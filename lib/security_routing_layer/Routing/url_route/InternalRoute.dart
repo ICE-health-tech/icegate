@@ -19,6 +19,7 @@ import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
 import 'package:ice_shield/orchestration_layer/Action/WebView/WebViewPage.dart';
+import 'package:ice_shield/ui_layer/info_page/ScoringRulesPage.dart';
 // // Import your pages
 // import 'package:ice_shield/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
 // import 'package:ice_shield/ui_layer/HomePage.dart'; // Your Home
@@ -250,6 +251,11 @@ final GoRouter router = GoRouter(
           path: '/notifications',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const NotificationManagerPage(),
+        ),
+        GoRoute(
+          path: '/manual',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) => const ScoringRulesPage(),
         ),
       ],
     ),

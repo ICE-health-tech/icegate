@@ -136,6 +136,21 @@ class DataSeeder {
       ),
     );
 
+    // 11. Create Mock Health Metrics for points
+    final now = DateTime.now();
+    for (int i = 0; i < 7; i++) {
+      final date = now.subtract(Duration(days: i));
+      final normalizedDate = DateTime(date.year, date.month, date.day);
+      await db.healthMetricsDAO.insertOrUpdateMetrics(
+        HealthMetricsTableCompanion(
+          personID: Value(personId),
+          steps: Value(5000 + (i * 100)), // 5000 to 5600 steps per day
+          date: Value(normalizedDate),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+    }
+
     print("Database seeded successfully.");
   }
 }

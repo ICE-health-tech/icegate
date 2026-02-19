@@ -63,7 +63,13 @@ class SettingsWidget extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.home_rounded, size: 30),
-            onPressed: () => context.go('/'),
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/');
+              }
+            },
           ),
           IconButton(
             icon: const Icon(Icons.grid_view, size: 30),
@@ -169,17 +175,18 @@ class SettingsWidget extends StatelessWidget {
 
           _buildSettingTile(
             context: context,
-            settingTitle: 'Terms of Service',
+            settingTitle: 'Manual',
             icon: Icons.description,
             onTap: () {
               // Action: Open terms page
               print('Navigate to Terms');
+              context.go("/manual");
             },
           ),
           _buildSettingTile(
             context: context,
             settingTitle: 'Version',
-            subtitle: '1.0.0',
+            subtitle: '1.1.1',
             icon: Icons.info_outline,
             trailingWidget: const SizedBox.shrink(),
             onTap: null,

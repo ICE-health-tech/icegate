@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
     show HealthMetricsDAO, HealthMetricsTableCompanion, HealthLogsDAO;
 import 'package:signals/signals.dart';
@@ -65,6 +66,9 @@ class HealthBlock {
   }
 
   void updateSteps(int steps) {
+    debugPrint(
+      "HealthBlock: updateSteps called with $steps steps (current: ${todaySteps.value})",
+    );
     if (steps > todaySteps.value) {
       todaySteps.value = steps;
       _saveSteps(steps);
@@ -75,6 +79,7 @@ class HealthBlock {
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
 
+    debugPrint("HealthBlock: Saving $steps steps to DB for $normalizedToday");
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
         personID: Value(personId),

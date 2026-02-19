@@ -100,15 +100,26 @@ class _DataLayerState extends State<DataLayer> {
   }
 
   Future<void> _syncHealthData() async {
-    final steps = await HealthService.fetchStepCount();
-    if (mounted) {
-      setState(() {
-        currentSteps = steps;
-      });
+    try {
+      debugPrint("DataLayer: Periodic health sync started...");
+      final steps = await HealthService.fetchStepCount();
+      debugPrint("DataLayer: HealthService returned $steps steps");
+      if (mounted) {
+        setState(() {
+          currentSteps = steps;
+        });
 
-      if (_isInitialized) {
-        healthBlock.updateSteps(steps);
+        if (_isInitialized) {
+          debugPrint("DataLayer: Forwarding $steps steps to healthBlock");
+          healthBlock.updateSteps(steps);
+        } else {
+          debugPrint(
+            "DataLayer: healthBlock not initialized yet, skipping step update",
+          );
+        }
       }
+    } catch (e) {
+      debugPrint("DataLayer: Error in _syncHealthData: $e");
     }
   }
 
@@ -146,6 +157,7 @@ class _DataLayerState extends State<DataLayer> {
 
       // 1. Pre-instantiate all blocks to avoid LateInitializationError in UI
       // even if specific init steps fail.
+      debugPrint("DataLayer: Pre-instantiating blocks for personID: 1");
       healthBlock = HealthBlock(
         personId: 1,
         healthDao: widget.database.healthMetricsDAO,
@@ -163,7 +175,7 @@ class _DataLayerState extends State<DataLayer> {
       // widgetManagerBlock is initialized later
 
       // Initialize HealthBlock
-      print("DataLayer: Initializing HealthBlock");
+      debugPrint("DataLayer: Initializing HealthBlock");
       healthBlock.init();
 
       // Initialize GrowthBlock

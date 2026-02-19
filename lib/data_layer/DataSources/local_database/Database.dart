@@ -415,11 +415,9 @@ class GoalsTable extends Table {
 @DataClassName("ScoreLocalData")
 class ScoresTable extends Table {
   IntColumn get scoreID => integer().autoIncrement()();
-  IntColumn get personID => integer().references(
-    PersonsTable,
-    #personID,
-    onDelete: KeyAction.cascade,
-  )();
+  IntColumn get personID => integer()
+      .references(PersonsTable, #personID, onDelete: KeyAction.cascade)
+      .unique()();
   RealColumn get healthGlobalScore => real().withDefault(const Constant(0.0))();
   RealColumn get socialGlobalScore => real().withDefault(const Constant(0.0))();
   RealColumn get financialGlobalScore =>
@@ -672,9 +670,9 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
   }
 
   Future<ScoreLocalData?> getScoreByPersonID(int personID) {
-    return (select(
-      scoresTable,
-    )..where((tbl) => tbl.personID.equals(personID))).getSingleOrNull();
+    return (select(scoresTable)..where((tbl) => tbl.personID.equals(personID)))
+        .get()
+        .then((list) => list.firstOrNull);
   }
 
   Stream<ScoreLocalData?> watchScoreByPersonID(int personID) {
@@ -684,77 +682,99 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
   }
 
   Future<void> incrementCareerScore(int personID, double points) async {
-    final existing = await getScoreByPersonID(personID);
-    if (existing != null) {
-      await update(scoresTable).replace(
-        existing.copyWith(
-          careerGlobalScore: existing.careerGlobalScore + points,
-          updatedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await into(scoresTable).insert(
-        ScoresTableCompanion.insert(
-          personID: personID,
-          careerGlobalScore: Value(points),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            careerGlobalScore: Value(existing.careerGlobalScore + points),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            personID: personID,
+            careerGlobalScore: Value(points),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> updateSocialScore(int personID, double score) async {
-    final existing = await getScoreByPersonID(personID);
-    if (existing != null) {
-      await update(scoresTable).replace(
-        existing.copyWith(socialGlobalScore: score, updatedAt: DateTime.now()),
-      );
-    } else {
-      await into(scoresTable).insert(
-        ScoresTableCompanion.insert(
-          personID: personID,
-          socialGlobalScore: Value(score),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            socialGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            personID: personID,
+            socialGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> updateFinancialScore(int personID, double score) async {
-    final existing = await getScoreByPersonID(personID);
-    if (existing != null) {
-      await update(scoresTable).replace(
-        existing.copyWith(
-          financialGlobalScore: score,
-          updatedAt: DateTime.now(),
-        ),
-      );
-    } else {
-      await into(scoresTable).insert(
-        ScoresTableCompanion.insert(
-          personID: personID,
-          financialGlobalScore: Value(score),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            financialGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            personID: personID,
+            financialGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
   }
 
   Future<void> updateHealthScore(int personID, double score) async {
-    final existing = await getScoreByPersonID(personID);
-    if (existing != null) {
-      await update(scoresTable).replace(
-        existing.copyWith(healthGlobalScore: score, updatedAt: DateTime.now()),
-      );
-    } else {
-      await into(scoresTable).insert(
-        ScoresTableCompanion.insert(
-          personID: personID,
-          healthGlobalScore: Value(score),
-          updatedAt: Value(DateTime.now()),
-        ),
-      );
-    }
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            healthGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            personID: personID,
+            healthGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
   }
 }
 
@@ -1875,7 +1895,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 19; // Increment schema version
+  int get schemaVersion => 20; // Increment schema version
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -1974,6 +1994,25 @@ class AppDatabase extends _$AppDatabase {
             );
           } catch (e) {
             print('Error creating unique index: $e');
+          }
+        }
+
+        if (from < 20) {
+          // Duplicate cleanup for scores_table
+          try {
+            print('Drift: Cleaning up duplicate scores for version 20');
+            await customStatement(
+              'DELETE FROM scores_table WHERE score_i_d NOT IN (SELECT MIN(score_i_d) FROM scores_table GROUP BY person_i_d)',
+            );
+
+            // Create the unique index if needed (SQLite table constraints are hard to add via ALTER)
+            // But with .unique() in the table definition and a version bump, Drift's build_runner might handle it
+            // or we manually ensure it here.
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_person_unique ON scores_table (person_i_d)',
+            );
+          } catch (e) {
+            print('Drift: Error in version 20 migration: $e');
           }
         }
 

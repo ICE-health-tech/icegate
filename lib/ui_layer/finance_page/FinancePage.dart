@@ -250,7 +250,13 @@ class _FinancePageState extends State<FinancePage> {
               actions: [
                 IconButton(
                   icon: const Icon(Icons.home_rounded, size: 30),
-                  onPressed: () => context.go('/'),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/');
+                    }
+                  },
                 ),
                 IconButton(
                   icon: const Icon(Icons.grid_view, size: 30),

@@ -11,12 +11,20 @@ class HealthService {
     if (_isAuthorized) return true;
 
     // Check motion permission first (needed for some data types on iOS)
-    await Permission.sensors.request();
+    try {
+      debugPrint("HealthService: Requesting motion sensors permission...");
+      await Permission.sensors.request();
+    } catch (e) {
+      debugPrint(
+        "HealthService: Motion sensors permission failed (possibly missing plugin): $e",
+      );
+    }
 
     final types = [HealthDataType.STEPS];
     final permissions = [HealthDataAccess.READ];
 
     try {
+      debugPrint("HealthService: Requesting health authorization...");
       _isAuthorized = await health.requestAuthorization(
         types,
         permissions: permissions,

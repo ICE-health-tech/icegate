@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
+// import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
@@ -44,7 +44,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
     if (_formKey.currentState!.validate()) {
       try {
         final internalWidgetsDAO = context.read<InternalWidgetsDAO>();
-        final externalWidgetsDAO = context.read<ExternalWidgetsDAO>();
+        // final externalWidgetsDAO = context.read<ExternalWidgetsDAO>();
         final projectBlock = context.read<ProjectBlock>();
         final growthBlock = context.read<GrowthBlock>();
         final projectNoteDAO = context.read<ProjectNoteDAO>();
@@ -109,21 +109,21 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
           );
         }
 
-        // 2. Create ExternalWidgetProtocol (Shortcut)
-        final externalWidget = ExternalWidgetProtocol(
-          name: name,
-          protocol: 'internal',
-          host: 'app',
-          url: internalWidget.url,
-          alias: internalWidget.alias,
-          dateAdded: dateAdded,
-          imageUrl: null, // Or a default project icon URL
-        );
+        // 2. Create ExternalWidgetProtocol (Shortcut) - REMOVED per user request
+        // final externalWidget = ExternalWidgetProtocol(
+        //   name: name,
+        //   protocol: 'internal',
+        //   host: 'app',
+        //   url: internalWidget.url,
+        //   alias: internalWidget.alias,
+        //   dateAdded: dateAdded,
+        //   imageUrl: null, // Or a default project icon URL
+        // );
 
         // Save External Widget
-        await externalWidgetsDAO.insertNewWidget(
-          externalWidgetProtocol: externalWidget,
-        );
+        // await externalWidgetsDAO.insertNewWidget(
+        //   externalWidgetProtocol: externalWidget,
+        // );
 
         // 3. Create Task if provided
         if (taskTitle.isNotEmpty) {

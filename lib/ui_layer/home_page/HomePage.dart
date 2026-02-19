@@ -96,7 +96,7 @@ class HomePage extends StatefulWidget {
           backgroundColor: Colors.cyan,
           tooltip: "Canvas",
           label: "Canvas",
-          onPressed: () => context.go("/canvas"),
+          onPressed: () => context.push("/canvas"),
         ),
       ],
     );
@@ -316,6 +316,15 @@ class _HomePageState extends State<HomePage> {
             const SizedBox(width: 8),
           ],
         ),
+        floatingActionButton: Watch((context) {
+          final level = _levelUpToShow.value;
+          if (level == null) return const SizedBox.shrink();
+          return LevelUpCelebration(
+            level: level,
+            onFinished: () => _levelUpToShow.value = null,
+          );
+        }),
+        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
         body: Watch((context) {
           final internalWidgets =
               internalWidgetBlock.listInternalWidgetHomePage.value;
@@ -524,15 +533,7 @@ class _HomePageState extends State<HomePage> {
             ),
           );
         }),
-        floatingActionButton: Watch((context) {
-          final level = _levelUpToShow.value;
-          if (level == null) return const SizedBox.shrink();
-          return LevelUpCelebration(
-            level: level,
-            onFinished: () => _levelUpToShow.value = null,
-          );
-        }),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+        // Duplicate FAB removed from here
       ),
     );
   }

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
     hide ScoreData;
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
@@ -11,10 +12,7 @@ class ScoreBlock {
 
   // DAOs stored locally for access in update methods
   late ScoreDAO _dao;
-  late PersonManagementDAO _personDAO;
   late FinanceDAO _financeDAO;
-  late HealthMetricsDAO _healthDAO;
-  late HealthMealDAO _mealDAO;
 
   late int _personID;
 
@@ -80,10 +78,7 @@ class ScoreBlock {
     int personID,
   ) {
     _dao = dao;
-    _personDAO = personDAO;
     _financeDAO = financeDAO;
-    _healthDAO = healthDAO;
-    _mealDAO = mealDAO;
     _personID = personID;
 
     // 1. Listen to Score changes (read)
@@ -106,102 +101,115 @@ class ScoreBlock {
 
     // Finance Watcher
     _subscriptions.add(
-      financeDAO.watchAccounts(personID).listen((_) => _updateFinanceScore()),
+      financeDAO.watchAccounts(personID).listen((accounts) async {
+        final assets = await _financeDAO.watchAssets(personID).first;
+        _updateFinanceScore(accounts, assets);
+      }),
     );
     _subscriptions.add(
-      financeDAO.watchAssets(personID).listen((_) => _updateFinanceScore()),
+      financeDAO.watchAssets(personID).listen((assets) async {
+        final accounts = await _financeDAO.watchAccounts(personID).first;
+        _updateFinanceScore(accounts, assets);
+      }),
     );
 
     // Social Watcher
     _subscriptions.add(
-      personDAO.getAllContacts().listen((_) => _updateSocialScore()),
+      personDAO.getAllContacts().listen(
+        (contacts) => _updateSocialScore(contacts),
+      ),
     );
 
-    // Health Watcher (Debounce might be good here for steps, but direct listen is fine for now)
+    // Health Watcher
     _subscriptions.add(
-      healthDAO.watchAllMetrics(personID).listen((_) => _updateHealthScore()),
+      healthDAO.watchAllMetrics(personID).listen((metrics) async {
+        final meals = await mealDAO.watchDaysWithMeals().first;
+        _updateHealthScore(metrics, meals);
+      }),
     );
     _subscriptions.add(
-      mealDAO.watchDaysWithMeals().listen((_) => _updateHealthScore()),
+      mealDAO.watchDaysWithMeals().listen((meals) async {
+        final metrics = await healthDAO.watchAllMetrics(personID).first;
+        _updateHealthScore(metrics, meals);
+      }),
     );
   }
 
-  Future<void> _updateFinanceScore() async {
+  Future<void> _updateFinanceScore(
+    List<FinancialAccountData> accounts,
+    List<AssetData> assets,
+  ) async {
+    debugPrint("ScoreBlock: triggering _updateFinanceScore...");
     try {
-      final accounts = await _financeDAO.watchAccounts(_personID).first;
-      final assets = await _financeDAO.watchAssets(_personID).first;
-
       double totalNetWorth = 0;
-      double investmentPoints = 0;
-
       for (var acc in accounts) {
         totalNetWorth += acc.balance;
       }
-
       for (var asset in assets) {
-        final currentVal = asset.currentEstimatedValue ?? 0.0;
-        final purchaseVal = asset.purchasePrice ?? 0.0;
+        totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
+      }
+      debugPrint("ScoreBlock: Total net worth: $totalNetWorth");
 
-        totalNetWorth += currentVal;
-
-        // Investment Return Calculation
-        if (purchaseVal > 0 && currentVal > purchaseVal) {
-          final returnPercentage =
-              ((currentVal - purchaseVal) / purchaseVal) * 100;
-          if (returnPercentage >= FINANCE_INVESTMENT_RETURN_THRESHOLD) {
-            investmentPoints +=
-                (returnPercentage / FINANCE_INVESTMENT_RETURN_THRESHOLD)
-                    .floor() *
-                FINANCE_INVESTMENT_POINTS;
-          }
-        }
+      // Points calculation using milestone from Const.dart
+      double financeScore = 0;
+      if (FINANCE_SAVINGS_MILESTONE > 0) {
+        financeScore =
+            (totalNetWorth / FINANCE_SAVINGS_MILESTONE) *
+            FINANCE_SAVINGS_POINTS;
       }
 
-      final savingsPoints =
-          ((totalNetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS)
-              .toDouble();
-
-      final financeScore = savingsPoints + investmentPoints;
-
+      debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
       await _dao.updateFinancialScore(_personID, financeScore);
     } catch (e) {
-      print("Error updating finance score: $e");
+      debugPrint("Error updating finance score: $e");
     }
   }
 
-  Future<void> _updateSocialScore() async {
+  Future<void> _updateSocialScore(List<SocialContact> contacts) async {
+    debugPrint("ScoreBlock: triggering _updateSocialScore...");
     try {
-      final contacts = await _personDAO.getAllContacts().first;
       int totalAffection = 0;
-      for (var c in contacts) {
-        totalAffection += c.affection;
+      for (var contact in contacts) {
+        totalAffection += contact.affection;
       }
+
       final socialScore =
-          (contacts.length * CONTACT_POINTS).toDouble() +
-          ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS)
-              .toDouble();
-      await _dao.updateSocialScore(_personID, socialScore);
+          (contacts.length * CONTACT_POINTS) +
+          ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
+
+      debugPrint(
+        "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
+      );
+      await _dao.updateSocialScore(_personID, socialScore.toDouble());
     } catch (e) {
-      print("Error updating social score: $e");
+      debugPrint("Error updating social score: $e");
     }
   }
 
-  Future<void> _updateHealthScore() async {
+  Future<void> _updateHealthScore(
+    List<HealthMetricsLocal> allMetrics,
+    List<DayWithMeal> allMealsWrapper,
+  ) async {
+    debugPrint("ScoreBlock: triggering _updateHealthScore...");
     try {
       // 1. Steps
       int stepsPoints = 0;
-      final allMetrics = await _healthDAO.watchAllMetrics(_personID).first;
+      debugPrint(
+        "ScoreBlock: Processing ${allMetrics.length} health metrics for personID: $_personID",
+      );
+
       int totalSteps = 0;
       for (var m in allMetrics) {
         totalSteps += m.steps;
       }
+      debugPrint("ScoreBlock: Total steps sum: $totalSteps");
+
       if (STEPS_PER_POINT > 0) {
         stepsPoints = (totalSteps / STEPS_PER_POINT).floor();
       }
 
       // 2. Diet
       int dietPoints = 0;
-      final allMealsWrapper = await _mealDAO.watchDaysWithMeals().first;
       final Map<String, double> dailyCalories = {};
 
       for (var item in allMealsWrapper) {
@@ -217,11 +225,15 @@ class ScoreBlock {
           dietPoints += CALORIE_BONUS_POINTS;
         }
       });
+      debugPrint(
+        "ScoreBlock: Calculated health metrics — Steps: $stepsPoints, Diet: $dietPoints",
+      );
 
       final healthScore = (stepsPoints + dietPoints).toDouble();
+      debugPrint("ScoreBlock: Final Health Global Score: $healthScore");
       await _dao.updateHealthScore(_personID, healthScore);
     } catch (e) {
-      print("Error updating health score: $e");
+      debugPrint("Error updating health score: $e");
     }
   }
 
