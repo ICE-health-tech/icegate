@@ -1021,7 +1021,7 @@ class _HomePageState extends State<HomePage> {
             top: 5,
             left: 15,
             child: Text(
-              "Tap to rename",
+              "Rename",
               style: TextStyle(
                 color: colorScheme.primary,
                 fontSize: 6,
