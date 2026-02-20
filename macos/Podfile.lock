@@ -31,6 +31,11 @@ PODS:
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
+  - powersync-sqlite-core (0.4.11)
+  - powersync_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - powersync-sqlite-core (~> 0.4.10)
   - quill_native_bridge_macos (0.0.1):
     - FlutterMacOS
   - shared_preferences_foundation (0.0.1):
@@ -85,6 +90,7 @@ DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
   - path_provider_foundation (from `Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin`)
+  - powersync_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/powersync_flutter_libs/darwin`)
   - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
   - shared_preferences_foundation (from `Flutter/ephemeral/.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
@@ -94,6 +100,7 @@ DEPENDENCIES:
 
 SPEC REPOS:
   trunk:
+    - powersync-sqlite-core
     - sqlite3
 
 EXTERNAL SOURCES:
@@ -125,6 +132,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin
   path_provider_foundation:
     :path: Flutter/ephemeral/.symlinks/plugins/path_provider_foundation/darwin
+  powersync_flutter_libs:
+    :path: Flutter/ephemeral/.symlinks/plugins/powersync_flutter_libs/darwin
   quill_native_bridge_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos
   shared_preferences_foundation:
@@ -153,6 +162,8 @@ SPEC CHECKSUMS:
   FlutterMacOS: d0db08ddef1a9af05a5ec4b724367152bb0500b1
   geolocator_apple: 66b711889fd333205763b83c9dcf0a57a28c7afd
   path_provider_foundation: 0b743cbb62d8e47eab856f09262bb8c1ddcfe6ba
+  powersync-sqlite-core: aae0128de5f062c8e5a6bc450090ebba0b398222
+  powersync_flutter_libs: 06a54b2eb2afc6f6fc675859bf1020d9cd6c0e4d
   quill_native_bridge_macos: 3a5f378bc757eb92825193853020b759b56cbb2c
   shared_preferences_foundation: 5086985c1d43c5ba4d5e69a4e8083a389e2909e6
   sqflite_darwin: 5a7236e3b501866c1c9befc6771dfd73ffb8702d

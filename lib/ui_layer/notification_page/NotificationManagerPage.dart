@@ -5,7 +5,6 @@ import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:go_router/go_router.dart';
 import 'package:drift/drift.dart' hide Column;
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 
@@ -212,7 +211,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 color: isEnabled ? Colors.greenAccent : Colors.redAccent,
               ),
             ),
-            activeColor: Colors.blueAccent,
+            activeThumbColor: Colors.blueAccent,
           ),
         ),
         if (isEnabled) ...[
@@ -701,7 +700,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         trailing: Switch(
           value: true,
           onChanged: (val) {},
-          activeColor: color,
+          activeThumbColor: color,
           trackColor: WidgetStateProperty.resolveWith(
             (states) => states.contains(WidgetState.selected)
                 ? color.withOpacity(0.4)
@@ -763,7 +762,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     await dao.updateNotification(updated);
                     await service.syncAllNotifications();
                   },
-                  activeColor: Colors.blueAccent,
+                  activeThumbColor: Colors.blueAccent,
                 ),
               ],
             ),
@@ -895,7 +894,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     const SizedBox(height: 24),
                     DropdownButtonFormField<String>(
                       dropdownColor: const Color(0xFF161B33),
-                      value: repeatFrequency,
+                      initialValue: repeatFrequency,
                       items: ['once', 'daily', 'weekly'].map((f) {
                         return DropdownMenuItem(
                           value: f,
@@ -954,8 +953,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                           context: context,
                           initialTime: selectedTime,
                         );
-                        if (time != null)
+                        if (time != null) {
                           setDialogState(() => selectedTime = time);
+                        }
                       },
                     ),
                   ],

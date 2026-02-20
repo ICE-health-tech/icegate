@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart';
 import '../UIConstants.dart';
 import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
@@ -516,7 +518,7 @@ class _HomePageState extends State<HomePage> {
                             padding: const EdgeInsets.only(right: 16),
                             child: SizedBox(
                               width: sizeOfWidget,
-                              child: _buildExternalGridItem(context, ext),
+                              child: _buildExternalWidget(context, ext),
                             ),
                           );
                         }
@@ -972,7 +974,11 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 10),
           AutoSizeText(
             widgetData.name,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: colorScheme.primary,
+            ),
             textAlign: TextAlign.center,
             maxLines: 1,
           ),
@@ -998,6 +1004,7 @@ class _HomePageState extends State<HomePage> {
             child: InkWell(
               onTap: () {
                 // Logic to delete internal widget
+                HapticFeedback.heavyImpact();
                 internalWidgetBlock.deleteWidget(
                   database.internalWidgetsDAO,
                   widgetData.name,
@@ -1020,12 +1027,12 @@ class _HomePageState extends State<HomePage> {
           ),
           Positioned(
             top: 5,
-            left: 15,
+            left: 20,
             child: Text(
               "Rename",
               style: TextStyle(
-                color: colorScheme.primary,
-                fontSize: 6,
+                color: Colors.redAccent,
+                fontSize: UIConstants.getResponsiveFontSize(context),
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -1035,7 +1042,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildExternalGridItem(BuildContext context, ExternalWidgetData data) {
+  Widget _buildExternalWidget(BuildContext context, ExternalWidgetData data) {
     final colorScheme = Theme.of(context).colorScheme;
     final String fullUrl = "${data.protocol}://${data.host}${data.url}";
 
@@ -1077,7 +1084,11 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 10),
           AutoSizeText(
             data.name,
-            style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 13),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 13,
+              color: colorScheme.primary,
+            ),
             textAlign: TextAlign.center,
             maxLines: 1,
           ),
@@ -1105,6 +1116,7 @@ class _HomePageState extends State<HomePage> {
             child: InkWell(
               onTap: () {
                 // Logic to delete external widget
+                HapticFeedback.heavyImpact();
                 externalWidgetBlock.deleteWidget(
                   database.externalWidgetsDAO,
                   data.widgetID,
@@ -1120,18 +1132,18 @@ class _HomePageState extends State<HomePage> {
                   ),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.close, color: Colors.white, size: 14),
+                child: Icon(Icons.close, color: Colors.white, size: 14),
               ),
             ),
           ),
           Positioned(
             top: 5,
-            left: 15,
+            left: 20,
             child: Text(
-              "Tap to change name",
+              "Rename",
               style: TextStyle(
-                color: Colors.white,
-                fontSize: 6,
+                color: Colors.redAccent,
+                fontSize: UIConstants.getResponsiveFontSize(context),
                 fontWeight: FontWeight.bold,
               ),
             ),

@@ -87,6 +87,11 @@ PODS:
     - Flutter
   - permission_handler_apple (9.3.0):
     - Flutter
+  - powersync-sqlite-core (0.4.11)
+  - powersync_flutter_libs (0.0.1):
+    - Flutter
+    - FlutterMacOS
+    - powersync-sqlite-core (~> 0.4.10)
   - quill_native_bridge_ios (0.0.1):
     - Flutter
   - SCCameraKit (1.40.0)
@@ -158,6 +163,7 @@ DEPENDENCIES:
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
   - pedometer (from `.symlinks/plugins/pedometer/ios`)
   - permission_handler_apple (from `.symlinks/plugins/permission_handler_apple/ios`)
+  - powersync_flutter_libs (from `.symlinks/plugins/powersync_flutter_libs/darwin`)
   - quill_native_bridge_ios (from `.symlinks/plugins/quill_native_bridge_ios/ios`)
   - shared_preferences_foundation (from `.symlinks/plugins/shared_preferences_foundation/darwin`)
   - sqflite_darwin (from `.symlinks/plugins/sqflite_darwin/darwin`)
@@ -170,6 +176,7 @@ SPEC REPOS:
     - DKImagePickerController
     - DKPhotoGallery
     - GLTFSceneKit
+    - powersync-sqlite-core
     - SCCameraKit
     - SCCameraKitReferenceUI
     - SDWebImage
@@ -225,6 +232,8 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/pedometer/ios"
   permission_handler_apple:
     :path: ".symlinks/plugins/permission_handler_apple/ios"
+  powersync_flutter_libs:
+    :path: ".symlinks/plugins/powersync_flutter_libs/darwin"
   quill_native_bridge_ios:
     :path: ".symlinks/plugins/quill_native_bridge_ios/ios"
   shared_preferences_foundation:
@@ -266,6 +275,8 @@ SPEC CHECKSUMS:
   path_provider_foundation: 0b743cbb62d8e47eab856f09262bb8c1ddcfe6ba
   pedometer: 381969883680ade42559782cc41a3bbd453d8234
   permission_handler_apple: 9878588469a2b0d0fc1e048d9f43605f92e6cec2
+  powersync-sqlite-core: aae0128de5f062c8e5a6bc450090ebba0b398222
+  powersync_flutter_libs: 06a54b2eb2afc6f6fc675859bf1020d9cd6c0e4d
   quill_native_bridge_ios: 2b01d585fcc73d0f5eed78c0bd244ee564b06f5a
   SCCameraKit: 3df78d50b972282517fd1c0c69f4a01d301ef4e6
   SCCameraKitReferenceUI: 737630ab0ccab689a3492585aeb349fe6ffa21cc

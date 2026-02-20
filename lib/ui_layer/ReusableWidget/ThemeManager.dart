@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+    hide ThemeData;
 import 'package:ice_shield/initial_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_shield/data_layer/Protocol/Theme/ThemeAdapter.dart';
@@ -71,7 +72,7 @@ class ThemeManager {
                         children: [
                           _buildThemeOption(
                             context,
-                            'Emerald Haven',
+                            'Haven',
                             'assets/DefaultTheme.json',
                             Icons.security_rounded,
                           ),
@@ -266,19 +267,40 @@ class ThemeManager {
   ) {
     final width = MediaQuery.of(context).size.width;
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final buttonColor = colorScheme
+        .primary; // Use the theme's primary color as default for ElevatedButton
+
+    // Improved luminance check for better contrast
+    final double luminance = buttonColor.computeLuminance();
+    final Color textColor = luminance > 0.5 ? Colors.black : Colors.white;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        // backgroundColor: Theme.of(context).colorScheme.surface,
-        foregroundColor: Theme.of(context).colorScheme.onSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(0)),
+        backgroundColor: buttonColor,
+        foregroundColor: textColor,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ), // More rounded for attractiveness
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       ),
       child: SizedBox(
         width: width * 0.5,
         child: Row(
           children: [
-            Icon(iconData, size: 18),
+            Icon(iconData, size: 20, color: textColor),
             const SizedBox(width: 12),
-            Expanded(child: Text(name, maxLines: 1)),
+            Expanded(
+              child: Text(
+                name,
+                maxLines: 1,
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 14,
+                ),
+              ),
+            ),
           ],
         ),
       ),

@@ -5,6 +5,7 @@ import 'package:ice_shield/ui_layer/ReusableWidget/WidgetCard.dart';
 // import 'package:ice_shield/ui_layer/ReusableWidget/WidgetCard.dart'
 // hide ExternalWidget, ExternalWidgetsDAO;
 import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 
 class WidgetPage extends StatefulWidget {
@@ -93,11 +94,7 @@ class _WidgetPage extends State<WidgetPage> {
           IconButton(
             icon: const Icon(Icons.home_rounded, size: 30),
             onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/');
-              }
+              WidgetNavigatorAction.smartPop(context);
             },
           ),
           IconButton(

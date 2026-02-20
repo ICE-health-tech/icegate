@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
@@ -17,9 +18,9 @@ class PersonalInformationPage extends StatefulWidget {
       type: "profile",
       destination: "/profile",
       size: size,
-      icon: Icons.home,
+      icon: Icons.settings,
       mainFunction: () {
-        context.go("/");
+        WidgetNavigatorAction.smartPop(context, "/settings");
       },
     );
   }
@@ -243,7 +244,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         elevation: 0,
         foregroundColor: Colors.white,
         actions: [
-        
           Container(
             margin: const EdgeInsets.only(right: 8),
             decoration: const BoxDecoration(

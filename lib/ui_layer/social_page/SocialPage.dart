@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/data_layer/Protocol/User/PersonProtocol.dart';
@@ -18,11 +19,7 @@ class SocialPage extends StatefulWidget {
       mainFunction: () => context.go("/social"),
       onSwipeUp: () => context.go("/canvas"),
       onSwipeRight: () {
-        if (Navigator.canPop(context)) {
-          context.pop();
-        } else {
-          context.go('/');
-        }
+        WidgetNavigatorAction.smartPop(context);
       },
       size: size,
       icon: Icons.people_alt_rounded,
@@ -75,11 +72,7 @@ class _SocialPageState extends State<SocialPage>
             IconButton(
               icon: const Icon(Icons.home_rounded, size: 30),
               onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/');
-                }
+                WidgetNavigatorAction.smartPop(context);
               },
             ),
             IconButton(
@@ -163,18 +156,26 @@ class _SocialPageState extends State<SocialPage>
       // Show loading indicator
       showDialog(
         context: context,
-        barrierDismissible: false,
+        barrierDismissible: true, // Allow cancelling
         builder: (context) => const Center(child: CircularProgressIndicator()),
       );
 
       try {
         print("DEBUG: Starting minimal contact fetch...");
         // 1. Fetch ONLY names and IDs (lightweight)
-        final contacts = await FlutterContacts.getContacts(
+        final allContacts = await FlutterContacts.getContacts(
           withProperties: false,
         );
 
-        print("DEBUG: Fetched ${contacts.length} summary contacts.");
+        // Deduplicate by displayName
+        final seenNames = <String>{};
+        final contacts = allContacts
+            .where((c) => seenNames.add(c.displayName))
+            .toList();
+
+        print(
+          "DEBUG: Fetched ${allContacts.length} contacts, deduplicated to ${contacts.length}.",
+        );
 
         if (!mounted) return;
         Navigator.pop(context); // Hide loading
@@ -326,7 +327,7 @@ class _SocialPageState extends State<SocialPage>
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedType,
+                      initialValue: selectedType,
                       items: const [
                         DropdownMenuItem(
                           value: 'friend',
@@ -782,7 +783,7 @@ class _SocialPageState extends State<SocialPage>
                     ),
                     const SizedBox(height: 16),
                     DropdownButtonFormField<String>(
-                      value: selectedType,
+                      initialValue: selectedType,
                       items: const [
                         DropdownMenuItem(
                           value: 'friend',

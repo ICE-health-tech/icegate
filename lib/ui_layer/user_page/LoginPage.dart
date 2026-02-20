@@ -266,6 +266,46 @@ class _LoginPageState extends State<LoginPage> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 16),
+
+                          SizedBox(
+                            width: double.infinity,
+                            height: 60,
+                            child: ElevatedButton.icon(
+                              onPressed: isLoading ? null : _handleGoogleSignIn,
+                              icon: isLoading
+                                  ? const SizedBox.shrink()
+                                  : const Icon(
+                                      Icons.login_rounded,
+                                      size: 24,
+                                      color: Colors.blueAccent,
+                                    ),
+                              label: isLoading
+                                  ? const SizedBox(
+                                      height: 24,
+                                      width: 24,
+                                      child: CircularProgressIndicator(
+                                        color: Colors.blueAccent,
+                                        strokeWidth: 2,
+                                      ),
+                                    )
+                                  : const Text(
+                                      'CONTINUE WITH GOOGLE',
+                                      style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.white,
+                                foregroundColor: Colors.black87,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -390,6 +430,10 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _handleGuestLogin() async {
     await _authBlock.loginAsGuest();
+  }
+
+  Future<void> _handleGoogleSignIn() async {
+    await _authBlock.signInWithGoogle();
   }
 }
 

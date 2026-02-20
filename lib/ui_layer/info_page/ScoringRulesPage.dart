@@ -55,7 +55,7 @@ class ScoringRulesPage extends StatelessWidget {
               color: Colors.blue,
               rules: [
                 '$FINANCE_SAVINGS_POINTS Points for every \$$FINANCE_SAVINGS_MILESTONE saved (Net Worth)',
-                '$FINANCE_INVESTMENT_POINTS Points for every ${FINANCE_INVESTMENT_RETURN_THRESHOLD}% investment return',
+                '$FINANCE_INVESTMENT_POINTS Points for every $FINANCE_INVESTMENT_RETURN_THRESHOLD% investment return',
                 'Points update as account balances and asset values change',
               ],
             ),

@@ -6,13 +6,14 @@ import 'package:ice_shield/ui_layer/health_page/subpage/FoodInputPage.dart';
 import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
 import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
-import 'package:ice_shield/ui_layer/user_page/ProfileDashboardPage.dart';
+// import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
 
 import 'package:ice_shield/ui_layer/canvas_page/CanvasDynamicIsland.dart';
+import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -36,7 +37,7 @@ class MainShell extends StatelessWidget {
         pageIcon = DragCanvasGrid.icon(context, size: responsiveSize);
         break;
       case '/profile':
-        pageIcon = ProfileDashboardPage.icon(context, size: responsiveSize);
+        pageIcon = AnalysisDashboardPage.icon(context, size: responsiveSize);
         break;
       case '/health':
         pageIcon = HealthPage.icon(context, size: responsiveSize);

@@ -78,7 +78,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
     {
       'name': 'Profile',
       'url': '/profile',
-      'alias': 'ProfileDashboardPage',
+      'alias': 'AnalysisDashboardPage',
       'icon': Icons.person_rounded,
       'desc': 'User dashboard',
     },

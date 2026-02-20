@@ -482,7 +482,7 @@ warning • The value of the local variable 'userDetails' isn't used • lib/ui_
    info • The file name 'PersonalInformationPage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/PersonalInformationPage.dart:1:1 • file_names
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/user_page/PersonalInformationPage.dart:626:60 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/user_page/PersonalInformationPage.dart:719:60 • deprecated_member_use
-   info • The file name 'ProfileDashboardPage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/ProfileDashboardPage.dart:1:1 • file_names
+   info • The file name 'AnalysisDashboardPage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/AnalysisDashboardPage.dart:1:1 • file_names
    info • The file name 'FinanceSectionCard.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/main_deparment/FinanceSectionCard.dart:1:1 • file_names
    info • The file name 'HealthSectionCard.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/main_deparment/HealthSectionCard.dart:1:1 • file_names
    info • The file name 'ProfileHeader.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/user_page/main_deparment/ProfileHeader.dart:1:1 • file_names

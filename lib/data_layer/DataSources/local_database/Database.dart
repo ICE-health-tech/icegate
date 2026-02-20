@@ -1,6 +1,8 @@
 // 1. Core Drift and Platform Imports
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart'; // For NativeDatabase on mobile/desktop
+import 'package:drift_sqlite_async/drift_sqlite_async.dart';
+import 'package:powersync/powersync.dart' show PowerSyncDatabase;
 import 'package:ice_shield/initial_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
@@ -1892,7 +1894,14 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   ],
 )
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(_openConnection());
+  final PowerSyncDatabase? powerSync;
+
+  AppDatabase([QueryExecutor? executor, this.powerSync])
+    : super(executor ?? _openConnection());
+
+  factory AppDatabase.powersync(PowerSyncDatabase db) {
+    return AppDatabase(SqliteAsyncDriftConnection(db), db);
+  }
 
   @override
   int get schemaVersion => 20; // Increment schema version

@@ -22,9 +22,9 @@ const double TASK_SCORE_INCREMENT = 2; // each task completion = +2
 const double PROJECT_SCORE_INCREMENT = 50; // each project completion = +50
 
 // ─── 💰 Finance ───
-const double FINANCE_SAVINGS_MILESTONE = 1000.0; // Every $1000 saved
+const double FINANCE_SAVINGS_MILESTONE = 50.0; // Every $1000 saved
 const int FINANCE_SAVINGS_POINTS = 50; // ...= +50 points
 const int FINANCE_BUDGET_ADHERENCE_POINTS =
-    20; // Staying under budget = +20 points
+    50; // Staying under budget = +50 points
 const double FINANCE_INVESTMENT_RETURN_THRESHOLD = 5.0; // Every 5% return
 const int FINANCE_INVESTMENT_POINTS = 10; // ...= +10 points

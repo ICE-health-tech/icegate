@@ -1,41 +1,27 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
-import 'package:drift/drift.dart' hide Column;
-import 'package:ice_shield/ui_layer/user_page/main_deparment/ProfileHeader.dart';
-import 'package:ice_shield/ui_layer/user_page/main_deparment/HealthSectionCard.dart';
-import 'package:ice_shield/ui_layer/user_page/main_deparment/FinanceSectionCard.dart';
-import 'package:ice_shield/ui_layer/user_page/main_deparment/SocialSectionCard.dart';
-import 'package:ice_shield/ui_layer/user_page/main_deparment/ProjectSectionCard.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:auto_size_text/auto_size_text.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 
-class ProfileDashboardPage extends StatelessWidget {
-  const ProfileDashboardPage({super.key});
+class AnalysisDashboardPage extends StatelessWidget {
+  const AnalysisDashboardPage({super.key});
 
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
       type: "profile",
       destination: "/profile",
       size: size,
-      icon: Icons.analytics,
+      icon: Icons.home,
       mainFunction: () async {
-        // context.push("/profile");
+        WidgetNavigatorAction.smartPop(context);
       },
       onSwipeRight: () {
-        if (context.canPop()) {
-          context.pop();
-        } else {
-          context.go("/");
-        }
+        WidgetNavigatorAction.smartPop(context);
       },
     );
   }

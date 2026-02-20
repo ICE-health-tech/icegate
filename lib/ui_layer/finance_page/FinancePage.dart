@@ -7,6 +7,7 @@ import 'package:ice_shield/ui_layer/finance_page/services/FinanceService.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -251,11 +252,7 @@ class _FinancePageState extends State<FinancePage> {
                 IconButton(
                   icon: const Icon(Icons.home_rounded, size: 30),
                   onPressed: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go('/');
-                    }
+                    WidgetNavigatorAction.smartPop(context);
                   },
                 ),
                 IconButton(

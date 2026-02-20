@@ -13,11 +13,27 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
+import 'package:powersync/powersync.dart';
+import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart'
+    as ps_schema;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  late final AppDatabase database = AppDatabase();
+  await Supabase.initialize(
+    url: 'https://wthislkepfufkbgiqegs.supabase.co',
+    anonKey:
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGlzbGtlcGZ1ZmtiZ2lxZWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODk2MjEsImV4cCI6MjA4NzA2NTYyMX0.EaYqJVIni8cSh0BCDZH1hQxqy-pdPj8o2aSG6dF7z-8', // TODO: User, please replace with your Anon Key
+  );
+
+  final dir = await getApplicationDocumentsDirectory();
+  final dbPath = p.join(dir.path, 'powersync.db');
+  final powersync = PowerSyncDatabase(schema: ps_schema.schema, path: dbPath);
+  await powersync.initialize();
+  final database = AppDatabase.powersync(powersync);
 
   final notificationService = LocalNotificationService();
   await notificationService.init(database);
@@ -25,7 +41,7 @@ void main() async {
   final audioHandler = await AudioService.init(
     builder: () => FocusAudioHandler(),
     config: const AudioServiceConfig(
-      androidNotificationChannelId: 'com.duylong.ice_shield.channel.audio',
+      androidNotificationChannelId: 'duylong.art.ice_gate.channel.audio',
       androidNotificationChannelName: 'Focus Audio Playback',
       androidNotificationOngoing: true,
     ),

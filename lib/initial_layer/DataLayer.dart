@@ -22,7 +22,9 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBloc
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_shield/data_layer/DataSources/cloud_database/PowerSyncConnector.dart';
 import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_shield/security_routing_layer/Routing/url_route/InternalRoute.dart';
 import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
@@ -284,12 +286,62 @@ class _DataLayerState extends State<DataLayer> {
     // --- NEW: Monitoring --- Agent
     await DatabaseAgent.monitoring(widget.database);
 
+    // --- NEW: Supabase Auth Listener for PowerSync ---
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+      final AuthChangeEvent event = data.event;
+      final Session? session = data.session;
+      final ps = widget.database.powerSync;
+
+      if (session != null) {
+        // Sync state to AuthBlock so downstream effects (PowerSync, fetchUser) trigger
+        authBlock.jwt.value = session.accessToken;
+        authBlock.username.value = session.user.email ?? "Google User";
+        authBlock.status.value = AuthStatus.authenticated;
+      }
+
+      if (ps == null) return;
+
+      if (event == AuthChangeEvent.signedIn ||
+          event == AuthChangeEvent.tokenRefreshed) {
+        if (session != null) {
+          print(
+            "☁️ [DataLayer] Supabase Auth Event: $event. Connecting PowerSync...",
+          );
+          final connector = MyPowerSyncConnector(
+            authBlock: authBlock,
+            powerSyncUrl:
+                "https://69967e7cd17eab7f63d96041.powersync.journeyapps.com",
+            baseUrl: "https://backend.duylong.art",
+          );
+          ps.connect(connector: connector);
+        }
+      } else if (event == AuthChangeEvent.signedOut) {
+        print("☁️ [DataLayer] Supabase Signed Out. Disconnecting PowerSync...");
+        ps.disconnect();
+        authBlock.logout(); // Trigger local state clear
+      }
+    });
+
     // --- NEW: Global Data Initializer ---
-    // Listen to AuthBlock token changes to trigger initial data fetch
+    // Listen to AuthBlock token changes to trigger initial data fetch and PowerSync Cloud connect
     _effectCleanups.add(
       effect(() {
         final token = authBlock.jwt.value;
         if (token != null && token.isNotEmpty) {
+          // Trigger PowerSync Cloud Connect
+          final ps = widget.database.powerSync;
+          if (ps != null) {
+            // --- MONITOR STATUS ---
+            ps.statusStream.listen((status) {
+              print(
+                "🌐 [PowerSync] Status: ${status.connected ? 'Connected' : 'Disconnected'} (Last synced: ${status.lastSyncedAt})",
+              );
+              if (status.anyError != null) {
+                print("❌ [PowerSync] Error: ${status.anyError}");
+              }
+            });
+          }
+
           personBlock.fetchInitialData(token).then((_) {
             // Update object database urls after initial fetch
             objectDatabaseBlock.updateUrlOfUser(personBlock);

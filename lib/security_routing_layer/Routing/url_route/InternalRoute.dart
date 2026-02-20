@@ -9,6 +9,7 @@ import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HabitDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
+import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart';
 // import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/HeartRatePage.dart';
@@ -28,7 +29,7 @@ import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_shield/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_shield/ui_layer/home_page/MainShell.dart';
 import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
-import 'package:ice_shield/ui_layer/user_page/ProfileDashboardPage.dart';
+import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
@@ -123,7 +124,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/profile',
           parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) => const ProfileDashboardPage(),
+          builder: (context, state) => const AnalysisDashboardPage(),
         ),
         // Route 5: Health
         GoRoute(

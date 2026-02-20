@@ -4,8 +4,8 @@ import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
 import 'package:ice_shield/data_layer/Protocol/User/RegistrationProtocol.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
-import 'dart:math';
 
 enum AuthStatus {
   init,
@@ -120,25 +120,25 @@ class AuthBlock {
   /// In this Flutter app, we'll simulate cookie check or just go to auto-auth
   Future<void> checkSession(BuildContext context) async {
     status.value = AuthStatus.checkingSession;
-    print("🔍 [AuthBlock] Checking for existing session...");
+    print("🔍 [AuthBlock] Checking for Supabase session...");
 
     try {
-      final session = await _sessionDao.getSession();
+      final session = Supabase.instance.client.auth.currentSession;
       if (session != null) {
-        print(
-          "✅ [AuthBlock] Session found: ${session.username} (JWT: ${session.jwt.substring(0, min(10, session.jwt.length))}...)",
-        );
-        jwt.value = session.jwt;
-        username.value = session.username;
-        // Proceed to authenticate and fetch
+        print("✅ [AuthBlock] Supabase session found.");
+        jwt.value = session.accessToken;
+
+        // You might want to get the username from the JWT or Supabase user metadata
+        username.value = session.user.email ?? "SupabaseUser";
+
         status.value = AuthStatus.authenticated;
         await fetchUser();
       } else {
-        print("⚠️ [AuthBlock] No session found in local DB.");
+        print("⚠️ [AuthBlock] No Supabase session found. Checking fallback...");
         await fetchAutoJWT();
       }
     } catch (e) {
-      print("❌ [AuthBlock] Error checking session: $e");
+      print("❌ [AuthBlock] Error checking Supabase session: $e");
       await fetchAutoJWT();
     }
   }
@@ -179,32 +179,66 @@ class AuthBlock {
   ) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("🔐 Authenticating with user credentials: $ident");
+    print("🔐 Authenticating with Supabase: $ident");
 
     try {
-      final data = await _authService.login(ident, password);
+      // 1. Sign in with Supabase
+      final AuthResponse response = await Supabase.instance.client.auth
+          .signInWithPassword(
+            email: ident.contains('@')
+                ? ident
+                : '$ident@example.com', // Fix email format if needed
+            password: password,
+          );
 
-      // Expected response might have 'token' or 'jwt'
-      final token = data['token'] ?? data['jwt'];
+      final session = response.session;
+      final token = session?.accessToken;
 
-      if (token != null && token.toString().isNotEmpty) {
-        jwt.value = token.toString();
+      if (token != null) {
+        jwt.value = token;
         username.value = ident;
 
         // Persistent save to database
         await _sessionDao.saveSession(jwt.value!, username.value);
 
         status.value = AuthStatus.authenticated;
-        print("✅ Login successful. JWT saved to database.");
+        print("✅ Supabase Login successful. JWT saved.");
 
-        // Fetch full user profile
+        // Fetch full user profile (optional, Supabase session might be enough)
         await fetchUser();
       } else {
-        throw Exception("Server returned no token");
+        throw Exception("Supabase returned no session");
       }
     } catch (e) {
-      print("❌ Authentication failed: $e");
+      print("❌ Supabase Authentication failed: $e");
       error.value = e.toString();
+      status.value = AuthStatus.unauthenticated;
+    }
+  }
+
+  /// Google Sign-In with Supabase
+  Future<void> signInWithGoogle() async {
+    status.value = AuthStatus.authenticating;
+    error.value = null;
+    print("🌐 Initiating Google Sign-In via Supabase...");
+
+    try {
+      await Supabase.instance.client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.supabase.icegate://login-callback',
+      );
+
+      // Note: The session will be picked up by the onAuthStateChange listener
+      // in DataLayer.dart once the user returns via deep link.
+      print("✅ Google OAuth initiated. Waiting for redirect...");
+    } catch (e) {
+      print("❌ Google Sign-In failed: $e");
+      String errorMessage = e.toString();
+      if (errorMessage.contains("provider is not enabled")) {
+        errorMessage =
+            "Google Sign-In is not yet enabled in your Supabase Dashboard. Please enable 'Google' in Authentication > Providers.";
+      }
+      error.value = errorMessage;
       status.value = AuthStatus.unauthenticated;
     }
   }

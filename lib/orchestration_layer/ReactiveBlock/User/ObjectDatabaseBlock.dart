@@ -33,6 +33,16 @@ class ObjectDatabaseBlock {
           )
         : UserObjectResource.baseObjectUrl;
 
+    if (alias == 'Guest-Shield') {
+      userObjectResource.value = UserObjectResource(
+        avatarImage:
+            "https://ui-avatars.com/api/?name=Guest+User&background=6366F1&color=fff",
+        coverImage:
+            "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?q=80&w=1000&auto=format&fit=crop",
+      );
+      return;
+    }
+
     userObjectResource.value = UserObjectResource(
       avatarImage:
           "$baseUrl/object/duylongwebappobjectdatabase/$alias/admin.png",

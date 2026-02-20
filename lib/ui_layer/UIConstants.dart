@@ -62,4 +62,13 @@ class UIConstants {
         ? _baseRippleSize
         : _tabletRippleSize;
   }
+
+  static double getResponsiveFontSize(
+    BuildContext context, {
+    double factor = 0.02,
+    double min = 10.0,
+    double max = 30.0,
+  }) {
+    return (MediaQuery.of(context).size.width * factor).clamp(min, max);
+  }
 }

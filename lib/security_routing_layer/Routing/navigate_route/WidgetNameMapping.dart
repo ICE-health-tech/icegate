@@ -6,7 +6,7 @@ import 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_shield/ui_layer/user_page/ProfileDashboardPage.dart';
+import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SettingWidget.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
@@ -23,7 +23,7 @@ class WidgetNameMapping {
     "ProjectsPage": ({identifier}) => const ProjectsPage(),
     "FinancePage": ({identifier}) => const FinancePage(),
     "SocialPage": ({identifier}) => const SocialPage(),
-    "ProfilePage": ({identifier}) => const ProfileDashboardPage(),
+    "ProfilePage": ({identifier}) => const AnalysisDashboardPage(),
     "NotesPage": ({identifier}) => const TextEditorPage(),
     "SettingsPage": ({identifier}) => const SettingsWidget(),
     "ProjectNotes": ({identifier}) => const ProjectNotesPage(),

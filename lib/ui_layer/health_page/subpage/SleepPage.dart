@@ -211,7 +211,7 @@ class _SleepPageState extends State<SleepPage> {
                                   ),
                                 ),
                                 Text(
-                                  "${DateFormat('MMM d').format(log.startTime)}",
+                                  DateFormat('MMM d').format(log.startTime),
                                   style: textTheme.bodySmall,
                                 ),
                               ],

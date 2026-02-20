@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
@@ -24,11 +25,7 @@ class ProjectsPage extends StatelessWidget {
       mainFunction: () => context.go("/projects"),
       onSwipeUp: () => context.go("/canvas"),
       onSwipeRight: () {
-        if (Navigator.canPop(context)) {
-          context.pop();
-        } else {
-          context.go('/');
-        }
+        WidgetNavigatorAction.smartPop(context);
       },
       icon: Icons.rocket_launch_rounded,
       onLongPress: () {
@@ -61,15 +58,9 @@ class ProjectsPage extends StatelessWidget {
           actions: [
             IconButton(
               icon: const Icon(Icons.home_rounded, size: 30),
-              onPressed: (){
-              if(context.canPop()){
-
-              
-              context.pop();
-              }else{
-              context.go('/');
-              }
-              }
+              onPressed: () {
+                WidgetNavigatorAction.smartPop(context);
+              },
             ),
             IconButton(
               icon: const Icon(Icons.grid_view, size: 30),

@@ -167,9 +167,8 @@ class PersonBlock {
       details: const UserDetails(),
       profiles: const UserProfile(
         firstName: 'Initial',
-        lastName: 'Loading...',
         profileImageUrl:
-            'https://backend.duylong.art/object/publish/default_avatar.png',
+            'https://ui-avatars.com/api/?name=Initial&background=6366F1&color=fff',
       ),
     ),
   );
@@ -223,7 +222,7 @@ class PersonBlock {
         lastName: 'Art',
         alias: 'Guest-Shield',
         profileImageUrl:
-            'https://backend.duylong.art/object/publish/default_avatar.png',
+            'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
       ),
       details: const UserDetails(
         bio: 'Securing the digital frontier.',

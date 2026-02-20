@@ -1,4 +1,4 @@
-package com.example.ice_shield
+package duylong.art.ice_gate
 
 import io.flutter.embedding.android.FlutterActivity
 

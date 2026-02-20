@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/BackWidget.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/ThemeManager.dart';
+import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class SettingsWidget extends StatelessWidget {
   final String title;
@@ -14,40 +14,176 @@ class SettingsWidget extends StatelessWidget {
   const SettingsWidget({super.key, this.title = 'App Settings'});
 
   static Widget icon(BuildContext context, {double size = 24.0}) {
-    return Container(
-      child: IconButton(
-        icon: Icon(Icons.settings),
-        iconSize: size,
-        onPressed: () {
-          context.go('/settings');
-        },
-      ),
-      // child: Icon(Icons.settings),
+    return IconButton(
+      icon: const Icon(Icons.settings),
+      iconSize: size,
+      onPressed: () {
+        context.go('/settings');
+      },
     );
   }
 
-  // A helper function to build a standard setting item
-  Widget _buildSettingTile({
+  Widget _buildPremiumSettingTile({
     required BuildContext context,
-    required String settingTitle,
+    required String title,
     String? subtitle,
-    IconData? icon,
+    required IconData icon,
+    required Color color,
     VoidCallback? onTap,
     Widget? trailingWidget,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return ListTile(
-      leading: icon != null ? Icon(icon, color: colorScheme.secondary) : null,
-      title: AutoSizeText(
-        settingTitle,
-        style: Theme.of(context).textTheme.titleMedium,
-        maxLines: 1,
-      ),
-      subtitle: subtitle != null ? AutoSizeText(subtitle, maxLines: 1) : null,
-      trailing: trailingWidget ?? const Icon(Icons.arrow_forward_ios, size: 16),
+    return InkWell(
       onTap: onTap,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 22),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  if (subtitle != null)
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            trailingWidget ??
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 20,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingSection({
+    required BuildContext context,
+    required String title,
+    required List<Widget> children,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+          child: Text(
+            title.toUpperCase(),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: colorScheme.primary,
+              letterSpacing: 1.5,
+            ),
+          ),
+        ),
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 16),
+          decoration: BoxDecoration(
+            color: colorScheme.surfaceContainerHigh,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: colorScheme.outline.withValues(alpha: 0.1),
+            ),
+          ),
+          child: Column(children: children),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildProfileHeader(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final authBlock = context.watch<AuthBlock>();
+    final username = authBlock.username.watch(context);
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      child: Row(
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [colorScheme.primary, colorScheme.tertiary],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: colorScheme.primary.withValues(alpha: 0.3),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 35),
+          ),
+          const SizedBox(width: 20),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  username ?? 'Guest',
+                  style: TextStyle(
+                    fontSize: 24,
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface,
+                    letterSpacing: -0.5,
+                  ),
+                ),
+                Text(
+                  username == 'Guest'
+                      ? "Sign in to sync your data"
+                      : "Premium Member",
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (username == 'Guest')
+            IconButton.filledTonal(
+              onPressed: () => context.push('/login'),
+              icon: const Icon(Icons.login_rounded),
+            ),
+        ],
+      ),
     );
   }
 
@@ -64,11 +200,7 @@ class SettingsWidget extends StatelessWidget {
           IconButton(
             icon: const Icon(Icons.home_rounded, size: 30),
             onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/');
-              }
+              WidgetNavigatorAction.smartPop(context);
             },
           ),
           IconButton(
@@ -78,145 +210,107 @@ class SettingsWidget extends StatelessWidget {
           const SizedBox(width: 8),
         ],
       ),
-      body: ListView(
-        children: <Widget>[
-          // 1. Account Settings
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: AutoSizeText(
-              'ACCOUNT',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 1,
+      body: SingleChildScrollView(
+        child: Column(
+          children: <Widget>[
+            _buildProfileHeader(context),
+
+            // 1. Account Settings
+            _buildSettingSection(
+              context: context,
+              title: "Account",
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Edit Profile',
+                  subtitle: 'Update your name and photo',
+                  icon: Icons.person_rounded,
+                  color: Colors.blue,
+                  onTap: () {
+                    context.go('/personal-info');
+                  },
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Change Password',
+                  icon: Icons.lock_rounded,
+                  color: Colors.purple,
+                  onTap: () {
+                    print('Navigate to Change Password');
+                  },
+                ),
+              ],
             ),
-          ),
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Edit Profile',
-            subtitle: 'Update your name and photo',
-            icon: Icons.person,
-            onTap: () {
-              // Action: Navigate to profile edit page
-              context.go('/personal-info');
-              print('Navigate to Profile Edit');
-            },
-          ),
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Change Password',
-            icon: Icons.lock,
-            onTap: () {
-              // Action: Navigate to password change page
-              print('Navigate to Change Password');
-            },
-          ),
 
-          Divider(
-            height: 1,
-            indent: 20,
-            endIndent: 20,
-            color: Theme.of(context).dividerColor.withOpacity(0.5),
-          ),
-
-          // 2. Application Preferences
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: AutoSizeText(
-              'PREFERENCES',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 1,
+            // 2. Preferences
+            _buildSettingSection(
+              context: context,
+              title: "Preferences",
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Change Theme',
+                  icon: Icons.palette_rounded,
+                  color: Colors.pink,
+                  onTap: () {
+                    ThemeManager.showThemeSelectionDialog(context);
+                  },
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Notifications',
+                  icon: Icons.notifications_rounded,
+                  color: Colors.amber,
+                  trailingWidget: Watch((context) {
+                    final notificationService = context
+                        .watch<LocalNotificationService>();
+                    return Switch.adaptive(
+                      value: notificationService.notificationsEnabled.value,
+                      onChanged: (bool value) {
+                        notificationService.setNotificationsEnabled(value);
+                      },
+                    );
+                  }),
+                ),
+              ],
             ),
-          ),
 
-          // Example: Theme Switch
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Change Theme',
-            icon: Icons.palette,
-            onTap: () {
-              // Navigator.of(context).pop();
-              ThemeManager.showThemeSelectionDialog(context);
-            },
-          ),
-
-          // Example: Notifications Toggle
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Notifications',
-            icon: Icons.notifications,
-            trailingWidget: Watch((context) {
-              final notificationService = context
-                  .watch<LocalNotificationService>();
-              return Switch(
-                value: notificationService.notificationsEnabled.value,
-                onChanged: (bool value) {
-                  notificationService.setNotificationsEnabled(value);
-                },
-              );
-            }),
-            onTap: null,
-          ),
-
-          Divider(
-            height: 1,
-            indent: 20,
-            endIndent: 20,
-            color: Theme.of(context).dividerColor.withOpacity(0.5),
-          ),
-
-          // 3. Info and Support
-          const Padding(
-            padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: AutoSizeText(
-              'ABOUT & SUPPORT',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-              maxLines: 1,
+            // 3. Info & Support
+            _buildSettingSection(
+              context: context,
+              title: "About & Support",
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Manual',
+                  icon: Icons.description_rounded,
+                  color: Colors.teal,
+                  onTap: () {
+                    context.go("/manual");
+                  },
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Version',
+                  subtitle: '1.1.2',
+                  icon: Icons.info_outline_rounded,
+                  color: Colors.grey,
+                  trailingWidget: const SizedBox.shrink(),
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Reset Database',
+                  subtitle: 'Clear all local data',
+                  icon: Icons.delete_forever_rounded,
+                  color: Colors.red,
+                  onTap: () => _showResetDatabaseDialog(context),
+                ),
+              ],
             ),
-          ),
 
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Manual',
-            icon: Icons.description,
-            onTap: () {
-              // Action: Open terms page
-              print('Navigate to Terms');
-              context.go("/manual");
-            },
-          ),
-          _buildSettingTile(
-            context: context,
-            settingTitle: 'Version',
-            subtitle: '1.1.1',
-            icon: Icons.info_outline,
-            trailingWidget: const SizedBox.shrink(),
-            onTap: null,
-          ),
-
-          Divider(
-            height: 1,
-            indent: 20,
-            endIndent: 20,
-            color: Theme.of(context).dividerColor.withOpacity(0.5),
-          ),
-
-          // 4. System / Debug
-          // const Padding(
-          //   padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-          //   child: AutoSizeText(
-          //     'SYSTEM',
-          //     style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
-          //     maxLines: 1,
-          //   ),
-          // ),
-
-          // _buildSettingTile(
-          //   context: context,
-          //   settingTitle: 'Reset Database',
-          //   subtitle: 'Clear all local application data',
-          //   icon: Icons.delete_forever,
-          //   onTap: () => _showResetDatabaseDialog(context),
-          // ),
-        ],
+            const SizedBox(height: 40),
+          ],
+        ),
       ),
     );
   }

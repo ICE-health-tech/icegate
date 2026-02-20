@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 // import 'package:http/http.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart' show ReadContext;
@@ -135,6 +136,7 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
                               child: IconButton(
                                 onPressed: () {
                                   // Remove from Store
+                                  HapticFeedback.heavyImpact();
                                   widget.store.removeByIndex(widget.index);
 
                                   // TODO: You can use 'dao' here to delete from DB

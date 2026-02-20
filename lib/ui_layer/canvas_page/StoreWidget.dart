@@ -247,6 +247,7 @@ class StoreWidget extends StatelessWidget {
                               right: -4,
                               child: InkWell(
                                 onTap: () {
+                                  HapticFeedback.heavyImpact();
                                   externalBlock.deleteWidget(
                                     dao,
                                     item.widgetID,
