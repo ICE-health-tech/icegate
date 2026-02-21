@@ -104,6 +104,8 @@ class MainShell extends StatelessWidget {
         currentRoute == '/notifications' ||
         currentRoute == '/personal-info' ||
         currentRoute == '/profile' ||
+        currentRoute == '/settings' ||
+        currentRoute == '/manual' ||
         currentRoute.startsWith('/widgets/webview');
 
     return Scaffold(

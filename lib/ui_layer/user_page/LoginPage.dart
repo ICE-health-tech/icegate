@@ -275,10 +275,24 @@ class _LoginPageState extends State<LoginPage> {
                               onPressed: isLoading ? null : _handleGoogleSignIn,
                               icon: isLoading
                                   ? const SizedBox.shrink()
-                                  : const Icon(
-                                      Icons.login_rounded,
-                                      size: 24,
-                                      color: Colors.blueAccent,
+                                  : Container(
+                                      padding: const EdgeInsets.all(4),
+                                      decoration: const BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Image.network(
+                                        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
+                                        width: 20,
+                                        height: 20,
+                                        errorBuilder:
+                                            (context, error, stackTrace) =>
+                                                const Icon(
+                                                  Icons.login_rounded,
+                                                  size: 18,
+                                                  color: Colors.blueAccent,
+                                                ),
+                                      ),
                                     ),
                               label: isLoading
                                   ? const SizedBox(

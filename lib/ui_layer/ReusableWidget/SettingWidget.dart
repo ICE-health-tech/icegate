@@ -263,7 +263,7 @@ class SettingsWidget extends StatelessWidget {
                   color: Colors.amber,
                   trailingWidget: Watch((context) {
                     final notificationService = context
-                        .watch<LocalNotificationService>();
+                        .read<LocalNotificationService>();
                     return Switch.adaptive(
                       value: notificationService.notificationsEnabled.value,
                       onChanged: (bool value) {

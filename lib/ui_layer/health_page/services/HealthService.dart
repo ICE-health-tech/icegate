@@ -8,6 +8,16 @@ class HealthService {
 
   /// Requests permission to access health data.
   static Future<bool> requestPermissions() async {
+    // Platform check: HealthKit/Google Fit only supported on mobile
+    if (kIsWeb ||
+        (defaultTargetPlatform != TargetPlatform.iOS &&
+            defaultTargetPlatform != TargetPlatform.android)) {
+      debugPrint(
+        "HealthService: Skipping authorization on ${defaultTargetPlatform.name}",
+      );
+      return false;
+    }
+
     if (_isAuthorized) return true;
 
     // Check motion permission first (needed for some data types on iOS)

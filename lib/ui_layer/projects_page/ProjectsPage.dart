@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -27,6 +26,7 @@ class ProjectsPage extends StatelessWidget {
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       icon: Icons.rocket_launch_rounded,
       onLongPress: () {
         showDialog(
@@ -163,13 +163,7 @@ class ProjectsPage extends StatelessWidget {
                       padding: const EdgeInsets.only(bottom: 12.0),
                       child: InkWell(
                         onTap: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) =>
-                                  ProjectDetailsPage(project: project),
-                            ),
-                          );
+                          context.push('/projects/${project.projectID}');
                         },
                         onLongPress: () async {
                           final confirm = await showDialog<bool>(

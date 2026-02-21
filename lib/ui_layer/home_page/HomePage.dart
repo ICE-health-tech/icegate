@@ -28,9 +28,6 @@ import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/ui_layer/projects_page/CreateProjectDialog.dart';
 import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
 
 class HomePage extends StatefulWidget {
@@ -49,58 +46,12 @@ class HomePage extends StatefulWidget {
         context.pop();
       },
       onSwipeUp: () => context.go("/canvas"),
-      onSwipeRight: () {
-        if (Navigator.canPop(context)) {
-          context.pop();
-        } else {
-          context.go('/');
-        }
+      onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
+      onLongPress: () {
+        context.go("/canvas");
       },
-      subButtons: [
-        SubButton(
-          icon: Icons.create_new_folder_rounded,
-          backgroundColor: Colors.deepPurple,
-          tooltip: "New Project",
-          label: "Project",
-          onPressed: () {
-            showDialog(
-              context: context,
-              builder: (context) => const CreateProjectDialog(),
-            );
-          },
-        ),
-        SubButton(
-          icon: Icons.folder_open_rounded,
-          backgroundColor: Colors.blueAccent,
-          tooltip: "View Projects",
-          label: "Projects",
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ProjectsPage()),
-            );
-          },
-        ),
-        SubButton(
-          icon: Icons.note_add_rounded,
-          backgroundColor: Colors.orange,
-          tooltip: "New Note",
-          label: "Note",
-          onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const TextEditorPage()),
-            );
-          },
-        ),
-        SubButton(
-          icon: Icons.grid_view_rounded,
-          backgroundColor: Colors.cyan,
-          tooltip: "Canvas",
-          label: "Canvas",
-          onPressed: () => context.push("/canvas"),
-        ),
-      ],
+      subButtons: [],
     );
   }
 
@@ -143,6 +94,8 @@ class HomePage extends StatefulWidget {
         print("double click");
         context.pop();
       },
+      onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
     );
   }
 
@@ -228,9 +181,7 @@ class _HomePageState extends State<HomePage> {
   // 1. Handles the actual step count data
   void _navigateInternalUrl(String name) {
     if (name == '/projects') {
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => const ProjectsPage()));
+      context.push(name);
       return;
     }
 
@@ -239,30 +190,11 @@ class _HomePageState extends State<HomePage> {
       if (parts.length > 2) {
         final id = int.tryParse(parts.last);
         if (id != null) {
-          try {
-            final project = context
-                .read<ProjectBlock>()
-                .projects
-                .value
-                .firstWhere((p) => p.projectID == id);
-            Navigator.of(context).push(
-              MaterialPageRoute(
-                builder: (context) => ProjectDetailsPage(project: project),
-              ),
-            );
-            return;
-          } catch (e) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Project $id not found, opening Hub instead'),
-              ),
-            );
-          }
+          context.push('/projects/$id');
+          return;
         }
       }
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (context) => const ProjectsPage()));
+      context.push('/projects');
       return;
     }
     context.push(name);
@@ -277,6 +209,7 @@ class _HomePageState extends State<HomePage> {
         child: AddPluginForm(
           data: FormData(
             title: "Add App Plugin",
+
             description: "Choose a plugin to extend your dashboard",
           ),
         ),
@@ -348,24 +281,17 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        widget.title,
-                        style: textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: colorScheme.onSurface,
+                      TextButton(
+                        child: Text(widget.title,
+                        style: 
+                        TextStyle(fontWeight: FontWeight.bold
+                        ,fontSize: 20
+                        )
+
                         ),
-                      ),
-                      IconButton(
-                        icon: CircleAvatar(
-                          backgroundColor: colorScheme.primaryContainer
-                              .withOpacity(0.5),
-                          child: Icon(
-                            Icons.person_outline,
-                            color: colorScheme.primary,
-                            size: 20,
-                          ),
-                        ),
-                        onPressed: () => context.go('/profile'),
+                        onPressed: () {
+                          context.go("/personal-info");
+                        },
                       ),
                     ],
                   ),
@@ -461,7 +387,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       AutoSizeText(
-                        'Quick Access',
+                        'Plugin',
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -506,7 +432,7 @@ class _HomePageState extends State<HomePage> {
                             child: SizedBox(
                               width: sizeOfWidget,
                               height: sizeOfWidget,
-                              child: _buildGridItem(context, widget),
+                              child: _buildInternalWidget(context, widget),
                             ),
                           );
                         } else {
@@ -885,7 +811,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildGridItem(
+  Widget _buildInternalWidget(
     BuildContext context,
     InternalWidgetProtocol? widgetData,
   ) {
@@ -897,6 +823,7 @@ class _HomePageState extends State<HomePage> {
       return InkWell(
         onTap: () => _showAddPluginDialog(context),
         borderRadius: BorderRadius.circular(28),
+        customBorder: Border.all(color: colorScheme.outline.withAlpha(90)),
         child: Container(
           width: sizeOfWidget,
           height: sizeOfWidget,
@@ -905,7 +832,7 @@ class _HomePageState extends State<HomePage> {
             borderRadius: BorderRadius.circular(28),
 
             border: Border.all(
-              color: colorScheme.primary.withOpacity(0.2),
+              color: colorScheme.outline.withAlpha(90),
               width: UIConstants.getBorderWidth(context, sizeOfWidget),
               style: BorderStyle
                   .none, // Can change to solid for dashed effect if custom painter
@@ -955,7 +882,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.4),
+          color: colorScheme.outline.withAlpha(90),
           width: UIConstants.getBorderWidth(context, sizeOfWidget),
         ),
       ),
@@ -1062,7 +989,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.4),
+          color: colorScheme.outline.withAlpha(90),
           width: UIConstants.getBorderWidth(context, sizeOfWidget),
         ),
       ),

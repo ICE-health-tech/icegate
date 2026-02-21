@@ -21,6 +21,7 @@ class SocialPage extends StatefulWidget {
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       size: size,
       icon: Icons.people_alt_rounded,
       subButtons: [

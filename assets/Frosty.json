@@ -2,55 +2,57 @@
     "theme_name": "Frosty Morning",
     "brightness": "light",
     "useMaterial3": true,
-    "seed_color": "0xFFE3F2FD",
+    "seed_color": "0xFFE1F5FE",
     "color_scheme": {
-        "primary": "0xFF42A5F5",
+        "primary": "0xFF0288D1",
         "onPrimary": "0xFFFFFFFF",
-        "secondary": "0xFF90A4AE",
+        "secondary": "0xFF546E7A",
         "onSecondary": "0xFFFFFFFF",
-        "surface": "0xFF42A5F5",
-        "onSurface": "0xFFFFFFFF",
-        "background": "0xFF1E88E5",
-        "onBackground": "0xFFFFFFFF"
+        "surface": "0xFFF0F9FF",
+        "onSurface": "0xFF263238",
+        "background": "0xFFFFFFFF",
+        "onBackground": "0xFF263238",
+        "primaryContainer": "0xFFE1F5FE",
+        "onPrimaryContainer": "0xFF01579B"
     },
     "components": {
         "appBar": {
-            "backgroundColor": "0xFF1E88E5",
-            "foregroundColor": "0xFFFFFFFF",
+            "backgroundColor": "0xFFFFFFFF",
+            "foregroundColor": "0xFF0288D1",
             "elevation": 0.0
         },
         "elevatedButton": {
-            "backgroundColor": "0xFF0D47A1",
+            "backgroundColor": "0xFF039BE5",
             "foregroundColor": "0xFFFFFFFF",
-            "borderRadius": 32.0,
+            "borderRadius": 24.0,
             "elevation": 0.0
         },
         "card": {
-            "backgroundColor": "0xFF64B5F6",
+            "backgroundColor": "0xFFE1F5FE",
             "elevation": 0.0,
-            "borderRadius": 20.0
+            "borderRadius": 24.0
         },
         "icon": {
-            "color": "0xFFFFFFFF",
+            "color": "0xFF0288D1",
             "size": 24.0
         }
     },
     "text_theme": {
-        "fontFamily": "Quicksand",
+        "fontFamily": "Outfit",
         "headlineLarge": {
             "size": 32.0,
             "weight": "bold",
-            "color": "0xFFFFFFFF"
+            "color": "0xFF263238"
         },
         "bodyMedium": {
             "size": 16.0,
             "weight": "normal",
-            "color": "0xFFFFFFFF"
+            "color": "0xFF455A64"
         },
         "labelLarge": {
-            "size": 16.0,
-            "weight": "medium",
-            "color": "0xFFFFFFFF"
+            "size": 14.0,
+            "weight": "semiBold",
+            "color": "0xFF0288D1"
         }
     }
 }

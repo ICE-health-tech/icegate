@@ -41,6 +41,40 @@ class AuthBlock {
        _passkeyService = passkeyService,
        _personDao = personDao;
 
+  /// Helper to persist session locally (e.g. after Google OAuth)
+  Future<void> persistSession(String token, String name) async {
+    print("💾 [AuthBlock] Persisting session locally for $name...");
+    await _sessionDao.saveSession(token, name);
+  }
+
+  /// NEW: Synchronize Supabase Auth user with public profile table
+  /// This ensures that 'saving it to supabase' happens after OAuth.
+  Future<void> syncUserWithSupabase(User user) async {
+    print(
+      "🔄 [AuthBlock] Synchronizing user ${user.email} with Supabase public schema...",
+    );
+    try {
+      // Upsert into public.profiles
+      // We use the Supabase UID as the primary anchor.
+      await Supabase.instance.client.from('profiles').upsert({
+        'id': user.id, // Primary Key (UUID)
+        'bio': user.userMetadata?['bio'] ?? 'Securing the digital frontier.',
+        'preferred_language': 'en',
+        'updated_at': DateTime.now().toIso8601String(),
+        'email': user.email,
+        'name': user.userMetadata?['full_name'] ?? user.email,
+        'first_name': user.userMetadata?['first_name'],
+        'last_name': user.userMetadata?['last_name'],
+      });
+      print(
+        "✅ [AuthBlock] User profile synchronized to Supabase public.profiles.",
+      );
+    } catch (e) {
+      print("⚠️ [AuthBlock] Could not sync user profile to public schema: $e");
+      // This might fail if RLS is not set up correctly yet, but we've initiated it.
+    }
+  }
+
   /// Mock/Guest Login logic
   Future<void> loginAsGuest() async {
     status.value = AuthStatus.authenticating;
@@ -171,7 +205,6 @@ class AuthBlock {
   }
 
   /// Step 5: Authenticate with user credentials
-  /// Corresponds to authenticating in XState
   Future<void> login(
     String ident,
     String password,
@@ -179,38 +212,31 @@ class AuthBlock {
   ) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("🔐 Authenticating with Supabase: $ident");
+    print("🔐 [AuthBlock] Authenticating with Supabase: $ident");
 
     try {
-      // 1. Sign in with Supabase
       final AuthResponse response = await Supabase.instance.client.auth
           .signInWithPassword(
-            email: ident.contains('@')
-                ? ident
-                : '$ident@example.com', // Fix email format if needed
+            email: ident.contains('@') ? ident : '$ident@example.com',
             password: password,
           );
 
       final session = response.session;
-      final token = session?.accessToken;
+      if (session != null) {
+        jwt.value = session.accessToken;
+        username.value = session.user.email ?? ident;
 
-      if (token != null) {
-        jwt.value = token;
-        username.value = ident;
-
-        // Persistent save to database
-        await _sessionDao.saveSession(jwt.value!, username.value);
+        await persistSession(jwt.value!, username.value!);
+        await syncUserWithSupabase(session.user);
 
         status.value = AuthStatus.authenticated;
-        print("✅ Supabase Login successful. JWT saved.");
-
-        // Fetch full user profile (optional, Supabase session might be enough)
+        print("✅ [AuthBlock] Supabase Login successful.");
         await fetchUser();
       } else {
         throw Exception("Supabase returned no session");
       }
     } catch (e) {
-      print("❌ Supabase Authentication failed: $e");
+      print("❌ [AuthBlock] Supabase Authentication failed: $e");
       error.value = e.toString();
       status.value = AuthStatus.unauthenticated;
     }
@@ -220,59 +246,58 @@ class AuthBlock {
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("🌐 Initiating Google Sign-In via Supabase...");
+    print("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
 
     try {
+      const redirectTo = 'io.supabase.icegate://login-callback';
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
-        redirectTo: 'io.supabase.icegate://login-callback',
+        redirectTo: redirectTo,
       );
-
-      // Note: The session will be picked up by the onAuthStateChange listener
-      // in DataLayer.dart once the user returns via deep link.
-      print("✅ Google OAuth initiated. Waiting for redirect...");
+      print(
+        "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
+      );
     } catch (e) {
-      print("❌ Google Sign-In failed: $e");
-      String errorMessage = e.toString();
-      if (errorMessage.contains("provider is not enabled")) {
-        errorMessage =
-            "Google Sign-In is not yet enabled in your Supabase Dashboard. Please enable 'Google' in Authentication > Providers.";
-      }
-      error.value = errorMessage;
+      print("❌ [AuthBlock] Google Sign-In initiation failed: $e");
+      error.value = e.toString();
       status.value = AuthStatus.unauthenticated;
     }
   }
 
-  /// Registration logic
+  /// Registration logic using Supabase
   Future<void> register(RegistrationPayload payload) async {
     status.value = AuthStatus.registering;
     error.value = null;
-    // print("📝 Registering user: ${payload.userName}");
+    print("📝 [AuthBlock] Registering user with Supabase: ${payload.userName}");
 
     try {
-      // Machine uses POST /backend/auth/signup
-      // We'll need to ensure CustomAuthService handles this
-      // For now, let's assume login() is our main flow
-      final data = await _authService.register(payload);
+      final AuthResponse response = await Supabase.instance.client.auth.signUp(
+        email: payload.email,
+        password: payload.password,
+        data: {
+          'user_name': payload.userName,
+          'first_name': payload.firstName,
+          'last_name': payload.lastName,
+        },
+      );
 
-      final token = data['token'] ?? data['jwt'];
-      if (token != null) {
-        jwt.value = token.toString();
-        username.value = payload.userName;
-
-        // Persistent save
-        await _sessionDao.saveSession(jwt.value!, username.value);
-
-        status.value = AuthStatus.authenticated;
-        print("✅ Registration successful.");
-        await fetchUser();
-      } else {
-        // Some backends might not return a token on signup, requiring separate login
-        status.value = AuthStatus.unauthenticated;
-        print("✅ Registration successful, please login.");
+      if (response.user != null) {
+        print("✅ [AuthBlock] Registration successful for ${payload.email}");
+        // If auto-logged in or confirmation not required:
+        if (response.session != null) {
+          jwt.value = response.session!.accessToken;
+          username.value = payload.userName;
+          await persistSession(jwt.value!, username.value!);
+          await syncUserWithSupabase(response.user!);
+          status.value = AuthStatus.authenticated;
+          await fetchUser();
+        } else {
+          status.value = AuthStatus.unauthenticated;
+          print("📬 [AuthBlock] Please check your email for confirmation.");
+        }
       }
     } catch (e) {
-      print("❌ Registration failed: $e");
+      print("❌ [AuthBlock] Registration failed: $e");
       error.value = e.toString();
       status.value = AuthStatus.unauthenticated;
     }
@@ -304,101 +329,90 @@ class AuthBlock {
     });
   }
 
-  /// Fetch full user profile from backend
+  /// Fetch full user profile from Supabase Postgrest
   Future<void> fetchUser() async {
-    final token = jwt.value;
-
-    // Attempt standard fetch, but skip for mock guest token to avoid 401 logouts
-    if (token != null && token != "mock_guest_jwt_token") {
-      try {
-        final userData = await _authService.fetchCurrentUser(token);
-        user.value = userData;
-        if (userData['userName'] != null) {
-          username.value = userData['userName'];
-        }
-        status.value = AuthStatus.authenticated;
-        return;
-      } catch (e) {
-        print("⚠️ Failed to fetch user profile via API: $e");
-        if (e.toString().contains('401') ||
-            e.toString().contains('Unauthorized')) {
-          await logout();
-          return;
-        }
-        // Proceed to fallback
-      }
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      print(
+        "⚠️ [AuthBlock] No Supabase session found for fetchUser. Falling back...",
+      );
+      await _fetchLocalFallback();
+      return;
     }
 
-    // Fallback: Fetch ID 1 or any available user from local DB
-    print("🔄 Attempting local fallback for User ID...");
     try {
-      PersonData? localPerson = await _personDao.getPersonById(1);
+      print(
+        "🔍 [AuthBlock] Fetching user profile from Supabase public.profiles...",
+      );
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-      if (localPerson == null) {
-        print("⚠️ User ID 1 not found, trying ID 0...");
-        localPerson = await _personDao.getPersonById(0);
+      if (response != null) {
+        user.value = Map<String, dynamic>.from(response);
+        // Map common fields to signals
+        username.value =
+            response['alias'] ?? session.user.email ?? "SupabaseUser";
+        status.value = AuthStatus.authenticated;
+        print("✅ [AuthBlock] Profile fetched for ${username.value}");
+        return;
+      } else {
+        print(
+          "⚠️ [AuthBlock] Profile record not found. Syncing existing user...",
+        );
+        await syncUserWithSupabase(session.user);
+        user.value = {
+          'id': session.user.id,
+          'email': session.user.email,
+          'userName': session.user.userMetadata?['user_name'] ?? 'User',
+        };
       }
+    } catch (e) {
+      print(
+        "⚠️ [AuthBlock] Remote fetch failed: $e. Falling back to local/guest.",
+      );
+    }
+    await _fetchLocalFallback();
+  }
+
+  Future<void> _fetchLocalFallback() async {
+    print("🔄 [AuthBlock] Attempting local fallback for User ID...");
+    try {
+      PersonData? localPerson = await _personDao.getPersonById(0);
 
       if (localPerson == null) {
-        print("⚠️ User ID 0 not found, trying to fetch ANY user...");
-        // Define a helper or just use a custom query if possible,
-        // but PersonBlock typically doesn't expose a "getAll" easily here?
-        // Let's rely on PersonDao.
-        // We can't easily do 'getAll' on DAO from here without adding a method.
-        // But we can try to find valid one.
-        // Actually, let's keep it simple for now and rely on 1 or 0.
-      }
-
-      if (localPerson == null) {
-        print("⚠️ User ID 1/0 not found, CREATING GUEST USER...");
-        // STRICT MOCK: If DB fails, we Just use a fake Map and DO NOT logout.
-        print("✅ Using IN-MEMORY Guest User (Database Empty)");
-        final mockUserMap = {
-          'id': 1,
+        print("✅ [AuthBlock] Using IN-MEMORY Guest User (Database Empty)");
+        user.value = {
+          'id': 'guest-id',
           'userName': 'Guest',
           'firstName': 'Guest',
           'lastName': 'User',
           'email': 'guest@offline',
           'role': 'guest',
         };
-
-        user.value = mockUserMap;
         username.value = 'Guest';
         status.value = AuthStatus.authenticated;
         return;
       }
 
       print(
-        "✅ Falling back to local user ID ${localPerson.personID}: ${localPerson.firstName}",
+        "✅ [AuthBlock] Falling back to local user ID ${localPerson.personID}: ${localPerson.firstName}",
       );
 
-      // Construct a mock user map that mimics the API response
-      final mockUserMap = {
-        'id': localPerson.personID,
+      user.value = {
+        'id': localPerson.personID.toString(),
         'userName': localPerson.firstName,
         'firstName': localPerson.firstName,
         'lastName': localPerson.lastName,
-        'email': 'offline@local', // Placeholder
+        'email': 'offline@local',
         'role': 'admin',
       };
-
-      user.value = mockUserMap;
       username.value = localPerson.firstName;
       status.value = AuthStatus.authenticated;
     } catch (dbError) {
-      print("❌ Local DB fallback failed: $dbError");
-      // Even if DB fails, allow Guest session
-      final mockUserMap = {
-        'id': 1,
-        'userName': 'Guest',
-        'firstName': 'Guest',
-        'lastName': 'User',
-        'email': 'guest@offline',
-        'role': 'guest',
-      };
-      user.value = mockUserMap;
-      username.value = 'Guest';
-      status.value = AuthStatus.authenticated;
+      print("❌ [AuthBlock] Local DB fallback failed: $dbError");
     }
   }
 }

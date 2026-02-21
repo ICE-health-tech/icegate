@@ -3,9 +3,21 @@
     "brightness": "light",
     "useMaterial3": true,
     "seed_color": "0xFF3F51B5",
+    "color_scheme": {
+        "primary": "0xFF303F9F",
+        "onPrimary": "0xFFFFFFFF",
+        "surface": "0xFFFFFFFF",
+        "onSurface": "0xFF1A1A1A"
+    },
     "components": {
         "appBar": {
+            "backgroundColor": "0xFFFFFFFF",
+            "foregroundColor": "0xFF303F9F",
             "elevation": 0.0
+        },
+        "icon": {
+            "color": "0xFF303F9F",
+            "size": 24.0
         }
     }
 }

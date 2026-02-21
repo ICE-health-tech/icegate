@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
@@ -105,8 +106,11 @@ class FocusBlock {
     );
     try {
       await fetchDailyStats();
-      // Use correct bundle ID for app group
-      await _liveActivities.init(appGroupId: 'group.duylong.art.iceshield');
+
+      if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+        // Use correct bundle ID for app group
+        await _liveActivities.init(appGroupId: 'group.duylong.art.iceshield');
+      }
 
       // Register this block with the audio handler for two-way sync
       _audioHandler?.focusBlock = this;
@@ -293,7 +297,9 @@ class FocusBlock {
     // Cancel fallback notification
     _notificationService?.cancelNotification(888);
 
-    if (_activityId != null) {
+    if (!kIsWeb &&
+        defaultTargetPlatform == TargetPlatform.iOS &&
+        _activityId != null) {
       _liveActivities.endActivity(_activityId!);
       _activityId = null;
     }

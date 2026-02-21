@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
@@ -21,34 +22,40 @@ class LocalNotificationService {
     // Initialize Timezones
     try {
       tz.initializeTimeZones();
-      dynamic timeZoneName = await FlutterTimezone.getLocalTimezone();
-
-      // Convert to string safely to handle Object return types
-      String timeZoneString = timeZoneName.toString();
-
-      // Clean up timezone string if it comes in a wrapper format (e.g. on some macOS setups)
-      if (timeZoneString.startsWith("TimezoneInfo(")) {
-        // Format: TimezoneInfo(ID, ...)
-        final parts = timeZoneString.split(',');
-        if (parts.isNotEmpty) {
-          timeZoneString = parts[0].replaceAll("TimezoneInfo(", "").trim();
-        }
-      }
+      String? timeZoneString;
 
       try {
-        tz.setLocalLocation(tz.getLocation(timeZoneString));
+        final dynamic localTimezone = await FlutterTimezone.getLocalTimezone();
+        timeZoneString = localTimezone.toString();
       } catch (e) {
-        print("Error setting local location '$timeZoneString': $e");
-        // Fallback to UTC or a known timezone if local fails
-        try {
-          tz.setLocalLocation(tz.getLocation('Asia/Ho_Chi_Minh'));
-        } catch (_) {
-          tz.setLocalLocation(tz.UTC);
+        debugPrint("Could not get local timezone: $e");
+      }
+
+      if (timeZoneString != null) {
+        // Clean up complex strings from some platforms (e.g., "TimezoneInfo(ID: Asia/Ho_Chi_Minh, ...)")
+        if (timeZoneString.contains('(')) {
+          final match = RegExp(
+            r'\((?:ID:\s*)?([^,\s\)]+)',
+          ).firstMatch(timeZoneString);
+          if (match != null) {
+            timeZoneString = match.group(1);
+          }
         }
+
+        try {
+          tz.setLocalLocation(tz.getLocation(timeZoneString!));
+          debugPrint("✅ Timezone set to $timeZoneString");
+        } catch (e) {
+          debugPrint(
+            "⚠️ Invalid timezone '$timeZoneString': $e. Falling back.",
+          );
+          _setFallbackTimezone();
+        }
+      } else {
+        _setFallbackTimezone();
       }
     } catch (e) {
-      print("Timezone initialization failed: $e");
-      // Ensure local is set to avoid crashes later
+      debugPrint("❌ Critical error in timezone initialization: $e");
       try {
         tz.setLocalLocation(tz.UTC);
       } catch (_) {}
@@ -355,5 +362,17 @@ class LocalNotificationService {
       body: body,
       notificationDetails: platformChannelSpecifics,
     );
+  }
+
+  void _setFallbackTimezone() {
+    try {
+      tz.setLocalLocation(tz.getLocation('Asia/Ho_Chi_Minh'));
+    } catch (_) {
+      try {
+        tz.setLocalLocation(tz.getLocation('UTC'));
+      } catch (_) {
+        tz.setLocalLocation(tz.UTC);
+      }
+    }
   }
 }

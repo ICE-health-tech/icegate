@@ -18,7 +18,7 @@ const int AFFECTION_PER_UNIT = 5; // every 5 affection...
 const int AFFECTION_POINTS = 10; // ...= +10 points
 
 // ─── 💼 Projects ───
-const double TASK_SCORE_INCREMENT = 2; // each task completion = +2
+const double TASK_SCORE_INCREMENT = 10; // each task completion = +2
 const double PROJECT_SCORE_INCREMENT = 50; // each project completion = +50
 
 // ─── 💰 Finance ───

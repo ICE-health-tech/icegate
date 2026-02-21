@@ -79,14 +79,13 @@ class ScoringRulesPage extends StatelessWidget {
   }
 
   Widget _buildIntroduction(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-        ),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -108,9 +107,9 @@ class ScoringRulesPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 12),
-          const Text(
-            'The Ice Shield scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores.',
-            style: TextStyle(height: 1.5),
+          Text(
+            'The Ice Shield scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores. Maintain a high score to unlock legendary status.',
+            style: TextStyle(height: 1.5, color: colorScheme.onSurface),
           ),
         ],
       ),
@@ -136,9 +135,9 @@ class ScoringRulesPage extends StatelessWidget {
         const SizedBox(height: 12),
         Container(
           decoration: BoxDecoration(
-            color: color.withOpacity(0.05),
+            color: color.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withOpacity(0.1)),
+            border: Border.all(color: color.withValues(alpha: 0.1)),
           ),
           child: Column(
             children: rules.map((rule) {
@@ -150,11 +149,17 @@ class ScoringRulesPage extends StatelessWidget {
                     Icon(
                       Icons.check_circle_outline_rounded,
                       size: 18,
-                      color: color.withOpacity(0.7),
+                      color: color.withValues(alpha: 0.7),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(rule, style: const TextStyle(fontSize: 14)),
+                      child: Text(
+                        rule,
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
+                      ),
                     ),
                   ],
                 ),

@@ -1,5 +1,6 @@
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:signals/signals.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- Interfaces for State ---
 class UserDetails {
@@ -14,6 +15,7 @@ class UserDetails {
   final String bio;
   final String occupation;
   final String educationLevel;
+  final String email;
   final String linkedinUrl;
 
   const UserDetails({
@@ -28,6 +30,7 @@ class UserDetails {
     this.bio = '',
     this.occupation = '',
     this.educationLevel = '',
+    this.email = '',
     this.linkedinUrl = '',
   });
 
@@ -44,6 +47,7 @@ class UserDetails {
       bio: json['bio'] ?? '',
       occupation: json['occupation'] ?? '',
       educationLevel: json['education_level'] ?? '',
+      email: json['email'] ?? '',
       linkedinUrl: json['linkedin_url'] ?? '',
     );
   }
@@ -59,6 +63,7 @@ class UserDetails {
     String? bio,
     String? occupation,
     String? educationLevel,
+    String? email,
     String? linkedinUrl,
   }) {
     return UserDetails(
@@ -73,6 +78,7 @@ class UserDetails {
       bio: bio ?? this.bio,
       occupation: occupation ?? this.occupation,
       educationLevel: educationLevel ?? this.educationLevel,
+      email: email ?? this.email,
       linkedinUrl: linkedinUrl ?? this.linkedinUrl,
     );
   }
@@ -100,11 +106,11 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       id: json['id'],
-      firstName: json['firstName'] ?? '',
-      lastName: json['lastName'] ?? '',
+      firstName: json['first_name'] ?? '',
+      lastName: json['last_name'] ?? '',
       friends: json['friends'] ?? 0,
       mutual: json['mutual'] ?? 0,
-      profileImageUrl: json['profileImageUrl'] ?? '',
+      profileImageUrl: json['profile_image_url'] ?? '',
       alias: json['alias'] ?? '',
     );
   }
@@ -159,8 +165,6 @@ class SkillType {
 
 // --- Person Block ---
 class PersonBlock {
-  final CustomAuthService _authService;
-
   // State Signals
   final information = signal<UserInformation>(
     UserInformation(
@@ -176,38 +180,70 @@ class PersonBlock {
   final account = signal<UserAccount>(const UserAccount());
   final skills = signal<List<SkillType>>([]);
 
-  PersonBlock({required CustomAuthService authService})
-    : _authService = authService;
+  PersonBlock({required CustomAuthService authService});
 
   // --- ACTIONS ---
 
-  /// Fetch user profile and details together
+  /// Fetch user profile and details together from Supabase
   Future<void> fetchFromDatabase(String token) async {
-    if (token == "mock_guest_jwt_token") {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || token == "mock_guest_jwt_token") {
       _applyGuestFallback();
       return;
     }
 
     try {
-      // 1. Fetch Person Information
-      final personAllData = await _authService.fetchPersonInformation(token);
-
-      // 2. Fetch Details
-      // final detailsData = await _authService.fetchInformationDetails(token);
-
-      // print("✅ Profile Sync: $personAllData");
-
-      // // Update state
-      information.value = UserInformation(
-        profiles: UserProfile.fromJson(personAllData['identity']),
-        details: UserDetails.fromJson(personAllData),
-      );
       print(
-        "✅ Profile ${information.value.profiles.alias} ${information.value.details.bio}",
+        "🔍 [PersonBlock] Fetching profile for ${user.id} from Supabase...",
       );
+      final response = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+
+      if (response != null) {
+        // Map snake_case from DB to CamelCase in Dart
+        final details = UserDetails(
+          bio: response['bio'] ?? '',
+          occupation: response['occupation'] ?? '',
+          location: response['location'] ?? '',
+          company: response['company'] ?? '',
+          university: response['university'] ?? '',
+          country: response['country'] ?? '',
+          githubUrl: response['github_url'] ?? '',
+          linkedinUrl: response['linkedin_url'] ?? '',
+          educationLevel: response['education_level'] ?? '',
+          websiteUrl: response['website_url'] ?? '',
+          email: response['email'] ?? user.email ?? '',
+        );
+
+        final profile = UserProfile(
+          id: 0, // Legacy int id
+          firstName:
+              response['first_name'] ??
+              user.userMetadata?['first_name'] ??
+              'User',
+          lastName:
+              response['last_name'] ?? user.userMetadata?['last_name'] ?? '',
+          alias: response['alias'] ?? user.userMetadata?['user_name'] ?? 'user',
+          profileImageUrl:
+              response['profile_image_url'] ??
+              user.userMetadata?['avatar_url'] ??
+              '',
+        );
+
+        information.value = UserInformation(
+          profiles: profile,
+          details: details,
+        );
+        print("✅ [PersonBlock] Profile fetched for ${profile.alias}");
+      } else {
+        print("⚠️ [PersonBlock] No profile found in Supabase. Falling back...");
+        _applyGuestFallback();
+      }
     } catch (e) {
-      print("❌ Failed to fetch user profile: $e");
-      // Fallback: Use some default data if currently in 'Initial' state to avoid blank screens
+      print("❌ [PersonBlock] Failed to fetch user profile: $e");
       if (information.value.profiles.firstName == 'Initial') {
         _applyGuestFallback();
       }
@@ -215,7 +251,7 @@ class PersonBlock {
   }
 
   void _applyGuestFallback() {
-    print("👤 Guest Mode: Applying default fallback data...");
+    print("👤 [PersonBlock] Applying default fallback data...");
     information.value = UserInformation(
       profiles: const UserProfile(
         firstName: 'DuyLong',
@@ -228,6 +264,7 @@ class PersonBlock {
         bio: 'Securing the digital frontier.',
         occupation: 'Core Security Agent',
         location: 'Unknown Sector',
+        email: 'agent@ice-shield.net',
       ),
     );
   }
@@ -252,6 +289,7 @@ class PersonBlock {
     String? githubUrl,
     String? linkedinUrl,
     String? educationLevel,
+    String? email,
   }) {
     information.value = UserInformation(
       profiles: information.value.profiles,
@@ -266,111 +304,106 @@ class PersonBlock {
         githubUrl: githubUrl,
         linkedinUrl: linkedinUrl,
         educationLevel: educationLevel,
+        email: email,
       ),
     );
   }
 
-  // Persist edits to database
+  // Persist edits to Supabase
   Future<void> updateProfileDatabase(String token) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null) {
+      print("❌ [PersonBlock] No user logged in to update profile.");
+      return;
+    }
+
     try {
       final details = information.value.details;
-      await _authService.updateInformationDetails(
-        token: token,
-        university: details.university,
-        location: details.location,
-        bio: details.bio,
-        occupation: details.occupation,
-        websiteUrl: details.websiteUrl,
-        company: details.company,
-        country: details.country,
-        githubUrl: details.githubUrl,
-        linkedinUrl: details.linkedinUrl,
-        educationLevel: details.educationLevel,
-      );
-      print("✅ Database Update Successful");
+      final profile = information.value.profiles;
+
+      print("💾 [PersonBlock] Updating profile in Supabase for ${user.id}...");
+      await Supabase.instance.client.from('profiles').upsert({
+        'id': user.id,
+        'first_name': profile.firstName,
+        'last_name': profile.lastName,
+        'alias': profile.alias,
+        'profile_image_url': profile.profileImageUrl,
+        'bio': details.bio,
+        'occupation': details.occupation,
+        'location': details.location,
+        'company': details.company,
+        'university': details.university,
+        'country': details.country,
+        'github_url': details.githubUrl,
+        'linkedin_url': details.linkedinUrl,
+        'education_level': details.educationLevel,
+        'website_url': details.websiteUrl,
+        'email': details.email,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      print("✅ [PersonBlock] Supabase Profile Update Successful");
     } catch (e) {
-      print("❌ Failed to update profile in database: $e");
+      print("❌ [PersonBlock] Failed to update profile in database: $e");
     }
   }
 
   // Fetch User Role
   Future<void> getUserRole(String token) async {
-    if (token == "mock_guest_jwt_token") {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || token == "mock_guest_jwt_token") {
       account.value = const UserAccount(role: 'GUEST');
       return;
     }
 
     try {
-      // Reusing fetchCurrentUser to get role, assuming it's in the response
-      // Or if there is a specific /account/information endpoint that returns role:
-      final userData = await _authService.fetchCurrentUser(token);
-
-      final role = userData['role'] ?? 'USER';
-
+      // For now, assume a field exists or just default to USER
+      // Role management might be in a separate table or app_metadata
+      final role = user.appMetadata['role'] ?? 'USER';
       account.value = UserAccount(role: role);
-      print("✅ User Role Fetched: $role");
+      print("✅ [PersonBlock] User Role: $role");
     } catch (e) {
-      print("❌ Failed to get user role: $e");
-      // Fallback: Default to USER if currently empty to avoid breakage
-      if (account.value.role == 'USER') {
-        print("🔄 Applying default fallback role (USER)...");
-        account.value = const UserAccount(role: 'USER');
-      }
+      print("❌ [PersonBlock] Failed to get user role: $e");
+      account.value = const UserAccount(role: 'USER');
     }
   }
 
-  // Fetch Skills
+  // Fetch Skills from Supabase
   Future<void> getUserSkill(String token) async {
-    if (token == "mock_guest_jwt_token") {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || token == "mock_guest_jwt_token") {
       skills.value = [];
       return;
     }
 
     try {
-      final skillsData = await _authService.fetchUserSkills(token);
-      final skillList = skillsData.map((s) => SkillType.fromJson(s)).toList();
+      print("🔍 [PersonBlock] Fetching skills from Supabase...");
+      final response = await Supabase.instance.client
+          .from('skills')
+          .select()
+          .eq('user_id', user.id); // Assuming user_id column
+
+      final skillList = (response as List)
+          .map((s) => SkillType.fromJson(s))
+          .toList();
 
       skills.value = skillList;
-      // print("✅ Database Skill Successful: ${skillList.length} skills found.");
+      print("✅ [PersonBlock] ${skillList.length} skills fetched.");
     } catch (e) {
-      print("❌ Failed to get user skills: $e");
-      // Fallback: Provide a default empty list if it fails, ensuring UI doesn't crash
-      if (skills.value.isEmpty) {
-        print("🔄 Applying empty skill list fallback...");
-        skills.value = [];
-      }
+      print("❌ [PersonBlock] Failed to get user skills: $e");
+      skills.value = [];
     }
   }
 
   // Unified Fetch Method
   Future<void> fetchInitialData(String token) async {
-    if (token.isEmpty) {
-      print("⚠️ No token provided for initial data fetch");
-      return;
-    }
+    if (token.isEmpty) return;
 
-    if (token == "mock_guest_jwt_token") {
-      print(
-        "👤 Guest Mode: Skipping network data fetch and using local/fallback data.",
-      );
-      await Future.wait([
-        fetchFromDatabase(token),
-        getUserRole(token),
-        getUserSkill(token),
-      ]);
-      return;
-    }
-
-    print("🚀 Starting Initial Data Fetch...");
-    try {
-      await Future.wait([
-        fetchFromDatabase(token),
-        getUserRole(token),
-        getUserSkill(token),
-      ]);
-      print("✅ Initial Data Fetch Completed");
-    } catch (e) {
-      print("❌ Error during initial data fetch: $e");
-    }
+    print("🚀 [PersonBlock] Starting Initial Data Fetch...");
+    await Future.wait([
+      fetchFromDatabase(token),
+      getUserRole(token),
+      getUserSkill(token),
+    ]);
+    print("✅ [PersonBlock] Initial Data Fetch Completed");
   }
 }

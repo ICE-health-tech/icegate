@@ -22,6 +22,7 @@ class HealthPage extends StatefulWidget {
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       size: size,
       icon: Icons.health_and_safety_rounded,
       subButtons: [

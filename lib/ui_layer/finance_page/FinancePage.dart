@@ -24,8 +24,9 @@ class FinancePage extends StatefulWidget {
         _showAddTransactionDialog(context);
       },
       onSwipeRight: () {
-        context.pop();
+        WidgetNavigatorAction.smartPop(context);
       },
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       subButtons: [
         SubButton(
           icon: Icons.savings_rounded,

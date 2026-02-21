@@ -225,7 +225,8 @@ class _WidgetFormDataState extends State<AddPluginForm> {
             children: [
               Text(
                 widget.data.title,
-                style: const TextStyle(
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
                   fontSize: 22,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
@@ -246,7 +247,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         const SizedBox(width: 8),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close_rounded),
+          icon: const Icon(Icons.close_rounded, color: Colors.black),
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.surface,
           ),

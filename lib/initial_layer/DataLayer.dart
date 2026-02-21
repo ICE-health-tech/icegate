@@ -6,7 +6,6 @@ import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
-import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -133,8 +132,8 @@ class _DataLayerState extends State<DataLayer> {
       // database = AppDatabase();
 
       // --- Database and Asset Loading ---
-      var baseUrl = "https://backend.duylong.art";
-      var authService = CustomAuthService(baseUrl: baseUrl);
+      // Legacy Auth Service is now deprecated in favor of Supabase
+      var authService = CustomAuthService(baseUrl: "http://localhost"); // Dummy
       var passkeyService = PasskeyAuthService();
 
       // Initialize Blocks
@@ -243,19 +242,6 @@ class _DataLayerState extends State<DataLayer> {
         "assets/LightThemePurple.json",
       );
 
-      ExternalWidgetProtocol externalWidgetProtocol = ExternalWidgetProtocol(
-        name: '',
-        protocol: '',
-        host: '',
-        url: '',
-      );
-
-      // Await database operations
-      print("DataLayer: Ensuring default data");
-      await widget.database.externalWidgetsDAO.insertNewWidget(
-        externalWidgetProtocol: externalWidgetProtocol,
-      );
-
       await widget.database.themesTableDAO.insertNewTheme(
         name: "Light theme",
         jsonContent: jsonString,
@@ -292,14 +278,44 @@ class _DataLayerState extends State<DataLayer> {
       final Session? session = data.session;
       final ps = widget.database.powerSync;
 
+      print(
+        "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
+      );
+
       if (session != null) {
+        print(
+          "🔑 [DataLayer] Session Token: ${session.accessToken.substring(0, 10)}...",
+        );
         // Sync state to AuthBlock so downstream effects (PowerSync, fetchUser) trigger
         authBlock.jwt.value = session.accessToken;
         authBlock.username.value = session.user.email ?? "Google User";
-        authBlock.status.value = AuthStatus.authenticated;
+
+        // --- NEW: Persist to local DB for auto-login on next start ---
+        authBlock.persistSession(
+          session.accessToken,
+          authBlock.username.value!,
+        );
+
+        // --- NEW: Synchronize user data with public schema ---
+        authBlock.syncUserWithSupabase(session.user);
+
+        if (authBlock.status.value != AuthStatus.authenticated) {
+          print(
+            "🔑 [DataLayer] Transitioning AuthBlock to 'authenticated' state",
+          );
+          authBlock.status.value = AuthStatus.authenticated;
+
+          // Only fetch user if we transitioned to authenticated
+          authBlock.fetchUser();
+        }
       }
 
-      if (ps == null) return;
+      if (ps == null) {
+        print(
+          "⚠️ [DataLayer] PowerSync instance is null. Skipping sync connect.",
+        );
+        return;
+      }
 
       if (event == AuthChangeEvent.signedIn ||
           event == AuthChangeEvent.tokenRefreshed) {
@@ -316,7 +332,9 @@ class _DataLayerState extends State<DataLayer> {
           ps.connect(connector: connector);
         }
       } else if (event == AuthChangeEvent.signedOut) {
-        print("☁️ [DataLayer] Supabase Signed Out. Disconnecting PowerSync...");
+        print(
+          "☁️ [DataLayer] Supabase Signed Out. Disconnecting PowerSync and clearing local session...",
+        );
         ps.disconnect();
         authBlock.logout(); // Trigger local state clear
       }

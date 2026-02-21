@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:ice_shield/ui_layer/ReusableWidget/SettingWidget.dart';
 import 'package:ice_shield/ui_layer/health_page/CaloriesPage.dart';
@@ -9,7 +10,9 @@ import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HabitDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
-import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:provider/provider.dart';
 import 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart';
 // import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/HeartRatePage.dart';
@@ -175,11 +178,6 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const WaterPage(),
             ),
             GoRoute(
-              path: 'focus',
-              parentNavigatorKey: _shellNavigatorKey,
-              builder: (context, state) => const FocusPage(),
-            ),
-            GoRoute(
               path: 'habits',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HabitDashboardPage(),
@@ -214,7 +212,59 @@ final GoRouter router = GoRouter(
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const FocusPage(),
             ),
+            GoRoute(
+              path: ':projectId',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) {
+                final projectIdStr = state.pathParameters['projectId'];
+                if (projectIdStr == null) return const ProjectsPage();
+                final projectId = int.tryParse(projectIdStr);
+                if (projectId == null) return const ProjectsPage();
+
+                return Watch((context) {
+                  final projects = context.read<ProjectBlock>().projects.value;
+                  try {
+                    final project = projects.firstWhere(
+                      (p) => p.projectID == projectId,
+                    );
+                    return ProjectDetailsPage(project: project);
+                  } catch (e) {
+                    return projects.isEmpty
+                        ? const Scaffold(
+                            body: Center(child: CircularProgressIndicator()),
+                          )
+                        : const ProjectsPage();
+                  }
+                });
+              },
+            ),
           ],
+        ),
+        GoRoute(
+          path: '/project/:projectId',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) {
+            final projectIdStr = state.pathParameters['projectId'];
+            if (projectIdStr == null) return const ProjectsPage();
+            final projectId = int.tryParse(projectIdStr);
+            if (projectId == null) return const ProjectsPage();
+
+            return Watch((context) {
+              final projects = context.read<ProjectBlock>().projects.value;
+              try {
+                final project = projects.firstWhere(
+                  (p) => p.projectID == projectId,
+                );
+                return ProjectDetailsPage(project: project);
+              } catch (e) {
+                return projects.isEmpty
+                    ? const Scaffold(
+                        body: Center(child: CircularProgressIndicator()),
+                      )
+                    : const ProjectsPage();
+              }
+            });
+          },
         ),
         // Route 9: Widgets
         GoRoute(

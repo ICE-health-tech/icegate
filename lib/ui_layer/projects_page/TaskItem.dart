@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
 
 class TaskItem extends StatelessWidget {
   final GoalProtocol task;
@@ -97,7 +98,7 @@ class TaskItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '+2 XP',
+                  '+'+TASK_SCORE_INCREMENT.toString()+' XP',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

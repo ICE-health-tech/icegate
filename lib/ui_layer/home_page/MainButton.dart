@@ -42,6 +42,7 @@ class MainButton extends StatefulWidget {
   final VoidCallback? doubleClickFunction;
   final VoidCallback? onSwipeUp;
   final VoidCallback? onSwipeRight;
+  final VoidCallback? onSwipeLeft;
   final VoidCallback? onLongPress;
 
   const MainButton({
@@ -59,6 +60,7 @@ class MainButton extends StatefulWidget {
     this.doubleClickFunction,
     this.onSwipeUp,
     this.onSwipeRight,
+    this.onSwipeLeft,
     this.onLongPress,
   });
 
@@ -288,6 +290,17 @@ class _MainButtonState extends State<MainButton>
     }
   }
 
+  void _handleSwipeLeft() {
+    HapticFeedback.mediumImpact();
+    if (widget.onSwipeLeft != null) {
+      widget.onSwipeLeft!();
+    } else if (widget.onSwipeRight != null) {
+      widget.onSwipeRight!();
+    } else {
+      widget.mainFunction();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final mainSize = widget.size ?? 56.0;
@@ -301,10 +314,12 @@ class _MainButtonState extends State<MainButton>
           onLongPress: widget.onLongPress ?? _showOverlay,
           onDoubleTap: widget.doubleClickFunction,
           onHorizontalDragEnd: (details) {
-            // Detect swipe right
-            if (details.primaryVelocity != null &&
-                details.primaryVelocity! > 300) {
-              _handleSwipeRight();
+            if (details.primaryVelocity != null) {
+              if (details.primaryVelocity! > 300) {
+                _handleSwipeRight();
+              } else if (details.primaryVelocity! < -300) {
+                _handleSwipeLeft();
+              }
             }
           },
 

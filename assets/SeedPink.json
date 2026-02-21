@@ -1,11 +1,23 @@
 {
     "theme_name": "Seed Pink",
-    "brightness": "dark",
+    "brightness": "light",
     "useMaterial3": true,
     "seed_color": "0xFFE91E63",
+    "color_scheme": {
+        "primary": "0xFFC2185B",
+        "onPrimary": "0xFFFFFFFF",
+        "surface": "0xFFFFFFFF",
+        "onSurface": "0xFF1A1A1A"
+    },
     "components": {
         "appBar": {
+            "backgroundColor": "0xFFFFFFFF",
+            "foregroundColor": "0xFFC2185B",
             "elevation": 0.0
+        },
+        "icon": {
+            "color": "0xFFC2185B",
+            "size": 24.0
         }
     }
 }

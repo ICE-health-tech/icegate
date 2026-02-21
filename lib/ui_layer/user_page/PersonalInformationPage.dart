@@ -111,6 +111,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     _universityController.text = info.details.university;
     _educationController.text = info.details.educationLevel;
     _aliasController.text = info.profiles.alias;
+    _emailController.text = info.details.email;
   }
 
   @override
@@ -173,6 +174,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         githubUrl: _githubController.text,
         linkedinUrl: _linkedinController.text,
         educationLevel: _educationController.text,
+        email: _emailController.text,
       );
 
       // Persist to database
@@ -347,14 +349,14 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           ),
                           _buildModernTextField(
                             controller: _emailController,
-                            label: 'Digital Point',
+                            label: 'eMail',
                             icon: Icons.alternate_email_rounded,
                             enabled: _isEditing,
                             keyboardType: TextInputType.emailAddress,
                           ),
                           _buildModernTextField(
                             controller: _phoneController,
-                            label: 'Contact Signal',
+                            label: 'Phone Number',
                             icon: Icons.sensors_rounded,
                             enabled: _isEditing,
                           ),
@@ -369,7 +371,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         children: [
                           _buildModernTextField(
                             controller: _occupationController,
-                            label: 'Current Protocol',
+                            label: 'Role',
                             icon: Icons.terminal_rounded,
                             enabled: _isEditing,
                           ),
@@ -396,7 +398,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           ),
                           _buildModernTextField(
                             controller: _educationController,
-                            label: 'Clearance Level',
+                            label: 'Education Level',
                             icon: Icons.verified_user_rounded,
                             enabled: _isEditing,
                           ),
@@ -411,13 +413,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         children: [
                           _buildModernTextField(
                             controller: _countryController,
-                            label: 'Territory',
+                            label: 'Country',
                             icon: Icons.flag_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _cityController,
-                            label: 'City Hub',
+                            label: 'City',
                             icon: Icons.map_rounded,
                             enabled: _isEditing,
                           ),
