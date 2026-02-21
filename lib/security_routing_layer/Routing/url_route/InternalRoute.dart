@@ -9,6 +9,8 @@ import 'package:ice_shield/ui_layer/health_page/ExercisePage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HabitDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
+import 'package:ice_shield/ui_layer/health_page/subpage/StepsDashboardPage.dart';
+import 'package:ice_shield/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
@@ -139,6 +141,13 @@ final GoRouter router = GoRouter(
               path: 'steps',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const StepsPage(),
+              routes: [
+                GoRoute(
+                  path: 'dashboard',
+                  parentNavigatorKey: _shellNavigatorKey,
+                  builder: (context, state) => const StepsDashboardPage(),
+                ),
+              ],
             ),
             GoRoute(
               path: 'heart_rate',
@@ -171,6 +180,13 @@ final GoRouter router = GoRouter(
               path: 'exercise',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ExercisePage(),
+              routes: [
+                GoRoute(
+                  path: 'dashboard',
+                  parentNavigatorKey: _shellNavigatorKey,
+                  builder: (context, state) => const ExerciseAnalysisPage(),
+                ),
+              ],
             ),
             GoRoute(
               path: 'water',

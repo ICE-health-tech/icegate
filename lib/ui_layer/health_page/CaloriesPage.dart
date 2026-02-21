@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import 'package:ice_shield/ui_layer/health_page/subpage/LidarFoodScanner.dart';
 import 'package:ice_shield/ui_layer/health_page/widgets/AddFoodModal.dart';
@@ -147,6 +148,13 @@ class _CaloriesCardState extends State<CaloriesPage> {
         centerTitle: true,
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
+        actions: [
+          IconButton(
+            onPressed: () => context.push('/health/food/dashboard'),
+            icon: const Icon(Icons.grid_view_rounded),
+            tooltip: 'Nutrition Dashboard',
+          ),
+        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),

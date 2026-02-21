@@ -11,6 +11,8 @@ class HealthBlock {
 
   final todaySteps = signal<int>(0);
   final historicalSteps = signal<int>(0);
+  final todaySleep = signal<double>(0.0);
+  final todayHeartRate = signal<int>(0);
   final dailyStepGoal = signal<int>(10000);
   final dailyKcalGoal = signal<int>(2500);
   final todayWater = signal<int>(0);
@@ -41,11 +43,15 @@ class HealthBlock {
 
       int totalHistorical = 0;
       int foundTodaySteps = 0;
+      double foundTodaySleep = 0;
+      int foundTodayHeartRate = 0;
 
       for (var m in metrics) {
         final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
         if (dateStr == todayStr) {
           foundTodaySteps = m.steps;
+          foundTodaySleep = m.sleepHours;
+          foundTodayHeartRate = m.heartRate;
         } else {
           totalHistorical += m.steps;
         }
@@ -55,6 +61,14 @@ class HealthBlock {
       // Only update todaySteps from DB if it's larger than current volatile state
       if (foundTodaySteps > todaySteps.value) {
         todaySteps.value = foundTodaySteps;
+      }
+
+      if (foundTodaySleep > todaySleep.value) {
+        todaySleep.value = foundTodaySleep;
+      }
+
+      if (foundTodayHeartRate > todayHeartRate.value) {
+        todayHeartRate.value = foundTodayHeartRate;
       }
     });
 
@@ -75,6 +89,26 @@ class HealthBlock {
     }
   }
 
+  void updateSleep(double hours) {
+    debugPrint(
+      "HealthBlock: updateSleep called with $hours hours (current: ${todaySleep.value})",
+    );
+    if (hours > todaySleep.value) {
+      todaySleep.value = hours;
+      _saveSleep(hours);
+    }
+  }
+
+  void updateHeartRate(int bpm) {
+    debugPrint(
+      "HealthBlock: updateHeartRate called with $bpm bpm (current: ${todayHeartRate.value})",
+    );
+    if (bpm > 0) {
+      todayHeartRate.value = bpm;
+      _saveHeartRate(bpm);
+    }
+  }
+
   Future<void> _saveSteps(int steps) async {
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
@@ -90,11 +124,47 @@ class HealthBlock {
     );
   }
 
+  Future<void> _saveSleep(double hours) async {
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+
+    debugPrint(
+      "HealthBlock: Saving $hours sleep hours to DB for $normalizedToday",
+    );
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        personID: Value(personId),
+        date: Value(normalizedToday),
+        sleepHours: Value(hours),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> _saveHeartRate(int bpm) async {
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+
+    debugPrint(
+      "HealthBlock: Saving $bpm heart rate to DB for $normalizedToday",
+    );
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        personID: Value(personId),
+        date: Value(normalizedToday),
+        heartRate: Value(bpm),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
   void dispose() {
     _metricsSubscription?.cancel();
     _waterSubscription?.cancel();
     todaySteps.dispose();
     historicalSteps.dispose();
+    todaySleep.dispose();
+    todayHeartRate.dispose();
     // totalSteps is a computed signal, it is handled automatically
     todayWater.dispose();
   }

@@ -145,16 +145,43 @@ class AnalysisDashboardPage extends StatelessWidget {
 
     return Column(
       children: [
-        _buildAnalysisCard(
-          context,
-          title: "Productivity Trend",
-          subtitle: "+15% from last week",
-          icon: Icons.trending_up_rounded,
-          color: Colors.green,
-          content: SimpleLineChart(
-            data: trendData,
+        GestureDetector(
+          onTap: () => context.push('/health/exercise/dashboard'),
+          child: _buildAnalysisCard(
+            context,
+            title: "Health Analysis",
+            subtitle: "Detailed wellness & activity report",
+            icon: Icons.health_and_safety_rounded,
             color: Colors.green,
-            height: 80,
+            content: Column(
+              children: [
+                SimpleLineChart(
+                  data: trendData,
+                  color: Colors.green,
+                  height: 80,
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      "View Detailed Report",
+                      style: TextStyle(
+                        color: colorScheme.primary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 12,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 12,
+                      color: colorScheme.primary,
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
         const SizedBox(height: 16),

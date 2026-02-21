@@ -36,6 +36,8 @@ class FocusSessionState {
 class FocusBlock {
   // Dependencies
   final FocusSessionsDAO _focusSessionDao;
+  final HealthLogsDAO _healthLogsDao;
+  final HealthMetricsDAO _healthMetricsDao;
   final int _currentPersonId;
   final LocalNotificationService? _notificationService;
 
@@ -58,6 +60,11 @@ class FocusBlock {
   final selectedProjectId = signal<int?>(null);
   final selectedTaskId = signal<int?>(null);
   final sessionNotes = signal<String>('');
+  final showSummary = signal<bool>(false);
+
+  // Exercise Mode Signals
+  final isExerciseMode = signal<bool>(false);
+  final exerciseType = signal<String>('');
 
   // Stats
   final totalStudyTimeToday = signal<int>(0); // In seconds
@@ -87,10 +94,14 @@ class FocusBlock {
 
   FocusBlock({
     required FocusSessionsDAO focusSessionDao,
+    required HealthLogsDAO healthLogsDao,
+    required HealthMetricsDAO healthMetricsDao,
     required int personId,
     FocusAudioHandler? audioHandler,
     LocalNotificationService? notificationService,
   }) : _focusSessionDao = focusSessionDao,
+       _healthLogsDao = healthLogsDao,
+       _healthMetricsDao = healthMetricsDao,
        _currentPersonId = personId,
        _audioHandler = audioHandler,
        _notificationService = notificationService {
@@ -447,28 +458,8 @@ class FocusBlock {
 
   Future<void> completeSession() async {
     pauseTimer();
-    // Play sound or notification here
-    await _saveSession(status: 'completed');
-
-    // Update stats immediately
-    if (currentSessionType.value == 'Focus') {
-      int duration = _getDurationForType('Focus');
-      totalStudyTimeToday.value += duration;
-      sessionsCompletedToday.value++;
-
-      // New: Automation - Complete task and increase points
-      if (selectedTaskId.value != null && growthBlock != null) {
-        await growthBlock!.completeGoal(
-          selectedTaskId.value!,
-          scoreBlock: scoreBlock,
-        );
-        // Clear selected task after completion
-        selectedTaskId.value = null;
-      }
-    }
-
-    // Auto-switch to break? Or wait for user.
-    // For now, let's just reset to default or next steps.
+    // Trigger Summary UI - actual saving happens when user confirms in dialog
+    showSummary.value = true;
 
     // Notify User
     _notificationService?.showNotification(
@@ -480,7 +471,29 @@ class FocusBlock {
           ? "Excellent work! Take a well-deserved break."
           : "Time to get back into the flow zone.",
     );
+  }
 
+  Future<void> finishAndSaveSession(String finalNotes) async {
+    sessionNotes.value = finalNotes;
+    await _saveSession(status: 'completed');
+
+    // Update stats immediately
+    if (currentSessionType.value == 'Focus') {
+      int duration = _getDurationForType('Focus');
+      totalStudyTimeToday.value += duration;
+      sessionsCompletedToday.value++;
+
+      // Automation - Complete task and increase points
+      if (selectedTaskId.value != null && growthBlock != null) {
+        await growthBlock!.completeGoal(
+          selectedTaskId.value!,
+          scoreBlock: scoreBlock,
+        );
+        selectedTaskId.value = null;
+      }
+    }
+
+    showSummary.value = false;
     resetTimer();
   }
 
@@ -508,7 +521,18 @@ class FocusBlock {
 
   void setSessionType(String type) {
     currentSessionType.value = type;
+    isExerciseMode.value =
+        false; // Reset exercise mode when manually shifting types
     resetTimer();
+  }
+
+  void startExercise(String type, int minutes) {
+    print("🚀 [FocusBlock] Starting Exercise: $type for $minutes min");
+    currentSessionType.value = 'Focus';
+    isExerciseMode.value = true;
+    exerciseType.value = type;
+    remainingTime.value = minutes * 60;
+    startTimer();
   }
 
   void setTimerTheme(String theme) {
@@ -559,6 +583,39 @@ class FocusBlock {
     );
 
     await _focusSessionDao.insertSession(session);
+
+    // Record to Health Metrics
+    final normalizedToday = DateTime(
+      _startTime!.year,
+      _startTime!.month,
+      _startTime!.day,
+    );
+    await _healthMetricsDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        personID: drift.Value(_currentPersonId),
+        date: drift.Value(normalizedToday),
+        focusMinutes: drift.Value(duration ~/ 60),
+        updatedAt: drift.Value(DateTime.now()),
+      ),
+    );
+
+    // Record Exercise Log if in Exercise Mode
+    if (isExerciseMode.value && status == 'completed') {
+      final exerciseLog = ExerciseLogsTableCompanion.insert(
+        personID: _currentPersonId,
+        type: exerciseType.value,
+        durationMinutes: duration ~/ 60,
+        timestamp: drift.Value(DateTime.now()),
+      );
+      await _healthLogsDao.insertExerciseLog(exerciseLog);
+      print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
+
+      // Auto-increase points for exercise
+      if (scoreBlock != null) {
+        scoreBlock!.addPoints(25); // Bonus for exercise completion
+      }
+    }
+
     await fetchDailyStats();
   }
 

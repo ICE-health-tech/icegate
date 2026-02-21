@@ -30,8 +30,20 @@ class HealthService {
       );
     }
 
-    final types = [HealthDataType.STEPS];
-    final permissions = [HealthDataAccess.READ];
+    final types = [
+      HealthDataType.STEPS,
+      HealthDataType.SLEEP_ASLEEP,
+      HealthDataType.SLEEP_IN_BED,
+      HealthDataType.SLEEP_AWAKE,
+      HealthDataType.HEART_RATE,
+    ];
+    final permissions = [
+      HealthDataAccess.READ,
+      HealthDataAccess.READ,
+      HealthDataAccess.READ,
+      HealthDataAccess.READ,
+      HealthDataAccess.READ,
+    ];
 
     try {
       debugPrint("HealthService: Requesting health authorization...");
@@ -62,6 +74,77 @@ class HealthService {
     } catch (e) {
       debugPrint("HealthService: Error fetching steps: $e");
       return 0;
+    }
+  }
+
+  /// Fetches the latest heart rate reading from Apple Health/Google Fit.
+  static Future<int> fetchLatestHeartRate() async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0;
+
+    final now = DateTime.now();
+    final oneHourAgo = now.subtract(const Duration(hours: 1));
+
+    try {
+      final types = [HealthDataType.HEART_RATE];
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: oneHourAgo,
+        endTime: now,
+        types: types,
+      );
+
+      if (healthData.isEmpty) return 0;
+
+      // Sort by date to get the LATEST
+      healthData.sort((a, b) => b.dateTo.compareTo(a.dateTo));
+      final latestValue = healthData.first.value;
+
+      if (latestValue is NumericHealthValue) {
+        final bpm = latestValue.numericValue.round();
+        debugPrint("HealthService: Fetched latest heart rate: $bpm bpm");
+        return bpm;
+      }
+      return 0;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching heart rate: $e");
+      return 0;
+    }
+  }
+
+  /// Fetches sleep data for the last 24 hours and returns total hours.
+  static Future<double> fetchSleepData() async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0.0;
+
+    final now = DateTime.now();
+    final yesterday = now.subtract(const Duration(hours: 24));
+
+    try {
+      final types = [HealthDataType.SLEEP_ASLEEP];
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: yesterday,
+        endTime: now,
+        types: types,
+      );
+
+      double totalMinutes = 0;
+      for (var data in healthData) {
+        // For sleep, the value is often the numeric representation of the category,
+        // but we want the duration. Health package provides 'value' which for sleep
+        // data points is usually the category. We need to calculate duration
+        // between data.dateFrom and data.dateTo.
+        final startTime = data.dateFrom;
+        final endTime = data.dateTo;
+        final duration = endTime.difference(startTime).inMinutes;
+        totalMinutes += duration;
+      }
+
+      final totalHours = totalMinutes / 60.0;
+      debugPrint("HealthService: Fetched sleep duration: $totalHours hours");
+      return totalHours;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching sleep data: $e");
+      return 0.0;
     }
   }
 }

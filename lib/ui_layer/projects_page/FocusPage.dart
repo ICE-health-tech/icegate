@@ -181,6 +181,14 @@ class _FocusPageState extends State<FocusPage> {
     return '${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}';
   }
 
+  void _showSessionSummary(BuildContext context, FocusBlock focusBlock) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => _SessionResultDialog(focusBlock: focusBlock),
+    );
+  }
+
   // Effect to listen for changes
   void _setupNotificationListener(BuildContext context, FocusBlock focusBlock) {
     if (_hasSetupListeners) return;
@@ -218,6 +226,13 @@ class _FocusPageState extends State<FocusPage> {
 
     _setupNotificationListener(context, focusBlock);
 
+    // Show Session Summary Dialog
+    if (focusBlock.showSummary.watch(context)) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showSessionSummary(context, focusBlock);
+      });
+    }
+
     final focusMin = focusBlock.focusDuration.watch(context);
     final shortMin = focusBlock.shortBreakDuration.watch(context);
     final longMin = focusBlock.longBreakDuration.watch(context);
@@ -230,6 +245,8 @@ class _FocusPageState extends State<FocusPage> {
     final selectedProjId = focusBlock.selectedProjectId.watch(context);
     final selectedTaskId = focusBlock.selectedTaskId.watch(context);
     final themeName = focusBlock.timerTheme.watch(context);
+    final isExerciseMode = focusBlock.isExerciseMode.watch(context);
+    final exerciseType = focusBlock.exerciseType.watch(context);
 
     // Get current theme
     final themeStyle = timerThemes.firstWhere(
@@ -238,10 +255,14 @@ class _FocusPageState extends State<FocusPage> {
     );
 
     // Dynamic Colors based on mode
-    final modeColor = sessionType == 'Focus' ? themeStyle.color : Colors.teal;
-    final modeBg = sessionType == 'Focus'
-        ? themeStyle.color.withOpacity(0.1)
-        : Colors.teal.withOpacity(0.1);
+    final modeColor = isExerciseMode
+        ? Colors.orange
+        : (sessionType == 'Focus' ? themeStyle.color : Colors.teal);
+    final modeBg = isExerciseMode
+        ? Colors.orange.withOpacity(0.1)
+        : (sessionType == 'Focus'
+              ? themeStyle.color.withOpacity(0.1)
+              : Colors.teal.withOpacity(0.1));
 
     int totalDuration = focusMin * 60;
     if (sessionType == 'Short Break') totalDuration = shortMin * 60;
@@ -370,6 +391,8 @@ class _FocusPageState extends State<FocusPage> {
                           focusBlock: focusBlock,
                           totalDuration: totalDuration,
                           themeName: themeName,
+                          isExerciseMode: isExerciseMode,
+                          exerciseType: exerciseType,
                         ),
                         const Spacer(),
 
@@ -938,6 +961,8 @@ class _TimerCircle extends StatelessWidget {
   final FocusBlock focusBlock;
   final int totalDuration;
   final String themeName;
+  final bool isExerciseMode;
+  final String exerciseType;
 
   const _TimerCircle({
     required this.progress,
@@ -948,6 +973,8 @@ class _TimerCircle extends StatelessWidget {
     required this.focusBlock,
     required this.totalDuration,
     required this.themeName,
+    required this.isExerciseMode,
+    required this.exerciseType,
   });
 
   @override
@@ -1085,7 +1112,9 @@ class _TimerCircle extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    isRunning ? Icons.bolt_rounded : Icons.spa_rounded,
+                    isExerciseMode
+                        ? Icons.bolt_rounded
+                        : (isRunning ? Icons.bolt_rounded : Icons.spa_rounded),
                     size: 14,
                     color: _getContrastColor(
                       modeColor,
@@ -1094,7 +1123,9 @@ class _TimerCircle extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    isRunning ? "FLOW STATE ACTIVE" : "BREATHING",
+                    isExerciseMode
+                        ? "ACTIVE EXERCISE: ${exerciseType.toUpperCase()}"
+                        : (isRunning ? "FLOW STATE ACTIVE" : "BREATHING"),
                     style: TextStyle(
                       fontSize: 11,
                       letterSpacing: 2,
@@ -2778,6 +2809,19 @@ class _HistoryItem extends StatelessWidget {
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                 ),
+                if (session.notes != null && session.notes!.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    session.notes!,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.primary.withOpacity(0.8),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
@@ -3110,4 +3154,135 @@ Color _getContrastColor(Color baseColor, Color backgroundColor) {
   }
 
   return baseColor;
+}
+
+class _SessionResultDialog extends StatefulWidget {
+  final FocusBlock focusBlock;
+  const _SessionResultDialog({required this.focusBlock});
+
+  @override
+  State<_SessionResultDialog> createState() => _SessionResultDialogState();
+}
+
+class _SessionResultDialogState extends State<_SessionResultDialog> {
+  final TextEditingController _notesController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notesController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final sessionType = widget.focusBlock.currentSessionType.value;
+    final isFocus = sessionType == 'Focus';
+
+    return Dialog(
+      backgroundColor: Colors.transparent,
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withOpacity(0.5),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.1),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: isFocus
+                    ? Colors.orange.withOpacity(0.1)
+                    : Colors.teal.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                isFocus ? Icons.emoji_events_rounded : Icons.coffee_rounded,
+                color: isFocus ? Colors.orange : Colors.teal,
+                size: 40,
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              isFocus ? "Session Complete!" : "Break Finished",
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isFocus
+                  ? "Outstanding effort! You've stayed in the zone."
+                  : "Hope you enjoyed your break. Ready for another round?",
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            TextField(
+              controller: _notesController,
+              maxLines: 3,
+              decoration: InputDecoration(
+                hintText: "What did you accomplish?",
+                labelText: "Session Notes",
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                filled: true,
+                fillColor: colorScheme.surfaceContainerLow,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () {
+                  widget.focusBlock.finishAndSaveSession(_notesController.text);
+                  Navigator.pop(context);
+                },
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  backgroundColor: isFocus ? Colors.orange : Colors.teal,
+                ),
+                child: const Text(
+                  "Log Result",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () {
+                widget.focusBlock.finishAndSaveSession("");
+                Navigator.pop(context);
+              },
+              child: Text(
+                "Skip Notes",
+                style: TextStyle(color: colorScheme.onSurfaceVariant),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

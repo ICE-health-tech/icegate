@@ -1,6 +1,8 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 
@@ -126,6 +128,7 @@ class _HeartRatePageState extends State<HeartRatePage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final healthBlock = context.watch<HealthBlock>();
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
@@ -176,6 +179,62 @@ class _HeartRatePageState extends State<HeartRatePage> {
                             const SizedBox(width: 40),
                           ],
                         ),
+                        const SizedBox(height: 20),
+
+                        // HealthKit Live Sync Card
+                        Watch((context) {
+                          final hr = healthBlock.todayHeartRate.value;
+                          return Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              color: Colors.pink.withValues(alpha: 0.05),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: Colors.pink.withValues(alpha: 0.1),
+                              ),
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(Icons.apple, color: Colors.pink),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "LATEST FROM HEALTH",
+                                        style: textTheme.labelSmall?.copyWith(
+                                          fontWeight: FontWeight.w900,
+                                          color: Colors.pink,
+                                        ),
+                                      ),
+                                      Text(
+                                        "Real-time sync from Watch",
+                                        style: textTheme.bodySmall,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                Text(
+                                  hr > 0 ? "$hr" : "--",
+                                  style: textTheme.headlineMedium?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.pink,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "bpm",
+                                  style: textTheme.labelSmall?.copyWith(
+                                    color: Colors.pink,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          );
+                        }),
+
                         const SizedBox(height: 30),
 
                         // Main Heart Rate Display

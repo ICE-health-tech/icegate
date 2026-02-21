@@ -11485,6 +11485,18 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _focusMinutesMeta = const VerificationMeta(
+    'focusMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> focusMinutes = GeneratedColumn<int>(
+    'focus_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _weightKgMeta = const VerificationMeta(
     'weightKg',
   );
@@ -11543,6 +11555,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     sleepHours,
     waterGlasses,
     exerciseMinutes,
+    focusMinutes,
     weightKg,
     caloriesConsumed,
     caloriesBurned,
@@ -11615,6 +11628,15 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         exerciseMinutes.isAcceptableOrUnknown(
           data['exercise_minutes']!,
           _exerciseMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('focus_minutes')) {
+      context.handle(
+        _focusMinutesMeta,
+        focusMinutes.isAcceptableOrUnknown(
+          data['focus_minutes']!,
+          _focusMinutesMeta,
         ),
       );
     }
@@ -11693,6 +11715,10 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         DriftSqlType.int,
         data['${effectivePrefix}exercise_minutes'],
       )!,
+      focusMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}focus_minutes'],
+      )!,
       weightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}weight_kg'],
@@ -11728,6 +11754,7 @@ class HealthMetricsLocal extends DataClass
   final double sleepHours;
   final int waterGlasses;
   final int exerciseMinutes;
+  final int focusMinutes;
   final double weightKg;
   final int caloriesConsumed;
   final int caloriesBurned;
@@ -11741,6 +11768,7 @@ class HealthMetricsLocal extends DataClass
     required this.sleepHours,
     required this.waterGlasses,
     required this.exerciseMinutes,
+    required this.focusMinutes,
     required this.weightKg,
     required this.caloriesConsumed,
     required this.caloriesBurned,
@@ -11757,6 +11785,7 @@ class HealthMetricsLocal extends DataClass
     map['sleep_hours'] = Variable<double>(sleepHours);
     map['water_glasses'] = Variable<int>(waterGlasses);
     map['exercise_minutes'] = Variable<int>(exerciseMinutes);
+    map['focus_minutes'] = Variable<int>(focusMinutes);
     map['weight_kg'] = Variable<double>(weightKg);
     map['calories_consumed'] = Variable<int>(caloriesConsumed);
     map['calories_burned'] = Variable<int>(caloriesBurned);
@@ -11774,6 +11803,7 @@ class HealthMetricsLocal extends DataClass
       sleepHours: Value(sleepHours),
       waterGlasses: Value(waterGlasses),
       exerciseMinutes: Value(exerciseMinutes),
+      focusMinutes: Value(focusMinutes),
       weightKg: Value(weightKg),
       caloriesConsumed: Value(caloriesConsumed),
       caloriesBurned: Value(caloriesBurned),
@@ -11795,6 +11825,7 @@ class HealthMetricsLocal extends DataClass
       sleepHours: serializer.fromJson<double>(json['sleepHours']),
       waterGlasses: serializer.fromJson<int>(json['waterGlasses']),
       exerciseMinutes: serializer.fromJson<int>(json['exerciseMinutes']),
+      focusMinutes: serializer.fromJson<int>(json['focusMinutes']),
       weightKg: serializer.fromJson<double>(json['weightKg']),
       caloriesConsumed: serializer.fromJson<int>(json['caloriesConsumed']),
       caloriesBurned: serializer.fromJson<int>(json['caloriesBurned']),
@@ -11813,6 +11844,7 @@ class HealthMetricsLocal extends DataClass
       'sleepHours': serializer.toJson<double>(sleepHours),
       'waterGlasses': serializer.toJson<int>(waterGlasses),
       'exerciseMinutes': serializer.toJson<int>(exerciseMinutes),
+      'focusMinutes': serializer.toJson<int>(focusMinutes),
       'weightKg': serializer.toJson<double>(weightKg),
       'caloriesConsumed': serializer.toJson<int>(caloriesConsumed),
       'caloriesBurned': serializer.toJson<int>(caloriesBurned),
@@ -11829,6 +11861,7 @@ class HealthMetricsLocal extends DataClass
     double? sleepHours,
     int? waterGlasses,
     int? exerciseMinutes,
+    int? focusMinutes,
     double? weightKg,
     int? caloriesConsumed,
     int? caloriesBurned,
@@ -11842,6 +11875,7 @@ class HealthMetricsLocal extends DataClass
     sleepHours: sleepHours ?? this.sleepHours,
     waterGlasses: waterGlasses ?? this.waterGlasses,
     exerciseMinutes: exerciseMinutes ?? this.exerciseMinutes,
+    focusMinutes: focusMinutes ?? this.focusMinutes,
     weightKg: weightKg ?? this.weightKg,
     caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
     caloriesBurned: caloriesBurned ?? this.caloriesBurned,
@@ -11863,6 +11897,9 @@ class HealthMetricsLocal extends DataClass
       exerciseMinutes: data.exerciseMinutes.present
           ? data.exerciseMinutes.value
           : this.exerciseMinutes,
+      focusMinutes: data.focusMinutes.present
+          ? data.focusMinutes.value
+          : this.focusMinutes,
       weightKg: data.weightKg.present ? data.weightKg.value : this.weightKg,
       caloriesConsumed: data.caloriesConsumed.present
           ? data.caloriesConsumed.value
@@ -11885,6 +11922,7 @@ class HealthMetricsLocal extends DataClass
           ..write('sleepHours: $sleepHours, ')
           ..write('waterGlasses: $waterGlasses, ')
           ..write('exerciseMinutes: $exerciseMinutes, ')
+          ..write('focusMinutes: $focusMinutes, ')
           ..write('weightKg: $weightKg, ')
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
@@ -11903,6 +11941,7 @@ class HealthMetricsLocal extends DataClass
     sleepHours,
     waterGlasses,
     exerciseMinutes,
+    focusMinutes,
     weightKg,
     caloriesConsumed,
     caloriesBurned,
@@ -11920,6 +11959,7 @@ class HealthMetricsLocal extends DataClass
           other.sleepHours == this.sleepHours &&
           other.waterGlasses == this.waterGlasses &&
           other.exerciseMinutes == this.exerciseMinutes &&
+          other.focusMinutes == this.focusMinutes &&
           other.weightKg == this.weightKg &&
           other.caloriesConsumed == this.caloriesConsumed &&
           other.caloriesBurned == this.caloriesBurned &&
@@ -11935,6 +11975,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   final Value<double> sleepHours;
   final Value<int> waterGlasses;
   final Value<int> exerciseMinutes;
+  final Value<int> focusMinutes;
   final Value<double> weightKg;
   final Value<int> caloriesConsumed;
   final Value<int> caloriesBurned;
@@ -11948,6 +11989,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.sleepHours = const Value.absent(),
     this.waterGlasses = const Value.absent(),
     this.exerciseMinutes = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
@@ -11962,6 +12004,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.sleepHours = const Value.absent(),
     this.waterGlasses = const Value.absent(),
     this.exerciseMinutes = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
     this.weightKg = const Value.absent(),
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
@@ -11977,6 +12020,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Expression<double>? sleepHours,
     Expression<int>? waterGlasses,
     Expression<int>? exerciseMinutes,
+    Expression<int>? focusMinutes,
     Expression<double>? weightKg,
     Expression<int>? caloriesConsumed,
     Expression<int>? caloriesBurned,
@@ -11991,6 +12035,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       if (sleepHours != null) 'sleep_hours': sleepHours,
       if (waterGlasses != null) 'water_glasses': waterGlasses,
       if (exerciseMinutes != null) 'exercise_minutes': exerciseMinutes,
+      if (focusMinutes != null) 'focus_minutes': focusMinutes,
       if (weightKg != null) 'weight_kg': weightKg,
       if (caloriesConsumed != null) 'calories_consumed': caloriesConsumed,
       if (caloriesBurned != null) 'calories_burned': caloriesBurned,
@@ -12007,6 +12052,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Value<double>? sleepHours,
     Value<int>? waterGlasses,
     Value<int>? exerciseMinutes,
+    Value<int>? focusMinutes,
     Value<double>? weightKg,
     Value<int>? caloriesConsumed,
     Value<int>? caloriesBurned,
@@ -12021,6 +12067,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       sleepHours: sleepHours ?? this.sleepHours,
       waterGlasses: waterGlasses ?? this.waterGlasses,
       exerciseMinutes: exerciseMinutes ?? this.exerciseMinutes,
+      focusMinutes: focusMinutes ?? this.focusMinutes,
       weightKg: weightKg ?? this.weightKg,
       caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
       caloriesBurned: caloriesBurned ?? this.caloriesBurned,
@@ -12055,6 +12102,9 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     if (exerciseMinutes.present) {
       map['exercise_minutes'] = Variable<int>(exerciseMinutes.value);
     }
+    if (focusMinutes.present) {
+      map['focus_minutes'] = Variable<int>(focusMinutes.value);
+    }
     if (weightKg.present) {
       map['weight_kg'] = Variable<double>(weightKg.value);
     }
@@ -12081,6 +12131,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
           ..write('sleepHours: $sleepHours, ')
           ..write('waterGlasses: $waterGlasses, ')
           ..write('exerciseMinutes: $exerciseMinutes, ')
+          ..write('focusMinutes: $focusMinutes, ')
           ..write('weightKg: $weightKg, ')
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
@@ -12885,7 +12936,7 @@ class $ScoresTableTable extends ScoresTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES persons_table (person_i_d) ON DELETE CASCADE',
+      'UNIQUE REFERENCES persons_table (person_i_d) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _healthGlobalScoreMeta = const VerificationMeta(
@@ -27259,6 +27310,7 @@ typedef $$HealthMetricsTableTableCreateCompanionBuilder =
       Value<double> sleepHours,
       Value<int> waterGlasses,
       Value<int> exerciseMinutes,
+      Value<int> focusMinutes,
       Value<double> weightKg,
       Value<int> caloriesConsumed,
       Value<int> caloriesBurned,
@@ -27274,6 +27326,7 @@ typedef $$HealthMetricsTableTableUpdateCompanionBuilder =
       Value<double> sleepHours,
       Value<int> waterGlasses,
       Value<int> exerciseMinutes,
+      Value<int> focusMinutes,
       Value<double> weightKg,
       Value<int> caloriesConsumed,
       Value<int> caloriesBurned,
@@ -27357,6 +27410,11 @@ class $$HealthMetricsTableTableFilterComposer
 
   ColumnFilters<int> get exerciseMinutes => $composableBuilder(
     column: $table.exerciseMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -27448,6 +27506,11 @@ class $$HealthMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get weightKg => $composableBuilder(
     column: $table.weightKg,
     builder: (column) => ColumnOrderings(column),
@@ -27525,6 +27588,11 @@ class $$HealthMetricsTableTableAnnotationComposer
 
   GeneratedColumn<int> get exerciseMinutes => $composableBuilder(
     column: $table.exerciseMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
     builder: (column) => column,
   );
 
@@ -27609,6 +27677,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<double> sleepHours = const Value.absent(),
                 Value<int> waterGlasses = const Value.absent(),
                 Value<int> exerciseMinutes = const Value.absent(),
+                Value<int> focusMinutes = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<int> caloriesConsumed = const Value.absent(),
                 Value<int> caloriesBurned = const Value.absent(),
@@ -27622,6 +27691,7 @@ class $$HealthMetricsTableTableTableManager
                 sleepHours: sleepHours,
                 waterGlasses: waterGlasses,
                 exerciseMinutes: exerciseMinutes,
+                focusMinutes: focusMinutes,
                 weightKg: weightKg,
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
@@ -27637,6 +27707,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<double> sleepHours = const Value.absent(),
                 Value<int> waterGlasses = const Value.absent(),
                 Value<int> exerciseMinutes = const Value.absent(),
+                Value<int> focusMinutes = const Value.absent(),
                 Value<double> weightKg = const Value.absent(),
                 Value<int> caloriesConsumed = const Value.absent(),
                 Value<int> caloriesBurned = const Value.absent(),
@@ -27650,6 +27721,7 @@ class $$HealthMetricsTableTableTableManager
                 sleepHours: sleepHours,
                 waterGlasses: waterGlasses,
                 exerciseMinutes: exerciseMinutes,
+                focusMinutes: focusMinutes,
                 weightKg: weightKg,
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,

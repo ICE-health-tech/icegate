@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart';
 import '../UIConstants.dart';
 import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
@@ -26,9 +25,8 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidget
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_shield/ui_layer/projects_page/CreateProjectDialog.dart';
-import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 
 class HomePage extends StatefulWidget {
   final String title;
@@ -118,6 +116,7 @@ class _HomePageState extends State<HomePage> {
   late ExternalWidgetBlock externalWidgetBlock;
   late GrowthBlock growthBlock;
   late HealthBlock healthBlock;
+  late ProjectBlock projectBlock;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
 
@@ -136,6 +135,7 @@ class _HomePageState extends State<HomePage> {
     healthMetricsDAO = context.read<HealthMetricsDAO>();
     financeBlock = context.read<FinanceBlock>();
     healthBlock = context.read<HealthBlock>();
+    projectBlock = context.read<ProjectBlock>();
 
     _fetchInitialData();
 
@@ -282,12 +282,12 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       TextButton(
-                        child: Text(widget.title,
-                        style: 
-                        TextStyle(fontWeight: FontWeight.bold
-                        ,fontSize: 20
-                        )
-
+                        child: Text(
+                          widget.title,
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 20,
+                          ),
                         ),
                         onPressed: () {
                           context.go("/personal-info");
@@ -313,13 +313,25 @@ class _HomePageState extends State<HomePage> {
                         Watch((context) {
                           final steps = healthBlock.todaySteps.value;
                           final kcal = healthMetricsData['food']?.value ?? 0;
+                          final sleep = healthBlock.todaySleep.value;
+                          final hr = healthBlock.todayHeartRate.value;
                           return _buildQuickAccessCard(
                             context,
                             'Health',
                             Icons.favorite_rounded,
                             Colors.green,
-                            subtitle1: '$steps steps',
-                            subtitle2: '$kcal kcal',
+                            metrics: [
+                              {'label': 'Steps', 'value': '$steps'},
+                              {'label': 'Kcal Consume', 'value': '$kcal'},
+                              {
+                                'label': 'Sleep',
+                                'value': '${sleep.toStringAsFixed(1)}h',
+                              },
+                              {
+                                'label': 'HR',
+                                'value': hr > 0 ? '$hr bpm' : '--',
+                              },
+                            ],
                             route: '/health',
                             scoreData: scoreBlock.score.healthGlobalScore,
                           );
@@ -327,42 +339,84 @@ class _HomePageState extends State<HomePage> {
                         Watch((context) {
                           final balance = financeBlock.totalBalance.value;
                           final spending = financeBlock.monthlySpending.value;
+                          final income = financeBlock.monthlyIncome.value;
+                          final savings = financeBlock.totalSavings.value;
                           return _buildQuickAccessCard(
                             context,
                             'Finance',
                             Icons.account_balance_wallet_rounded,
                             Colors.blue,
-                            subtitle1: 'Total \$${balance.toStringAsFixed(0)}',
-                            subtitle2: 'Spent \$${spending.toStringAsFixed(0)}',
+                            metrics: [
+                              {
+                                'label': 'Balance',
+                                'value': '\$${balance.toStringAsFixed(0)}',
+                              },
+                              {
+                                'label': 'Spent',
+                                'value': '\$${spending.toStringAsFixed(0)}',
+                              },
+                              {
+                                'label': 'Income',
+                                'value': '\$${income.toStringAsFixed(0)}',
+                              },
+                              {
+                                'label': 'Savings',
+                                'value': '\$${savings.toStringAsFixed(0)}',
+                              },
+                            ],
                             route: '/finance',
                             scoreData: scoreBlock.score.financialGlobalScore,
                           );
                         }),
-                        StreamBuilder<List<PersonData>>(
-                          stream: database.personDAO.getAllPersons(),
-                          builder: (context, snapshot) {
-                            final count = snapshot.data?.length ?? 0;
-                            return _buildQuickAccessCard(
-                              context,
-                              'Social',
-                              Icons.people_alt_rounded,
-                              Colors.purple,
-                              subtitle1: '$count relationships',
-                              subtitle2: 'Expanding network',
-                              route: '/social',
-                              scoreData: scoreBlock.score.socialGlobalScore,
-                            );
-                          },
-                        ),
+                        Watch((context) {
+                          final info = personBlock.information.value;
+                          return StreamBuilder<List<PersonData>>(
+                            stream: database.personDAO.getAllPersons(),
+                            builder: (context, snapshot) {
+                              final count = snapshot.data?.length ?? 0;
+                              return _buildQuickAccessCard(
+                                context,
+                                'Social',
+                                Icons.people_alt_rounded,
+                                Colors.purple,
+                                metrics: [
+                                  {'label': 'Connections', 'value': '$count'},
+                                  {
+                                    'label': 'Friends',
+                                    'value': '${info.profiles.friends}',
+                                  },
+                                  {
+                                    'label': 'Mutual',
+                                    'value': '${info.profiles.mutual}',
+                                  },
+                                  {
+                                    'label': 'Alias',
+                                    'value': info.profiles.alias,
+                                  },
+                                ],
+                                route: '/social',
+                                scoreData: scoreBlock.score.socialGlobalScore,
+                              );
+                            },
+                          );
+                        }),
                         Watch((context) {
                           final projectGoals = growthBlock.goals.value
                               .where((g) => g.category == 'project')
                               .toList();
-                          final activeCount = projectGoals
+                          final tasksRemaining = projectGoals
                               .where((g) => g.status != 'done')
                               .length;
-                          final doneCount = projectGoals
+                          final tasksDone = projectGoals
                               .where((g) => g.status == 'done')
+                              .length;
+
+                          final allProjects = projectBlock.projects.value;
+                          final projectsDone = allProjects
+                              .where((p) => p.status == 1)
+                              .length;
+                          final projectsRemaining = allProjects
+                              .where((p) => p.status == 0)
                               .length;
 
                           return _buildQuickAccessCard(
@@ -370,8 +424,18 @@ class _HomePageState extends State<HomePage> {
                             'Projects',
                             Icons.rocket_launch_rounded,
                             Colors.orange,
-                            subtitle1: '$activeCount active goals',
-                            subtitle2: '$doneCount completed',
+                            metrics: [
+                              {'label': 'Done', 'value': '$projectsDone Projs'},
+                              {
+                                'label': 'Active',
+                                'value': '$projectsRemaining Projs',
+                              },
+                              {'label': 'Done', 'value': '$tasksDone Tasks'},
+                              {
+                                'label': 'Active',
+                                'value': '$tasksRemaining Tasks',
+                              },
+                            ],
                             route: '/projects',
                             scoreData: scoreBlock.score.careerGlobalScore,
                           );
@@ -632,8 +696,7 @@ class _HomePageState extends State<HomePage> {
     String title,
     IconData icon,
     Color color, {
-    required String subtitle1,
-    required String subtitle2,
+    required List<Map<String, String>> metrics,
     required String route,
     required double scoreData,
   }) {
@@ -643,7 +706,7 @@ class _HomePageState extends State<HomePage> {
     final progress = GamificationService.getProgressToNextLevel(safeScore);
 
     return Container(
-      width: 220,
+      width: 260,
       margin: const EdgeInsets.only(right: 12),
       child: Card(
         elevation: 0,
@@ -742,13 +805,13 @@ class _HomePageState extends State<HomePage> {
                                   title,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 18, // User manual adjustment
+                                    fontSize: 18,
                                     color: colorScheme.onSurface,
                                     letterSpacing: -0.5,
                                   ),
                                   maxLines: 1,
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 RollingScoreText(
                                   value: level,
                                   prefix: "LV ",
@@ -759,7 +822,7 @@ class _HomePageState extends State<HomePage> {
                                     letterSpacing: 0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 6),
+                                const SizedBox(height: 4),
                                 RollingScoreText(
                                   value: scoreData,
                                   prefix: "P: ",
@@ -777,29 +840,42 @@ class _HomePageState extends State<HomePage> {
                       ],
                     ),
                     const Spacer(),
-
-                    // const SizedBox(height: ),1
-                    AutoSizeText(
-                      subtitle1,
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.9),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        height: 1.1,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    AutoSizeText(
-                      subtitle2,
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.55),
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                    // 2x2 Grid of metrics
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: metrics.map((m) {
+                        return SizedBox(
+                          width: 90,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              AutoSizeText(
+                                m['value'] ?? '',
+                                style: TextStyle(
+                                  color: colorScheme.onSurface.withOpacity(0.9),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.1,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              AutoSizeText(
+                                m['label'] ?? '',
+                                style: TextStyle(
+                                  color: colorScheme.onSurface.withOpacity(0.5),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.1,
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        );
+                      }).toList(),
                     ),
                   ],
                 ),

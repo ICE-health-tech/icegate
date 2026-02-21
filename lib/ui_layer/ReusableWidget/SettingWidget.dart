@@ -166,9 +166,7 @@ class SettingsWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  username == 'Guest'
-                      ? "Sign in to sync your data"
-                      : "Premium Member",
+                  username == 'Guest' ? "Sign in to sync your data" : "Member",
                   style: TextStyle(
                     fontSize: 14,
                     color: colorScheme.onSurfaceVariant,
@@ -292,7 +290,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: 'Version',
-                  subtitle: '1.1.2',
+                  subtitle: '1.1.5',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

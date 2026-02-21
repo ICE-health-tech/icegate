@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:intl/intl.dart';
@@ -21,6 +23,7 @@ class _SleepPageState extends State<SleepPage> {
     final dao = context.watch<HealthLogsDAO>();
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final healthBlock = context.watch<HealthBlock>();
 
     return StreamBuilder<List<SleepLogData>>(
       stream: dao.watchSleepLogs(1), // Assuming personID 1
@@ -41,6 +44,51 @@ class _SleepPageState extends State<SleepPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // HealthKit Sleep Data
+                Watch((context) {
+                  final healthSleep = healthBlock.todaySleep.value;
+                  return Container(
+                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.only(bottom: 24),
+                    decoration: BoxDecoration(
+                      color: Colors.indigo.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: Colors.indigo.withOpacity(0.2)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.apple, color: Colors.indigo),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "HealthKit Sleep",
+                                style: textTheme.labelLarge?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.indigo,
+                                ),
+                              ),
+                              Text(
+                                "Last 24h from Apple Health",
+                                style: textTheme.bodySmall,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Text(
+                          "${healthSleep.toStringAsFixed(1)}h",
+                          style: textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            color: Colors.indigo,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
                 // Top Hero Card
                 Container(
                   padding: const EdgeInsets.all(32),

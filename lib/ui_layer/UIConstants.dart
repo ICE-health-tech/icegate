@@ -15,8 +15,9 @@ class UIConstants {
   }
 
   static double getSizeOfDepartment(BuildContext context) {
-    // If screen width is small (phone), use 190, else 220
-    return MediaQuery.of(context).size.width < 600 ? 190.0 : 220.0;
+    // If screen width is small (phone), use 222, else 222
+    // Increased from 190.0 to 222.0 to accommodate 4 metrics grid
+    return MediaQuery.of(context).size.width < 600 ? 222.0 : 222.0;
   }
 
   static double getBorderWidth(

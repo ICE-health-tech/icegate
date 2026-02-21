@@ -82,6 +82,68 @@ class ProjectsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Watch((context) {
+                      final projectBlock = context.read<ProjectBlock>();
+                      final growthBlock = context.read<GrowthBlock>();
+
+                      final allProjects = projectBlock.projects.value;
+                      final projectsDone = allProjects
+                          .where((p) => p.status == 1)
+                          .length;
+                      final projectsActive = allProjects
+                          .where((p) => p.status == 0)
+                          .length;
+
+                      final projectGoals = growthBlock.goals.value
+                          .where((g) => g.category == 'project')
+                          .toList();
+                      final tasksDone = projectGoals
+                          .where((g) => g.status == 'done')
+                          .length;
+                      final tasksActive = projectGoals
+                          .where((g) => g.status != 'done')
+                          .length;
+
+                      return Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              colorScheme.primaryContainer.withOpacity(0.4),
+                              colorScheme.primaryContainer.withOpacity(0.1),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(24),
+                          border: Border.all(
+                            color: colorScheme.primaryContainer.withOpacity(
+                              0.2,
+                            ),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildSummaryItem(
+                              context,
+                              'Projects',
+                              '$projectsDone/$projectsActive',
+                              Icons.folder_copy_rounded,
+                              Colors.blue,
+                            ),
+                            _buildSummaryItem(
+                              context,
+                              'Tasks',
+                              '$tasksDone/$tasksActive',
+                              Icons.task_alt_rounded,
+                              Colors.orange,
+                            ),
+                          ],
+                        ),
+                      );
+                    }),
+                    const SizedBox(height: 32),
                     _buildSectionTitle(context, 'Quick Actions'),
                     const SizedBox(height: 16),
                     Row(
@@ -416,6 +478,46 @@ class ProjectsPage extends StatelessWidget {
         color: Theme.of(context).colorScheme.onSurface,
         letterSpacing: -0.2,
       ),
+    );
+  }
+
+  Widget _buildSummaryItem(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: color.withOpacity(0.1),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: color, size: 24),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
+            color: colorScheme.onSurface,
+            letterSpacing: -0.5,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface.withOpacity(0.5),
+          ),
+        ),
+      ],
     );
   }
 

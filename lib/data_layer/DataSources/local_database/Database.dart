@@ -512,6 +512,7 @@ class HealthMetricsTable extends Table {
   RealColumn get sleepHours => real().withDefault(const Constant(0.0))();
   IntColumn get waterGlasses => integer().withDefault(const Constant(0))();
   IntColumn get exerciseMinutes => integer().withDefault(const Constant(0))();
+  IntColumn get focusMinutes => integer().withDefault(const Constant(0))();
   RealColumn get weightKg => real().withDefault(const Constant(0.0))();
   IntColumn get caloriesConsumed => integer().withDefault(const Constant(0))();
   IntColumn get caloriesBurned => integer().withDefault(const Constant(0))();
@@ -748,6 +749,30 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             personID: personID,
             financialGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> incrementHealthScore(int personID, double points) async {
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            healthGlobalScore: Value(existing.healthGlobalScore + points),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            personID: personID,
+            healthGlobalScore: Value(points),
             updatedAt: Value(DateTime.now()),
           ),
         );
@@ -1904,7 +1929,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 20; // Increment schema version
+  int get schemaVersion => 21; // Increment schema version
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -2081,6 +2106,17 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(waterLogsTable);
           await m.createTable(sleepLogsTable);
           await m.createTable(exerciseLogsTable);
+        }
+        if (from < 21) {
+          try {
+            await customStatement(
+              "ALTER TABLE health_metrics_table ADD COLUMN focus_minutes INTEGER DEFAULT 0;",
+            );
+          } catch (e) {
+            print(
+              'Error adding focus_minutes column to health_metrics_table: $e',
+            );
+          }
         }
       },
       beforeOpen: (details) async {

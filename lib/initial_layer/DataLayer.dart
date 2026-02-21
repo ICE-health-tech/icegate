@@ -103,8 +103,19 @@ class _DataLayerState extends State<DataLayer> {
   Future<void> _syncHealthData() async {
     try {
       debugPrint("DataLayer: Periodic health sync started...");
+
+      // Sync Steps
       final steps = await HealthService.fetchStepCount();
       debugPrint("DataLayer: HealthService returned $steps steps");
+
+      // Sync Sleep
+      final sleepHours = await HealthService.fetchSleepData();
+      debugPrint("DataLayer: HealthService returned $sleepHours sleep hours");
+
+      // Sync Heart Rate
+      final heartRate = await HealthService.fetchLatestHeartRate();
+      debugPrint("DataLayer: HealthService returned $heartRate bpm");
+
       if (mounted) {
         setState(() {
           currentSteps = steps;
@@ -113,9 +124,17 @@ class _DataLayerState extends State<DataLayer> {
         if (_isInitialized) {
           debugPrint("DataLayer: Forwarding $steps steps to healthBlock");
           healthBlock.updateSteps(steps);
+
+          debugPrint(
+            "DataLayer: Forwarding $sleepHours sleep hours to healthBlock",
+          );
+          healthBlock.updateSleep(sleepHours);
+
+          debugPrint("DataLayer: Forwarding $heartRate bpm to healthBlock");
+          healthBlock.updateHeartRate(heartRate);
         } else {
           debugPrint(
-            "DataLayer: healthBlock not initialized yet, skipping step update",
+            "DataLayer: healthBlock not initialized yet, skipping health update",
           );
         }
       }
@@ -168,6 +187,8 @@ class _DataLayerState extends State<DataLayer> {
       scoreBlock = ScoreBlock();
       focusBlock = FocusBlock(
         focusSessionDao: widget.database.focusSessionsDAO,
+        healthLogsDao: widget.database.healthLogsDAO,
+        healthMetricsDao: widget.database.healthMetricsDAO,
         personId: 1,
         audioHandler: context.read<FocusAudioHandler>(),
         notificationService: context.read<LocalNotificationService>(),

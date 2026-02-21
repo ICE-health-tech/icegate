@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -42,6 +43,11 @@ class _ExercisePageState extends State<ExercisePage> {
             backgroundColor: colorScheme.surface,
             elevation: 0,
             actions: [
+              IconButton(
+                onPressed: () => context.push('/health/exercise/dashboard'),
+                icon: const Icon(Icons.analytics_rounded, color: Colors.orange),
+                tooltip: 'Exercise Analysis',
+              ),
               IconButton(
                 onPressed: () => context.go('/health/habits'),
                 icon: const Icon(Icons.grid_view_rounded, color: Colors.orange),
@@ -120,33 +126,65 @@ class _ExercisePageState extends State<ExercisePage> {
                   child: ListView(
                     scrollDirection: Axis.horizontal,
                     children: [
-                      _habitQuickAction(
+                      _activityQuickAction(
                         context,
-                        dao,
-                        Icons.air_rounded,
                         "Breathing",
                         5,
+                        Icons.air_rounded,
                       ),
-                      _habitQuickAction(
+                      _activityQuickAction(
                         context,
-                        dao,
-                        Icons.fitness_center_rounded,
                         "Gym",
                         30,
+                        Icons.fitness_center_rounded,
                       ),
-                      _habitQuickAction(
+                      _activityQuickAction(
                         context,
-                        dao,
-                        Icons.directions_run_rounded,
                         "Running",
                         20,
+                        Icons.directions_run_rounded,
                       ),
-                      _habitQuickAction(
+                      _activityQuickAction(
                         context,
-                        dao,
-                        Icons.self_improvement_rounded,
                         "Yoga",
                         15,
+                        Icons.self_improvement_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "CrossFit",
+                        45,
+                        Icons.bolt_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "Pilates",
+                        35,
+                        Icons.accessibility_new_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "Swimming",
+                        30,
+                        Icons.pool_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "Cycling",
+                        40,
+                        Icons.directions_bike_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "Meditation",
+                        10,
+                        Icons.spa_rounded,
+                      ),
+                      _activityQuickAction(
+                        context,
+                        "Strength",
+                        50,
+                        Icons.fitness_center_rounded,
                       ),
                     ],
                   ),
@@ -253,24 +291,18 @@ class _ExercisePageState extends State<ExercisePage> {
     );
   }
 
-  Widget _habitQuickAction(
+  Widget _activityQuickAction(
     BuildContext context,
-    HealthLogsDAO dao,
-    IconData icon,
     String type,
     int mins,
+    IconData icon,
   ) {
+    final focusBlock = context.read<FocusBlock>();
     return GestureDetector(
-      onTap: () async {
+      onTap: () {
         Feedback.forTap(context);
-        await dao.insertExerciseLog(
-          ExerciseLogsTableCompanion.insert(
-            personID: 1,
-            type: type,
-            durationMinutes: mins,
-            timestamp: drift.Value(DateTime.now()),
-          ),
-        );
+        focusBlock.startExercise(type, mins);
+        context.push('/projects/focus');
       },
       child: Container(
         width: 100,
@@ -306,52 +338,76 @@ class _ExercisePageState extends State<ExercisePage> {
   void _showAddExerciseDialog(BuildContext context, HealthLogsDAO dao) {
     final typeController = TextEditingController();
     final minsController = TextEditingController();
+    final intensities = ['low', 'medium', 'high'];
+    String selectedIntensity = 'medium';
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text("CUSTOM ACTIVITY"),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: typeController,
-              decoration: const InputDecoration(
-                labelText: "Activity Type (e.g. Gym)",
+      builder: (context) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text("CUSTOM ACTIVITY"),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: typeController,
+                decoration: const InputDecoration(
+                  labelText: "Activity Type (e.g. Gym)",
+                ),
               ),
+              TextField(
+                controller: minsController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Duration (min)"),
+              ),
+              const SizedBox(height: 16),
+              DropdownButtonFormField<String>(
+                value: selectedIntensity,
+                decoration: const InputDecoration(labelText: "Intensity"),
+                items: intensities.map((String value) {
+                  return DropdownMenuItem<String>(
+                    value: value,
+                    child: Text(value.toUpperCase()),
+                  );
+                }).toList(),
+                onChanged: (value) {
+                  if (value != null) {
+                    setDialogState(() {
+                      selectedIntensity = value;
+                    });
+                  }
+                },
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("CANCEL"),
             ),
-            TextField(
-              controller: minsController,
-              keyboardType: TextInputType.number,
-              decoration: const InputDecoration(labelText: "Duration (min)"),
+            ElevatedButton(
+              onPressed: () async {
+                final type = typeController.text.isEmpty
+                    ? "Exercise"
+                    : typeController.text;
+                final mins = int.tryParse(minsController.text) ?? 0;
+                if (mins > 0) {
+                  await dao.insertExerciseLog(
+                    ExerciseLogsTableCompanion.insert(
+                      personID: 1,
+                      type: type,
+                      durationMinutes: mins,
+                      intensity: drift.Value(selectedIntensity),
+                      timestamp: drift.Value(DateTime.now()),
+                    ),
+                  );
+                }
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text("LOG ACTIVITY"),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text("CANCEL"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final type = typeController.text.isEmpty
-                  ? "Exercise"
-                  : typeController.text;
-              final mins = int.tryParse(minsController.text) ?? 0;
-              if (mins > 0) {
-                await dao.insertExerciseLog(
-                  ExerciseLogsTableCompanion.insert(
-                    personID: 1,
-                    type: type,
-                    durationMinutes: mins,
-                    timestamp: drift.Value(DateTime.now()),
-                  ),
-                );
-              }
-              if (context.mounted) Navigator.pop(context);
-            },
-            child: const Text("LOG ACTIVITY"),
-          ),
-        ],
       ),
     );
   }

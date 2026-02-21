@@ -241,6 +241,15 @@ class ScoreBlock {
     await _dao.incrementCareerScore(_personID, points);
   }
 
+  Future<void> persistentHealthIncrement(double points) async {
+    await _dao.incrementHealthScore(_personID, points);
+  }
+
+  /// Generic method to add points (default to Career/Global)
+  void addPoints(double points) {
+    persistentCareerIncrement(points);
+  }
+
   void dispose() {
     for (var s in _subscriptions) {
       s.cancel();

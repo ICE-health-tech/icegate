@@ -280,6 +280,7 @@ class HealthMetricsData {
 
     if (isToday) {
       try {
+        // Sync Steps
         final liveSteps = await HealthService.fetchStepCount();
         if (liveSteps > currentSteps) {
           currentSteps = liveSteps;
@@ -300,8 +301,52 @@ class HealthMetricsData {
             );
           }
         }
+
+        // Sync Sleep
+        final liveSleep = await HealthService.fetchSleepData();
+        if (liveSleep > (metricsLocal?.sleepHours ?? 0.0)) {
+          // Sync back to DB
+          if (metricsLocal != null) {
+            await healthMetricsDAO.insertOrUpdateMetrics(
+              metricsLocal
+                  .toCompanion(true)
+                  .copyWith(sleepHours: Value(liveSleep)),
+            );
+          } else {
+            await healthMetricsDAO.insertOrUpdateMetrics(
+              HealthMetricsTableCompanion.insert(
+                personID: 1,
+                date: day,
+                sleepHours: Value(liveSleep),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          }
+        }
+
+        // Sync Heart Rate
+        final liveHeartRate = await HealthService.fetchLatestHeartRate();
+        if (liveHeartRate > 0) {
+          // Sync back to DB
+          if (metricsLocal != null) {
+            await healthMetricsDAO.insertOrUpdateMetrics(
+              metricsLocal
+                  .toCompanion(true)
+                  .copyWith(heartRate: Value(liveHeartRate)),
+            );
+          } else {
+            await healthMetricsDAO.insertOrUpdateMetrics(
+              HealthMetricsTableCompanion.insert(
+                personID: 1,
+                date: day,
+                heartRate: Value(liveHeartRate),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          }
+        }
       } catch (e) {
-        debugPrint("Error syncing live steps: $e");
+        debugPrint("Error syncing live health data: $e");
       }
     }
 
@@ -330,6 +375,7 @@ class HealthMetricsData {
     // 6. Extract values
     final waterMl = metricsLocal?.waterGlasses ?? 0;
     final exerciseMin = metricsLocal?.exerciseMinutes ?? 0;
+    final focusMin = metricsLocal?.focusMinutes ?? 0;
     final sleepHrs = metricsLocal?.sleepHours ?? 0.0;
     final heartRate = metricsLocal?.heartRate ?? 0;
 
@@ -337,6 +383,7 @@ class HealthMetricsData {
     final yExercise = yesterdayMetrics?.exerciseMinutes ?? 0;
     final ySleep = yesterdayMetrics?.sleepHours ?? 0.0;
     final ySteps = yesterdayMetrics?.steps ?? 0;
+    final yFocus = yesterdayMetrics?.focusMinutes ?? 0;
 
     // Goals
     const stepGoal = STEP_GOAL;
@@ -431,15 +478,17 @@ class HealthMetricsData {
       'focus': HealthMetric(
         id: 'focus',
         name: 'Focus',
-        value: ((metricsLocal?.exerciseMinutes ?? 0))
-            .toString(), // Placeholder until we have focus in metricsLocal or dedicated fetch
+        value: focusMin.toString(),
         icon: Icons.timer_outlined,
         color: const Color(0xFF3F51B5),
         unit: 'min',
-        progress: null,
-        subtitle: 'Daily focus goal',
-        trend: null,
-        trendPositive: null,
+        progress: (focusMin / 120).clamp(
+          0.0,
+          1.0,
+        ), // Placeholder goal of 2 hours
+        subtitle: 'Study Time',
+        trend: trendStr(focusMin, yFocus, 'min'),
+        trendPositive: trendPositive(focusMin, yFocus),
         detailPage: '/health/focus',
       ),
     };
