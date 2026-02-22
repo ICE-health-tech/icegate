@@ -234,7 +234,7 @@ class SettingsWidget extends StatelessWidget {
                   icon: Icons.lock_rounded,
                   color: Colors.purple,
                   onTap: () {
-                    print('Navigate to Change Password');
+                    context.push('/settings/change-password');
                   },
                 ),
               ],
@@ -290,7 +290,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: 'Version',
-                  subtitle: '1.1.5',
+                  subtitle: '2.1.1',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

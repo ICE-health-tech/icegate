@@ -46,6 +46,7 @@ import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_shield/ui_layer/user_page/LoginPage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_shield/ui_layer/user_page/ChangePasswordPage.dart';
 // import 'MainShell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -148,6 +149,13 @@ final GoRouter router = GoRouter(
           path: '/settings',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const SettingsWidget(),
+          routes: [
+            GoRoute(
+              path: 'change-password',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const ChangePasswordPage(),
+            ),
+          ],
         ),
         // Route 4: Profile Dashboard
         GoRoute(
