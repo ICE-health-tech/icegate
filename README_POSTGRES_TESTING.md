@@ -60,7 +60,7 @@ The schema includes the following table groups:
 - `email_addresses` - Email addresses with verification status
 - `user_accounts` - User authentication and authorization
 - `profiles` - Extended user profile information
-- `cv_addresses` - CV/Resume contact information
+- `detail_information` - CV/Resume contact information
 
 ### Skills & Development
 - `skills` - User skills and proficiency levels
@@ -133,7 +133,7 @@ SELECT
     cv.linkedin_url
 FROM persons p
 LEFT JOIN profiles pr ON p.person_id = pr.person_id
-LEFT JOIN cv_addresses cv ON p.person_id = cv.person_id;
+LEFT JOIN detail_information cv ON p.person_id = cv.person_id;
 
 -- Get skills by proficiency level
 SELECT skill_name, proficiency_level, years_of_experience

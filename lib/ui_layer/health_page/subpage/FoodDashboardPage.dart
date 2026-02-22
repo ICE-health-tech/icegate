@@ -11,6 +11,7 @@ import 'package:path/path.dart' as path;
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class FoodDashboardPage extends StatefulWidget {
   const FoodDashboardPage({super.key});
@@ -144,6 +145,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
     await widget.healthMealDAO.insertMeal(
       MealsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         mealName: _foodController.text.isEmpty ? "Meal" : _foodController.text,
         mealImageUrl: Value(_imagePath),
         carbs: Value(carbs),
@@ -156,6 +158,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
     await widget.healthMealDAO.insertDay(
       DaysTableCompanion.insert(
+        id: IDGen.generateUuid(),
         dayID: now,
         caloriesOut: const Value(0),
         weight: const Value(0),

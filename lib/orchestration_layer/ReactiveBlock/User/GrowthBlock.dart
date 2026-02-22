@@ -5,6 +5,7 @@ import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class GrowthBlock {
   final goals = signal<List<GoalProtocol>>([]);
@@ -28,73 +29,90 @@ class GrowthBlock {
 
     _goalsSubscription?.cancel();
     _goalsSubscription = dao.watchGoals(personId).listen((data) {
-      updateGoals(
-        data
-            .map(
-              (e) => GoalProtocol(
-                goalID: e.goalID,
-                personID: e.personID,
-                title: e.title,
-                description: e.description,
-                category: e.category,
-                priority: e.priority,
-                status: e.status,
-                targetDate: e.targetDate,
-                completionDate: e.completionDate,
-                progressPercentage: e.progressPercentage,
-                projectID: e.projectID,
-              ),
-            )
-            .toList(),
-      );
+      untracked(() {
+        updateGoals(
+          data
+              .map(
+                (e) => GoalProtocol(
+                  id: e.id,
+                  goalID: e.goalID,
+                  personID: e.personID,
+                  title: e.title,
+                  description: e.description,
+                  category: e.category,
+                  priority: e.priority,
+                  status: e.status,
+                  targetDate: e.targetDate,
+                  completionDate: e.completionDate,
+                  progressPercentage: e.progressPercentage,
+                  projectID: e.projectID,
+                ),
+              )
+              .toList(),
+        );
+      });
     });
 
     _habitsSubscription?.cancel();
     _habitsSubscription = dao.watchHabits(personId).listen((data) {
-      updateHabits(
-        data
-            .map(
-              (e) => HabitProtocol(
-                habitID: e.habitID,
-                personID: e.personID,
-                goalID: e.goalID,
-                habitName: e.habitName,
-                description: e.description,
-                frequency: e.frequency,
-                frequencyDetails: e.frequencyDetails,
-                targetCount: e.targetCount,
-                isActive: e.isActive,
-                startedDate: e.startedDate,
-              ),
-            )
-            .toList(),
-      );
+      untracked(() {
+        updateHabits(
+          data
+              .map(
+                (e) => HabitProtocol(
+                  id: e.id,
+                  habitID: e.habitID,
+                  personID: e.personID,
+                  goalID: e.goalID,
+                  habitName: e.habitName,
+                  description: e.description,
+                  frequency: e.frequency,
+                  frequencyDetails: e.frequencyDetails,
+                  targetCount: e.targetCount,
+                  isActive: e.isActive,
+                  startedDate: e.startedDate,
+                ),
+              )
+              .toList(),
+        );
+      });
     });
 
     _skillsSubscription?.cancel();
     _skillsSubscription = dao.watchSkills(personId).listen((data) {
-      updateSkills(
-        data
-            .map(
-              (e) => SkillProtocol(
-                skillID: e.skillID,
-                personID: e.personID,
-                skillName: e.skillName,
-                skillCategory: e.skillCategory,
-                proficiencyLevel: e.proficiencyLevel.name,
-                yearsOfExperience: e.yearsOfExperience,
-                description: e.description,
-                isFeatured: e.isFeatured,
-              ),
-            )
-            .toList(),
-      );
+      untracked(() {
+        updateSkills(
+          data
+              .map(
+                (e) => SkillProtocol(
+                  id: e.id,
+                  skillID: e.skillID,
+                  personID: e.personID,
+                  skillName: e.skillName,
+                  skillCategory: e.skillCategory,
+                  proficiencyLevel: e.proficiencyLevel.name,
+                  yearsOfExperience: e.yearsOfExperience,
+                  description: e.description,
+                  isFeatured: e.isFeatured,
+                ),
+              )
+              .toList(),
+        );
+      });
     });
   }
 
-  Future<void> completeGoal(int goalID, {ScoreBlock? scoreBlock}) async {
-    await _dao.updateGoalStatus(goalID, 'done');
+  Future<void> completeGoal(String id, {ScoreBlock? scoreBlock}) async {
+    await _dao.updateGoalStatusByUuid(id, 'done');
+    await _awardPoints(scoreBlock);
+  }
 
+  Future<void> completeGoalByIntId(int goalID, {ScoreBlock? scoreBlock}) async {
+    await _dao.updateGoalStatusByIntId(goalID, 'done');
+    await _awardPoints(scoreBlock);
+  }
+
+  Future<void> _awardPoints(ScoreBlock? scoreBlock) async {
     // Award points for task completion
     if (scoreBlock != null) {
       final completedCount = goals.value
@@ -113,6 +131,7 @@ class GrowthBlock {
   }) async {
     await _dao.createGoal(
       GoalsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         personID: _personId,
         title: title,
         projectID: Value(projectID),

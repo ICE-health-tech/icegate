@@ -1,4 +1,5 @@
 class ProjectProtocol {
+  final String id;
   final int projectID;
   final int personID;
   final String name;
@@ -9,6 +10,7 @@ class ProjectProtocol {
   final int status;
 
   ProjectProtocol({
+    required this.id,
     required this.projectID,
     required this.personID,
     required this.name,

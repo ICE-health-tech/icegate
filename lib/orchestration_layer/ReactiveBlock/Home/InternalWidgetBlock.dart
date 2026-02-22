@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
@@ -18,21 +19,28 @@ class InternalWidgetBlock {
   void refreshBlock(InternalWidgetsDAO internalWidgetDAO) {
     // 1. Cancel any existing subscription to prevent leaks
     _widgetSubscription?.cancel();
+    print(
+      "DUYLONG Internal widget: ${internalWidgetDAO.getInternalWidgetByName("Health")}",
+    );
+    _widgetSubscription = internalWidgetDAO.watchAllWidgets().listen(
+      (driftData) {
+        // print("Mapping element: ${driftData.first.name}, Image: ${driftData.first.imageUrl}");
+        final List<InternalWidgetProtocol> protocolData = driftData
+            .map(
+              (driftElement) =>
+                  InternalWidgetProtocol.adapterList(driftElement),
+            )
+            .toList();
 
-    // 2. Subscribe to the DAO's stream
-    _widgetSubscription = internalWidgetDAO.watchAllWidgets().listen((
-      driftData,
-    ) {
-      // 3. Convert the incoming Drift data to protocol objects
-      final List<InternalWidgetProtocol> protocolData = driftData
-          .map(
-            (driftElement) => InternalWidgetProtocol.adapterList(driftElement),
-          )
-          .toList();
+        // 4. Update the signal
 
-      // 4. Update the signal
-      updateListBlockFromDatabase(protocolData);
-    });
+        updateListBlockFromDatabase(protocolData);
+      },
+      onError: (e, stackTrace) {
+        debugPrint("InternalWidgetBlock: Error watching widgets: $e");
+        debugPrint("Stack trace: $stackTrace");
+      },
+    );
   }
 
   Future<void> deleteWidget(InternalWidgetsDAO dao, String name) async {

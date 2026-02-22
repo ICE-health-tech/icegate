@@ -122,6 +122,10 @@ class FinanceService {
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
+        if (response.body.trim().startsWith('<!doctype html>')) {
+          debugPrint('Error fetching $ticker: Received HTML instead of JSON');
+          return empty;
+        }
         final data = json.decode(response.body);
 
         // Mapping TCBS data to your FinanceAsset model

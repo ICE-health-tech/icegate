@@ -62,7 +62,10 @@ class ScoreBlock {
     if (level < 10) return "Novice";
     if (level < 20) return "Protector";
     if (level < 30) return "Guardian";
-    return "Legend";
+    if (level < 50) return "Hero";
+    if (level < 70) return "Legend";
+    if (level < 90) return "Saint";
+    return "God";
   });
 
   void updateScore(ScoreData score) {
@@ -77,6 +80,12 @@ class ScoreBlock {
     HealthMealDAO mealDAO,
     int personID,
   ) {
+    // Clear old subscriptions to avoid overlapping updates if init is called again (e.g. on user login)
+    for (var s in _subscriptions) {
+      s.cancel();
+    }
+    _subscriptions.clear();
+
     _dao = dao;
     _financeDAO = financeDAO;
     _personID = personID;
@@ -87,14 +96,14 @@ class ScoreBlock {
         if (data != null) {
           updateScore(
             ScoreData(
-              healthGlobalScore: data.healthGlobalScore,
-              socialGlobalScore: data.socialGlobalScore,
-              financialGlobalScore: data.financialGlobalScore,
-              careerGlobalScore: data.careerGlobalScore,
+              healthGlobalScore: data.healthGlobalScore ?? 0.0,
+              socialGlobalScore: data.socialGlobalScore ?? 0.0,
+              financialGlobalScore: data.financialGlobalScore ?? 0.0,
+              careerGlobalScore: data.careerGlobalScore ?? 0.0,
             ),
           );
         }
-      }),
+      }, onError: (e) => debugPrint("ScoreBlock: Error watching score: $e")),
     );
 
     // 2. Auto-Update Logic (write)
@@ -104,34 +113,39 @@ class ScoreBlock {
       financeDAO.watchAccounts(personID).listen((accounts) async {
         final assets = await _financeDAO.watchAssets(personID).first;
         _updateFinanceScore(accounts, assets);
-      }),
+      }, onError: (e) => debugPrint("ScoreBlock: Error watching accounts: $e")),
     );
     _subscriptions.add(
       financeDAO.watchAssets(personID).listen((assets) async {
         final accounts = await _financeDAO.watchAccounts(personID).first;
         _updateFinanceScore(accounts, assets);
-      }),
+      }, onError: (e) => debugPrint("ScoreBlock: Error watching assets: $e")),
     );
 
     // Social Watcher
     _subscriptions.add(
       personDAO.getAllContacts().listen(
         (contacts) => _updateSocialScore(contacts),
+        onError: (e) => debugPrint("ScoreBlock: Error watching contacts: $e"),
       ),
     );
 
     // Health Watcher
     _subscriptions.add(
-      healthDAO.watchAllMetrics(personID).listen((metrics) async {
-        final meals = await mealDAO.watchDaysWithMeals().first;
-        _updateHealthScore(metrics, meals);
-      }),
+      healthDAO.watchAllMetrics(personID).listen(
+        (metrics) async {
+          final meals = await mealDAO.watchDaysWithMeals().first;
+          _updateHealthScore(metrics, meals);
+        },
+        onError: (e) =>
+            debugPrint("ScoreBlock: Error watching health metrics: $e"),
+      ),
     );
     _subscriptions.add(
       mealDAO.watchDaysWithMeals().listen((meals) async {
         final metrics = await healthDAO.watchAllMetrics(personID).first;
         _updateHealthScore(metrics, meals);
-      }),
+      }, onError: (e) => debugPrint("ScoreBlock: Error watching meals: $e")),
     );
   }
 
@@ -160,7 +174,7 @@ class ScoreBlock {
 
       debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
       await _dao.updateFinancialScore(_personID, financeScore);
-    } catch (e) {
+        } catch (e) {
       debugPrint("Error updating finance score: $e");
     }
   }
@@ -181,7 +195,7 @@ class ScoreBlock {
         "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
       );
       await _dao.updateSocialScore(_personID, socialScore.toDouble());
-    } catch (e) {
+        } catch (e) {
       debugPrint("Error updating social score: $e");
     }
   }
@@ -214,7 +228,8 @@ class ScoreBlock {
 
       for (var item in allMealsWrapper) {
         // Group by YYYY-MM-DD
-        final d = item.meal.eatenAt;
+        final d = item.meal.eatenAt; // Skip meals without a valid date
+
         final dateKey = "${d.year}-${d.month}-${d.day}";
         dailyCalories[dateKey] =
             (dailyCalories[dateKey] ?? 0) + item.meal.calories;
@@ -231,9 +246,12 @@ class ScoreBlock {
 
       final healthScore = (stepsPoints + dietPoints).toDouble();
       debugPrint("ScoreBlock: Final Health Global Score: $healthScore");
+      // if (_personID != null) {
       await _dao.updateHealthScore(_personID, healthScore);
-    } catch (e) {
+      // }
+    } catch (e, stack) {
       debugPrint("Error updating health score: $e");
+      debugPrint("Stack trace: $stack");
     }
   }
 

@@ -108,7 +108,7 @@ class ScoringRulesPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'The Ice Shield scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores. Maintain a high score to unlock legendary status.',
+            'The Ice Gate scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores. Maintain a high score to unlock legendary status.',
             style: TextStyle(height: 1.5, color: colorScheme.onSurface),
           ),
         ],

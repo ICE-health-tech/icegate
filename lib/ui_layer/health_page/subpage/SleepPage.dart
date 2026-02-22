@@ -4,6 +4,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
 
 class SleepPage extends StatefulWidget {
@@ -344,6 +345,7 @@ class _SleepPageState extends State<SleepPage> {
 
     await dao.insertSleepLog(
       SleepLogsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         personID: 1,
         startTime: start,
         endTime: drift.Value(end),

@@ -4,9 +4,15 @@ import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
 
 class TaskItem extends StatelessWidget {
   final GoalProtocol task;
+  final String? projectName;
   final VoidCallback onComplete;
 
-  const TaskItem({super.key, required this.task, required this.onComplete});
+  const TaskItem({
+    super.key,
+    required this.task,
+    required this.onComplete,
+    this.projectName,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -63,6 +69,28 @@ class TaskItem extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (projectName != null) ...[
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
+                      margin: const EdgeInsets.only(bottom: 4),
+                      decoration: BoxDecoration(
+                        color: colorScheme.primaryContainer.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: Text(
+                        projectName!.toUpperCase(),
+                        style: TextStyle(
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          color: colorScheme.primary,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                   Text(
                     task.title,
                     style: TextStyle(
@@ -87,6 +115,17 @@ class TaskItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
+                  if (isDone && task.completionDate != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      'Completed on ${task.completionDate!.day}/${task.completionDate!.month}/${task.completionDate!.year}',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.primary.withOpacity(0.6),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -98,7 +137,7 @@ class TaskItem extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '+'+TASK_SCORE_INCREMENT.toString()+' XP',
+                  '+$TASK_SCORE_INCREMENT XP',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,

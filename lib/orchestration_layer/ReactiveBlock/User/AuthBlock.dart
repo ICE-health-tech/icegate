@@ -30,6 +30,7 @@ class AuthBlock {
   final error = signal<String?>(null);
   final username = signal<String?>(null);
   final user = signal<Map<String, dynamic>?>(null);
+  final showWelcomeBack = signal<bool>(false);
 
   AuthBlock({
     required CustomAuthService authService,
@@ -47,31 +48,57 @@ class AuthBlock {
     await _sessionDao.saveSession(token, name);
   }
 
-  /// NEW: Synchronize Supabase Auth user with public profile table
-  /// This ensures that 'saving it to supabase' happens after OAuth.
+  /// Synchronize Supabase Auth user with public profile table
+  /// This ensures that the mandatory 'persons' row exists for PowerSync.
   Future<void> syncUserWithSupabase(User user) async {
-    print(
-      "🔄 [AuthBlock] Synchronizing user ${user.email} with Supabase public schema...",
-    );
+    print("🔄 [AuthBlock] Synchronizing user ${user.id} with Supabase...");
+
     try {
-      // Upsert into public.profiles
-      // We use the Supabase UID as the primary anchor.
-      await Supabase.instance.client.from('profiles').upsert({
-        'id': user.id, // Primary Key (UUID)
-        'bio': user.userMetadata?['bio'] ?? 'Securing the digital frontier.',
-        'preferred_language': 'en',
-        'updated_at': DateTime.now().toIso8601String(),
-        'email': user.email,
-        'name': user.userMetadata?['full_name'] ?? user.email,
-        'first_name': user.userMetadata?['first_name'],
-        'last_name': user.userMetadata?['last_name'],
-      });
+      // 1. Ensure persons row exists
+      final fullName =
+          user.userMetadata?['full_name'] ??
+          user.userMetadata?['name'] ??
+          'IceUser';
+      final firstName =
+          user.userMetadata?['first_name'] ?? fullName.split(' ')[0];
+      final lastName =
+          user.userMetadata?['last_name'] ??
+          (fullName.contains(' ')
+              ? fullName.split(' ').sublist(1).join(' ')
+              : '');
+
+      // Upsert into persons
+      final personResult = await Supabase.instance.client
+          .from('persons')
+          .upsert({
+            'id': user.id,
+            'first_name': firstName,
+            'last_name': lastName,
+            'profile_image_url': user.userMetadata?['avatar_url'],
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .select('person_id')
+          .maybeSingle();
+
+      final int? personInternalId = personResult?['person_id'];
       print(
-        "✅ [AuthBlock] User profile synchronized to Supabase public.profiles.",
+        "   ✅ [AuthBlock] 'persons' row ensured. Internal ID: $personInternalId",
       );
+
+      if (personInternalId != null) {
+        // 2. Ensure initial profile exists
+        await Supabase.instance.client.from('profiles').upsert({
+          'id': user.id,
+          'person_id': personInternalId,
+          'bio': 'Securing the digital frontier.',
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'id');
+        print("   ✅ [AuthBlock] 'profiles' row ensured.");
+      }
     } catch (e) {
-      print("⚠️ [AuthBlock] Could not sync user profile to public schema: $e");
-      // This might fail if RLS is not set up correctly yet, but we've initiated it.
+      print(
+        "⚠️ [AuthBlock] Identity synchronization fallback failed (Trigger might still work): $e",
+      );
     }
   }
 
@@ -253,6 +280,7 @@ class AuthBlock {
       await Supabase.instance.client.auth.signInWithOAuth(
         OAuthProvider.google,
         redirectTo: redirectTo,
+        authScreenLaunchMode: LaunchMode.externalApplication,
       );
       print(
         "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
@@ -355,8 +383,14 @@ class AuthBlock {
         // Map common fields to signals
         username.value =
             response['alias'] ?? session.user.email ?? "SupabaseUser";
+
+        // Ensure email is present in the user map for UI
+        user.value!['email'] = session.user.email;
+
         status.value = AuthStatus.authenticated;
-        print("✅ [AuthBlock] Profile fetched for ${username.value}");
+        print(
+          "✅ [AuthBlock] Profile fetched for ${username.value} with email ${session.user.email}",
+        );
         return;
       } else {
         print(

@@ -106,20 +106,25 @@ class UserProfile {
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
       id: json['id'],
-      firstName: json['first_name'] ?? '',
-      lastName: json['last_name'] ?? '',
+      firstName: json['firstName'] ?? json['first_name'] ?? '',
+      lastName: json['lastName'] ?? json['last_name'] ?? '',
       friends: json['friends'] ?? 0,
       mutual: json['mutual'] ?? 0,
-      profileImageUrl: json['profile_image_url'] ?? '',
+      profileImageUrl:
+          json['profileImageUrl'] ?? json['profile_image_url'] ?? '',
       alias: json['alias'] ?? '',
     );
   }
 
-  UserProfile copyWith({String? profileImageUrl}) {
+  UserProfile copyWith({
+    String? firstName,
+    String? lastName,
+    String? profileImageUrl,
+  }) {
     return UserProfile(
       id: id,
-      firstName: firstName,
-      lastName: lastName,
+      firstName: firstName ?? this.firstName,
+      lastName: lastName ?? this.lastName,
       friends: friends,
       mutual: mutual,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
@@ -194,41 +199,67 @@ class PersonBlock {
 
     try {
       print(
-        "🔍 [PersonBlock] Fetching profile for ${user.id} from Supabase...",
+        "🔍 [PersonBlock] Fetching profile for ${user.id} from Supabase (persons + profiles)...",
       );
-      final response = await Supabase.instance.client
-          .from('profiles')
-          .select()
-          .eq('id', user.id)
-          .maybeSingle();
 
-      if (response != null) {
-        // Map snake_case from DB to CamelCase in Dart
+      // Fetch from both tables using a single request if possible, or parallel
+      final results = await Future.wait([
+        Supabase.instance.client
+            .from('persons')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle(),
+        Supabase.instance.client
+            .from('profiles')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle(),
+        Supabase.instance.client
+            .from('detail_information')
+            .select()
+            .eq('id', user.id)
+            .maybeSingle(),
+      ]);
+
+      final personData = results[0];
+      final profileData = results[1];
+      final detailData = results[2];
+
+      if (personData != null || profileData != null) {
+        // Map data from multiple sources
         final details = UserDetails(
-          bio: response['bio'] ?? '',
-          occupation: response['occupation'] ?? '',
-          location: response['location'] ?? '',
-          company: response['company'] ?? '',
-          university: response['university'] ?? '',
-          country: response['country'] ?? '',
-          githubUrl: response['github_url'] ?? '',
-          linkedinUrl: response['linkedin_url'] ?? '',
-          educationLevel: response['education_level'] ?? '',
-          websiteUrl: response['website_url'] ?? '',
-          email: response['email'] ?? user.email ?? '',
+          bio: profileData?['bio'] ?? detailData?['bio'] ?? '',
+          occupation:
+              profileData?['occupation'] ?? detailData?['occupation'] ?? '',
+          location: profileData?['location'] ?? detailData?['location'] ?? '',
+          company: detailData?['company'] ?? '',
+          university: detailData?['university'] ?? '',
+          country: detailData?['country'] ?? '',
+          githubUrl:
+              profileData?['github_url'] ?? detailData?['github_url'] ?? '',
+          linkedinUrl:
+              profileData?['linkedin_url'] ?? detailData?['linkedin_url'] ?? '',
+          educationLevel:
+              profileData?['education_level'] ??
+              detailData?['education_level'] ??
+              '',
+          websiteUrl:
+              profileData?['website_url'] ?? detailData?['website_url'] ?? '',
+          email: user.email ?? '',
         );
 
         final profile = UserProfile(
-          id: 0, // Legacy int id
+          id: personData?['person_id'],
           firstName:
-              response['first_name'] ??
+              personData?['first_name'] ??
               user.userMetadata?['first_name'] ??
               'User',
           lastName:
-              response['last_name'] ?? user.userMetadata?['last_name'] ?? '',
-          alias: response['alias'] ?? user.userMetadata?['user_name'] ?? 'user',
+              personData?['last_name'] ?? user.userMetadata?['last_name'] ?? '',
+          alias:
+              personData?['alias'] ?? user.userMetadata?['user_name'] ?? 'user',
           profileImageUrl:
-              response['profile_image_url'] ??
+              personData?['profile_image_url'] ??
               user.userMetadata?['avatar_url'] ??
               '',
         );
@@ -237,7 +268,9 @@ class PersonBlock {
           profiles: profile,
           details: details,
         );
-        print("✅ [PersonBlock] Profile fetched for ${profile.alias}");
+        print(
+          "✅ [PersonBlock] Multi-source Profile fetched for ${profile.alias}",
+        );
       } else {
         print("⚠️ [PersonBlock] No profile found in Supabase. Falling back...");
         _applyGuestFallback();
@@ -279,6 +312,8 @@ class PersonBlock {
 
   // Optimistic update for edit
   void editProfile({
+    String? firstName,
+    String? lastName,
     String? university,
     String? location,
     String? bio,
@@ -292,7 +327,10 @@ class PersonBlock {
     String? email,
   }) {
     information.value = UserInformation(
-      profiles: information.value.profiles,
+      profiles: information.value.profiles.copyWith(
+        firstName: firstName,
+        lastName: lastName,
+      ),
       details: information.value.details.copyWith(
         university: university,
         location: location,
@@ -321,27 +359,57 @@ class PersonBlock {
       final details = information.value.details;
       final profile = information.value.profiles;
 
-      print("💾 [PersonBlock] Updating profile in Supabase for ${user.id}...");
-      await Supabase.instance.client.from('profiles').upsert({
+      print(
+        "💾 [PersonBlock] Updating profile across tables for ${user.id}...",
+      );
+
+      // 1. Update persons table (Identity)
+      print("   - Updating 'persons' table...");
+      await Supabase.instance.client.from('persons').upsert({
         'id': user.id,
         'first_name': profile.firstName,
         'last_name': profile.lastName,
-        'alias': profile.alias,
         'profile_image_url': profile.profileImageUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      print("   ✅ 'persons' update successful.");
+
+      // 2. Update profiles table (Social/Bio)
+      print("   - Updating 'profiles' table...");
+      await Supabase.instance.client.from('profiles').upsert({
+        'id': user.id,
         'bio': details.bio,
         'occupation': details.occupation,
+        'education_level': details.educationLevel,
         'location': details.location,
+        'website_url': details.websiteUrl,
+        'linkedin_url': details.linkedinUrl,
+        'github_url': details.githubUrl,
+        'updated_at': DateTime.now().toIso8601String(),
+      });
+      print("   ✅ 'profiles' update successful.");
+
+      // 3. Update detail_information table (Professional/Location)
+      print("   - Updating 'detail_information' table...");
+      await Supabase.instance.client.from('detail_information').upsert({
+        'id': user.id, // Primary key is id (uuid)
         'company': details.company,
         'university': details.university,
         'country': details.country,
+        'bio': details.bio,
+        'occupation': details.occupation,
+        'location': details.location,
         'github_url': details.githubUrl,
+        'website_url': details.websiteUrl,
         'linkedin_url': details.linkedinUrl,
         'education_level': details.educationLevel,
-        'website_url': details.websiteUrl,
-        'email': details.email,
         'updated_at': DateTime.now().toIso8601String(),
-      });
-      print("✅ [PersonBlock] Supabase Profile Update Successful");
+      }, onConflict: 'id');
+      print("   ✅ 'detail_information' update successful.");
+
+      print(
+        "✅ [PersonBlock] Multi-table Profile Update COMPLETED for ${user.id}",
+      );
     } catch (e) {
       print("❌ [PersonBlock] Failed to update profile in database: $e");
     }
@@ -376,11 +444,19 @@ class PersonBlock {
     }
 
     try {
-      print("🔍 [PersonBlock] Fetching skills from Supabase...");
+      final personId = information.value.profiles.id;
+      if (personId == null) {
+        print(
+          "⚠️ [PersonBlock] Skipping skills fetch: No personID resolved yet.",
+        );
+        skills.value = [];
+        return;
+      }
+
       final response = await Supabase.instance.client
           .from('skills')
           .select()
-          .eq('user_id', user.id); // Assuming user_id column
+          .eq('person_id', personId);
 
       final skillList = (response as List)
           .map((s) => SkillType.fromJson(s))
@@ -398,12 +474,13 @@ class PersonBlock {
   Future<void> fetchInitialData(String token) async {
     if (token.isEmpty) return;
 
-    print("🚀 [PersonBlock] Starting Initial Data Fetch...");
-    await Future.wait([
-      fetchFromDatabase(token),
-      getUserRole(token),
-      getUserSkill(token),
-    ]);
+    print("🚀 [PersonBlock] Starting Initial Data Fetch (Sequential Flow)...");
+
+    // 1. First resolve person identity
+    await fetchFromDatabase(token);
+
+    // 2. Then fetch dependent data
+    await Future.wait([getUserRole(token), getUserSkill(token)]);
     print("✅ [PersonBlock] Initial Data Fetch Completed");
   }
 }

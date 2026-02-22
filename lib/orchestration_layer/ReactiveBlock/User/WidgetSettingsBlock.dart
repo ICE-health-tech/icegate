@@ -17,7 +17,7 @@ class WidgetSettingsBlock {
         data
             .map(
               (e) => WidgetProtocol(
-                widgetID: e.personID,
+                widgetID: e.personWidgetID,
                 personID: e.personID,
                 widgetName: e.widgetName,
                 widgetType: e.widgetType,

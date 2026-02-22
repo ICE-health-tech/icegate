@@ -21,18 +21,23 @@ class ProjectsPage extends StatelessWidget {
     return MainButton(
       type: "projects",
       destination: "/projects",
-      mainFunction: () => context.go("/projects"),
-      onSwipeUp: () => context.go("/canvas"),
+      mainFunction: () {
+        showDialog(
+          context: context,
+          builder: (context) => const CreateProjectDialog(),
+        );
+      },
+      onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
       onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       icon: Icons.rocket_launch_rounded,
       onLongPress: () {
-        showDialog(
-          context: context,
-          builder: (context) => const CreateProjectDialog(),
-        );
+         context.go("/project-analysis");
+       
       },
       subButtons: [],
     );
@@ -181,7 +186,7 @@ class ProjectsPage extends StatelessWidget {
                             label: 'Focus',
                             color: Colors.purple,
                             onTap: () {
-                              context.push('/projects/focus');
+                              context.push('/health/focus');
                             },
                           ),
                         ),
@@ -252,7 +257,7 @@ class ProjectsPage extends StatelessWidget {
                           );
                           if (confirm == true && context.mounted) {
                             final projectBlock = context.read<ProjectBlock>();
-                            await projectBlock.deleteProject(project.projectID);
+                            await projectBlock.deleteProject(project.id);
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
@@ -342,39 +347,47 @@ class ProjectsPage extends StatelessWidget {
                 ),
               );
             }),
-            // --- ACTIVE TASKS SECTION ---
+            // --- ALL TASKS SECTION ---
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                child: Column(
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        _buildSectionTitle(context, 'Active Tasks'),
-                        TextButton(
-                          onPressed: () =>
-                              _showAddTaskDialog(context, growthBlock),
-                          child: const Text('Add Task'),
-                        ),
-                      ],
+                    _buildSectionTitle(context, 'Active Tasks'),
+                    TextButton(
+                      onPressed: () => _showAddTaskDialog(context, growthBlock),
+                      child: const Text('Add Task'),
                     ),
                   ],
                 ),
               ),
             ),
             Watch((context) {
-              final tasks = growthBlock.goals.value
-                  .where((g) => g.category == 'project' && g.status != 'done')
-                  .toList();
+              final projectBlock = context.watch<ProjectBlock>();
+              final projects = projectBlock.projects.value;
+
+              final tasks = growthBlock.goals.value.where((g) {
+                // Include all project tasks and active personal tasks
+                return g.category == 'project' ||
+                    g.projectID != null ||
+                    (g.status != 'done' && g.category == 'personal');
+              }).toList();
+
+              // Sort: active first, then by ID (assuming newer is larger)
+              tasks.sort((a, b) {
+                if (a.status != 'done' && b.status == 'done') return -1;
+                if (a.status == 'done' && b.status != 'done') return 1;
+                return b.goalID.compareTo(a.goalID);
+              });
 
               if (tasks.isEmpty) {
                 return const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.symmetric(horizontal: 20),
                     child: _EmptyState(
-                      icon: Icons.task_alt,
-                      message: 'All caught up! Add a task to stay productive.',
+                      icon: Icons.checklist_rounded,
+                      message: 'No tasks yet. Add one to stay productive.',
                     ),
                   ),
                 );
@@ -385,18 +398,33 @@ class ProjectsPage extends StatelessWidget {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final task = tasks[index];
+
+                    // Find project name if it exists
+                    String? projectName;
+                    if (task.projectID != null) {
+                      try {
+                        projectName = projects
+                            .firstWhere((p) => p.projectID == task.projectID)
+                            .name;
+                      } catch (_) {
+                        projectName = null;
+                      }
+                    }
+
                     return TaskItem(
                       task: task,
+                      projectName: projectName,
                       onComplete: () async {
-                        await growthBlock.completeGoal(task.goalID);
-                        // Award points persistently
-                        await scoreBlock.persistentCareerIncrement(2);
+                        await growthBlock.completeGoal(
+                          task.id,
+                          scoreBlock: scoreBlock,
+                        );
 
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: const Text(
-                                'Task complete! +2 Project XP Awarded 🚀',
+                                'Task complete! XP Awarded 🚀',
                               ),
                               behavior: SnackBarBehavior.floating,
                               duration: const Duration(seconds: 1),

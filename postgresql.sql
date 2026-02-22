@@ -10,7 +10,7 @@ DROP TABLE IF EXISTS goals CASCADE;
 DROP TABLE IF EXISTS assets CASCADE;
 DROP TABLE IF EXISTS financial_accounts CASCADE;
 DROP TABLE IF EXISTS skills CASCADE;
-DROP TABLE IF EXISTS cv_addresses CASCADE;
+DROP TABLE IF EXISTS detail_information CASCADE;
 DROP TABLE IF EXISTS profiles CASCADE;
 DROP TABLE IF EXISTS user_accounts CASCADE;
 DROP TABLE IF EXISTS email_addresses CASCADE;
@@ -143,7 +143,7 @@ CREATE TABLE profiles (
 );
 
 -- CV Addresses Table
-CREATE TABLE cv_addresses (
+CREATE TABLE detail_information (
     cv_address_id SERIAL PRIMARY KEY,
     person_id INTEGER NOT NULL UNIQUE REFERENCES persons(person_id) ON DELETE CASCADE,
     github_url TEXT,
@@ -293,7 +293,7 @@ CREATE INDEX idx_email_addresses_email ON email_addresses(email_address);
 CREATE INDEX idx_user_accounts_person_id ON user_accounts(person_id);
 CREATE INDEX idx_user_accounts_username ON user_accounts(username);
 CREATE INDEX idx_profiles_person_id ON profiles(person_id);
-CREATE INDEX idx_cv_addresses_person_id ON cv_addresses(person_id);
+CREATE INDEX idx_detail_information_person_id ON detail_information(person_id);
 
 -- Skills indexes
 CREATE INDEX idx_skills_person_id ON skills(person_id);
@@ -342,7 +342,7 @@ INSERT INTO profiles (profile_id, person_id, bio, occupation, location)
 VALUES (1, 1, 'Software developer passionate about Flutter and mobile apps', 'Software Engineer', 'San Francisco, CA');
 
 -- Insert sample CV address
-INSERT INTO cv_addresses (cv_address_id, person_id, github_url, linkedin_url, location, country)
+INSERT INTO detail_information (cv_address_id, person_id, github_url, linkedin_url, location, country)
 VALUES (1, 1, 'https://github.com/johndoe', 'https://linkedin.com/in/johndoe', 'San Francisco', 'USA');
 
 -- Insert sample skill
@@ -377,7 +377,7 @@ $$ language 'plpgsql';
 -- Add triggers for all tables with updated_at
 CREATE TRIGGER update_persons_updated_at BEFORE UPDATE ON persons FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_profiles_updated_at BEFORE UPDATE ON profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
-CREATE TRIGGER update_cv_addresses_updated_at BEFORE UPDATE ON cv_addresses FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_detail_information_updated_at BEFORE UPDATE ON detail_information FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_user_accounts_updated_at BEFORE UPDATE ON user_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_skills_updated_at BEFORE UPDATE ON skills FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
 CREATE TRIGGER update_financial_accounts_updated_at BEFORE UPDATE ON financial_accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
@@ -411,7 +411,7 @@ SELECT
 UNION ALL SELECT 'email_addresses', COUNT(*) FROM email_addresses
 UNION ALL SELECT 'user_accounts', COUNT(*) FROM user_accounts
 UNION ALL SELECT 'profiles', COUNT(*) FROM profiles
-UNION ALL SELECT 'cv_addresses', COUNT(*) FROM cv_addresses
+UNION ALL SELECT 'detail_information', COUNT(*) FROM detail_information
 UNION ALL SELECT 'skills', COUNT(*) FROM skills
 UNION ALL SELECT 'financial_accounts', COUNT(*) FROM financial_accounts
 UNION ALL SELECT 'assets', COUNT(*) FROM assets

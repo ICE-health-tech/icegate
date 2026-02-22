@@ -6,17 +6,18 @@ part of 'BluetoothDeviceInfo.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_BluetoothDeviceInfo _$BluetoothDeviceInfoFromJson(Map<String, dynamic> json) =>
-    _BluetoothDeviceInfo(
-      id: json['id'] as String,
-      name: json['name'] as String,
-      isConnected: json['isConnected'] as bool? ?? false,
-      rssi: (json['rssi'] as num?)?.toInt() ?? 0,
-      deviceType: json['deviceType'] as String? ?? 'Unknown',
-    );
+_$BluetoothDeviceInfoImpl _$$BluetoothDeviceInfoImplFromJson(
+  Map<String, dynamic> json,
+) => _$BluetoothDeviceInfoImpl(
+  id: json['id'] as String,
+  name: json['name'] as String,
+  isConnected: json['isConnected'] as bool? ?? false,
+  rssi: (json['rssi'] as num?)?.toInt() ?? 0,
+  deviceType: json['deviceType'] as String? ?? 'Unknown',
+);
 
-Map<String, dynamic> _$BluetoothDeviceInfoToJson(
-  _BluetoothDeviceInfo instance,
+Map<String, dynamic> _$$BluetoothDeviceInfoImplToJson(
+  _$BluetoothDeviceInfoImpl instance,
 ) => <String, dynamic>{
   'id': instance.id,
   'name': instance.name,

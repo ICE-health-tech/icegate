@@ -43,7 +43,9 @@ class HomePage extends StatefulWidget {
         print("double click");
         context.pop();
       },
-      onSwipeUp: () => context.go("/canvas"),
+      onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
       onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
       onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       onLongPress: () {
@@ -126,6 +128,7 @@ class _HomePageState extends State<HomePage> {
 
     database = context.read<AppDatabase>();
     internalWidgetBlock = context.read<InternalWidgetBlock>();
+
     externalWidgetBlock = context.read<ExternalWidgetBlock>();
     authBlock = context.read<AuthBlock>();
     scoreBlock = context.read<ScoreBlock>();
@@ -157,9 +160,12 @@ class _HomePageState extends State<HomePage> {
     }
 
     Future.microtask(() {
+      print("DUYLONG>>");
       internalWidgetBlock.refreshBlock(database.internalWidgetsDAO);
       externalWidgetBlock.refreshBlock(database.externalWidgetsDAO);
 
+      // print("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
+      // );
       HealthMetricsData.getMetricsByDay(DateTime.now(), context).then((
         newData,
       ) {
@@ -700,13 +706,14 @@ class _HomePageState extends State<HomePage> {
     required String route,
     required double scoreData,
   }) {
+    final isPhone = MediaQuery.of(context).size.width < 600;
     final colorScheme = Theme.of(context).colorScheme;
     final safeScore = scoreData.isFinite ? scoreData.toInt() : 0;
     final level = GamificationService.getLevel(safeScore);
     final progress = GamificationService.getProgressToNextLevel(safeScore);
 
     return Container(
-      width: 260,
+      width: isPhone ? 210 : 280,
       margin: const EdgeInsets.only(right: 12),
       child: Card(
         elevation: 0,
@@ -751,7 +758,7 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(20.0),
+                padding: EdgeInsets.all(isPhone ? 12.0 : 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -767,11 +774,11 @@ class _HomePageState extends State<HomePage> {
                               alignment: Alignment.center,
                               children: [
                                 SizedBox(
-                                  width: 60,
-                                  height: 60,
+                                  width: isPhone ? 64 : 76,
+                                  height: isPhone ? 64 : 76,
                                   child: CircularProgressIndicator(
                                     value: value.clamp(0.0, 1.0),
-                                    strokeWidth: 4,
+                                    strokeWidth: isPhone ? 4 : 5,
                                     backgroundColor: color.withOpacity(0.1),
                                     valueColor: AlwaysStoppedAnimation<Color>(
                                       color,
@@ -780,12 +787,16 @@ class _HomePageState extends State<HomePage> {
                                   ),
                                 ),
                                 Container(
-                                  padding: const EdgeInsets.all(12),
+                                  padding: EdgeInsets.all(isPhone ? 12 : 16),
                                   decoration: BoxDecoration(
                                     color: color.withOpacity(0.1),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: Icon(icon, color: color, size: 24),
+                                  child: Icon(
+                                    icon,
+                                    color: color,
+                                    size: isPhone ? 26 : 30,
+                                  ),
                                 ),
                               ],
                             );
@@ -805,7 +816,7 @@ class _HomePageState extends State<HomePage> {
                                   title,
                                   style: TextStyle(
                                     fontWeight: FontWeight.w900,
-                                    fontSize: 18,
+                                    fontSize: isPhone ? 18 : 22,
                                     color: colorScheme.onSurface,
                                     letterSpacing: -0.5,
                                   ),
@@ -817,7 +828,7 @@ class _HomePageState extends State<HomePage> {
                                   prefix: "LV ",
                                   style: TextStyle(
                                     color: color,
-                                    fontSize: 14,
+                                    fontSize: isPhone ? 14 : 18,
                                     fontWeight: FontWeight.w900,
                                     letterSpacing: 0.5,
                                   ),
@@ -829,7 +840,7 @@ class _HomePageState extends State<HomePage> {
                                   decimalPlaces: 1,
                                   style: TextStyle(
                                     color: color.withOpacity(0.9),
-                                    fontSize: 16,
+                                    fontSize: isPhone ? 16 : 22,
                                     fontWeight: FontWeight.w900,
                                   ),
                                 ),
@@ -842,11 +853,11 @@ class _HomePageState extends State<HomePage> {
                     const Spacer(),
                     // 2x2 Grid of metrics
                     Wrap(
-                      spacing: 12,
-                      runSpacing: 4,
+                      spacing: isPhone ? 8 : 12,
+                      runSpacing: isPhone ? 4 : 4,
                       children: metrics.map((m) {
                         return SizedBox(
-                          width: 90,
+                          width: isPhone ? 80 : 90,
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
@@ -854,7 +865,7 @@ class _HomePageState extends State<HomePage> {
                                 m['value'] ?? '',
                                 style: TextStyle(
                                   color: colorScheme.onSurface.withOpacity(0.9),
-                                  fontSize: 13,
+                                  fontSize: isPhone ? 11 : 13,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
                                 ),
@@ -865,7 +876,7 @@ class _HomePageState extends State<HomePage> {
                                 m['label'] ?? '',
                                 style: TextStyle(
                                   color: colorScheme.onSurface.withOpacity(0.5),
-                                  fontSize: 10,
+                                  fontSize: isPhone ? 9 : 10,
                                   fontWeight: FontWeight.w600,
                                   height: 1.1,
                                 ),
@@ -1047,7 +1058,8 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildExternalWidget(BuildContext context, ExternalWidgetData data) {
     final colorScheme = Theme.of(context).colorScheme;
-    final String fullUrl = "${data.protocol}://${data.host}${data.url}";
+    final String fullUrl =
+        "${data.protocol ?? 'https'}://${data.host ?? ''}${data.url ?? ''}";
 
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
     final item = Container(
@@ -1086,7 +1098,7 @@ class _HomePageState extends State<HomePage> {
           ),
           const SizedBox(height: 10),
           AutoSizeText(
-            data.name,
+            data.name ?? 'Untitled',
             style: TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 13,
@@ -1122,7 +1134,7 @@ class _HomePageState extends State<HomePage> {
                 HapticFeedback.heavyImpact();
                 externalWidgetBlock.deleteWidget(
                   database.externalWidgetsDAO,
-                  data.widgetID,
+                  data.widgetID ?? 0,
                 );
               },
               child: Container(
@@ -1196,7 +1208,7 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
     ExternalWidgetData data,
   ) {
-    final controller = TextEditingController(text: data.name);
+    final controller = TextEditingController(text: data.name ?? '');
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -1215,7 +1227,7 @@ class _HomePageState extends State<HomePage> {
               if (controller.text.isNotEmpty) {
                 externalWidgetBlock.renameWidget(
                   database.externalWidgetsDAO,
-                  data.widgetID,
+                  data.widgetID ?? 0,
                   controller.text,
                 );
                 Navigator.pop(context);

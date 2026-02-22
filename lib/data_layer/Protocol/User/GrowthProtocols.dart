@@ -1,4 +1,5 @@
 class GoalProtocol {
+  final String id;
   final int goalID;
   final int personID;
   final int? projectID;
@@ -12,6 +13,7 @@ class GoalProtocol {
   final int progressPercentage;
 
   GoalProtocol({
+    required this.id,
     required this.goalID,
     required this.personID,
     this.projectID,
@@ -27,6 +29,7 @@ class GoalProtocol {
 }
 
 class HabitProtocol {
+  final String id;
   final int habitID;
   final int personID;
   final int? goalID;
@@ -39,6 +42,7 @@ class HabitProtocol {
   final DateTime startedDate;
 
   HabitProtocol({
+    required this.id,
     required this.habitID,
     required this.personID,
     this.goalID,
@@ -53,6 +57,7 @@ class HabitProtocol {
 }
 
 class SkillProtocol {
+  final String id;
   final int skillID;
   final int personID;
   final String skillName;
@@ -63,6 +68,7 @@ class SkillProtocol {
   final bool isFeatured;
 
   SkillProtocol({
+    required this.id,
     required this.skillID,
     required this.personID,
     required this.skillName,

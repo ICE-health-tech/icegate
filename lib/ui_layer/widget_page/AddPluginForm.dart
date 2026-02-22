@@ -87,11 +87,12 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         }
 
         await internalWidgetsDAO.insertInternalWidget(
+          
           name: _selectedPlugin!.name,
           url: _selectedPlugin!.url,
           alias: _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_'),
-          imageUrl: _selectedPlugin!.imageUrl ?? "",
-        );
+            imageUrl: _selectedPlugin!.imageUrl ?? "assets/internalwidget/default.png",
+          );
       } else {
         // --- EXTERNAL MODE ---
         if (_isPluginMode) {

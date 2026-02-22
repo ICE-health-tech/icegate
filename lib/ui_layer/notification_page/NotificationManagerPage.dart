@@ -1,12 +1,14 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart' hide ThemeData;
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
+
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -85,7 +87,6 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         ),
                         Row(
                           children: [
-                           
                             IconButton(
                               onPressed: () => Navigator.pop(context),
                               icon: Icon(
@@ -270,197 +271,234 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               );
             },
           ),
-          const SizedBox(height: 32),
-          Text(
-            "Quick Channels",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildChannelTile(
-            "Daily Briefing",
-            "Morning summary with quote of the day",
-            Icons.wb_sunny_rounded,
-            Colors.orangeAccent,
-            onTest: () => notificationService.scheduleDailyNotification(),
-          ),
-          const SizedBox(height: 12),
-          _buildChannelTile(
-            "Quest Updates",
-            "Task status and milestones",
-            Icons.shield_rounded,
-            Colors.purpleAccent,
-          ),
-          const SizedBox(height: 32),
         ],
       ],
     );
   }
 
   Widget _buildSystemQuestsTab(BuildContext context) {
-    final healthBlock = context.read<HealthBlock>();
+    final questDao = context.watch<QuestDAO>();
 
-    return Watch((context) {
-      final steps = healthBlock.todaySteps.value;
-      final stepGoal = healthBlock.dailyStepGoal.value;
-      final water = healthBlock.todayWater.value;
+    return StreamBuilder<List<QuestData>>(
+      stream: questDao.watchActiveQuests(),
+      builder: (context, snapshot) {
+        final quests = snapshot.data ?? [];
 
-      return ListView(
-        physics: const BouncingScrollPhysics(),
-        children: [
-          AnimatedBuilder(
-            animation: _pulseController,
-            builder: (context, child) {
-              final pulseOpacity = (_pulseController.value * 0.2 + 0.2);
-              return Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      Colors.blue.withOpacity(0.15),
-                      Colors.cyan.withOpacity(0.05),
+        return ListView(
+          physics: const BouncingScrollPhysics(),
+          children: [
+            AnimatedBuilder(
+              animation: _pulseController,
+              builder: (context, child) {
+                final pulseOpacity = (_pulseController.value * 0.2 + 0.2);
+                return Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Colors.blue.withOpacity(0.15),
+                        Colors.cyan.withOpacity(0.05),
+                      ],
+                    ),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: Colors.cyanAccent.withOpacity(pulseOpacity),
+                      width: 1.5,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.cyan.withOpacity(0.1),
+                        blurRadius: 20 * _pulseController.value,
+                        spreadRadius: 2,
+                      ),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: Colors.cyanAccent.withOpacity(pulseOpacity),
-                    width: 1.5,
+                  child: child,
+                );
+              },
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          "[ DAILY QUEST: HUNTER MODE ]",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1.2,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Icon(
+                        Icons.radar_rounded,
+                        color: Colors.cyanAccent.withOpacity(0.8),
+                        size: 18,
+                      ),
+                    ],
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.cyan.withOpacity(0.1),
-                      blurRadius: 20 * _pulseController.value,
-                      spreadRadius: 2,
-                    ),
-                  ],
-                ),
-                child: child,
-              );
-            },
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Expanded(
-                      child: Text(
-                        "[ DAILY QUEST: IMMERSIVE STATS ]",
-                        style: TextStyle(
-                          color: Colors.cyanAccent,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1.2,
-                        ),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                    Icon(
-                      Icons.radar_rounded,
-                      color: Colors.cyanAccent.withOpacity(0.8),
-                      size: 18,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 24),
-                _buildQuestItem(
-                  "Physical Training",
-                  "Push-ups: 0 / 100",
-                  0.0,
-                  Colors.orangeAccent,
-                  Icons.fitness_center_rounded,
-                ),
-                _buildQuestItem(
-                  "Core Strength",
-                  "Sit-ups: 0 / 100",
-                  0.0,
-                  Colors.greenAccent,
-                  Icons.accessibility_new_rounded,
-                ),
-                _buildQuestItem(
-                  "Leg Endurance",
-                  "Squats: 0 / 100",
-                  0.0,
-                  Colors.blueAccent,
-                  Icons.directions_run_rounded,
-                ),
-                _buildQuestItem(
-                  "Movement Radius",
-                  "$steps / $stepGoal m",
-                  (steps / stepGoal).clamp(0.0, 1.0),
-                  Colors.cyanAccent,
-                  Icons.explore_rounded,
-                ),
-                _buildQuestItem(
-                  "Molecular Support",
-                  "$water / 2000 ml",
-                  (water / 2000).clamp(0.0, 1.0),
-                  Colors.lightBlueAccent,
-                  Icons.water_drop_rounded,
-                ),
-                const SizedBox(height: 20),
-                const Divider(color: Colors.cyanAccent, thickness: 0.5),
-                const SizedBox(height: 12),
-                Row(
-                  children: [
-                    Icon(
-                      Icons.error_outline_rounded,
-                      color: Colors.redAccent.withOpacity(0.8),
-                      size: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    const Expanded(
-                      child: Text(
-                        "WARNING: PERFORMANCE DEGRADATION DETECTED UPON FAILURE.",
-                        style: TextStyle(
-                          color: Colors.redAccent,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
+                  const SizedBox(height: 24),
+                  if (quests.isEmpty)
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Text(
+                          "NO ACTIVE QUESTS DETECTED",
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.primary,
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1,
+                          ),
                         ),
                       ),
+                    )
+                  else
+                    ...quests.map((quest) {
+                      final progress = quest.targetValue > 0
+                          ? (quest.currentValue / quest.targetValue).clamp(
+                              0.0,
+                              1.0,
+                            )
+                          : 0.0;
+                      return _buildQuestItem(
+                        quest.title,
+                        "${quest.currentValue.toInt()} / ${quest.targetValue.toInt()}",
+                        progress,
+                        _getCategoryColor(quest.category),
+                        _getCategoryIcon(quest.category),
+                      );
+                    }),
+
+                  // --- Real-time Health Quests (Restored) ---
+                  Watch((context) {
+                    final healthBlock = context.watch<HealthBlock>();
+                    final steps = healthBlock.todaySteps.value;
+                    final stepGoal = healthBlock.dailyStepGoal.value;
+                    final water = healthBlock.todayWater.value;
+
+                    return Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        _buildQuestItem(
+                          "Movement Radius",
+                          "$steps / $stepGoal m",
+                          (stepGoal > 0 ? steps / stepGoal : 0.0).clamp(
+                            0.0,
+                            1.0,
+                          ),
+                          Colors.cyanAccent,
+                          Icons.explore_rounded,
+                        ),
+                        _buildQuestItem(
+                          "Molecular Support",
+                          "$water / 2000 ml",
+                          (water / 2000.0).clamp(0.0, 1.0),
+                          Colors.lightBlueAccent,
+                          Icons.water_drop_rounded,
+                        ),
+                      ],
+                    );
+                  }),
+                  const SizedBox(height: 20),
+                  const Divider(color: Colors.cyanAccent, thickness: 0.5),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.error_outline_rounded,
+                        color: Colors.redAccent.withOpacity(0.8),
+                        size: 14,
+                      ),
+                      const SizedBox(width: 8),
+                      const Expanded(
+                        child: Text(
+                          "WARNING: PERFORMANCE DEGRADATION DETECTED UPON FAILURE.",
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 32),
+            Text(
+              "COMPLETED PROTOCOLS",
+              style: TextStyle(
+                color: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.24),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 2,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildGlassCard(
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Center(
+                  child: Text(
+                    "SYSTEM INITIALIZED - READY FOR DATA",
+                    style: TextStyle(
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.onSurface.withOpacity(0.15),
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
                     ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          Text(
-            "COMPLETED PROTOCOLS",
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24),
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 2,
-            ),
-          ),
-          const SizedBox(height: 16),
-          _buildGlassCard(
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Center(
-                child: Text(
-                  "SYSTEM INITIALIZED - NO RECORDS FOUND",
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.15),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1,
                   ),
                 ),
               ),
             ),
-          ),
-        ],
-      );
-    });
+          ],
+        );
+      },
+    );
+  }
+
+  Color _getCategoryColor(String category) {
+    switch (category.toLowerCase()) {
+      case 'health':
+        return Colors.greenAccent;
+      case 'social':
+        return Colors.blueAccent;
+      case 'finance':
+        return Colors.orangeAccent;
+      case 'career':
+      case 'productivity':
+        return Colors.purpleAccent;
+      default:
+        return Colors.cyanAccent;
+    }
+  }
+
+  IconData _getCategoryIcon(String category) {
+    switch (category.toLowerCase()) {
+      case 'health':
+        return Icons.fitness_center_rounded;
+      case 'social':
+        return Icons.people_alt_rounded;
+      case 'finance':
+        return Icons.account_balance_wallet_rounded;
+      case 'career':
+      case 'productivity':
+        return Icons.rocket_launch_rounded;
+      default:
+        return Icons.auto_awesome_rounded;
+    }
   }
 
   Widget _buildQuestItem(
@@ -661,9 +699,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     String title,
     String subtitle,
     IconData icon,
-    Color color, {
-    VoidCallback? onTest,
-  }) {
+    Color color,
+  ) {
     return _buildGlassCard(
       borderColor: color.withOpacity(0.2),
       child: ListTile(
@@ -984,6 +1021,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     dao
                         .insertNotification(
                           CustomNotificationsTableCompanion.insert(
+                            id: IDGen.generateUuid(),
                             title: titleController.text,
                             content: contentController.text,
                             scheduledTime: scheduled,
@@ -1106,6 +1144,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 final dao = context.read<QuoteDAO>();
                 dao.insertQuote(
                   QuotesTableCompanion.insert(
+                    id: IDGen.generateUuid(),
                     content: contentController.text,
                     author: Value(
                       authorController.text.isEmpty

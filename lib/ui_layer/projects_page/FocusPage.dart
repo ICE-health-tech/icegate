@@ -172,8 +172,24 @@ class _FocusPageState extends State<FocusPage> {
   @override
   void dispose() {
     _audioSubscription?.cancel();
+    _summaryEffectDispose?.call();
     super.dispose();
   }
+
+  void _setupSummaryEffect(FocusBlock focusBlock) {
+    if (_summaryEffectDispose != null) return;
+    _summaryEffectDispose = effect(() {
+      if (focusBlock.showSummary.value) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _showSessionSummary(context, focusBlock);
+          }
+        });
+      }
+    });
+  }
+
+  void Function()? _summaryEffectDispose;
 
   String formatTime(int totalSeconds) {
     int minutes = totalSeconds ~/ 60;
@@ -225,13 +241,10 @@ class _FocusPageState extends State<FocusPage> {
     final growthBlock = context.watch<GrowthBlock>();
 
     _setupNotificationListener(context, focusBlock);
+    _setupSummaryEffect(focusBlock);
 
-    // Show Session Summary Dialog
-    if (focusBlock.showSummary.watch(context)) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _showSessionSummary(context, focusBlock);
-      });
-    }
+    // Sync logic has been moved to FocusBlock and FocusAudioHandler
+    // to prevent infinite loops and state fighting.
 
     final focusMin = focusBlock.focusDuration.watch(context);
     final shortMin = focusBlock.shortBreakDuration.watch(context);
@@ -509,6 +522,15 @@ class _TimerControls extends StatelessWidget {
         ),
         const SizedBox(width: 24),
         IconButton.filled(
+          onPressed: () => _showYoutubeDialog(context),
+          icon: const Icon(Icons.music_video_rounded, size: 20),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            padding: const EdgeInsets.all(12),
+          ),
+        ),
+        const SizedBox(width: 24),
+        IconButton.filled(
           onPressed: () => _showSettings(context),
           icon: const Icon(Icons.settings_suggest_rounded, size: 20),
           style: IconButton.styleFrom(
@@ -517,6 +539,56 @@ class _TimerControls extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showYoutubeDialog(BuildContext context) {
+    final controller = TextEditingController(text: focusBlock.youtubeUrl.value);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("YouTube Music"),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Text(
+              "Paste a YouTube link to play audio during your session.",
+              style: TextStyle(fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            TextField(
+              controller: controller,
+              decoration: const InputDecoration(
+                hintText: "https://youtube.com/watch?v=...",
+                border: OutlineInputBorder(),
+              ),
+              autofocus: true,
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              focusBlock.clearYoutube();
+              Navigator.pop(context);
+            },
+            child: const Text("Clear"),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () {
+              if (controller.text.isNotEmpty) {
+                focusBlock.playYoutube(controller.text);
+              }
+              Navigator.pop(context);
+            },
+            child: const Text("Play"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -1138,6 +1210,43 @@ class _TimerCircle extends StatelessWidget {
                   ),
                 ],
               ),
+              if (focusBlock.currentTrackTitle.watch(context) != null) ...[
+                const SizedBox(height: 12),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 6,
+                  ),
+                  decoration: BoxDecoration(
+                    color: modeColor.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        Icons.music_note_rounded,
+                        size: 14,
+                        color: modeColor,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          focusBlock.currentTrackTitle.value!.toUpperCase(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color: modeColor,
+                            letterSpacing: 1,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               _TimerControls(
                 focusBlock: focusBlock,

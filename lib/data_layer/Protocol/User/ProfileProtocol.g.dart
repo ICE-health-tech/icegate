@@ -6,28 +6,30 @@ part of 'ProfileProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_ProfileProtocol _$ProfileProtocolFromJson(Map<String, dynamic> json) =>
-    _ProfileProtocol(
-      profileID: (json['profileID'] as num).toInt(),
-      personID: (json['personID'] as num).toInt(),
-      bio: json['bio'] as String?,
-      occupation: json['occupation'] as String?,
-      educationLevel: json['educationLevel'] as String?,
-      location: json['location'] as String?,
-      websiteUrl: json['websiteUrl'] as String?,
-      linkedinUrl: json['linkedinUrl'] as String?,
-      githubUrl: json['githubUrl'] as String?,
-    );
+_$ProfileProtocolImpl _$$ProfileProtocolImplFromJson(
+  Map<String, dynamic> json,
+) => _$ProfileProtocolImpl(
+  profileID: (json['profileID'] as num).toInt(),
+  personID: (json['personID'] as num).toInt(),
+  bio: json['bio'] as String?,
+  occupation: json['occupation'] as String?,
+  educationLevel: json['educationLevel'] as String?,
+  location: json['location'] as String?,
+  websiteUrl: json['websiteUrl'] as String?,
+  linkedinUrl: json['linkedinUrl'] as String?,
+  githubUrl: json['githubUrl'] as String?,
+);
 
-Map<String, dynamic> _$ProfileProtocolToJson(_ProfileProtocol instance) =>
-    <String, dynamic>{
-      'profileID': instance.profileID,
-      'personID': instance.personID,
-      'bio': instance.bio,
-      'occupation': instance.occupation,
-      'educationLevel': instance.educationLevel,
-      'location': instance.location,
-      'websiteUrl': instance.websiteUrl,
-      'linkedinUrl': instance.linkedinUrl,
-      'githubUrl': instance.githubUrl,
-    };
+Map<String, dynamic> _$$ProfileProtocolImplToJson(
+  _$ProfileProtocolImpl instance,
+) => <String, dynamic>{
+  'profileID': instance.profileID,
+  'personID': instance.personID,
+  'bio': instance.bio,
+  'occupation': instance.occupation,
+  'educationLevel': instance.educationLevel,
+  'location': instance.location,
+  'websiteUrl': instance.websiteUrl,
+  'linkedinUrl': instance.linkedinUrl,
+  'githubUrl': instance.githubUrl,
+};

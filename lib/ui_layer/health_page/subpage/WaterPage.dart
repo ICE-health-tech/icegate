@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
 
 class WaterPage extends StatefulWidget {
@@ -195,6 +196,7 @@ class _WaterPageState extends State<WaterPage>
         Feedback.forTap(context);
         await dao.insertWaterLog(
           WaterLogsTableCompanion.insert(
+            id: IDGen.generateUuid(),
             personID: 1,
             amount: drift.Value(amount),
             timestamp: drift.Value(DateTime.now()),
@@ -259,6 +261,7 @@ class _WaterPageState extends State<WaterPage>
               if (amount > 0) {
                 await dao.insertWaterLog(
                   WaterLogsTableCompanion.insert(
+                    id: IDGen.generateUuid(),
                     personID: 1,
                     amount: drift.Value(amount),
                     timestamp: drift.Value(DateTime.now()),

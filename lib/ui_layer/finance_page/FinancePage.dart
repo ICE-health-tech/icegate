@@ -23,6 +23,9 @@ class FinancePage extends StatefulWidget {
       mainFunction: () {
         _showAddTransactionDialog(context);
       },
+      onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
@@ -922,7 +925,9 @@ class _FinancePageState extends State<FinancePage> {
     }
 
     return FutureBuilder<ProjectData?>(
-      future: context.read<AppDatabase>().projectsDAO.getProjectById(projectID),
+      future: context.read<AppDatabase>().projectsDAO.getProjectByIntId(
+        projectID,
+      ),
       builder: (context, snapshot) {
         if (snapshot.hasData && snapshot.data != null) {
           _projectNamesCache[projectID] = snapshot.data!.name;

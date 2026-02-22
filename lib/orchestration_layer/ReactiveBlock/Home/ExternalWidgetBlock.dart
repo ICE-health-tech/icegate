@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:flutter/foundation.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 
@@ -8,9 +9,13 @@ class ExternalWidgetBlock {
 
   void refreshBlock(ExternalWidgetsDAO dao) {
     _subscription?.cancel();
-    _subscription = dao.watchAllWidgets().listen((data) {
-      listExternalWidgets.value = data;
-    });
+    _subscription = dao.watchAllWidgets().listen(
+      (data) {
+        listExternalWidgets.value = data;
+      },
+      onError: (e) =>
+          debugPrint("ExternalWidgetBlock: Error watching widgets: $e"),
+    );
   }
 
   void dispose() {

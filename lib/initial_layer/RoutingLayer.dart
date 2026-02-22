@@ -47,17 +47,18 @@ class _adapterState extends State<Adapter> {
     if (existingWidget == null) {
       await dao.insertInternalWidget(
         name: "WidgetPage",
-        imageUrl: "",
+        imageUrl: "assets/internalwidget/defaul.png",
         url: "/canvas",
         alias: "WidgetPage",
       );
 
       await dao.insertInternalWidget(
         name: "Health Department",
-        imageUrl: "",
+        imageUrl: "assets/internalwidget/defaul.png",
         url: "/health",
         alias: "HealthPage",
       );
+      print("DUYLONG routing: $dao");
     } else {
       print("Default internal widgets already exist. Skipping insertion.");
     }

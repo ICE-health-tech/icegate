@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path; // Add this alias to avoid conflicts
 import 'package:intl/intl.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class FoodInputPage extends StatefulWidget {
@@ -167,6 +168,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
       // 1. Insert Meal details
       final mealId = await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
+          id: IDGen.generateUuid(),
           mealName: _foodController.text,
 
           mealImageUrl: Value(_imagePath),
@@ -181,6 +183,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
       // 2. Insert Day log
       await _healthMealDAO.insertDay(
         DaysTableCompanion.insert(
+          id: IDGen.generateUuid(),
           dayID: now,
           caloriesOut: Value(0),
           weight: Value(0),

@@ -6,9 +6,9 @@ part of 'EmailAddressProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_EmailAddressProtocol _$EmailAddressProtocolFromJson(
+_$EmailAddressProtocolImpl _$$EmailAddressProtocolImplFromJson(
   Map<String, dynamic> json,
-) => _EmailAddressProtocol(
+) => _$EmailAddressProtocolImpl(
   emailAddressID: (json['emailAddressID'] as num).toInt(),
   personID: (json['personID'] as num).toInt(),
   emailAddress: json['emailAddress'] as String,
@@ -22,8 +22,8 @@ _EmailAddressProtocol _$EmailAddressProtocolFromJson(
       : DateTime.parse(json['verifiedAt'] as String),
 );
 
-Map<String, dynamic> _$EmailAddressProtocolToJson(
-  _EmailAddressProtocol instance,
+Map<String, dynamic> _$$EmailAddressProtocolImplToJson(
+  _$EmailAddressProtocolImpl instance,
 ) => <String, dynamic>{
   'emailAddressID': instance.emailAddressID,
   'personID': instance.personID,

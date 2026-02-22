@@ -1,0 +1,40 @@
+# PowerSync Development Sync Rules (Permissive Mode)
+# Use this for debugging. Syncs all data to everyone.
+
+config:
+  edition: 2
+
+bucket_definitions:
+  global:
+    data:
+      - SELECT * FROM internal_widgets
+      - SELECT * FROM external_widgets
+      - SELECT * FROM themes
+      - SELECT * FROM themes_config
+      - SELECT * FROM project_notes
+      - SELECT * FROM projects
+      - SELECT * FROM persons
+      - SELECT * FROM email_addresses
+      - SELECT * FROM user_accounts
+      - SELECT * FROM profiles
+      - SELECT * FROM detail_information
+      - SELECT * FROM skills
+      - SELECT * FROM financial_accounts
+      - SELECT * FROM assets
+      - SELECT * FROM transactions
+      - SELECT * FROM goals
+      - SELECT * FROM scores
+      - SELECT * FROM habits
+      - SELECT * FROM blog_posts
+      - SELECT * FROM person_widgets
+      - SELECT * FROM health_metrics
+      - SELECT * FROM meals
+      - SELECT * FROM sessions
+      - SELECT * FROM water_logs
+      - SELECT * FROM sleep_logs
+      - SELECT * FROM exercise_logs
+      - SELECT * FROM custom_notifications
+      - SELECT * FROM quotes
+      - SELECT * FROM quests
+      - SELECT * FROM days
+      - SELECT * FROM focus_sessions

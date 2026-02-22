@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
+import 'package:flutter/services.dart' show SystemUiOverlayStyle, rootBundle;
 
 // Helper function to convert a hex string (e.g., "0xFF3F3B66") to a Color object.
 Color _parseColor(String hex) {
@@ -234,6 +234,10 @@ class JsonThemeAdapter {
             ? _parseColor(appBarJson['foregroundColor'])
             : colorScheme.onPrimary,
       ),
+      systemOverlayStyle: brightness == Brightness.light
+          ? SystemUiOverlayStyle
+                .dark // Dark icons on light background
+          : SystemUiOverlayStyle.light, // Light icons on dark background
     );
 
     // ElevatedButton Theme

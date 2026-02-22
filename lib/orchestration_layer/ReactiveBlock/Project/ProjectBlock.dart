@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class ProjectBlock {
   final projects = signal<List<ProjectProtocol>>([]);
@@ -32,6 +33,7 @@ class ProjectBlock {
             projects.value = data
                 .map(
                   (e) => ProjectProtocol(
+                    id: e.id,
                     projectID: e.projectID,
                     personID: e.personID,
                     name: e.name,
@@ -44,8 +46,9 @@ class ProjectBlock {
                 )
                 .toList();
           },
-          onError: (e) {
+          onError: (e, stackTrace) {
             debugPrint("ProjectBlock: Error watching projects: $e");
+            debugPrint("ProjectBlock Stack: $stackTrace");
           },
         );
   }
@@ -57,6 +60,7 @@ class ProjectBlock {
   ) async {
     return await _dao.insertProject(
       ProjectsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         personID: _personId,
         name: name,
         description: Value(description),
@@ -67,8 +71,8 @@ class ProjectBlock {
     );
   }
 
-  Future<void> deleteProject(int projectID) async {
-    await _dao.deleteProject(projectID);
+  Future<void> deleteProject(String id) async {
+    await _dao.deleteProjectByUuid(id);
   }
 
   void selectProject(ProjectProtocol? project) {
@@ -82,6 +86,7 @@ class ProjectBlock {
     final scoreBlock = context.read<ScoreBlock>();
     await _dao.updateProject(
       ProjectData(
+        id: project.id,
         projectID: project.projectID,
         personID: project.personID,
         name: project.name,

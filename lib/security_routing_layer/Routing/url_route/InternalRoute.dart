@@ -11,8 +11,10 @@ import 'package:ice_shield/ui_layer/health_page/HabitDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/StepsDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
+import 'package:ice_shield/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
+import 'package:ice_shield/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart';
@@ -26,6 +28,8 @@ import 'package:ice_shield/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
 import 'package:ice_shield/orchestration_layer/Action/WebView/WebViewPage.dart';
 import 'package:ice_shield/ui_layer/info_page/ScoringRulesPage.dart';
+import 'package:ice_shield/ui_layer/animation_page/snowflake_assemble_screen.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/session_tracker.dart';
 // // Import your pages
 // import 'package:ice_shield/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
 // import 'package:ice_shield/ui_layer/HomePage.dart'; // Your Home
@@ -52,15 +56,30 @@ final ValueNotifier<AuthStatus?> authStatusNotifier = ValueNotifier(
   AuthStatus.checkingSession,
 );
 
+final ValueNotifier<bool?> showIntroNotifier = ValueNotifier(null);
+
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
-  refreshListenable: authStatusNotifier,
+  refreshListenable: Listenable.merge([authStatusNotifier, showIntroNotifier]),
   redirect: (context, state) {
     final status = authStatusNotifier.value;
     final isLoggingIn = state.uri.path == '/login';
 
     debugPrint("🛣️ [GoRouter] Path: ${state.uri.path}, Status: $status");
+
+    // Check intro logic first on startup
+    if (showIntroNotifier.value == null) {
+      SessionTracker.shouldShowIntro().then((shouldShow) {
+        showIntroNotifier.value = shouldShow;
+      });
+      return null;
+    }
+
+    if (showIntroNotifier.value == true && state.uri.path != '/intro') {
+      showIntroNotifier.value = false; // Reset so they don't get stuck
+      return '/intro';
+    }
 
     if (status == null ||
         status == AuthStatus.checkingSession ||
@@ -90,6 +109,11 @@ final GoRouter router = GoRouter(
       path: '/login',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const LoginPage(),
+    ),
+    GoRoute(
+      path: '/intro',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const SnowflakeAssembleScreen(),
     ),
 
     // --- SHELL ROUTE (Wraps pages with the App Bar) ---
@@ -189,6 +213,11 @@ final GoRouter router = GoRouter(
               ],
             ),
             GoRoute(
+              path: 'focus',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const FocusPage(),
+            ),
+            GoRoute(
               path: 'water',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const WaterPage(),
@@ -197,6 +226,11 @@ final GoRouter router = GoRouter(
               path: 'habits',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HabitDashboardPage(),
+            ),
+            GoRoute(
+              path: 'analysis',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const HealthAnalysisPage(),
             ),
           ],
         ),
@@ -223,11 +257,7 @@ final GoRouter router = GoRouter(
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const TextEditorPage(),
             ),
-            GoRoute(
-              path: 'focus',
-              parentNavigatorKey: _shellNavigatorKey,
-              builder: (context, state) => const FocusPage(),
-            ),
+
             GoRoute(
               path: ':projectId',
               parentNavigatorKey: _shellNavigatorKey,
@@ -255,6 +285,11 @@ final GoRouter router = GoRouter(
               },
             ),
           ],
+        ),
+        GoRoute(
+          path: '/project-analysis',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) => const ProjectAnalysisPage(),
         ),
         GoRoute(
           path: '/project/:projectId',

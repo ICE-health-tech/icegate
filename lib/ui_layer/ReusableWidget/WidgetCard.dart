@@ -62,7 +62,7 @@ void _showDeleteConfirmDialog(
       return ConfirmDialog(
         dao: dao,
         name: "Confirm",
-        widgetID: widgetData.widgetID,
+        widgetID: widgetData.widgetID ?? 0,
       ); // Return your dialog widget here
     },
   );
@@ -164,18 +164,18 @@ class WidgetCard extends StatelessWidget {
                             errorBuilder: (context, error, stack) {
                               return _buildFallbackIcon(
                                 context,
-                                widgetData.name,
+                                widgetData.name ?? 'Widget',
                               );
                             },
                           ),
                         ),
                       )
-                    : _buildFallbackIcon(context, widgetData.name),
+                    : _buildFallbackIcon(context, widgetData.name ?? 'Widget'),
               ),
               const SizedBox(height: 8),
               // Name Text
               Text(
-                widgetData.name,
+                widgetData.name ?? 'Untitled',
                 style: Theme.of(context).textTheme.titleSmall,
                 textAlign: TextAlign.center,
                 maxLines: 2,

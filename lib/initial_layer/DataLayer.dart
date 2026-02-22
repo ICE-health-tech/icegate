@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
@@ -21,9 +20,15 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBloc
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/data_layer/DataSources/cloud_database/PowerSyncConnector.dart';
+import 'package:ice_shield/data_layer/DataSources/cloud_database/PowerSyncConnector.dart'; // Add this back
 import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:audio_service/audio_service.dart';
+import 'package:powersync/powersync.dart' hide Column;
+import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart'
+    as ps_schema;
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_shield/security_routing_layer/Routing/url_route/InternalRoute.dart';
 import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
@@ -37,30 +42,19 @@ import 'package:signals_flutter/signals_flutter.dart';
 // To make this runnable, I will use AppDatabase as the type, but if you need
 // AppDatabase, you must ensure the import matches the actual file path.
 
-// 1. Convert to StatefulWidget to manage the database lifecycle internally.
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
-  final AppDatabase database;
-  // Blocks should be in State if they are initialized there.
-  // late PersonBlock personBlock; // Removed
-  // late AuthBlock authBlock; // Removed
-  // late ObjectDatabaseBlock objectDatabaseBlock; // Removed
 
-  // The database is no longer passed in the constructor.
-  const DataLayer({
-    super.key,
-    required this.database,
-    required this.childWidget,
-  });
+  const DataLayer({super.key, required this.childWidget});
 
   @override
   State<DataLayer> createState() => _DataLayerState();
 }
 
-class _DataLayerState extends State<DataLayer> {
-  // 2. Declare the database instance using 'late final'.
-  // 'late' guarantees it will be initialized before its first use.
-  // late final AppDatabase database;
+class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
+  late AppDatabase database;
+  late LocalNotificationService notificationService;
+  late FocusAudioHandler audioHandler;
 
   late PersonBlock personBlock;
   late AuthBlock authBlock;
@@ -70,18 +64,28 @@ class _DataLayerState extends State<DataLayer> {
   late GrowthBlock growthBlock;
   late FocusBlock focusBlock;
   late HealthBlock healthBlock;
+  late ProjectBlock projectBlock;
+  late FinanceBlock financeBlock;
+  late ContentBlock contentBlock;
+  late WidgetSettingsBlock widgetSettingsBlock;
+  late InternalWidgetBlock internalWidgetBlock;
+  late ExternalWidgetBlock externalWidgetBlock;
+  DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
 
   late HealthMetricsDAO healthMetricsDAO;
-  // late StreamSubscription<StepCount> _stepSubscription; // Removed
   int currentSteps = 0;
   bool _isInitialized = false;
+  bool _hasError = false;
+  bool _isAudioInitialized = false;
+  String? _errorMessage;
   final List<EffectCleanup> _effectCleanups = [];
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
 
     // 1. Keep initState() synchronous.
     // Start periodic HealthKit sync
@@ -144,160 +148,206 @@ class _DataLayerState extends State<DataLayer> {
   }
 
   Future<void> _initializeData() async {
-    print("DataLayerState(${identityHashCode(this)}): _initializeData called");
-    // Use a try-catch block for robust error handling during async setup.
     try {
-      // 3. Initialize the database instance internally.
-      // database = AppDatabase();
+      // 1. Initialize Supabase
+      await Supabase.initialize(
+        url: 'https://wthislkepfufkbgiqegs.supabase.co',
+        anonKey:
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGlzbGtlcGZ1ZmtiZ2lxZWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODk2MjEsImV4cCI6MjA4NzA2NTYyMX0.EaYqJVIni8cSh0BCDZH1hQxqy-pdPj8o2aSG6dF7z-8',
+        authOptions: const FlutterAuthClientOptions(
+          authFlowType: AuthFlowType.pkce,
+        ),
+      );
 
-      // --- Database and Asset Loading ---
-      // Legacy Auth Service is now deprecated in favor of Supabase
+      // 2. Initialize PowerSync and Database
+      final dir = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dir.path, 'powersync.db');
+      final powersync = PowerSyncDatabase(
+        schema: ps_schema.schema,
+        path: dbPath,
+      );
+      await powersync.initialize();
+      database = AppDatabase.powersync(powersync);
+
+      // 3. Initialize Notifications
+      notificationService = LocalNotificationService();
+      await notificationService.init(database);
+
+      // 4. Initialize Audio
+      try {
+        if (!_isAudioInitialized) {
+          audioHandler = await AudioService.init(
+            builder: () => FocusAudioHandler(),
+            config: const AudioServiceConfig(
+              androidNotificationChannelId:
+                  'duylong.art.ice_gate.channel.audio',
+              androidNotificationChannelName: 'Focus Audio Playback',
+              androidNotificationOngoing: true,
+            ),
+          );
+          _isAudioInitialized = true;
+        }
+      } catch (e) {
+        debugPrint("DataLayer: AudioService already running or failed: $e");
+      }
+
+      // 5. Initialize Services and Blocks
       var authService = CustomAuthService(baseUrl: "http://localhost"); // Dummy
       var passkeyService = PasskeyAuthService();
 
-      // Initialize Blocks
       personBlock = PersonBlock(authService: authService);
       authBlock = AuthBlock(
         authService: authService,
-        sessionDao: widget.database.sessionDAO,
+        sessionDao: database.sessionDAO,
         passkeyService: passkeyService,
-        personDao: widget.database.personManagementDAO,
+        personDao: database.personManagementDAO,
       );
-      healthMetricsDAO = widget.database.healthMetricsDAO;
+      healthMetricsDAO = database.healthMetricsDAO;
 
-      // int steps = 0;
-
-      // int steps = 0;
-      //   HealthMetricsTableCompanion(
-      //     personID: const Value(1),
-      //     steps: Value(currentSteps),
-      //     date: Value(now),
-      //   ),
-      // );
-
-      // 1. Pre-instantiate all blocks to avoid LateInitializationError in UI
-      // even if specific init steps fail.
-      debugPrint("DataLayer: Pre-instantiating blocks for personID: 1");
       healthBlock = HealthBlock(
         personId: 1,
-        healthDao: widget.database.healthMetricsDAO,
-        healthLogsDao: widget.database.healthLogsDAO,
+        healthDao: database.healthMetricsDAO,
+        healthLogsDao: database.healthLogsDAO,
       );
       growthBlock = GrowthBlock();
+      growthBlock.init(database.growthDAO, 1);
       scoreBlock = ScoreBlock();
+      projectBlock = ProjectBlock();
+      projectBlock.init(database.projectsDAO, 1);
+
+      internalWidgetBlock = InternalWidgetBlock();
+      externalWidgetBlock = ExternalWidgetBlock();
+
+      financeBlock = FinanceBlock();
+      financeBlock.init(database.financeDAO, 1);
+
+      contentBlock = ContentBlock();
+      contentBlock.init(database.contentDAO, 1);
+
+      widgetSettingsBlock = WidgetSettingsBlock();
+      widgetSettingsBlock.init(database.widgetDAO, 1);
+
       focusBlock = FocusBlock(
-        focusSessionDao: widget.database.focusSessionsDAO,
-        healthLogsDao: widget.database.healthLogsDAO,
-        healthMetricsDao: widget.database.healthMetricsDAO,
+        focusSessionDao: database.focusSessionsDAO,
+        healthLogsDao: database.healthLogsDAO,
+        healthMetricsDao: database.healthMetricsDAO,
         personId: 1,
-        audioHandler: context.read<FocusAudioHandler>(),
-        notificationService: context.read<LocalNotificationService>(),
+        audioHandler: audioHandler,
+        notificationService: notificationService,
       );
       objectDatabaseBlock = ObjectDatabaseBlock();
-      // widgetManagerBlock is initialized later
 
-      // Initialize HealthBlock
-      debugPrint("DataLayer: Initializing HealthBlock");
+      // 5. Initialize Services and Blocks
       healthBlock.init();
+      // growthBlock.init - Moved to dynamic effect below
 
-      // Initialize GrowthBlock
-      print("DataLayer: Initializing GrowthBlock");
-      try {
-        growthBlock.init(widget.database.growthDAO, 1);
-      } catch (e) {
-        print("DataLayer: GrowthBlock init failed: $e");
-      }
+      scoreBlock.init(
+        database.scoreDAO,
+        database.personManagementDAO,
+        database.financeDAO,
+        database.healthMetricsDAO,
+        database.healthMealDAO,
+        1, // Initial fallback
+      );
+      print("DUYLONG: personBlock: $personBlock");
+      // --- NEW: Dynamic Person ID Re-initialization ---
+      _effectCleanups.add(
+        effect(() {
+          // Track the profile and personId
+          final profile = personBlock.information.value.profiles;
+          final personId = profile.id;
 
-      // Initialize ScoreBlock
-      print("DataLayer: Initializing ScoreBlock");
-      try {
-        scoreBlock.init(
-          widget.database.scoreDAO,
-          widget.database.personManagementDAO,
-          widget.database.financeDAO,
-          widget.database.healthMetricsDAO,
-          widget.database.healthMealDAO,
-          1,
-        );
-      } catch (e) {
-        print("DataLayer: ScoreBlock init failed: $e");
-      }
+          if (personId != null && personId != 0) {
+            untracked(() {
+              print(
+                "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
+              );
 
-      // Initialize FocusBlock
-      print("DataLayer: Initializing FocusBlock");
-      try {
-        focusBlock
-          ..growthBlock = growthBlock
-          ..scoreBlock = scoreBlock;
+              // Re-initialize blocks with the correct identity
+              healthBlock.personId = personId;
+              healthBlock.init();
 
-        await focusBlock.init();
-      } catch (e, stack) {
-        print("DataLayer: FocusBlock init failed: $e");
-        print(stack);
-      }
+              growthBlock.init(database.growthDAO, personId);
+              projectBlock.init(database.projectsDAO, personId);
+              financeBlock.init(database.financeDAO, personId);
+              contentBlock.init(database.contentDAO, personId);
+              widgetSettingsBlock.init(database.widgetDAO, personId);
 
-      // widget.database.scoreDAO.insertOrUpdateScore(ScoreLocalData(personID: 1, healthGlobalScore: 0, socialGlobalScore: 0, financialGlobalScore: 0, careerGlobalScore: 0, createdAt: DateTime.now(), updatedAt: DateTime.now(), scoreID: 1));
+              scoreBlock.init(
+                database.scoreDAO,
+                database.personManagementDAO,
+                database.financeDAO,
+                database.healthMetricsDAO,
+                database.healthMealDAO,
+                personId,
+              );
 
-      print("DataLayer: FocusBlock initialized");
+              focusBlock.personId = personId;
+              focusBlock.fetchDailyStats();
+            });
+          }
+        }),
+      );
 
-      // Initialize ObjectDatabaseBlock
-      print("DataLayer: Initializing ObjectDatabaseBlock");
-      objectDatabaseBlock = ObjectDatabaseBlock();
+      focusBlock
+        ..growthBlock = growthBlock
+        ..scoreBlock = scoreBlock;
+      await focusBlock.init();
 
-      print("DataLayer: Initializing WidgetManagerBlock");
       widgetManagerBlock = WidgetManagerBlock(
-        widgetDao: widget.database.widgetDAO,
+        widgetDao: database.widgetDAO,
         personIdSignal: computed(
           () => personBlock.information.value.profiles.id,
         ),
       );
 
-      // Check session immediately on startup
       if (mounted) {
         authBlock.checkSession(context);
       }
 
-      // Await asset loading
-      print("DataLayer: Loading theme asset");
       String jsonString = await rootBundle.loadString(
         "assets/LightThemePurple.json",
       );
-
-      await widget.database.themesTableDAO.insertNewTheme(
+      print("DUYLONG>>");
+      await database.themesTableDAO.insertNewTheme(
         name: "Light theme",
         jsonContent: jsonString,
         author: "Duy Long",
       );
+      print("DUYLONG>>");
+      //Error
 
-      // --- NEW: Seed Data ---
-      print("DataLayer: Seeding data");
-      await DataSeeder.seed(widget.database);
-      print("DataLayer: Initialization success");
+      // Disabling DataSeeder to avoid local data conflicts with Supabase
+      // await DataSeeder.seed(database);
+      // print("DUYLONG>>>>");
       if (mounted) {
         setState(() {
           _isInitialized = true;
         });
+
+        // Immediately sync health data now that blocks are initialized
+        _syncHealthData();
       }
     } catch (e, stack) {
-      print("DataLayer: Initialization CRITICAL error: $e");
-      print(stack);
-      // We set _isInitialized = true even on error to "fail forward"
-      // and let the app handle missing data gracefully rather than hanging forever.
+      debugPrint("DataLayer: Initialization CRITICAL error: $e");
+      debugPrintStack(stackTrace: stack);
       if (mounted) {
         setState(() {
-          _isInitialized = true;
+          _hasError = true;
+          _errorMessage = e.toString();
+          _isInitialized = true; // Still allow building the error UI
         });
       }
     }
 
     // --- NEW: Monitoring --- Agent
-    await DatabaseAgent.monitoring(widget.database);
+    await DatabaseAgent.monitoring(database);
 
     // --- NEW: Supabase Auth Listener for PowerSync ---
     Supabase.instance.client.auth.onAuthStateChange.listen((data) {
       final AuthChangeEvent event = data.event;
       final Session? session = data.session;
-      final ps = widget.database.powerSync;
+      final ps = database.powerSync;
 
       print(
         "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
@@ -339,7 +389,8 @@ class _DataLayerState extends State<DataLayer> {
       }
 
       if (event == AuthChangeEvent.signedIn ||
-          event == AuthChangeEvent.tokenRefreshed) {
+          event == AuthChangeEvent.tokenRefreshed ||
+          event == AuthChangeEvent.initialSession) {
         if (session != null) {
           print(
             "☁️ [DataLayer] Supabase Auth Event: $event. Connecting PowerSync...",
@@ -368,7 +419,7 @@ class _DataLayerState extends State<DataLayer> {
         final token = authBlock.jwt.value;
         if (token != null && token.isNotEmpty) {
           // Trigger PowerSync Cloud Connect
-          final ps = widget.database.powerSync;
+          final ps = database.powerSync;
           if (ps != null) {
             // --- MONITOR STATUS ---
             ps.statusStream.listen((status) {
@@ -398,7 +449,32 @@ class _DataLayerState extends State<DataLayer> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused) {
+      _lastPausedTime = DateTime.now();
+      debugPrint("DataLayer: App paused at $_lastPausedTime");
+    } else if (state == AppLifecycleState.resumed) {
+      debugPrint("DataLayer: App resumed");
+      if (_lastPausedTime != null) {
+        final diff = DateTime.now().difference(_lastPausedTime!);
+        debugPrint("DataLayer: App was paused for ${diff.inSeconds} seconds");
+
+        // Trigger welcome back animation if > 2 hours (7200 seconds)
+        // For testing purposes, I might want to use a smaller value like 5 seconds,
+        // but the requirement is 2 hours.
+        if (diff.inHours >= 2) {
+          debugPrint(
+            "DataLayer: Long absence detected, triggering welcome back signal",
+          );
+          authBlock.showWelcomeBack.value = true;
+        }
+      }
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _healthSyncTimer?.cancel();
     for (final cleanup in _effectCleanups) {
       cleanup();
@@ -417,6 +493,34 @@ class _DataLayerState extends State<DataLayer> {
       );
     }
 
+    if (_hasError) {
+      return MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                const SizedBox(height: 16),
+                const Text(
+                  "Critical Initialization Error",
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Text(_errorMessage ?? "Unknown Error"),
+                ),
+                ElevatedButton(
+                  onPressed: () => _initializeData(),
+                  child: const Text("Retry"),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     // Only build MultiProvider if blocks are initialized to avoid LateInitializationError
     // But since we are providing them, and they are late, we need to be careful.
     // effectively they are initialized in initState -> _initializeData (sync part starts).
@@ -425,32 +529,20 @@ class _DataLayerState extends State<DataLayer> {
 
     return MultiProvider(
       providers: [
+        // Services
+        Provider<LocalNotificationService>.value(value: notificationService),
+        Provider<FocusAudioHandler>.value(value: audioHandler),
+
         // 1. Provider for the main database instance.
-        // The type provided is AppDatabase (your database class).
-        Provider<AppDatabase>(
-          create: (_) =>
-              widget.database, // Use the internally initialized field
-        ),
+        Provider<AppDatabase>.value(value: database),
 
         // 2. Provider for the DAO instance.
-        // The type provided is ExternalWidgetDao (your DAO class).
-        Provider<ExternalWidgetsDAO>(
-          // Access the DAO getter from the database instance.
-          create: (context) => widget.database.externalWidgetsDAO,
-        ),
+        Provider<ExternalWidgetsDAO>.value(value: database.externalWidgetsDAO),
+        Provider<ProjectNoteDAO>.value(value: database.projectNoteDAO),
+        Provider<InternalWidgetsDAO>.value(value: database.internalWidgetsDAO),
 
-        // 3. Provider for ProjectNoteDAO
-        Provider<ProjectNoteDAO>(
-          create: (context) => widget.database.projectNoteDAO,
-        ),
-        Provider<InternalWidgetsDAO>(
-          create: (context) => widget.database.internalWidgetsDAO,
-        ),
-
-        // 3. StreamProvider to watch the live list of data. (For READ operations)
         StreamProvider<List<ExternalWidgetData>>(
-          create: (context) =>
-              widget.database.externalWidgetsDAO.watchAllWidgets(),
+          create: (_) => database.externalWidgetsDAO.watchAllWidgets(),
           initialData: const [],
           catchError: (_, error) {
             debugPrint('Error watching widgets: $error');
@@ -458,72 +550,65 @@ class _DataLayerState extends State<DataLayer> {
           },
         ),
 
-        // --- NEW: DAOs ---
-        Provider<PersonManagementDAO>(
-          create: (_) => widget.database.personManagementDAO,
+        StreamProvider<List<InternalWidgetData>>(
+          create: (_) => database.internalWidgetsDAO.watchAllWidgets(),
+          initialData: const [],
+          catchError: (_, error) {
+            debugPrint('DUYLONG watching widgets: $error');
+            return const [];
+          },
         ),
-        Provider<FinanceDAO>(create: (_) => widget.database.financeDAO),
-        Provider<GrowthDAO>(create: (_) => widget.database.growthDAO),
-        Provider<ContentDAO>(create: (_) => widget.database.contentDAO),
-        Provider<WidgetDAO>(create: (_) => widget.database.widgetDAO),
-        Provider<HealthMetricsDAO>(
-          create: (_) => widget.database.healthMetricsDAO,
+
+        Provider<PersonManagementDAO>.value(
+          value: database.personManagementDAO,
         ),
-        Provider<ProjectsDAO>(create: (_) => widget.database.projectsDAO),
-        Provider<ScoreDAO>(create: (_) => widget.database.scoreDAO),
-        Provider<CustomNotificationDAO>(
-          create: (_) => widget.database.customNotificationDAO,
+        Provider<FinanceDAO>.value(value: database.financeDAO),
+        Provider<GrowthDAO>.value(value: database.growthDAO),
+        Provider<ContentDAO>.value(value: database.contentDAO),
+        Provider<WidgetDAO>.value(value: database.widgetDAO),
+        Provider<HealthMetricsDAO>.value(value: database.healthMetricsDAO),
+        Provider<ProjectsDAO>.value(value: database.projectsDAO),
+        Provider<ScoreDAO>.value(value: database.scoreDAO),
+        Provider<CustomNotificationDAO>.value(
+          value: database.customNotificationDAO,
         ),
-        Provider<PersonDAO>(create: (_) => widget.database.personDAO),
-        Provider<QuoteDAO>(create: (_) => widget.database.quoteDAO),
-        Provider<HealthLogsDAO>(create: (_) => widget.database.healthLogsDAO),
+        Provider<PersonDAO>.value(value: database.personDAO),
+        Provider<QuoteDAO>.value(value: database.quoteDAO),
+        Provider<HealthLogsDAO>.value(value: database.healthLogsDAO),
+        Provider<QuestDAO>.value(value: database.questDAO),
 
         // --- NEW: Reactive Blocks ---
         // PersonBlock (Load user ID 1 by default)
-        Provider<PersonBlock>(create: (_) => personBlock),
+        Provider<PersonBlock>.value(value: personBlock),
 
         // AuthBlock
-        Provider<AuthBlock>(create: (_) => authBlock),
+        Provider<AuthBlock>.value(value: authBlock),
 
         // ObjectDatabaseBlock
-        Provider<ObjectDatabaseBlock>(create: (_) => objectDatabaseBlock),
+        Provider<ObjectDatabaseBlock>.value(value: objectDatabaseBlock),
 
         // FinanceBlock
-        Provider<FinanceBlock>(
-          create: (_) => FinanceBlock()..init(widget.database.financeDAO, 1),
-          dispose: (_, block) => block.dispose(),
-        ),
+        Provider<FinanceBlock>.value(value: financeBlock),
 
         // GrowthBlock
         Provider<GrowthBlock>.value(value: growthBlock),
 
         // ContentBlock
-        Provider<ContentBlock>(
-          create: (_) => ContentBlock()..init(widget.database.contentDAO, 1),
-          dispose: (_, block) => block.dispose(),
-        ),
-        Provider<HealthMealDAO>(create: (_) => widget.database.healthMealDAO),
+        Provider<ContentBlock>.value(value: contentBlock),
+        Provider<HealthMealDAO>.value(value: database.healthMealDAO),
 
         // WidgetSettingsBlock
-        Provider<WidgetSettingsBlock>(
-          create: (_) =>
-              WidgetSettingsBlock()..init(widget.database.widgetDAO, 1),
-          dispose: (_, block) => block.dispose(),
-        ),
+        Provider<WidgetSettingsBlock>.value(value: widgetSettingsBlock),
 
         Provider<ScoreBlock>.value(value: scoreBlock),
-        Provider<ProjectBlock>(
-          create: (_) => ProjectBlock()..init(widget.database.projectsDAO, 1),
-          dispose: (_, block) => block.dispose(),
-        ),
-        Provider<InternalWidgetBlock>(create: (_) => InternalWidgetBlock()),
-        Provider<ExternalWidgetBlock>(create: (_) => ExternalWidgetBlock()),
-        Provider<WidgetManagerBlock>(create: (_) => widgetManagerBlock),
+        Provider<ProjectBlock>.value(value: projectBlock),
+        // --- Home Logic ---
+        Provider<InternalWidgetBlock>.value(value: internalWidgetBlock),
+        Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
+        Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
 
         // --- Focus ---
-        Provider<FocusSessionsDAO>(
-          create: (_) => widget.database.focusSessionsDAO,
-        ),
+        Provider<FocusSessionsDAO>.value(value: database.focusSessionsDAO),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
       ],

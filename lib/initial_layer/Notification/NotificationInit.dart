@@ -123,6 +123,9 @@ class LocalNotificationService {
     // Daily notification
     await scheduleDailyNotification();
 
+    // Retention notifications (Engagement)
+    await scheduleRetentionNotifications();
+
     // Custom notifications from database
     if (_database != null) {
       final customNotifications = await _database!.customNotificationDAO
@@ -131,6 +134,63 @@ class LocalNotificationService {
         await scheduleCustomNotification(notification);
       }
     }
+  }
+
+  Future<void> scheduleRetentionNotifications() async {
+    if (!notificationsEnabled.value) return;
+
+    // 1. Daily Engagement Reminder (9 PM)
+    await _notificationsPlugin.zonedSchedule(
+      id: 999,
+      title: 'Daily Review 🌙',
+      body:
+          'Time to review your progress! Check how you did in Health and Projects today.',
+      scheduledDate: _nextInstanceOfTime(
+        DateTime(2024, 1, 1, 21, 0), // 9:00 PM
+      ),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'retention_channel',
+          'Engagement Reminders',
+          channelDescription: 'Notifications to keep you on track',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          interruptionLevel: InterruptionLevel.active,
+        ),
+        macOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+    );
+
+    // 2. Weekend Summary Reminder (Sunday 10 AM)
+    await _notificationsPlugin.zonedSchedule(
+      id: 1000,
+      title: 'Weekly Summary 📈',
+      body:
+          "How was your week? Let's check your analysis and plan for the next one!",
+      scheduledDate: _nextInstanceOfDay(
+        DateTime(2024, 1, 1, 10, 0), // 10:00 AM
+        DateTime.sunday,
+      ),
+      notificationDetails: const NotificationDetails(
+        android: AndroidNotificationDetails(
+          'retention_channel',
+          'Engagement Reminders',
+          channelDescription: 'Notifications to keep you on track',
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        iOS: DarwinNotificationDetails(
+          interruptionLevel: InterruptionLevel.active,
+        ),
+        macOS: DarwinNotificationDetails(),
+      ),
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
+    );
   }
 
   Future<void> scheduleDailyNotification() async {

@@ -235,9 +235,9 @@ class _DragCanvasState extends State<DragCanvas> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withOpacity(0.4),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.1), width: 1.5),
+          border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.5),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.2),
@@ -249,7 +249,7 @@ class _DragCanvasState extends State<DragCanvas> {
         child: Row(
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding:  EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.15),
                 shape: BoxShape.circle,
@@ -264,8 +264,8 @@ class _DragCanvasState extends State<DragCanvas> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style:  TextStyle(
+                      color: color,
                       fontSize: 18,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 0.5,
@@ -275,7 +275,7 @@ class _DragCanvasState extends State<DragCanvas> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
+                      color: color,
                       fontSize: 13,
                       fontWeight: FontWeight.w500,
                     ),

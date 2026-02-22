@@ -2,8 +2,6 @@
 
 part of 'GpsLocationFetch.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -279,5 +277,3 @@ class _GpsLocationAPI implements GpsLocationAPI {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on

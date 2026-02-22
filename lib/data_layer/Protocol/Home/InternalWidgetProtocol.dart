@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'PluginProtocol.dart';
 
 class InternalWidgetProtocol implements PluginProtocol {
@@ -129,9 +130,10 @@ class InternalWidgetProtocol implements PluginProtocol {
   @override
   InternalWidgetData toDatabase() {
     return InternalWidgetData(
+      id: IDGen.generateUuid(),
       url: _url,
       name: _name,
-      imageUrl: _imageUrl ?? '',
+      imageUrl: _imageUrl ?? 'Unknown',
       dateAdded: _dateAdded,
       widgetID: _widgetID,
       alias: _alias,
@@ -141,17 +143,25 @@ class InternalWidgetProtocol implements PluginProtocol {
   /// Static adapter method for backward compatibility
   static InternalWidgetProtocol adapterList(InternalWidgetData data) {
     return InternalWidgetProtocol(
-      url: data.url ?? '',
-      name: data.name ?? '',
-      alias: data.alias,
-      imageUrl: data.imageUrl.isNotEmpty ? data.imageUrl : null,
-      dateAdded: data.dateAdded,
-      widgetID: data.widgetID,
+      widgetID: data.widgetID ?? 0,
+
+      // Use null-coalescing (??) instead of (!) for all table fields
+      name: data.name ?? 'Untitled',
+      url: data.url ?? '/',
+      alias: data.alias ?? '',
+
+      // SAFE CHECK: This prevents the specific "Null check" crash
+      imageUrl: (data.imageUrl != null && data.imageUrl!.isNotEmpty)
+          ? data.imageUrl!
+          : 'assets/internalwidget/default.png',
+
+      dateAdded: data.dateAdded ?? DateTime.now().toIso8601String(),
+     
       // Use defaults for new fields when adapting from database
-      description: '',
+      description: 'Unknown',
       icon: getIconFromName(data.name ?? ''),
       protocol: 'https',
-      host: '',
+      host: 'Unknown',
       category: PluginCategory.other,
       tags: const [],
       isActive: false,

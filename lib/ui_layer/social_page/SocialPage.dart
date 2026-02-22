@@ -16,14 +16,16 @@ class SocialPage extends StatefulWidget {
     return MainButton(
       type: "social",
       destination: "/social",
-      mainFunction: () => context.go("/social"),
-      onSwipeUp: () => context.go("/canvas"),
+      mainFunction: () => context.go("/"),
+      onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);
       },
       onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       size: size,
-      icon: Icons.people_alt_rounded,
+      icon: Icons.account_circle_outlined,
       subButtons: [
         SubButton(
           icon: Icons.favorite,
@@ -50,7 +52,7 @@ class _SocialPageState extends State<SocialPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 5, vsync: this);
   }
 
   @override
@@ -101,6 +103,10 @@ class _SocialPageState extends State<SocialPage>
               unselectedLabelColor: colorScheme.onSurfaceVariant,
               indicatorColor: colorScheme.primary,
               tabs: const [
+                Tab(
+                  text: 'Achievements',
+                  icon: Icon(Icons.emoji_events_outlined),
+                ),
                 Tab(text: 'Friends', icon: Icon(Icons.people_outline)),
                 Tab(text: 'Dating', icon: Icon(Icons.favorite_border)),
                 Tab(text: 'Family', icon: Icon(Icons.family_restroom)),
@@ -116,6 +122,7 @@ class _SocialPageState extends State<SocialPage>
               child: TabBarView(
                 controller: _tabController,
                 children: [
+                  _buildAchievementsGrid(context),
                   _buildContactList(context, 'friend'),
                   _buildContactList(context, 'dating'),
                   _buildContactList(context, 'family'),
@@ -137,7 +144,7 @@ class _SocialPageState extends State<SocialPage>
             animation: _tabController,
             builder: (context, child) {
               return Icon(
-                _tabController.index == 3
+                _tabController.index == 4
                     ? Icons.contact_phone_rounded
                     : Icons.person_add_rounded,
               );
@@ -649,6 +656,92 @@ class _SocialPageState extends State<SocialPage>
     );
   }
 
+  Widget _buildAchievementsGrid(BuildContext context) {
+    final questDao = context.watch<QuestDAO>();
+
+    return StreamBuilder<List<QuestData>>(
+      stream: questDao.watchActiveQuests(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final quests = snapshot.data!;
+
+        if (quests.isEmpty) {
+          return Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.emoji_events_outlined,
+                  size: 64,
+                  color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
+                ),
+                const SizedBox(height: 16),
+                const Text('No achievements yet. Keep growing!'),
+              ],
+            ),
+          );
+        }
+
+        return GridView.builder(
+          padding: const EdgeInsets.all(16),
+          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: 2,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+            childAspectRatio: 0.85,
+          ),
+          itemCount: quests.length,
+          itemBuilder: (context, index) {
+            final quest = quests[index];
+            final progress = (quest.currentValue / quest.targetValue).clamp(
+              0.0,
+              1.0,
+            );
+
+            // Map categories to icons/colors
+            IconData icon = Icons.star_rounded;
+            Color color = Colors.orange;
+
+            switch (quest.category.toLowerCase()) {
+              case 'health':
+                icon = Icons.favorite_rounded;
+                color = Colors.red;
+                break;
+              case 'finance':
+                icon = Icons.account_balance_wallet_rounded;
+                color = Colors.green;
+                break;
+              case 'social':
+                icon = Icons.people_alt_rounded;
+                color = Colors.purple;
+                break;
+              case 'career':
+              case 'project':
+                icon = Icons.rocket_launch_rounded;
+                color = Colors.blue;
+                break;
+            }
+
+            return _AchievementCard(
+              title: quest.title,
+              description: quest.description ?? '',
+              icon: icon,
+              color: color,
+              progress: progress,
+            );
+          },
+        );
+      },
+    );
+  }
+
   Widget _buildDirectoryList(BuildContext context) {
     final personDao = context.watch<PersonDAO>();
     final managementDao = context.read<PersonManagementDAO>();
@@ -851,13 +944,166 @@ class _SocialPageState extends State<SocialPage>
   String _getTabName(int index) {
     switch (index) {
       case 0:
-        return 'Friend';
+        return 'Achievements';
       case 1:
-        return 'Dating';
+        return 'Friend';
       case 2:
+        return 'Dating';
+      case 3:
         return 'Family';
+      case 4:
+        return 'Directory';
       default:
         return 'Friend';
     }
+  }
+}
+
+class _AchievementCard extends StatelessWidget {
+  final String title;
+  final String description;
+  final IconData icon;
+  final Color color;
+  final double progress;
+
+  const _AchievementCard({
+    required this.title,
+    required this.description,
+    required this.icon,
+    required this.color,
+    required this.progress,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isCompleted = progress >= 1.0;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withOpacity(0.2), color.withOpacity(0.05)],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.2), width: 1.5),
+        boxShadow: [
+          BoxShadow(
+            color: color.withOpacity(0.1),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Icon(icon, size: 100, color: color.withOpacity(0.05)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: color, size: 28),
+                  ),
+                  const Spacer(),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    description,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.2,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 12),
+                  Stack(
+                    children: [
+                      Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
+                      FractionallySizedBox(
+                        widthFactor: progress,
+                        child: Container(
+                          height: 6,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [color, color.withOpacity(0.7)],
+                            ),
+                            borderRadius: BorderRadius.circular(3),
+                            boxShadow: [
+                              BoxShadow(
+                                color: color.withOpacity(0.3),
+                                blurRadius: 4,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          color: color,
+                        ),
+                      ),
+                      if (isCompleted)
+                        const Icon(
+                          Icons.check_circle,
+                          color: Colors.green,
+                          size: 14,
+                        ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  // TODO: Show achievement details
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

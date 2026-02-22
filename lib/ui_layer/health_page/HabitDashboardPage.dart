@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:provider/provider.dart';
 
 class HabitDashboardPage extends StatelessWidget {
@@ -136,6 +137,7 @@ class HabitDashboardPage extends StatelessWidget {
     try {
       await dao.insertExerciseLog(
         ExerciseLogsTableCompanion.insert(
+          id: IDGen.generateUuid(),
           personID: 1,
           type: type,
           durationMinutes: minutes,
@@ -152,6 +154,7 @@ class HabitDashboardPage extends StatelessWidget {
     try {
       await dao.insertWaterLog(
         WaterLogsTableCompanion.insert(
+          id: IDGen.generateUuid(),
           personID: 1,
           amount: Value(amount),
           timestamp: Value(DateTime.now()),
@@ -169,6 +172,7 @@ class HabitDashboardPage extends StatelessWidget {
       final now = DateTime.now();
       await dao.insertSleepLog(
         SleepLogsTableCompanion.insert(
+          id: IDGen.generateUuid(),
           personID: 1,
           startTime: now.subtract(const Duration(hours: 8)),
           endTime: Value(now),

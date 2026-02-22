@@ -10,6 +10,7 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.d
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:go_router/go_router.dart';
 import 'TaskItem.dart';
 import 'TextEditorPage.dart';
 
@@ -55,6 +56,12 @@ class ProjectDetailsPage extends StatelessWidget {
                 ),
               IconButton(
                 padding: const EdgeInsets.only(right: 16),
+                icon: const Icon(Icons.analytics_outlined),
+                tooltip: 'Analysis',
+                onPressed: () => context.go('/project-analysis'),
+              ),
+              IconButton(
+                padding: const EdgeInsets.only(right: 16),
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
                 tooltip: 'Delete Project',
                 onPressed: () async {
@@ -82,7 +89,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   );
                   if (confirm == true && context.mounted) {
                     final projectBlock = context.read<ProjectBlock>();
-                    await projectBlock.deleteProject(project.projectID);
+                    await projectBlock.deleteProject(project.id);
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
@@ -132,7 +139,64 @@ class ProjectDetailsPage extends StatelessWidget {
                             fontSize: 14,
                           ),
                         ),
-                      const SizedBox(height: 40),
+                      const SizedBox(height: 16),
+                      StreamBuilder<List<GoalData>>(
+                        stream: database.growthDAO.watchGoalsByProject(
+                          project.projectID,
+                        ),
+                        builder: (context, snapshot) {
+                          final tasks = snapshot.data ?? [];
+                          final completed = tasks
+                              .where((t) => t.status == 'done')
+                              .length;
+                          final total = tasks.length;
+                          final progress = total > 0 ? completed / total : 0.0;
+
+                          return Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    '${(progress * 100).toInt()}%',
+                                    style: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'COMPLETE',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface.withOpacity(
+                                        0.5,
+                                      ),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 10,
+                                      letterSpacing: 1.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(4),
+                                child: LinearProgressIndicator(
+                                  value: progress,
+                                  minHeight: 8,
+                                  backgroundColor: colorScheme.primary
+                                      .withOpacity(0.1),
+                                  valueColor: AlwaysStoppedAnimation(
+                                    colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 20),
                     ],
                   ),
                 ),
@@ -149,44 +213,38 @@ class ProjectDetailsPage extends StatelessWidget {
                     _showAddTaskDialog(context, growthBlock, project.projectID);
                   }),
                   const SizedBox(height: 16),
-                  StreamBuilder<List<GoalData>>(
-                    stream: database.growthDAO.watchGoalsByProject(
-                      project.projectID,
-                    ),
-                    builder: (context, snapshot) {
-                      final tasks = snapshot.data ?? [];
-                      if (tasks.isEmpty) {
-                        return _buildEmptyState(
-                          context,
-                          'No tasks for this project yet.',
-                        );
-                      }
-                      return Column(
-                        children: tasks.map((e) {
-                          final protocol = GoalProtocol(
-                            goalID: e.goalID,
-                            personID: e.personID,
-                            title: e.title,
-                            description: e.description,
-                            category: e.category,
-                            priority: e.priority,
-                            status: e.status,
-                            targetDate: e.targetDate,
-                            completionDate: e.completionDate,
-                            progressPercentage: e.progressPercentage,
-                            projectID: e.projectID,
-                          );
-                          return TaskItem(
-                            task: protocol,
-                            onComplete: () => growthBlock.completeGoal(
-                              e.goalID,
-                              scoreBlock: context.read<ScoreBlock>(),
-                            ),
-                          );
-                        }).toList(),
+                  Watch((context) {
+                    final allGoals = growthBlock.goals.value;
+                    final tasks = allGoals
+                        .where((g) => g.projectID == project.projectID)
+                        .toList();
+                    if (tasks.isEmpty) {
+                      return _buildEmptyState(
+                        context,
+                        'No tasks for this project yet.',
                       );
-                    },
-                  ),
+                    }
+
+                    // Sort: active tasks first, completed tasks last
+                    final sortedTasks = List<GoalProtocol>.from(tasks);
+                    sortedTasks.sort((a, b) {
+                      if (a.status == 'done' && b.status != 'done') return 1;
+                      if (a.status != 'done' && b.status == 'done') return -1;
+                      return 0;
+                    });
+
+                    return Column(
+                      children: sortedTasks.map((protocol) {
+                        return TaskItem(
+                          task: protocol,
+                          onComplete: () => growthBlock.completeGoal(
+                            protocol.id,
+                            scoreBlock: context.read<ScoreBlock>(),
+                          ),
+                        );
+                      }).toList(),
+                    );
+                  }),
                   const SizedBox(height: 32),
                   _buildSectionHeader(context, 'Notes', () {
                     _createNewNote(

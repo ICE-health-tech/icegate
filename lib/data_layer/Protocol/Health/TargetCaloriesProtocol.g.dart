@@ -6,17 +6,17 @@ part of 'TargetCaloriesProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_TargetCaloriesProtocol _$TargetCaloriesProtocolFromJson(
+_$TargetCaloriesProtocolImpl _$$TargetCaloriesProtocolImplFromJson(
   Map<String, dynamic> json,
-) => _TargetCaloriesProtocol(
+) => _$TargetCaloriesProtocolImpl(
   calories: (json['calories'] as num).toInt(),
   protein: (json['protein'] as num).toInt(),
   carbs: (json['carbs'] as num).toInt(),
   fat: (json['fat'] as num).toInt(),
 );
 
-Map<String, dynamic> _$TargetCaloriesProtocolToJson(
-  _TargetCaloriesProtocol instance,
+Map<String, dynamic> _$$TargetCaloriesProtocolImplToJson(
+  _$TargetCaloriesProtocolImpl instance,
 ) => <String, dynamic>{
   'calories': instance.calories,
   'protein': instance.protein,

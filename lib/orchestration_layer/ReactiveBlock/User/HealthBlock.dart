@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
     show HealthMetricsDAO, HealthMetricsTableCompanion, HealthLogsDAO;
 import 'package:signals/signals.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class HealthBlock {
-  final int personId;
+  int personId;
   final HealthMetricsDAO _healthDao;
 
   final todaySteps = signal<int>(0);
@@ -35,48 +36,57 @@ class HealthBlock {
 
   void init() {
     // Watch all metrics to calculate historical steps (excluding today)
-    _metricsSubscription = _healthDao.watchAllMetrics(personId).listen((
-      metrics,
-    ) {
-      final today = DateTime.now();
-      final todayStr = "${today.year}-${today.month}-${today.day}";
+    _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
+      (metrics) {
+        final today = DateTime.now();
+        final todayStr = "${today.year}-${today.month}-${today.day}";
 
-      int totalHistorical = 0;
-      int foundTodaySteps = 0;
-      double foundTodaySleep = 0;
-      int foundTodayHeartRate = 0;
+        int totalHistorical = 0;
+        int foundTodaySteps = 0;
+        double foundTodaySleep = 0;
+        int foundTodayHeartRate = 0;
 
-      for (var m in metrics) {
-        final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
-        if (dateStr == todayStr) {
-          foundTodaySteps = m.steps;
-          foundTodaySleep = m.sleepHours;
-          foundTodayHeartRate = m.heartRate;
-        } else {
-          totalHistorical += m.steps;
+        for (var m in metrics) {
+          final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
+          if (dateStr == todayStr) {
+            foundTodaySteps = m.steps;
+            foundTodaySleep = m.sleepHours;
+            foundTodayHeartRate = m.heartRate;
+          } else {
+            totalHistorical += m.steps;
+          }
         }
-      }
 
-      historicalSteps.value = totalHistorical;
-      // Only update todaySteps from DB if it's larger than current volatile state
-      if (foundTodaySteps > todaySteps.value) {
-        todaySteps.value = foundTodaySteps;
-      }
+        historicalSteps.value = totalHistorical;
+        // Only update todaySteps from DB if it's larger than current volatile state
+        if (foundTodaySteps > todaySteps.value) {
+          todaySteps.value = foundTodaySteps;
+        }
 
-      if (foundTodaySleep > todaySleep.value) {
-        todaySleep.value = foundTodaySleep;
-      }
+        if (foundTodaySleep > todaySleep.value) {
+          todaySleep.value = foundTodaySleep;
+        }
 
-      if (foundTodayHeartRate > todayHeartRate.value) {
-        todayHeartRate.value = foundTodayHeartRate;
-      }
-    });
+        if (foundTodayHeartRate > todayHeartRate.value) {
+          todayHeartRate.value = foundTodayHeartRate;
+        }
+      },
+      onError: (e) =>
+          debugPrint("HealthBlock: Error watching health metrics: $e"),
+    );
 
     _waterSubscription = _healthLogsDao
         .watchDailyWaterLogs(personId, DateTime.now())
-        .listen((logs) {
-          todayWater.value = logs.fold<int>(0, (sum, log) => sum + log.amount);
-        });
+        .listen(
+          (logs) {
+            todayWater.value = logs.fold<int>(
+              0,
+              (sum, log) => sum + log.amount,
+            );
+          },
+          onError: (e) =>
+              debugPrint("HealthBlock: Error watching water logs: $e"),
+        );
   }
 
   void updateSteps(int steps) {
@@ -116,6 +126,7 @@ class HealthBlock {
     debugPrint("HealthBlock: Saving $steps steps to DB for $normalizedToday");
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
+        id: Value(IDGen.generateUuid()),
         personID: Value(personId),
         date: Value(normalizedToday),
         steps: Value(steps),
@@ -133,6 +144,7 @@ class HealthBlock {
     );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
+        id: Value(IDGen.generateUuid()),
         personID: Value(personId),
         date: Value(normalizedToday),
         sleepHours: Value(hours),
@@ -150,6 +162,7 @@ class HealthBlock {
     );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
+        id: Value(IDGen.generateUuid()),
         personID: Value(personId),
         date: Value(normalizedToday),
         heartRate: Value(bpm),

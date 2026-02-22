@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -10,6 +11,7 @@ import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:ice_shield/data_layer/Services/YoutubeService.dart';
 
 enum FocusStatus { idle, running, paused, completed }
 
@@ -38,7 +40,8 @@ class FocusBlock {
   final FocusSessionsDAO _focusSessionDao;
   final HealthLogsDAO _healthLogsDao;
   final HealthMetricsDAO _healthMetricsDao;
-  final int _currentPersonId;
+  int _currentPersonId;
+  set personId(int id) => _currentPersonId = id;
   final LocalNotificationService? _notificationService;
 
   // Configuration (Defaults)
@@ -77,6 +80,11 @@ class FocusBlock {
   // Audio Customization
   final customSoundPath = signal<String?>(null);
   final isCustomSoundLocal = signal<bool>(false);
+  final youtubeUrl = signal<String?>(null);
+  final isStreamingYoutube = signal<bool>(false);
+  final currentTrackTitle = signal<String?>(null);
+
+  final _youtubeService = YoutubeService();
 
   // External Blocks for Automation
   GrowthBlock? growthBlock;
@@ -85,6 +93,7 @@ class FocusBlock {
   // Timer
   Timer? _timer;
   DateTime? _startTime;
+  bool _isStarting = false;
 
   final FocusAudioHandler? _audioHandler;
 
@@ -134,18 +143,16 @@ class FocusBlock {
 
   void startTimer({bool fromSystem = false}) async {
     print(
-      "FocusBlock(${identityHashCode(this)}): startTimer called. isRunning: ${isRunning.value}, fromSystem: $fromSystem",
+      "FocusBlock(${identityHashCode(this)}): startTimer called. isRunning: ${isRunning.value}, fromSystem: $fromSystem, _isStarting: $_isStarting",
     );
-    if (isRunning.value) return;
+    if (isRunning.value || _isStarting) return;
 
-    isRunning.value = true;
-    _startTime ??= DateTime.now();
-
-    // debugPrint("audio: "+ _audioHandler.mediaItem.value.toString());]
+    _isStarting = true;
     try {
+      isRunning.value = true;
+      _startTime ??= DateTime.now();
+
       if (!fromSystem) {
-        // Attempt to set source, but proceed to 'play' (start session) regardless
-        // This ensures the lock screen controls appear even for silent sessions or failed assets
         try {
           await _updateAudioSource();
           if (isRunning.value) {
@@ -155,68 +162,43 @@ class FocusBlock {
           print(
             "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
           );
-          // Even if audio fails, we still want the timer to run and notifications to show
         }
       }
 
-      // ALWAYS show status notification to satisfy "both must show" requirement
-      // _notificationService?.showNotification(
-      //   888,
-      //   "Focus Session Active",
-      //   "Stay focused! ${_formatTime(remainingTime.value)} remaining",
-      // );
-    } catch (e) {
-      print("FocusBlock startTimer error: $e");
-    }
-
-    // Start Live Activity asynchronously without blocking the timer
-    // Wrap in try-catch to prevent debug crashes on Simulator/Device without Widget Extension
-    try {
-      _createLiveActivity();
-    } catch (e) {
-      print(
-        "FocusBlock: Live Activity skipped (Platform Exception likely): $e",
-      );
-    }
-
-    // print("FocusBlock: Starting Timer.periodic");
-    // // Show initial notification immediately
-    // _notificationService?.showNotification(
-    //   888,
-    //   "Focus Session Active",
-    //   "${_formatTime(remainingTime.value)} remaining",
-    // );
-
-    if (!isRunning.value) {
-      print(
-        "FocusBlock: startTimer aborted early - user requested pause during setup.",
-      );
-      return;
-    }
-
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (remainingTime.value > 0) {
-        remainingTime.value--;
-
-        // Sync to Live Activity (Primary)
-        try {
-          _updateLiveActivity();
-        } catch (e) {
-          print("FocusBlock: Live Activity Update Error: $e");
-        }
-
-        // Sync to Media Metadata (Secondary, only if audio is active)
-        try {
-          _updateMediaMetadata();
-        } catch (e) {
-          print("FocusBlock: Media Metadata Update Error: $e");
-        }
-
-        // Update notification every second for a live countdown experience
-      } else {
-        completeSession();
+      try {
+        await _createLiveActivity();
+      } catch (e) {
+        print("FocusBlock: Live Activity skipped: $e");
       }
-    });
+
+      if (!isRunning.value) {
+        print(
+          "FocusBlock: startTimer aborted early - user requested pause during setup.",
+        );
+        return;
+      }
+
+      _timer?.cancel(); // Safety cancel before creating new
+      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (remainingTime.value > 0) {
+          remainingTime.value--;
+          try {
+            _updateLiveActivity();
+          } catch (e) {
+            print("FocusBlock: Live Activity Update Error: $e");
+          }
+          try {
+            _updateMediaMetadata();
+          } catch (e) {
+            print("FocusBlock: Media Metadata Update Error: $e");
+          }
+        } else {
+          completeSession();
+        }
+      });
+    } finally {
+      _isStarting = false;
+    }
   }
 
   Future<void> _createLiveActivity() async {
@@ -363,6 +345,20 @@ class FocusBlock {
     }
 
     try {
+      // 0. Check for YouTube Streaming
+      if (youtubeUrl.value != null) {
+        final streamUrl = await _youtubeService.getAudioStreamUrl(
+          youtubeUrl.value!,
+        );
+        if (streamUrl != null) {
+          final targetSource = UrlSource(streamUrl);
+          await _audioHandler.setSource(targetSource);
+          isStreamingYoutube.value = true;
+          return true;
+        }
+      }
+      isStreamingYoutube.value = false;
+
       // 1. Check for Silent Mode
       if (customSoundPath.value == SILENT_MODE) {
         await _audioHandler.stop(); // Ensure silence
@@ -440,7 +436,7 @@ class FocusBlock {
       case 'Default':
       default:
         // Use a remote URL because local assets are corrupted (0 bytes)
-        return 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3';
+        return 'sounds/forest_stream';
     }
   }
 
@@ -485,7 +481,7 @@ class FocusBlock {
 
       // Automation - Complete task and increase points
       if (selectedTaskId.value != null && growthBlock != null) {
-        await growthBlock!.completeGoal(
+        await growthBlock!.completeGoalByIntId(
           selectedTaskId.value!,
           scoreBlock: scoreBlock,
         );
@@ -537,11 +533,26 @@ class FocusBlock {
 
   void setTimerTheme(String theme) {
     timerTheme.value = theme;
+    // Clear other audio sources when a theme is explicitly selected
+    youtubeUrl.value = null;
+    currentTrackTitle.value = null;
+    isStreamingYoutube.value = false;
+    customSoundPath.value = null;
+    if (isRunning.value) {
+      _updateAudioSource();
+    }
   }
 
   void setCustomSound(String path, {bool isLocal = false}) {
     customSoundPath.value = path;
     isCustomSoundLocal.value = isLocal;
+    // Clear YouTube if custom sound is set
+    youtubeUrl.value = null;
+    currentTrackTitle.value = null;
+    isStreamingYoutube.value = false;
+    if (isRunning.value) {
+      _updateAudioSource();
+    }
   }
 
   void clearCustomSound() {
@@ -558,6 +569,28 @@ class FocusBlock {
     selectedTaskId.value = taskId;
   }
 
+  Future<void> playYoutube(String url) async {
+    youtubeUrl.value = url;
+    customSoundPath.value = null; // Clear custom sounds when playing YouTube
+    final metadata = await _youtubeService.getVideoMetadata(url);
+    if (metadata != null) {
+      currentTrackTitle.value = metadata.title;
+    }
+    if (isRunning.value) {
+      await _updateAudioSource();
+      _audioHandler?.play();
+    }
+  }
+
+  void clearYoutube() {
+    youtubeUrl.value = null;
+    currentTrackTitle.value = null;
+    isStreamingYoutube.value = false;
+    if (isRunning.value) {
+      _updateAudioSource();
+    }
+  }
+
   // --- Database Actions ---
 
   Future<void> _saveSession({required String status}) async {
@@ -570,6 +603,7 @@ class FocusBlock {
     if (duration < 60) return;
 
     final session = FocusSessionsTableCompanion.insert(
+      id: IDGen.generateUuid(),
       personID: _currentPersonId,
       projectID: drift.Value(selectedProjectId.value),
       taskID: drift.Value(selectedTaskId.value),
@@ -602,6 +636,7 @@ class FocusBlock {
     // Record Exercise Log if in Exercise Mode
     if (isExerciseMode.value && status == 'completed') {
       final exerciseLog = ExerciseLogsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         personID: _currentPersonId,
         type: exerciseType.value,
         durationMinutes: duration ~/ 60,

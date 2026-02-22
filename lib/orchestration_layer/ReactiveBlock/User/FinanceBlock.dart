@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/data_layer/Protocol/User/FinanceProtocols.dart';
 
 class FinanceBlock {
@@ -198,6 +199,7 @@ class FinanceBlock {
   }) async {
     await _dao.insertTransaction(
       TransactionsTableCompanion.insert(
+        id: IDGen.generateUuid(),
         personID: _personId,
         category: category,
         type: type,

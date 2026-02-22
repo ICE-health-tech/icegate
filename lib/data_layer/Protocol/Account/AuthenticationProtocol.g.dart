@@ -6,16 +6,16 @@ part of 'AuthenticationProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_AuthenticationProtocol _$AuthenticationProtocolFromJson(
+_$AuthenticationProtocolImpl _$$AuthenticationProtocolImplFromJson(
   Map<String, dynamic> json,
-) => _AuthenticationProtocol(
+) => _$AuthenticationProtocolImpl(
   username: json['username'] as String,
   password: json['password'] as String,
   jwt: json['jwt'] as String,
 );
 
-Map<String, dynamic> _$AuthenticationProtocolToJson(
-  _AuthenticationProtocol instance,
+Map<String, dynamic> _$$AuthenticationProtocolImplToJson(
+  _$AuthenticationProtocolImpl instance,
 ) => <String, dynamic>{
   'username': instance.username,
   'password': instance.password,

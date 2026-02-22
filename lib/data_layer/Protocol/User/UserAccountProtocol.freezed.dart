@@ -1,5 +1,5 @@
-// GENERATED CODE - DO NOT MODIFY BY HAND
 // coverage:ignore-file
+// GENERATED CODE - DO NOT MODIFY BY HAND
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
@@ -9,287 +9,312 @@ part of 'UserAccountProtocol.dart';
 // FreezedGenerator
 // **************************************************************************
 
-// dart format off
 T _$identity<T>(T value) => value;
+
+final _privateConstructorUsedError = UnsupportedError(
+  'It seems like you constructed your class using `MyClass._()`. This constructor is only meant to be used by freezed and you are not supposed to need it nor use it.\nPlease check the documentation here for more information: https://github.com/rrousselGit/freezed#adding-getters-and-methods-to-our-models',
+);
+
+UserAccountProtocol _$UserAccountProtocolFromJson(Map<String, dynamic> json) {
+  return _UserAccountProtocol.fromJson(json);
+}
 
 /// @nodoc
 mixin _$UserAccountProtocol {
-
- int get accountID; int get personID; String get username; String? get primaryEmail; String get role; bool get isLocked; DateTime? get lastLoginAt;
-/// Create a copy of UserAccountProtocol
-/// with the given fields replaced by the non-null parameter values.
-@JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-$UserAccountProtocolCopyWith<UserAccountProtocol> get copyWith => _$UserAccountProtocolCopyWithImpl<UserAccountProtocol>(this as UserAccountProtocol, _$identity);
+  int get accountID => throw _privateConstructorUsedError;
+  int get personID => throw _privateConstructorUsedError;
+  String get username => throw _privateConstructorUsedError;
+  String? get primaryEmail => throw _privateConstructorUsedError;
+  String get role => throw _privateConstructorUsedError;
+  bool get isLocked => throw _privateConstructorUsedError;
+  DateTime? get lastLoginAt => throw _privateConstructorUsedError;
 
   /// Serializes this UserAccountProtocol to a JSON map.
-  Map<String, dynamic> toJson();
+  Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
 
-
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is UserAccountProtocol&&(identical(other.accountID, accountID) || other.accountID == accountID)&&(identical(other.personID, personID) || other.personID == personID)&&(identical(other.username, username) || other.username == username)&&(identical(other.primaryEmail, primaryEmail) || other.primaryEmail == primaryEmail)&&(identical(other.role, role) || other.role == role)&&(identical(other.isLocked, isLocked) || other.isLocked == isLocked)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
-}
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,accountID,personID,username,primaryEmail,role,isLocked,lastLoginAt);
-
-@override
-String toString() {
-  return 'UserAccountProtocol(accountID: $accountID, personID: $personID, username: $username, primaryEmail: $primaryEmail, role: $role, isLocked: $isLocked, lastLoginAt: $lastLoginAt)';
-}
-
-
+  /// Create a copy of UserAccountProtocol
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  $UserAccountProtocolCopyWith<UserAccountProtocol> get copyWith =>
+      throw _privateConstructorUsedError;
 }
 
 /// @nodoc
-abstract mixin class $UserAccountProtocolCopyWith<$Res>  {
-  factory $UserAccountProtocolCopyWith(UserAccountProtocol value, $Res Function(UserAccountProtocol) _then) = _$UserAccountProtocolCopyWithImpl;
-@useResult
-$Res call({
- int accountID, int personID, String username, String? primaryEmail, String role, bool isLocked, DateTime? lastLoginAt
-});
-
-
-
-
+abstract class $UserAccountProtocolCopyWith<$Res> {
+  factory $UserAccountProtocolCopyWith(
+    UserAccountProtocol value,
+    $Res Function(UserAccountProtocol) then,
+  ) = _$UserAccountProtocolCopyWithImpl<$Res, UserAccountProtocol>;
+  @useResult
+  $Res call({
+    int accountID,
+    int personID,
+    String username,
+    String? primaryEmail,
+    String role,
+    bool isLocked,
+    DateTime? lastLoginAt,
+  });
 }
+
 /// @nodoc
-class _$UserAccountProtocolCopyWithImpl<$Res>
+class _$UserAccountProtocolCopyWithImpl<$Res, $Val extends UserAccountProtocol>
     implements $UserAccountProtocolCopyWith<$Res> {
-  _$UserAccountProtocolCopyWithImpl(this._self, this._then);
+  _$UserAccountProtocolCopyWithImpl(this._value, this._then);
 
-  final UserAccountProtocol _self;
-  final $Res Function(UserAccountProtocol) _then;
+  // ignore: unused_field
+  final $Val _value;
+  // ignore: unused_field
+  final $Res Function($Val) _then;
 
-/// Create a copy of UserAccountProtocol
-/// with the given fields replaced by the non-null parameter values.
-@pragma('vm:prefer-inline') @override $Res call({Object? accountID = null,Object? personID = null,Object? username = null,Object? primaryEmail = freezed,Object? role = null,Object? isLocked = null,Object? lastLoginAt = freezed,}) {
-  return _then(_self.copyWith(
-accountID: null == accountID ? _self.accountID : accountID // ignore: cast_nullable_to_non_nullable
-as int,personID: null == personID ? _self.personID : personID // ignore: cast_nullable_to_non_nullable
-as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,primaryEmail: freezed == primaryEmail ? _self.primaryEmail : primaryEmail // ignore: cast_nullable_to_non_nullable
-as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String,isLocked: null == isLocked ? _self.isLocked : isLocked // ignore: cast_nullable_to_non_nullable
-as bool,lastLoginAt: freezed == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
-  ));
+  /// Create a copy of UserAccountProtocol
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? accountID = null,
+    Object? personID = null,
+    Object? username = null,
+    Object? primaryEmail = freezed,
+    Object? role = null,
+    Object? isLocked = null,
+    Object? lastLoginAt = freezed,
+  }) {
+    return _then(
+      _value.copyWith(
+            accountID: null == accountID
+                ? _value.accountID
+                : accountID // ignore: cast_nullable_to_non_nullable
+                      as int,
+            personID: null == personID
+                ? _value.personID
+                : personID // ignore: cast_nullable_to_non_nullable
+                      as int,
+            username: null == username
+                ? _value.username
+                : username // ignore: cast_nullable_to_non_nullable
+                      as String,
+            primaryEmail: freezed == primaryEmail
+                ? _value.primaryEmail
+                : primaryEmail // ignore: cast_nullable_to_non_nullable
+                      as String?,
+            role: null == role
+                ? _value.role
+                : role // ignore: cast_nullable_to_non_nullable
+                      as String,
+            isLocked: null == isLocked
+                ? _value.isLocked
+                : isLocked // ignore: cast_nullable_to_non_nullable
+                      as bool,
+            lastLoginAt: freezed == lastLoginAt
+                ? _value.lastLoginAt
+                : lastLoginAt // ignore: cast_nullable_to_non_nullable
+                      as DateTime?,
+          )
+          as $Val,
+    );
+  }
 }
 
+/// @nodoc
+abstract class _$$UserAccountProtocolImplCopyWith<$Res>
+    implements $UserAccountProtocolCopyWith<$Res> {
+  factory _$$UserAccountProtocolImplCopyWith(
+    _$UserAccountProtocolImpl value,
+    $Res Function(_$UserAccountProtocolImpl) then,
+  ) = __$$UserAccountProtocolImplCopyWithImpl<$Res>;
+  @override
+  @useResult
+  $Res call({
+    int accountID,
+    int personID,
+    String username,
+    String? primaryEmail,
+    String role,
+    bool isLocked,
+    DateTime? lastLoginAt,
+  });
 }
 
+/// @nodoc
+class __$$UserAccountProtocolImplCopyWithImpl<$Res>
+    extends _$UserAccountProtocolCopyWithImpl<$Res, _$UserAccountProtocolImpl>
+    implements _$$UserAccountProtocolImplCopyWith<$Res> {
+  __$$UserAccountProtocolImplCopyWithImpl(
+    _$UserAccountProtocolImpl _value,
+    $Res Function(_$UserAccountProtocolImpl) _then,
+  ) : super(_value, _then);
 
-/// Adds pattern-matching-related methods to [UserAccountProtocol].
-extension UserAccountProtocolPatterns on UserAccountProtocol {
-/// A variant of `map` that fallback to returning `orElse`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeMap<TResult extends Object?>(TResult Function( _UserAccountProtocol value)?  $default,{required TResult orElse(),}){
-final _that = this;
-switch (_that) {
-case _UserAccountProtocol() when $default != null:
-return $default(_that);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// Callbacks receives the raw object, upcasted.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case final Subclass2 value:
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult map<TResult extends Object?>(TResult Function( _UserAccountProtocol value)  $default,){
-final _that = this;
-switch (_that) {
-case _UserAccountProtocol():
-return $default(_that);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `map` that fallback to returning `null`.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case final Subclass value:
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? mapOrNull<TResult extends Object?>(TResult? Function( _UserAccountProtocol value)?  $default,){
-final _that = this;
-switch (_that) {
-case _UserAccountProtocol() when $default != null:
-return $default(_that);case _:
-  return null;
-
-}
-}
-/// A variant of `when` that fallback to an `orElse` callback.
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return orElse();
-/// }
-/// ```
-
-@optionalTypeArgs TResult maybeWhen<TResult extends Object?>(TResult Function( int accountID,  int personID,  String username,  String? primaryEmail,  String role,  bool isLocked,  DateTime? lastLoginAt)?  $default,{required TResult orElse(),}) {final _that = this;
-switch (_that) {
-case _UserAccountProtocol() when $default != null:
-return $default(_that.accountID,_that.personID,_that.username,_that.primaryEmail,_that.role,_that.isLocked,_that.lastLoginAt);case _:
-  return orElse();
-
-}
-}
-/// A `switch`-like method, using callbacks.
-///
-/// As opposed to `map`, this offers destructuring.
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case Subclass2(:final field2):
-///     return ...;
-/// }
-/// ```
-
-@optionalTypeArgs TResult when<TResult extends Object?>(TResult Function( int accountID,  int personID,  String username,  String? primaryEmail,  String role,  bool isLocked,  DateTime? lastLoginAt)  $default,) {final _that = this;
-switch (_that) {
-case _UserAccountProtocol():
-return $default(_that.accountID,_that.personID,_that.username,_that.primaryEmail,_that.role,_that.isLocked,_that.lastLoginAt);case _:
-  throw StateError('Unexpected subclass');
-
-}
-}
-/// A variant of `when` that fallback to returning `null`
-///
-/// It is equivalent to doing:
-/// ```dart
-/// switch (sealedClass) {
-///   case Subclass(:final field):
-///     return ...;
-///   case _:
-///     return null;
-/// }
-/// ```
-
-@optionalTypeArgs TResult? whenOrNull<TResult extends Object?>(TResult? Function( int accountID,  int personID,  String username,  String? primaryEmail,  String role,  bool isLocked,  DateTime? lastLoginAt)?  $default,) {final _that = this;
-switch (_that) {
-case _UserAccountProtocol() when $default != null:
-return $default(_that.accountID,_that.personID,_that.username,_that.primaryEmail,_that.role,_that.isLocked,_that.lastLoginAt);case _:
-  return null;
-
-}
-}
-
+  /// Create a copy of UserAccountProtocol
+  /// with the given fields replaced by the non-null parameter values.
+  @pragma('vm:prefer-inline')
+  @override
+  $Res call({
+    Object? accountID = null,
+    Object? personID = null,
+    Object? username = null,
+    Object? primaryEmail = freezed,
+    Object? role = null,
+    Object? isLocked = null,
+    Object? lastLoginAt = freezed,
+  }) {
+    return _then(
+      _$UserAccountProtocolImpl(
+        accountID: null == accountID
+            ? _value.accountID
+            : accountID // ignore: cast_nullable_to_non_nullable
+                  as int,
+        personID: null == personID
+            ? _value.personID
+            : personID // ignore: cast_nullable_to_non_nullable
+                  as int,
+        username: null == username
+            ? _value.username
+            : username // ignore: cast_nullable_to_non_nullable
+                  as String,
+        primaryEmail: freezed == primaryEmail
+            ? _value.primaryEmail
+            : primaryEmail // ignore: cast_nullable_to_non_nullable
+                  as String?,
+        role: null == role
+            ? _value.role
+            : role // ignore: cast_nullable_to_non_nullable
+                  as String,
+        isLocked: null == isLocked
+            ? _value.isLocked
+            : isLocked // ignore: cast_nullable_to_non_nullable
+                  as bool,
+        lastLoginAt: freezed == lastLoginAt
+            ? _value.lastLoginAt
+            : lastLoginAt // ignore: cast_nullable_to_non_nullable
+                  as DateTime?,
+      ),
+    );
+  }
 }
 
 /// @nodoc
 @JsonSerializable()
+class _$UserAccountProtocolImpl extends _UserAccountProtocol {
+  const _$UserAccountProtocolImpl({
+    required this.accountID,
+    required this.personID,
+    required this.username,
+    this.primaryEmail,
+    this.role = 'user',
+    this.isLocked = false,
+    this.lastLoginAt,
+  }) : super._();
 
-class _UserAccountProtocol extends UserAccountProtocol {
-  const _UserAccountProtocol({required this.accountID, required this.personID, required this.username, this.primaryEmail, this.role = 'user', this.isLocked = false, this.lastLoginAt}): super._();
-  factory _UserAccountProtocol.fromJson(Map<String, dynamic> json) => _$UserAccountProtocolFromJson(json);
+  factory _$UserAccountProtocolImpl.fromJson(Map<String, dynamic> json) =>
+      _$$UserAccountProtocolImplFromJson(json);
 
-@override final  int accountID;
-@override final  int personID;
-@override final  String username;
-@override final  String? primaryEmail;
-@override@JsonKey() final  String role;
-@override@JsonKey() final  bool isLocked;
-@override final  DateTime? lastLoginAt;
+  @override
+  final int accountID;
+  @override
+  final int personID;
+  @override
+  final String username;
+  @override
+  final String? primaryEmail;
+  @override
+  @JsonKey()
+  final String role;
+  @override
+  @JsonKey()
+  final bool isLocked;
+  @override
+  final DateTime? lastLoginAt;
 
-/// Create a copy of UserAccountProtocol
-/// with the given fields replaced by the non-null parameter values.
-@override @JsonKey(includeFromJson: false, includeToJson: false)
-@pragma('vm:prefer-inline')
-_$UserAccountProtocolCopyWith<_UserAccountProtocol> get copyWith => __$UserAccountProtocolCopyWithImpl<_UserAccountProtocol>(this, _$identity);
+  @override
+  String toString() {
+    return 'UserAccountProtocol(accountID: $accountID, personID: $personID, username: $username, primaryEmail: $primaryEmail, role: $role, isLocked: $isLocked, lastLoginAt: $lastLoginAt)';
+  }
 
-@override
-Map<String, dynamic> toJson() {
-  return _$UserAccountProtocolToJson(this, );
+  @override
+  bool operator ==(Object other) {
+    return identical(this, other) ||
+        (other.runtimeType == runtimeType &&
+            other is _$UserAccountProtocolImpl &&
+            (identical(other.accountID, accountID) ||
+                other.accountID == accountID) &&
+            (identical(other.personID, personID) ||
+                other.personID == personID) &&
+            (identical(other.username, username) ||
+                other.username == username) &&
+            (identical(other.primaryEmail, primaryEmail) ||
+                other.primaryEmail == primaryEmail) &&
+            (identical(other.role, role) || other.role == role) &&
+            (identical(other.isLocked, isLocked) ||
+                other.isLocked == isLocked) &&
+            (identical(other.lastLoginAt, lastLoginAt) ||
+                other.lastLoginAt == lastLoginAt));
+  }
+
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  int get hashCode => Object.hash(
+    runtimeType,
+    accountID,
+    personID,
+    username,
+    primaryEmail,
+    role,
+    isLocked,
+    lastLoginAt,
+  );
+
+  /// Create a copy of UserAccountProtocol
+  /// with the given fields replaced by the non-null parameter values.
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  @override
+  @pragma('vm:prefer-inline')
+  _$$UserAccountProtocolImplCopyWith<_$UserAccountProtocolImpl> get copyWith =>
+      __$$UserAccountProtocolImplCopyWithImpl<_$UserAccountProtocolImpl>(
+        this,
+        _$identity,
+      );
+
+  @override
+  Map<String, dynamic> toJson() {
+    return _$$UserAccountProtocolImplToJson(this);
+  }
 }
 
-@override
-bool operator ==(Object other) {
-  return identical(this, other) || (other.runtimeType == runtimeType&&other is _UserAccountProtocol&&(identical(other.accountID, accountID) || other.accountID == accountID)&&(identical(other.personID, personID) || other.personID == personID)&&(identical(other.username, username) || other.username == username)&&(identical(other.primaryEmail, primaryEmail) || other.primaryEmail == primaryEmail)&&(identical(other.role, role) || other.role == role)&&(identical(other.isLocked, isLocked) || other.isLocked == isLocked)&&(identical(other.lastLoginAt, lastLoginAt) || other.lastLoginAt == lastLoginAt));
+abstract class _UserAccountProtocol extends UserAccountProtocol {
+  const factory _UserAccountProtocol({
+    required final int accountID,
+    required final int personID,
+    required final String username,
+    final String? primaryEmail,
+    final String role,
+    final bool isLocked,
+    final DateTime? lastLoginAt,
+  }) = _$UserAccountProtocolImpl;
+  const _UserAccountProtocol._() : super._();
+
+  factory _UserAccountProtocol.fromJson(Map<String, dynamic> json) =
+      _$UserAccountProtocolImpl.fromJson;
+
+  @override
+  int get accountID;
+  @override
+  int get personID;
+  @override
+  String get username;
+  @override
+  String? get primaryEmail;
+  @override
+  String get role;
+  @override
+  bool get isLocked;
+  @override
+  DateTime? get lastLoginAt;
+
+  /// Create a copy of UserAccountProtocol
+  /// with the given fields replaced by the non-null parameter values.
+  @override
+  @JsonKey(includeFromJson: false, includeToJson: false)
+  _$$UserAccountProtocolImplCopyWith<_$UserAccountProtocolImpl> get copyWith =>
+      throw _privateConstructorUsedError;
 }
-
-@JsonKey(includeFromJson: false, includeToJson: false)
-@override
-int get hashCode => Object.hash(runtimeType,accountID,personID,username,primaryEmail,role,isLocked,lastLoginAt);
-
-@override
-String toString() {
-  return 'UserAccountProtocol(accountID: $accountID, personID: $personID, username: $username, primaryEmail: $primaryEmail, role: $role, isLocked: $isLocked, lastLoginAt: $lastLoginAt)';
-}
-
-
-}
-
-/// @nodoc
-abstract mixin class _$UserAccountProtocolCopyWith<$Res> implements $UserAccountProtocolCopyWith<$Res> {
-  factory _$UserAccountProtocolCopyWith(_UserAccountProtocol value, $Res Function(_UserAccountProtocol) _then) = __$UserAccountProtocolCopyWithImpl;
-@override @useResult
-$Res call({
- int accountID, int personID, String username, String? primaryEmail, String role, bool isLocked, DateTime? lastLoginAt
-});
-
-
-
-
-}
-/// @nodoc
-class __$UserAccountProtocolCopyWithImpl<$Res>
-    implements _$UserAccountProtocolCopyWith<$Res> {
-  __$UserAccountProtocolCopyWithImpl(this._self, this._then);
-
-  final _UserAccountProtocol _self;
-  final $Res Function(_UserAccountProtocol) _then;
-
-/// Create a copy of UserAccountProtocol
-/// with the given fields replaced by the non-null parameter values.
-@override @pragma('vm:prefer-inline') $Res call({Object? accountID = null,Object? personID = null,Object? username = null,Object? primaryEmail = freezed,Object? role = null,Object? isLocked = null,Object? lastLoginAt = freezed,}) {
-  return _then(_UserAccountProtocol(
-accountID: null == accountID ? _self.accountID : accountID // ignore: cast_nullable_to_non_nullable
-as int,personID: null == personID ? _self.personID : personID // ignore: cast_nullable_to_non_nullable
-as int,username: null == username ? _self.username : username // ignore: cast_nullable_to_non_nullable
-as String,primaryEmail: freezed == primaryEmail ? _self.primaryEmail : primaryEmail // ignore: cast_nullable_to_non_nullable
-as String?,role: null == role ? _self.role : role // ignore: cast_nullable_to_non_nullable
-as String,isLocked: null == isLocked ? _self.isLocked : isLocked // ignore: cast_nullable_to_non_nullable
-as bool,lastLoginAt: freezed == lastLoginAt ? _self.lastLoginAt : lastLoginAt // ignore: cast_nullable_to_non_nullable
-as DateTime?,
-  ));
-}
-
-
-}
-
-// dart format on

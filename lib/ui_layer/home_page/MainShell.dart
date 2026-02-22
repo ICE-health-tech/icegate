@@ -73,6 +73,9 @@ class MainShell extends StatelessWidget {
       case '/projects':
         pageIcon = ProjectsPage.icon(context, size: responsiveSize);
         break;
+      case '/project-analysis':
+        pageIcon = ProjectsPage.icon(context, size: responsiveSize);
+        break;
       case '/projects/editor':
         return const SizedBox.shrink();
       case '/personal-info':

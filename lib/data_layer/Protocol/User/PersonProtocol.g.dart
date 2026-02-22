@@ -6,8 +6,8 @@ part of 'PersonProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_PersonProtocol _$PersonProtocolFromJson(Map<String, dynamic> json) =>
-    _PersonProtocol(
+_$PersonProtocolImpl _$$PersonProtocolImplFromJson(Map<String, dynamic> json) =>
+    _$PersonProtocolImpl(
       personID: (json['personID'] as num).toInt(),
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String?,
@@ -20,14 +20,15 @@ _PersonProtocol _$PersonProtocolFromJson(Map<String, dynamic> json) =>
       isActive: json['isActive'] as bool? ?? true,
     );
 
-Map<String, dynamic> _$PersonProtocolToJson(_PersonProtocol instance) =>
-    <String, dynamic>{
-      'personID': instance.personID,
-      'firstName': instance.firstName,
-      'lastName': instance.lastName,
-      'dateOfBirth': instance.dateOfBirth?.toIso8601String(),
-      'gender': instance.gender,
-      'phoneNumber': instance.phoneNumber,
-      'profileImageUrl': instance.profileImageUrl,
-      'isActive': instance.isActive,
-    };
+Map<String, dynamic> _$$PersonProtocolImplToJson(
+  _$PersonProtocolImpl instance,
+) => <String, dynamic>{
+  'personID': instance.personID,
+  'firstName': instance.firstName,
+  'lastName': instance.lastName,
+  'dateOfBirth': instance.dateOfBirth?.toIso8601String(),
+  'gender': instance.gender,
+  'phoneNumber': instance.phoneNumber,
+  'profileImageUrl': instance.profileImageUrl,
+  'isActive': instance.isActive,
+};

@@ -40,7 +40,9 @@ class GamificationService {
       // Group by Day
       final Map<String, double> dailyCalories = {};
       for (var item in allMealsWrapper) {
-        final dateKey = DateFormat('yyyy-MM-dd').format(item.meal.eatenAt);
+        final date = item.meal.eatenAt; // Skip meals without a valid date
+
+        final dateKey = DateFormat('yyyy-MM-dd').format(date);
         dailyCalories[dateKey] =
             (dailyCalories[dateKey] ?? 0) + item.meal.calories;
       }

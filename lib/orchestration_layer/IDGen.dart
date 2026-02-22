@@ -1,6 +1,10 @@
 import 'dart:math';
+import 'package:uuid/uuid.dart';
 
 class IDGen {
+  static const _uuid = Uuid();
+
+  static String generateUuid() => _uuid.v4();
   // Static random instance to avoid creating a new one every call
   static final Random _rng = Random.secure();
 

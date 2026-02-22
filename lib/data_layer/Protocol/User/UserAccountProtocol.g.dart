@@ -6,21 +6,22 @@ part of 'UserAccountProtocol.dart';
 // JsonSerializableGenerator
 // **************************************************************************
 
-_UserAccountProtocol _$UserAccountProtocolFromJson(Map<String, dynamic> json) =>
-    _UserAccountProtocol(
-      accountID: (json['accountID'] as num).toInt(),
-      personID: (json['personID'] as num).toInt(),
-      username: json['username'] as String,
-      primaryEmail: json['primaryEmail'] as String?,
-      role: json['role'] as String? ?? 'user',
-      isLocked: json['isLocked'] as bool? ?? false,
-      lastLoginAt: json['lastLoginAt'] == null
-          ? null
-          : DateTime.parse(json['lastLoginAt'] as String),
-    );
+_$UserAccountProtocolImpl _$$UserAccountProtocolImplFromJson(
+  Map<String, dynamic> json,
+) => _$UserAccountProtocolImpl(
+  accountID: (json['accountID'] as num).toInt(),
+  personID: (json['personID'] as num).toInt(),
+  username: json['username'] as String,
+  primaryEmail: json['primaryEmail'] as String?,
+  role: json['role'] as String? ?? 'user',
+  isLocked: json['isLocked'] as bool? ?? false,
+  lastLoginAt: json['lastLoginAt'] == null
+      ? null
+      : DateTime.parse(json['lastLoginAt'] as String),
+);
 
-Map<String, dynamic> _$UserAccountProtocolToJson(
-  _UserAccountProtocol instance,
+Map<String, dynamic> _$$UserAccountProtocolImplToJson(
+  _$UserAccountProtocolImpl instance,
 ) => <String, dynamic>{
   'accountID': instance.accountID,
   'personID': instance.personID,

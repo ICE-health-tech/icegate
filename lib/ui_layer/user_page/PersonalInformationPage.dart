@@ -32,20 +32,21 @@ class PersonalInformationPage extends StatefulWidget {
 
 class _PersonalInformationPageState extends State<PersonalInformationPage>
     with SingleTickerProviderStateMixin {
-  late final TextEditingController _nameController;
-  late final TextEditingController _emailController;
-  late final TextEditingController _phoneController;
-  late final TextEditingController _cityController;
-  late final TextEditingController _countryController;
-  late final TextEditingController _bioController;
-  late final TextEditingController _occupationController;
-  late final TextEditingController _companyController;
-  late final TextEditingController _websiteController;
-  late final TextEditingController _aliasController;
-  late final TextEditingController _githubController;
-  late final TextEditingController _linkedinController;
-  late final TextEditingController _universityController;
-  late final TextEditingController _educationController;
+  final TextEditingController _firstNameController = TextEditingController();
+  final TextEditingController _lastNameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _cityController = TextEditingController();
+  final TextEditingController _countryController = TextEditingController();
+  final TextEditingController _bioController = TextEditingController();
+  final TextEditingController _occupationController = TextEditingController();
+  final TextEditingController _companyController = TextEditingController();
+  final TextEditingController _websiteController = TextEditingController();
+  final TextEditingController _aliasController = TextEditingController();
+  final TextEditingController _githubController = TextEditingController();
+  final TextEditingController _linkedinController = TextEditingController();
+  final TextEditingController _universityController = TextEditingController();
+  final TextEditingController _educationController = TextEditingController();
 
   bool _isEditing = false;
   bool _isSaving = false;
@@ -67,22 +68,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     super.initState();
     _authBlock = context.read<AuthBlock>();
 
-    // Initialize empty controllers
-    _nameController = TextEditingController();
-    _emailController = TextEditingController();
-    _phoneController = TextEditingController();
-    _cityController = TextEditingController();
-    _countryController = TextEditingController();
-    _bioController = TextEditingController();
-    _occupationController = TextEditingController();
-    _companyController = TextEditingController();
-    _websiteController = TextEditingController();
-    _aliasController = TextEditingController();
-    _githubController = TextEditingController();
-    _linkedinController = TextEditingController();
-    _universityController = TextEditingController();
-    _educationController = TextEditingController();
-
     // Setup animations
     _animationController = AnimationController(
       vsync: this,
@@ -98,8 +83,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
   // Helper to sync controllers with current state (call in build or listener)
   void _syncControllersWithState(UserInformation info) {
     // Sync if not editing to ensure latest data is shown
-    _nameController.text =
-        "${info.profiles.firstName} ${info.profiles.lastName}";
+    _firstNameController.text = info.profiles.firstName;
+    _lastNameController.text = info.profiles.lastName;
     _bioController.text = info.details.bio;
     _occupationController.text = info.details.occupation;
     _websiteController.text = info.details.websiteUrl;
@@ -116,7 +101,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
   @override
   void dispose() {
-    _nameController.dispose();
+    _firstNameController.dispose();
+    _lastNameController.dispose();
     _emailController.dispose();
     _phoneController.dispose();
     _cityController.dispose();
@@ -164,6 +150,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
       // Optimistic update
       personBlock.editProfile(
+        firstName: _firstNameController.text.trim(),
+        lastName: _lastNameController.text.trim(),
         university: _universityController.text,
         location: _cityController.text,
         bio: _bioController.text,
@@ -342,8 +330,14 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         icon: Icons.fingerprint_rounded,
                         children: [
                           _buildModernTextField(
-                            controller: _nameController,
-                            label: 'Full Identity',
+                            controller: _firstNameController,
+                            label: 'First Name',
+                            icon: Icons.badge_outlined,
+                            enabled: _isEditing,
+                          ),
+                          _buildModernTextField(
+                            controller: _lastNameController,
+                            label: 'Last Name',
                             icon: Icons.badge_outlined,
                             enabled: _isEditing,
                           ),
@@ -621,7 +615,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                     Text(
                       info.profiles.firstName.isNotEmpty
                           ? "${info.profiles.firstName} ${info.profiles.lastName}"
-                          : "Long Duy",
+                          : "User",
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         letterSpacing: -0.5,

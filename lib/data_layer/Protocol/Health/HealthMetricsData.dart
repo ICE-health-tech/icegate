@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
@@ -261,7 +262,12 @@ class HealthMetricsData {
 
     // 2. Fetch data from the database
     final metricsLocal = await healthMetricsDAO.getMetricsForDate(1, day);
-    final calories = await healthMealDAO.getCaloriesByDate(day);
+    double calories = 0;
+    try {
+      calories = await healthMealDAO.getCaloriesByDate(day);
+    } catch (e) {
+      debugPrint("Error fetching calories for day: $e");
+    }
 
     // 3. Fetch yesterday's data for trend comparison
     final yesterday = day.subtract(const Duration(days: 1));
@@ -269,7 +275,12 @@ class HealthMetricsData {
       1,
       yesterday,
     );
-    final yesterdayCalories = await healthMealDAO.getCaloriesByDate(yesterday);
+    double yesterdayCalories = 0;
+    try {
+      yesterdayCalories = await healthMealDAO.getCaloriesByDate(yesterday);
+    } catch (e) {
+      debugPrint("Error fetching yesterday calories: $e");
+    }
 
     // 4. Fetch live steps from HealthService (Pedometer)
     int currentSteps = metricsLocal?.steps ?? 0;
@@ -293,6 +304,7 @@ class HealthMetricsData {
           } else {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
+                id: IDGen.generateUuid(),
                 personID: 1,
                 date: day,
                 steps: Value(liveSteps),
@@ -315,6 +327,7 @@ class HealthMetricsData {
           } else {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
+                id: IDGen.generateUuid(),
                 personID: 1,
                 date: day,
                 sleepHours: Value(liveSleep),
@@ -337,6 +350,7 @@ class HealthMetricsData {
           } else {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
+                id: IDGen.generateUuid(),
                 personID: 1,
                 date: day,
                 heartRate: Value(liveHeartRate),
@@ -418,6 +432,18 @@ class HealthMetricsData {
         trendPositive: trendPositive(currentSteps, ySteps),
         detailPage: '/health/steps',
       ),
+      'weight': HealthMetric(
+        id: 'weight',
+        name: 'Weight',
+        value: (metricsLocal?.weightKg ?? 0.0).toStringAsFixed(1),
+        icon: Icons.monitor_weight_rounded,
+        color: const Color(0xFF00BCD4),
+        unit: 'kg',
+        subtitle: 'Current weight',
+        trend: null,
+        trendPositive: null,
+        detailPage: '/health/weight',
+      ),
       'water': HealthMetric(
         id: 'water',
         name: 'Water',
@@ -496,19 +522,6 @@ class HealthMetricsData {
 
   /// Get daily summary statistics
   static Map<String, int> getDailySummary() {
-    final metrics = getDefaultMetrics();
-    int completed = 0;
-    int total = 0;
-
-    for (var metric in metrics) {
-      if (metric.progress != null) {
-        total++;
-        if (metric.progress! >= 1.0) {
-          completed++;
-        }
-      }
-    }
-
-    return {'completed': completed, 'total': total};
+    return {'completed': 0, 'total': 0};
   }
 }

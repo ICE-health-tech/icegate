@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -362,7 +363,7 @@ class _ExercisePageState extends State<ExercisePage> {
               ),
               const SizedBox(height: 16),
               DropdownButtonFormField<String>(
-                value: selectedIntensity,
+                initialValue: selectedIntensity,
                 decoration: const InputDecoration(labelText: "Intensity"),
                 items: intensities.map((String value) {
                   return DropdownMenuItem<String>(
@@ -394,6 +395,7 @@ class _ExercisePageState extends State<ExercisePage> {
                 if (mins > 0) {
                   await dao.insertExerciseLog(
                     ExerciseLogsTableCompanion.insert(
+                      id: IDGen.generateUuid(),
                       personID: 1,
                       type: type,
                       durationMinutes: mins,

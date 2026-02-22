@@ -2,8 +2,6 @@
 
 part of 'MapFetch.dart';
 
-// dart format off
-
 // **************************************************************************
 // RetrofitGenerator
 // **************************************************************************
@@ -157,5 +155,3 @@ class _OpenStreetMapApi implements OpenStreetMapApi {
     return Uri.parse(dioBaseUrl).resolveUri(url).toString();
   }
 }
-
-// dart format on
