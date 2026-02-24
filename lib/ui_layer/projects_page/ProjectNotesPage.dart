@@ -217,7 +217,7 @@ class _NoteCard extends StatelessWidget {
                           TextButton(
                             onPressed: () {
                               context.read<ProjectNoteDAO>().deleteNote(
-                                note.noteID,
+                                note.noteID!,
                               );
                               Navigator.pop(context);
                             },

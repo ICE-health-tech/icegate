@@ -12,7 +12,7 @@ _$ItemImpl _$$ItemImplFromJson(Map<String, dynamic> json) => _$ItemImpl(
   imageUrl: json['imageUrl'] as String,
   alias: json['alias'] as String,
   dateAdded: json['dateAdded'] as String,
-  widgetID: (json['widgetID'] as num).toInt(),
+  widgetID: json['widgetID'] as String,
   isStay: json['isStay'] as bool? ?? false,
   isTarget: json['isTarget'] as bool? ?? false,
   score: (json['score'] as num?)?.toInt() ?? 0,

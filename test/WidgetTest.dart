@@ -26,7 +26,7 @@ void main() {
     test('supports value equality', () {
       // Define all required fields
       var instanceA = InternalWidgetDragProtocol.item(
-        widgetID: 1,
+        widgetID: '1',
         alias: 'a',
         score: 10,
         name: 'Test A',
@@ -37,7 +37,7 @@ void main() {
       );
 
       var instanceB = InternalWidgetDragProtocol.item(
-        widgetID: 11,
+        widgetID: '11',
         alias: 'a',
         score: 10,
         name: 'Test A',
@@ -48,7 +48,7 @@ void main() {
       );
 
       var instanceC = InternalWidgetDragProtocol.item(
-        widgetID: 222,
+        widgetID: '222',
         alias: 'b',
         name: 'Test B',
         url: 'url',
@@ -65,7 +65,7 @@ void main() {
     // 3. Test copyWith (Immutability)
     test('copyWith creates a new instance with updated values', () {
       var instance = InternalWidgetDragProtocol.item(
-        widgetID: 111,
+        widgetID: '111',
         alias: 'original',
         name: 'Name',
         url: 'url',
@@ -115,7 +115,7 @@ void main() {
 
       test('toJson creates a valid map', () {
         var instance = InternalWidgetDragProtocol.item(
-          widgetID: 5555,
+          widgetID: '5555',
           alias: 'json_test',
           score: 99,
           isTarget: true,

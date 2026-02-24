@@ -4,7 +4,7 @@ import 'package:powersync/powersync.dart';
 /// All column names use snake_case to match Supabase.
 const Schema schema = Schema([
   Table('internal_widgets', [
-    Column.integer('widget_id'),
+    Column.text('widget_id'),
     Column.text('name'),
     Column.text('url'),
     Column.text('date_added'),
@@ -12,7 +12,7 @@ const Schema schema = Schema([
     Column.text('alias'),
   ]),
   Table('external_widgets', [
-    Column.integer('widget_id'),
+    Column.text('widget_id'),
     Column.text('name'),
     Column.text('alias'),
     Column.text('protocol'),
@@ -22,7 +22,7 @@ const Schema schema = Schema([
     Column.text('date_added'),
   ]),
   Table('themes', [
-    Column.integer('theme_id'),
+    Column.text('theme_id'),
     Column.text('name'),
     Column.text('alias'),
     Column.text('json_content'),
@@ -30,8 +30,8 @@ const Schema schema = Schema([
     Column.text('added_date'),
   ]),
   Table('project_notes', [
-    Column.integer('note_id'),
-    Column.integer('person_id'),
+    Column.text('note_id'),
+    Column.text('person_id'),
     Column.text('title'),
     Column.text('content'),
     Column.text('created_at'),
@@ -39,8 +39,8 @@ const Schema schema = Schema([
     Column.integer('project_id'),
   ]),
   Table('projects', [
-    Column.integer('project_id'),
-    Column.integer('person_id'),
+    Column.text('project_id'),
+    Column.text('person_id'),
     Column.text('name'),
     Column.text('description'),
     Column.text('category'),
@@ -50,7 +50,7 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('persons', [
-    Column.integer('person_id'),
+    Column.text('person_id'),
     Column.text('first_name'),
     Column.text('last_name'),
     Column.text('date_of_birth'),
@@ -64,8 +64,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('email_addresses', [
-    Column.integer('email_address_id'),
-    Column.integer('person_id'),
+    Column.text('email_address_id'),
+    Column.text('person_id'),
     Column.text('email_address'),
     Column.text('email_type'),
     Column.integer('is_primary'),
@@ -74,8 +74,8 @@ const Schema schema = Schema([
     Column.text('created_at'),
   ]),
   Table('user_accounts', [
-    Column.integer('account_id'),
-    Column.integer('person_id'),
+    Column.text('account_id'),
+    Column.text('person_id'),
     Column.text('username'),
     Column.text('password_hash'),
     Column.integer('primary_email_id'),
@@ -88,8 +88,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('profiles', [
-    Column.integer('profile_id'),
-    Column.integer('person_id'),
+    Column.text('profile_id'),
+    Column.text('person_id'),
     Column.text('bio'),
     Column.text('occupation'),
     Column.text('education_level'),
@@ -103,8 +103,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('detail_information', [
-    Column.integer('cv_address_id'),
-    Column.integer('person_id'),
+    Column.text('cv_address_id'),
+    Column.text('person_id'),
     Column.text('github_url'),
     Column.text('website_url'),
     Column.text('company'),
@@ -119,8 +119,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('skills', [
-    Column.integer('skill_id'),
-    Column.integer('person_id'),
+    Column.text('skill_id'),
+    Column.text('person_id'),
     Column.text('skill_name'),
     Column.text('skill_category'),
     Column.text('proficiency_level'),
@@ -131,8 +131,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('financial_accounts', [
-    Column.integer('account_id'),
-    Column.integer('person_id'),
+    Column.text('account_id'),
+    Column.text('person_id'),
     Column.text('account_name'),
     Column.text('account_type'),
     Column.real('balance'),
@@ -143,8 +143,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('assets', [
-    Column.integer('asset_id'),
-    Column.integer('person_id'),
+    Column.text('asset_id'),
+    Column.text('person_id'),
     Column.text('asset_name'),
     Column.text('asset_category'),
     Column.text('purchase_date'),
@@ -159,8 +159,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('transactions', [
-    Column.integer('transaction_id'),
-    Column.integer('person_id'),
+    Column.text('transaction_id'),
+    Column.text('person_id'),
     Column.text('category'),
     Column.text('type'),
     Column.real('amount'),
@@ -170,8 +170,8 @@ const Schema schema = Schema([
     Column.integer('project_id'),
   ]),
   Table('goals', [
-    Column.integer('goal_id'),
-    Column.integer('person_id'),
+    Column.text('goal_id'),
+    Column.text('person_id'),
     Column.text('title'),
     Column.text('description'),
     Column.text('category'),
@@ -185,8 +185,8 @@ const Schema schema = Schema([
     Column.integer('project_id'),
   ]),
   Table('scores', [
-    Column.integer('score_id'),
-    Column.integer('person_id'),
+    Column.text('score_id'),
+    Column.text('person_id'),
     Column.real('health_global_score'),
     Column.real('social_global_score'),
     Column.real('financial_global_score'),
@@ -195,8 +195,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('habits', [
-    Column.integer('habit_id'),
-    Column.integer('person_id'),
+    Column.text('habit_id'),
+    Column.text('person_id'),
     Column.integer('goal_id'),
     Column.text('habit_name'),
     Column.text('description'),
@@ -209,8 +209,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('blog_posts', [
-    Column.integer('post_id'),
-    Column.integer('author_id'),
+    Column.text('post_id'),
+    Column.text('author_id'),
     Column.text('title'),
     Column.text('slug'),
     Column.text('excerpt'),
@@ -226,8 +226,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('person_widgets', [
-    Column.integer('person_widget_id'),
-    Column.integer('person_id'),
+    Column.text('person_widget_id'),
+    Column.text('person_id'),
     Column.text('widget_name'),
     Column.text('widget_type'),
     Column.text('configuration'),
@@ -238,8 +238,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('health_metrics', [
-    Column.integer('metric_id'),
-    Column.integer('person_id'),
+    Column.text('metric_id'),
+    Column.text('person_id'),
     Column.text('date'),
     Column.integer('steps'),
     Column.integer('heart_rate'),
@@ -253,7 +253,7 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('meals', [
-    Column.integer('meal_id'),
+    Column.text('meal_id'),
     Column.text('meal_name'),
     Column.text('meal_image_url'),
     Column.real('fat'),
@@ -289,11 +289,9 @@ const Schema schema = Schema([
     Column.text('intensity'),
     Column.text('timestamp'),
   ]),
-  Table('themes_config', [
-    Column.integer('theme_id'),
-    Column.text('theme_name'),
-    Column.text('theme_path'),
-  ]),
+  // themes_config is intentionally excluded from PowerSync sync.
+  // Theme is a local-only user preference — syncing it would overwrite the
+  // user's saved theme with server state on every app restart.
   Table('custom_notifications', [
     Column.integer('notification_id'),
     Column.text('title'),
@@ -329,9 +327,9 @@ const Schema schema = Schema([
     Column.integer('calories_out'),
   ]),
   Table('focus_sessions', [
-    Column.integer('session_id'),
-    Column.integer('person_id'),
-    Column.integer('project_id'),
+    Column.text('session_id'),
+    Column.text('person_id'),
+    Column.text('project_id'),
     Column.text('start_time'),
     Column.text('end_time'),
     Column.integer('duration_seconds'),

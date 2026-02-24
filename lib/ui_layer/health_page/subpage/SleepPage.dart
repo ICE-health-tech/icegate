@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
@@ -26,8 +27,9 @@ class _SleepPageState extends State<SleepPage> {
     final textTheme = Theme.of(context).textTheme;
     final healthBlock = context.watch<HealthBlock>();
 
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
     return StreamBuilder<List<SleepLogData>>(
-      stream: dao.watchSleepLogs(1), // Assuming personID 1
+      stream: dao.watchSleepLogs(personId),
       builder: (context, snapshot) {
         final logs = snapshot.data ?? [];
         final lastLog = logs.isNotEmpty ? logs.last : null;
@@ -346,7 +348,7 @@ class _SleepPageState extends State<SleepPage> {
     await dao.insertSleepLog(
       SleepLogsTableCompanion.insert(
         id: IDGen.generateUuid(),
-        personID: 1,
+        personID: Supabase.instance.client.auth.currentUser?.id ?? "",
         startTime: start,
         endTime: drift.Value(end),
         quality: drift.Value(quality),

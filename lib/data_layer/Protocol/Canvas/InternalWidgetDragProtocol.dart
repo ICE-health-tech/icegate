@@ -41,7 +41,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
         imageUrl: '',
         alias: '',
         dateAdded: '',
-        widgetID: IDGen.generate(),
+        widgetID: IDGen.generateUuid(),
       );
 
   // We use a single factory that implements the parent fields + new fields
@@ -53,10 +53,11 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
     required String imageUrl,
     required String alias,
     required String dateAdded,
-    required int widgetID,
+    required String widgetID,
 
     // --- UI Fields (From your Flutter Code) ---
     // We exclude Icon/String from JSON because they aren't natively serializable
+    // ignore: invalid_annotation_target
     @JsonKey(includeFromJson: false, includeToJson: false)
     @Default('white')
     String color,
@@ -83,7 +84,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
   @override
   String get dateAdded => (this as _Item).dateAdded;
   @override
-  int get widgetID => (this as _Item).widgetID;
+  String get widgetID => (this as _Item).widgetID;
 
   bool get isEmpty => name == 'Empty';
 
@@ -103,7 +104,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
       imageUrl: '',
       alias: 'empty',
       dateAdded: '',
-      widgetID: IDGen.generate(),
+      widgetID: IDGen.generateUuid(),
       color: 'white',
       isStay: false,
       isTarget: false, // Default for empty

@@ -29,7 +29,7 @@ mixin _$InternalWidgetDragProtocol {
   String get imageUrl => throw _privateConstructorUsedError;
   String get alias => throw _privateConstructorUsedError;
   String get dateAdded => throw _privateConstructorUsedError;
-  int get widgetID =>
+  String get widgetID =>
       throw _privateConstructorUsedError; // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -46,7 +46,7 @@ mixin _$InternalWidgetDragProtocol {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -62,7 +62,7 @@ mixin _$InternalWidgetDragProtocol {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -78,7 +78,7 @@ mixin _$InternalWidgetDragProtocol {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -128,7 +128,7 @@ abstract class $InternalWidgetDragProtocolCopyWith<$Res> {
     String imageUrl,
     String alias,
     String dateAdded,
-    int widgetID,
+    String widgetID,
     @JsonKey(includeFromJson: false, includeToJson: false) String color,
     bool isStay,
     bool isTarget,
@@ -190,7 +190,7 @@ class _$InternalWidgetDragProtocolCopyWithImpl<
             widgetID: null == widgetID
                 ? _value.widgetID
                 : widgetID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             color: null == color
                 ? _value.color
                 : color // ignore: cast_nullable_to_non_nullable
@@ -228,7 +228,7 @@ abstract class _$$ItemImplCopyWith<$Res>
     String imageUrl,
     String alias,
     String dateAdded,
-    int widgetID,
+    String widgetID,
     @JsonKey(includeFromJson: false, includeToJson: false) String color,
     bool isStay,
     bool isTarget,
@@ -284,7 +284,7 @@ class __$$ItemImplCopyWithImpl<$Res>
         widgetID: null == widgetID
             ? _value.widgetID
             : widgetID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         color: null == color
             ? _value.color
             : color // ignore: cast_nullable_to_non_nullable
@@ -337,7 +337,7 @@ class _$ItemImpl extends _Item {
   @override
   final String dateAdded;
   @override
-  final int widgetID;
+  final String widgetID;
   // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
   @override
@@ -414,7 +414,7 @@ class _$ItemImpl extends _Item {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -445,7 +445,7 @@ class _$ItemImpl extends _Item {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -476,7 +476,7 @@ class _$ItemImpl extends _Item {
       String imageUrl,
       String alias,
       String dateAdded,
-      int widgetID,
+      String widgetID,
       @JsonKey(includeFromJson: false, includeToJson: false) String color,
       bool isStay,
       bool isTarget,
@@ -543,7 +543,7 @@ abstract class _Item extends InternalWidgetDragProtocol {
     required final String imageUrl,
     required final String alias,
     required final String dateAdded,
-    required final int widgetID,
+    required final String widgetID,
     @JsonKey(includeFromJson: false, includeToJson: false) final String color,
     final bool isStay,
     final bool isTarget,
@@ -565,7 +565,7 @@ abstract class _Item extends InternalWidgetDragProtocol {
   @override
   String get dateAdded;
   @override
-  int get widgetID; // --- UI Fields (From your Flutter Code) ---
+  String get widgetID; // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)

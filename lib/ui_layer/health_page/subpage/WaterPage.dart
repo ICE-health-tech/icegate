@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
@@ -38,8 +39,9 @@ class _WaterPageState extends State<WaterPage>
     final dao = context.watch<HealthLogsDAO>();
     final textTheme = Theme.of(context).textTheme;
 
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
     return StreamBuilder<List<WaterLogData>>(
-      stream: dao.watchDailyWaterLogs(1, DateTime.now()),
+      stream: dao.watchDailyWaterLogs(personId, DateTime.now()),
       builder: (context, snapshot) {
         final logs = snapshot.data ?? [];
         final totalWater = logs.fold<int>(0, (sum, log) => sum + log.amount);
@@ -197,7 +199,7 @@ class _WaterPageState extends State<WaterPage>
         await dao.insertWaterLog(
           WaterLogsTableCompanion.insert(
             id: IDGen.generateUuid(),
-            personID: 1,
+            personID: Supabase.instance.client.auth.currentUser?.id ?? "",
             amount: drift.Value(amount),
             timestamp: drift.Value(DateTime.now()),
           ),
@@ -262,7 +264,8 @@ class _WaterPageState extends State<WaterPage>
                 await dao.insertWaterLog(
                   WaterLogsTableCompanion.insert(
                     id: IDGen.generateUuid(),
-                    personID: 1,
+                    personID:
+                        Supabase.instance.client.auth.currentUser?.id ?? "",
                     amount: drift.Value(amount),
                     timestamp: drift.Value(DateTime.now()),
                   ),

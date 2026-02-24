@@ -37,8 +37,8 @@ Future<void> example1BasicSetup() async {
     receiveTimeout: const Duration(seconds: 30),
   );
 
-  // Get the API instance
-  final api = apiClient.api;
+  // API client ready to use
+  apiClient.api;
 
   // print('API client created successfully');
   // print('Base URL: https://api.example.com');
@@ -52,7 +52,7 @@ Future<void> example2FetchCurrentLocation() async {
     final apiClient = GpsLocationApiClient(baseUrl: 'https://api.example.com');
 
     // Fetch current location
-    final location = await apiClient.api.getCurrentLocation();
+    await apiClient.api.getCurrentLocation();
 
     
   } on DioException catch (e) {

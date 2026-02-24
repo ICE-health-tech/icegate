@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
 import 'package:ice_shield/data_layer/Protocol/User/RegistrationProtocol.dart';
@@ -54,6 +55,9 @@ class AuthBlock {
     print("🔄 [AuthBlock] Synchronizing user ${user.id} with Supabase...");
 
     try {
+      final client = Supabase.instance.client;
+      final userId = user.id;
+
       // 1. Ensure persons row exists
       final fullName =
           user.userMetadata?['full_name'] ??
@@ -67,37 +71,69 @@ class AuthBlock {
               ? fullName.split(' ').sublist(1).join(' ')
               : '');
 
-      // Upsert into persons
-      final personResult = await Supabase.instance.client
-          .from('persons')
-          .upsert({
-            'id': user.id,
-            'first_name': firstName,
-            'last_name': lastName,
-            'profile_image_url': user.userMetadata?['avatar_url'],
-            'updated_at': DateTime.now().toIso8601String(),
-          })
-          .select('person_id')
-          .maybeSingle();
+      print("   - Upserting into 'persons'...");
+      await client.from('persons').upsert({
+        'id': userId,
+        'first_name': firstName,
+        'last_name': lastName,
+        'profile_image_url': user.userMetadata?['avatar_url'],
+        'is_active': true, // Use boolean true
+        'updated_at': DateTime.now().toIso8601String(),
+      });
 
-      final int? personInternalId = personResult?['person_id'];
-      print(
-        "   ✅ [AuthBlock] 'persons' row ensured. Internal ID: $personInternalId",
-      );
+      // 2. Ensure initial profile exists
+      print("   - Ensuring 'profiles' row exists...");
+      await client.from('profiles').upsert({
+        'id': userId, // Primary key
+        'person_id': userId, // Linked person
+        'bio': 'Securing the digital frontier.',
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'person_id'); // Ensure uniqueness per person
 
-      if (personInternalId != null) {
-        // 2. Ensure initial profile exists
-        await Supabase.instance.client.from('profiles').upsert({
-          'id': user.id,
-          'person_id': personInternalId,
-          'bio': 'Securing the digital frontier.',
-          'updated_at': DateTime.now().toIso8601String(),
-        }, onConflict: 'id');
-        print("   ✅ [AuthBlock] 'profiles' row ensured.");
+      // 3. Ensure email address exists
+      if (user.email != null) {
+        print("   - Ensuring 'email_addresses' row exists...");
+        await client.from('email_addresses').upsert({
+          'id':
+              userId, // Using user ID as initial ID for simplicity or generate uuid
+          'person_id': userId,
+          'email_address': user.email,
+          'is_primary': true,
+          'status': 'verified',
+        }, onConflict: 'person_id, email_address');
       }
+
+      // 4. Ensure user_account exists
+      final usernameStr =
+          user.email ??
+          user.userMetadata?['user_name'] ??
+          'user_${userId.substring(0, 8)}';
+
+      print("   - Ensuring 'user_accounts' row exists...");
+      await client.from('user_accounts').upsert({
+        'id': userId,
+        'person_id': userId,
+        'username': usernameStr,
+        'password_hash': 'EXTERNAL_AUTH',
+        'role': 'user',
+        'is_locked': false,
+      }, onConflict: 'username');
+
+      // 5. Ensure detail_information exists
+      print("   - Ensuring 'detail_information' row exists...");
+      await client.from('detail_information').upsert({
+        'id': userId,
+        'person_id': userId,
+        'bio': 'Securing the digital frontier.',
+        'updated_at': DateTime.now().toIso8601String(),
+      }, onConflict: 'person_id');
+
+      print(
+        "✅ [AuthBlock] Identity synchronization successfully completed in Flutter.",
+      );
     } catch (e) {
       print(
-        "⚠️ [AuthBlock] Identity synchronization fallback failed (Trigger might still work): $e",
+        "❌ [AuthBlock] Identity synchronization failed in Flutter logic: $e",
       );
     }
   }
@@ -414,7 +450,9 @@ class AuthBlock {
   Future<void> _fetchLocalFallback() async {
     print("🔄 [AuthBlock] Attempting local fallback for User ID...");
     try {
-      PersonData? localPerson = await _personDao.getPersonById(0);
+      PersonData? localPerson = await _personDao.getPersonById(
+        DataSeeder.guestPersonId,
+      );
 
       if (localPerson == null) {
         print("✅ [AuthBlock] Using IN-MEMORY Guest User (Database Empty)");

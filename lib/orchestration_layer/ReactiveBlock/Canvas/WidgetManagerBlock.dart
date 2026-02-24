@@ -5,7 +5,7 @@ import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 
 class WidgetManagerBlock {
   final WidgetDAO? _widgetDao;
-  final ReadonlySignal<int?> _personIdSignal;
+  final ReadonlySignal<String?> _personIdSignal;
   EffectCleanup? _effectCleanup;
 
   // 1. STATE
@@ -14,7 +14,7 @@ class WidgetManagerBlock {
   // Constructor
   WidgetManagerBlock({
     WidgetDAO? widgetDao,
-    required ReadonlySignal<int?> personIdSignal,
+    required ReadonlySignal<String?> personIdSignal,
   }) : _widgetDao = widgetDao,
        _personIdSignal = personIdSignal {
     // print("widgets: ${widgets.value}");

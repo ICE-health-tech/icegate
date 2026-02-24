@@ -7,7 +7,7 @@ import 'package:signals/signals.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class HealthBlock {
-  int personId;
+  String personId;
   final HealthMetricsDAO _healthDao;
 
   final todaySteps = signal<int>(0);
@@ -25,16 +25,21 @@ class HealthBlock {
   StreamSubscription? _metricsSubscription;
 
   HealthBlock({
-    required this.personId,
+    required String personId,
     required HealthMetricsDAO healthDao,
     required HealthLogsDAO healthLogsDao,
-  }) : _healthDao = healthDao,
+  }) : personId = personId,
+       _healthDao = healthDao,
        _healthLogsDao = healthLogsDao;
 
   final HealthLogsDAO _healthLogsDao;
   StreamSubscription? _waterSubscription;
 
   void init() {
+    if (personId.isEmpty) {
+      debugPrint("HealthBlock: Skipping init, personId is empty.");
+      return;
+    }
     // Watch all metrics to calculate historical steps (excluding today)
     _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
       (metrics) {
@@ -120,6 +125,7 @@ class HealthBlock {
   }
 
   Future<void> _saveSteps(int steps) async {
+    if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
 
@@ -136,6 +142,7 @@ class HealthBlock {
   }
 
   Future<void> _saveSleep(double hours) async {
+    if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
 
@@ -154,6 +161,7 @@ class HealthBlock {
   }
 
   Future<void> _saveHeartRate(int bpm) async {
+    if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day);
 

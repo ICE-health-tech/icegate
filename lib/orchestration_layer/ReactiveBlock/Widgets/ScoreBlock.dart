@@ -1,7 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
-    hide ScoreData;
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
 import 'package:signals/signals.dart';
@@ -14,7 +13,7 @@ class ScoreBlock {
   late ScoreDAO _dao;
   late FinanceDAO _financeDAO;
 
-  late int _personID;
+  late String _personID;
 
   // Track subscriptions to cancel them on dispose
   final List<StreamSubscription> _subscriptions = [];
@@ -78,8 +77,13 @@ class ScoreBlock {
     FinanceDAO financeDAO,
     HealthMetricsDAO healthDAO,
     HealthMealDAO mealDAO,
-    int personID,
+    String personID,
   ) {
+    if (personID.isEmpty) {
+      debugPrint("ScoreBlock: Skipping init, personID is empty.");
+      return;
+    }
+
     // Clear old subscriptions to avoid overlapping updates if init is called again (e.g. on user login)
     for (var s in _subscriptions) {
       s.cancel();
@@ -153,6 +157,7 @@ class ScoreBlock {
     List<FinancialAccountData> accounts,
     List<AssetData> assets,
   ) async {
+    if (_personID.isEmpty) return;
     debugPrint("ScoreBlock: triggering _updateFinanceScore...");
     try {
       double totalNetWorth = 0;
@@ -174,12 +179,13 @@ class ScoreBlock {
 
       debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
       await _dao.updateFinancialScore(_personID, financeScore);
-        } catch (e) {
+    } catch (e) {
       debugPrint("Error updating finance score: $e");
     }
   }
 
   Future<void> _updateSocialScore(List<SocialContact> contacts) async {
+    if (_personID.isEmpty) return;
     debugPrint("ScoreBlock: triggering _updateSocialScore...");
     try {
       int totalAffection = 0;
@@ -195,7 +201,7 @@ class ScoreBlock {
         "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
       );
       await _dao.updateSocialScore(_personID, socialScore.toDouble());
-        } catch (e) {
+    } catch (e) {
       debugPrint("Error updating social score: $e");
     }
   }
@@ -204,6 +210,7 @@ class ScoreBlock {
     List<HealthMetricsLocal> allMetrics,
     List<DayWithMeal> allMealsWrapper,
   ) async {
+    if (_personID.isEmpty) return;
     debugPrint("ScoreBlock: triggering _updateHealthScore...");
     try {
       // 1. Steps
@@ -256,10 +263,12 @@ class ScoreBlock {
   }
 
   Future<void> persistentCareerIncrement(double points) async {
+    if (_personID.isEmpty) return;
     await _dao.incrementCareerScore(_personID, points);
   }
 
   Future<void> persistentHealthIncrement(double points) async {
+    if (_personID.isEmpty) return;
     await _dao.incrementHealthScore(_personID, points);
   }
 

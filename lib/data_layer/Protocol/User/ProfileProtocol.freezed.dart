@@ -21,8 +21,8 @@ ProfileProtocol _$ProfileProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$ProfileProtocol {
-  int get profileID => throw _privateConstructorUsedError;
-  int get personID => throw _privateConstructorUsedError;
+  String get profileID => throw _privateConstructorUsedError;
+  String get personID => throw _privateConstructorUsedError;
   String? get bio => throw _privateConstructorUsedError;
   String? get occupation => throw _privateConstructorUsedError;
   String? get educationLevel => throw _privateConstructorUsedError;
@@ -49,8 +49,8 @@ abstract class $ProfileProtocolCopyWith<$Res> {
   ) = _$ProfileProtocolCopyWithImpl<$Res, ProfileProtocol>;
   @useResult
   $Res call({
-    int profileID,
-    int personID,
+    String profileID,
+    String personID,
     String? bio,
     String? occupation,
     String? educationLevel,
@@ -91,11 +91,11 @@ class _$ProfileProtocolCopyWithImpl<$Res, $Val extends ProfileProtocol>
             profileID: null == profileID
                 ? _value.profileID
                 : profileID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             personID: null == personID
                 ? _value.personID
                 : personID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             bio: freezed == bio
                 ? _value.bio
                 : bio // ignore: cast_nullable_to_non_nullable
@@ -140,8 +140,8 @@ abstract class _$$ProfileProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int profileID,
-    int personID,
+    String profileID,
+    String personID,
     String? bio,
     String? occupation,
     String? educationLevel,
@@ -181,11 +181,11 @@ class __$$ProfileProtocolImplCopyWithImpl<$Res>
         profileID: null == profileID
             ? _value.profileID
             : profileID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         personID: null == personID
             ? _value.personID
             : personID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         bio: freezed == bio
             ? _value.bio
             : bio // ignore: cast_nullable_to_non_nullable
@@ -238,9 +238,9 @@ class _$ProfileProtocolImpl implements _ProfileProtocol {
       _$$ProfileProtocolImplFromJson(json);
 
   @override
-  final int profileID;
+  final String profileID;
   @override
-  final int personID;
+  final String personID;
   @override
   final String? bio;
   @override
@@ -319,8 +319,8 @@ class _$ProfileProtocolImpl implements _ProfileProtocol {
 
 abstract class _ProfileProtocol implements ProfileProtocol {
   factory _ProfileProtocol({
-    required final int profileID,
-    required final int personID,
+    required final String profileID,
+    required final String personID,
     final String? bio,
     final String? occupation,
     final String? educationLevel,
@@ -334,9 +334,9 @@ abstract class _ProfileProtocol implements ProfileProtocol {
       _$ProfileProtocolImpl.fromJson;
 
   @override
-  int get profileID;
+  String get profileID;
   @override
-  int get personID;
+  String get personID;
   @override
   String? get bio;
   @override

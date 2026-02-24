@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:drift/drift.dart' as drift;
 
 class AddAccountDialog extends StatefulWidget {
@@ -34,13 +35,13 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
     if (personID == null) return;
 
     context.read<AppDatabase>().financeDAO.createAccount(
-      FinancialAccountsTableCompanion(
-        personID: drift.Value(personID),
-        accountName: drift.Value(name),
+      FinancialAccountsTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        personID: personID,
+        accountName: name,
         accountType: drift.Value(_selectedType),
         balance: drift.Value(balance),
         currency: drift.Value(_selectedCurrency),
-        // color: drift.Value(_selectedColor.value.toString()), // If we had color
       ),
     );
 

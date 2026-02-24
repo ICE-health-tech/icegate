@@ -395,7 +395,7 @@ class ProjectDetailsPage extends StatelessWidget {
   void _showAddTaskDialog(
     BuildContext context,
     GrowthBlock growthBlock,
-    int projectID,
+    String projectID,
   ) {
     final titleController = TextEditingController();
     showDialog(
@@ -433,7 +433,7 @@ class ProjectDetailsPage extends StatelessWidget {
   void _showAddProjectTransactionDialog(
     BuildContext context,
     FinanceBlock financeBlock,
-    int projectID,
+    String projectID,
   ) {
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
@@ -500,7 +500,7 @@ class ProjectDetailsPage extends StatelessWidget {
   void _createNewNote(
     BuildContext context,
     ProjectNoteDAO dao,
-    int projectID,
+    String projectID,
   ) async {
     final noteID = await dao.insertNote(
       title: 'New Project Note',

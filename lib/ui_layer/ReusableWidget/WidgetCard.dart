@@ -62,7 +62,7 @@ void _showDeleteConfirmDialog(
       return ConfirmDialog(
         dao: dao,
         name: "Confirm",
-        widgetID: widgetData.widgetID ?? 0,
+        widgetID: widgetData.widgetID ?? '',
       ); // Return your dialog widget here
     },
   );

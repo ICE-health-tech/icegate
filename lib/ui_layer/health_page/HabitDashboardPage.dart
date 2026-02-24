@@ -3,6 +3,7 @@ import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class HabitDashboardPage extends StatelessWidget {
   const HabitDashboardPage({super.key});
@@ -138,7 +139,7 @@ class HabitDashboardPage extends StatelessWidget {
       await dao.insertExerciseLog(
         ExerciseLogsTableCompanion.insert(
           id: IDGen.generateUuid(),
-          personID: 1,
+          personID: '',
           type: type,
           durationMinutes: minutes,
           timestamp: Value(DateTime.now()),
@@ -155,7 +156,7 @@ class HabitDashboardPage extends StatelessWidget {
       await dao.insertWaterLog(
         WaterLogsTableCompanion.insert(
           id: IDGen.generateUuid(),
-          personID: 1,
+          personID: Supabase.instance.client.auth.currentUser!.id,
           amount: Value(amount),
           timestamp: Value(DateTime.now()),
         ),
@@ -173,7 +174,7 @@ class HabitDashboardPage extends StatelessWidget {
       await dao.insertSleepLog(
         SleepLogsTableCompanion.insert(
           id: IDGen.generateUuid(),
-          personID: 1,
+          personID: '',
           startTime: now.subtract(const Duration(hours: 8)),
           endTime: Value(now),
           quality: const Value(4),

@@ -57,7 +57,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         final taskTitle = _taskTitleController.text.trim();
         final noteTitle = _noteTitleController.text.trim();
 
-        final widgetID = IDGen.generate();
+        final widgetID = IDGen.generateUuid();
         final dateAdded = DateTime.now().toIso8601String();
 
         // 0. Create Project Entity

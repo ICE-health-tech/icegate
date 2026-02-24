@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
@@ -17,13 +18,17 @@ class GrowthBlock {
   StreamSubscription? _skillsSubscription;
 
   late GrowthDAO _dao;
-  late int _personId;
+  late String _personId;
 
   void updateGoals(List<GoalProtocol> data) => goals.value = data;
   void updateHabits(List<HabitProtocol> data) => habits.value = data;
   void updateSkills(List<SkillProtocol> data) => skills.value = data;
 
-  void init(GrowthDAO dao, int personId) {
+  void init(GrowthDAO dao, String personId) {
+    if (personId.isEmpty) {
+      debugPrint("GrowthBlock: Skipping init, personId is empty.");
+      return;
+    }
     _dao = dao;
     _personId = personId;
 
@@ -35,7 +40,7 @@ class GrowthBlock {
               .map(
                 (e) => GoalProtocol(
                   id: e.id,
-                  goalID: e.goalID,
+                  goalID: e.goalID ?? "",
                   personID: e.personID,
                   title: e.title,
                   description: e.description,
@@ -61,7 +66,7 @@ class GrowthBlock {
               .map(
                 (e) => HabitProtocol(
                   id: e.id,
-                  habitID: e.habitID,
+                  habitID: e.habitID ?? "",
                   personID: e.personID,
                   goalID: e.goalID,
                   habitName: e.habitName,
@@ -86,7 +91,7 @@ class GrowthBlock {
               .map(
                 (e) => SkillProtocol(
                   id: e.id,
-                  skillID: e.skillID,
+                  skillID: e.skillID ?? "",
                   personID: e.personID,
                   skillName: e.skillName,
                   skillCategory: e.skillCategory,
@@ -107,8 +112,11 @@ class GrowthBlock {
     await _awardPoints(scoreBlock);
   }
 
-  Future<void> completeGoalByIntId(int goalID, {ScoreBlock? scoreBlock}) async {
-    await _dao.updateGoalStatusByIntId(goalID, 'done');
+  Future<void> completeGoalByGoalId(
+    String goalID, {
+    ScoreBlock? scoreBlock,
+  }) async {
+    await _dao.updateGoalStatusByUuid(goalID, 'done');
     await _awardPoints(scoreBlock);
   }
 
@@ -127,8 +135,9 @@ class GrowthBlock {
   Future<void> createNewTask(
     String title,
     String description, {
-    int? projectID,
+    String? projectID,
   }) async {
+    if (_personId.isEmpty) return;
     await _dao.createGoal(
       GoalsTableCompanion.insert(
         id: IDGen.generateUuid(),

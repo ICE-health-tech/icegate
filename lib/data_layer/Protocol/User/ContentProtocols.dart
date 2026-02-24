@@ -1,6 +1,6 @@
 class BlogPostProtocol {
-  final int blogPostID;
-  final int authorID;
+  final String blogPostID;
+  final String authorID;
   final String title;
   final String slug;
   final String? excerpt;

@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -35,7 +36,8 @@ class _HeartRatePageState extends State<HeartRatePage> {
   Future<void> _loadData() async {
     final dao = context.read<HealthMetricsDAO>();
     final today = DateTime.now();
-    final data = await dao.getMetricsForDate(1, today);
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+    final data = await dao.getMetricsForDate(personId, today);
     if (mounted) {
       setState(() {
         currentHeartRate = data?.heartRate ?? 0;
@@ -52,7 +54,8 @@ class _HeartRatePageState extends State<HeartRatePage> {
     final today = DateTime.now();
 
     try {
-      final currentMetrics = await dao.getMetricsForDate(1, today);
+      final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+      final currentMetrics = await dao.getMetricsForDate(personId, today);
 
       if (currentMetrics != null) {
         await dao.insertOrUpdateMetrics(
@@ -67,7 +70,7 @@ class _HeartRatePageState extends State<HeartRatePage> {
         await dao.insertOrUpdateMetrics(
           HealthMetricsTableCompanion.insert(
             id: IDGen.generateUuid(),
-            personID: 1,
+            personID: Supabase.instance.client.auth.currentUser?.id ?? "",
             date: today,
             heartRate: drift.Value(bpm),
             updatedAt: drift.Value(DateTime.now()),

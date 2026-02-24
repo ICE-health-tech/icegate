@@ -1,6 +1,6 @@
 class WidgetProtocol {
   final int widgetID;
-  final int personID;
+  final String personID;
   final String widgetName;
   final String widgetType;
   final String configuration; // JSON string

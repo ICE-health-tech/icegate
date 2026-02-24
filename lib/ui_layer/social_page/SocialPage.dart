@@ -374,7 +374,7 @@ class _SocialPageState extends State<SocialPage>
                             firstName: firstNameController.text,
                             lastName: lastNameController.text,
                             isActive: true,
-                            personID: IDGen.generate(),
+                            personID: IDGen.generateUuid(),
                             phoneNumber: contact.phones.isNotEmpty
                                 ? contact.phones.first.number
                                 : null,
@@ -456,7 +456,7 @@ class _SocialPageState extends State<SocialPage>
 
             return GestureDetector(
               onDoubleTap: () {
-                personDao.increaseAffection(contact.personID);
+                personDao.increaseAffection(contact.personID!);
                 ScaffoldMessenger.of(context).showSnackBar(
                   SnackBar(
                     content: Text(
@@ -536,7 +536,7 @@ class _SocialPageState extends State<SocialPage>
                                 Row(
                                   children: [
                                     Text(
-                                      'ID: ${contact.personID}',
+                                      'ID: ${contact.personID!}',
                                       style: TextStyle(
                                         color: Theme.of(
                                           context,
@@ -580,7 +580,7 @@ class _SocialPageState extends State<SocialPage>
                             ),
                             onPressed: () {
                               personDao.increaseAffection(
-                                contact.personID,
+                                contact.personID!,
                                 amount: 5,
                               );
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -805,7 +805,7 @@ class _SocialPageState extends State<SocialPage>
                   icon: const Icon(Icons.more_vert),
                   onSelected: (value) async {
                     await managementDao.updateRelationship(
-                      person.personID,
+                      person.personID??"",
                       value,
                     );
                     ScaffoldMessenger.of(context).showSnackBar(
@@ -918,7 +918,7 @@ class _SocialPageState extends State<SocialPage>
                           firstName: firstNameController.text,
                           lastName: lastNameController.text,
                           isActive: true,
-                          personID: IDGen.generate(),
+                          personID: IDGen.generateUuid(),
                         ),
                         relationship: selectedType,
                       );

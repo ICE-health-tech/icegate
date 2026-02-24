@@ -29,7 +29,7 @@ abstract class PluginProtocol {
   // Instance data (runtime) - describes a specific plugin instance
   String get alias;
   String get dateAdded;
-  int get widgetID;
+  String get widgetID;
 
   // Category and metadata for enhanced functionality
   PluginCategory get category;
@@ -40,7 +40,7 @@ abstract class PluginProtocol {
   /// This allows easy conversion from template to actual widget instance
   PluginProtocol createInstance({
     String? customAlias,
-    required int widgetID,
+    required String widgetID,
     required String dateAdded,
   });
 

@@ -21,8 +21,8 @@ UserAccountProtocol _$UserAccountProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$UserAccountProtocol {
-  int get accountID => throw _privateConstructorUsedError;
-  int get personID => throw _privateConstructorUsedError;
+  String get accountID => throw _privateConstructorUsedError;
+  String get personID => throw _privateConstructorUsedError;
   String get username => throw _privateConstructorUsedError;
   String? get primaryEmail => throw _privateConstructorUsedError;
   String get role => throw _privateConstructorUsedError;
@@ -47,8 +47,8 @@ abstract class $UserAccountProtocolCopyWith<$Res> {
   ) = _$UserAccountProtocolCopyWithImpl<$Res, UserAccountProtocol>;
   @useResult
   $Res call({
-    int accountID,
-    int personID,
+    String accountID,
+    String personID,
     String username,
     String? primaryEmail,
     String role,
@@ -85,11 +85,11 @@ class _$UserAccountProtocolCopyWithImpl<$Res, $Val extends UserAccountProtocol>
             accountID: null == accountID
                 ? _value.accountID
                 : accountID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             personID: null == personID
                 ? _value.personID
                 : personID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             username: null == username
                 ? _value.username
                 : username // ignore: cast_nullable_to_non_nullable
@@ -126,8 +126,8 @@ abstract class _$$UserAccountProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int accountID,
-    int personID,
+    String accountID,
+    String personID,
     String username,
     String? primaryEmail,
     String role,
@@ -163,11 +163,11 @@ class __$$UserAccountProtocolImplCopyWithImpl<$Res>
         accountID: null == accountID
             ? _value.accountID
             : accountID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         personID: null == personID
             ? _value.personID
             : personID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         username: null == username
             ? _value.username
             : username // ignore: cast_nullable_to_non_nullable
@@ -210,9 +210,9 @@ class _$UserAccountProtocolImpl extends _UserAccountProtocol {
       _$$UserAccountProtocolImplFromJson(json);
 
   @override
-  final int accountID;
+  final String accountID;
   @override
-  final int personID;
+  final String personID;
   @override
   final String username;
   @override
@@ -283,8 +283,8 @@ class _$UserAccountProtocolImpl extends _UserAccountProtocol {
 
 abstract class _UserAccountProtocol extends UserAccountProtocol {
   const factory _UserAccountProtocol({
-    required final int accountID,
-    required final int personID,
+    required final String accountID,
+    required final String personID,
     required final String username,
     final String? primaryEmail,
     final String role,
@@ -297,9 +297,9 @@ abstract class _UserAccountProtocol extends UserAccountProtocol {
       _$UserAccountProtocolImpl.fromJson;
 
   @override
-  int get accountID;
+  String get accountID;
   @override
-  int get personID;
+  String get personID;
   @override
   String get username;
   @override

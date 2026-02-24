@@ -16,9 +16,13 @@ class ProjectBlock {
 
   StreamSubscription? _projectsSubscription;
   late ProjectsDAO _dao;
-  late int _personId;
+  late String _personId;
 
-  void init(ProjectsDAO dao, int personId) {
+  void init(ProjectsDAO dao, String personId) {
+    if (personId.isEmpty) {
+      debugPrint("ProjectBlock: Skipping init, personId is empty.");
+      return;
+    }
     _dao = dao;
     _personId = personId;
 
@@ -34,7 +38,7 @@ class ProjectBlock {
                 .map(
                   (e) => ProjectProtocol(
                     id: e.id,
-                    projectID: e.projectID,
+                    projectID: e.projectID ?? "",
                     personID: e.personID,
                     name: e.name,
                     description: e.description,
@@ -53,12 +57,14 @@ class ProjectBlock {
         );
   }
 
-  Future<int> createProject(
+  Future<String> createProject(
     String name,
     String? description,
     String? color,
   ) async {
-    return await _dao.insertProject(
+    if (_personId.isEmpty) return "";
+    final uuid = IDGen.generateUuid();
+    await _dao.insertProject(
       ProjectsTableCompanion.insert(
         id: IDGen.generateUuid(),
         personID: _personId,
@@ -69,10 +75,11 @@ class ProjectBlock {
         updatedAt: Value(DateTime.now()),
       ),
     );
+    return uuid;
   }
 
   Future<void> deleteProject(String id) async {
-    await _dao.deleteProjectByUuid(id);
+    await _dao.deleteProjectByProjectId(id);
   }
 
   void selectProject(ProjectProtocol? project) {

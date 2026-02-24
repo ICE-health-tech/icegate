@@ -12,6 +12,7 @@ import 'package:path/path.dart' as path; // Add this alias to avoid conflicts
 import 'package:intl/intl.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class FoodInputPage extends StatefulWidget {
   const FoodInputPage({super.key});
@@ -71,10 +72,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
   final _aiService = Aifoodcaloriesservices();
   // final database = AppDatabase();
   bool _isAnalyzing = false;
-  final List<Map<String, dynamic>> _meals = [
-    // {'name': 'Breakfast', 'calories': 450, 'time': '08:30 AM'},
-    // {'name': 'Lunch', 'calories': 650, 'time': '01:15 PM'},
-  ];
 
   final _foodController = TextEditingController();
   final _caloriesController = TextEditingController();
@@ -101,7 +98,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
         imageQuality: 85,
       );
 
-      print("Path when I pick image: ${image!.path}");
+      if (image == null) {
+        print("No image selected");
+        return;
+      }
+
+      print("Path when I pick image: ${image.path}");
       // Sử dụng path_provider
 
       //  final Directory appDir=await
@@ -165,12 +167,18 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
       final now = DateTime.now();
 
+      final authBlock = context.read<AuthBlock>();
+      final userData = authBlock.user.value;
+      final int personID = (userData?['person_id'] is int)
+          ? userData!['person_id']
+          : int.tryParse(userData?['id']?.toString() ?? '') ?? 1;
+
       // 1. Insert Meal details
-      final mealId = await _healthMealDAO.insertMeal(
+      await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
           id: IDGen.generateUuid(),
           mealName: _foodController.text,
-
+          personID: personID.toString(),
           mealImageUrl: Value(_imagePath),
           carbs: Value(carbs),
           protein: Value(protein),
@@ -373,6 +381,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   }
 
                   final mealsList = snapshot.data ?? [];
+                  // print("meal list: " + mealsList.toList().toString());
 
                   if (mealsList.isEmpty) {
                     return Container(
@@ -555,16 +564,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
           ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
-      ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _showCaptureOptions(context),
-        label: const Text(
-          'LOG MEAL',
-          style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 1),
-        ),
-        icon: const Icon(Icons.add_rounded, size: 28),
-        backgroundColor: colorScheme.primary,
-        elevation: 8,
       ),
     );
   }

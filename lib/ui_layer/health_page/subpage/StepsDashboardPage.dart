@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
@@ -36,8 +37,8 @@ class StepsDashboardPage extends StatelessWidget {
       ),
       body: StreamBuilder<List<HealthMetricsLocal>>(
         stream: healthMetricsDao.watchAllMetrics(
-          1,
-        ), // Assuming personID 1 for now
+          Supabase.instance.client.auth.currentUser?.id ?? "",
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

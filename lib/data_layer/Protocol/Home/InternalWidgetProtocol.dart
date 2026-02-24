@@ -1,7 +1,3 @@
-//  --- DATA CLASS (InternalWidgetData) ---
-// This part is assumed to be correct based on the protocol requirements
-// import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
@@ -13,7 +9,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   final String _name;
   final String? _imageUrl;
   final String _dateAdded;
-  final int _widgetID;
+  final String _widgetID;
   final String _alias;
 
   // NEW: Enhanced metadata fields
@@ -43,7 +39,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   String get alias => _alias;
 
   @override
-  int get widgetID => _widgetID;
+  String get widgetID => _widgetID;
 
   // Getters for new fields
   @override
@@ -77,7 +73,7 @@ class InternalWidgetProtocol implements PluginProtocol {
     required String name,
     required String alias,
     required String dateAdded,
-    required int widgetID,
+    required String widgetID,
     String? imageUrl,
     // NEW: Enhanced parameters with defaults for backward compatibility
     String description = '',
@@ -106,7 +102,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   @override
   InternalWidgetProtocol createInstance({
     String? customAlias,
-    required int widgetID,
+    required String widgetID,
     required String dateAdded,
   }) {
     return InternalWidgetProtocol(
@@ -143,7 +139,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   /// Static adapter method for backward compatibility
   static InternalWidgetProtocol adapterList(InternalWidgetData data) {
     return InternalWidgetProtocol(
-      widgetID: data.widgetID ?? 0,
+      widgetID: data.widgetID ?? '',
 
       // Use null-coalescing (??) instead of (!) for all table fields
       name: data.name ?? 'Untitled',
@@ -156,7 +152,7 @@ class InternalWidgetProtocol implements PluginProtocol {
           : 'assets/internalwidget/default.png',
 
       dateAdded: data.dateAdded ?? DateTime.now().toIso8601String(),
-     
+
       // Use defaults for new fields when adapting from database
       description: 'Unknown',
       icon: getIconFromName(data.name ?? ''),

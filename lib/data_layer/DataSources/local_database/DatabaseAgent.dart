@@ -68,7 +68,7 @@ class DatabaseVerificationAgent {
     try {
       // await database.customSelect('SELECT 1').get();
       PersonDAO dao = PersonDAO(database as AppDatabase);
-      dao.getPersonByID(0);
+      dao.getPersonByID('');
       // print("✅ Can get person 0");
     } catch (e) {
       // print("❌ Can't get person 0");

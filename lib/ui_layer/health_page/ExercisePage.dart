@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
@@ -23,8 +24,9 @@ class _ExercisePageState extends State<ExercisePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
     return StreamBuilder<List<ExerciseLogData>>(
-      stream: dao.watchDailyExerciseLogs(1, DateTime.now()),
+      stream: dao.watchDailyExerciseLogs(personId, DateTime.now()),
       builder: (context, snapshot) {
         final logs = snapshot.data ?? [];
         final totalMinutes = logs.fold<int>(
@@ -303,7 +305,7 @@ class _ExercisePageState extends State<ExercisePage> {
       onTap: () {
         Feedback.forTap(context);
         focusBlock.startExercise(type, mins);
-        context.push('/projects/focus');
+        context.push('/health/focus');
       },
       child: Container(
         width: 100,
@@ -396,7 +398,8 @@ class _ExercisePageState extends State<ExercisePage> {
                   await dao.insertExerciseLog(
                     ExerciseLogsTableCompanion.insert(
                       id: IDGen.generateUuid(),
-                      personID: 1,
+                      personID:
+                          Supabase.instance.client.auth.currentUser?.id ?? "",
                       type: type,
                       durationMinutes: mins,
                       intensity: drift.Value(selectedIntensity),

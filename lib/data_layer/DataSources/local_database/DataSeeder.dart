@@ -7,16 +7,18 @@ import 'package:ice_shield/data_layer/Protocol/User/UserAccountProtocol.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class DataSeeder {
+  static const String guestPersonId = '00000000-0000-0000-0000-000000000001';
+
   static Future<void> seed(AppDatabase db) async {
-    // Check if any person exists (autoincrement usually starts at 1, but we use 0 in seeder)
-    final person = await db.personManagementDAO.getPersonById(1);
+    // Check if any person exists
+    final person = await db.personManagementDAO.getPersonById(guestPersonId);
     if (person != null) return; // Already seeded
 
     print("Seeding database...");
 
-    // 1. Create Person using PersonProtocol (ID auto-generated)
+    // 1. Create Person using PersonProtocol
     final personProtocol = PersonProtocol(
-      personID: 1,
+      personID: guestPersonId,
       firstName: 'Long',
       lastName: 'Duy',
       dateOfBirth: DateTime(1, 1, 1),
@@ -26,9 +28,9 @@ class DataSeeder {
     );
     final personId = await db.personManagementDAO.createPerson(personProtocol);
     print("DUYLONG>>>>>>$personId");
-    // 2. Create Email using EmailAddressProtocol (ID auto-generated)
-    final emailProtocol = EmailAddressProtocol(
-      emailAddressID: 1,
+
+    // 2. Create Email using EmailAddressProtocol
+    final emailProtocol = EmailAddressProtocol.create(
       personID: personId,
       emailAddress: 'longduy@example.com',
       isPrimary: true,
@@ -37,21 +39,19 @@ class DataSeeder {
     print("DUYLONG>>>>>>$emailProtocol");
     await db.personManagementDAO.addEmail(emailProtocol);
 
-    // 3. Create Account using UserAccountProtocol (ID auto-generated)
-    final accountProtocol = UserAccountProtocol(
+    // 3. Create Account using UserAccountProtocol
+    final accountProtocol = UserAccountProtocol.create(
       personID: personId,
       username: 'Guest',
       role: 'admin',
-      accountID: personId,
     );
     await db.personManagementDAO.createAccount(
       accountProtocol,
       passwordHash: 'hashed_password', // Mock hash
     );
 
-    // 4. Create Profile using ProfileProtocol (ID auto-generated)
-    final profileProtocol = CVAddressProtocol(
-      cvAddressID: 1,
+    // 4. Create CV Address using CVAddressProtocol
+    final cvAddressProtocol = CVAddressProtocol.create(
       personID: personId,
       bio: 'Flutter Developer & Tech Enthusiast',
       occupation: 'Software Engineer',
@@ -59,7 +59,7 @@ class DataSeeder {
       location: 'Ha Noi, Vietnam',
       websiteUrl: 'https://example.com',
     );
-    await db.personManagementDAO.createCVAddress(profileProtocol);
+    await db.personManagementDAO.createCVAddress(cvAddressProtocol);
 
     // 5. Create Financial Accounts
     await db.financeDAO.createAccount(

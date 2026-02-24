@@ -1,5 +1,10 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:signals/signals.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class UserObjectResource {
   final String avatarImage;
@@ -13,17 +18,181 @@ class ObjectDatabaseBlock {
     UserObjectResource(avatarImage: '', coverImage: ''),
   );
 
-  Future<void> updateUrlOfUser(PersonBlock personBlock) async {
-    String alias = personBlock.information.value.profiles.alias;
-    print("alias: $alias");
+  final _imagePicker = ImagePicker();
 
-    if (alias.isEmpty) {
+  /// Upload an image file to MinIO via the backend.
+  ///
+  /// [alias] - The user's alias (bucket folder)
+  /// [fileName] - The target filename (e.g. 'admin.png' or 'cover.png')
+  /// [imageFile] - The local image file to upload
+  /// [token] - JWT auth token for the backend
+  Future<bool> uploadImageToMinio({
+    required String userId,
+    required String fileName,
+    required File imageFile,
+    required String token,
+  }) async {
+    try {
+      final baseUrl = UserObjectResource.baseObjectUrl.endsWith('/')
+          ? UserObjectResource.baseObjectUrl.substring(
+              0,
+              UserObjectResource.baseObjectUrl.length - 1,
+            )
+          : UserObjectResource.baseObjectUrl;
+
+      final uploadUrl = Uri.parse(
+        '$baseUrl/object/duylongwebappobjectdatabase/$userId/$fileName',
+      );
+
+      debugPrint('📤 [ObjectDB] Uploading $fileName for userId: $userId');
+      debugPrint('📤 [ObjectDB] Upload URL: $uploadUrl');
+
+      // Detect content type
+      String contentType = 'application/octet-stream';
+      if (fileName.toLowerCase().endsWith('.png')) {
+        contentType = 'image/png';
+      } else if (fileName.toLowerCase().endsWith('.jpg') ||
+          fileName.toLowerCase().endsWith('.jpeg')) {
+        contentType = 'image/jpeg';
+      } else if (fileName.toLowerCase().endsWith('.gif')) {
+        contentType = 'image/gif';
+      }
+
+      // Send direct PUT request with raw bytes
+      final response = await http.put(
+        uploadUrl,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': contentType,
+        },
+        body: await imageFile.readAsBytes(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('✅ [ObjectDB] $fileName uploaded successfully');
+        return true;
+      } else {
+        debugPrint(
+          '❌ [ObjectDB] Upload failed: ${response.statusCode} - ${response.body}',
+        );
+        return false;
+      }
+    } catch (e) {
+      debugPrint('❌ [ObjectDB] Upload error: $e');
+      return false;
+    }
+  }
+
+  /// Pick an image from gallery and upload it as avatar (admin.png)
+  Future<bool> pickAndUploadAvatar({
+    required String userId,
+    required String token,
+  }) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 512,
+        maxHeight: 512,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        debugPrint('⚠️ [ObjectDB] Avatar pick cancelled');
+        return false;
+      }
+
+      final file = File(pickedFile.path);
+      final success = await uploadImageToMinio(
+        userId: userId,
+        fileName: 'admin.png',
+        imageFile: file,
+        token: token,
+      );
+
+      if (success) {
+        // Refresh URL with cache-busting
+        _refreshUrls(userId);
+      }
+
+      return success;
+    } catch (e) {
+      debugPrint('❌ [ObjectDB] pickAndUploadAvatar error: $e');
+      return false;
+    }
+  }
+
+  /// Pick an image from gallery and upload it as cover (cover.png)
+  Future<bool> pickAndUploadCover({
+    required String userId,
+    required String token,
+  }) async {
+    try {
+      final XFile? pickedFile = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        maxWidth: 1920,
+        maxHeight: 1080,
+        imageQuality: 85,
+      );
+
+      if (pickedFile == null) {
+        debugPrint('⚠️ [ObjectDB] Cover pick cancelled');
+        return false;
+      }
+
+      final file = File(pickedFile.path);
+      final success = await uploadImageToMinio(
+        userId: userId,
+        fileName: 'cover.png',
+        imageFile: file,
+        token: token,
+      );
+
+      if (success) {
+        // Refresh URL with cache-busting
+        _refreshUrls(userId);
+      }
+
+      return success;
+    } catch (e) {
+      debugPrint('❌ [ObjectDB] pickAndUploadCover error: $e');
+      return false;
+    }
+  }
+
+  /// Refresh image URLs with cache-busting timestamp
+  void _refreshUrls(String userId) {
+    final baseUrl = UserObjectResource.baseObjectUrl.endsWith('/')
+        ? UserObjectResource.baseObjectUrl.substring(
+            0,
+            UserObjectResource.baseObjectUrl.length - 1,
+          )
+        : UserObjectResource.baseObjectUrl;
+
+    final cacheBuster = DateTime.now().millisecondsSinceEpoch;
+    userObjectResource.value = UserObjectResource(
+      avatarImage:
+          "$baseUrl/object/duylongwebappobjectdatabase/$userId/admin.png?v=$cacheBuster",
+      coverImage:
+          "$baseUrl/object/duylongwebappobjectdatabase/$userId/cover.png?v=$cacheBuster",
+    );
+  }
+
+  Future<void> updateUrlOfUser(PersonBlock personBlock) async {
+    final profile = personBlock.information.value.profiles;
+    final String? userId = Supabase.instance.client.auth.currentUser?.id;
+    final String alias = profile.alias;
+
+    print("userId: $userId, alias: $alias");
+
+    if (userId == null && alias.isEmpty) {
       userObjectResource.value = UserObjectResource(
         avatarImage: '',
         coverImage: '',
       );
       return;
     }
+
+    final pathId = userId ?? alias;
 
     // Ensure baseObjectUrl doesn't end with slash, prevent double slashes
     final baseUrl = UserObjectResource.baseObjectUrl.endsWith('/')
@@ -45,9 +214,9 @@ class ObjectDatabaseBlock {
 
     userObjectResource.value = UserObjectResource(
       avatarImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$alias/admin.png",
+          "$baseUrl/object/duylongwebappobjectdatabase/$pathId/admin.png",
       coverImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$alias/cover.png",
+          "$baseUrl/object/duylongwebappobjectdatabase/$pathId/cover.png",
     );
   }
 }

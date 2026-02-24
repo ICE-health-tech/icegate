@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart' hide ThemeData;
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+    hide ThemeData;
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -620,9 +621,23 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Expanded(
           child: StreamBuilder<List<QuoteData>>(
             stream: quoteDao
-                .watchActiveQuotes(), // Or watchAll if we want to show disabled too
+                .watchAllQuotes(), // Using watchAll to find EVERYTHING
             builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                debugPrint('❌ WisdomBoard Error: ${snapshot.error}');
+                debugPrint('WisdomBoard StackTrace: ${snapshot.stackTrace}');
+              }
               final quotes = snapshot.data ?? [];
+              debugPrint(
+                'WisdomBoard: Found ${quotes.length} quotes. State: ${snapshot.connectionState}',
+              );
+              if (quotes.isNotEmpty) {
+                for (var q in quotes) {
+                  debugPrint(
+                    'WisdomBoard: [ID: ${q.id}] Quote: "${q.content}", Author: ${q.author}, Active: ${q.isActive}',
+                  );
+                }
+              }
               if (quotes.isEmpty &&
                   snapshot.connectionState == ConnectionState.active) {
                 return Center(
@@ -689,59 +704,6 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               ),
             ),
             child: child,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildChannelTile(
-    String title,
-    String subtitle,
-    IconData icon,
-    Color color,
-  ) {
-    return _buildGlassCard(
-      borderColor: color.withOpacity(0.2),
-      child: ListTile(
-        contentPadding: const EdgeInsets.all(16),
-        leading: Container(
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: color.withOpacity(0.2)),
-          ),
-          child: Icon(icon, color: color, size: 24),
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-            letterSpacing: -0.2,
-          ),
-        ),
-        subtitle: Padding(
-          padding: const EdgeInsets.only(top: 4.0),
-          child: Text(
-            subtitle,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
-              fontSize: 12,
-              height: 1.4,
-            ),
-          ),
-        ),
-        trailing: Switch(
-          value: true,
-          onChanged: (val) {},
-          activeThumbColor: color,
-          trackColor: WidgetStateProperty.resolveWith(
-            (states) => states.contains(WidgetState.selected)
-                ? color.withOpacity(0.4)
-                : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
           ),
         ),
       ),
@@ -845,7 +807,11 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     size: 20,
                   ),
                   onPressed: () async {
-                    await dao.deleteNotification(notification.notificationID);
+                    if (notification.notificationID != null) {
+                      await dao.deleteNotification(
+                        notification.notificationID!,
+                      );
+                    }
                     await service.syncAllNotifications();
                   },
                 ),
@@ -1110,7 +1076,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           ),
           title: Text(
             "Inspirational Quote",
-            style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
+            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1119,7 +1085,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 controller: contentController,
                 maxLines: 3,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
                 decoration: _dialogInputDecoration("Quote Contents"),
               ),
@@ -1127,7 +1093,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               TextField(
                 controller: authorController,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Theme.of(context).colorScheme.onPrimary,
                 ),
                 decoration: _dialogInputDecoration("Author"),
               ),
@@ -1139,21 +1105,40 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               child: const Text("Cancel"),
             ),
             ElevatedButton(
-              onPressed: () {
+              onPressed: () async {
                 if (contentController.text.isEmpty) return;
                 final dao = context.read<QuoteDAO>();
-                dao.insertQuote(
-                  QuotesTableCompanion.insert(
-                    id: IDGen.generateUuid(),
-                    content: contentController.text,
-                    author: Value(
-                      authorController.text.isEmpty
-                          ? null
-                          : authorController.text,
+                try {
+                  await dao.insertQuote(
+                    QuotesTableCompanion.insert(
+                      id: IDGen.generateUuid(),
+                      content: contentController.text,
+                      author: Value(
+                        authorController.text.isEmpty
+                            ? null
+                            : authorController.text,
+                      ),
                     ),
-                  ),
-                );
-                Navigator.pop(context);
+                  );
+                  debugPrint(
+                    '✅ WisdomBoard: Successfully inserted quote: ${contentController.text}',
+                  );
+
+                  // Diagnostic: Check count immediately
+                  final allQuotes = await dao.getAllQuotes();
+                  debugPrint(
+                    '📊 WisdomBoard Diagnostic: Total quotes in DB: ${allQuotes.length}',
+                  );
+
+                  if (context.mounted) Navigator.pop(context);
+                } catch (e) {
+                  print('FAILED TO INSERT QUOTE: $e');
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(
+                      context,
+                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
+                  }
+                }
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.blueAccent,
@@ -1221,7 +1206,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     ).colorScheme.onSurface.withOpacity(0.2),
                     size: 18,
                   ),
-                  onPressed: () => dao.deleteQuote(quote.quoteID),
+                  onPressed: () => dao.deleteQuote(quote.id),
                   style: IconButton.styleFrom(
                     padding: EdgeInsets.zero,
                     minimumSize: const Size(32, 32),
@@ -1240,11 +1225,11 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(
-        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.5),
       ),
       enabledBorder: UnderlineInputBorder(
         borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.1),
         ),
       ),
       focusedBorder: const UnderlineInputBorder(

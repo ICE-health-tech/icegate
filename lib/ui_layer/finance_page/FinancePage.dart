@@ -208,8 +208,7 @@ class _FinancePageState extends State<FinancePage> {
     decimalDigits: 1,
   );
   late final List<FinanceAsset> _stocks = [];
-  final List<FinanceAsset> _coins = FinanceService.getCoins();
-  final Map<int, String> _projectNamesCache = {};
+  final Map<String, String> _projectNamesCache = {};
 
   Future<void> _initWatchlist() async {
     const List<String> myTickers = ['FPT', 'VNM', 'HPG', 'SSI', 'VIC', 'TCB'];
@@ -477,7 +476,6 @@ class _FinancePageState extends State<FinancePage> {
     BuildContext context,
     FinanceBlock financeBlock,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
     final savings = financeBlock.totalSavings.value;
     final spending = financeBlock.monthlySpending.value;
     final income = financeBlock.monthlyIncome.value;
@@ -831,7 +829,7 @@ class _FinancePageState extends State<FinancePage> {
           size: 28,
         ),
       ),
-      onDismissed: (_) => financeBlock.deleteTransaction(txn.transactionID),
+      onDismissed: (_) => financeBlock.deleteTransaction(txn.transactionID!),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -919,13 +917,13 @@ class _FinancePageState extends State<FinancePage> {
     );
   }
 
-  Widget _buildProjectTag(BuildContext context, int projectID) {
+  Widget _buildProjectTag(BuildContext context, String projectID) {
     if (_projectNamesCache.containsKey(projectID)) {
       return _renderProjectTag(context, _projectNamesCache[projectID]!);
     }
 
     return FutureBuilder<ProjectData?>(
-      future: context.read<AppDatabase>().projectsDAO.getProjectByIntId(
+      future: context.read<AppDatabase>().projectsDAO.getProjectByProjectId(
         projectID,
       ),
       builder: (context, snapshot) {
@@ -1012,94 +1010,4 @@ class _FinancePageState extends State<FinancePage> {
     );
   }
 
-  Widget _buildAssetItem(BuildContext context, FinanceAsset asset) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isPositive = asset.change24h >= 0;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.25)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.015),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: asset.color.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: asset.color.withOpacity(0.1)),
-            ),
-            child: Icon(asset.icon, color: asset.color, size: 26),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  asset.symbol,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 17,
-                    letterSpacing: -0.5,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  asset.name,
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.4),
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                _currencyFormat.format(asset.price),
-                style: const TextStyle(
-                  fontWeight: FontWeight.w900,
-                  fontSize: 17,
-                  letterSpacing: -0.5,
-                ),
-              ),
-              const SizedBox(height: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: (isPositive ? Colors.green : Colors.red).withOpacity(
-                    0.1,
-                  ),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${isPositive ? '▲' : '▼'} ${asset.change24h.abs()}%',
-                  style: TextStyle(
-                    color: isPositive ? Colors.green[700] : Colors.red[700],
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
@@ -15,7 +16,7 @@ class FinanceBlock {
   StreamSubscription? _transactionsSubscription;
 
   late FinanceDAO _dao;
-  late int _personId;
+  late String _personId;
 
   void updateAccounts(List<FinancialAccountProtocol> data) {
     accounts.value = data;
@@ -135,7 +136,11 @@ class FinanceBlock {
     return map;
   });
 
-  void init(FinanceDAO dao, int personId) {
+  void init(FinanceDAO dao, String personId) {
+    if (personId.isEmpty) {
+      debugPrint("FinanceBlock: Skipping init, personId is empty.");
+      return;
+    }
     _dao = dao;
     _personId = personId;
 
@@ -144,7 +149,7 @@ class FinanceBlock {
       final protocols = data
           .map(
             (e) => FinancialAccountProtocol(
-              financialAccountID: e.accountID,
+              financialAccountID: e.accountID ?? "",
               personID: e.personID,
               accountName: e.accountName,
               accountType: e.accountType,
@@ -163,7 +168,7 @@ class FinanceBlock {
       final protocols = data
           .map(
             (e) => AssetProtocol(
-              id: e.assetID,
+              id: e.assetID ?? "",
               personId: e.personID,
               assetName: e.assetName,
               assetCategory: e.assetCategory,
@@ -195,8 +200,9 @@ class FinanceBlock {
     required double amount,
     String? description,
     DateTime? date,
-    int? projectID,
+    String? projectID,
   }) async {
+    if (_personId.isEmpty) return;
     await _dao.insertTransaction(
       TransactionsTableCompanion.insert(
         id: IDGen.generateUuid(),
@@ -211,7 +217,7 @@ class FinanceBlock {
     );
   }
 
-  Future<void> deleteTransaction(int transactionID) async {
+  Future<void> deleteTransaction(String transactionID) async {
     await _dao.deleteTransaction(transactionID);
   }
 

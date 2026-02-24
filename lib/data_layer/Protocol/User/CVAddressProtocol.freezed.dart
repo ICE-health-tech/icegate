@@ -21,8 +21,8 @@ CVAddressProtocol _$CVAddressProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CVAddressProtocol {
-  int get cvAddressID => throw _privateConstructorUsedError;
-  int get personID => throw _privateConstructorUsedError;
+  String get cvAddressID => throw _privateConstructorUsedError;
+  String get personID => throw _privateConstructorUsedError;
   String? get githubUrl => throw _privateConstructorUsedError;
   String? get websiteUrl => throw _privateConstructorUsedError;
   String? get company => throw _privateConstructorUsedError;
@@ -52,8 +52,8 @@ abstract class $CVAddressProtocolCopyWith<$Res> {
   ) = _$CVAddressProtocolCopyWithImpl<$Res, CVAddressProtocol>;
   @useResult
   $Res call({
-    int cvAddressID,
-    int personID,
+    String cvAddressID,
+    String personID,
     String? githubUrl,
     String? websiteUrl,
     String? company,
@@ -100,11 +100,11 @@ class _$CVAddressProtocolCopyWithImpl<$Res, $Val extends CVAddressProtocol>
             cvAddressID: null == cvAddressID
                 ? _value.cvAddressID
                 : cvAddressID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             personID: null == personID
                 ? _value.personID
                 : personID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             githubUrl: freezed == githubUrl
                 ? _value.githubUrl
                 : githubUrl // ignore: cast_nullable_to_non_nullable
@@ -161,8 +161,8 @@ abstract class _$$CVAddressProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int cvAddressID,
-    int personID,
+    String cvAddressID,
+    String personID,
     String? githubUrl,
     String? websiteUrl,
     String? company,
@@ -208,11 +208,11 @@ class __$$CVAddressProtocolImplCopyWithImpl<$Res>
         cvAddressID: null == cvAddressID
             ? _value.cvAddressID
             : cvAddressID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         personID: null == personID
             ? _value.personID
             : personID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         githubUrl: freezed == githubUrl
             ? _value.githubUrl
             : githubUrl // ignore: cast_nullable_to_non_nullable
@@ -280,9 +280,9 @@ class _$CVAddressProtocolImpl implements _CVAddressProtocol {
       _$$CVAddressProtocolImplFromJson(json);
 
   @override
-  final int cvAddressID;
+  final String cvAddressID;
   @override
-  final int personID;
+  final String personID;
   @override
   final String? githubUrl;
   @override
@@ -374,8 +374,8 @@ class _$CVAddressProtocolImpl implements _CVAddressProtocol {
 
 abstract class _CVAddressProtocol implements CVAddressProtocol {
   const factory _CVAddressProtocol({
-    required final int cvAddressID,
-    required final int personID,
+    required final String cvAddressID,
+    required final String personID,
     final String? githubUrl,
     final String? websiteUrl,
     final String? company,
@@ -392,9 +392,9 @@ abstract class _CVAddressProtocol implements CVAddressProtocol {
       _$CVAddressProtocolImpl.fromJson;
 
   @override
-  int get cvAddressID;
+  String get cvAddressID;
   @override
-  int get personID;
+  String get personID;
   @override
   String? get githubUrl;
   @override

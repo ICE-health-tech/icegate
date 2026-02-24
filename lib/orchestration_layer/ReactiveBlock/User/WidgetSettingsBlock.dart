@@ -10,14 +10,14 @@ class WidgetSettingsBlock {
 
   void updateWidgets(List<WidgetProtocol> data) => widgets.value = data;
 
-  void init(WidgetDAO dao, int personID) {
+  void init(WidgetDAO dao, String personID) {
     _widgetsSubscription?.cancel();
     _widgetsSubscription = dao.watchWidgets(personID).listen((data) {
       updateWidgets(
         data
             .map(
               (e) => WidgetProtocol(
-                widgetID: e.personWidgetID,
+                widgetID: e.personWidgetID??0,
                 personID: e.personID,
                 widgetName: e.widgetName,
                 widgetType: e.widgetType,

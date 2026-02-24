@@ -1,8 +1,8 @@
 class GoalProtocol {
   final String id;
-  final int goalID;
-  final int personID;
-  final int? projectID;
+  final String goalID;
+  final String personID;
+  final String? projectID;
   final String title;
   final String? description;
   final String category;
@@ -30,9 +30,9 @@ class GoalProtocol {
 
 class HabitProtocol {
   final String id;
-  final int habitID;
-  final int personID;
-  final int? goalID;
+  final String habitID;
+  final String personID;
+  final String? goalID;
   final String habitName;
   final String? description;
   final String frequency;
@@ -58,8 +58,8 @@ class HabitProtocol {
 
 class SkillProtocol {
   final String id;
-  final int skillID;
-  final int personID;
+  final String skillID;
+  final String personID;
   final String skillName;
   final String? skillCategory;
   final String proficiencyLevel;

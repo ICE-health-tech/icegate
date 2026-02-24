@@ -9,8 +9,8 @@ abstract class UserAccountProtocol with _$UserAccountProtocol {
   const UserAccountProtocol._();
 
   const factory UserAccountProtocol({
-    required int accountID,
-    required int personID,
+    required String accountID,
+    required String personID,
     required String username,
     String? primaryEmail,
     @Default('user') String role,
@@ -19,8 +19,8 @@ abstract class UserAccountProtocol with _$UserAccountProtocol {
   }) = _UserAccountProtocol;
 
   factory UserAccountProtocol.create({
-    int? accountID,
-    required int personID,
+    String? accountID,
+    required String personID,
     required String username,
     String? primaryEmail,
     String role = 'user',
@@ -28,7 +28,7 @@ abstract class UserAccountProtocol with _$UserAccountProtocol {
     DateTime? lastLoginAt,
   }) {
     return UserAccountProtocol(
-      accountID: accountID ?? IDGen.generate(),
+      accountID: accountID ?? IDGen.generateUuid(),
       personID: personID,
       username: username,
       primaryEmail: primaryEmail,

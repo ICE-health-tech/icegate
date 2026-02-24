@@ -23,8 +23,7 @@ class ExternalDragWidget extends StatefulWidget {
   final int index;
   final WidgetManagerBlock store;
 
-  late ExternalWidgetsDAO widgetDAO;
-  ExternalDragWidget({super.key, required this.index, required this.store});
+  const ExternalDragWidget({super.key, required this.index, required this.store});
 
   @override
   State<ExternalDragWidget> createState() => _ExternalDragWidgetState();
@@ -32,11 +31,12 @@ class ExternalDragWidget extends StatefulWidget {
 
 class _ExternalDragWidgetState extends State<ExternalDragWidget> {
   bool isHovering = false;
+  late ExternalWidgetsDAO _widgetDAO;
 
   @override
   Widget build(BuildContext context) {
     // 1. Added the DAO access here as requested
-    widget.widgetDAO = context.read<ExternalWidgetsDAO>();
+    _widgetDAO = context.read<ExternalWidgetsDAO>();
 
     // OBSERVER: Rebuilds specific cell if its specific data changes
     return Watch((context) {
@@ -76,7 +76,7 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
               url: incomingData.url,
             );
             // TODO: You can use 'dao' here to persist the new item
-            widget.widgetDAO.insertNewWidget(
+            _widgetDAO.insertNewWidget(
               externalWidgetProtocol: externalWidgetProtocol,
             );
           }

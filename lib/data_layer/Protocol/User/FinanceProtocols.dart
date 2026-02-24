@@ -1,6 +1,6 @@
 class FinancialAccountProtocol {
-  final int financialAccountID;
-  final int personID;
+  final String financialAccountID;
+  final String personID;
   final String accountName;
   final String accountType;
   final double balance;
@@ -21,8 +21,8 @@ class FinancialAccountProtocol {
 }
 
 class AssetProtocol {
-  final int id;
-  final int personId;
+  final String id;
+  final String personId;
   final String assetName;
   final String assetCategory;
   final DateTime? purchaseDate;

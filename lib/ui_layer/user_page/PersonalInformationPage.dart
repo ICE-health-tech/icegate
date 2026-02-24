@@ -9,6 +9,7 @@ import 'package:signals/signals_flutter.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({super.key});
@@ -50,6 +51,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
   bool _isEditing = false;
   bool _isSaving = false;
+  bool _isUploadingAvatar = false;
+  bool _isUploadingCover = false;
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   // late PersonManagementDAO personManagementDAO; // Unused
@@ -171,6 +174,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       // Simulate save delay
       await Future.delayed(Duration(seconds: 1));
 
+      if (!mounted) return;
       setState(() {
         _isSaving = false;
         _isEditing = false;
@@ -191,10 +195,111 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         );
       }
     } catch (e) {
+      if (!mounted) return;
       setState(() {
         _isSaving = false;
       });
       // ... error handling
+    }
+  }
+
+  Future<void> _uploadAvatar() async {
+    final objectBlock = context.read<ObjectDatabaseBlock>();
+    final token = _authBlock.jwt.value;
+    final String? userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (token == null || token.isEmpty || userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error: Not authenticated')));
+      return;
+    }
+
+    setState(() => _isUploadingAvatar = true);
+
+    try {
+      final success = await objectBlock.pickAndUploadAvatar(
+        userId: userId,
+        token: token,
+      );
+
+      if (mounted) {
+        if (!mounted) return;
+        setState(() => _isUploadingAvatar = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? 'Avatar updated!' : 'Avatar upload cancelled',
+            ),
+            backgroundColor: success ? Colors.green : Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        if (!mounted) return;
+        setState(() => _isUploadingAvatar = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadCover() async {
+    final objectBlock = context.read<ObjectDatabaseBlock>();
+    final token = _authBlock.jwt.value;
+    final String? userId = Supabase.instance.client.auth.currentUser?.id;
+
+    if (token == null || token.isEmpty || userId == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error: Not authenticated')));
+      return;
+    }
+
+    setState(() => _isUploadingCover = true);
+
+    try {
+      final success = await objectBlock.pickAndUploadCover(
+        userId: userId,
+        token: token,
+      );
+
+      if (mounted) {
+        if (!mounted) return;
+        setState(() => _isUploadingCover = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              success ? 'Cover updated!' : 'Cover upload cancelled',
+            ),
+            backgroundColor: success ? Colors.green : Colors.orange,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        if (!mounted) return;
+        setState(() => _isUploadingCover = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Upload failed: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
@@ -316,7 +421,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       // Skills Section (Horizontal Scroll/Wrap)
                       _buildSectionHeader(
                         context,
-                        'Core Expertise',
+                        'Skills',
                         Icons.auto_awesome_rounded,
                       ),
                       const SizedBox(height: 12),
@@ -476,7 +581,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Deactivate Session',
+                                'Logout',
                                 style: TextStyle(
                                   color: colorScheme.error,
                                   fontWeight: FontWeight.bold,
@@ -512,44 +617,107 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       child: Stack(
         children: [
           // Background Gradient / Cover
-          Container(
-            height: 190,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.secondary,
-                  colorScheme.tertiary,
+          GestureDetector(
+            onTap: _isEditing ? _uploadCover : null,
+            child: Container(
+              height: 190,
+              decoration: BoxDecoration(
+                gradient: objectResource.coverImage.isEmpty
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          colorScheme.primary,
+                          colorScheme.secondary,
+                          colorScheme.tertiary,
+                        ],
+                      )
+                    : null,
+                image: objectResource.coverImage.isNotEmpty
+                    ? DecorationImage(
+                        image: NetworkImage(objectResource.coverImage),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
+                borderRadius: const BorderRadius.only(
+                  bottomLeft: Radius.circular(60),
+                ),
+              ),
+              child: Stack(
+                children: [
+                  if (objectResource.coverImage.isEmpty) ...[
+                    Positioned(
+                      top: -50,
+                      right: -50,
+                      child: Container(
+                        width: 200,
+                        height: 100,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                    Positioned.fill(
+                      child: Icon(
+                        Icons.ac_unit_rounded,
+                        size: 100,
+                        color: Colors.white.withOpacity(0.05),
+                      ),
+                    ),
+                  ],
+                  if (_isEditing)
+                    Positioned(
+                      bottom: 12,
+                      right: 16,
+                      child: _isUploadingCover
+                          ? Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black45,
+                                borderRadius: BorderRadius.circular(20),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.camera_alt_rounded,
+                                    color: Colors.white,
+                                    size: 16,
+                                  ),
+                                  SizedBox(width: 4),
+                                  Text(
+                                    'Edit Cover',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                    ),
                 ],
               ),
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(60),
-              ),
-            ),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: -50,
-                  right: -50,
-                  child: Container(
-                    width: 200,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-                Positioned.fill(
-                  child: Icon(
-                    Icons.ac_unit_rounded,
-                    size: 100,
-                    color: Colors.white.withOpacity(0.05),
-                  ),
-                ),
-              ],
             ),
           ),
 
@@ -574,37 +742,51 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       ),
                     ],
                   ),
-                  child: Stack(
-                    children: [
-                      CircleAvatar(
-                        radius: 56,
-                        backgroundColor: colorScheme.primaryContainer,
-                        backgroundImage: objectResource.avatarImage.isNotEmpty
-                            ? NetworkImage(objectResource.avatarImage)
-                            : null,
-                        child: (objectResource.avatarImage.isEmpty)
-                            ? Icon(
-                                Icons.person_rounded,
-                                size: 56,
-                                color: colorScheme.onPrimaryContainer,
-                              )
-                            : null,
-                      ),
-                      if (_isEditing)
-                        Positioned.fill(
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.black38,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.camera_enhance_rounded,
-                              color: Colors.white,
-                              size: 28,
+                  child: GestureDetector(
+                    onTap: _isEditing ? _uploadAvatar : null,
+                    child: Stack(
+                      children: [
+                        CircleAvatar(
+                          radius: 56,
+                          backgroundColor: colorScheme.primaryContainer,
+                          backgroundImage: objectResource.avatarImage.isNotEmpty
+                              ? NetworkImage(objectResource.avatarImage)
+                              : null,
+                          child: (objectResource.avatarImage.isEmpty)
+                              ? Icon(
+                                  Icons.person_rounded,
+                                  size: 56,
+                                  color: colorScheme.onPrimaryContainer,
+                                )
+                              : null,
+                        ),
+                        if (_isEditing)
+                          Positioned.fill(
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Colors.black38,
+                                shape: BoxShape.circle,
+                              ),
+                              child: _isUploadingAvatar
+                                  ? const Center(
+                                      child: SizedBox(
+                                        width: 28,
+                                        height: 28,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2.5,
+                                          color: Colors.white,
+                                        ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.camera_enhance_rounded,
+                                      color: Colors.white,
+                                      size: 28,
+                                    ),
                             ),
                           ),
-                        ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 12),

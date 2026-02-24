@@ -35,7 +35,6 @@ class OSMMapWidget extends StatefulWidget {
 class _OSMMapWidgetState extends State<OSMMapWidget> {
   late MapController _mapController;
   String _selectedTileServer = OSMTileServer.standard;
-  final bool _showTraffic = false;
 
   @override
   void initState() {

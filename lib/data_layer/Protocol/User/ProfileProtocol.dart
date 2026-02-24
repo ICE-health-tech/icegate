@@ -9,8 +9,8 @@ abstract class ProfileProtocol with _$ProfileProtocol {
   // ProfileProtocol._();
 
   factory ProfileProtocol({
-    required int profileID,
-    required int personID,
+    required String profileID,
+    required String personID,
     String? bio,
     String? occupation,
     String? educationLevel,
@@ -21,8 +21,8 @@ abstract class ProfileProtocol with _$ProfileProtocol {
   }) = _ProfileProtocol;
 
   factory ProfileProtocol.create({
-    int? profileID,
-    required int personID,
+    String? profileID,
+    required String personID,
     String? bio,
     String? occupation,
     String? educationLevel,
@@ -32,7 +32,7 @@ abstract class ProfileProtocol with _$ProfileProtocol {
     String? githubUrl,
   }) {
     return ProfileProtocol(
-      profileID: profileID ?? IDGen.generate(),
+      profileID: profileID ?? IDGen.generateUuid(),
       personID: personID,
       bio: bio,
       occupation: occupation,

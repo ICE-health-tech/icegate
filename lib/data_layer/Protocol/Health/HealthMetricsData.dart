@@ -253,6 +253,7 @@ class HealthMetricsData {
   }
 
   static Future<Map<String, HealthMetric>> getMetricsByDay(
+    String personId,
     DateTime day,
     BuildContext context,
   ) async {
@@ -261,8 +262,12 @@ class HealthMetricsData {
     final healthMetricsDAO = context.read<HealthMetricsDAO>();
 
     // 2. Fetch data from the database
-    final metricsLocal = await healthMetricsDAO.getMetricsForDate(1, day);
+    final metricsLocal = await healthMetricsDAO.getMetricsForDate(
+      personId,
+      day,
+    );
     double calories = 0;
+    print("Day that get fetch calories for: " + day.toString());
     try {
       calories = await healthMealDAO.getCaloriesByDate(day);
     } catch (e) {
@@ -272,7 +277,7 @@ class HealthMetricsData {
     // 3. Fetch yesterday's data for trend comparison
     final yesterday = day.subtract(const Duration(days: 1));
     final yesterdayMetrics = await healthMetricsDAO.getMetricsForDate(
-      1,
+      personId,
       yesterday,
     );
     double yesterdayCalories = 0;
@@ -305,7 +310,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: 1,
+                personID: personId,
                 date: day,
                 steps: Value(liveSteps),
                 updatedAt: Value(DateTime.now()),
@@ -328,7 +333,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: 1,
+                personID: personId,
                 date: day,
                 sleepHours: Value(liveSleep),
                 updatedAt: Value(DateTime.now()),
@@ -351,7 +356,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: 1,
+                personID: personId,
                 date: day,
                 heartRate: Value(liveHeartRate),
                 updatedAt: Value(DateTime.now()),

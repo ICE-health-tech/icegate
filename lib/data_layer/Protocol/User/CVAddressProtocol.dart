@@ -7,8 +7,8 @@ part 'CVAddressProtocol.g.dart';
 @freezed
 abstract class CVAddressProtocol with _$CVAddressProtocol {
   const factory CVAddressProtocol({
-    required int cvAddressID,
-    required int personID,
+    required String cvAddressID,
+    required String personID,
     String? githubUrl,
     String? websiteUrl,
     String? company,
@@ -22,8 +22,8 @@ abstract class CVAddressProtocol with _$CVAddressProtocol {
   }) = _CVAddressProtocol;
 
   factory CVAddressProtocol.create({
-    int? cvAddressID,
-    required int personID,
+    String? cvAddressID,
+    required String personID,
     String? githubUrl,
     String? websiteUrl,
     String? company,
@@ -36,7 +36,7 @@ abstract class CVAddressProtocol with _$CVAddressProtocol {
     String? linkedinUrl,
   }) {
     return CVAddressProtocol(
-      cvAddressID: cvAddressID ?? IDGen.generate(),
+      cvAddressID: cvAddressID ?? IDGen.generateUuid(),
       personID: personID,
       githubUrl: githubUrl,
       websiteUrl: websiteUrl,

@@ -9,7 +9,7 @@ abstract class PersonProtocol with _$PersonProtocol {
   // PersonProtocol.();
 
   const factory PersonProtocol({
-    required int personID,
+    required String personID,
     required String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -20,7 +20,7 @@ abstract class PersonProtocol with _$PersonProtocol {
   }) = _PersonProtocol;
 
   factory PersonProtocol.create({
-    int? personID,
+    String? personID,
     required String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -30,7 +30,7 @@ abstract class PersonProtocol with _$PersonProtocol {
     bool isActive = true,
   }) {
     return PersonProtocol(
-      personID: personID ?? IDGen.generate(),
+      personID: personID ?? IDGen.generateUuid(),
       firstName: firstName,
       lastName: lastName,
       dateOfBirth: dateOfBirth,

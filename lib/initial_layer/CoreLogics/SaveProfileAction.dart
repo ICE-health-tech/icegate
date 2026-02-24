@@ -6,7 +6,7 @@ import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
 
-Future<int> saveProfileAction(
+Future<String> saveProfileAction(
   String name,
   String email,
   String phone,

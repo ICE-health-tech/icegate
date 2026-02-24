@@ -35,14 +35,14 @@ abstract class BasePluginProtocol {
   /// This is the factory method that converts a template into an actual widget instance
   InternalWidgetProtocol createInstance({
     String? customAlias,
-    int? customWidgetID,
+    String? customWidgetID,
   }) {
     return InternalWidgetProtocol(
       name: name,
       url: url,
       imageUrl: imageUrl,
       alias: customAlias ?? name,
-      widgetID: customWidgetID ?? IDGen.generate(),
+      widgetID: customWidgetID ?? IDGen.generateUuid(),
       dateAdded: DateTime.now().toString(),
       description: description,
       icon: icon,

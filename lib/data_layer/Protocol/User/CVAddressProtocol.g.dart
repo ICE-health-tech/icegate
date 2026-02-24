@@ -9,8 +9,8 @@ part of 'CVAddressProtocol.dart';
 _$CVAddressProtocolImpl _$$CVAddressProtocolImplFromJson(
   Map<String, dynamic> json,
 ) => _$CVAddressProtocolImpl(
-  cvAddressID: (json['cvAddressID'] as num).toInt(),
-  personID: (json['personID'] as num).toInt(),
+  cvAddressID: json['cvAddressID'] as String,
+  personID: json['personID'] as String,
   githubUrl: json['githubUrl'] as String?,
   websiteUrl: json['websiteUrl'] as String?,
   company: json['company'] as String?,

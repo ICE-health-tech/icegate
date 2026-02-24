@@ -9,8 +9,8 @@ part of 'ProfileProtocol.dart';
 _$ProfileProtocolImpl _$$ProfileProtocolImplFromJson(
   Map<String, dynamic> json,
 ) => _$ProfileProtocolImpl(
-  profileID: (json['profileID'] as num).toInt(),
-  personID: (json['personID'] as num).toInt(),
+  profileID: json['profileID'] as String,
+  personID: json['personID'] as String,
   bio: json['bio'] as String?,
   occupation: json['occupation'] as String?,
   educationLevel: json['educationLevel'] as String?,

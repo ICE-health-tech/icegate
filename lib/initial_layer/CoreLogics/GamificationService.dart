@@ -16,7 +16,7 @@ class GamificationService {
     this._financeDAO,
   );
 
-  Future<int> calculateTotalPoints(int personID) async {
+  Future<int> calculateTotalPoints(String personID) async {
     // 1. Points from Steps: STEPS_PER_POINT steps = 1 point
     int stepsPoints = 0;
     try {
@@ -96,7 +96,7 @@ class GamificationService {
     return stepsPoints + dietPoints + socialPoints + financePoints;
   }
 
-  Future<Map<String, int>> getPointsBreakdown(int personID) async {
+  Future<Map<String, int>> getPointsBreakdown(String personID) async {
     // 1. Steps
     int stepsPoints = 0;
     try {

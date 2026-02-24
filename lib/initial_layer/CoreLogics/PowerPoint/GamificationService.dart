@@ -7,7 +7,7 @@ class GamificationService {
 
   GamificationService(this._healthMetricsDAO, this._healthMealDAO);
 
-  Future<int> calculateTotalPoints(int personID) async {
+  Future<int> calculateTotalPoints(String personID) async {
     // 1. Points from Steps: 100 steps = 1 point
     int stepsPoints = 0;
     final allMetrics = await _healthMetricsDAO.watchAllMetrics(personID).first;
@@ -49,7 +49,6 @@ class GamificationService {
 
   double getProgressToNextLevel(int points) {
     int currentLevel = getLevel(points);
-    int nextLevelPoints = (currentLevel + 1) * 100;
     int currentLevelPoints = currentLevel * 100;
 
     return (points - currentLevelPoints) / 100;

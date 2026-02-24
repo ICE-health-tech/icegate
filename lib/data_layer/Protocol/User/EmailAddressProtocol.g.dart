@@ -9,8 +9,8 @@ part of 'EmailAddressProtocol.dart';
 _$EmailAddressProtocolImpl _$$EmailAddressProtocolImplFromJson(
   Map<String, dynamic> json,
 ) => _$EmailAddressProtocolImpl(
-  emailAddressID: (json['emailAddressID'] as num).toInt(),
-  personID: (json['personID'] as num).toInt(),
+  emailAddressID: json['emailAddressID'] as String,
+  personID: json['personID'] as String,
   emailAddress: json['emailAddress'] as String,
   emailType: json['emailType'] as String? ?? 'personal',
   isPrimary: json['isPrimary'] as bool? ?? true,

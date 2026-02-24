@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
@@ -52,275 +53,321 @@ class _LoginPageState extends State<LoginPage> {
           status == AuthStatus.checkingSession;
 
       return Scaffold(
+        resizeToAvoidBottomInset: false,
         body: Stack(
           children: [
-            // 1. Premium Background Gradient
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF0F172A), // Deep Midnight
-                    const Color(0xFF1E293B), // Slate
-                    const Color(0xFF0F172A),
-                  ],
+            // 1. Anime Background
+            Positioned.fill(
+              child: Image.asset(
+                'assets/anime_bg.png',
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) => Container(
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Color(0xFF0F172A), Color(0xFF1E293B)],
+                    ),
+                  ),
                 ),
               ),
             ),
 
-            // 2. Animated Glows
-            Positioned(
-              top: -100,
-              right: -50,
-              child: _GlowCircle(
-                color: const Color(0xFF2196F3).withOpacity(0.15),
-                size: 400,
-              ),
-            ),
-            Positioned(
-              bottom: -150,
-              left: -100,
-              child: _GlowCircle(
-                color: const Color(0xFF00BCD4).withOpacity(0.1),
-                size: 500,
+            // 2. Dark Overlay for readability
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withOpacity(0.3),
+                      Colors.black.withOpacity(0.7),
+                    ],
+                  ),
+                ),
               ),
             ),
 
-            // 3. Main Content
+            // 3. Floating Tech Ornaments (HUD Style)
+            Positioned(
+              top: 100,
+              left: -50,
+              child: _CircularHUD(
+                size: 200,
+                color: const Color(0xFF00E5FF).withOpacity(0.1),
+              ),
+            ),
+            Positioned(
+              bottom: 100,
+              right: -50,
+              child: _CircularHUD(
+                size: 250,
+                color: const Color(0xFFFF00E5).withOpacity(0.1),
+              ),
+            ),
+
+            // 4. Main Content
             Center(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    // Glassmorphic Card
-                    Container(
-                      padding: const EdgeInsets.all(32),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(32),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                    // Anime-Style Glass Card
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                        child: Container(
+                          padding: const EdgeInsets.all(32),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(
+                              color: Colors.white.withOpacity(0.15),
+                              width: 1.5,
+                            ),
+                          ),
+                          child: Column(
+                            children: [
+                              // App Icon / Logo with Neon Glow
+                              Container(
+                                padding: const EdgeInsets.all(20),
+                                decoration: BoxDecoration(
+                                  color: const Color(
+                                    0xFF00E5FF,
+                                  ).withOpacity(0.05),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: const Color(
+                                      0xFF00E5FF,
+                                    ).withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF00E5FF,
+                                      ).withOpacity(0.2),
+                                      blurRadius: 40,
+                                      spreadRadius: 2,
+                                    ),
+                                  ],
+                                ),
+                                child: Image.asset(
+                                  'assets/icon/appicon.png',
+                                  width: 70,
+                                  height: 70,
+                                  errorBuilder: (context, error, stackTrace) =>
+                                      const Icon(
+                                        Icons.ac_unit_rounded,
+                                        size: 70,
+                                        color: Color(0xFF00E5FF),
+                                      ),
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+                              Column(
+                                children: [
+                                  const Text(
+                                    'ICE GATE',
+                                    style: TextStyle(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 4.0,
+                                      color: Colors.white,
+                                      shadows: [
+                                        Shadow(
+                                          color: Color(0xFF00E5FF),
+                                          blurRadius: 20,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Text(
+                                    'アイス・ゲート',
+                                    style: TextStyle(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w500,
+                                      color: Colors.white.withOpacity(0.5),
+                                      letterSpacing: 8,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 12),
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Container(
+                                        width: 40,
+                                        height: 1,
+                                        color: const Color(
+                                          0xFF00E5FF,
+                                        ).withOpacity(0.5),
+                                      ),
+                                      const Padding(
+                                        padding: EdgeInsets.symmetric(
+                                          horizontal: 10,
+                                        ),
+                                        child: Text(
+                                          'LIFE GATEWAY',
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            fontWeight: FontWeight.bold,
+                                            letterSpacing: 3.0,
+                                            color: Color(0xFF00E5FF),
+                                          ),
+                                        ),
+                                      ),
+                                      Container(
+                                        width: 40,
+                                        height: 1,
+                                        color: const Color(
+                                          0xFF00E5FF,
+                                        ).withOpacity(0.5),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 40),
+
+                              // Error Display
+                              if (error != null)
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 10,
+                                    horizontal: 16,
+                                  ),
+                                  margin: const EdgeInsets.only(bottom: 24),
+                                  decoration: BoxDecoration(
+                                    color: Colors.redAccent.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(12),
+                                    border: Border.all(
+                                      color: Colors.redAccent.withOpacity(0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      const Icon(
+                                        Icons.error_outline_rounded,
+                                        color: Colors.redAccent,
+                                        size: 18,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          error,
+                                          style: const TextStyle(
+                                            color: Colors.redAccent,
+                                            fontSize: 12,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+
+                              // Form
+                              _buildModernField(
+                                controller: _emailController,
+                                hint: 'COMMANDER IDENT',
+                                icon: Icons.alternate_email_rounded,
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                              const SizedBox(height: 16),
+                              _buildModernField(
+                                controller: _passwordController,
+                                hint: 'ENCRYPTION KEY',
+                                icon: Icons.vpn_key_rounded,
+                                obscureText: true,
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Login Button
+                              Container(
+                                width: double.infinity,
+                                height: 60,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF00E5FF,
+                                      ).withOpacity(0.3),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
+                                    ),
+                                  ],
+                                ),
+                                child: ElevatedButton(
+                                  key: const ValueKey('login_btn'),
+                                  onPressed: isLoading ? null : _handleLogin,
+                                  style:
+                                      ElevatedButton.styleFrom(
+                                        backgroundColor: const Color(
+                                          0xFF00E5FF,
+                                        ),
+                                        foregroundColor: Colors.black,
+                                        elevation: 0,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            20,
+                                          ),
+                                        ),
+                                      ).copyWith(
+                                        overlayColor: WidgetStateProperty.all(
+                                          Colors.white30,
+                                        ),
+                                      ),
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          height: 24,
+                                          width: 24,
+                                          child: CircularProgressIndicator(
+                                            color: Colors.black,
+                                            strokeWidth: 3,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'INITIATE LINK',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w900,
+                                            letterSpacing: 2.0,
+                                          ),
+                                        ),
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+
+                              // Auth Alternatives
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _buildIconButton(
+                                      icon: Icons.fingerprint_rounded,
+                                      onPressed: isLoading
+                                          ? null
+                                          : _handlePasskeyLogin,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _buildIconButton(
+                                      icon: Icons.g_mobiledata_rounded,
+                                      onPressed: isLoading
+                                          ? null
+                                          : _handleGoogleSignIn,
+                                      isGmail: true,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      child: Column(
-                        children: [
-                          // App Icon / Logo
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.blue.withOpacity(0.2),
-                                  blurRadius: 30,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                            child: Image.asset(
-                              'assets/icon/appicon.png',
-                              width: 80,
-                              height: 80,
-                              errorBuilder: (context, error, stackTrace) =>
-                                  const Icon(
-                                    Icons.ac_unit_rounded,
-                                    size: 80,
-                                    color: Color(0xFF2196F3),
-                                  ),
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          const Text(
-                            'ICE GATE',
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 2.0,
-                              color: Colors.white,
-                            ),
-                          ),
-                          const Text(
-                            'LIFE GATEWAY',
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 4.0,
-                              color: Color(0xFF2196F3),
-                            ),
-                          ),
-                          const SizedBox(height: 48),
-
-                          // Error Display
-                          if (error != null)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 8,
-                                horizontal: 16,
-                              ),
-                              margin: const EdgeInsets.only(bottom: 24),
-                              decoration: BoxDecoration(
-                                color: Colors.redAccent.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: Colors.redAccent.withOpacity(0.2),
-                                ),
-                              ),
-                              child: Text(
-                                error,
-                                style: const TextStyle(
-                                  color: Colors.redAccent,
-                                  fontSize: 13,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-
-                          // Form
-                          _buildModernField(
-                            controller: _emailController,
-                            hint: 'Operational Email',
-                            icon: Icons.alternate_email_rounded,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildModernField(
-                            controller: _passwordController,
-                            hint: 'Access Matrix',
-                            icon: Icons.lock_outline_rounded,
-                            obscureText: true,
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Login Button
-                          SizedBox(
-                            width: double.infinity,
-                            height: 60,
-                            child: ElevatedButton(
-                              key: const ValueKey('login_btn'),
-                              onPressed: isLoading ? null : _handleLogin,
-                              style:
-                                  ElevatedButton.styleFrom(
-                                    backgroundColor: const Color(0xFF2196F3),
-                                    foregroundColor: Colors.white,
-                                    elevation: 0,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(20),
-                                    ),
-                                    shadowColor: Colors.blue.withOpacity(0.5),
-                                  ).copyWith(
-                                    elevation: WidgetStateProperty.resolveWith(
-                                      (states) => 10,
-                                    ),
-                                  ),
-                              child: isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.white,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'AUTHORIZE ACCESS',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.0,
-                                      ),
-                                    ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Passkey Option
-                          SizedBox(
-                            width: double.infinity,
-                            height: 60,
-                            child: OutlinedButton.icon(
-                              key: const ValueKey('passkey_btn'),
-                              onPressed: isLoading ? null : _handlePasskeyLogin,
-                              icon: const Icon(
-                                Icons.fingerprint_rounded,
-                                size: 24,
-                              ),
-                              label: const Text(
-                                'USE BIOMETRIC PASSKEY',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
-                                ),
-                              ),
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: Colors.white,
-                                side: BorderSide(
-                                  color: Colors.white.withOpacity(0.2),
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          SizedBox(
-                            width: double.infinity,
-                            height: 60,
-                            child: ElevatedButton.icon(
-                              onPressed: isLoading ? null : _handleGoogleSignIn,
-                              icon: isLoading
-                                  ? const SizedBox.shrink()
-                                  : Container(
-                                      padding: const EdgeInsets.all(4),
-                                      decoration: const BoxDecoration(
-                                        color: Colors.white,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      child: Image.network(
-                                        'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
-                                        width: 20,
-                                        height: 20,
-                                        errorBuilder:
-                                            (context, error, stackTrace) =>
-                                                const Icon(
-                                                  Icons.login_rounded,
-                                                  size: 18,
-                                                  color: Colors.blueAccent,
-                                                ),
-                                      ),
-                                    ),
-                              label: isLoading
-                                  ? const SizedBox(
-                                      height: 24,
-                                      width: 24,
-                                      child: CircularProgressIndicator(
-                                        color: Colors.blueAccent,
-                                        strokeWidth: 2,
-                                      ),
-                                    )
-                                  : const Text(
-                                      'CONTINUE WITH GOOGLE',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                      ),
-                                    ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.white,
-                                foregroundColor: Colors.black87,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(20),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ),
 
@@ -335,17 +382,19 @@ class _LoginPageState extends State<LoginPage> {
                           child: Text(
                             'GUEST ACCESS',
                             style: TextStyle(
-                              color: Colors.white.withOpacity(0.6),
+                              color: Colors.white.withOpacity(0.4),
                               fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                              letterSpacing: 1.0,
+                              fontSize: 11,
+                              letterSpacing: 2.0,
                             ),
                           ),
                         ),
-                        Text(
-                          '|',
-                          style: TextStyle(
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: BoxDecoration(
                             color: Colors.white.withOpacity(0.2),
+                            shape: BoxShape.circle,
                           ),
                         ),
                         TextButton(
@@ -353,10 +402,10 @@ class _LoginPageState extends State<LoginPage> {
                           child: const Text(
                             'ENROLL HUB',
                             style: TextStyle(
-                              color: Color(0xFF2196F3),
+                              color: Color(0xFF00E5FF),
                               fontWeight: FontWeight.w900,
-                              fontSize: 12,
-                              letterSpacing: 1.0,
+                              fontSize: 11,
+                              letterSpacing: 2.0,
                             ),
                           ),
                         ),
@@ -372,6 +421,29 @@ class _LoginPageState extends State<LoginPage> {
     });
   }
 
+  Widget _buildIconButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    bool isGmail = false,
+  }) {
+    return Container(
+      height: 55,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: IconButton(
+        onPressed: onPressed,
+        icon: Icon(
+          icon,
+          color: isGmail ? Colors.white : const Color(0xFF00E5FF),
+          size: isGmail ? 32 : 28,
+        ),
+      ),
+    );
+  }
+
   Widget _buildModernField({
     required TextEditingController controller,
     required String hint,
@@ -383,31 +455,37 @@ class _LoginPageState extends State<LoginPage> {
       controller: controller,
       obscureText: obscureText,
       keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500),
+      style: const TextStyle(
+        color: Colors.white,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 1.2,
+      ),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.3),
-          fontSize: 14,
+          color: Colors.white.withOpacity(0.2),
+          fontSize: 12,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.5,
         ),
-        prefixIcon: Icon(icon, size: 20, color: Colors.white.withOpacity(0.5)),
+        prefixIcon: Icon(icon, size: 18, color: const Color(0xFF00E5FF)),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.05),
+        fillColor: Colors.black.withOpacity(0.2),
         contentPadding: const EdgeInsets.symmetric(
-          vertical: 20,
+          vertical: 18,
           horizontal: 20,
         ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(20),
-          borderSide: const BorderSide(color: Color(0xFF2196F3), width: 2),
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFF00E5FF), width: 1.5),
         ),
       ),
     );
@@ -451,10 +529,10 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-class _GlowCircle extends StatelessWidget {
+class _CircularHUD extends StatelessWidget {
   final Color color;
   final double size;
-  const _GlowCircle({required this.color, required this.size});
+  const _CircularHUD({required this.color, required this.size});
 
   @override
   Widget build(BuildContext context) {
@@ -463,7 +541,44 @@ class _GlowCircle extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        boxShadow: [BoxShadow(color: color, blurRadius: 100, spreadRadius: 10)],
+        border: Border.all(color: color.withOpacity(0.5), width: 1),
+      ),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: size * 0.8,
+            height: size * 0.8,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.2), width: 2),
+            ),
+          ),
+          Container(
+            width: size * 0.6,
+            height: size * 0.6,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              border: Border.all(color: color.withOpacity(0.1), width: 8),
+            ),
+          ),
+          // Small dots or accents
+          for (int i = 0; i < 4; i++)
+            Transform.rotate(
+              angle: i * (3.14159 / 2),
+              child: Align(
+                alignment: Alignment.topCenter,
+                child: Container(
+                  width: 4,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }

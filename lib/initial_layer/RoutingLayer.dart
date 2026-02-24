@@ -34,16 +34,11 @@ class _adapterState extends State<Adapter> {
     final externalDao = appDatabase.externalWidgetsDAO;
     final themeDao = appDatabase.themeDAO;
 
+    // Load the saved theme from SharedPreferences (local-only, never synced).
+    final savedTheme = await themeDao.getCurrentTheme();
+    themeStore.loadTheme(savedTheme.themePath);
+
     final existingWidget = await dao.getInternalWidgetByName("WidgetPage");
-    final existingTheme = await themeDao.getCurrentTheme();
-
-    if (existingTheme == null) {
-      await themeDao.insertTheme(
-        themeName: "CurrentTheme",
-        themePath: "assets/SeedBlue.json",
-      );
-    }
-
     if (existingWidget == null) {
       await dao.insertInternalWidget(
         name: "WidgetPage",
@@ -58,9 +53,6 @@ class _adapterState extends State<Adapter> {
         url: "/health",
         alias: "HealthPage",
       );
-      print("DUYLONG routing: $dao");
-    } else {
-      print("Default internal widgets already exist. Skipping insertion.");
     }
 
     internalWidgetBlock.refreshBlock(dao);
@@ -71,18 +63,9 @@ class _adapterState extends State<Adapter> {
   void initState() {
     super.initState();
     appDatabase = context.read<AppDatabase>();
-    _initAsyncDatabaseLink();
     themeStore = context.read<ThemeStore>();
-
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      var currentThemeData = await appDatabase.themeDAO.getCurrentTheme();
-      themeStore.loadTheme(currentThemeData?.themePath ?? "");
-    });
-
-    // AuthBlock is already initialized and checking session in DataLayer.
-    // We just need to ensure it's available in this scope if needed,
-    // but better to read it in build() or where used.
     authBlock = context.read<AuthBlock>();
+    _initAsyncDatabaseLink();
   }
 
   @override

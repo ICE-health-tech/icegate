@@ -21,7 +21,7 @@ PersonProtocol _$PersonProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PersonProtocol {
-  int get personID => throw _privateConstructorUsedError;
+  String get personID => throw _privateConstructorUsedError;
   String get firstName => throw _privateConstructorUsedError;
   String? get lastName => throw _privateConstructorUsedError;
   DateTime? get dateOfBirth => throw _privateConstructorUsedError;
@@ -48,7 +48,7 @@ abstract class $PersonProtocolCopyWith<$Res> {
   ) = _$PersonProtocolCopyWithImpl<$Res, PersonProtocol>;
   @useResult
   $Res call({
-    int personID,
+    String personID,
     String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -88,7 +88,7 @@ class _$PersonProtocolCopyWithImpl<$Res, $Val extends PersonProtocol>
             personID: null == personID
                 ? _value.personID
                 : personID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             firstName: null == firstName
                 ? _value.firstName
                 : firstName // ignore: cast_nullable_to_non_nullable
@@ -133,7 +133,7 @@ abstract class _$$PersonProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int personID,
+    String personID,
     String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -172,7 +172,7 @@ class __$$PersonProtocolImplCopyWithImpl<$Res>
         personID: null == personID
             ? _value.personID
             : personID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         firstName: null == firstName
             ? _value.firstName
             : firstName // ignore: cast_nullable_to_non_nullable
@@ -224,7 +224,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
       _$$PersonProtocolImplFromJson(json);
 
   @override
-  final int personID;
+  final String personID;
   @override
   final String firstName;
   @override
@@ -301,7 +301,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
 
 abstract class _PersonProtocol implements PersonProtocol {
   const factory _PersonProtocol({
-    required final int personID,
+    required final String personID,
     required final String firstName,
     final String? lastName,
     final DateTime? dateOfBirth,
@@ -315,7 +315,7 @@ abstract class _PersonProtocol implements PersonProtocol {
       _$PersonProtocolImpl.fromJson;
 
   @override
-  int get personID;
+  String get personID;
   @override
   String get firstName;
   @override

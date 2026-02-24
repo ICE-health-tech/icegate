@@ -19,7 +19,7 @@ class FocusSessionState {
   final int remainingSeconds;
   final int totalDuration;
   final FocusStatus status;
-  final int? currentProjectId;
+  final String? currentProjectId;
   final String? notes;
 
   const FocusSessionState({
@@ -40,8 +40,9 @@ class FocusBlock {
   final FocusSessionsDAO _focusSessionDao;
   final HealthLogsDAO _healthLogsDao;
   final HealthMetricsDAO _healthMetricsDao;
-  int _currentPersonId;
-  set personId(int id) => _currentPersonId = id;
+  String _currentPersonId;
+  String get currentPersonId => _currentPersonId;
+  set personId(String id) => _currentPersonId = id;
   final LocalNotificationService? _notificationService;
 
   // Configuration (Defaults)
@@ -60,8 +61,8 @@ class FocusBlock {
   final currentSessionType = signal<String>(
     'Focus',
   ); // Focus, Short Break, Long Break
-  final selectedProjectId = signal<int?>(null);
-  final selectedTaskId = signal<int?>(null);
+  final selectedProjectId = signal<String?>(null);
+  final selectedTaskId = signal<String?>(null);
   final sessionNotes = signal<String>('');
   final showSummary = signal<bool>(false);
 
@@ -105,7 +106,7 @@ class FocusBlock {
     required FocusSessionsDAO focusSessionDao,
     required HealthLogsDAO healthLogsDao,
     required HealthMetricsDAO healthMetricsDao,
-    required int personId,
+    required String personId,
     FocusAudioHandler? audioHandler,
     LocalNotificationService? notificationService,
   }) : _focusSessionDao = focusSessionDao,
@@ -121,6 +122,10 @@ class FocusBlock {
 
   // --- Initialization ---
   Future<void> init() async {
+    if (_currentPersonId.isEmpty) {
+      print("FocusBlock: Skipping init, personId is empty.");
+      return;
+    }
     print(
       "FocusBlock Checking: init called. AudioHandler is ${_audioHandler != null ? 'PRESENT' : 'NULL'}",
     );
@@ -436,7 +441,7 @@ class FocusBlock {
       case 'Default':
       default:
         // Use a remote URL because local assets are corrupted (0 bytes)
-        return 'sounds/forest_stream';
+        return 'sounds/default_theme.mp3';
     }
   }
 
@@ -469,7 +474,10 @@ class FocusBlock {
     );
   }
 
-  Future<void> finishAndSaveSession(String finalNotes) async {
+  Future<void> finishAndSaveSession(
+    String finalNotes, {
+    bool markTaskDone = false,
+  }) async {
     sessionNotes.value = finalNotes;
     await _saveSession(status: 'completed');
 
@@ -479,12 +487,17 @@ class FocusBlock {
       totalStudyTimeToday.value += duration;
       sessionsCompletedToday.value++;
 
-      // Automation - Complete task and increase points
-      if (selectedTaskId.value != null && growthBlock != null) {
-        await growthBlock!.completeGoalByIntId(
+      // Automation - Only complete task if explicitly requested
+      if (markTaskDone && selectedTaskId.value != null && growthBlock != null) {
+        await growthBlock!.completeGoalByGoalId(
           selectedTaskId.value!,
           scoreBlock: scoreBlock,
         );
+      }
+
+      // We keep the selectedTaskId so they can run another session on the same task,
+      // UNLESS they explicitly marked it as done.
+      if (markTaskDone) {
         selectedTaskId.value = null;
       }
     }
@@ -560,12 +573,12 @@ class FocusBlock {
     isCustomSoundLocal.value = false;
   }
 
-  void setProject(int? projectId) {
+  void setProject(String? projectId) {
     selectedProjectId.value = projectId;
     selectedTaskId.value = null; // Reset task when project changes
   }
 
-  void setTask(int? taskId) {
+  void setTask(String? taskId) {
     selectedTaskId.value = taskId;
   }
 
@@ -594,6 +607,7 @@ class FocusBlock {
   // --- Database Actions ---
 
   Future<void> _saveSession({required String status}) async {
+    if (_currentPersonId.isEmpty) return;
     if (_startTime == null) return;
 
     final duration =
@@ -655,6 +669,7 @@ class FocusBlock {
   }
 
   Future<void> fetchDailyStats() async {
+    if (_currentPersonId.isEmpty) return;
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final todayEnd = todayStart.add(const Duration(days: 1));

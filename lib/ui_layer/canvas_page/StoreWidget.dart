@@ -37,7 +37,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'facebook',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 101,
+        widgetID: '101',
         score: 10,
       ),
       InternalWidgetDragProtocol.item(
@@ -47,7 +47,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'instagram',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 102,
+        widgetID: '102',
         score: 10,
       ),
       InternalWidgetDragProtocol.item(
@@ -57,7 +57,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'phone',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 103,
+        widgetID: '103',
         score: 5,
       ),
       InternalWidgetDragProtocol.item(
@@ -67,7 +67,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'messages',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 104,
+        widgetID: '104',
         score: 50,
       ),
       InternalWidgetDragProtocol.item(
@@ -77,7 +77,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'mail',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 105,
+        widgetID: '105',
         score: 20,
       ),
       InternalWidgetDragProtocol.item(
@@ -87,7 +87,7 @@ class StoreWidget extends StatelessWidget {
         imageUrl: '',
         alias: 'youtube',
         dateAdded: DateTime.now().toIso8601String(),
-        widgetID: 105,
+        widgetID: "105",
         score: 20,
       ),
     ];
@@ -102,7 +102,7 @@ class StoreWidget extends StatelessWidget {
       imageUrl: "${data.protocol}://${data.host}${data.url}",
       alias: 'plugin',
       dateAdded: DateTime.now().toIso8601String(),
-      widgetID: int.tryParse(data.widgetID.toString()) ?? 0,
+      widgetID: data.widgetID ?? '',
       score: 5,
       isTarget: false,
     );

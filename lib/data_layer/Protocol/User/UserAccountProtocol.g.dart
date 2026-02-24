@@ -9,8 +9,8 @@ part of 'UserAccountProtocol.dart';
 _$UserAccountProtocolImpl _$$UserAccountProtocolImplFromJson(
   Map<String, dynamic> json,
 ) => _$UserAccountProtocolImpl(
-  accountID: (json['accountID'] as num).toInt(),
-  personID: (json['personID'] as num).toInt(),
+  accountID: json['accountID'] as String,
+  personID: json['personID'] as String,
   username: json['username'] as String,
   primaryEmail: json['primaryEmail'] as String?,
   role: json['role'] as String? ?? 'user',

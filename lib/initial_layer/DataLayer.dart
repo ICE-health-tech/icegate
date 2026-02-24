@@ -205,33 +205,33 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       healthMetricsDAO = database.healthMetricsDAO;
 
       healthBlock = HealthBlock(
-        personId: 1,
+        personId: "",
         healthDao: database.healthMetricsDAO,
         healthLogsDao: database.healthLogsDAO,
       );
       growthBlock = GrowthBlock();
-      growthBlock.init(database.growthDAO, 1);
+      growthBlock.init(database.growthDAO, "");
       scoreBlock = ScoreBlock();
       projectBlock = ProjectBlock();
-      projectBlock.init(database.projectsDAO, 1);
+      projectBlock.init(database.projectsDAO, "");
 
       internalWidgetBlock = InternalWidgetBlock();
       externalWidgetBlock = ExternalWidgetBlock();
 
       financeBlock = FinanceBlock();
-      financeBlock.init(database.financeDAO, 1);
+      financeBlock.init(database.financeDAO, "");
 
       contentBlock = ContentBlock();
-      contentBlock.init(database.contentDAO, 1);
+      contentBlock.init(database.contentDAO, "");
 
       widgetSettingsBlock = WidgetSettingsBlock();
-      widgetSettingsBlock.init(database.widgetDAO, 1);
+      widgetSettingsBlock.init(database.widgetDAO, "");
 
       focusBlock = FocusBlock(
         focusSessionDao: database.focusSessionsDAO,
         healthLogsDao: database.healthLogsDAO,
         healthMetricsDao: database.healthMetricsDAO,
-        personId: 1,
+        personId: "",
         audioHandler: audioHandler,
         notificationService: notificationService,
       );
@@ -247,7 +247,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         database.financeDAO,
         database.healthMetricsDAO,
         database.healthMealDAO,
-        1, // Initial fallback
+        "", // Initial fallback
       );
       print("DUYLONG: personBlock: $personBlock");
       // --- NEW: Dynamic Person ID Re-initialization ---
@@ -257,7 +257,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           final profile = personBlock.information.value.profiles;
           final personId = profile.id;
 
-          if (personId != null && personId != 0) {
+          if (personId != null && personId.isNotEmpty) {
             untracked(() {
               print(
                 "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",

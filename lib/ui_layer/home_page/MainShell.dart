@@ -24,7 +24,7 @@ class MainShell extends StatelessWidget {
     // final height = MediaQuery.of(context).size.height;
     // final cross = sqrt(width * width + height * height);
 
-    final double responsiveSize = (width * 0.18).clamp(56.0, 70.0);
+    final double responsiveSize = (width * 0.19).clamp(56.0, 90.0);
 
     // print("Current route: $route");
     // Determine which page's icon to show based on the route
@@ -84,6 +84,8 @@ class MainShell extends StatelessWidget {
       case '/project_notes':
         pageIcon = ProjectsPage.icon(context, size: responsiveSize);
         break;
+      case '/health/focus':
+        return const SizedBox.shrink();
       default:
         // Default to home icon
         pageIcon = HomePage.returnHomeIcon(context, size: responsiveSize);
@@ -102,7 +104,6 @@ class MainShell extends StatelessWidget {
     final currentRoute = GoRouterState.of(context).uri.path;
 
     final bool shouldHideAppBar =
-        currentRoute == '/projects/focus' ||
         currentRoute == '/health/focus' ||
         currentRoute == '/notifications' ||
         currentRoute == '/personal-info' ||
@@ -114,7 +115,7 @@ class MainShell extends StatelessWidget {
     return Scaffold(
       // --- DYNAMIC BODY (Changes based on route) ---
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 20.0, top: 10),
+        padding: const EdgeInsets.only(bottom: 20.0, top: 5),
         child: _getMainButtonForRoute(context, currentRoute),
       ),
 
@@ -128,7 +129,7 @@ class MainShell extends StatelessWidget {
               right: 0,
               child: SafeArea(
                 child: SizedBox(
-                  height: 70, // Match AppBar toolbarHeight after user change
+                  height: 80, // Match AppBar toolbarHeight after user change
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: Align(

@@ -4,8 +4,8 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 // --- Interfaces for State ---
 class UserDetails {
-  final int? informationId;
-  final int? identityId;
+  final String? informationId;
+  final String? identityId;
   final String githubUrl;
   final String websiteUrl;
   final String company;
@@ -36,8 +36,9 @@ class UserDetails {
 
   factory UserDetails.fromJson(Map<String, dynamic> json) {
     return UserDetails(
-      informationId: json['information_id'] as int?, // Assuming exact key match
-      identityId: json['identity_id'] as int?, // Check backend structure
+      informationId:
+          json['information_id'] as String?, // Assuming exact key match
+      identityId: json['identity_id'] as String?, // Check backend structure
       githubUrl: json['github_url'] ?? '',
       websiteUrl: json['website_url'] ?? '',
       company: json['company'] ?? '',
@@ -85,7 +86,7 @@ class UserDetails {
 }
 
 class UserProfile {
-  final int? id;
+  final String? id;
   final String firstName;
   final String lastName;
   final int friends;
@@ -105,7 +106,7 @@ class UserProfile {
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
-      id: json['id'],
+      id: json['id'] as String?,
       firstName: json['firstName'] ?? json['first_name'] ?? '',
       lastName: json['lastName'] ?? json['last_name'] ?? '',
       friends: json['friends'] ?? 0,
@@ -146,7 +147,7 @@ class UserAccount {
 }
 
 class SkillType {
-  final int id;
+  final String id;
   final String category;
   final String name;
   final String description;
@@ -160,7 +161,7 @@ class SkillType {
 
   factory SkillType.fromJson(Map<String, dynamic> json) {
     return SkillType(
-      id: json['id'] ?? 0,
+      id: json['id'] as String? ?? '',
       category: json['category'] ?? '',
       name: json['name'] ?? '',
       description: json['description'] ?? '',
@@ -184,6 +185,9 @@ class PersonBlock {
 
   final account = signal<UserAccount>(const UserAccount());
   final skills = signal<List<SkillType>>([]);
+
+  /// Computed signal that returns the current person's ID (UUID string)
+  late final currentPersonID = computed(() => information.value.profiles.id);
 
   PersonBlock({required CustomAuthService authService});
 

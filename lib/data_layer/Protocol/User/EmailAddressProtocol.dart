@@ -7,10 +7,9 @@ part 'EmailAddressProtocol.g.dart';
 
 @freezed
 abstract class EmailAddressProtocol with _$EmailAddressProtocol {
-  
   const factory EmailAddressProtocol({
-    required int emailAddressID,
-    required int personID,
+    required String emailAddressID,
+    required String personID,
     required String emailAddress,
     @Default('personal') String emailType,
     @Default(true) bool isPrimary,
@@ -18,11 +17,9 @@ abstract class EmailAddressProtocol with _$EmailAddressProtocol {
     DateTime? verifiedAt,
   }) = _EmailAddressProtocol;
 
-   
-
-   factory EmailAddressProtocol.create({
-    int? emailAddressID,
-    required int personID,
+  factory EmailAddressProtocol.create({
+    String? emailAddressID,
+    required String personID,
     required String emailAddress,
     String emailType = 'personal',
     bool isPrimary = false,
@@ -30,7 +27,7 @@ abstract class EmailAddressProtocol with _$EmailAddressProtocol {
     DateTime? verifiedAt,
   }) {
     return EmailAddressProtocol(
-      emailAddressID: emailAddressID ?? IDGen.generate(),
+      emailAddressID: emailAddressID ?? IDGen.generateUuid(),
       personID: personID,
       emailAddress: emailAddress,
       emailType: emailType,

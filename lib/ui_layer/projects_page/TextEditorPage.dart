@@ -417,7 +417,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                     );
                     if (confirm == true && context.mounted) {
                       await context.read<ProjectNoteDAO>().deleteNote(
-                        widget.note!.noteID,
+                        widget.note!.noteID!,
                       );
                       if (context.mounted) Navigator.pop(context);
                     }
@@ -842,7 +842,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                             );
                             if (confirm == true && context.mounted) {
                               await context.read<ProjectNoteDAO>().deleteNote(
-                                widget.note!.noteID,
+                                widget.note!.noteID!,
                               );
                               if (context.mounted) Navigator.pop(context);
                             }

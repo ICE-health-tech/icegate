@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
+import 'dart:math';
 import '../UIConstants.dart';
 import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
@@ -119,6 +121,7 @@ class _HomePageState extends State<HomePage> {
   late GrowthBlock growthBlock;
   late HealthBlock healthBlock;
   late ProjectBlock projectBlock;
+  int? _currentQuoteIndex;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
 
@@ -166,15 +169,16 @@ class _HomePageState extends State<HomePage> {
 
       // print("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
       // );
-      HealthMetricsData.getMetricsByDay(DateTime.now(), context).then((
-        newData,
-      ) {
-        if (mounted) {
-          setState(() {
-            healthMetricsData = newData;
-          });
-        }
-      });
+      final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+      HealthMetricsData.getMetricsByDay(personId, DateTime.now(), context).then(
+        (newData) {
+          if (mounted) {
+            setState(() {
+              healthMetricsData = newData;
+            });
+          }
+        },
+      );
     });
   }
 
@@ -1134,7 +1138,7 @@ class _HomePageState extends State<HomePage> {
                 HapticFeedback.heavyImpact();
                 externalWidgetBlock.deleteWidget(
                   database.externalWidgetsDAO,
-                  data.widgetID ?? 0,
+                  data.id,
                 );
               },
               child: Container(
@@ -1227,7 +1231,7 @@ class _HomePageState extends State<HomePage> {
               if (controller.text.isNotEmpty) {
                 externalWidgetBlock.renameWidget(
                   database.externalWidgetsDAO,
-                  data.widgetID ?? 0,
+                  data.id,
                   controller.text,
                 );
                 Navigator.pop(context);
@@ -1252,7 +1256,12 @@ class _HomePageState extends State<HomePage> {
         String? author;
 
         if (activeQuotes.isNotEmpty) {
-          final qData = activeQuotes[DateTime.now().day % activeQuotes.length];
+          // Initialize or keep index within bounds
+          if (_currentQuoteIndex == null ||
+              _currentQuoteIndex! >= activeQuotes.length) {
+            _currentQuoteIndex = DateTime.now().day % activeQuotes.length;
+          }
+          final qData = activeQuotes[_currentQuoteIndex!];
           quote = qData.content;
           author = qData.author;
         } else {
@@ -1264,57 +1273,77 @@ class _HomePageState extends State<HomePage> {
             "Your time is limited, don't waste it living someone else's life.",
             "Design is not just what it looks like and feels like. Design is how it works.",
           ];
-          quote = defaultQuotes[DateTime.now().day % defaultQuotes.length];
+          if (_currentQuoteIndex == null ||
+              _currentQuoteIndex! >= defaultQuotes.length) {
+            _currentQuoteIndex = DateTime.now().day % defaultQuotes.length;
+          }
+          quote = defaultQuotes[_currentQuoteIndex!];
           author = null;
         }
 
-        return Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(2),
-          // decoration: BoxDecoration(
-          //   color: colorScheme.primary.withOpacity(0.05),
-          //   borderRadius: BorderRadius.circular(32),
-          //   border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
-          // ),
-          child: Row(
-            children: [
-              Icon(
-                Icons.format_quote_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: AutoSizeText(
-                  quote,
-                  textAlign: TextAlign.center,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    fontStyle: FontStyle.italic,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+        return InkWell(
+          onTap: () {
+            setState(() {
+              if (activeQuotes.isNotEmpty) {
+                _currentQuoteIndex =
+                    (Random().nextInt(activeQuotes.length)) %
+                    activeQuotes.length;
+              } else {
+                _currentQuoteIndex =
+                    (Random().nextInt(5)) % 5; // fallback length
+              }
+            });
+            HapticFeedback.lightImpact();
+          },
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            // decoration: BoxDecoration(
+            //   color: colorScheme.primary.withOpacity(0.05),
+            //   borderRadius: BorderRadius.circular(32),
+            //   border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+            // ),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.format_quote_rounded,
+                  color: colorScheme.primary.withOpacity(0.5),
+                  size: 18,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: AutoSizeText(
+                    quote,
+                    textAlign: TextAlign.center,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      fontStyle: FontStyle.italic,
+                      color: colorScheme.onSurface.withOpacity(0.8),
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                Icons.format_quote_rounded,
-                color: colorScheme.primary,
-                size: 20,
-              ),
-              if (author != null && author.isNotEmpty) ...[
-                const SizedBox(width: 5),
-                Text(
-                  "- $author",
-                  style: textTheme.bodySmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.primary.withOpacity(0.7),
+                const SizedBox(width: 8),
+                if (author != null && author.isNotEmpty) ...[
+                  Text(
+                    "- $author",
+                    style: textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 10,
+                      color: colorScheme.primary.withOpacity(0.7),
+                    ),
                   ),
+                  const SizedBox(width: 4),
+                ],
+                Icon(
+                  Icons.format_quote_rounded,
+                  color: colorScheme.primary.withOpacity(0.5),
+                  size: 18,
                 ),
               ],
-              const SizedBox(height: 5),
-            ],
+            ),
           ),
         );
       },

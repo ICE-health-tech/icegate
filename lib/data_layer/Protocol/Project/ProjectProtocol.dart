@@ -1,7 +1,7 @@
 class ProjectProtocol {
   final String id;
-  final int projectID;
-  final int personID;
+  final String projectID;
+  final String personID;
   final String name;
   final String? description;
   final String? color;

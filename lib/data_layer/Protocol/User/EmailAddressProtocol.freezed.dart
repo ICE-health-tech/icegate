@@ -21,8 +21,8 @@ EmailAddressProtocol _$EmailAddressProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$EmailAddressProtocol {
-  int get emailAddressID => throw _privateConstructorUsedError;
-  int get personID => throw _privateConstructorUsedError;
+  String get emailAddressID => throw _privateConstructorUsedError;
+  String get personID => throw _privateConstructorUsedError;
   String get emailAddress => throw _privateConstructorUsedError;
   String get emailType => throw _privateConstructorUsedError;
   bool get isPrimary => throw _privateConstructorUsedError;
@@ -47,8 +47,8 @@ abstract class $EmailAddressProtocolCopyWith<$Res> {
   ) = _$EmailAddressProtocolCopyWithImpl<$Res, EmailAddressProtocol>;
   @useResult
   $Res call({
-    int emailAddressID,
-    int personID,
+    String emailAddressID,
+    String personID,
     String emailAddress,
     String emailType,
     bool isPrimary,
@@ -88,11 +88,11 @@ class _$EmailAddressProtocolCopyWithImpl<
             emailAddressID: null == emailAddressID
                 ? _value.emailAddressID
                 : emailAddressID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             personID: null == personID
                 ? _value.personID
                 : personID // ignore: cast_nullable_to_non_nullable
-                      as int,
+                      as String,
             emailAddress: null == emailAddress
                 ? _value.emailAddress
                 : emailAddress // ignore: cast_nullable_to_non_nullable
@@ -129,8 +129,8 @@ abstract class _$$EmailAddressProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    int emailAddressID,
-    int personID,
+    String emailAddressID,
+    String personID,
     String emailAddress,
     String emailType,
     bool isPrimary,
@@ -166,11 +166,11 @@ class __$$EmailAddressProtocolImplCopyWithImpl<$Res>
         emailAddressID: null == emailAddressID
             ? _value.emailAddressID
             : emailAddressID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         personID: null == personID
             ? _value.personID
             : personID // ignore: cast_nullable_to_non_nullable
-                  as int,
+                  as String,
         emailAddress: null == emailAddress
             ? _value.emailAddress
             : emailAddress // ignore: cast_nullable_to_non_nullable
@@ -213,9 +213,9 @@ class _$EmailAddressProtocolImpl implements _EmailAddressProtocol {
       _$$EmailAddressProtocolImplFromJson(json);
 
   @override
-  final int emailAddressID;
+  final String emailAddressID;
   @override
-  final int personID;
+  final String personID;
   @override
   final String emailAddress;
   @override
@@ -288,8 +288,8 @@ class _$EmailAddressProtocolImpl implements _EmailAddressProtocol {
 
 abstract class _EmailAddressProtocol implements EmailAddressProtocol {
   const factory _EmailAddressProtocol({
-    required final int emailAddressID,
-    required final int personID,
+    required final String emailAddressID,
+    required final String personID,
     required final String emailAddress,
     final String emailType,
     final bool isPrimary,
@@ -301,9 +301,9 @@ abstract class _EmailAddressProtocol implements EmailAddressProtocol {
       _$EmailAddressProtocolImpl.fromJson;
 
   @override
-  int get emailAddressID;
+  String get emailAddressID;
   @override
-  int get personID;
+  String get personID;
   @override
   String get emailAddress;
   @override

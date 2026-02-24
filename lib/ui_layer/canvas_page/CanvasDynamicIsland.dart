@@ -145,7 +145,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                   onTap: isFocusRunning
                       ? () {
                           HapticFeedback.mediumImpact();
-                          context.push('/projects/focus');
+                          context.push('/health/focus');
                         }
                       : null,
                   child: Center(
@@ -209,6 +209,26 @@ class CanvasDynamicIsland extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
+                // Focus Shortcut
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    context.push('/health/focus');
+                  },
+                  child: Container(
+                    padding: EdgeInsets.all(4 * scalingFactor),
+                    decoration: const BoxDecoration(
+                      color: Colors.transparent,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.timer_outlined,
+                      color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                      size: 22 * scalingFactor,
+                    ),
+                  ),
+                ),
+                SizedBox(width: 4 * scalingFactor),
                 // Notifications
                 GestureDetector(
                   onTap: () {

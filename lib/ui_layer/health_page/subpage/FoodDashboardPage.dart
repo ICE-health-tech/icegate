@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class FoodDashboardPage extends StatefulWidget {
   const FoodDashboardPage({super.key});
@@ -33,6 +34,11 @@ class FoodDashboardPage extends StatefulWidget {
     final aiService = Aifoodcaloriesservices();
     final picker = ImagePicker();
     final healthMealDAO = context.read<HealthMealDAO>();
+    final authBlock = context.read<AuthBlock>();
+    final userData = authBlock.user.value;
+    final String personID = (userData?['person_id'] is int)
+        ? userData!['person_id']
+        : int.tryParse(userData?['id']?.toString() ?? '') ?? 1;
 
     showDialog(
       context: context,
@@ -41,6 +47,7 @@ class FoodDashboardPage extends StatefulWidget {
           aiService: aiService,
           picker: picker,
           healthMealDAO: healthMealDAO,
+          personID: personID,
         );
       },
     );
@@ -51,11 +58,13 @@ class _MealDialogContent extends StatefulWidget {
   final Aifoodcaloriesservices aiService;
   final ImagePicker picker;
   final HealthMealDAO healthMealDAO;
+  final String personID;
 
   const _MealDialogContent({
     required this.aiService,
     required this.picker,
     required this.healthMealDAO,
+    required this.personID,
   });
 
   @override
@@ -147,6 +156,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
       MealsTableCompanion.insert(
         id: IDGen.generateUuid(),
         mealName: _foodController.text.isEmpty ? "Meal" : _foodController.text,
+        personID: widget.personID,
         mealImageUrl: Value(_imagePath),
         carbs: Value(carbs),
         protein: Value(protein),
@@ -370,7 +380,8 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
   Map<String, List<DayWithMeal>> _groupMealsByDay(List<DayWithMeal> meals) {
     final Map<String, List<DayWithMeal>> grouped = {};
     for (var meal in meals) {
-      final dateKey = DateFormat('yyyy-MM-dd').format(meal.meal.eatenAt);
+      final eatenAt = meal.meal.eatenAt;
+      final dateKey = DateFormat('yyyy-MM-dd').format(eatenAt);
       if (!grouped.containsKey(dateKey)) {
         grouped[dateKey] = [];
       }
@@ -407,7 +418,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                 elevation: 0,
                 backgroundColor: colorScheme.surface,
                 title: Text(
-                  'Nutrition',
+                  'Meal Log',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     color: colorScheme.onSurface,

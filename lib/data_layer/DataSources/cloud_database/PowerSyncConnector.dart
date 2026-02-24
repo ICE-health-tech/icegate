@@ -18,7 +18,6 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
   @override
   Future<PowerSyncCredentials?> fetchCredentials() async {
     final session = Supabase.instance.client.auth.currentSession;
-    final token = session?.accessToken;
     if (session == null || session.isExpired) {
       try {
         // If this fails with 500, we must catch it and force a login
@@ -42,11 +41,36 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
 
   /// No global transformation needed.
   /// Drift schema `.named()` values are now aligned directly with Supabase column names:
-  /// - Tables we migrated (projects, goals, scores, skills, person_widgets) use camelCase in both Drift and Supabase.
-  /// - Tables we didn't migrate (persons, habits, etc.) use snake_case in both Drift and Supabase.
-  Map<String, dynamic> _transformOpData(Map<String, dynamic>? data) {
+  /// - Tables use UUIDs (via IDGen.generateUuid()) for IDs.
+  /// - Column names use snake_case in both Drift and Supabase to match PowerSync schema.
+  Map<String, dynamic> _transformOpData(
+    String table,
+    Map<String, dynamic>? data,
+  ) {
     if (data == null) return {};
-    return Map<String, dynamic>.from(data);
+    final map = Map<String, dynamic>.from(data);
+
+    // Many legacy tables have a SERIAL column that Drift defaults to 0 locally.
+    // We must NOT send 0 to Supabase, or we'll get a 23505 Duplicate Key violation
+    // and PowerSync will silently drop the record.
+    final serialKeys = {
+      'custom_notifications': 'notification_id',
+      'blog_posts': 'post_id',
+      'focus_sessions': 'session_id',
+      // widget_id is SERIAL (integer) in Supabase — strip UUID/empty values before upload
+      'external_widgets': 'widget_id',
+      // internal_widgets has no widget_id column in Supabase — strip to avoid 42703
+      'internal_widgets': 'widget_id',
+    };
+
+    final serialKey = serialKeys[table];
+    if (serialKey != null) {
+      // Supabase is missing quote_id and other serials on newly created tables,
+      // or they are 0 locally. We should strip them entirely during upload.
+      map.remove(serialKey);
+    }
+
+    return map;
   }
 
   /// PowerSync calls this to upload local changes to your backend.
@@ -60,7 +84,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
       for (var crud in transaction.crud) {
         final table = crud.table;
         final id = crud.id;
-        final opData = _transformOpData(crud.opData);
+        final opData = _transformOpData(table, crud.opData);
 
         print(
           "📤 [PowerSync] Syncing $table (op: ${crud.op}, id: $id): $opData",
@@ -98,11 +122,13 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
       // 42703 = "column does not exist"
       // 22008 = "date/time field value out of range" (stale integer timestamp)
       // 23505 = "duplicate key violation" (stale data conflicts)
+      // 22P02 = "invalid text representation" (e.g. UUID/empty string for integer column)
       // These are unrecoverable stale data — skip to unblock the queue.
       if (e.code == 'PGRST204' ||
           e.code == '42703' ||
           e.code == '22008' ||
-          e.code == '23505') {
+          e.code == '23505' ||
+          e.code == '22P02') {
         print(
           '⚠️ PowerSync: Skipping unrecoverable schema mismatch. Completing transaction to clear queue.',
         );

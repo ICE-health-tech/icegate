@@ -36,8 +36,7 @@ class ProjectsPage extends StatelessWidget {
       onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       icon: Icons.rocket_launch_rounded,
       onLongPress: () {
-         context.go("/project-analysis");
-       
+        context.go("/project-analysis");
       },
       subButtons: [],
     );
@@ -364,7 +363,7 @@ class ProjectsPage extends StatelessWidget {
               ),
             ),
             Watch((context) {
-              final projectBlock = context.watch<ProjectBlock>();
+              final projectBlock = context.read<ProjectBlock>();
               final projects = projectBlock.projects.value;
 
               final tasks = growthBlock.goals.value.where((g) {
@@ -795,95 +794,3 @@ class _RecentNoteItem extends StatelessWidget {
   }
 }
 
-class _ProjectCard extends StatelessWidget {
-  final String title;
-  final double progress;
-  final String dueDate;
-  final Color color;
-
-  const _ProjectCard({
-    required this.title,
-    required this.progress,
-    required this.dueDate,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Active',
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.more_horiz,
-                color: colorScheme.onSurface.withOpacity(0.4),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            title,
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            dueDate,
-            style: TextStyle(
-              color: colorScheme.onSurface.withOpacity(0.6),
-              fontSize: 14,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(4),
-            child: LinearProgressIndicator(
-              value: progress,
-              backgroundColor: colorScheme.surfaceContainerHighest,
-              valueColor: AlwaysStoppedAnimation<Color>(color),
-              minHeight: 6,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}

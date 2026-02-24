@@ -243,9 +243,6 @@ class _FocusPageState extends State<FocusPage> {
     _setupNotificationListener(context, focusBlock);
     _setupSummaryEffect(focusBlock);
 
-    // Sync logic has been moved to FocusBlock and FocusAudioHandler
-    // to prevent infinite loops and state fighting.
-
     final focusMin = focusBlock.focusDuration.watch(context);
     final shortMin = focusBlock.shortBreakDuration.watch(context);
     final longMin = focusBlock.longBreakDuration.watch(context);
@@ -255,11 +252,12 @@ class _FocusPageState extends State<FocusPage> {
     final sessionType = focusBlock.currentSessionType.watch(context);
     final totalStudyTime = focusBlock.totalStudyTimeToday.watch(context);
     final sessionsCount = focusBlock.sessionsCompletedToday.watch(context);
-    final selectedProjId = focusBlock.selectedProjectId.watch(context);
-    final selectedTaskId = focusBlock.selectedTaskId.watch(context);
     final themeName = focusBlock.timerTheme.watch(context);
     final isExerciseMode = focusBlock.isExerciseMode.watch(context);
     final exerciseType = focusBlock.exerciseType.watch(context);
+
+    // Sync logic has been moved to FocusBlock and FocusAudioHandler
+    // to prevent infinite loops and state fighting.
 
     // Get current theme
     final themeStyle = timerThemes.firstWhere(
@@ -360,28 +358,17 @@ class _FocusPageState extends State<FocusPage> {
                     child: _SessionTypeToggle(focusBlock: focusBlock),
                   ),
                 ),
-                // Selection Area (Project & Task)
+                // Minimal Selection Status (Text only)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 24,
-                      vertical: 12,
+                      vertical: 8,
                     ),
-                    child: Column(
-                      children: [
-                        _ProjectSelector(
-                          focusBlock: focusBlock,
-                          projectBlock: projectBlock,
-                          selectedProjId: selectedProjId,
-                        ),
-                        const SizedBox(height: 12),
-                        _TaskSelector(
-                          focusBlock: focusBlock,
-                          growthBlock: growthBlock,
-                          selectedProjId: selectedProjId,
-                          selectedTaskId: selectedTaskId,
-                        ),
-                      ],
+                    child: _ActiveSessionContext(
+                      focusBlock: focusBlock,
+                      projectBlock: projectBlock,
+                      growthBlock: growthBlock,
                     ),
                   ),
                 ),
@@ -410,7 +397,7 @@ class _FocusPageState extends State<FocusPage> {
                         const Spacer(),
 
                         // Detailed Controls Consolidated into Circle
-                        const SizedBox(height: 120),
+                        const SizedBox(height: 30),
 
                         // Stats & History Preview
                         _StatsGrid(
@@ -434,7 +421,7 @@ class _FocusPageState extends State<FocusPage> {
                 StreamBuilder<List<FocusSessionData>>(
                   stream: context
                       .read<FocusSessionsDAO>()
-                      .watchSessionsByPerson(1),
+                      .watchSessionsByPerson(focusBlock.currentPersonId),
                   builder: (context, snapshot) {
                     if (!snapshot.hasData || snapshot.data!.isEmpty) {
                       return const SliverToBoxAdapter(child: SizedBox.shrink());
@@ -633,110 +620,162 @@ class _SessionTypeToggle extends StatelessWidget {
   }
 }
 
-class _ProjectSelector extends StatelessWidget {
+class _ActiveSessionContext extends StatelessWidget {
   final FocusBlock focusBlock;
   final ProjectBlock projectBlock;
-  final int? selectedProjId;
+  final GrowthBlock growthBlock;
 
-  const _ProjectSelector({
+  const _ActiveSessionContext({
     required this.focusBlock,
     required this.projectBlock,
-    required this.selectedProjId,
+    required this.growthBlock,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isRunning = focusBlock.isRunning.watch(context);
+    final selectedProjId = focusBlock.selectedProjectId.watch(context);
+    final selectedTaskId = focusBlock.selectedTaskId.watch(context);
+
     final projects = projectBlock.projects.watch(context);
     final selectedProject = projects
         .where((p) => p.projectID == selectedProjId)
         .firstOrNull;
 
-    return GestureDetector(
-      onTap: () => _showProjectPicker(context, projects),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.8),
-              Theme.of(context).colorScheme.surfaceContainer.withOpacity(0.4),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Theme.of(
-              context,
-            ).colorScheme.outlineVariant.withOpacity(0.2),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 14,
-              height: 14,
+    final tasks = growthBlock.goals
+        .watch(context)
+        .where((g) => g.projectID == selectedProjId && g.status != 'done')
+        .toList();
+
+    final selectedTask = tasks
+        .where((t) => t.goalID == selectedTaskId)
+        .firstOrNull;
+
+    if (selectedProject == null) {
+      return GestureDetector(
+        onTap: () => _showProjectPicker(context, projects),
+        child: Center(
+          child: AnimatedScale(
+            scale: isRunning ? 0.8 : 1.1,
+            duration: const Duration(milliseconds: 400),
+            curve: Curves.easeOutBack,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: selectedProject?.color != null
-                    ? Color(int.parse(selectedProject!.color!))
-                    : Theme.of(context).colorScheme.primary,
-                boxShadow: [
-                  BoxShadow(
-                    color:
-                        (selectedProject?.color != null
-                                ? Color(int.parse(selectedProject!.color!))
-                                : Theme.of(context).colorScheme.primary)
-                            .withOpacity(0.5),
-                    blurRadius: 8,
-                  ),
-                ],
+                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Text(
+                "TAP TO SELECT PROJECT",
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.2,
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                ),
               ),
             ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "ACTIVE PROJECT",
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                  ),
-                  Text(
-                    selectedProject?.name ?? "Select Project",
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.rocket_launch_rounded, // More expressive
-              size: 20,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-            ),
-          ],
+          ),
         ),
+      );
+    }
+
+    return AnimatedScale(
+      scale: isRunning ? 0.85 : 1.15,
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.easeInOutCubic,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          GestureDetector(
+            onTap: isRunning
+                ? null
+                : () => _showProjectPicker(context, projects),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 8,
+                  height: 8,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: selectedProject.color != null
+                        ? Color(int.parse(selectedProject.color!))
+                        : Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  selectedProject.name.toUpperCase(),
+                  style: TextStyle(
+                    fontSize: isRunning ? 10 : 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.0,
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                ),
+                if (!isRunning) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 14,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.primary.withOpacity(0.5),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          GestureDetector(
+            onTap: isRunning
+                ? null
+                : () => _showTaskPicker(context, tasks, selectedTaskId),
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  selectedTask?.title ?? "SELECT TASK",
+                  style: TextStyle(
+                    fontSize: isRunning ? 12 : 16,
+                    fontWeight: isRunning ? FontWeight.w500 : FontWeight.w700,
+                    color: selectedTask != null
+                        ? Theme.of(context).colorScheme.onSurface.withOpacity(
+                            isRunning ? 0.5 : 0.8,
+                          )
+                        : Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.4),
+                  ),
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (!isRunning && selectedTask != null) ...[
+                  const SizedBox(width: 4),
+                  Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 14,
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.3),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
 
   void _showProjectPicker(BuildContext context, List<dynamic> projects) {
+    final selectedProjId = focusBlock.selectedProjectId.value;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -790,101 +829,13 @@ class _ProjectSelector extends StatelessWidget {
       ),
     );
   }
-}
 
-class _TaskSelector extends StatelessWidget {
-  final FocusBlock focusBlock;
-  final GrowthBlock growthBlock;
-  final int? selectedProjId;
-  final int? selectedTaskId;
-
-  const _TaskSelector({
-    required this.focusBlock,
-    required this.growthBlock,
-    required this.selectedProjId,
-    required this.selectedTaskId,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    if (selectedProjId == null) return const SizedBox.shrink();
-
-    final tasks = growthBlock.goals
-        .watch(context)
-        .where((g) => g.projectID == selectedProjId && g.status != 'done')
-        .toList();
-
-    final selectedTask = tasks
-        .where((t) => t.goalID == selectedTaskId)
-        .firstOrNull;
-
-    return GestureDetector(
-      onTap: () => _showTaskPicker(context, tasks),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-        decoration: BoxDecoration(
-          color: Theme.of(
-            context,
-          ).colorScheme.primaryContainer.withOpacity(0.08),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.15),
-          ),
-        ),
-        child: Row(
-          children: [
-            Icon(
-              Icons.bolt_rounded,
-              color: Theme.of(context).colorScheme.primary,
-              size: 22, // Slightly larger
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "CURRENT TASK",
-                    style: TextStyle(
-                      fontSize: 9,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.0,
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.primary.withOpacity(0.7),
-                    ),
-                  ),
-                  Text(
-                    selectedTask?.title ?? "Select Active Task",
-                    style: TextStyle(
-                      fontWeight: selectedTask != null
-                          ? FontWeight.bold
-                          : FontWeight.w500,
-                      fontSize: 15,
-                      color: selectedTask != null
-                          ? Theme.of(context).colorScheme.onSurface
-                          : Theme.of(
-                              context,
-                            ).colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-            Icon(
-              Icons.auto_awesome_rounded, // More expressive
-              size: 20,
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.4),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showTaskPicker(BuildContext context, List<dynamic> tasks) {
+  void _showTaskPicker(
+    BuildContext context,
+    List<dynamic> tasks,
+    String? selectedTaskId,
+  ) {
+    final selectedProjId = focusBlock.selectedProjectId.value;
     showModalBottomSheet(
       context: context,
       backgroundColor: Colors.transparent,
@@ -971,7 +922,7 @@ class _TaskSelector extends StatelessWidget {
     BuildContext context,
     FocusBlock focusBlock,
     GrowthBlock growthBlock,
-    int? projectId,
+    String? projectId,
   ) {
     final titleController = TextEditingController();
     final descController = TextEditingController();
@@ -3275,6 +3226,7 @@ class _SessionResultDialog extends StatefulWidget {
 
 class _SessionResultDialogState extends State<_SessionResultDialog> {
   final TextEditingController _notesController = TextEditingController();
+  bool _markTaskCompleted = false;
 
   @override
   void dispose() {
@@ -3288,6 +3240,7 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
     final colorScheme = theme.colorScheme;
     final sessionType = widget.focusBlock.currentSessionType.value;
     final isFocus = sessionType == 'Focus';
+    final hasActiveTask = widget.focusBlock.selectedTaskId.value != null;
 
     return Dialog(
       backgroundColor: Colors.transparent,
@@ -3358,12 +3311,40 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
                 fillColor: colorScheme.surfaceContainerLow,
               ),
             ),
+            if (isFocus && hasActiveTask) ...[
+              const SizedBox(height: 16),
+              Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.secondaryContainer.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withOpacity(0.3),
+                  ),
+                ),
+                child: CheckboxListTile(
+                  title: const Text(
+                    "Mark task as fully completed",
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                  ),
+                  value: _markTaskCompleted,
+                  activeColor: Colors.orange,
+                  onChanged: (val) {
+                    setState(() {
+                      _markTaskCompleted = val ?? false;
+                    });
+                  },
+                ),
+              ),
+            ],
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: FilledButton(
                 onPressed: () {
-                  widget.focusBlock.finishAndSaveSession(_notesController.text);
+                  widget.focusBlock.finishAndSaveSession(
+                    _notesController.text,
+                    markTaskDone: _markTaskCompleted,
+                  );
                   Navigator.pop(context);
                 },
                 style: FilledButton.styleFrom(
@@ -3381,7 +3362,10 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
             ),
             TextButton(
               onPressed: () {
-                widget.focusBlock.finishAndSaveSession("");
+                widget.focusBlock.finishAndSaveSession(
+                  "",
+                  markTaskDone: _markTaskCompleted,
+                );
                 Navigator.pop(context);
               },
               child: Text(

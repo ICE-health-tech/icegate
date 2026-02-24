@@ -8,7 +8,7 @@ part of 'PersonProtocol.dart';
 
 _$PersonProtocolImpl _$$PersonProtocolImplFromJson(Map<String, dynamic> json) =>
     _$PersonProtocolImpl(
-      personID: (json['personID'] as num).toInt(),
+      personID: json['personID'] as String,
       firstName: json['firstName'] as String,
       lastName: json['lastName'] as String?,
       dateOfBirth: json['dateOfBirth'] == null

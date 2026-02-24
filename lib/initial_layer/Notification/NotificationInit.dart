@@ -255,7 +255,7 @@ class LocalNotificationService {
         // We need a unique ID for each day of the weekly repeat
         // Using notificationID + day offset to keep it unique but related
         final dayId =
-            data.notificationID * 100 + day; // Using 100 to avoid overlap
+            data.notificationID.hashCode * 100 + day; // Using 100 to avoid overlap
         await _notificationsPlugin.zonedSchedule(
           id: dayId,
           title: data.title,
@@ -268,7 +268,7 @@ class LocalNotificationService {
       }
     } else {
       await _notificationsPlugin.zonedSchedule(
-        id: data.notificationID,
+        id: data.notificationID.hashCode,
         title: data.title,
         body: data.content,
         scheduledDate: matchComponents != null

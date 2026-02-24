@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 class ConfirmDialog extends StatefulWidget {
   final ExternalWidgetsDAO dao;
   final String name;
-  final int widgetID;
+  final String widgetID;
 
   const ConfirmDialog({
     super.key,

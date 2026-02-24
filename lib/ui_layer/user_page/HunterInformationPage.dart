@@ -31,235 +31,311 @@ class _UserInformationPageState extends State<UserInformationPage> {
     final personBlock = context.watch<PersonBlock>();
     final info = personBlock.information.watch(context);
     final userProfile = info.profiles;
-    final userDetails = info.details;
-
     final Size screenSize = MediaQuery.of(context).size;
     final bool isLargeScreen = screenSize.width > 600;
 
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0E27), // Dark background
-      body: CustomScrollView(
-        slivers: [
-          // Modern App Bar with gradient
-          SliverAppBar(
-            expandedHeight: 120,
-            floating: false,
-            pinned: true,
-            backgroundColor: Colors.transparent,
-            flexibleSpace: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0xFF6366F1),
-                    Color(0xFF8B5CF6),
-                    Color(0xFFEC4899),
+      backgroundColor: colorScheme.surface,
+      body: Stack(
+        children: [
+          // Technical Grid Background
+          Positioned.fill(
+            child: Opacity(
+              opacity: isDark ? 0.1 : 0.05,
+              child: Image.asset(
+                'assets/system_hud.png',
+                fit: BoxFit.cover,
+                color: isDark ? null : colorScheme.primary.withOpacity(0.3),
+                colorBlendMode: isDark ? BlendMode.dst : BlendMode.srcATop,
+              ),
+            ),
+          ),
+          CustomScrollView(
+            slivers: [
+              // Modern App Bar with gradient
+              SliverAppBar(
+                expandedHeight: 140,
+                floating: false,
+                pinned: true,
+                backgroundColor: Colors.transparent,
+                flexibleSpace: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        colorScheme.surfaceContainerHighest,
+                        colorScheme.surface.withOpacity(0.8),
+                      ],
+                    ),
+                    border: Border(
+                      bottom: BorderSide(
+                        color: colorScheme.primary.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                  ),
+                  child: FlexibleSpaceBar(
+                    title: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'SYSTEM INTERFACE',
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 4.0,
+                            color: Color(0xFF00E5FF),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Hunter Dashboard',
+                          style: TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 24,
+                            letterSpacing: -0.5,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ],
+                    ),
+                    centerTitle: false,
+                    titlePadding: const EdgeInsets.only(left: 20, bottom: 20),
+                  ),
+                ),
+              ),
+
+              // Content
+              SliverToBoxAdapter(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 24),
+
+                    // Enhanced Profile Header
+                    _buildEnhancedProfileHeader(context, userProfile),
+
+                    const SizedBox(height: 24),
+
+                    // Status Cards
+                    _buildStatsCard(context),
+
+                    const SizedBox(height: 32),
+
+                    // Metrics Section Header
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                      child: Row(
+                        children: [
+                          const Text(
+                            'OPERATIONAL METRICS',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              color: Color(0xFF00E5FF),
+                              letterSpacing: 2.0,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Container(
+                              height: 1,
+                              color: const Color(0xFF00E5FF).withOpacity(0.2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 20),
+
+                    // Enhanced Metrics Grid
+                    _buildEnhancedMetricsGrid(context, isLargeScreen),
+
+                    const SizedBox(height: 32),
+
+                    // Department Canvas Section
+                    _buildCanvasHeader(context),
+
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),
-              child: FlexibleSpaceBar(
-                title: const Text(
-                  'Hunter Dashboard',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    fontSize: 24,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                centerTitle: false,
-                titlePadding: const EdgeInsets.only(left: 20, bottom: 16),
-              ),
-            ),
-            actions: [
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                onPressed: () {},
-                color: Colors.white,
-              ),
-              IconButton(
-                icon: const Icon(Icons.settings_outlined),
-                onPressed: () {},
-                color: Colors.white,
-              ),
-              const SizedBox(width: 8),
+
+              // Interactive Canvas
+              SliverToBoxAdapter(child: _buildInteractiveCanvas()),
+              SliverToBoxAdapter(child: DragCanvasGrid()),
+              const SliverToBoxAdapter(child: SizedBox(height: 40)),
             ],
           ),
-
-          // Content
-          SliverToBoxAdapter(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: 20),
-
-                // Enhanced Profile Header
-                _buildEnhancedProfileHeader(context, userProfile),
-
-                const SizedBox(height: 24),
-
-                // StatsCard - Passing null or default for now as stats are missing
-                _buildStatsCard(context),
-
-                const SizedBox(height: 24),
-
-                // Metrics Section
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 4,
-                        height: 24,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFF6366F1), Color(0xFFEC4899)],
-                          ),
-                          borderRadius: BorderRadius.circular(2),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      const Text(
-                        'System Metrics',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Enhanced Metrics Grid
-                _buildEnhancedMetricsGrid(context, isLargeScreen),
-
-                const SizedBox(height: 32),
-
-                // Department Canvas Section
-                _buildCanvasHeader(context),
-
-                const SizedBox(height: 16),
-              ],
-            ),
-          ),
-
-          // Interactive Canvas
-          SliverToBoxAdapter(child: _buildInteractiveCanvas()),
-          // DragCanvas(),
-          SliverToBoxAdapter(child: DragCanvasGrid()),
-          const SliverToBoxAdapter(child: SizedBox(height: 40)),
         ],
       ),
     );
   }
 
-  // Enhanced Profile Header with glass morphism effect
+  // Enhanced Profile Header with System style
   Widget _buildEnhancedProfileHeader(BuildContext context, UserProfile user) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.1),
-              Colors.white.withValues(alpha: 0.05),
-            ],
-          ),
-          borderRadius: BorderRadius.circular(20),
+          color: const Color(0xFF1E293B).withOpacity(0.5),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
-            width: 1,
+            color: const Color(0xFF00E5FF).withOpacity(0.2),
+            width: 1.5,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Row(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
             children: [
-              // Avatar with glow effect
-              Container(
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: const Color(0xFF6366F1).withValues(alpha: 0.5),
-                      blurRadius: 20,
-                      spreadRadius: 2,
+              // Tech Accents
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Container(
+                  width: 80,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF00E5FF).withOpacity(0.1),
+                    borderRadius: const BorderRadius.only(
+                      bottomLeft: Radius.circular(24),
                     ),
-                  ],
-                ),
-                child: CircleAvatar(
-                  radius: 45,
-                  backgroundImage: user.profileImageUrl.isNotEmpty
-                      ? NetworkImage(user.profileImageUrl)
-                      : null,
-                  child: user.profileImageUrl.isEmpty
-                      ? const Icon(Icons.person, size: 40)
-                      : null,
+                  ),
+                  alignment: Alignment.center,
+                  child: const Text(
+                    'ID: ALPHA-01',
+                    style: TextStyle(
+                      color: Color(0xFF00E5FF),
+                      fontSize: 8,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
                 ),
               ),
-              const SizedBox(width: 20),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+              Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Row(
                   children: [
-                    Text(
-                      "${user.firstName} ${user.lastName}",
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      user.alias.isNotEmpty
-                          ? user.alias
-                          : "No alias", // Email is missing
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.7),
-                        fontSize: 14,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    // Avatar with Hexagon Border
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                      padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFF10B981), Color(0xFF059669)],
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: const Color(0xFF00E5FF),
+                          width: 2,
                         ),
-                        borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF10B981).withOpacity(0.3),
-                            blurRadius: 8,
-                            spreadRadius: 1,
+                            color: const Color(0xFF00E5FF).withOpacity(0.2),
+                            blurRadius: 15,
                           ),
                         ],
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
+                      child: CircleAvatar(
+                        radius: 40,
+                        backgroundColor: const Color(0xFF0F172A),
+                        backgroundImage: user.profileImageUrl.isNotEmpty
+                            ? NetworkImage(user.profileImageUrl)
+                            : null,
+                        child: user.profileImageUrl.isEmpty
+                            ? const Icon(
+                                Icons.person_rounded,
+                                size: 40,
+                                color: Color(0xFF00E5FF),
+                              )
+                            : null,
+                      ),
+                    ),
+                    const SizedBox(width: 20),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(
-                            Icons.shield,
-                            color: Colors.white,
-                            size: 16,
+                          Row(
+                            children: [
+                              Text(
+                                user.firstName.toUpperCase(),
+                                style: const TextStyle(
+                                  fontSize: 22,
+                                  fontWeight: FontWeight.w900,
+                                  color: Colors.white,
+                                  letterSpacing: 1.0,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(
+                                Icons.verified_user_rounded,
+                                color: Color(0xFF00E5FF),
+                                size: 16,
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(height: 4),
                           Text(
-                            'S-Rank Hunter',
-                            style: const TextStyle(
-                              color: Colors.white,
+                            user.alias.isNotEmpty
+                                ? "@${user.alias.toLowerCase()}"
+                                : "Awaiting Credentials...",
+                            style: TextStyle(
+                              color: const Color(0xFF00E5FF).withOpacity(0.6),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          // Premium S-RANK Badge
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 6,
+                            ),
+                            decoration: BoxDecoration(
+                              gradient: const LinearGradient(
+                                colors: [Color(0xFFFFD700), Color(0xFFFFA500)],
+                              ),
+                              borderRadius: BorderRadius.circular(8),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.orange.withOpacity(0.4),
+                                  blurRadius: 12,
+                                  spreadRadius: 1,
+                                ),
+                              ],
+                            ),
+                            child: const Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.bolt_rounded,
+                                  color: Colors.black,
+                                  size: 16,
+                                ),
+                                SizedBox(width: 6),
+                                Text(
+                                  'S-RANK HUNTER',
+                                  style: TextStyle(
+                                    color: Colors.black,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -275,170 +351,176 @@ class _UserInformationPageState extends State<UserInformationPage> {
     );
   }
 
-  // Enhanced Stats Card with better visual design
+  // Enhanced Stats Card with Status Window style
   Widget _buildStatsCard(BuildContext context) {
-    // Default values for now
-    const strength = 0;
-    const intelligence = 0;
-    const agility = 0;
-    const stamina = 0;
-
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Colors.white.withValues(alpha: 0.1),
-              Colors.white.withValues(alpha: 0.05),
-            ],
+          color: colorScheme.surfaceContainerHighest.withOpacity(
+            isDark ? 0.3 : 0.6,
           ),
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withValues(alpha: 0.2),
+            color: colorScheme.onSurface.withOpacity(0.1),
             width: 1,
           ),
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        child: Column(
+          children: [
+            // Header
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withOpacity(0.03),
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(24),
+                  topRight: Radius.circular(24),
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: colorScheme.onSurface.withOpacity(0.05),
+                  ),
+                ),
+              ),
+              child: Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFEF4444), Color(0xFFDC2626)],
-                      ),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.auto_graph,
-                      color: Colors.white,
-                      size: 20,
-                    ),
+                  Icon(
+                    Icons.dashboard_customize_rounded,
+                    color: colorScheme.primary,
+                    size: 18,
                   ),
                   const SizedBox(width: 12),
-                  const Text(
-                    '[STATUS WINDOW] Properties',
+                  Text(
+                    'STATUS WINDOW',
                     style: TextStyle(
-                      fontSize: 18,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                      letterSpacing: 2.0,
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    'v4.12.0',
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: colorScheme.onSurface.withOpacity(0.2),
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 0.5,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 20),
-
-              _buildEnhancedStatBar(
-                'Strength',
-                strength,
-                const Color(0xFFEF4444),
-                Icons.fitness_center,
+            ),
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                children: [
+                  _buildEnhancedStatBar(
+                    context,
+                    'STRENGTH',
+                    142,
+                    const Color(0xFFFF3D00).withOpacity(isDark ? 1.0 : 0.7),
+                    Icons.bolt_rounded,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildEnhancedStatBar(
+                    context,
+                    'INTELLIGENCE',
+                    188,
+                    const Color(0xFF2979FF).withOpacity(isDark ? 1.0 : 0.7),
+                    Icons.auto_awesome_motion_rounded,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildEnhancedStatBar(
+                    context,
+                    'AGILITY',
+                    156,
+                    const Color(0xFF00E676).withOpacity(isDark ? 1.0 : 0.7),
+                    Icons.speed_rounded,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildEnhancedStatBar(
+                    context,
+                    'SENSORY',
+                    110,
+                    const Color(0xFFFFEA00).withOpacity(isDark ? 1.0 : 0.7),
+                    Icons.visibility_rounded,
+                  ),
+                ],
               ),
-              const SizedBox(height: 16),
-              _buildEnhancedStatBar(
-                'Intelligence',
-                intelligence,
-                const Color(0xFF3B82F6),
-                Icons.psychology,
-              ),
-              const SizedBox(height: 16),
-              _buildEnhancedStatBar(
-                'Agility',
-                agility,
-                const Color(0xFF10B981),
-                Icons.speed,
-              ),
-              const SizedBox(height: 16),
-              _buildEnhancedStatBar(
-                'Stamina',
-                stamina,
-                const Color(0xFFF59E0B),
-                Icons.favorite,
-              ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
 
-  // Enhanced stat bar with icon and better styling
+  // Tactical stat bar
   Widget _buildEnhancedStatBar(
+    BuildContext context,
     String label,
     int value,
     Color color,
     IconData icon,
   ) {
-    final double progress = value / 200;
+    final colorScheme = Theme.of(context).colorScheme;
+    final double progress = (value / 200).clamp(0.0, 1.0);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Icon(icon, color: color, size: 18),
-            const SizedBox(width: 8),
-            Expanded(
-              child: Text(
-                label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                  fontSize: 15,
+            Row(
+              children: [
+                Icon(icon, color: color, size: 16),
+                const SizedBox(width: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface.withOpacity(0.7),
+                    fontSize: 11,
+                    letterSpacing: 1.0,
+                  ),
                 ),
-              ),
+              ],
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: color.withValues(alpha: 0.5),
-                  width: 1,
-                ),
-              ),
-              child: Text(
-                '$value',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: color,
-                ),
+            Text(
+              '$value',
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 14,
+                color: color,
+                fontFamily: 'Monospace',
               ),
             ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: 10),
         Stack(
           children: [
             Container(
-              height: 12,
+              height: 6,
               decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(10),
+                color: colorScheme.onSurface.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
             FractionallySizedBox(
               widthFactor: progress,
               child: Container(
-                height: 12,
+                height: 6,
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [color, color.withValues(alpha: 0.7)],
-                  ),
-                  borderRadius: BorderRadius.circular(10),
+                  color: color,
+                  borderRadius: BorderRadius.circular(2),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withValues(alpha: 0.5),
+                      color: color.withOpacity(0.4),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),

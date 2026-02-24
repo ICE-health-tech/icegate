@@ -1,8 +1,9 @@
- import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/ui_layer/finance_page/models/FinanceAsset.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:drift/drift.dart' as drift;
 
 class AddAssetDialog extends StatefulWidget {
@@ -36,14 +37,14 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
 
     if (personID == null) return;
 
-    context.read<AppDatabase>().financeDAO.createHolding(
-      FinancialAssetHoldingsTableCompanion(
-        personID: drift.Value(personID),
-        symbol: drift.Value(symbol),
-        name: drift.Value(symbol), // Default name to symbol for now
-        quantity: drift.Value(quantity),
-        averageBuyPrice: drift.Value(price),
-        assetType: drift.Value(_selectedType),
+    context.read<AppDatabase>().financeDAO.createAsset(
+      AssetsTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        personID: personID,
+        assetName: symbol,
+        assetCategory: _selectedType.name,
+        currentEstimatedValue: drift.Value(quantity * price),
+        currency: drift.Value(CurrencyType.USD), // Default to USD for now
       ),
     );
 

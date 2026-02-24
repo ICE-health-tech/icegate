@@ -1,0 +1,8 @@
+-- USER INITIALIZATION LOGIC MIGRATED TO FLUTTER
+-- The logic previously in this trigger (handle_new_user) has been moved to 
+-- AuthBlock.syncUserWithSupabase in the Flutter application.
+-- To fully remove the old trigger from Supabase, run:
+-- DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+-- DROP FUNCTION IF EXISTS public.handle_new_user();
+-- This ensures that the Flutter logic is the single source of truth for 
+-- initializing the 'persons', 'profiles', and other related tables.
