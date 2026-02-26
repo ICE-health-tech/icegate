@@ -147,8 +147,8 @@ class GrowthBlock {
         description: Value(description),
         status: const Value('active'),
         category: const Value('project'),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
+        createdAt: Value(DateTime.now().toUtc()),
+        updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
   }

@@ -237,6 +237,15 @@ class SettingsWidget extends StatelessWidget {
                     context.push('/settings/change-password');
                   },
                 ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Change Username',
+                  icon: Icons.alternate_email_rounded,
+                  color: Colors.orange,
+                  onTap: () {
+                    context.push('/settings/change-username');
+                  },
+                ),
               ],
             ),
 

@@ -27,6 +27,26 @@ part 'Database.g.dart';
 
 // --- 3. Table Definitions ---
 
+class DateTimeConverter extends TypeConverter<DateTime, String> {
+  const DateTimeConverter();
+
+  @override
+  DateTime fromSql(String fromDb) => DateTime.parse(fromDb).toLocal();
+
+  @override
+  String toSql(DateTime value) => value.toUtc().toIso8601String();
+}
+
+class DateTimeUTCConverter extends TypeConverter<DateTime, DateTime> {
+  const DateTimeUTCConverter();
+
+  @override
+  DateTime fromSql(DateTime fromDb) => fromDb.toLocal();
+
+  @override
+  DateTime toSql(DateTime value) => value.toUtc();
+}
+
 // // Constants for ExternalWidgetsTable (Optional, but good for clarity)
 // const String columnId = 'widget_id';
 // const String columnName = 'name';
@@ -110,29 +130,24 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
 
   // void insertInternalWidget(){
   Future<int> insertInternalWidget({
+    String? id,
+    String? widgetID,
     required String name,
-    // required String protocol,
-    // required widgetID,
     required String alias,
     required String url,
     String? imageUrl,
   }) {
-    // final alias = _generateRandomAlias(8);
-    final dateAdded = DateTime.now().toIso8601String();
-
-    final entry = InternalWidgetsTableCompanion.insert(
-      id: IDGen.generateUuid(),
-      name: Value(name),
-      alias: Value(alias), // This must be a String, not null
-      url: Value(url),
-      widgetID: Value(IDGen.generateUuid()),
-      // If imageUrl is null, provide a valid fallback string immediately
-      imageUrl: Value(imageUrl ?? "assets/internalwidget/default_plugin.png"),
-      dateAdded: Value(dateAdded),
+    return into(internalWidgetsTable).insert(
+      InternalWidgetsTableCompanion.insert(
+        id: id ?? IDGen.generateUuid(),
+        widgetID: Value(widgetID),
+        name: Value(name),
+        alias: Value(alias),
+        url: Value(url),
+        imageUrl: Value(imageUrl ?? "assets/internalwidget/default_plugin.png"),
+        dateAdded: Value(DateTime.now().toIso8601String()),
+      ),
     );
-
-    print("DUYLONG insertInternalWidget: $entry");
-    return into(internalWidgetsTable).insert(entry);
   }
 
   Future<int> deleteInternalWidget(String name) {
@@ -189,7 +204,8 @@ class ThemesTable extends Table {
       text().withLength(min: 1, max: 50).unique().named('alias')();
   TextColumn get json => text().named('json_content')();
   TextColumn get author => text().withLength(min: 1, max: 50).named('author')();
-  DateTimeColumn get addedDate => dateTime().named('added_date')();
+  TextColumn get addedDate =>
+      text().map(const DateTimeConverter()).named('added_date')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -213,10 +229,14 @@ class ProjectNotesTable extends Table {
   TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
   TextColumn get content =>
       text().named('content')(); // JSON string of the note content
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
   TextColumn get projectID => text()
       .nullable()
       .references(ProjectsTable, #id, onDelete: KeyAction.cascade)
@@ -246,10 +266,14 @@ class ProjectsTable extends Table {
   TextColumn get color => text().nullable().named('color')();
   IntColumn get status =>
       integer().withDefault(const Constant(0)).named('status')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -275,10 +299,14 @@ class OrganizationsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get name => text().withLength(min: 1, max: 100).named('name')();
   TextColumn get domain => text().nullable().named('domain')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -298,8 +326,10 @@ class PersonsTable extends Table {
       text().withLength(min: 1, max: 100).named('first_name')();
   TextColumn get lastName => text().nullable().named('last_name')();
   // Full name can be computed in Dart, not stored
-  DateTimeColumn get dateOfBirth =>
-      dateTime().nullable().named('date_of_birth')();
+  DateTimeColumn get dateOfBirth => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('date_of_birth')();
   TextColumn get gender =>
       text().nullable().named('gender')(); // 'male', 'female', etc.
   TextColumn get phoneNumber =>
@@ -313,10 +343,14 @@ class PersonsTable extends Table {
       integer().withDefault(const Constant(0)).named('affection')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -345,9 +379,14 @@ class EmailAddressesTable extends Table {
   TextColumn get status => textEnum<EmailStatus>()
       .withDefault(const Constant('pending'))
       .named('status')();
-  DateTimeColumn get verifiedAt => dateTime().nullable().named('verified_at')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get verifiedAt => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('verified_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -379,14 +418,22 @@ class UserAccountsTable extends Table {
       boolean().withDefault(const Constant(false)).named('is_locked')();
   IntColumn get failedLoginAttempts =>
       integer().withDefault(const Constant(0)).named('failed_login_attempts')();
-  DateTimeColumn get lastLoginAt =>
-      dateTime().nullable().named('last_login_at')();
-  DateTimeColumn get passwordChangedAt =>
-      dateTime().withDefault(currentDateAndTime).named('password_changed_at')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get lastLoginAt => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('last_login_at')();
+  DateTimeColumn get passwordChangedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('password_changed_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -412,10 +459,14 @@ class ProfilesTable extends Table {
   TextColumn get timezone => text().nullable().named('timezone')();
   TextColumn get preferredLanguage =>
       text().nullable().named('preferred_language')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -445,10 +496,14 @@ class CVAddressesTable extends Table {
   TextColumn get occupation => text().nullable().named('occupation')();
   TextColumn get educationLevel => text().nullable().named('education_level')();
   TextColumn get linkedinUrl => text().nullable().named('linkedin_url')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -477,10 +532,14 @@ class SkillsTable extends Table {
   TextColumn get description => text().nullable().named('description')();
   BoolColumn get isFeatured =>
       boolean().withDefault(const Constant(false)).named('is_featured')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -511,10 +570,14 @@ class FinancialAccountsTable extends Table {
       boolean().withDefault(const Constant(false)).named('is_primary')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -549,10 +612,14 @@ class AssetsTable extends Table {
   TextColumn get notes => text().nullable().named('notes')();
   BoolColumn get isInsured =>
       boolean().withDefault(const Constant(false)).named('is_insured')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -580,8 +647,10 @@ class TransactionsTable extends Table {
   TextColumn get description => text().nullable().named('description')();
   DateTimeColumn get transactionDate =>
       dateTime().withDefault(currentDateAndTime).named('transaction_date')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
   TextColumn get projectID => text()
       .nullable()
       .references(ProjectsTable, #id, onDelete: KeyAction.cascade)
@@ -613,15 +682,25 @@ class GoalsTable extends Table {
   TextColumn get status => text()
       .withDefault(const Constant('active'))
       .named('status')(); // planning, active, etc.
-  DateTimeColumn get targetDate => dateTime().nullable().named('target_date')();
-  DateTimeColumn get completionDate =>
-      dateTime().nullable().named('completion_date')();
+  DateTimeColumn get targetDate => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('target_date')();
+  DateTimeColumn get completionDate => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('completion_date')();
   IntColumn get progressPercentage =>
       integer().withDefault(const Constant(0)).named('progress_percentage')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  // Cột lưu dưới dạng ISO 8601 hoặc Unix timestamp tùy cấu hình Drift
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime) // Sử dụng hàm có sẵn của SQL
+      .named('created_at')();
+
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
   TextColumn get projectID => text()
       .nullable()
       .references(ProjectsTable, #id, onDelete: KeyAction.cascade)
@@ -704,10 +783,14 @@ class HabitsTable extends Table {
       boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get startedDate =>
       dateTime().withDefault(currentDateAndTime).named('started_date')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -745,10 +828,14 @@ class BlogPostsTable extends Table {
       dateTime().nullable().named('published_at')();
   DateTimeColumn get scheduledFor =>
       dateTime().nullable().named('scheduled_for')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -804,7 +891,8 @@ class HealthMetricsTable extends Table {
   TextColumn get personID => text()
       .references(PersonsTable, #id, onDelete: KeyAction.cascade)
       .named('person_id')();
-  DateTimeColumn get date => dateTime().named('date')();
+  DateTimeColumn get date =>
+      dateTime().map(const DateTimeUTCConverter()).named('date')();
   IntColumn get steps =>
       integer().withDefault(const Constant(0)).named('steps')();
   IntColumn get heartRate =>
@@ -823,8 +911,10 @@ class HealthMetricsTable extends Table {
       integer().withDefault(const Constant(0)).named('calories_consumed')();
   IntColumn get caloriesBurned =>
       integer().withDefault(const Constant(0)).named('calories_burned')();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -859,8 +949,10 @@ class MealsTable extends Table {
       real().withDefault(const Constant(0.0)).named("protein")();
   RealColumn get calories =>
       real().withDefault(const Constant(0.0)).named("calories")();
-  DateTimeColumn get eatenAt =>
-      dateTime().withDefault(currentDateAndTime).named("eaten_at")();
+  DateTimeColumn get eatenAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named("eaten_at")();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -897,8 +989,10 @@ class SessionTable extends Table {
   TextColumn get localID => text().nullable().named('local_id')();
   TextColumn get jwt => text().named('jwt')();
   TextColumn get username => text().nullable().named('username')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1013,8 +1107,10 @@ class CustomNotificationsTable extends Table {
   )(); // Comma-separated: 1,3,5 (Mon, Wed, Fri)
   BoolColumn get isEnabled =>
       boolean().withDefault(const Constant(true)).named('is_enabled')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1045,8 +1141,10 @@ class QuestsTable extends Table {
       integer().withDefault(const Constant(10)).named('reward_exp')();
   BoolColumn get isCompleted =>
       boolean().withDefault(const Constant(false)).named('is_completed')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1528,12 +1626,13 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   // Persons
   Future<String> createPerson(
     PersonProtocol person, {
+    String? id,
     String? relationship,
   }) async {
-    final String newUuid = IDGen.generateUuid();
+    final String newUuid = id ?? IDGen.generateUuid();
 
     final companion = PersonsTableCompanion.insert(
-      id: newUuid, // Use the generated UUID
+      id: newUuid, // Use the provided or generated UUID
       personID: Value(person.personID),
       firstName: person.firstName,
       lastName: Value(person.lastName),
@@ -1581,6 +1680,13 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   Future<PersonData?> getPersonById(String personID) => (select(
     personsTable,
   )..where((t) => t.personID.equals(personID))).getSingleOrNull();
+
+  Future<int> deletePerson(String personID) {
+    return (delete(
+      personsTable,
+    )..where((t) => t.personID.equals(personID))).go();
+  }
+
   Future<void> updatePerson(PersonData person) =>
       update(personsTable).replace(person);
 
@@ -1620,6 +1726,49 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     });
   }
 
+  Stream<List<SocialContact>> watchTopRankedContacts({int limit = 10}) {
+    return customSelect(
+      "SELECT * FROM persons WHERE relationship != 'none' AND relationship != 'me' ORDER BY affection DESC LIMIT ?",
+      variables: [Variable.withInt(limit)],
+      readsFrom: {personsTable},
+    ).watch().map((rows) {
+      return rows.where((row) => row.data['id'] != null).map((row) {
+        final person = PersonData(
+          id: row.data['id'] as String,
+          personID: (row.data['person_id'] as String?) ?? '',
+          firstName: (row.data['first_name'] as String?) ?? 'Unknown',
+          lastName: row.data['last_name'] as String?,
+          dateOfBirth: row.data['date_of_birth'] != null
+              ? DateTime.tryParse(row.data['date_of_birth'].toString())
+              : null,
+          gender: row.data['gender'] as String?,
+          phoneNumber: row.data['phone_number'] as String?,
+          profileImageUrl: row.data['profile_image_url'] as String?,
+          relationship: (row.data['relationship'] as String?) ?? 'none',
+          affection: (row.data['affection'] as int?) ?? 0,
+          isActive: row.data['is_active'] == 1 || row.data['is_active'] == true,
+          createdAt: row.data['created_at'] != null
+              ? DateTime.tryParse(row.data['created_at'].toString()) ??
+                    DateTime.now()
+              : DateTime.now(),
+          updatedAt: row.data['updated_at'] != null
+              ? DateTime.tryParse(row.data['updated_at'].toString()) ??
+                    DateTime.now()
+              : DateTime.now(),
+        );
+        final affection = row.data['affection'] as int? ?? 0;
+        return SocialContact(person: person, affection: affection);
+      }).toList();
+    });
+  }
+
+  Stream<int> watchTotalAffection() {
+    return customSelect(
+      "SELECT SUM(affection) as total FROM persons WHERE relationship != 'none' AND relationship != 'me'",
+      readsFrom: {personsTable},
+    ).watchSingle().map((row) => row.data['total'] as int? ?? 0);
+  }
+
   Stream<List<SocialContact>> getAllContacts() {
     return customSelect(
       "SELECT * FROM persons WHERE relationship != 'none' AND relationship != 'me'",
@@ -1657,7 +1806,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> increaseAffection(String personId, {int amount = 1}) async {
     await customUpdate(
-      'UPDATE persons SET affection = affection + ? WHERE personID = ?',
+      'UPDATE persons SET affection = affection + ? WHERE person_id = ?',
       variables: [Variable.withInt(amount), Variable.withString(personId)],
       updates: {personsTable},
       updateKind: UpdateKind.update,
@@ -1666,7 +1815,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> updateRelationship(String personId, String relationship) async {
     await customUpdate(
-      'UPDATE persons SET relationship = ? WHERE personID = ?',
+      'UPDATE persons SET relationship = ? WHERE person_id = ?',
       variables: [
         Variable.withString(relationship),
         Variable.withString(personId),
@@ -1759,6 +1908,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   Future<UserAccountData?> getAccountByUsername(String username) => (select(
     userAccountsTable,
   )..where((t) => t.username.equals(username))).getSingleOrNull();
+
+  Future<UserAccountData?> getAccountByPersonId(String personId) => (select(
+    userAccountsTable,
+  )..where((t) => t.personID.equals(personId))).getSingleOrNull();
 
   Future<void> updateAccount(UserAccountData account) =>
       update(userAccountsTable).replace(account);
@@ -2127,6 +2280,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
                   : null,
               progressPercentage:
                   (row.data['progress_percentage'] as int?) ?? 0,
+
               createdAt: row.data['created_at'] != null
                   ? DateTime.tryParse(row.data['created_at'].toString()) ??
                         DateTime.now()
@@ -2462,6 +2616,10 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  Stream<List<HealthMetricsLocal>> watchMetricsByPerson(String personID) {
+    return watchAllMetrics(personID);
+  }
+
   Future<HealthMetricsLocal?> getMetricsForDate(
     String personID,
     DateTime date,
@@ -2480,20 +2638,24 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  Future<int> insertOrUpdateMetrics(HealthMetricsTableCompanion entry) {
-    HealthMetricsTableCompanion finalEntry = entry;
-    if (entry.date.present) {
-      final d = entry.date.value;
-      final normalized = DateTime(d.year, d.month, d.day);
-      finalEntry = entry.copyWith(date: Value(normalized));
+  Future<void> insertOrUpdateMetrics(HealthMetricsTableCompanion entry) async {
+    final d = entry.date.value;
+    final normalized = DateTime(d.year, d.month, d.day);
+    final personId = entry.personID.value;
+
+    final existing = await getMetricsForDate(personId, normalized);
+
+    if (existing != null) {
+      await (update(healthMetricsTable)..where((t) => t.id.equals(existing.id)))
+          .write(entry.copyWith(date: Value(normalized)));
+    } else {
+      await into(healthMetricsTable).insert(
+        entry.copyWith(
+          id: entry.id.present ? entry.id : Value(IDGen.generateUuid()),
+          date: Value(normalized),
+        ),
+      );
     }
-    return into(healthMetricsTable).insert(
-      finalEntry,
-      onConflict: DoUpdate(
-        (old) => finalEntry,
-        target: [healthMetricsTable.personID, healthMetricsTable.date],
-      ),
-    );
   }
 
   Future<int> deleteMetricsForPerson(String personID) {
@@ -2566,10 +2728,17 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<DayWithMeal>> watchDaysWithMeals() {
+    // We join meals by their eaten_at DATE truncated to midnight
+    // to match daysTable.dayID which is also truncated to midnight.
     final query = select(daysTable).join([
-      innerJoin(mealsTable, mealsTable.eatenAt.equalsExp(daysTable.dayID)),
+      innerJoin(
+        mealsTable,
+        mealsTable.eatenAt.year.equalsExp(daysTable.dayID.year) &
+            mealsTable.eatenAt.month.equalsExp(daysTable.dayID.month) &
+            mealsTable.eatenAt.day.equalsExp(daysTable.dayID.day),
+      ),
     ]);
-    print("this query is execute");
+    print("watchDaysWithMeals: executing query...");
     return query.watch().map((rows) {
       // print("row is: "+rows.toString());
       return rows.map((row) {
@@ -2647,6 +2816,10 @@ class FocusSessionsTable extends Table {
   TextColumn get status => text()
       .withLength(min: 1, max: 20)
       .named('status')(); // 'completed', 'interrupted'
+  TextColumn get sessionType => text()
+      .withLength(min: 1, max: 20)
+      .withDefault(const Constant('Focus'))
+      .named('session_type')();
   TextColumn get taskID => text()
       .nullable()
       .references(GoalsTable, #id, onDelete: KeyAction.cascade)
@@ -2671,6 +2844,14 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
       focusSessionsTable,
     )..where((t) => t.personID.equals(personId))).watch();
   }
+
+  Stream<List<FocusSessionData>> watchAllSessions() {
+    return select(focusSessionsTable).watch();
+  }
+
+  Future<int> deleteSession(String id) {
+    return (delete(focusSessionsTable)..where((t) => t.id.equals(id))).go();
+  }
 }
 
 @DataClassName('QuoteData')
@@ -2687,8 +2868,10 @@ class QuotesTable extends Table {
   TextColumn get author => text().nullable()();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -2968,9 +3151,12 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.powersync(PowerSyncDatabase db) {
     return AppDatabase(SqliteAsyncDriftConnection(db), db);
   }
-
+  DriftDatabaseOptions get options => const DriftDatabaseOptions(
+    // Ép Drift lưu DateTime dưới dạng chuỗi ISO8601 thay vì số nguyên
+    storeDateTimeAsText: true,
+  );
   @override
-  int get schemaVersion => 25; // Increment schema version to 25
+  int get schemaVersion => 26; // Increment schema version to 26
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -3014,7 +3200,7 @@ class AppDatabase extends _$AppDatabase {
         if (from < 16) {
           try {
             await customStatement(
-              "ALTER TABLE focus_sessions ADD COLUMN taskID INTEGER REFERENCES goals(goalID) ON DELETE CASCADE;",
+              "ALTER TABLE focus_sessions ADD COLUMN taskID TEXT REFERENCES goals(goalID) ON DELETE CASCADE;",
             );
           } catch (e) {
             print('Error adding taskID column to focus_sessions: $e');
@@ -3034,17 +3220,17 @@ class AppDatabase extends _$AppDatabase {
           // Safely add columns - catch errors if they already exist
           try {
             await customStatement(
-              'ALTER TABLE project_notes ADD COLUMN personID INTEGER REFERENCES persons(personID) ON DELETE CASCADE',
+              'ALTER TABLE project_notes ADD COLUMN personID TEXT REFERENCES persons(personID) ON DELETE CASCADE',
             );
           } catch (_) {}
           try {
             await customStatement(
-              'ALTER TABLE project_notes ADD COLUMN projectID INTEGER REFERENCES projects(projectID) ON DELETE CASCADE',
+              'ALTER TABLE project_notes ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE',
             );
           } catch (_) {}
           try {
             await customStatement(
-              'ALTER TABLE goals ADD COLUMN projectID INTEGER REFERENCES projects(projectID) ON DELETE CASCADE',
+              'ALTER TABLE goals ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE',
             );
           } catch (_) {}
         }
@@ -3121,7 +3307,7 @@ class AppDatabase extends _$AppDatabase {
         if (from < 14) {
           try {
             await customStatement(
-              "ALTER TABLE transactions ADD COLUMN projectID INTEGER REFERENCES projects(projectID) ON DELETE CASCADE;",
+              "ALTER TABLE transactions ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE;",
             );
           } catch (e) {
             print('Error adding projectID column to transactions: $e');
@@ -3205,10 +3391,10 @@ class AppDatabase extends _$AppDatabase {
           }
         }
 
-        if (from < 24) {
+        if (from < 26) {
           try {
             await customStatement(
-              "ALTER TABLE meals ADD COLUMN person_id INTEGER REFERENCES persons(person_id) ON DELETE CASCADE;",
+              "ALTER TABLE meals ADD COLUMN person_id TEXT REFERENCES persons(id) ON DELETE CASCADE;",
             );
           } catch (e) {
             print('Drift: Error adding person_id column to meals: $e');

@@ -195,10 +195,11 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    if (name.startsWith('/project/')) {
+    if (name.startsWith('/project')) {
       final parts = name.split('/');
       if (parts.length > 2) {
-        final id = int.tryParse(parts.last);
+        final id = (parts.last);
+        
         if (id != null) {
           context.push('/projects/$id');
           return;

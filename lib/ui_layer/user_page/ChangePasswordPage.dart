@@ -16,9 +16,11 @@ class ChangePasswordPage extends StatefulWidget {
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
   final _formKey = GlobalKey<FormState>();
+  final _currentPasswordController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isLoading = false;
+  bool _obscureCurrentPassword = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
 
@@ -28,6 +30,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     setState(() => _isLoading = true);
 
     try {
+      final email = Supabase.instance.client.auth.currentUser?.email;
+      if (email == null) throw Exception("No authenticated user found");
+
+      // 1. Re-authenticate to verify current password
+      print("🔐 [ChangePassword] Verifying current password for $email...");
+      try {
+        await Supabase.instance.client.auth.signInWithPassword(
+          email: email,
+          password: _currentPasswordController.text,
+        );
+      } catch (authErr) {
+        throw Exception(
+          "Current password verification failed. Please check your credentials.",
+        );
+      }
+
+      // 2. Update password
+      print("🔐 [ChangePassword] Updating to new password...");
       await Supabase.instance.client.auth.updateUser(
         UserAttributes(password: _passwordController.text),
       );
@@ -120,6 +140,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
   @override
   void dispose() {
+    _currentPasswordController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
@@ -185,6 +206,46 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 ),
               ),
               const SizedBox(height: 32),
+
+              // Current Password
+              Text(
+                'Current Password',
+                style: textTheme.labelLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 8),
+              TextFormField(
+                controller: _currentPasswordController,
+                obscureText: _obscureCurrentPassword,
+                decoration: InputDecoration(
+                  hintText: 'Enter current password',
+                  prefixIcon: const Icon(Icons.lock_person_outlined),
+                  suffixIcon: IconButton(
+                    icon: Icon(
+                      _obscureCurrentPassword
+                          ? Icons.visibility_off
+                          : Icons.visibility,
+                    ),
+                    onPressed: () => setState(
+                      () => _obscureCurrentPassword = !_obscureCurrentPassword,
+                    ),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerLow,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide.none,
+                  ),
+                ),
+                validator: (value) {
+                  if (value == null || value.isEmpty)
+                    return 'Please enter current password';
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
 
               // New Password
               Text(

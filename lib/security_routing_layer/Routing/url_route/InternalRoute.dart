@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -38,15 +39,19 @@ import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_shield/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_shield/ui_layer/home_page/MainShell.dart';
 import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
+import 'package:ice_shield/ui_layer/projects_page/FocusHistoryPage.dart';
+import 'package:ice_shield/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_shield/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_shield/ui_layer/user_page/LoginPage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_shield/ui_layer/user_page/ChangePasswordPage.dart';
+import 'package:ice_shield/ui_layer/user_page/ChangeUsernamePage.dart';
 // import 'MainShell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -81,6 +86,7 @@ final GoRouter router = GoRouter(
       showIntroNotifier.value = false; // Reset so they don't get stuck
       return '/intro';
     }
+    print("Current Location: ${state.matchedLocation}");
 
     if (status == null ||
         status == AuthStatus.checkingSession ||
@@ -155,6 +161,11 @@ final GoRouter router = GoRouter(
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ChangePasswordPage(),
             ),
+            GoRoute(
+              path: 'change-username',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const ChangeUsernamePage(),
+            ),
           ],
         ),
         // Route 4: Profile Dashboard
@@ -162,6 +173,11 @@ final GoRouter router = GoRouter(
           path: '/profile',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const AnalysisDashboardPage(),
+        ),
+        GoRoute(
+          path: '/focus-history',
+          parentNavigatorKey: _shellNavigatorKey,
+          builder: (context, state) => const FocusHistoryPage(),
         ),
         // Route 5: Health
         GoRoute(
@@ -195,6 +211,11 @@ final GoRouter router = GoRouter(
               path: 'calories',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const CaloriesPage(),
+            ),
+            GoRoute(
+              path: 'weight',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const WeightPage(),
             ),
             GoRoute(
               path: 'food',
@@ -247,6 +268,13 @@ final GoRouter router = GoRouter(
           path: '/finance',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const FinancePage(),
+          routes: [
+            GoRoute(
+              path: 'dashboard',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const FinanceDashboardPage(),
+            ),
+          ],
         ),
         // Route 7: Social
         GoRoute(
@@ -267,33 +295,42 @@ final GoRouter router = GoRouter(
             ),
 
             GoRoute(
-              path: ':projectId',
+              path:
+                  ':projectId', // Đường dẫn con của /projects nên URL sẽ là /projects/123
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) {
-                final projectIdStr = state.pathParameters['projectId'];
-                if (projectIdStr == null) return const ProjectsPage();
-                final projectId = int.tryParse(projectIdStr);
-                if (projectId == null) return const ProjectsPage();
+                final projectId = state.pathParameters['projectId'];
 
                 return Watch((context) {
                   final projects = context.read<ProjectBlock>().projects.value;
-                  try {
-                    final project = projects.firstWhere(
-                      (p) => p.projectID == projectId,
+
+                  // TRƯỜNG HỢP 1: Đang tải dữ liệu
+                  if (projects.isEmpty) {
+                    return const Scaffold(
+                      body: Center(child: CircularProgressIndicator()),
                     );
+                  }
+
+                  // TRƯỜNG HỢP 2: Tìm kiếm đúng project theo ID từ URL
+                  // Dùng firstWhereOrNull để an toàn (cần import package:collection)
+                  final project = projects.cast<ProjectProtocol?>().firstWhere(
+                    (p) => p?.id.toString() == projectId,
+                    orElse: () => null,
+                  );
+
+                  // TRƯỜNG HỢP 3: Hiển thị kết quả
+                  if (project != null) {
                     return ProjectDetailsPage(project: project);
-                  } catch (e) {
-                    return projects.isEmpty
-                        ? const Scaffold(
-                            body: Center(child: CircularProgressIndicator()),
-                          )
-                        : const ProjectsPage();
+                  } else {
+                    // Nếu không tìm thấy ID, quay về trang danh sách
+                    return const ProjectsPage();
                   }
                 });
               },
             ),
           ],
         ),
+
         GoRoute(
           path: '/project-analysis',
           parentNavigatorKey: _shellNavigatorKey,
@@ -303,24 +340,32 @@ final GoRouter router = GoRouter(
           path: '/project/:projectId',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) {
-            final projectIdStr = state.pathParameters['projectId'];
-            if (projectIdStr == null) return const ProjectsPage();
-            final projectId = int.tryParse(projectIdStr);
+            final projectId = state.pathParameters['projectId'];
             if (projectId == null) return const ProjectsPage();
-
             return Watch((context) {
               final projects = context.read<ProjectBlock>().projects.value;
-              try {
-                final project = projects.firstWhere(
-                  (p) => p.projectID == projectId,
+              //  final projectList = projectBlock.projects.value
+              //           .where((p) => p.status == 0)
+              //           .toList();
+
+              // Nếu danh sách đang tải (rỗng và đang fetch)
+              if (projects.isEmpty) {
+                return const Scaffold(
+                  body: Center(child: CircularProgressIndicator()),
                 );
+              }
+
+              // Tìm project theo ID
+              final project = projects.cast<ProjectProtocol?>().firstWhere(
+                (p) => p?.id == projectId,
+                orElse: () => null,
+              );
+
+              // Nếu tìm thấy thì vào Details, không thì quay lại List
+              if (project != null) {
                 return ProjectDetailsPage(project: project);
-              } catch (e) {
-                return projects.isEmpty
-                    ? const Scaffold(
-                        body: Center(child: CircularProgressIndicator()),
-                      )
-                    : const ProjectsPage();
+              } else {
+                return const ProjectsPage();
               }
             });
           },

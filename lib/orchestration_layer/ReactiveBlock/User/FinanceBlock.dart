@@ -217,8 +217,8 @@ class FinanceBlock {
     );
   }
 
-  Future<void> deleteTransaction(String transactionID) async {
-    await _dao.deleteTransaction(transactionID);
+  Future<void> deleteTransaction(String id) async {
+    await _dao.deleteTransaction(id);
   }
 
   void dispose() {

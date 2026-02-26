@@ -116,29 +116,30 @@ class _PieChartPainter extends CustomPainter {
     if (total == 0) return;
 
     double startAngle = -math.pi / 2;
-    final rect = Rect.fromLTWH(0, 0, size.width, size.height);
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+    final holeRadius = radius * 0.6; // Consistent donut hole
 
     int i = 0;
     data.forEach((key, value) {
       final sweepAngle = (value / total) * 2 * math.pi;
-      final paint = Paint()
-        ..color = colors[i % colors.length]
-        ..style = PaintingStyle.fill;
+      if (sweepAngle > 0) {
+        final paint = Paint()
+          ..color = colors[i % colors.length]
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = radius - holeRadius;
 
-      canvas.drawArc(rect, startAngle, sweepAngle, true, paint);
+        canvas.drawArc(
+          Rect.fromCircle(center: center, radius: (radius + holeRadius) / 2),
+          startAngle,
+          sweepAngle,
+          false,
+          paint,
+        );
+      }
       startAngle += sweepAngle;
       i++;
     });
-
-    // Draw center hole for donut effect
-    final holePaint = Paint()
-      ..color = Colors
-          .white; // Should ideally match background but white is safe for now
-    canvas.drawCircle(
-      Offset(size.width / 2, size.height / 2),
-      size.width * 0.25,
-      holePaint,
-    );
   }
 
   @override

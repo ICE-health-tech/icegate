@@ -1076,7 +1076,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           ),
           title: Text(
             "Inspirational Quote",
-            style: TextStyle(color: Theme.of(context).colorScheme.onPrimary),
+            style: TextStyle(color: Theme.of(context).colorScheme.secondary),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -1085,7 +1085,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 controller: contentController,
                 maxLines: 3,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 decoration: _dialogInputDecoration("Quote Contents"),
               ),
@@ -1093,7 +1093,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               TextField(
                 controller: authorController,
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onPrimary,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
                 decoration: _dialogInputDecoration("Author"),
               ),
@@ -1224,12 +1224,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   InputDecoration _dialogInputDecoration(String label) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(
-        color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.5),
-      ),
+      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
       enabledBorder: UnderlineInputBorder(
         borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.onPrimary.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.onSecondary,
         ),
       ),
       focusedBorder: const UnderlineInputBorder(

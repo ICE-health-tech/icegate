@@ -153,6 +153,8 @@ class CanvasDynamicIsland extends StatelessWidget {
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
+                             
+                              const SizedBox(width: 8),
                               Container(
                                 width: 6,
                                 height: 6,

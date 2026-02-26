@@ -15,7 +15,10 @@ class HeartRatePage extends StatefulWidget {
   State<HeartRatePage> createState() => _HeartRatePageState();
 }
 
-class _HeartRatePageState extends State<HeartRatePage> {
+class _HeartRatePageState extends State<HeartRatePage>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
   int currentHeartRate = 0;
   final List<int> recentReadings = [];
   final TextEditingController _bpmController = TextEditingController();
@@ -24,11 +27,21 @@ class _HeartRatePageState extends State<HeartRatePage> {
   @override
   void initState() {
     super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+
+    _pulseAnimation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+
     _loadData();
   }
 
   @override
   void dispose() {
+    _pulseController.dispose();
     _bpmController.dispose();
     super.dispose();
   }
@@ -264,20 +277,13 @@ class _HeartRatePageState extends State<HeartRatePage> {
                             ),
                             child: Column(
                               children: [
-                                TweenAnimationBuilder<double>(
-                                  tween: Tween(begin: 1.0, end: 1.2),
-                                  duration: const Duration(milliseconds: 600),
-                                  curve: Curves.elasticOut,
-                                  builder: (context, value, child) {
-                                    return Transform.scale(
-                                      scale: value,
-                                      child: Icon(
-                                        Icons.favorite_rounded,
-                                        color: zoneColor,
-                                        size: 60,
-                                      ),
-                                    );
-                                  },
+                                ScaleTransition(
+                                  scale: _pulseAnimation,
+                                  child: Icon(
+                                    Icons.favorite_rounded,
+                                    color: zoneColor,
+                                    size: 60,
+                                  ),
                                 ),
                                 const SizedBox(height: 16),
                                 Row(

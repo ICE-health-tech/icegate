@@ -813,7 +813,7 @@ class _FinancePageState extends State<FinancePage> {
     };
 
     return Dismissible(
-      key: Key('txn_${txn.transactionID}'),
+      key: Key('txn_${txn.id}'),
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
@@ -829,7 +829,7 @@ class _FinancePageState extends State<FinancePage> {
           size: 28,
         ),
       ),
-      onDismissed: (_) => financeBlock.deleteTransaction(txn.transactionID!),
+      onDismissed: (_) => financeBlock.deleteTransaction(txn.id),
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -988,7 +988,7 @@ class _FinancePageState extends State<FinancePage> {
             ),
             const Spacer(),
             TextButton(
-              onPressed: () {},
+              onPressed: () => context.push('/finance/dashboard'),
               style: TextButton.styleFrom(
                 padding: const EdgeInsets.symmetric(horizontal: 12),
                 minimumSize: Size.zero,
@@ -1009,5 +1009,4 @@ class _FinancePageState extends State<FinancePage> {
       ),
     );
   }
-
 }

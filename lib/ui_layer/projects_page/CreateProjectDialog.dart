@@ -58,7 +58,11 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         final noteTitle = _noteTitleController.text.trim();
 
         final widgetID = IDGen.generateUuid();
-        final dateAdded = DateTime.now().toIso8601String();
+        // 1. Force it to UTC before converting
+        final dateAdded = DateTime.now().toUtc().toIso8601String();
+
+        // Result: "2026-02-25T13:53:14.123Z"
+        // print("date time: " + dateAdded);
 
         // 0. Create Project Entity
         final projectId = await projectBlock.createProject(
@@ -83,6 +87,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
 
         // Save Internal Widget
         await internalWidgetsDAO.insertInternalWidget(
+          id: widgetID,
+          widgetID: widgetID,
           name: internalWidget.name,
           alias: internalWidget.alias,
           url: internalWidget.url,

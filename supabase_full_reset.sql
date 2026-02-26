@@ -255,7 +255,7 @@ CREATE TABLE themes (
 DROP TABLE IF EXISTS public.user_accounts CASCADE;
 CREATE TABLE user_accounts (
     id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id integer,
+    person_id  text UNIQUE,
     username text UNIQUE,
     password_hash text,
     primary_email_id integer,

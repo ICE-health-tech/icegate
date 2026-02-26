@@ -82,13 +82,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
   late HealthMealDAO _healthMealDAO;
   late Directory appDir;
 
-  @override
-  void didChangeDependencies() async {
-    super.didChangeDependencies();
-    _healthMealDAO = context.read<HealthMealDAO>();
-    appDir = await getApplicationDocumentsDirectory();
-  }
-
   Future<void> _pickImage(ImageSource source) async {
     try {
       final XFile? image = await _picker.pickImage(
@@ -169,16 +162,17 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
       final authBlock = context.read<AuthBlock>();
       final userData = authBlock.user.value;
-      final int personID = (userData?['person_id'] is int)
-          ? userData!['person_id']
-          : int.tryParse(userData?['id']?.toString() ?? '') ?? 1;
+      final String personID =
+          userData?['person_id']?.toString() ??
+          userData?['id']?.toString() ??
+          '1';
 
       // 1. Insert Meal details
       await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
           id: IDGen.generateUuid(),
           mealName: _foodController.text,
-          personID: personID.toString(),
+          personID: personID,
           mealImageUrl: Value(_imagePath),
           carbs: Value(carbs),
           protein: Value(protein),

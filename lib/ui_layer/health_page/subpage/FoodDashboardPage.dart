@@ -36,9 +36,10 @@ class FoodDashboardPage extends StatefulWidget {
     final healthMealDAO = context.read<HealthMealDAO>();
     final authBlock = context.read<AuthBlock>();
     final userData = authBlock.user.value;
-    final String personID = (userData?['person_id'] is int)
-        ? userData!['person_id']
-        : int.tryParse(userData?['id']?.toString() ?? '') ?? 1;
+    final String personID =
+        userData?['person_id']?.toString() ??
+        userData?['id']?.toString() ??
+        '1';
 
     showDialog(
       context: context,

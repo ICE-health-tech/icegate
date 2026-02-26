@@ -78,6 +78,12 @@ class ThemeManager {
                           ),
                           _buildThemeOption(
                             context,
+                            'Nostalgia 📼',
+                            'assets/NostalgiaTheme.json',
+                            Icons.settings_backup_restore_rounded,
+                          ),
+                          _buildThemeOption(
+                            context,
                             'Cyberpunk 2077 ',
                             'assets/Cyberpunk.json',
                             Icons.bolt_rounded,

@@ -26,7 +26,10 @@ class DataSeeder {
       phoneNumber: '0123456789',
       profileImageUrl: 'https://example.com/profile.jpg',
     );
-    final personId = await db.personManagementDAO.createPerson(personProtocol);
+    final personId = await db.personManagementDAO.createPerson(
+      personProtocol,
+      id: guestPersonId,
+    );
     print("DUYLONG>>>>>>$personId");
 
     // 2. Create Email using EmailAddressProtocol

@@ -2806,7 +2806,7 @@ class _RecentHistoryHeader extends StatelessWidget {
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
           ),
           TextButton(
-            onPressed: () {},
+            onPressed: () => context.push('/focus-history'),
             child: const Text("View All", style: TextStyle(fontSize: 12)),
           ),
         ],

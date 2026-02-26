@@ -12,8 +12,7 @@ class FocusAudioHandler extends BaseAudioHandler
 
   FocusAudioHandler() {
     _player.setReleaseMode(ReleaseMode.loop);
-
-    // Notify the system that we are ready to play
+    print("🎧 [AudioHandler-${identityHashCode(this)}] Initialized");
     playbackState.add(
       playbackState.value.copyWith(
         controls: [MediaControl.pause, MediaControl.play, MediaControl.stop],
@@ -31,12 +30,14 @@ class FocusAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> play() async {
+    print("🎧 [AudioHandler-${identityHashCode(this)}] play() received");
     // 1. Update State FIRST to responsive UI
     playbackState.add(
       playbackState.value.copyWith(
         playing: true,
         controls: [MediaControl.pause, MediaControl.stop],
         processingState: AudioProcessingState.ready,
+        speed: 1.0,
       ),
     );
 
@@ -60,6 +61,7 @@ class FocusAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> pause() async {
+    print("⏸️ [AudioHandler-${identityHashCode(this)}] pause() received");
     // 1. Update State FIRST
     playbackState.add(
       playbackState.value.copyWith(
@@ -85,13 +87,22 @@ class FocusAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> stop() async {
+    print("🛑 [AudioHandler-${identityHashCode(this)}] stop() received");
     await _player.stop();
     playbackState.add(
       playbackState.value.copyWith(
         playing: false,
         processingState: AudioProcessingState.idle,
+        controls: [MediaControl.play, MediaControl.stop],
       ),
     );
+
+    // Sync back to block
+    try {
+      _focusBlock?.stopTimer();
+    } catch (e) {
+      print("FocusAudioHandler: Error syncing stop: $e");
+    }
   }
 
   @override
@@ -103,11 +114,12 @@ class FocusAudioHandler extends BaseAudioHandler
   void updateMetadata({
     required String title,
     required String artist,
+    bool? playing,
     Duration? duration,
     Duration? position,
   }) {
     print(
-      "FocusAudioHandler: updateMetadata - $title, $artist, dur: $duration, pos: $position",
+      "FocusAudioHandler: updateMetadata - $title, $artist, playing: $playing, dur: $duration, pos: $position",
     );
 
     // Update MediaItem (Static info)
@@ -118,25 +130,36 @@ class FocusAudioHandler extends BaseAudioHandler
         title: title,
         artist: artist,
         duration: duration,
-        // artUri: Uri.parse(
-        //   'https://images.unsplash.com/photo-1519681393798-38e36fefce15?auto=format&fit=crop&w=500&q=60',
-        // ), // Zen Stones Artwork
       ),
     );
 
     // Update PlaybackState (Dynamic info)
-    if (position != null) {
+    final isPlaying = playing ?? playbackState.value.playing;
+
+    // Check if we actually need to update the playback state.
+    // Constantly updating playbackState with new updatePosition causes "snapping"
+    // because the app's clock might be slightly behind the system's interpolated clock.
+    final bool stateChanged = isPlaying != playbackState.value.playing;
+
+    // Remove the 3-second guard to allow second-by-second updates for the timer
+    if (stateChanged || position != null) {
       playbackState.add(
         playbackState.value.copyWith(
-          // Anchor the position to the current system time for smooth scrubbing
-          updatePosition: position,
-          bufferedPosition: position,
-          playing: true, // Ensure it shows as playing
+          updatePosition: position ?? playbackState.value.updatePosition,
+          bufferedPosition: position ?? playbackState.value.bufferedPosition,
+          playing: isPlaying,
           processingState: AudioProcessingState.ready,
+          controls: isPlaying
+              ? [MediaControl.pause, MediaControl.stop]
+              : [MediaControl.play, MediaControl.stop],
           speed: 1.0,
           queueIndex: 0,
         ),
       );
     }
+  }
+
+  Future<void> setVolume(double volume) async {
+    await _player.setVolume(volume);
   }
 }

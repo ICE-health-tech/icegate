@@ -66,13 +66,14 @@ class ProjectBlock {
     final uuid = IDGen.generateUuid();
     await _dao.insertProject(
       ProjectsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: uuid, // Use the same UUID
+        projectID: Value(uuid), // Consistently set projectID
         personID: _personId,
         name: name,
         description: Value(description),
         color: Value(color),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
+        createdAt: Value(DateTime.now().toUtc()),
+        updatedAt:Value(DateTime.now().toUtc()),
       ),
     );
     return uuid;

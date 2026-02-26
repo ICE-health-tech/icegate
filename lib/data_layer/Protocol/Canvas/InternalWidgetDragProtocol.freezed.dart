@@ -32,6 +32,7 @@ mixin _$InternalWidgetDragProtocol {
   String get widgetID =>
       throw _privateConstructorUsedError; // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
+  // ignore: invalid_annotation_target
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get color => throw _privateConstructorUsedError; // @JsonKey(includeFromJson: false, includeToJson: false) @Default(Icon(Icons.rectangle)) Icon icon,
   // --- State Fields ---
@@ -340,6 +341,7 @@ class _$ItemImpl extends _Item {
   final String widgetID;
   // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
+  // ignore: invalid_annotation_target
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   final String color;
@@ -567,6 +569,7 @@ abstract class _Item extends InternalWidgetDragProtocol {
   @override
   String get widgetID; // --- UI Fields (From your Flutter Code) ---
   // We exclude Icon/String from JSON because they aren't natively serializable
+  // ignore: invalid_annotation_target
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   String get color; // @JsonKey(includeFromJson: false, includeToJson: false) @Default(Icon(Icons.rectangle)) Icon icon,

@@ -32,95 +32,57 @@ class AnalysisDashboardPage extends StatelessWidget {
 
     return Watch((context) {
       final scoreBlock = context.watch<ScoreBlock>();
-
       final totalXP = scoreBlock.totalXP.watch(context);
+      final level = scoreBlock.globalLevel.watch(context);
+      final progress = scoreBlock.levelProgress.watch(context);
+      final rank = scoreBlock.rankTitle.watch(context);
 
       return Scaffold(
         backgroundColor: colorScheme.surface,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios_new_rounded),
+            onPressed: () => WidgetNavigatorAction.smartPop(context),
+          ),
+          actions: [
+            Padding(
+              padding: const EdgeInsets.only(right: 16.0),
+              child: Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
+            ),
+          ],
+        ),
         body: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              const SizedBox(height: 24),
-
               // --- GUEST BANNER ---
               if (context.watch<AuthBlock>().username.value == 'Guest')
-                Padding(
-                  padding: const EdgeInsets.only(bottom: 24.0),
-                  child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.primary.withOpacity(0.1),
-                          colorScheme.tertiary.withOpacity(0.1),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: colorScheme.primary.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.cloud_off_rounded,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Guest Mode",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                              Text(
-                                "Synchronize to save your progress.",
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        FilledButton(
-                          onPressed: () {
-                            context.push('/login');
-                          },
-                          style: FilledButton.styleFrom(
-                            visualDensity: VisualDensity.compact,
-                          ),
-                          child: const Text("Sync"),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildGuestBanner(colorScheme, context),
 
-              // --- SECTION: ANALYSIS ---
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Analysis Center',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                  Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
-                ],
+              // --- TITLE ---
+              Text(
+                'Analysis Center',
+                style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1,
+                ),
               ),
-              const SizedBox(height: 16),
-              _buildAnalysisSection(context, colorScheme, scoreBlock, totalXP),
+              const SizedBox(height: 24),
+
+              // --- HERO SECTION ---
+              _buildHeroSection(context, level, rank, progress, totalXP),
               const SizedBox(height: 32),
+
+              // --- SECTOR GRID ---
+              _buildSectorGrid(context, scoreBlock),
+              const SizedBox(height: 32),
+
+              // --- BALANCE CHART ---
+              _buildBalanceSection(context, scoreBlock),
             ],
           ),
         ),
@@ -128,13 +90,265 @@ class AnalysisDashboardPage extends StatelessWidget {
     });
   }
 
-  Widget _buildAnalysisSection(
+  Widget _buildGuestBanner(ColorScheme colorScheme, BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24.0),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              colorScheme.primary.withOpacity(0.1),
+              colorScheme.tertiary.withOpacity(0.1),
+            ],
+          ),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+        ),
+        child: Row(
+          children: [
+            Icon(Icons.cloud_off_rounded, color: colorScheme.primary),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Guest Mode",
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.primary,
+                    ),
+                  ),
+                  Text(
+                    "Synchronize to save your progress.",
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            FilledButton(
+              onPressed: () => context.push('/login'),
+              style: FilledButton.styleFrom(
+                visualDensity: VisualDensity.compact,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Sync"),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeroSection(
     BuildContext context,
-    ColorScheme colorScheme,
-    ScoreBlock scoreBlock,
+    int level,
+    String rank,
+    double progress,
     double totalXP,
   ) {
-    final trendData = [0.4, 0.5, 0.45, 0.6, 0.55, 0.7, 0.85];
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "LEVEL $level",
+                    style: TextStyle(
+                      color: colorScheme.onPrimary.withOpacity(0.7),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                      letterSpacing: 2,
+                    ),
+                  ),
+                  Text(
+                    rank,
+                    style: TextStyle(
+                      color: colorScheme.onPrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 28,
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.onPrimary.withOpacity(0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: colorScheme.onPrimary,
+                  size: 32,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress,
+              minHeight: 12,
+              backgroundColor: colorScheme.onPrimary.withOpacity(0.1),
+              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "${(progress * 100).toInt()}% to level ${level + 1}",
+                style: TextStyle(
+                  color: colorScheme.onPrimary.withOpacity(0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              Text(
+                "Total XP: ${totalXP.toInt()}",
+                style: TextStyle(
+                  color: colorScheme.onPrimary.withOpacity(0.8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSectorGrid(BuildContext context, ScoreBlock scoreBlock) {
+    final score = scoreBlock.score;
+    return GridView.count(
+      crossAxisCount: 2,
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      mainAxisSpacing: 16,
+      crossAxisSpacing: 16,
+      childAspectRatio: 1.1,
+      children: [
+        _buildSectorCard(
+          context,
+          title: "HEALTH",
+          value: score.healthGlobalScore.toInt().toString(),
+          icon: Icons.favorite_rounded,
+          color: Colors.green,
+          onTap: () => context.push('/health/exercise/dashboard'),
+        ),
+        _buildSectorCard(
+          context,
+          title: "FINANCE",
+          value: score.financialGlobalScore.toInt().toString(),
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.blue,
+          onTap: () => context.push('/finance/dashboard'),
+        ),
+        _buildSectorCard(
+          context,
+          title: "SOCIAL",
+          value: score.socialGlobalScore.toInt().toString(),
+          icon: Icons.people_alt_rounded,
+          color: Colors.purple,
+          onTap: () => context.push('/social/contacts'),
+        ),
+        _buildSectorCard(
+          context,
+          title: "PROJECTS",
+          value: score.careerGlobalScore.toInt().toString(),
+          icon: Icons.rocket_launch_rounded,
+          color: Colors.orange,
+          onTap: () => context.push('/projects/dashboard'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSectorCard(
+    BuildContext context, {
+    required String title,
+    required String value,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHigh,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const Spacer(),
+            Text(
+              value,
+              style: TextStyle(
+                fontSize: 24,
+                fontWeight: FontWeight.w900,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBalanceSection(BuildContext context, ScoreBlock scoreBlock) {
     final score = scoreBlock.score;
     final distributionData = {
       'Health': score.healthGlobalScore,
@@ -143,55 +357,28 @@ class AnalysisDashboardPage extends StatelessWidget {
       'Projects': score.careerGlobalScore,
     };
 
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: () => context.push('/health/exercise/dashboard'),
-          child: _buildAnalysisCard(
-            context,
-            title: "Health Analysis",
-            subtitle: "Detailed wellness & activity report",
-            icon: Icons.health_and_safety_rounded,
-            color: Colors.green,
-            content: Column(
-              children: [
-                SimpleLineChart(
-                  data: trendData,
-                  color: Colors.green,
-                  height: 80,
-                ),
-                const SizedBox(height: 8),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      "View Detailed Report",
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 12,
-                      color: colorScheme.primary,
-                    ),
-                  ],
-                ),
-              ],
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: colorScheme.outline.withOpacity(0.05)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            "SCORE BALANCE",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.5,
             ),
           ),
-        ),
-        const SizedBox(height: 16),
-        _buildAnalysisCard(
-          context,
-          title: "Score Distribution",
-          subtitle: "Sector balance",
-          icon: Icons.pie_chart_rounded,
-          color: Colors.blue,
-          content: Row(
+          const SizedBox(height: 24),
+          Row(
             children: [
               SimplePieChart(
                 data: distributionData,
@@ -201,78 +388,58 @@ class AnalysisDashboardPage extends StatelessWidget {
                   Colors.purple,
                   Colors.orange,
                 ],
-                size: 80,
+                size: 120,
               ),
-              const SizedBox(width: 24),
+              const SizedBox(width: 32),
               Expanded(
                 child: Column(
-                  children: distributionData.entries
-                      .map(
-                        (e) => Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 2.0),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  color: _getColorForSector(e.key),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                e.key,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const Spacer(),
-                              Text(
-                                "${e.value.toInt()}",
-                                style: const TextStyle(fontSize: 12),
-                              ),
-                            ],
+                  children: distributionData.entries.map((e) {
+                    final percent =
+                        (e.value /
+                                distributionData.values.fold(
+                                  0.1,
+                                  (sum, val) => sum + val,
+                                ) *
+                                100)
+                            .toInt();
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 4.0),
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: _getColorForSector(e.key),
+                              shape: BoxShape.circle,
+                            ),
                           ),
-                        ),
-                      )
-                      .toList(),
+                          const SizedBox(width: 12),
+                          Text(
+                            e.key,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            "$percent%",
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
               ),
             ],
           ),
-        ),
-        const SizedBox(height: 16),
-        _buildAnalysisCard(
-          context,
-          title: "Total Life Score",
-          subtitle: "Overall progress and alignment",
-          icon: Icons.auto_awesome_rounded,
-          color: Colors.amber,
-          content: Column(
-            children: [
-              Text(
-                "${totalXP.toInt()}",
-                style: Theme.of(context).textTheme.displayLarge?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  color: Colors.amber,
-                  letterSpacing: -2,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "You're becoming a legend!",
-                style: TextStyle(
-                  color: colorScheme.onSurfaceVariant,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -289,64 +456,5 @@ class AnalysisDashboardPage extends StatelessWidget {
       default:
         return Colors.grey;
     }
-  }
-
-  Widget _buildAnalysisCard(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    required Widget content,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: color, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          content,
-        ],
-      ),
-    );
   }
 }

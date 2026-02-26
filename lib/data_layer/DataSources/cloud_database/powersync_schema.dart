@@ -3,8 +3,15 @@ import 'package:powersync/powersync.dart';
 /// Define the PowerSync schema.
 /// All column names use snake_case to match Supabase.
 const Schema schema = Schema([
+  Table('organizations', [
+    Column.text('name'),
+    Column.text('domain'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
+  ]),
   Table('internal_widgets', [
     Column.text('widget_id'),
+    Column.text('tenant_id'),
     Column.text('name'),
     Column.text('url'),
     Column.text('date_added'),
@@ -13,6 +20,7 @@ const Schema schema = Schema([
   ]),
   Table('external_widgets', [
     Column.text('widget_id'),
+    Column.text('tenant_id'),
     Column.text('name'),
     Column.text('alias'),
     Column.text('protocol'),
@@ -23,6 +31,7 @@ const Schema schema = Schema([
   ]),
   Table('themes', [
     Column.text('theme_id'),
+    Column.text('tenant_id'),
     Column.text('name'),
     Column.text('alias'),
     Column.text('json_content'),
@@ -31,15 +40,17 @@ const Schema schema = Schema([
   ]),
   Table('project_notes', [
     Column.text('note_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('title'),
     Column.text('content'),
     Column.text('created_at'),
     Column.text('updated_at'),
-    Column.integer('project_id'),
+    Column.text('project_id'),
   ]),
   Table('projects', [
     Column.text('project_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('name'),
     Column.text('description'),
@@ -51,6 +62,7 @@ const Schema schema = Schema([
   ]),
   Table('persons', [
     Column.text('person_id'),
+    Column.text('tenant_id'),
     Column.text('first_name'),
     Column.text('last_name'),
     Column.text('date_of_birth'),
@@ -65,6 +77,7 @@ const Schema schema = Schema([
   ]),
   Table('email_addresses', [
     Column.text('email_address_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('email_address'),
     Column.text('email_type'),
@@ -75,10 +88,11 @@ const Schema schema = Schema([
   ]),
   Table('user_accounts', [
     Column.text('account_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('username'),
     Column.text('password_hash'),
-    Column.integer('primary_email_id'),
+    Column.text('primary_email_id'),
     Column.text('role'),
     Column.integer('is_locked'),
     Column.integer('failed_login_attempts'),
@@ -89,6 +103,7 @@ const Schema schema = Schema([
   ]),
   Table('profiles', [
     Column.text('profile_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('bio'),
     Column.text('occupation'),
@@ -104,6 +119,7 @@ const Schema schema = Schema([
   ]),
   Table('detail_information', [
     Column.text('cv_address_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('github_url'),
     Column.text('website_url'),
@@ -120,6 +136,7 @@ const Schema schema = Schema([
   ]),
   Table('skills', [
     Column.text('skill_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('skill_name'),
     Column.text('skill_category'),
@@ -132,6 +149,7 @@ const Schema schema = Schema([
   ]),
   Table('financial_accounts', [
     Column.text('account_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('account_name'),
     Column.text('account_type'),
@@ -144,6 +162,7 @@ const Schema schema = Schema([
   ]),
   Table('assets', [
     Column.text('asset_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('asset_name'),
     Column.text('asset_category'),
@@ -151,7 +170,7 @@ const Schema schema = Schema([
     Column.real('purchase_price'),
     Column.real('current_estimated_value'),
     Column.text('currency'),
-    Column.real('condition'),
+    Column.text('condition'),
     Column.text('location'),
     Column.text('notes'),
     Column.integer('is_insured'),
@@ -160,6 +179,7 @@ const Schema schema = Schema([
   ]),
   Table('transactions', [
     Column.text('transaction_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('category'),
     Column.text('type'),
@@ -167,10 +187,11 @@ const Schema schema = Schema([
     Column.text('description'),
     Column.text('transaction_date'),
     Column.text('created_at'),
-    Column.integer('project_id'),
+    Column.text('project_id'),
   ]),
   Table('goals', [
     Column.text('goal_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('title'),
     Column.text('description'),
@@ -182,10 +203,11 @@ const Schema schema = Schema([
     Column.integer('progress_percentage'),
     Column.text('created_at'),
     Column.text('updated_at'),
-    Column.integer('project_id'),
+    Column.text('project_id'),
   ]),
   Table('scores', [
     Column.text('score_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.real('health_global_score'),
     Column.real('social_global_score'),
@@ -196,8 +218,9 @@ const Schema schema = Schema([
   ]),
   Table('habits', [
     Column.text('habit_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
-    Column.integer('goal_id'),
+    Column.text('goal_id'),
     Column.text('habit_name'),
     Column.text('description'),
     Column.text('frequency'),
@@ -210,6 +233,7 @@ const Schema schema = Schema([
   ]),
   Table('blog_posts', [
     Column.text('post_id'),
+    Column.text('tenant_id'),
     Column.text('author_id'),
     Column.text('title'),
     Column.text('slug'),
@@ -227,6 +251,7 @@ const Schema schema = Schema([
   ]),
   Table('person_widgets', [
     Column.text('person_widget_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('widget_name'),
     Column.text('widget_type'),
@@ -239,6 +264,7 @@ const Schema schema = Schema([
   ]),
   Table('health_metrics', [
     Column.text('metric_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('date'),
     Column.integer('steps'),
@@ -254,6 +280,8 @@ const Schema schema = Schema([
   ]),
   Table('meals', [
     Column.text('meal_id'),
+    Column.text('tenant_id'),
+    Column.text('person_id'),
     Column.text('meal_name'),
     Column.text('meal_image_url'),
     Column.real('fat'),
@@ -263,27 +291,33 @@ const Schema schema = Schema([
     Column.text('eaten_at'),
   ]),
   Table('sessions', [
-    Column.integer('local_id'),
+    Column.text('tenant_id'),
+    Column.text('local_id'),
     Column.text('jwt'),
     Column.text('username'),
     Column.text('created_at'),
   ]),
   Table('water_logs', [
-    Column.integer('log_id'),
-    Column.integer('person_id'),
+    Column.text('tenant_id'),
+    Column.text('log_id'),
+    Column.text('person_id'),
     Column.integer('amount'),
     Column.text('timestamp'),
   ]),
   Table('sleep_logs', [
-    Column.integer('log_id'),
-    Column.integer('person_id'),
+    // Column.text('id'),
+    Column.text('tenant_id'),
+    Column.text('log_id'),
+    Column.text('person_id'),
     Column.text('start_time'),
     Column.text('end_time'),
     Column.integer('quality'),
   ]),
   Table('exercise_logs', [
-    Column.integer('log_id'),
-    Column.integer('person_id'),
+    // Column.text('id'),
+    Column.text('tenant_id'),
+    Column.text('log_id'),
+    Column.text('person_id'),
     Column.text('type'),
     Column.integer('duration_minutes'),
     Column.text('intensity'),
@@ -293,7 +327,9 @@ const Schema schema = Schema([
   // Theme is a local-only user preference — syncing it would overwrite the
   // user's saved theme with server state on every app restart.
   Table('custom_notifications', [
-    Column.integer('notification_id'),
+    // Column.text('id'),
+    Column.text('tenant_id'),
+    Column.text('notification_id'),
     Column.text('title'),
     Column.text('content'),
     Column.text('scheduled_time'),
@@ -303,14 +339,18 @@ const Schema schema = Schema([
     Column.text('created_at'),
   ]),
   Table('quotes', [
-    Column.integer('quote_id'),
+    // Column.text('id'),
+    Column.text('tenant_id'),
+    Column.text('quote_id'),
     Column.text('content'),
     Column.text('author'),
     Column.integer('is_active'),
     Column.text('created_at'),
   ]),
   Table('quests', [
-    Column.integer('quest_id'),
+    // Column.text('id'),
+    Column.text('tenant_id'),
+    Column.text('quest_id'),
     Column.text('title'),
     Column.text('description'),
     Column.text('type'),
@@ -323,18 +363,20 @@ const Schema schema = Schema([
   ]),
   Table('days', [
     Column.text('day_id'),
+    Column.text('tenant_id'),
     Column.integer('weight'),
     Column.integer('calories_out'),
   ]),
   Table('focus_sessions', [
     Column.text('session_id'),
+    Column.text('tenant_id'),
     Column.text('person_id'),
     Column.text('project_id'),
     Column.text('start_time'),
     Column.text('end_time'),
     Column.integer('duration_seconds'),
     Column.text('status'),
-    Column.integer('task_id'),
+    Column.text('task_id'),
     Column.text('notes'),
   ]),
 ]);

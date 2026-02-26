@@ -1,4 +1,5 @@
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -253,7 +254,7 @@ class PersonBlock {
         );
 
         final profile = UserProfile(
-          id: personData?['person_id'],
+          id: personData?['id'] ?? personData?['person_id'] ?? user.id,
           firstName:
               personData?['first_name'] ??
               user.userMetadata?['first_name'] ??
@@ -291,6 +292,7 @@ class PersonBlock {
     print("👤 [PersonBlock] Applying default fallback data...");
     information.value = UserInformation(
       profiles: const UserProfile(
+        id: DataSeeder.guestPersonId,
         firstName: 'DuyLong',
         lastName: 'Art',
         alias: 'Guest-Shield',

@@ -1214,17 +1214,15 @@ class $ThemesTableTable extends ThemesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _addedDateMeta = const VerificationMeta(
-    'addedDate',
-  );
   @override
-  late final GeneratedColumn<DateTime> addedDate = GeneratedColumn<DateTime>(
-    'added_date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, String> addedDate =
+      GeneratedColumn<String>(
+        'added_date',
+        aliasedName,
+        false,
+        type: DriftSqlType.string,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ThemesTableTable.$converteraddedDate);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -1297,14 +1295,6 @@ class $ThemesTableTable extends ThemesTable
     } else if (isInserting) {
       context.missing(_authorMeta);
     }
-    if (data.containsKey('added_date')) {
-      context.handle(
-        _addedDateMeta,
-        addedDate.isAcceptableOrUnknown(data['added_date']!, _addedDateMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_addedDateMeta);
-    }
     return context;
   }
 
@@ -1342,10 +1332,12 @@ class $ThemesTableTable extends ThemesTable
         DriftSqlType.string,
         data['${effectivePrefix}author'],
       )!,
-      addedDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}added_date'],
-      )!,
+      addedDate: $ThemesTableTable.$converteraddedDate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}added_date'],
+        )!,
+      ),
     );
   }
 
@@ -1353,6 +1345,9 @@ class $ThemesTableTable extends ThemesTable
   $ThemesTableTable createAlias(String alias) {
     return $ThemesTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, String> $converteraddedDate =
+      const DateTimeConverter();
 }
 
 class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
@@ -1388,7 +1383,11 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
     map['alias'] = Variable<String>(alias);
     map['json_content'] = Variable<String>(json);
     map['author'] = Variable<String>(author);
-    map['added_date'] = Variable<DateTime>(addedDate);
+    {
+      map['added_date'] = Variable<String>(
+        $ThemesTableTable.$converteraddedDate.toSql(addedDate),
+      );
+    }
     return map;
   }
 
@@ -1549,7 +1548,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
     Expression<String>? alias,
     Expression<String>? json,
     Expression<String>? author,
-    Expression<DateTime>? addedDate,
+    Expression<String>? addedDate,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1614,7 +1613,9 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
       map['author'] = Variable<String>(author.value);
     }
     if (addedDate.present) {
-      map['added_date'] = Variable<DateTime>(addedDate.value);
+      map['added_date'] = Variable<String>(
+        $ThemesTableTable.$converteraddedDate.toSql(addedDate.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -17395,6 +17396,22 @@ class $FocusSessionsTableTable extends FocusSessionsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sessionTypeMeta = const VerificationMeta(
+    'sessionType',
+  );
+  @override
+  late final GeneratedColumn<String> sessionType = GeneratedColumn<String>(
+    'session_type',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 20,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Focus'),
+  );
   static const VerificationMeta _taskIDMeta = const VerificationMeta('taskID');
   @override
   late final GeneratedColumn<String> taskID = GeneratedColumn<String>(
@@ -17427,6 +17444,7 @@ class $FocusSessionsTableTable extends FocusSessionsTable
     endTime,
     durationSeconds,
     status,
+    sessionType,
     taskID,
     notes,
   ];
@@ -17506,6 +17524,15 @@ class $FocusSessionsTableTable extends FocusSessionsTable
     } else if (isInserting) {
       context.missing(_statusMeta);
     }
+    if (data.containsKey('session_type')) {
+      context.handle(
+        _sessionTypeMeta,
+        sessionType.isAcceptableOrUnknown(
+          data['session_type']!,
+          _sessionTypeMeta,
+        ),
+      );
+    }
     if (data.containsKey('task_id')) {
       context.handle(
         _taskIDMeta,
@@ -17563,6 +17590,10 @@ class $FocusSessionsTableTable extends FocusSessionsTable
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
+      sessionType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_type'],
+      )!,
       taskID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}task_id'],
@@ -17591,6 +17622,7 @@ class FocusSessionData extends DataClass
   final DateTime? endTime;
   final int durationSeconds;
   final String status;
+  final String sessionType;
   final String? taskID;
   final String? notes;
   const FocusSessionData({
@@ -17603,6 +17635,7 @@ class FocusSessionData extends DataClass
     this.endTime,
     required this.durationSeconds,
     required this.status,
+    required this.sessionType,
     this.taskID,
     this.notes,
   });
@@ -17626,6 +17659,7 @@ class FocusSessionData extends DataClass
     }
     map['duration_seconds'] = Variable<int>(durationSeconds);
     map['status'] = Variable<String>(status);
+    map['session_type'] = Variable<String>(sessionType);
     if (!nullToAbsent || taskID != null) {
       map['task_id'] = Variable<String>(taskID);
     }
@@ -17654,6 +17688,7 @@ class FocusSessionData extends DataClass
           : Value(endTime),
       durationSeconds: Value(durationSeconds),
       status: Value(status),
+      sessionType: Value(sessionType),
       taskID: taskID == null && nullToAbsent
           ? const Value.absent()
           : Value(taskID),
@@ -17678,6 +17713,7 @@ class FocusSessionData extends DataClass
       endTime: serializer.fromJson<DateTime?>(json['endTime']),
       durationSeconds: serializer.fromJson<int>(json['durationSeconds']),
       status: serializer.fromJson<String>(json['status']),
+      sessionType: serializer.fromJson<String>(json['sessionType']),
       taskID: serializer.fromJson<String?>(json['taskID']),
       notes: serializer.fromJson<String?>(json['notes']),
     );
@@ -17695,6 +17731,7 @@ class FocusSessionData extends DataClass
       'endTime': serializer.toJson<DateTime?>(endTime),
       'durationSeconds': serializer.toJson<int>(durationSeconds),
       'status': serializer.toJson<String>(status),
+      'sessionType': serializer.toJson<String>(sessionType),
       'taskID': serializer.toJson<String?>(taskID),
       'notes': serializer.toJson<String?>(notes),
     };
@@ -17710,6 +17747,7 @@ class FocusSessionData extends DataClass
     Value<DateTime?> endTime = const Value.absent(),
     int? durationSeconds,
     String? status,
+    String? sessionType,
     Value<String?> taskID = const Value.absent(),
     Value<String?> notes = const Value.absent(),
   }) => FocusSessionData(
@@ -17722,6 +17760,7 @@ class FocusSessionData extends DataClass
     endTime: endTime.present ? endTime.value : this.endTime,
     durationSeconds: durationSeconds ?? this.durationSeconds,
     status: status ?? this.status,
+    sessionType: sessionType ?? this.sessionType,
     taskID: taskID.present ? taskID.value : this.taskID,
     notes: notes.present ? notes.value : this.notes,
   );
@@ -17738,6 +17777,9 @@ class FocusSessionData extends DataClass
           ? data.durationSeconds.value
           : this.durationSeconds,
       status: data.status.present ? data.status.value : this.status,
+      sessionType: data.sessionType.present
+          ? data.sessionType.value
+          : this.sessionType,
       taskID: data.taskID.present ? data.taskID.value : this.taskID,
       notes: data.notes.present ? data.notes.value : this.notes,
     );
@@ -17755,6 +17797,7 @@ class FocusSessionData extends DataClass
           ..write('endTime: $endTime, ')
           ..write('durationSeconds: $durationSeconds, ')
           ..write('status: $status, ')
+          ..write('sessionType: $sessionType, ')
           ..write('taskID: $taskID, ')
           ..write('notes: $notes')
           ..write(')'))
@@ -17772,6 +17815,7 @@ class FocusSessionData extends DataClass
     endTime,
     durationSeconds,
     status,
+    sessionType,
     taskID,
     notes,
   );
@@ -17788,6 +17832,7 @@ class FocusSessionData extends DataClass
           other.endTime == this.endTime &&
           other.durationSeconds == this.durationSeconds &&
           other.status == this.status &&
+          other.sessionType == this.sessionType &&
           other.taskID == this.taskID &&
           other.notes == this.notes);
 }
@@ -17802,6 +17847,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   final Value<DateTime?> endTime;
   final Value<int> durationSeconds;
   final Value<String> status;
+  final Value<String> sessionType;
   final Value<String?> taskID;
   final Value<String?> notes;
   final Value<int> rowid;
@@ -17815,6 +17861,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     this.endTime = const Value.absent(),
     this.durationSeconds = const Value.absent(),
     this.status = const Value.absent(),
+    this.sessionType = const Value.absent(),
     this.taskID = const Value.absent(),
     this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -17829,6 +17876,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     this.endTime = const Value.absent(),
     required int durationSeconds,
     required String status,
+    this.sessionType = const Value.absent(),
     this.taskID = const Value.absent(),
     this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -17847,6 +17895,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     Expression<DateTime>? endTime,
     Expression<int>? durationSeconds,
     Expression<String>? status,
+    Expression<String>? sessionType,
     Expression<String>? taskID,
     Expression<String>? notes,
     Expression<int>? rowid,
@@ -17861,6 +17910,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
       if (endTime != null) 'end_time': endTime,
       if (durationSeconds != null) 'duration_seconds': durationSeconds,
       if (status != null) 'status': status,
+      if (sessionType != null) 'session_type': sessionType,
       if (taskID != null) 'task_id': taskID,
       if (notes != null) 'notes': notes,
       if (rowid != null) 'rowid': rowid,
@@ -17877,6 +17927,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     Value<DateTime?>? endTime,
     Value<int>? durationSeconds,
     Value<String>? status,
+    Value<String>? sessionType,
     Value<String?>? taskID,
     Value<String?>? notes,
     Value<int>? rowid,
@@ -17891,6 +17942,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
       endTime: endTime ?? this.endTime,
       durationSeconds: durationSeconds ?? this.durationSeconds,
       status: status ?? this.status,
+      sessionType: sessionType ?? this.sessionType,
       taskID: taskID ?? this.taskID,
       notes: notes ?? this.notes,
       rowid: rowid ?? this.rowid,
@@ -17927,6 +17979,9 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     if (status.present) {
       map['status'] = Variable<String>(status.value);
     }
+    if (sessionType.present) {
+      map['session_type'] = Variable<String>(sessionType.value);
+    }
     if (taskID.present) {
       map['task_id'] = Variable<String>(taskID.value);
     }
@@ -17951,6 +18006,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
           ..write('endTime: $endTime, ')
           ..write('durationSeconds: $durationSeconds, ')
           ..write('status: $status, ')
+          ..write('sessionType: $sessionType, ')
           ..write('taskID: $taskID, ')
           ..write('notes: $notes, ')
           ..write('rowid: $rowid')
@@ -25400,10 +25456,11 @@ class $$ThemesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get addedDate => $composableBuilder(
-    column: $table.addedDate,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, String> get addedDate =>
+      $composableBuilder(
+        column: $table.addedDate,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -25468,7 +25525,7 @@ class $$ThemesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<DateTime> get addedDate => $composableBuilder(
+  ColumnOrderings<String> get addedDate => $composableBuilder(
     column: $table.addedDate,
     builder: (column) => ColumnOrderings(column),
   );
@@ -25524,7 +25581,7 @@ class $$ThemesTableTableAnnotationComposer
   GeneratedColumn<String> get author =>
       $composableBuilder(column: $table.author, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get addedDate =>
+  GeneratedColumnWithTypeConverter<DateTime, String> get addedDate =>
       $composableBuilder(column: $table.addedDate, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -40586,6 +40643,7 @@ typedef $$FocusSessionsTableTableCreateCompanionBuilder =
       Value<DateTime?> endTime,
       required int durationSeconds,
       required String status,
+      Value<String> sessionType,
       Value<String?> taskID,
       Value<String?> notes,
       Value<int> rowid,
@@ -40601,6 +40659,7 @@ typedef $$FocusSessionsTableTableUpdateCompanionBuilder =
       Value<DateTime?> endTime,
       Value<int> durationSeconds,
       Value<String> status,
+      Value<String> sessionType,
       Value<String?> taskID,
       Value<String?> notes,
       Value<int> rowid,
@@ -40744,6 +40803,11 @@ class $$FocusSessionsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnFilters(column),
@@ -40881,6 +40945,11 @@ class $$FocusSessionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get notes => $composableBuilder(
     column: $table.notes,
     builder: (column) => ColumnOrderings(column),
@@ -41007,6 +41076,11 @@ class $$FocusSessionsTableTableAnnotationComposer
 
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionType => $composableBuilder(
+    column: $table.sessionType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get notes =>
       $composableBuilder(column: $table.notes, builder: (column) => column);
@@ -41152,6 +41226,7 @@ class $$FocusSessionsTableTableTableManager
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<int> durationSeconds = const Value.absent(),
                 Value<String> status = const Value.absent(),
+                Value<String> sessionType = const Value.absent(),
                 Value<String?> taskID = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -41165,6 +41240,7 @@ class $$FocusSessionsTableTableTableManager
                 endTime: endTime,
                 durationSeconds: durationSeconds,
                 status: status,
+                sessionType: sessionType,
                 taskID: taskID,
                 notes: notes,
                 rowid: rowid,
@@ -41180,6 +41256,7 @@ class $$FocusSessionsTableTableTableManager
                 Value<DateTime?> endTime = const Value.absent(),
                 required int durationSeconds,
                 required String status,
+                Value<String> sessionType = const Value.absent(),
                 Value<String?> taskID = const Value.absent(),
                 Value<String?> notes = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -41193,6 +41270,7 @@ class $$FocusSessionsTableTableTableManager
                 endTime: endTime,
                 durationSeconds: durationSeconds,
                 status: status,
+                sessionType: sessionType,
                 taskID: taskID,
                 notes: notes,
                 rowid: rowid,

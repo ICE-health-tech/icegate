@@ -185,16 +185,7 @@ class _LoginPageState extends State<LoginPage> {
                                       ],
                                     ),
                                   ),
-                                  Text(
-                                    'アイス・ゲート',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w500,
-                                      color: Colors.white.withOpacity(0.5),
-                                      letterSpacing: 8,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
+
                                   Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
@@ -272,14 +263,14 @@ class _LoginPageState extends State<LoginPage> {
                               // Form
                               _buildModernField(
                                 controller: _emailController,
-                                hint: 'COMMANDER IDENT',
+                                hint: 'USERNAME / eMAIL',
                                 icon: Icons.alternate_email_rounded,
                                 keyboardType: TextInputType.emailAddress,
                               ),
                               const SizedBox(height: 16),
                               _buildModernField(
                                 controller: _passwordController,
-                                hint: 'ENCRYPTION KEY',
+                                hint: 'PASSWORD',
                                 icon: Icons.vpn_key_rounded,
                                 obscureText: true,
                               ),
@@ -331,7 +322,7 @@ class _LoginPageState extends State<LoginPage> {
                                           ),
                                         )
                                       : const Text(
-                                          'INITIATE LINK',
+                                          'GO TO GATE',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,

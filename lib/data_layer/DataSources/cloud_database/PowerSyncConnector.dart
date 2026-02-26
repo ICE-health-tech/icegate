@@ -1,5 +1,6 @@
 import 'package:powersync/powersync.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A connector that bridges the local PowerSync database with your cloud backend.
@@ -86,6 +87,24 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         final id = crud.id;
         final opData = _transformOpData(table, crud.opData);
 
+        // --- Skip Guest Data ---
+        // We do not sync data associated with the hardcoded guest ID to Supabase.
+        // This avoids foreign key violations for local-only seeded data.
+        const guestId = DataSeeder.guestPersonId;
+        final isGuestData =
+            id.toString() == guestId ||
+            opData['person_id']?.toString() == guestId ||
+            opData['author_id']?.toString() == guestId ||
+            opData['user_id']?.toString() == guestId ||
+            opData['owner_id']?.toString() == guestId;
+
+        if (isGuestData) {
+          print(
+            "⏭️ [PowerSync] Skipping guest data sync for $table (id: $id) - person_id matches $guestId",
+          );
+          continue;
+        }
+
         print(
           "📤 [PowerSync] Syncing $table (op: ${crud.op}, id: $id): $opData",
         );
@@ -115,22 +134,25 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
       await transaction.complete();
       print('✅ PowerSync: Batch of ${transaction.crud.length} uploaded.');
     } on PostgrestException catch (e) {
+      final errorCode = e.code?.toString();
       print(
-        '❌ PowerSync: Sync error for table ${transaction.crud[0].table}: $e',
+        '❌ PowerSync: Sync error for table ${transaction.crud[0].table}: Code $errorCode - $e',
       );
       // PGRST204 = "column not found in schema cache"
       // 42703 = "column does not exist"
       // 22008 = "date/time field value out of range" (stale integer timestamp)
       // 23505 = "duplicate key violation" (stale data conflicts)
+      // 23503 = "foreign key violation" (missing parent data like guest ID)
       // 22P02 = "invalid text representation" (e.g. UUID/empty string for integer column)
       // These are unrecoverable stale data — skip to unblock the queue.
-      if (e.code == 'PGRST204' ||
-          e.code == '42703' ||
-          e.code == '22008' ||
-          e.code == '23505' ||
-          e.code == '22P02') {
+      if (errorCode == 'PGRST204' ||
+          errorCode == '42703' ||
+          errorCode == '22008' ||
+          errorCode == '23505' ||
+          errorCode == '23503' ||
+          errorCode == '22P02') {
         print(
-          '⚠️ PowerSync: Skipping unrecoverable schema mismatch. Completing transaction to clear queue.',
+          '⚠️ PowerSync: Skipping unrecoverable error ($errorCode). Completing transaction to clear queue.',
         );
         await transaction.complete();
       } else {

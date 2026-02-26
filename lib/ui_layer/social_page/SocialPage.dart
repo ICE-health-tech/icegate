@@ -65,36 +65,37 @@ class _SocialPageState extends State<SocialPage>
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          toolbarHeight: 70,
+          toolbarHeight: 60,
           backgroundColor: Colors.transparent,
           elevation: 0,
           centerTitle: true,
+          title: Text(
+            'Social Hub',
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 24,
+              letterSpacing: -0.5,
+              color: colorScheme.onSurface,
+            ),
+          ),
           leadingWidth: 0,
           leading: const SizedBox.shrink(),
           actions: [
             IconButton(
-              icon: const Icon(Icons.home_rounded, size: 30),
+              icon: const Icon(Icons.home_rounded, size: 28),
               onPressed: () {
                 WidgetNavigatorAction.smartPop(context);
               },
-            ),
-            IconButton(
-              icon: const Icon(Icons.grid_view, size: 30),
-              onPressed: () => context.go('/canvas'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings, size: 30),
-              onPressed: () => context.go('/settings'),
             ),
             const SizedBox(width: 8),
           ],
         ),
         body: Column(
           children: [
-            // Level Header
-            // _buildLevelHeader(context),
+            // Dashboard Header
+            _buildDashboard(context),
 
-            // const SizedBox(height: 16),
+            const SizedBox(height: 8),
 
             // Tabs
             TabBar(
@@ -102,17 +103,32 @@ class _SocialPageState extends State<SocialPage>
               labelColor: colorScheme.primary,
               unselectedLabelColor: colorScheme.onSurfaceVariant,
               indicatorColor: colorScheme.primary,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 12,
+              ),
+              isScrollable: true,
               tabs: const [
                 Tab(
-                  text: 'Achievements',
-                  icon: Icon(Icons.emoji_events_outlined),
+                  text: 'Ranking',
+                  icon: Icon(Icons.leaderboard_rounded, size: 20),
                 ),
-                Tab(text: 'Friends', icon: Icon(Icons.people_outline)),
-                Tab(text: 'Dating', icon: Icon(Icons.favorite_border)),
-                Tab(text: 'Family', icon: Icon(Icons.family_restroom)),
                 Tab(
-                  text: 'Directory',
-                  icon: Icon(Icons.import_contacts_rounded),
+                  text: 'Friends',
+                  icon: Icon(Icons.people_alt_rounded, size: 20),
+                ),
+                Tab(
+                  text: 'Dating',
+                  icon: Icon(Icons.favorite_rounded, size: 20),
+                ),
+                Tab(
+                  text: 'Family',
+                  icon: Icon(Icons.family_restroom_rounded, size: 20),
+                ),
+                Tab(
+                  text: 'Feats',
+                  icon: Icon(Icons.emoji_events_rounded, size: 20),
                 ),
               ],
             ),
@@ -122,11 +138,11 @@ class _SocialPageState extends State<SocialPage>
               child: TabBarView(
                 controller: _tabController,
                 children: [
-                  _buildAchievementsGrid(context),
+                  _buildRankingList(context),
                   _buildContactList(context, 'friend'),
                   _buildContactList(context, 'dating'),
                   _buildContactList(context, 'family'),
-                  _buildDirectoryList(context),
+                  _buildAchievementsGrid(context),
                 ],
               ),
             ),
@@ -134,22 +150,326 @@ class _SocialPageState extends State<SocialPage>
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            if (_tabController.index == 3) {
-              _importContacts();
-            } else {
-              _showAddContactDialog(context);
+            if (_tabController.index == 0) {
+              // No add action for achievements yet
+              return;
             }
+            _showAddOrImportOptions(context);
           },
-          child: AnimatedBuilder(
-            animation: _tabController,
-            builder: (context, child) {
-              return Icon(
-                _tabController.index == 4
-                    ? Icons.contact_phone_rounded
-                    : Icons.person_add_rounded,
+          child: const Icon(Icons.person_add_rounded),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDashboard(BuildContext context) {
+    final personDao = context.watch<PersonManagementDAO>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.primaryContainer.withOpacity(0.3),
+            colorScheme.secondaryContainer.withOpacity(0.1),
+          ],
+        ),
+        borderRadius: const BorderRadius.vertical(bottom: Radius.circular(32)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Social Presence',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: colorScheme.secondary,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  StreamBuilder<int>(
+                    stream: personDao.watchTotalAffection(),
+                    builder: (context, snapshot) {
+                      final total = snapshot.data ?? 0;
+                      return Text(
+                        '$total ✨',
+                        style: TextStyle(
+                          fontSize: 36,
+                          fontWeight: FontWeight.w900,
+                          color: colorScheme.onSurface,
+                          letterSpacing: -1,
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: colorScheme.surface,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: colorScheme.primary.withOpacity(0.05),
+                      blurRadius: 10,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  Icons.auto_awesome_rounded,
+                  color: colorScheme.primary,
+                  size: 28,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            'TOP ALLIES',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w800,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 12),
+          StreamBuilder<List<SocialContact>>(
+            stream: personDao.watchTopRankedContacts(limit: 3),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text(
+                  'Start bonding to see your top allies!',
+                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic),
+                );
+              }
+              final tops = snapshot.data!;
+              return Row(
+                children: tops.asMap().entries.map((entry) {
+                  final index = entry.key;
+                  final contact = entry.value;
+                  return Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(right: index == 2 ? 0 : 12),
+                      child: Column(
+                        children: [
+                          Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      index == 0
+                                          ? Colors.amber
+                                          : (index == 1
+                                                ? Colors.blueGrey
+                                                : Colors.deepOrangeAccent),
+                                      Colors.white.withOpacity(0.1),
+                                    ],
+                                  ),
+                                ),
+                                child: CircleAvatar(
+                                  radius: 26,
+                                  backgroundColor: colorScheme.surface,
+                                  child: Text(
+                                    contact.person.firstName[0].toUpperCase(),
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Positioned(
+                                bottom: 0,
+                                right: 0,
+                                child: Container(
+                                  padding: const EdgeInsets.all(4),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: colorScheme.surface,
+                                      width: 2,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    '${index + 1}',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            contact.person.firstName,
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                }).toList(),
               );
             },
           ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRankingList(BuildContext context) {
+    final personDao = context.watch<PersonManagementDAO>();
+
+    return StreamBuilder<List<SocialContact>>(
+      stream: personDao.watchTopRankedContacts(),
+      builder: (context, snapshot) {
+        if (snapshot.hasError) {
+          return Center(child: Text('Error: ${snapshot.error}'));
+        }
+
+        if (!snapshot.hasData) {
+          return const Center(child: CircularProgressIndicator());
+        }
+
+        final contacts = snapshot.data!;
+
+        if (contacts.isEmpty) {
+          return const Center(child: Text('No rank data available.'));
+        }
+
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: contacts.length,
+          itemBuilder: (context, index) {
+            final contact = contacts[index];
+            return _buildRankingCard(context, contact, index + 1);
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildRankingCard(
+    BuildContext context,
+    SocialContact socialContact,
+    int rank,
+  ) {
+    final contact = socialContact.person;
+    final affection = socialContact.affection;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ListTile(
+        contentPadding: const EdgeInsets.all(16),
+        leading: SizedBox(
+          width: 60,
+          child: Row(
+            children: [
+              Text(
+                '#$rank',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 18,
+                  color: rank <= 3
+                      ? Colors.amber
+                      : colorScheme.onSurface.withOpacity(0.3),
+                ),
+              ),
+              const SizedBox(width: 8),
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: colorScheme.primary.withOpacity(0.1),
+                child: Text(
+                  contact.firstName[0].toUpperCase(),
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        title: Text(
+          "${contact.firstName} ${contact.lastName ?? ''}",
+          style: const TextStyle(fontWeight: FontWeight.w800),
+        ),
+        subtitle: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                const Icon(Icons.favorite, size: 12, color: Colors.pink),
+                const SizedBox(width: 4),
+                Text(
+                  '$affection Relationship Pts',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: (affection % 100) / 100,
+                backgroundColor: colorScheme.primary.withOpacity(0.05),
+                color: colorScheme.primary,
+                minHeight: 4,
+              ),
+            ),
+          ],
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: colorScheme.onSurfaceVariant,
         ),
       ),
     );
@@ -590,14 +910,77 @@ class _SocialPageState extends State<SocialPage>
                               );
                             },
                           ),
-                          IconButton(
-                            icon: const Icon(
-                              Icons.chat_bubble_outline,
-                              size: 20,
-                            ),
-                            onPressed: () {
-                              // TODO: Chat
+                          PopupMenuButton<String>(
+                            icon: const Icon(Icons.more_vert, size: 20),
+                            onSelected: (value) async {
+                              if (value == 'none') {
+                                final bool? confirm = await showDialog<bool>(
+                                  context: context,
+                                  builder: (context) => AlertDialog(
+                                    title: const Text('Remove Contact'),
+                                    content: Text(
+                                      'Are you sure you want to remove ${contact.firstName}?',
+                                    ),
+                                    actions: [
+                                      TextButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, false),
+                                        child: const Text('Cancel'),
+                                      ),
+                                      ElevatedButton(
+                                        onPressed: () =>
+                                            Navigator.pop(context, true),
+                                        child: const Text('Remove'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (confirm == true) {
+                                  await personDao.deletePerson(
+                                    contact.personID!,
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        '${contact.firstName} removed.',
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              } else {
+                                await personDao.updateRelationship(
+                                  contact.personID ?? "",
+                                  value,
+                                );
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Moved ${contact.firstName} to ${value.toUpperCase()}',
+                                    ),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             },
+                            itemBuilder: (context) => [
+                              const PopupMenuItem(
+                                value: 'friend',
+                                child: Text('Move to Friends'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'dating',
+                                child: Text('Move to Dating'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'family',
+                                child: Text('Move to Family'),
+                              ),
+                              const PopupMenuItem(
+                                value: 'none',
+                                child: Text('Remove Contact'),
+                              ),
+                            ],
                           ),
                         ],
                       ),
@@ -742,96 +1125,6 @@ class _SocialPageState extends State<SocialPage>
     );
   }
 
-  Widget _buildDirectoryList(BuildContext context) {
-    final personDao = context.watch<PersonDAO>();
-    final managementDao = context.read<PersonManagementDAO>();
-
-    return StreamBuilder<List<PersonData>>(
-      stream: personDao.getAllPersons(),
-      builder: (context, snapshot) {
-        if (snapshot.hasError) {
-          return Center(child: Text('Error: ${snapshot.error}'));
-        }
-
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final persons = snapshot.data!;
-
-        if (persons.isEmpty) {
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(
-                  Icons.person_search_outlined,
-                  size: 64,
-                  color: Theme.of(context).colorScheme.outline.withOpacity(0.5),
-                ),
-                const SizedBox(height: 16),
-                const Text('No people in directory'),
-              ],
-            ),
-          );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: persons.length,
-          itemBuilder: (context, index) {
-            final person = persons[index];
-            final currentRelationship = person.relationship;
-
-            return Card(
-              margin: const EdgeInsets.only(bottom: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: ListTile(
-                leading: CircleAvatar(
-                  backgroundColor: Theme.of(
-                    context,
-                  ).colorScheme.primaryContainer,
-                  child: Text(
-                    person.firstName.isNotEmpty
-                        ? person.firstName[0].toUpperCase()
-                        : '?',
-                  ),
-                ),
-                title: Text('${person.firstName} ${person.lastName ?? ''}'),
-                subtitle: Text('Status: ${currentRelationship.toUpperCase()}'),
-                trailing: PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert),
-                  onSelected: (value) async {
-                    await managementDao.updateRelationship(
-                      person.personID??"",
-                      value,
-                    );
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'Moved ${person.firstName} to ${value.toUpperCase()}',
-                        ),
-                        behavior: SnackBarBehavior.floating,
-                      ),
-                    );
-                  },
-                  itemBuilder: (context) => [
-                    const PopupMenuItem(value: 'friend', child: Text('Friend')),
-                    const PopupMenuItem(value: 'dating', child: Text('Dating')),
-                    const PopupMenuItem(value: 'family', child: Text('Family')),
-                    const PopupMenuItem(value: 'none', child: Text('Remove')),
-                  ],
-                ),
-              ),
-            );
-          },
-        );
-      },
-    );
-  }
-
   Color _getRelationshipColor(String type) {
     switch (type) {
       case 'dating':
@@ -842,6 +1135,41 @@ class _SocialPageState extends State<SocialPage>
       default:
         return Colors.blue;
     }
+  }
+
+  void _showAddOrImportOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(Icons.person_add_rounded),
+                title: const Text('Add Manually'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _showAddContactDialog(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.contact_phone_rounded),
+                title: const Text('Import from Contacts'),
+                onTap: () {
+                  Navigator.pop(context);
+                  _importContacts();
+                },
+              ),
+              const SizedBox(height: 8),
+            ],
+          ),
+        );
+      },
+    );
   }
 
   void _showAddContactDialog(BuildContext context) {
@@ -943,16 +1271,12 @@ class _SocialPageState extends State<SocialPage>
 
   String _getTabName(int index) {
     switch (index) {
-      case 0:
-        return 'Achievements';
       case 1:
         return 'Friend';
       case 2:
         return 'Dating';
       case 3:
         return 'Family';
-      case 4:
-        return 'Directory';
       default:
         return 'Friend';
     }

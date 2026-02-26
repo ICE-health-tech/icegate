@@ -134,7 +134,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "OBJECTIVE SYNC",
+                                  "MISSION",
                                   style: TextStyle(
                                     color: colorScheme.onSurface,
                                     fontSize: 22,
@@ -187,7 +187,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                         _buildGoalSlider(
                           context: context,
                           label: "STEP TARGET",
-                          jpLabel: "歩数目標",
+                    
                           icon: Icons.directions_run_rounded,
                           color: colorScheme.primary,
                           valueSignal: healthBlock.dailyStepGoal,
@@ -201,7 +201,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                         _buildGoalSlider(
                           context: context,
                           label: "CALORIE LIMIT",
-                          jpLabel: "カロリー制限",
+                       
                           icon: Icons.local_fire_department_rounded,
                           color: const Color(0xFFFF3D00),
                           valueSignal: healthBlock.dailyKcalGoal,
@@ -258,7 +258,7 @@ class GoalConfigurationWidget extends StatelessWidget {
   Widget _buildGoalSlider({
     required BuildContext context,
     required String label,
-    required String jpLabel,
+    // required String jpLabel,
     required IconData icon,
     required Color color,
     required Signal<int> valueSignal,
@@ -292,14 +292,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                           letterSpacing: 1.5,
                         ),
                       ),
-                      Text(
-                        jpLabel,
-                        style: TextStyle(
-                          color: color.withOpacity(0.4),
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                    
                     ],
                   ),
                 ],

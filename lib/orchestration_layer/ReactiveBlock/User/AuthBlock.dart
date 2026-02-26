@@ -88,25 +88,27 @@ class AuthBlock {
         'person_id': userId, // Linked person
         'bio': 'Securing the digital frontier.',
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'person_id'); // Ensure uniqueness per person
+      }, onConflict: 'person_id'); // Use person_id for uniqueness
 
       // 3. Ensure email address exists
       if (user.email != null) {
         print("   - Ensuring 'email_addresses' row exists...");
-        await client.from('email_addresses').upsert({
-          'id':
-              userId, // Using user ID as initial ID for simplicity or generate uuid
-          'person_id': userId,
-          'email_address': user.email,
-          'is_primary': true,
-          'status': 'verified',
-        }, onConflict: 'person_id, email_address');
+        await client.from('email_addresses').upsert(
+          {
+            'id': userId, // Using user ID as primary key
+            'person_id': userId,
+            'email_address': user.email,
+            'is_primary': true,
+            'status': 'verified',
+          },
+          onConflict: 'person_id, email_address',
+        ); // Standard conflict for emails
       }
 
       // 4. Ensure user_account exists
       final usernameStr =
-          user.email ??
           user.userMetadata?['user_name'] ??
+          user.email?.split('@')[0] ??
           'user_${userId.substring(0, 8)}';
 
       print("   - Ensuring 'user_accounts' row exists...");
@@ -117,7 +119,7 @@ class AuthBlock {
         'password_hash': 'EXTERNAL_AUTH',
         'role': 'user',
         'is_locked': false,
-      }, onConflict: 'username');
+      }, onConflict: 'person_id'); // Match person_id to existing account
 
       // 5. Ensure detail_information exists
       print("   - Ensuring 'detail_information' row exists...");
@@ -267,7 +269,7 @@ class AuthBlock {
     }
   }
 
-  /// Step 5: Authenticate with user credentials
+  /// Step 5: Authenticate with user credentials (ident can be email or username)
   Future<void> login(
     String ident,
     String password,
@@ -275,14 +277,53 @@ class AuthBlock {
   ) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("🔐 [AuthBlock] Authenticating with Supabase: $ident");
+    print("🔐 [AuthBlock] Authenticating: $ident");
 
     try {
-      final AuthResponse response = await Supabase.instance.client.auth
-          .signInWithPassword(
-            email: ident.contains('@') ? ident : '$ident@example.com',
-            password: password,
+      String email = ident;
+
+      // 1. Resolve username to email if identifier doesn't look like an email
+      if (!ident.contains('@')) {
+        print("🔍 [AuthBlock] Resolving username '$ident' to email...");
+        try {
+          // Attempt to find the user in the public user_accounts table first.
+          final response = await Supabase.instance.client
+              .from('user_accounts')
+              .select('person_id')
+              .eq('username', ident)
+              .maybeSingle();
+
+          if (response != null && response['person_id'] != null) {
+            final personId = response['person_id'];
+            // Now get the primary email for this person
+            final emailResponse = await Supabase.instance.client
+                .from('email_addresses')
+                .select('email_address')
+                .eq('person_id', personId)
+                .eq('is_primary', true)
+                .maybeSingle();
+
+            if (emailResponse != null &&
+                emailResponse['email_address'] != null) {
+              email = emailResponse['email_address'];
+              print("✅ [AuthBlock] Username '$ident' resolved to '$email'");
+            }
+          }
+        } catch (resolveErr) {
+          print(
+            "⚠️ [AuthBlock] Username resolution failed: $resolveErr. Falling back...",
           );
+        }
+
+        if (email == ident) {
+          print(
+            "⚠️ [AuthBlock] Username resolution failed for: $ident. Attempting direct login.",
+          );
+        }
+      }
+
+      final AuthResponse response = await Supabase.instance.client.auth
+          .signInWithPassword(email: email, password: password);
 
       final session = response.session;
       if (session != null) {
@@ -293,13 +334,13 @@ class AuthBlock {
         await syncUserWithSupabase(session.user);
 
         status.value = AuthStatus.authenticated;
-        print("✅ [AuthBlock] Supabase Login successful.");
+        print("✅ [AuthBlock] Authentication successful.");
         await fetchUser();
       } else {
         throw Exception("Supabase returned no session");
       }
     } catch (e) {
-      print("❌ [AuthBlock] Supabase Authentication failed: $e");
+      print("❌ [AuthBlock] Authentication failed: $e");
       error.value = e.toString();
       status.value = AuthStatus.unauthenticated;
     }
@@ -318,6 +359,15 @@ class AuthBlock {
         redirectTo: redirectTo,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
+
+      final user = Supabase.instance.client.auth.currentUser;
+      if (user != null) {
+        print("👤 [AuthBlock] User already present, syncing identity...");
+        await syncUserWithSupabase(user);
+      }
+
+      print("✅ [AuthBlock] User account synced to database.");
+
       print(
         "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
       );
@@ -406,19 +456,33 @@ class AuthBlock {
 
     try {
       print(
-        "🔍 [AuthBlock] Fetching user profile from Supabase public.profiles...",
+        "🔍 [AuthBlock] Fetching user profile from Supabase profiles & user_accounts...",
       );
-      final response = await Supabase.instance.client
+
+      // 1. Fetch profile first
+      final profileResponse = await Supabase.instance.client
           .from('profiles')
           .select()
           .eq('id', session.user.id)
           .maybeSingle();
 
-      if (response != null) {
-        user.value = Map<String, dynamic>.from(response);
-        // Map common fields to signals
+      // 2. Fetch username from user_accounts specifically
+      final personId =
+          session.user.userMetadata?['person_id'] ?? session.user.id;
+      final accountResponse = await Supabase.instance.client
+          .from('user_accounts')
+          .select('username')
+          .eq('person_id', personId) // Assuming person_id is linked to user.id
+          .maybeSingle();
+
+      if (profileResponse != null) {
+        user.value = Map<String, dynamic>.from(profileResponse);
+
+        // Use username from user_accounts, fallback to email
         username.value =
-            response['alias'] ?? session.user.email ?? "SupabaseUser";
+            accountResponse?['username'] ??
+            session.user.email ??
+            "SupabaseUser";
 
         // Ensure email is present in the user map for UI
         user.value!['email'] = session.user.email;
@@ -474,17 +538,57 @@ class AuthBlock {
       );
 
       user.value = {
-        'id': localPerson.personID.toString(),
+        'id': localPerson.id,
         'userName': localPerson.firstName,
         'firstName': localPerson.firstName,
         'lastName': localPerson.lastName,
         'email': 'offline@local',
         'role': 'admin',
       };
-      username.value = localPerson.firstName;
-      status.value = AuthStatus.authenticated;
     } catch (dbError) {
       print("❌ [AuthBlock] Local DB fallback failed: $dbError");
+    }
+  }
+
+  /// Step 22: Update username
+  Future<void> changeUsername(String newUsername) async {
+    final authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) throw Exception("Not authenticated");
+
+    print("👤 [AuthBlock] Changing username to: $newUsername");
+
+    try {
+      final client = Supabase.instance.client;
+      final userId = authUser.id;
+      final personId = authUser.userMetadata?['person_id'] ?? userId;
+
+      // 1. Update Supabase Auth metadata
+      await client.auth.updateUser(
+        UserAttributes(data: {'user_name': newUsername}),
+      );
+
+      // 2. Update public user_accounts table (remote)
+      print("   - Updating 'user_accounts.username'...");
+      await client
+          .from('user_accounts')
+          .update({'username': newUsername})
+          .eq('person_id', personId);
+
+      // 3. Update local database
+      print("   - Updating local database...");
+      final personAccount = await _personDao.getAccountByPersonId(personId);
+      if (personAccount != null) {
+        await _personDao.updateAccount(
+          personAccount.copyWith(username: newUsername),
+        );
+      }
+
+      // 4. Update UI signal
+      username.value = newUsername;
+      print("✅ [AuthBlock] Username updated successfully.");
+    } catch (e) {
+      print("❌ [AuthBlock] Failed to change username: $e");
+      rethrow;
     }
   }
 }

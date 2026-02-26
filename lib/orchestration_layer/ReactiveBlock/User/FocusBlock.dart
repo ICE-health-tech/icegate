@@ -93,14 +93,17 @@ class FocusBlock {
 
   // Timer
   Timer? _timer;
-  DateTime? _startTime;
+  DateTime? _actualStartTime; // Persists across pauses for logging
+  DateTime? _targetEndTime;
   bool _isStarting = false;
+  bool _isLiveActivityInitialized = false;
 
   final FocusAudioHandler? _audioHandler;
 
   // Live Activity
   final _liveActivities = LiveActivities();
   String? _activityId;
+  StreamSubscription? _activitySubscription;
 
   FocusBlock({
     required FocusSessionsDAO focusSessionDao,
@@ -122,19 +125,33 @@ class FocusBlock {
 
   // --- Initialization ---
   Future<void> init() async {
-    if (_currentPersonId.isEmpty) {
-      print("FocusBlock: Skipping init, personId is empty.");
-      return;
-    }
     print(
       "FocusBlock Checking: init called. AudioHandler is ${_audioHandler != null ? 'PRESENT' : 'NULL'}",
     );
     try {
-      await fetchDailyStats();
-
+      // Initialize Live Activities immediately (doesn't require personId)
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
-        // Use correct bundle ID for app group
         await _liveActivities.init(appGroupId: 'group.duylong.art.iceshield');
+        _activitySubscription?.cancel();
+        _activitySubscription = _liveActivities.activityUpdateStream.listen((
+          event,
+        ) {
+          event.map(
+            active: (active) {},
+            ended: (ended) {
+              if (isRunning.value) stopTimer();
+            },
+            stale: (stale) {},
+            unknown: (unknown) {},
+          );
+        });
+        _isLiveActivityInitialized = true;
+      }
+
+      if (_currentPersonId.isEmpty) {
+        print("FocusBlock: personId is empty, skipping daily stats fetch.");
+      } else {
+        await fetchDailyStats();
       }
 
       // Register this block with the audio handler for two-way sync
@@ -155,50 +172,57 @@ class FocusBlock {
     _isStarting = true;
     try {
       isRunning.value = true;
-      _startTime ??= DateTime.now();
+      _actualStartTime ??= DateTime.now();
+      _targetEndTime = DateTime.now().add(
+        Duration(seconds: remainingTime.value),
+      );
 
-      if (!fromSystem) {
-        try {
-          await _updateAudioSource();
-          if (isRunning.value) {
-            _audioHandler?.play();
-          }
-        } catch (audioError) {
-          print(
-            "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
-          );
-        }
-      }
+      // Force immediate metadata update for instant play/pause button toggle
+      _updateMediaMetadata();
 
-      try {
-        await _createLiveActivity();
-      } catch (e) {
-        print("FocusBlock: Live Activity skipped: $e");
-      }
-
-      if (!isRunning.value) {
-        print(
-          "FocusBlock: startTimer aborted early - user requested pause during setup.",
-        );
-        return;
-      }
-
-      _timer?.cancel(); // Safety cancel before creating new
-      _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-        if (remainingTime.value > 0) {
-          remainingTime.value--;
-          try {
-            _updateLiveActivity();
-          } catch (e) {
-            print("FocusBlock: Live Activity Update Error: $e");
-          }
-          try {
-            _updateMediaMetadata();
-          } catch (e) {
-            print("FocusBlock: Media Metadata Update Error: $e");
-          }
-        } else {
+      // 1. START TIMER IMMEDIATELY
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        if (_targetEndTime == null) return;
+        final now = DateTime.now();
+        final remaining = _targetEndTime!.difference(now);
+        if (remaining.inMilliseconds <= 0) {
+          remainingTime.value = 0;
           completeSession();
+        } else {
+          final newSeconds = remaining.inSeconds;
+          if (newSeconds != remainingTime.value) {
+            remainingTime.value = newSeconds;
+
+            // Only update Live Activity every 5 seconds to avoid iOS throttling
+            if (newSeconds % 5 == 0) {
+              _updateLiveActivity();
+            }
+
+            _updateMediaMetadata();
+          }
+        }
+      });
+
+      // 2. RUN SETUP IN BACKGROUND
+      Future.microtask(() async {
+        if (!fromSystem) {
+          try {
+            await _updateAudioSource();
+            if (isRunning.value) {
+              _audioHandler?.play();
+            }
+          } catch (audioError) {
+            print(
+              "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
+            );
+          }
+        }
+
+        try {
+          await _createLiveActivity();
+        } catch (e) {
+          print("FocusBlock: Live Activity skipped: $e");
         }
       });
     } finally {
@@ -207,6 +231,10 @@ class FocusBlock {
   }
 
   Future<void> _createLiveActivity() async {
+    if (!_isLiveActivityInitialized) {
+      print("FocusBlock: Live Activity skipped (Not initialized yet)");
+      return;
+    }
     try {
       String songName;
       if (customSoundPath.value != null) {
@@ -286,8 +314,17 @@ class FocusBlock {
     if (!isRunning.value) return;
 
     isRunning.value = false;
+    if (_targetEndTime != null) {
+      remainingTime.value = _targetEndTime!
+          .difference(DateTime.now())
+          .inSeconds;
+      _targetEndTime = null;
+    }
     _timer?.cancel();
     _timer = null;
+
+    // Force metadata update to show "Paused" state immediately
+    _updateMediaMetadata();
 
     if (!fromSystem) {
       _audioHandler?.pause();
@@ -326,14 +363,16 @@ class FocusBlock {
         })
         .join(' ');
 
-    String title = songDisplayName;
+    String title = currentTrackTitle.value ?? songDisplayName;
     String artist =
         "${currentSessionType.value} | Time Left: ${_formatTime(remainingTime.value)}";
 
     final totalSecs = _getDurationForType(currentSessionType.value);
+    // Add is playing
     _audioHandler.updateMetadata(
       title: title,
       artist: artist,
+      playing: isRunning.value,
       duration: Duration(seconds: totalSecs),
       position: Duration(seconds: totalSecs - remainingTime.value),
     );
@@ -366,12 +405,14 @@ class FocusBlock {
 
       // 1. Check for Silent Mode
       if (customSoundPath.value == SILENT_MODE) {
-        await _audioHandler.stop(); // Ensure silence
-        return false; // Valid, but no "playback" needed
+        await _audioHandler.setVolume(0.0);
+      } else {
+        await _audioHandler.setVolume(1.0);
       }
 
       Source targetSource;
-      if (customSoundPath.value != null) {
+      if (customSoundPath.value != null &&
+          customSoundPath.value != SILENT_MODE) {
         if (customSoundPath.value!.startsWith('http')) {
           targetSource = UrlSource(customSoundPath.value!);
         } else {
@@ -447,8 +488,12 @@ class FocusBlock {
 
   void resetTimer() {
     pauseTimer();
+    _actualStartTime = null;
+    _targetEndTime = null;
     remainingTime.value = _getDurationForType(currentSessionType.value);
-    _startTime = null;
+
+    // Ensure metadata is updated with reset time and paused state
+    _updateMediaMetadata();
   }
 
   void stopTimer() {
@@ -608,10 +653,9 @@ class FocusBlock {
 
   Future<void> _saveSession({required String status}) async {
     if (_currentPersonId.isEmpty) return;
-    if (_startTime == null) return;
 
-    final duration =
-        _getDurationForType(currentSessionType.value) - remainingTime.value;
+    final totalDuration = _getDurationForType(currentSessionType.value);
+    final duration = totalDuration - remainingTime.value;
 
     // Only save significant sessions (e.g., > 1 minute)
     if (duration < 60) return;
@@ -621,10 +665,11 @@ class FocusBlock {
       personID: _currentPersonId,
       projectID: drift.Value(selectedProjectId.value),
       taskID: drift.Value(selectedTaskId.value),
-      startTime: _startTime!,
+      startTime: _actualStartTime!,
       endTime: drift.Value(DateTime.now()),
       durationSeconds: duration,
       status: status, // 'completed' or 'interrupted'
+      sessionType: drift.Value(currentSessionType.value),
       notes: drift.Value(
         sessionNotes.value.isNotEmpty ? sessionNotes.value : null,
       ),
@@ -634,9 +679,9 @@ class FocusBlock {
 
     // Record to Health Metrics
     final normalizedToday = DateTime(
-      _startTime!.year,
-      _startTime!.month,
-      _startTime!.day,
+      _actualStartTime!.year,
+      _actualStartTime!.month,
+      _actualStartTime!.day,
     );
     await _healthMetricsDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
@@ -668,23 +713,18 @@ class FocusBlock {
     await fetchDailyStats();
   }
 
+  Future<void> deleteSession(String id) async {
+    await _focusSessionDao.deleteSession(id);
+    await fetchDailyStats();
+  }
+
   Future<void> fetchDailyStats() async {
     if (_currentPersonId.isEmpty) return;
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
     final todayEnd = todayStart.add(const Duration(days: 1));
 
-    // We need a query for today's sessions.
-    // Since DAO only has watchSessionsByPerson, we might need to filter manually or add a specific query.
-    // For simplicity, let's filter the stream or assume we add a getTodaySessions to DAO later.
-    // Here we'll just use the stream subscription approach or a one-time fetch if we add that to DAO.
-
-    // Ideally, we should add `getSessionsForDateRange` to DAO.
-    // Without it, we can't easily get *just* today without fetching all.
-    // Let's rely on the stream in the UI for history,
-    // and for stats, maybe we listen to the stream once.
-
-    // Implementing a simple listener on the full stream for now (not efficient for large data, but works for MVP).
+    // Implementing a simple listener on the full stream for now
     final allSessions = await _focusSessionDao
         .watchSessionsByPerson(_currentPersonId)
         .first;
@@ -697,14 +737,10 @@ class FocusBlock {
           session.startTime.isBefore(todayEnd)) {
         if (session.status == 'completed' &&
             session.durationSeconds >= 25 * 60) {
-          // Assume 'Focus' sessions are roughly this length or marked?
-          // Actually, we should check duration or have a type field.
-          // For 'Study Time', sum durationSeconds.
           todayDuration += session.durationSeconds;
           todayCount++;
         } else if (session.status == 'completed') {
           todayDuration += session.durationSeconds;
-          // maybe count breaks? usually not as "sessions".
         }
       }
     }
@@ -715,6 +751,7 @@ class FocusBlock {
 
   void dispose() {
     _timer?.cancel();
+    _activitySubscription?.cancel();
     if (_activityId != null) {
       _liveActivities.endActivity(_activityId!);
     }
