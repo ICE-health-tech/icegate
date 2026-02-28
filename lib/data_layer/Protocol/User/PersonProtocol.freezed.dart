@@ -21,7 +21,7 @@ PersonProtocol _$PersonProtocolFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$PersonProtocol {
-  String get personID => throw _privateConstructorUsedError;
+  String get id => throw _privateConstructorUsedError;
   String get firstName => throw _privateConstructorUsedError;
   String? get lastName => throw _privateConstructorUsedError;
   DateTime? get dateOfBirth => throw _privateConstructorUsedError;
@@ -48,7 +48,7 @@ abstract class $PersonProtocolCopyWith<$Res> {
   ) = _$PersonProtocolCopyWithImpl<$Res, PersonProtocol>;
   @useResult
   $Res call({
-    String personID,
+    String id,
     String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -74,7 +74,7 @@ class _$PersonProtocolCopyWithImpl<$Res, $Val extends PersonProtocol>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? personID = null,
+    Object? id = null,
     Object? firstName = null,
     Object? lastName = freezed,
     Object? dateOfBirth = freezed,
@@ -85,9 +85,9 @@ class _$PersonProtocolCopyWithImpl<$Res, $Val extends PersonProtocol>
   }) {
     return _then(
       _value.copyWith(
-            personID: null == personID
-                ? _value.personID
-                : personID // ignore: cast_nullable_to_non_nullable
+            id: null == id
+                ? _value.id
+                : id // ignore: cast_nullable_to_non_nullable
                       as String,
             firstName: null == firstName
                 ? _value.firstName
@@ -133,7 +133,7 @@ abstract class _$$PersonProtocolImplCopyWith<$Res>
   @override
   @useResult
   $Res call({
-    String personID,
+    String id,
     String firstName,
     String? lastName,
     DateTime? dateOfBirth,
@@ -158,7 +158,7 @@ class __$$PersonProtocolImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? personID = null,
+    Object? id = null,
     Object? firstName = null,
     Object? lastName = freezed,
     Object? dateOfBirth = freezed,
@@ -169,9 +169,9 @@ class __$$PersonProtocolImplCopyWithImpl<$Res>
   }) {
     return _then(
       _$PersonProtocolImpl(
-        personID: null == personID
-            ? _value.personID
-            : personID // ignore: cast_nullable_to_non_nullable
+        id: null == id
+            ? _value.id
+            : id // ignore: cast_nullable_to_non_nullable
                   as String,
         firstName: null == firstName
             ? _value.firstName
@@ -210,7 +210,7 @@ class __$$PersonProtocolImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$PersonProtocolImpl implements _PersonProtocol {
   const _$PersonProtocolImpl({
-    required this.personID,
+    required this.id,
     required this.firstName,
     this.lastName,
     this.dateOfBirth,
@@ -224,7 +224,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
       _$$PersonProtocolImplFromJson(json);
 
   @override
-  final String personID;
+  final String id;
   @override
   final String firstName;
   @override
@@ -243,7 +243,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
 
   @override
   String toString() {
-    return 'PersonProtocol(personID: $personID, firstName: $firstName, lastName: $lastName, dateOfBirth: $dateOfBirth, gender: $gender, phoneNumber: $phoneNumber, profileImageUrl: $profileImageUrl, isActive: $isActive)';
+    return 'PersonProtocol(id: $id, firstName: $firstName, lastName: $lastName, dateOfBirth: $dateOfBirth, gender: $gender, phoneNumber: $phoneNumber, profileImageUrl: $profileImageUrl, isActive: $isActive)';
   }
 
   @override
@@ -251,8 +251,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$PersonProtocolImpl &&
-            (identical(other.personID, personID) ||
-                other.personID == personID) &&
+            (identical(other.id, id) || other.id == id) &&
             (identical(other.firstName, firstName) ||
                 other.firstName == firstName) &&
             (identical(other.lastName, lastName) ||
@@ -272,7 +271,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
   @override
   int get hashCode => Object.hash(
     runtimeType,
-    personID,
+    id,
     firstName,
     lastName,
     dateOfBirth,
@@ -301,7 +300,7 @@ class _$PersonProtocolImpl implements _PersonProtocol {
 
 abstract class _PersonProtocol implements PersonProtocol {
   const factory _PersonProtocol({
-    required final String personID,
+    required final String id,
     required final String firstName,
     final String? lastName,
     final DateTime? dateOfBirth,
@@ -315,7 +314,7 @@ abstract class _PersonProtocol implements PersonProtocol {
       _$PersonProtocolImpl.fromJson;
 
   @override
-  String get personID;
+  String get id;
   @override
   String get firstName;
   @override

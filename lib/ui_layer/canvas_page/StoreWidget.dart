@@ -102,7 +102,7 @@ class StoreWidget extends StatelessWidget {
       imageUrl: "${data.protocol}://${data.host}${data.url}",
       alias: 'plugin',
       dateAdded: DateTime.now().toIso8601String(),
-      widgetID: data.widgetID ?? '',
+      widgetID: data.id,
       score: 5,
       isTarget: false,
     );

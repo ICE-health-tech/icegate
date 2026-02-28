@@ -14,9 +14,12 @@ class HealthBlock {
   final historicalSteps = signal<int>(0);
   final todaySleep = signal<double>(0.0);
   final todayHeartRate = signal<int>(0);
+  final todayCaloriesBurned = signal<int>(0);
   final dailyStepGoal = signal<int>(10000);
   final dailyKcalGoal = signal<int>(2500);
   final todayWater = signal<int>(0);
+  final todayExerciseMinutes = signal<int>(0);
+  final todayFocusMinutes = signal<int>(0);
 
   late final totalSteps = computed(
     () => todaySteps.value + historicalSteps.value,
@@ -50,15 +53,19 @@ class HealthBlock {
         int foundTodaySteps = 0;
         double foundTodaySleep = 0;
         int foundTodayHeartRate = 0;
+        int foundTodayCaloriesBurned = 0;
 
         for (var m in metrics) {
           final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
           if (dateStr == todayStr) {
-            foundTodaySteps = m.steps;
-            foundTodaySleep = m.sleepHours;
-            foundTodayHeartRate = m.heartRate;
+            foundTodaySteps = m.steps ?? 0;
+            foundTodaySleep = m.sleepHours ?? 0.0;
+            foundTodayHeartRate = m.heartRate ?? 0;
+            foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+            todayExerciseMinutes.value = m.exerciseMinutes ?? 0;
+            todayFocusMinutes.value = m.focusMinutes ?? 0;
           } else {
-            totalHistorical += m.steps;
+            totalHistorical += m.steps ?? 0;
           }
         }
 
@@ -74,6 +81,10 @@ class HealthBlock {
 
         if (foundTodayHeartRate > todayHeartRate.value) {
           todayHeartRate.value = foundTodayHeartRate;
+        }
+
+        if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
+          todayCaloriesBurned.value = foundTodayCaloriesBurned;
         }
       },
       onError: (e) =>
@@ -122,6 +133,35 @@ class HealthBlock {
       todayHeartRate.value = bpm;
       _saveHeartRate(bpm);
     }
+  }
+
+  void updateCalories(int calories) {
+    debugPrint(
+      "HealthBlock: updateCalories called with $calories kcal (current: ${todayCaloriesBurned.value})",
+    );
+    if (calories > todayCaloriesBurned.value) {
+      todayCaloriesBurned.value = calories;
+      _saveCalories(calories);
+    }
+  }
+
+  Future<void> _saveCalories(int calories) async {
+    if (personId.isEmpty) return;
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+
+    debugPrint(
+      "HealthBlock: Saving $calories calories to DB for $normalizedToday",
+    );
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        id: Value(IDGen.generateUuid()),
+        personID: Value(personId),
+        date: Value(normalizedToday),
+        caloriesBurned: Value(calories),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   Future<void> _saveSteps(int steps) async {

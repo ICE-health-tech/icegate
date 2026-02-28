@@ -39,7 +39,7 @@ class ProjectBlock {
                   (e) => ProjectProtocol(
                     id: e.id,
                     projectID: e.projectID ?? "",
-                    personID: e.personID,
+                    personID: e.personID??"",
                     name: e.name,
                     description: e.description,
                     color: e.color,
@@ -68,7 +68,7 @@ class ProjectBlock {
       ProjectsTableCompanion.insert(
         id: uuid, // Use the same UUID
         projectID: Value(uuid), // Consistently set projectID
-        personID: _personId,
+        personID: Value(_personId),
         name: name,
         description: Value(description),
         color: Value(color),

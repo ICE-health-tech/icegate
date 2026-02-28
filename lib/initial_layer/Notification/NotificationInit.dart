@@ -116,15 +116,9 @@ class LocalNotificationService {
     await _notificationsPlugin.cancel(id: id);
   }
 
-  /// Sync all notifications (daily + custom from DB)
+  /// Sync all custom notifications from DB
   Future<void> syncAllNotifications() async {
     if (!notificationsEnabled.value) return;
-
-    // Daily notification
-    await scheduleDailyNotification();
-
-    // Retention notifications (Engagement)
-    await scheduleRetentionNotifications();
 
     // Custom notifications from database
     if (_database != null) {
@@ -134,89 +128,6 @@ class LocalNotificationService {
         await scheduleCustomNotification(notification);
       }
     }
-  }
-
-  Future<void> scheduleRetentionNotifications() async {
-    if (!notificationsEnabled.value) return;
-
-    // 1. Daily Engagement Reminder (9 PM)
-    await _notificationsPlugin.zonedSchedule(
-      id: 999,
-      title: 'Daily Review 🌙',
-      body:
-          'Time to review your progress! Check how you did in Health and Projects today.',
-      scheduledDate: _nextInstanceOfTime(
-        DateTime(2024, 1, 1, 21, 0), // 9:00 PM
-      ),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'retention_channel',
-          'Engagement Reminders',
-          channelDescription: 'Notifications to keep you on track',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          interruptionLevel: InterruptionLevel.active,
-        ),
-        macOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
-
-    // 2. Weekend Summary Reminder (Sunday 10 AM)
-    await _notificationsPlugin.zonedSchedule(
-      id: 1000,
-      title: 'Weekly Summary 📈',
-      body:
-          "How was your week? Let's check your analysis and plan for the next one!",
-      scheduledDate: _nextInstanceOfDay(
-        DateTime(2024, 1, 1, 10, 0), // 10:00 AM
-        DateTime.sunday,
-      ),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'retention_channel',
-          'Engagement Reminders',
-          channelDescription: 'Notifications to keep you on track',
-          importance: Importance.high,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(
-          interruptionLevel: InterruptionLevel.active,
-        ),
-        macOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
-    );
-  }
-
-  Future<void> scheduleDailyNotification() async {
-    if (!notificationsEnabled.value) return;
-
-    final quote = await _getRandomQuote();
-
-    await _notificationsPlugin.zonedSchedule(
-      id: 888,
-      title: 'Good Morning! ☀️',
-      body: quote,
-      scheduledDate: _nextInstanceOfSevenAM(),
-      notificationDetails: const NotificationDetails(
-        android: AndroidNotificationDetails(
-          'daily_channel',
-          'Daily Reminder',
-          channelDescription: 'Daily 7 AM briefing',
-          importance: Importance.max,
-          priority: Priority.high,
-        ),
-        iOS: DarwinNotificationDetails(),
-        macOS: DarwinNotificationDetails(),
-      ),
-      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      matchDateTimeComponents: DateTimeComponents.time,
-    );
   }
 
   Future<void> scheduleCustomNotification(CustomNotificationData data) async {
@@ -243,6 +154,11 @@ class LocalNotificationService {
       return;
     }
 
+    final category = data.category ?? 'General';
+    final priority = data.priority ?? 'Normal';
+
+    final details = _customNotificationDetails(category, priority);
+
     // For weekly, we might need multiple schedules if multiple days are selected
     if (data.repeatFrequency == 'weekly' &&
         data.repeatDays != null &&
@@ -255,13 +171,14 @@ class LocalNotificationService {
         // We need a unique ID for each day of the weekly repeat
         // Using notificationID + day offset to keep it unique but related
         final dayId =
-            data.notificationID.hashCode * 100 + day; // Using 100 to avoid overlap
+            data.notificationID.hashCode * 100 +
+            day; // Using 100 to avoid overlap
         await _notificationsPlugin.zonedSchedule(
           id: dayId,
           title: data.title,
           body: data.content,
           scheduledDate: _nextInstanceOfDay(data.scheduledTime, day),
-          notificationDetails: _customNotificationDetails(),
+          notificationDetails: details,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         );
@@ -274,45 +191,55 @@ class LocalNotificationService {
         scheduledDate: matchComponents != null
             ? _nextInstanceOfTime(data.scheduledTime)
             : scheduledDate,
-        notificationDetails: _customNotificationDetails(),
+        notificationDetails: details,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: matchComponents,
       );
     }
   }
 
-  Future<String> _getRandomQuote() async {
-    if (_database != null) {
-      final quotes = await _database!.quoteDAO.getAllQuotes();
-      final activeQuotes = quotes.where((q) => q.isActive).toList();
-      if (activeQuotes.isNotEmpty) {
-        final quote = activeQuotes[DateTime.now().day % activeQuotes.length];
-        return "${quote.content} ${quote.author != null ? '- ${quote.author}' : ''}";
-      }
-    }
+  NotificationDetails _customNotificationDetails(
+    String category,
+    String priority,
+  ) {
+    final Importance importance = switch (priority) {
+      'Urgent' => Importance.max,
+      'High' => Importance.high,
+      'Normal' => Importance.defaultImportance,
+      'Low' => Importance.min,
+      _ => Importance.defaultImportance,
+    };
 
-    // Default Fallback Quotes
-    final defaultQuotes = [
-      "The only way to do great work is to love what you do.",
-      "Innovation distinguishes between a leader and a follower.",
-      "Stay hungry, stay foolish.",
-      "Your time is limited, don't waste it living someone else's life.",
-      "Design is not just what it looks like and feels like. Design is how it works.",
-    ];
-    return defaultQuotes[DateTime.now().day % defaultQuotes.length];
-  }
+    final Priority p = switch (priority) {
+      'Urgent' => Priority.max,
+      'High' => Priority.high,
+      'Normal' => Priority.defaultPriority,
+      'Low' => Priority.min,
+      _ => Priority.defaultPriority,
+    };
 
-  NotificationDetails _customNotificationDetails() {
-    return const NotificationDetails(
+    // Use category for channel ID/Name
+    final String channelId =
+        "${category.toLowerCase().replaceAll(' ', '_')}_channel";
+
+    return NotificationDetails(
       android: AndroidNotificationDetails(
-        'custom_channel',
-        'Custom Notifications',
-        channelDescription: 'User scheduled notifications',
-        importance: Importance.max,
-        priority: Priority.high,
+        channelId,
+        category,
+        channelDescription: '$category notifications',
+        importance: importance,
+        priority: p,
       ),
-      iOS: DarwinNotificationDetails(),
-      macOS: DarwinNotificationDetails(),
+      iOS: DarwinNotificationDetails(
+        interruptionLevel: switch (priority) {
+          'Urgent' => InterruptionLevel.critical,
+          'High' => InterruptionLevel.active,
+          'Normal' => InterruptionLevel.active,
+          'Low' => InterruptionLevel.passive,
+          _ => InterruptionLevel.active,
+        },
+      ),
+      macOS: const DarwinNotificationDetails(),
     );
   }
 
@@ -337,22 +264,6 @@ class LocalNotificationService {
     tz.TZDateTime scheduledDate = _nextInstanceOfTime(time);
     // Convert Monday=1, Sunday=7 (Dart/TZDateTime)
     while (scheduledDate.weekday != dayOfWeek) {
-      scheduledDate = scheduledDate.add(const Duration(days: 1));
-    }
-    return scheduledDate;
-  }
-
-  tz.TZDateTime _nextInstanceOfSevenAM() {
-    final tz.TZDateTime now = tz.TZDateTime.now(tz.local);
-    tz.TZDateTime scheduledDate = tz.TZDateTime(
-      tz.local,
-      now.year,
-      now.month,
-      now.day,
-      7,
-    );
-    // If scheduled date is now OR in the past, move to the next day
-    if (!scheduledDate.isAfter(now)) {
       scheduledDate = scheduledDate.add(const Duration(days: 1));
     }
     return scheduledDate;

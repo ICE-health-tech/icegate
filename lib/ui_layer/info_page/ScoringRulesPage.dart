@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
 
 class ScoringRulesPage extends StatelessWidget {

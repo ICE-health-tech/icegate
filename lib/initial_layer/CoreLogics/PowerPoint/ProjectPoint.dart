@@ -1,4 +1,4 @@
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 /// ProjectPoint — Configurable point system for projects & tasks.
 ///

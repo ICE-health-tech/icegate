@@ -46,26 +46,10 @@ class GoalConfigurationWidget extends StatelessWidget {
                       letterSpacing: 4,
                     ),
                   ),
-                  Text(
-                    "ターゲット進化",
-                    style: TextStyle(
-                      color: colorScheme.primary,
-                      fontSize: 8,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 8,
-                    ),
-                  ),
+                
                 ],
               ),
-              actions: [
-                IconButton(
-                  onPressed: () {},
-                  icon: Icon(
-                    Icons.settings_input_component_rounded,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
+              
             ),
           ),
         ),

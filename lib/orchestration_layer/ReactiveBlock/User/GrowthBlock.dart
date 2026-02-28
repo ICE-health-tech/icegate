@@ -41,7 +41,7 @@ class GrowthBlock {
                 (e) => GoalProtocol(
                   id: e.id,
                   goalID: e.goalID ?? "",
-                  personID: e.personID,
+                  personID: e.personID??"",
                   title: e.title,
                   description: e.description,
                   category: e.category,
@@ -67,7 +67,7 @@ class GrowthBlock {
                 (e) => HabitProtocol(
                   id: e.id,
                   habitID: e.habitID ?? "",
-                  personID: e.personID,
+                  personID: e.personID??"",
                   goalID: e.goalID,
                   habitName: e.habitName,
                   description: e.description,
@@ -92,7 +92,7 @@ class GrowthBlock {
                 (e) => SkillProtocol(
                   id: e.id,
                   skillID: e.skillID ?? "",
-                  personID: e.personID,
+                  personID: e.personID??"",
                   skillName: e.skillName,
                   skillCategory: e.skillCategory,
                   proficiencyLevel: e.proficiencyLevel.name,
@@ -141,7 +141,7 @@ class GrowthBlock {
     await _dao.createGoal(
       GoalsTableCompanion.insert(
         id: IDGen.generateUuid(),
-        personID: _personId,
+        personID: Value(_personId),
         title: title,
         projectID: Value(projectID),
         description: Value(description),

@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
+import 'package:ice_shield/ui_layer/notification_page/NotificationInboxPage.dart';
+import 'package:ice_shield/ui_layer/notification_page/CustomNotificationManagerPage.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:ice_shield/ui_layer/ReusableWidget/SettingWidget.dart';
@@ -122,6 +124,21 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const SnowflakeAssembleScreen(),
     ),
+    GoRoute(
+      path: '/notifications',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const NotificationManagerPage(),
+    ),
+    GoRoute(
+      path: '/notification-inbox',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const NotificationInboxPage(),
+    ),
+    GoRoute(
+      path: '/custom-notifications',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const CustomNotificationManagerPage(),
+    ),
 
     // --- SHELL ROUTE (Wraps pages with the App Bar) ---
     ShellRoute(
@@ -135,7 +152,7 @@ final GoRouter router = GoRouter(
         GoRoute(
           path: '/',
           parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) => const HomePage(title: 'DuyLong'),
+          builder: (context, state) => const HomePage(),
         ),
         // Route 2: The Grid Canvas
         GoRoute(
@@ -185,6 +202,11 @@ final GoRouter router = GoRouter(
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const HealthPage(),
           routes: [
+            GoRoute(
+               path: '/dashboard',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const HealthAnalysisPage(),
+            ),
             GoRoute(
               path: 'steps',
               parentNavigatorKey: _shellNavigatorKey,
@@ -401,11 +423,6 @@ final GoRouter router = GoRouter(
           path: "/project_notes",
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const ProjectNotesPage(),
-        ),
-        GoRoute(
-          path: '/notifications',
-          parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) => const NotificationManagerPage(),
         ),
         GoRoute(
           path: '/manual',

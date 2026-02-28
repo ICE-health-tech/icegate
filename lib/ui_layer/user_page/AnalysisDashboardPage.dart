@@ -65,7 +65,7 @@ class AnalysisDashboardPage extends StatelessWidget {
 
               // --- TITLE ---
               Text(
-                'Analysis Center',
+                'Overview',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
@@ -73,10 +73,7 @@ class AnalysisDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-              // --- HERO SECTION ---
-              _buildHeroSection(context, level, rank, progress, totalXP),
-              const SizedBox(height: 32),
-
+            
               // --- SECTOR GRID ---
               _buildSectorGrid(context, scoreBlock),
               const SizedBox(height: 32),
@@ -265,7 +262,7 @@ class AnalysisDashboardPage extends StatelessWidget {
           value: score.healthGlobalScore.toInt().toString(),
           icon: Icons.favorite_rounded,
           color: Colors.green,
-          onTap: () => context.push('/health/exercise/dashboard'),
+          onTap: () => context.push('/health/dashboard'),
         ),
         _buildSectorCard(
           context,

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 class TaskItem extends StatelessWidget {
   final GoalProtocol task;

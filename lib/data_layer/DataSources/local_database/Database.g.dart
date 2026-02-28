@@ -10,8 +10,6 @@ mixin _$InternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.internalWidgetsTable;
 }
 mixin _$ThemeDAOMixin on DatabaseAccessor<AppDatabase> {
-  $OrganizationsTableTable get organizationsTable =>
-      attachedDatabase.organizationsTable;
   $ThemeTableTable get themeTable => attachedDatabase.themeTable;
 }
 mixin _$PersonDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -32,8 +30,6 @@ mixin _$ExternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.externalWidgetsTable;
 }
 mixin _$ThemesTableDAOMixin on DatabaseAccessor<AppDatabase> {
-  $OrganizationsTableTable get organizationsTable =>
-      attachedDatabase.organizationsTable;
   $ThemesTableTable get themesTable => attachedDatabase.themesTable;
 }
 mixin _$ProjectNoteDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -186,30 +182,26 @@ class $OrganizationsTableTable extends OrganizationsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($OrganizationsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($OrganizationsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -249,18 +241,6 @@ class $OrganizationsTableTable extends OrganizationsTable
         domain.isAcceptableOrUnknown(data['domain']!, _domainMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -282,14 +262,18 @@ class $OrganizationsTableTable extends OrganizationsTable
         DriftSqlType.string,
         data['${effectivePrefix}domain'],
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $OrganizationsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $OrganizationsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -297,6 +281,11 @@ class $OrganizationsTableTable extends OrganizationsTable
   $OrganizationsTableTable createAlias(String alias) {
     return $OrganizationsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class OrganizationData extends DataClass
@@ -321,8 +310,16 @@ class OrganizationData extends DataClass
     if (!nullToAbsent || domain != null) {
       map['domain'] = Variable<String>(domain);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $OrganizationsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $OrganizationsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -484,10 +481,14 @@ class OrganizationsTableCompanion extends UpdateCompanion<OrganizationData> {
       map['domain'] = Variable<String>(domain.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $OrganizationsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $OrganizationsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1140,19 +1141,16 @@ class $ThemesTableTable extends ThemesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
-    'tenantID',
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
   );
   @override
-  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
-    'tenant_id',
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES organizations (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _themeIDMeta = const VerificationMeta(
     'themeID',
@@ -1226,7 +1224,7 @@ class $ThemesTableTable extends ThemesTable
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    tenantID,
+    organizationId,
     themeID,
     name,
     alias,
@@ -1251,10 +1249,13 @@ class $ThemesTableTable extends ThemesTable
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('tenant_id')) {
+    if (data.containsKey('organization_id')) {
       context.handle(
-        _tenantIDMeta,
-        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
       );
     }
     if (data.containsKey('theme_id')) {
@@ -1308,9 +1309,9 @@ class $ThemesTableTable extends ThemesTable
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      tenantID: attachedDatabase.typeMapping.read(
+      organizationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}tenant_id'],
+        data['${effectivePrefix}organization_id'],
       ),
       themeID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -1352,7 +1353,7 @@ class $ThemesTableTable extends ThemesTable
 
 class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   final String id;
-  final String? tenantID;
+  final String? organizationId;
   final String? themeID;
   final String name;
   final String alias;
@@ -1361,7 +1362,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   final DateTime addedDate;
   const LocalThemeData({
     required this.id,
-    this.tenantID,
+    this.organizationId,
     this.themeID,
     required this.name,
     required this.alias,
@@ -1373,8 +1374,8 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || tenantID != null) {
-      map['tenant_id'] = Variable<String>(tenantID);
+    if (!nullToAbsent || organizationId != null) {
+      map['organization_id'] = Variable<String>(organizationId);
     }
     if (!nullToAbsent || themeID != null) {
       map['theme_id'] = Variable<String>(themeID);
@@ -1394,9 +1395,9 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   ThemesTableCompanion toCompanion(bool nullToAbsent) {
     return ThemesTableCompanion(
       id: Value(id),
-      tenantID: tenantID == null && nullToAbsent
+      organizationId: organizationId == null && nullToAbsent
           ? const Value.absent()
-          : Value(tenantID),
+          : Value(organizationId),
       themeID: themeID == null && nullToAbsent
           ? const Value.absent()
           : Value(themeID),
@@ -1415,7 +1416,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalThemeData(
       id: serializer.fromJson<String>(json['id']),
-      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      organizationId: serializer.fromJson<String?>(json['organizationId']),
       themeID: serializer.fromJson<String?>(json['themeID']),
       name: serializer.fromJson<String>(json['name']),
       alias: serializer.fromJson<String>(json['alias']),
@@ -1429,7 +1430,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'tenantID': serializer.toJson<String?>(tenantID),
+      'organizationId': serializer.toJson<String?>(organizationId),
       'themeID': serializer.toJson<String?>(themeID),
       'name': serializer.toJson<String>(name),
       'alias': serializer.toJson<String>(alias),
@@ -1441,7 +1442,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
 
   LocalThemeData copyWith({
     String? id,
-    Value<String?> tenantID = const Value.absent(),
+    Value<String?> organizationId = const Value.absent(),
     Value<String?> themeID = const Value.absent(),
     String? name,
     String? alias,
@@ -1450,7 +1451,9 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
     DateTime? addedDate,
   }) => LocalThemeData(
     id: id ?? this.id,
-    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    organizationId: organizationId.present
+        ? organizationId.value
+        : this.organizationId,
     themeID: themeID.present ? themeID.value : this.themeID,
     name: name ?? this.name,
     alias: alias ?? this.alias,
@@ -1461,7 +1464,9 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   LocalThemeData copyWithCompanion(ThemesTableCompanion data) {
     return LocalThemeData(
       id: data.id.present ? data.id.value : this.id,
-      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
       themeID: data.themeID.present ? data.themeID.value : this.themeID,
       name: data.name.present ? data.name.value : this.name,
       alias: data.alias.present ? data.alias.value : this.alias,
@@ -1475,7 +1480,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   String toString() {
     return (StringBuffer('LocalThemeData(')
           ..write('id: $id, ')
-          ..write('tenantID: $tenantID, ')
+          ..write('organizationId: $organizationId, ')
           ..write('themeID: $themeID, ')
           ..write('name: $name, ')
           ..write('alias: $alias, ')
@@ -1487,14 +1492,22 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, tenantID, themeID, name, alias, json, author, addedDate);
+  int get hashCode => Object.hash(
+    id,
+    organizationId,
+    themeID,
+    name,
+    alias,
+    json,
+    author,
+    addedDate,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is LocalThemeData &&
           other.id == this.id &&
-          other.tenantID == this.tenantID &&
+          other.organizationId == this.organizationId &&
           other.themeID == this.themeID &&
           other.name == this.name &&
           other.alias == this.alias &&
@@ -1505,7 +1518,7 @@ class LocalThemeData extends DataClass implements Insertable<LocalThemeData> {
 
 class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   final Value<String> id;
-  final Value<String?> tenantID;
+  final Value<String?> organizationId;
   final Value<String?> themeID;
   final Value<String> name;
   final Value<String> alias;
@@ -1515,7 +1528,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   final Value<int> rowid;
   const ThemesTableCompanion({
     this.id = const Value.absent(),
-    this.tenantID = const Value.absent(),
+    this.organizationId = const Value.absent(),
     this.themeID = const Value.absent(),
     this.name = const Value.absent(),
     this.alias = const Value.absent(),
@@ -1526,7 +1539,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   });
   ThemesTableCompanion.insert({
     required String id,
-    this.tenantID = const Value.absent(),
+    this.organizationId = const Value.absent(),
     this.themeID = const Value.absent(),
     required String name,
     required String alias,
@@ -1542,7 +1555,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
        addedDate = Value(addedDate);
   static Insertable<LocalThemeData> custom({
     Expression<String>? id,
-    Expression<String>? tenantID,
+    Expression<String>? organizationId,
     Expression<String>? themeID,
     Expression<String>? name,
     Expression<String>? alias,
@@ -1553,7 +1566,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (tenantID != null) 'tenant_id': tenantID,
+      if (organizationId != null) 'organization_id': organizationId,
       if (themeID != null) 'theme_id': themeID,
       if (name != null) 'name': name,
       if (alias != null) 'alias': alias,
@@ -1566,7 +1579,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
 
   ThemesTableCompanion copyWith({
     Value<String>? id,
-    Value<String?>? tenantID,
+    Value<String?>? organizationId,
     Value<String?>? themeID,
     Value<String>? name,
     Value<String>? alias,
@@ -1577,7 +1590,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   }) {
     return ThemesTableCompanion(
       id: id ?? this.id,
-      tenantID: tenantID ?? this.tenantID,
+      organizationId: organizationId ?? this.organizationId,
       themeID: themeID ?? this.themeID,
       name: name ?? this.name,
       alias: alias ?? this.alias,
@@ -1594,8 +1607,8 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (tenantID.present) {
-      map['tenant_id'] = Variable<String>(tenantID.value);
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
     }
     if (themeID.present) {
       map['theme_id'] = Variable<String>(themeID.value);
@@ -1627,7 +1640,7 @@ class ThemesTableCompanion extends UpdateCompanion<LocalThemeData> {
   String toString() {
     return (StringBuffer('ThemesTableCompanion(')
           ..write('id: $id, ')
-          ..write('tenantID: $tenantID, ')
+          ..write('organizationId: $organizationId, ')
           ..write('themeID: $themeID, ')
           ..write('name: $name, ')
           ..write('alias: $alias, ')
@@ -2191,17 +2204,6 @@ class $PersonsTableTable extends PersonsTable
       'REFERENCES organizations (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _personIDMeta = const VerificationMeta(
-    'personID',
-  );
-  @override
-  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
-    'person_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _firstNameMeta = const VerificationMeta(
     'firstName',
   );
@@ -2228,17 +2230,15 @@ class $PersonsTableTable extends PersonsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _dateOfBirthMeta = const VerificationMeta(
-    'dateOfBirth',
-  );
   @override
-  late final GeneratedColumn<DateTime> dateOfBirth = GeneratedColumn<DateTime>(
-    'date_of_birth',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> dateOfBirth =
+      GeneratedColumn<DateTime>(
+        'date_of_birth',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($PersonsTableTable.$converterdateOfBirthn);
   static const VerificationMeta _genderMeta = const VerificationMeta('gender');
   @override
   late final GeneratedColumn<String> gender = GeneratedColumn<String>(
@@ -2310,35 +2310,30 @@ class $PersonsTableTable extends PersonsTable
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($PersonsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($PersonsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
     tenantID,
-    personID,
     firstName,
     lastName,
     dateOfBirth,
@@ -2374,12 +2369,6 @@ class $PersonsTableTable extends PersonsTable
         tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
       );
     }
-    if (data.containsKey('person_id')) {
-      context.handle(
-        _personIDMeta,
-        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
-      );
-    }
     if (data.containsKey('first_name')) {
       context.handle(
         _firstNameMeta,
@@ -2392,15 +2381,6 @@ class $PersonsTableTable extends PersonsTable
       context.handle(
         _lastNameMeta,
         lastName.isAcceptableOrUnknown(data['last_name']!, _lastNameMeta),
-      );
-    }
-    if (data.containsKey('date_of_birth')) {
-      context.handle(
-        _dateOfBirthMeta,
-        dateOfBirth.isAcceptableOrUnknown(
-          data['date_of_birth']!,
-          _dateOfBirthMeta,
-        ),
       );
     }
     if (data.containsKey('gender')) {
@@ -2448,18 +2428,6 @@ class $PersonsTableTable extends PersonsTable
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -2477,10 +2445,6 @@ class $PersonsTableTable extends PersonsTable
         DriftSqlType.string,
         data['${effectivePrefix}tenant_id'],
       ),
-      personID: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}person_id'],
-      ),
       firstName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}first_name'],
@@ -2489,9 +2453,11 @@ class $PersonsTableTable extends PersonsTable
         DriftSqlType.string,
         data['${effectivePrefix}last_name'],
       ),
-      dateOfBirth: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}date_of_birth'],
+      dateOfBirth: $PersonsTableTable.$converterdateOfBirthn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date_of_birth'],
+        ),
       ),
       gender: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -2517,14 +2483,18 @@ class $PersonsTableTable extends PersonsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $PersonsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $PersonsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -2532,12 +2502,20 @@ class $PersonsTableTable extends PersonsTable
   $PersonsTableTable createAlias(String alias) {
     return $PersonsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $converterdateOfBirth =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterdateOfBirthn =
+      NullAwareTypeConverter.wrap($converterdateOfBirth);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class PersonData extends DataClass implements Insertable<PersonData> {
   final String id;
   final String? tenantID;
-  final String? personID;
   final String firstName;
   final String? lastName;
   final DateTime? dateOfBirth;
@@ -2552,7 +2530,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
   const PersonData({
     required this.id,
     this.tenantID,
-    this.personID,
     required this.firstName,
     this.lastName,
     this.dateOfBirth,
@@ -2572,15 +2549,14 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     if (!nullToAbsent || tenantID != null) {
       map['tenant_id'] = Variable<String>(tenantID);
     }
-    if (!nullToAbsent || personID != null) {
-      map['person_id'] = Variable<String>(personID);
-    }
     map['first_name'] = Variable<String>(firstName);
     if (!nullToAbsent || lastName != null) {
       map['last_name'] = Variable<String>(lastName);
     }
     if (!nullToAbsent || dateOfBirth != null) {
-      map['date_of_birth'] = Variable<DateTime>(dateOfBirth);
+      map['date_of_birth'] = Variable<DateTime>(
+        $PersonsTableTable.$converterdateOfBirthn.toSql(dateOfBirth),
+      );
     }
     if (!nullToAbsent || gender != null) {
       map['gender'] = Variable<String>(gender);
@@ -2594,8 +2570,16 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     map['relationship'] = Variable<String>(relationship);
     map['affection'] = Variable<int>(affection);
     map['is_active'] = Variable<bool>(isActive);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $PersonsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $PersonsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -2605,9 +2589,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       tenantID: tenantID == null && nullToAbsent
           ? const Value.absent()
           : Value(tenantID),
-      personID: personID == null && nullToAbsent
-          ? const Value.absent()
-          : Value(personID),
       firstName: Value(firstName),
       lastName: lastName == null && nullToAbsent
           ? const Value.absent()
@@ -2640,7 +2621,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     return PersonData(
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
-      personID: serializer.fromJson<String?>(json['personID']),
       firstName: serializer.fromJson<String>(json['firstName']),
       lastName: serializer.fromJson<String?>(json['lastName']),
       dateOfBirth: serializer.fromJson<DateTime?>(json['dateOfBirth']),
@@ -2660,7 +2640,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
-      'personID': serializer.toJson<String?>(personID),
       'firstName': serializer.toJson<String>(firstName),
       'lastName': serializer.toJson<String?>(lastName),
       'dateOfBirth': serializer.toJson<DateTime?>(dateOfBirth),
@@ -2678,7 +2657,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
   PersonData copyWith({
     String? id,
     Value<String?> tenantID = const Value.absent(),
-    Value<String?> personID = const Value.absent(),
     String? firstName,
     Value<String?> lastName = const Value.absent(),
     Value<DateTime?> dateOfBirth = const Value.absent(),
@@ -2693,7 +2671,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
   }) => PersonData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
-    personID: personID.present ? personID.value : this.personID,
     firstName: firstName ?? this.firstName,
     lastName: lastName.present ? lastName.value : this.lastName,
     dateOfBirth: dateOfBirth.present ? dateOfBirth.value : this.dateOfBirth,
@@ -2712,7 +2689,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     return PersonData(
       id: data.id.present ? data.id.value : this.id,
       tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
-      personID: data.personID.present ? data.personID.value : this.personID,
       firstName: data.firstName.present ? data.firstName.value : this.firstName,
       lastName: data.lastName.present ? data.lastName.value : this.lastName,
       dateOfBirth: data.dateOfBirth.present
@@ -2740,7 +2716,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     return (StringBuffer('PersonData(')
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
-          ..write('personID: $personID, ')
           ..write('firstName: $firstName, ')
           ..write('lastName: $lastName, ')
           ..write('dateOfBirth: $dateOfBirth, ')
@@ -2760,7 +2735,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
   int get hashCode => Object.hash(
     id,
     tenantID,
-    personID,
     firstName,
     lastName,
     dateOfBirth,
@@ -2779,7 +2753,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       (other is PersonData &&
           other.id == this.id &&
           other.tenantID == this.tenantID &&
-          other.personID == this.personID &&
           other.firstName == this.firstName &&
           other.lastName == this.lastName &&
           other.dateOfBirth == this.dateOfBirth &&
@@ -2796,7 +2769,6 @@ class PersonData extends DataClass implements Insertable<PersonData> {
 class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   final Value<String> id;
   final Value<String?> tenantID;
-  final Value<String?> personID;
   final Value<String> firstName;
   final Value<String?> lastName;
   final Value<DateTime?> dateOfBirth;
@@ -2812,7 +2784,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   const PersonsTableCompanion({
     this.id = const Value.absent(),
     this.tenantID = const Value.absent(),
-    this.personID = const Value.absent(),
     this.firstName = const Value.absent(),
     this.lastName = const Value.absent(),
     this.dateOfBirth = const Value.absent(),
@@ -2829,7 +2800,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   PersonsTableCompanion.insert({
     required String id,
     this.tenantID = const Value.absent(),
-    this.personID = const Value.absent(),
     required String firstName,
     this.lastName = const Value.absent(),
     this.dateOfBirth = const Value.absent(),
@@ -2847,7 +2817,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   static Insertable<PersonData> custom({
     Expression<String>? id,
     Expression<String>? tenantID,
-    Expression<String>? personID,
     Expression<String>? firstName,
     Expression<String>? lastName,
     Expression<DateTime>? dateOfBirth,
@@ -2864,7 +2833,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (tenantID != null) 'tenant_id': tenantID,
-      if (personID != null) 'person_id': personID,
       if (firstName != null) 'first_name': firstName,
       if (lastName != null) 'last_name': lastName,
       if (dateOfBirth != null) 'date_of_birth': dateOfBirth,
@@ -2883,7 +2851,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   PersonsTableCompanion copyWith({
     Value<String>? id,
     Value<String?>? tenantID,
-    Value<String?>? personID,
     Value<String>? firstName,
     Value<String?>? lastName,
     Value<DateTime?>? dateOfBirth,
@@ -2900,7 +2867,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     return PersonsTableCompanion(
       id: id ?? this.id,
       tenantID: tenantID ?? this.tenantID,
-      personID: personID ?? this.personID,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       dateOfBirth: dateOfBirth ?? this.dateOfBirth,
@@ -2925,9 +2891,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     if (tenantID.present) {
       map['tenant_id'] = Variable<String>(tenantID.value);
     }
-    if (personID.present) {
-      map['person_id'] = Variable<String>(personID.value);
-    }
     if (firstName.present) {
       map['first_name'] = Variable<String>(firstName.value);
     }
@@ -2935,7 +2898,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
       map['last_name'] = Variable<String>(lastName.value);
     }
     if (dateOfBirth.present) {
-      map['date_of_birth'] = Variable<DateTime>(dateOfBirth.value);
+      map['date_of_birth'] = Variable<DateTime>(
+        $PersonsTableTable.$converterdateOfBirthn.toSql(dateOfBirth.value),
+      );
     }
     if (gender.present) {
       map['gender'] = Variable<String>(gender.value);
@@ -2956,10 +2921,14 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
       map['is_active'] = Variable<bool>(isActive.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $PersonsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $PersonsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -2972,7 +2941,6 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     return (StringBuffer('PersonsTableCompanion(')
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
-          ..write('personID: $personID, ')
           ..write('firstName: $firstName, ')
           ..write('lastName: $lastName, ')
           ..write('dateOfBirth: $dateOfBirth, ')
@@ -3037,9 +3005,9 @@ class $ProjectsTableTable extends ProjectsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -3098,30 +3066,26 @@ class $ProjectsTableTable extends ProjectsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProjectsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProjectsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3170,8 +3134,6 @@ class $ProjectsTableTable extends ProjectsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
@@ -3208,18 +3170,6 @@ class $ProjectsTableTable extends ProjectsTable
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -3244,7 +3194,7 @@ class $ProjectsTableTable extends ProjectsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       name: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}name'],
@@ -3265,14 +3215,18 @@ class $ProjectsTableTable extends ProjectsTable
         DriftSqlType.int,
         data['${effectivePrefix}status'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $ProjectsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $ProjectsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -3280,13 +3234,18 @@ class $ProjectsTableTable extends ProjectsTable
   $ProjectsTableTable createAlias(String alias) {
     return $ProjectsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class ProjectData extends DataClass implements Insertable<ProjectData> {
   final String id;
   final String? tenantID;
   final String? projectID;
-  final String personID;
+  final String? personID;
   final String name;
   final String? description;
   final String? category;
@@ -3298,7 +3257,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     required this.id,
     this.tenantID,
     this.projectID,
-    required this.personID,
+    this.personID,
     required this.name,
     this.description,
     this.category,
@@ -3317,7 +3276,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['name'] = Variable<String>(name);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -3329,8 +3290,16 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       map['color'] = Variable<String>(color);
     }
     map['status'] = Variable<int>(status);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $ProjectsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -3343,7 +3312,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       projectID: projectID == null && nullToAbsent
           ? const Value.absent()
           : Value(projectID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       name: Value(name),
       description: description == null && nullToAbsent
           ? const Value.absent()
@@ -3369,7 +3340,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       projectID: serializer.fromJson<String?>(json['projectID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
       category: serializer.fromJson<String?>(json['category']),
@@ -3386,7 +3357,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'projectID': serializer.toJson<String?>(projectID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
       'category': serializer.toJson<String?>(category),
@@ -3401,7 +3372,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> projectID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? name,
     Value<String?> description = const Value.absent(),
     Value<String?> category = const Value.absent(),
@@ -3413,7 +3384,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     projectID: projectID.present ? projectID.value : this.projectID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
     category: category.present ? category.value : this.category,
@@ -3493,7 +3464,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> projectID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> name;
   final Value<String?> description;
   final Value<String?> category;
@@ -3520,7 +3491,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.projectID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
     this.category = const Value.absent(),
@@ -3530,7 +3501,6 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        name = Value(name);
   static Insertable<ProjectData> custom({
     Expression<String>? id,
@@ -3566,7 +3536,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? projectID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? name,
     Value<String?>? description,
     Value<String?>? category,
@@ -3623,10 +3593,14 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       map['status'] = Variable<int>(status.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $ProjectsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -3730,30 +3704,26 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProjectNotesTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProjectNotesTableTable.$converterupdatedAt);
   static const VerificationMeta _projectIDMeta = const VerificationMeta(
     'projectID',
   );
@@ -3831,18 +3801,6 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     if (data.containsKey('project_id')) {
       context.handle(
         _projectIDMeta,
@@ -3882,14 +3840,18 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         DriftSqlType.string,
         data['${effectivePrefix}content'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $ProjectNotesTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $ProjectNotesTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
       projectID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -3901,6 +3863,11 @@ class $ProjectNotesTableTable extends ProjectNotesTable
   $ProjectNotesTableTable createAlias(String alias) {
     return $ProjectNotesTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
@@ -3939,8 +3906,16 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     }
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $ProjectNotesTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectNotesTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
@@ -4191,10 +4166,14 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       map['content'] = Variable<String>(content.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $ProjectNotesTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectNotesTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (projectID.present) {
       map['project_id'] = Variable<String>(projectID.value);
@@ -4270,9 +4249,9 @@ class $EmailAddressesTableTable extends EmailAddressesTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -4326,29 +4305,27 @@ class $EmailAddressesTableTable extends EmailAddressesTable
         requiredDuringInsert: false,
         defaultValue: const Constant('pending'),
       ).withConverter<EmailStatus>($EmailAddressesTableTable.$converterstatus);
-  static const VerificationMeta _verifiedAtMeta = const VerificationMeta(
-    'verifiedAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> verifiedAt = GeneratedColumn<DateTime>(
-    'verified_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> verifiedAt =
+      GeneratedColumn<DateTime>(
+        'verified_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>(
+        $EmailAddressesTableTable.$converterverifiedAtn,
+      );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($EmailAddressesTableTable.$convertercreatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4399,8 +4376,6 @@ class $EmailAddressesTableTable extends EmailAddressesTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('email_address')) {
       context.handle(
@@ -4423,18 +4398,6 @@ class $EmailAddressesTableTable extends EmailAddressesTable
       context.handle(
         _isPrimaryMeta,
         isPrimary.isAcceptableOrUnknown(data['is_primary']!, _isPrimaryMeta),
-      );
-    }
-    if (data.containsKey('verified_at')) {
-      context.handle(
-        _verifiedAtMeta,
-        verifiedAt.isAcceptableOrUnknown(data['verified_at']!, _verifiedAtMeta),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
     return context;
@@ -4461,7 +4424,7 @@ class $EmailAddressesTableTable extends EmailAddressesTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       emailAddress: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}email_address'],
@@ -4480,14 +4443,18 @@ class $EmailAddressesTableTable extends EmailAddressesTable
           data['${effectivePrefix}status'],
         )!,
       ),
-      verifiedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}verified_at'],
+      verifiedAt: $EmailAddressesTableTable.$converterverifiedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}verified_at'],
+        ),
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $EmailAddressesTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
     );
   }
 
@@ -4498,6 +4465,12 @@ class $EmailAddressesTableTable extends EmailAddressesTable
 
   static JsonTypeConverter2<EmailStatus, String, String> $converterstatus =
       const EnumNameConverter<EmailStatus>(EmailStatus.values);
+  static TypeConverter<DateTime, DateTime> $converterverifiedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterverifiedAtn =
+      NullAwareTypeConverter.wrap($converterverifiedAt);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class EmailAddressData extends DataClass
@@ -4505,7 +4478,7 @@ class EmailAddressData extends DataClass
   final String id;
   final String? tenantID;
   final String? emailAddressID;
-  final String personID;
+  final String? personID;
   final String emailAddress;
   final String emailType;
   final bool isPrimary;
@@ -4516,7 +4489,7 @@ class EmailAddressData extends DataClass
     required this.id,
     this.tenantID,
     this.emailAddressID,
-    required this.personID,
+    this.personID,
     required this.emailAddress,
     required this.emailType,
     required this.isPrimary,
@@ -4534,7 +4507,9 @@ class EmailAddressData extends DataClass
     if (!nullToAbsent || emailAddressID != null) {
       map['email_address_id'] = Variable<String>(emailAddressID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['email_address'] = Variable<String>(emailAddress);
     map['email_type'] = Variable<String>(emailType);
     map['is_primary'] = Variable<bool>(isPrimary);
@@ -4544,9 +4519,15 @@ class EmailAddressData extends DataClass
       );
     }
     if (!nullToAbsent || verifiedAt != null) {
-      map['verified_at'] = Variable<DateTime>(verifiedAt);
+      map['verified_at'] = Variable<DateTime>(
+        $EmailAddressesTableTable.$converterverifiedAtn.toSql(verifiedAt),
+      );
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $EmailAddressesTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     return map;
   }
 
@@ -4559,7 +4540,9 @@ class EmailAddressData extends DataClass
       emailAddressID: emailAddressID == null && nullToAbsent
           ? const Value.absent()
           : Value(emailAddressID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       emailAddress: Value(emailAddress),
       emailType: Value(emailType),
       isPrimary: Value(isPrimary),
@@ -4580,7 +4563,7 @@ class EmailAddressData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       emailAddressID: serializer.fromJson<String?>(json['emailAddressID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       emailAddress: serializer.fromJson<String>(json['emailAddress']),
       emailType: serializer.fromJson<String>(json['emailType']),
       isPrimary: serializer.fromJson<bool>(json['isPrimary']),
@@ -4598,7 +4581,7 @@ class EmailAddressData extends DataClass
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'emailAddressID': serializer.toJson<String?>(emailAddressID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'emailAddress': serializer.toJson<String>(emailAddress),
       'emailType': serializer.toJson<String>(emailType),
       'isPrimary': serializer.toJson<bool>(isPrimary),
@@ -4614,7 +4597,7 @@ class EmailAddressData extends DataClass
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> emailAddressID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? emailAddress,
     String? emailType,
     bool? isPrimary,
@@ -4627,7 +4610,7 @@ class EmailAddressData extends DataClass
     emailAddressID: emailAddressID.present
         ? emailAddressID.value
         : this.emailAddressID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     emailAddress: emailAddress ?? this.emailAddress,
     emailType: emailType ?? this.emailType,
     isPrimary: isPrimary ?? this.isPrimary,
@@ -4706,7 +4689,7 @@ class EmailAddressesTableCompanion extends UpdateCompanion<EmailAddressData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> emailAddressID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> emailAddress;
   final Value<String> emailType;
   final Value<bool> isPrimary;
@@ -4731,7 +4714,7 @@ class EmailAddressesTableCompanion extends UpdateCompanion<EmailAddressData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.emailAddressID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String emailAddress,
     this.emailType = const Value.absent(),
     this.isPrimary = const Value.absent(),
@@ -4740,7 +4723,6 @@ class EmailAddressesTableCompanion extends UpdateCompanion<EmailAddressData> {
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        emailAddress = Value(emailAddress);
   static Insertable<EmailAddressData> custom({
     Expression<String>? id,
@@ -4774,7 +4756,7 @@ class EmailAddressesTableCompanion extends UpdateCompanion<EmailAddressData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? emailAddressID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? emailAddress,
     Value<String>? emailType,
     Value<bool>? isPrimary,
@@ -4828,10 +4810,14 @@ class EmailAddressesTableCompanion extends UpdateCompanion<EmailAddressData> {
       );
     }
     if (verifiedAt.present) {
-      map['verified_at'] = Variable<DateTime>(verifiedAt.value);
+      map['verified_at'] = Variable<DateTime>(
+        $EmailAddressesTableTable.$converterverifiedAtn.toSql(verifiedAt.value),
+      );
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $EmailAddressesTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -4905,11 +4891,11 @@ class $UserAccountsTableTable extends UserAccountsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES persons (id) ON DELETE CASCADE',
+      'UNIQUE REFERENCES persons (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _usernameMeta = const VerificationMeta(
@@ -4919,13 +4905,13 @@ class $UserAccountsTableTable extends UserAccountsTable
   late final GeneratedColumn<String> username = GeneratedColumn<String>(
     'username',
     aliasedName,
-    false,
+    true,
     additionalChecks: GeneratedColumn.checkTextLength(
       minTextLength: 3,
       maxTextLength: 50,
     ),
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
   );
   static const VerificationMeta _passwordHashMeta = const VerificationMeta(
@@ -4935,9 +4921,9 @@ class $UserAccountsTableTable extends UserAccountsTable
   late final GeneratedColumn<String> passwordHash = GeneratedColumn<String>(
     'password_hash',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _primaryEmailIDMeta = const VerificationMeta(
     'primaryEmailID',
@@ -4970,7 +4956,7 @@ class $UserAccountsTableTable extends UserAccountsTable
   late final GeneratedColumn<bool> isLocked = GeneratedColumn<bool>(
     'is_locked',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.bool,
     requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
@@ -4984,59 +4970,55 @@ class $UserAccountsTableTable extends UserAccountsTable
   late final GeneratedColumn<int> failedLoginAttempts = GeneratedColumn<int>(
     'failed_login_attempts',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _lastLoginAtMeta = const VerificationMeta(
-    'lastLoginAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> lastLoginAt = GeneratedColumn<DateTime>(
-    'last_login_at',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _passwordChangedAtMeta = const VerificationMeta(
-    'passwordChangedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> lastLoginAt =
+      GeneratedColumn<DateTime>(
+        'last_login_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>(
+        $UserAccountsTableTable.$converterlastLoginAtn,
+      );
   @override
-  late final GeneratedColumn<DateTime> passwordChangedAt =
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  passwordChangedAt =
       GeneratedColumn<DateTime>(
         'password_changed_at',
         aliasedName,
-        false,
+        true,
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
         defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>(
+        $UserAccountsTableTable.$converterpasswordChangedAtn,
       );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>($UserAccountsTableTable.$convertercreatedAtn);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>($UserAccountsTableTable.$converterupdatedAtn);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5088,16 +5070,12 @@ class $UserAccountsTableTable extends UserAccountsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('username')) {
       context.handle(
         _usernameMeta,
         username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
       );
-    } else if (isInserting) {
-      context.missing(_usernameMeta);
     }
     if (data.containsKey('password_hash')) {
       context.handle(
@@ -5107,8 +5085,6 @@ class $UserAccountsTableTable extends UserAccountsTable
           _passwordHashMeta,
         ),
       );
-    } else if (isInserting) {
-      context.missing(_passwordHashMeta);
     }
     if (data.containsKey('primary_email_id')) {
       context.handle(
@@ -5132,36 +5108,6 @@ class $UserAccountsTableTable extends UserAccountsTable
           data['failed_login_attempts']!,
           _failedLoginAttemptsMeta,
         ),
-      );
-    }
-    if (data.containsKey('last_login_at')) {
-      context.handle(
-        _lastLoginAtMeta,
-        lastLoginAt.isAcceptableOrUnknown(
-          data['last_login_at']!,
-          _lastLoginAtMeta,
-        ),
-      );
-    }
-    if (data.containsKey('password_changed_at')) {
-      context.handle(
-        _passwordChangedAtMeta,
-        passwordChangedAt.isAcceptableOrUnknown(
-          data['password_changed_at']!,
-          _passwordChangedAtMeta,
-        ),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
     return context;
@@ -5188,15 +5134,15 @@ class $UserAccountsTableTable extends UserAccountsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       username: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}username'],
-      )!,
+      ),
       passwordHash: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}password_hash'],
-      )!,
+      ),
       primaryEmailID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}primary_email_id'],
@@ -5210,27 +5156,36 @@ class $UserAccountsTableTable extends UserAccountsTable
       isLocked: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_locked'],
-      )!,
+      ),
       failedLoginAttempts: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}failed_login_attempts'],
-      )!,
-      lastLoginAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_login_at'],
       ),
-      passwordChangedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}password_changed_at'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      lastLoginAt: $UserAccountsTableTable.$converterlastLoginAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}last_login_at'],
+        ),
+      ),
+      passwordChangedAt: $UserAccountsTableTable.$converterpasswordChangedAtn
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.dateTime,
+              data['${effectivePrefix}password_changed_at'],
+            ),
+          ),
+      createdAt: $UserAccountsTableTable.$convertercreatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        ),
+      ),
+      updatedAt: $UserAccountsTableTable.$converterupdatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        ),
+      ),
     );
   }
 
@@ -5241,38 +5196,54 @@ class $UserAccountsTableTable extends UserAccountsTable
 
   static JsonTypeConverter2<UserRole, String, String> $converterrole =
       const EnumNameConverter<UserRole>(UserRole.values);
+  static TypeConverter<DateTime, DateTime> $converterlastLoginAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterlastLoginAtn =
+      NullAwareTypeConverter.wrap($converterlastLoginAt);
+  static TypeConverter<DateTime, DateTime> $converterpasswordChangedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterpasswordChangedAtn =
+      NullAwareTypeConverter.wrap($converterpasswordChangedAt);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertercreatedAtn =
+      NullAwareTypeConverter.wrap($convertercreatedAt);
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterupdatedAtn =
+      NullAwareTypeConverter.wrap($converterupdatedAt);
 }
 
 class UserAccountData extends DataClass implements Insertable<UserAccountData> {
   final String id;
   final String? tenantID;
   final String? accountID;
-  final String personID;
-  final String username;
-  final String passwordHash;
+  final String? personID;
+  final String? username;
+  final String? passwordHash;
   final String? primaryEmailID;
   final UserRole role;
-  final bool isLocked;
-  final int failedLoginAttempts;
+  final bool? isLocked;
+  final int? failedLoginAttempts;
   final DateTime? lastLoginAt;
-  final DateTime passwordChangedAt;
-  final DateTime createdAt;
-  final DateTime updatedAt;
+  final DateTime? passwordChangedAt;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
   const UserAccountData({
     required this.id,
     this.tenantID,
     this.accountID,
-    required this.personID,
-    required this.username,
-    required this.passwordHash,
+    this.personID,
+    this.username,
+    this.passwordHash,
     this.primaryEmailID,
     required this.role,
-    required this.isLocked,
-    required this.failedLoginAttempts,
+    this.isLocked,
+    this.failedLoginAttempts,
     this.lastLoginAt,
-    required this.passwordChangedAt,
-    required this.createdAt,
-    required this.updatedAt,
+    this.passwordChangedAt,
+    this.createdAt,
+    this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -5284,9 +5255,15 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
     if (!nullToAbsent || accountID != null) {
       map['account_id'] = Variable<String>(accountID);
     }
-    map['person_id'] = Variable<String>(personID);
-    map['username'] = Variable<String>(username);
-    map['password_hash'] = Variable<String>(passwordHash);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    if (!nullToAbsent || username != null) {
+      map['username'] = Variable<String>(username);
+    }
+    if (!nullToAbsent || passwordHash != null) {
+      map['password_hash'] = Variable<String>(passwordHash);
+    }
     if (!nullToAbsent || primaryEmailID != null) {
       map['primary_email_id'] = Variable<String>(primaryEmailID);
     }
@@ -5295,14 +5272,34 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
         $UserAccountsTableTable.$converterrole.toSql(role),
       );
     }
-    map['is_locked'] = Variable<bool>(isLocked);
-    map['failed_login_attempts'] = Variable<int>(failedLoginAttempts);
-    if (!nullToAbsent || lastLoginAt != null) {
-      map['last_login_at'] = Variable<DateTime>(lastLoginAt);
+    if (!nullToAbsent || isLocked != null) {
+      map['is_locked'] = Variable<bool>(isLocked);
     }
-    map['password_changed_at'] = Variable<DateTime>(passwordChangedAt);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || failedLoginAttempts != null) {
+      map['failed_login_attempts'] = Variable<int>(failedLoginAttempts);
+    }
+    if (!nullToAbsent || lastLoginAt != null) {
+      map['last_login_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterlastLoginAtn.toSql(lastLoginAt),
+      );
+    }
+    if (!nullToAbsent || passwordChangedAt != null) {
+      map['password_changed_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterpasswordChangedAtn.toSql(
+          passwordChangedAt,
+        ),
+      );
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$convertercreatedAtn.toSql(createdAt),
+      );
+    }
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterupdatedAtn.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -5315,21 +5312,37 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
       accountID: accountID == null && nullToAbsent
           ? const Value.absent()
           : Value(accountID),
-      personID: Value(personID),
-      username: Value(username),
-      passwordHash: Value(passwordHash),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      username: username == null && nullToAbsent
+          ? const Value.absent()
+          : Value(username),
+      passwordHash: passwordHash == null && nullToAbsent
+          ? const Value.absent()
+          : Value(passwordHash),
       primaryEmailID: primaryEmailID == null && nullToAbsent
           ? const Value.absent()
           : Value(primaryEmailID),
       role: Value(role),
-      isLocked: Value(isLocked),
-      failedLoginAttempts: Value(failedLoginAttempts),
+      isLocked: isLocked == null && nullToAbsent
+          ? const Value.absent()
+          : Value(isLocked),
+      failedLoginAttempts: failedLoginAttempts == null && nullToAbsent
+          ? const Value.absent()
+          : Value(failedLoginAttempts),
       lastLoginAt: lastLoginAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastLoginAt),
-      passwordChangedAt: Value(passwordChangedAt),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
+      passwordChangedAt: passwordChangedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(passwordChangedAt),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
     );
   }
 
@@ -5342,23 +5355,23 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       accountID: serializer.fromJson<String?>(json['accountID']),
-      personID: serializer.fromJson<String>(json['personID']),
-      username: serializer.fromJson<String>(json['username']),
-      passwordHash: serializer.fromJson<String>(json['passwordHash']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      username: serializer.fromJson<String?>(json['username']),
+      passwordHash: serializer.fromJson<String?>(json['passwordHash']),
       primaryEmailID: serializer.fromJson<String?>(json['primaryEmailID']),
       role: $UserAccountsTableTable.$converterrole.fromJson(
         serializer.fromJson<String>(json['role']),
       ),
-      isLocked: serializer.fromJson<bool>(json['isLocked']),
-      failedLoginAttempts: serializer.fromJson<int>(
+      isLocked: serializer.fromJson<bool?>(json['isLocked']),
+      failedLoginAttempts: serializer.fromJson<int?>(
         json['failedLoginAttempts'],
       ),
       lastLoginAt: serializer.fromJson<DateTime?>(json['lastLoginAt']),
-      passwordChangedAt: serializer.fromJson<DateTime>(
+      passwordChangedAt: serializer.fromJson<DateTime?>(
         json['passwordChangedAt'],
       ),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
   }
   @override
@@ -5368,19 +5381,19 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'accountID': serializer.toJson<String?>(accountID),
-      'personID': serializer.toJson<String>(personID),
-      'username': serializer.toJson<String>(username),
-      'passwordHash': serializer.toJson<String>(passwordHash),
+      'personID': serializer.toJson<String?>(personID),
+      'username': serializer.toJson<String?>(username),
+      'passwordHash': serializer.toJson<String?>(passwordHash),
       'primaryEmailID': serializer.toJson<String?>(primaryEmailID),
       'role': serializer.toJson<String>(
         $UserAccountsTableTable.$converterrole.toJson(role),
       ),
-      'isLocked': serializer.toJson<bool>(isLocked),
-      'failedLoginAttempts': serializer.toJson<int>(failedLoginAttempts),
+      'isLocked': serializer.toJson<bool?>(isLocked),
+      'failedLoginAttempts': serializer.toJson<int?>(failedLoginAttempts),
       'lastLoginAt': serializer.toJson<DateTime?>(lastLoginAt),
-      'passwordChangedAt': serializer.toJson<DateTime>(passwordChangedAt),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+      'passwordChangedAt': serializer.toJson<DateTime?>(passwordChangedAt),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
   }
 
@@ -5388,34 +5401,38 @@ class UserAccountData extends DataClass implements Insertable<UserAccountData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> accountID = const Value.absent(),
-    String? personID,
-    String? username,
-    String? passwordHash,
+    Value<String?> personID = const Value.absent(),
+    Value<String?> username = const Value.absent(),
+    Value<String?> passwordHash = const Value.absent(),
     Value<String?> primaryEmailID = const Value.absent(),
     UserRole? role,
-    bool? isLocked,
-    int? failedLoginAttempts,
+    Value<bool?> isLocked = const Value.absent(),
+    Value<int?> failedLoginAttempts = const Value.absent(),
     Value<DateTime?> lastLoginAt = const Value.absent(),
-    DateTime? passwordChangedAt,
-    DateTime? createdAt,
-    DateTime? updatedAt,
+    Value<DateTime?> passwordChangedAt = const Value.absent(),
+    Value<DateTime?> createdAt = const Value.absent(),
+    Value<DateTime?> updatedAt = const Value.absent(),
   }) => UserAccountData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     accountID: accountID.present ? accountID.value : this.accountID,
-    personID: personID ?? this.personID,
-    username: username ?? this.username,
-    passwordHash: passwordHash ?? this.passwordHash,
+    personID: personID.present ? personID.value : this.personID,
+    username: username.present ? username.value : this.username,
+    passwordHash: passwordHash.present ? passwordHash.value : this.passwordHash,
     primaryEmailID: primaryEmailID.present
         ? primaryEmailID.value
         : this.primaryEmailID,
     role: role ?? this.role,
-    isLocked: isLocked ?? this.isLocked,
-    failedLoginAttempts: failedLoginAttempts ?? this.failedLoginAttempts,
+    isLocked: isLocked.present ? isLocked.value : this.isLocked,
+    failedLoginAttempts: failedLoginAttempts.present
+        ? failedLoginAttempts.value
+        : this.failedLoginAttempts,
     lastLoginAt: lastLoginAt.present ? lastLoginAt.value : this.lastLoginAt,
-    passwordChangedAt: passwordChangedAt ?? this.passwordChangedAt,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
+    passwordChangedAt: passwordChangedAt.present
+        ? passwordChangedAt.value
+        : this.passwordChangedAt,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
   UserAccountData copyWithCompanion(UserAccountsTableCompanion data) {
     return UserAccountData(
@@ -5508,17 +5525,17 @@ class UserAccountsTableCompanion extends UpdateCompanion<UserAccountData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> accountID;
-  final Value<String> personID;
-  final Value<String> username;
-  final Value<String> passwordHash;
+  final Value<String?> personID;
+  final Value<String?> username;
+  final Value<String?> passwordHash;
   final Value<String?> primaryEmailID;
   final Value<UserRole> role;
-  final Value<bool> isLocked;
-  final Value<int> failedLoginAttempts;
+  final Value<bool?> isLocked;
+  final Value<int?> failedLoginAttempts;
   final Value<DateTime?> lastLoginAt;
-  final Value<DateTime> passwordChangedAt;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
+  final Value<DateTime?> passwordChangedAt;
+  final Value<DateTime?> createdAt;
+  final Value<DateTime?> updatedAt;
   final Value<int> rowid;
   const UserAccountsTableCompanion({
     this.id = const Value.absent(),
@@ -5541,9 +5558,9 @@ class UserAccountsTableCompanion extends UpdateCompanion<UserAccountData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.accountID = const Value.absent(),
-    required String personID,
-    required String username,
-    required String passwordHash,
+    this.personID = const Value.absent(),
+    this.username = const Value.absent(),
+    this.passwordHash = const Value.absent(),
     this.primaryEmailID = const Value.absent(),
     this.role = const Value.absent(),
     this.isLocked = const Value.absent(),
@@ -5553,10 +5570,7 @@ class UserAccountsTableCompanion extends UpdateCompanion<UserAccountData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       personID = Value(personID),
-       username = Value(username),
-       passwordHash = Value(passwordHash);
+  }) : id = Value(id);
   static Insertable<UserAccountData> custom({
     Expression<String>? id,
     Expression<String>? tenantID,
@@ -5598,17 +5612,17 @@ class UserAccountsTableCompanion extends UpdateCompanion<UserAccountData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? accountID,
-    Value<String>? personID,
-    Value<String>? username,
-    Value<String>? passwordHash,
+    Value<String?>? personID,
+    Value<String?>? username,
+    Value<String?>? passwordHash,
     Value<String?>? primaryEmailID,
     Value<UserRole>? role,
-    Value<bool>? isLocked,
-    Value<int>? failedLoginAttempts,
+    Value<bool?>? isLocked,
+    Value<int?>? failedLoginAttempts,
     Value<DateTime?>? lastLoginAt,
-    Value<DateTime>? passwordChangedAt,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
+    Value<DateTime?>? passwordChangedAt,
+    Value<DateTime?>? createdAt,
+    Value<DateTime?>? updatedAt,
     Value<int>? rowid,
   }) {
     return UserAccountsTableCompanion(
@@ -5666,16 +5680,26 @@ class UserAccountsTableCompanion extends UpdateCompanion<UserAccountData> {
       map['failed_login_attempts'] = Variable<int>(failedLoginAttempts.value);
     }
     if (lastLoginAt.present) {
-      map['last_login_at'] = Variable<DateTime>(lastLoginAt.value);
+      map['last_login_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterlastLoginAtn.toSql(lastLoginAt.value),
+      );
     }
     if (passwordChangedAt.present) {
-      map['password_changed_at'] = Variable<DateTime>(passwordChangedAt.value);
+      map['password_changed_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterpasswordChangedAtn.toSql(
+          passwordChangedAt.value,
+        ),
+      );
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$convertercreatedAtn.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $UserAccountsTableTable.$converterupdatedAtn.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -5739,9 +5763,9 @@ class $ProfilesTableTable extends ProfilesTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'UNIQUE REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -5844,30 +5868,26 @@ class $ProfilesTableTable extends ProfilesTable
         type: DriftSqlType.string,
         requiredDuringInsert: false,
       );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProfilesTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProfilesTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -5913,8 +5933,6 @@ class $ProfilesTableTable extends ProfilesTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('bio')) {
       context.handle(
@@ -5979,18 +5997,6 @@ class $ProfilesTableTable extends ProfilesTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -6011,7 +6017,7 @@ class $ProfilesTableTable extends ProfilesTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       bio: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}bio'],
@@ -6048,14 +6054,18 @@ class $ProfilesTableTable extends ProfilesTable
         DriftSqlType.string,
         data['${effectivePrefix}preferred_language'],
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $ProfilesTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $ProfilesTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -6063,12 +6073,17 @@ class $ProfilesTableTable extends ProfilesTable
   $ProfilesTableTable createAlias(String alias) {
     return $ProfilesTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class ProfileData extends DataClass implements Insertable<ProfileData> {
   final String id;
   final String? profileID;
-  final String personID;
+  final String? personID;
   final String? bio;
   final String? occupation;
   final String? educationLevel;
@@ -6083,7 +6098,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   const ProfileData({
     required this.id,
     this.profileID,
-    required this.personID,
+    this.personID,
     this.bio,
     this.occupation,
     this.educationLevel,
@@ -6103,7 +6118,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     if (!nullToAbsent || profileID != null) {
       map['profile_id'] = Variable<String>(profileID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     if (!nullToAbsent || bio != null) {
       map['bio'] = Variable<String>(bio);
     }
@@ -6131,8 +6148,16 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     if (!nullToAbsent || preferredLanguage != null) {
       map['preferred_language'] = Variable<String>(preferredLanguage);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -6142,7 +6167,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       profileID: profileID == null && nullToAbsent
           ? const Value.absent()
           : Value(profileID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       bio: bio == null && nullToAbsent ? const Value.absent() : Value(bio),
       occupation: occupation == null && nullToAbsent
           ? const Value.absent()
@@ -6181,7 +6208,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     return ProfileData(
       id: serializer.fromJson<String>(json['id']),
       profileID: serializer.fromJson<String?>(json['profileID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       bio: serializer.fromJson<String?>(json['bio']),
       occupation: serializer.fromJson<String?>(json['occupation']),
       educationLevel: serializer.fromJson<String?>(json['educationLevel']),
@@ -6203,7 +6230,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'profileID': serializer.toJson<String?>(profileID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'bio': serializer.toJson<String?>(bio),
       'occupation': serializer.toJson<String?>(occupation),
       'educationLevel': serializer.toJson<String?>(educationLevel),
@@ -6221,7 +6248,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   ProfileData copyWith({
     String? id,
     Value<String?> profileID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     Value<String?> bio = const Value.absent(),
     Value<String?> occupation = const Value.absent(),
     Value<String?> educationLevel = const Value.absent(),
@@ -6236,7 +6263,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   }) => ProfileData(
     id: id ?? this.id,
     profileID: profileID.present ? profileID.value : this.profileID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     bio: bio.present ? bio.value : this.bio,
     occupation: occupation.present ? occupation.value : this.occupation,
     educationLevel: educationLevel.present
@@ -6343,7 +6370,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
 class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
   final Value<String> id;
   final Value<String?> profileID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String?> bio;
   final Value<String?> occupation;
   final Value<String?> educationLevel;
@@ -6376,7 +6403,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
   ProfilesTableCompanion.insert({
     required String id,
     this.profileID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     this.bio = const Value.absent(),
     this.occupation = const Value.absent(),
     this.educationLevel = const Value.absent(),
@@ -6389,8 +6416,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       personID = Value(personID);
+  }) : id = Value(id);
   static Insertable<ProfileData> custom({
     Expression<String>? id,
     Expression<String>? profileID,
@@ -6430,7 +6456,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
   ProfilesTableCompanion copyWith({
     Value<String>? id,
     Value<String?>? profileID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String?>? bio,
     Value<String?>? occupation,
     Value<String?>? educationLevel,
@@ -6503,10 +6529,14 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
       map['preferred_language'] = Variable<String>(preferredLanguage.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -6584,9 +6614,9 @@ class $SkillsTableTable extends SkillsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -6661,30 +6691,26 @@ class $SkillsTableTable extends SkillsTable
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SkillsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SkillsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -6734,8 +6760,6 @@ class $SkillsTableTable extends SkillsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('skill_name')) {
       context.handle(
@@ -6778,18 +6802,6 @@ class $SkillsTableTable extends SkillsTable
         isFeatured.isAcceptableOrUnknown(data['is_featured']!, _isFeaturedMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -6814,7 +6826,7 @@ class $SkillsTableTable extends SkillsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       skillName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}skill_name'],
@@ -6841,14 +6853,18 @@ class $SkillsTableTable extends SkillsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_featured'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $SkillsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $SkillsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -6861,13 +6877,17 @@ class $SkillsTableTable extends SkillsTable
   $converterproficiencyLevel = const EnumNameConverter<SkillLevel>(
     SkillLevel.values,
   );
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class SkillData extends DataClass implements Insertable<SkillData> {
   final String id;
   final String? tenantID;
   final String? skillID;
-  final String personID;
+  final String? personID;
   final String skillName;
   final String? skillCategory;
   final SkillLevel proficiencyLevel;
@@ -6880,7 +6900,7 @@ class SkillData extends DataClass implements Insertable<SkillData> {
     required this.id,
     this.tenantID,
     this.skillID,
-    required this.personID,
+    this.personID,
     required this.skillName,
     this.skillCategory,
     required this.proficiencyLevel,
@@ -6900,7 +6920,9 @@ class SkillData extends DataClass implements Insertable<SkillData> {
     if (!nullToAbsent || skillID != null) {
       map['skill_id'] = Variable<String>(skillID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['skill_name'] = Variable<String>(skillName);
     if (!nullToAbsent || skillCategory != null) {
       map['skill_category'] = Variable<String>(skillCategory);
@@ -6915,8 +6937,16 @@ class SkillData extends DataClass implements Insertable<SkillData> {
       map['description'] = Variable<String>(description);
     }
     map['is_featured'] = Variable<bool>(isFeatured);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $SkillsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $SkillsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -6929,7 +6959,9 @@ class SkillData extends DataClass implements Insertable<SkillData> {
       skillID: skillID == null && nullToAbsent
           ? const Value.absent()
           : Value(skillID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       skillName: Value(skillName),
       skillCategory: skillCategory == null && nullToAbsent
           ? const Value.absent()
@@ -6954,7 +6986,7 @@ class SkillData extends DataClass implements Insertable<SkillData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       skillID: serializer.fromJson<String?>(json['skillID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       skillName: serializer.fromJson<String>(json['skillName']),
       skillCategory: serializer.fromJson<String?>(json['skillCategory']),
       proficiencyLevel: $SkillsTableTable.$converterproficiencyLevel.fromJson(
@@ -6974,7 +7006,7 @@ class SkillData extends DataClass implements Insertable<SkillData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'skillID': serializer.toJson<String?>(skillID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'skillName': serializer.toJson<String>(skillName),
       'skillCategory': serializer.toJson<String?>(skillCategory),
       'proficiencyLevel': serializer.toJson<String>(
@@ -6992,7 +7024,7 @@ class SkillData extends DataClass implements Insertable<SkillData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> skillID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? skillName,
     Value<String?> skillCategory = const Value.absent(),
     SkillLevel? proficiencyLevel,
@@ -7005,7 +7037,7 @@ class SkillData extends DataClass implements Insertable<SkillData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     skillID: skillID.present ? skillID.value : this.skillID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     skillName: skillName ?? this.skillName,
     skillCategory: skillCategory.present
         ? skillCategory.value
@@ -7100,7 +7132,7 @@ class SkillsTableCompanion extends UpdateCompanion<SkillData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> skillID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> skillName;
   final Value<String?> skillCategory;
   final Value<SkillLevel> proficiencyLevel;
@@ -7129,7 +7161,7 @@ class SkillsTableCompanion extends UpdateCompanion<SkillData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.skillID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String skillName,
     this.skillCategory = const Value.absent(),
     this.proficiencyLevel = const Value.absent(),
@@ -7140,7 +7172,6 @@ class SkillsTableCompanion extends UpdateCompanion<SkillData> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        skillName = Value(skillName);
   static Insertable<SkillData> custom({
     Expression<String>? id,
@@ -7178,7 +7209,7 @@ class SkillsTableCompanion extends UpdateCompanion<SkillData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? skillID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? skillName,
     Value<String?>? skillCategory,
     Value<SkillLevel>? proficiencyLevel,
@@ -7244,10 +7275,14 @@ class SkillsTableCompanion extends UpdateCompanion<SkillData> {
       map['is_featured'] = Variable<bool>(isFeatured.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $SkillsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $SkillsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -7323,9 +7358,9 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -7407,30 +7442,30 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>(
+        $FinancialAccountsTableTable.$convertercreatedAt,
+      );
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>(
+        $FinancialAccountsTableTable.$converterupdatedAt,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -7480,8 +7515,6 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('account_name')) {
       context.handle(
@@ -7521,18 +7554,6 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -7557,7 +7578,7 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       accountName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}account_name'],
@@ -7584,14 +7605,18 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $FinancialAccountsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $FinancialAccountsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -7602,6 +7627,10 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
 
   static JsonTypeConverter2<CurrencyType, String, String> $convertercurrency =
       const EnumNameConverter<CurrencyType>(CurrencyType.values);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class FinancialAccountData extends DataClass
@@ -7609,7 +7638,7 @@ class FinancialAccountData extends DataClass
   final String id;
   final String? tenantID;
   final String? accountID;
-  final String personID;
+  final String? personID;
   final String accountName;
   final String accountType;
   final double balance;
@@ -7622,7 +7651,7 @@ class FinancialAccountData extends DataClass
     required this.id,
     this.tenantID,
     this.accountID,
-    required this.personID,
+    this.personID,
     required this.accountName,
     required this.accountType,
     required this.balance,
@@ -7642,7 +7671,9 @@ class FinancialAccountData extends DataClass
     if (!nullToAbsent || accountID != null) {
       map['account_id'] = Variable<String>(accountID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['account_name'] = Variable<String>(accountName);
     map['account_type'] = Variable<String>(accountType);
     map['balance'] = Variable<double>(balance);
@@ -7653,8 +7684,16 @@ class FinancialAccountData extends DataClass
     }
     map['is_primary'] = Variable<bool>(isPrimary);
     map['is_active'] = Variable<bool>(isActive);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $FinancialAccountsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $FinancialAccountsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -7667,7 +7706,9 @@ class FinancialAccountData extends DataClass
       accountID: accountID == null && nullToAbsent
           ? const Value.absent()
           : Value(accountID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       accountName: Value(accountName),
       accountType: Value(accountType),
       balance: Value(balance),
@@ -7688,7 +7729,7 @@ class FinancialAccountData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       accountID: serializer.fromJson<String?>(json['accountID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       accountName: serializer.fromJson<String>(json['accountName']),
       accountType: serializer.fromJson<String>(json['accountType']),
       balance: serializer.fromJson<double>(json['balance']),
@@ -7708,7 +7749,7 @@ class FinancialAccountData extends DataClass
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'accountID': serializer.toJson<String?>(accountID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'accountName': serializer.toJson<String>(accountName),
       'accountType': serializer.toJson<String>(accountType),
       'balance': serializer.toJson<double>(balance),
@@ -7726,7 +7767,7 @@ class FinancialAccountData extends DataClass
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> accountID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? accountName,
     String? accountType,
     double? balance,
@@ -7739,7 +7780,7 @@ class FinancialAccountData extends DataClass
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     accountID: accountID.present ? accountID.value : this.accountID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     accountName: accountName ?? this.accountName,
     accountType: accountType ?? this.accountType,
     balance: balance ?? this.balance,
@@ -7827,7 +7868,7 @@ class FinancialAccountsTableCompanion
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> accountID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> accountName;
   final Value<String> accountType;
   final Value<double> balance;
@@ -7856,7 +7897,7 @@ class FinancialAccountsTableCompanion
     required String id,
     this.tenantID = const Value.absent(),
     this.accountID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String accountName,
     this.accountType = const Value.absent(),
     this.balance = const Value.absent(),
@@ -7867,7 +7908,6 @@ class FinancialAccountsTableCompanion
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        accountName = Value(accountName);
   static Insertable<FinancialAccountData> custom({
     Expression<String>? id,
@@ -7905,7 +7945,7 @@ class FinancialAccountsTableCompanion
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? accountID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? accountName,
     Value<String>? accountType,
     Value<double>? balance,
@@ -7969,10 +8009,14 @@ class FinancialAccountsTableCompanion
       map['is_active'] = Variable<bool>(isActive.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $FinancialAccountsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $FinancialAccountsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -8048,9 +8092,9 @@ class $AssetsTableTable extends AssetsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -8167,30 +8211,26 @@ class $AssetsTableTable extends AssetsTable
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($AssetsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($AssetsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -8244,8 +8284,6 @@ class $AssetsTableTable extends AssetsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('asset_name')) {
       context.handle(
@@ -8317,18 +8355,6 @@ class $AssetsTableTable extends AssetsTable
         isInsured.isAcceptableOrUnknown(data['is_insured']!, _isInsuredMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -8353,7 +8379,7 @@ class $AssetsTableTable extends AssetsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       assetName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}asset_name'],
@@ -8396,14 +8422,18 @@ class $AssetsTableTable extends AssetsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_insured'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $AssetsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $AssetsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -8414,13 +8444,17 @@ class $AssetsTableTable extends AssetsTable
 
   static JsonTypeConverter2<CurrencyType, String, String> $convertercurrency =
       const EnumNameConverter<CurrencyType>(CurrencyType.values);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class AssetData extends DataClass implements Insertable<AssetData> {
   final String id;
   final String? tenantID;
   final String? assetID;
-  final String personID;
+  final String? personID;
   final String assetName;
   final String assetCategory;
   final DateTime? purchaseDate;
@@ -8437,7 +8471,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     required this.id,
     this.tenantID,
     this.assetID,
-    required this.personID,
+    this.personID,
     required this.assetName,
     required this.assetCategory,
     this.purchaseDate,
@@ -8461,7 +8495,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     if (!nullToAbsent || assetID != null) {
       map['asset_id'] = Variable<String>(assetID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['asset_name'] = Variable<String>(assetName);
     map['asset_category'] = Variable<String>(assetCategory);
     if (!nullToAbsent || purchaseDate != null) {
@@ -8486,8 +8522,16 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       map['notes'] = Variable<String>(notes);
     }
     map['is_insured'] = Variable<bool>(isInsured);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $AssetsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $AssetsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -8500,7 +8544,9 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       assetID: assetID == null && nullToAbsent
           ? const Value.absent()
           : Value(assetID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       assetName: Value(assetName),
       assetCategory: Value(assetCategory),
       purchaseDate: purchaseDate == null && nullToAbsent
@@ -8535,7 +8581,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       assetID: serializer.fromJson<String?>(json['assetID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       assetName: serializer.fromJson<String>(json['assetName']),
       assetCategory: serializer.fromJson<String>(json['assetCategory']),
       purchaseDate: serializer.fromJson<DateTime?>(json['purchaseDate']),
@@ -8561,7 +8607,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'assetID': serializer.toJson<String?>(assetID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'assetName': serializer.toJson<String>(assetName),
       'assetCategory': serializer.toJson<String>(assetCategory),
       'purchaseDate': serializer.toJson<DateTime?>(purchaseDate),
@@ -8585,7 +8631,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> assetID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? assetName,
     String? assetCategory,
     Value<DateTime?> purchaseDate = const Value.absent(),
@@ -8602,7 +8648,7 @@ class AssetData extends DataClass implements Insertable<AssetData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     assetID: assetID.present ? assetID.value : this.assetID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     assetName: assetName ?? this.assetName,
     assetCategory: assetCategory ?? this.assetCategory,
     purchaseDate: purchaseDate.present ? purchaseDate.value : this.purchaseDate,
@@ -8717,7 +8763,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> assetID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> assetName;
   final Value<String> assetCategory;
   final Value<DateTime?> purchaseDate;
@@ -8754,7 +8800,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.assetID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String assetName,
     required String assetCategory,
     this.purchaseDate = const Value.absent(),
@@ -8769,7 +8815,6 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        assetName = Value(assetName),
        assetCategory = Value(assetCategory);
   static Insertable<AssetData> custom({
@@ -8817,7 +8862,7 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? assetID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? assetName,
     Value<String>? assetCategory,
     Value<DateTime?>? purchaseDate,
@@ -8904,10 +8949,14 @@ class AssetsTableCompanion extends UpdateCompanion<AssetData> {
       map['is_insured'] = Variable<bool>(isInsured.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $AssetsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $AssetsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -8985,9 +9034,9 @@ class $GoalsTableTable extends GoalsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -9046,29 +9095,24 @@ class $GoalsTableTable extends GoalsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('active'),
   );
-  static const VerificationMeta _targetDateMeta = const VerificationMeta(
-    'targetDate',
-  );
   @override
-  late final GeneratedColumn<DateTime> targetDate = GeneratedColumn<DateTime>(
-    'target_date',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _completionDateMeta = const VerificationMeta(
-    'completionDate',
-  );
-  @override
-  late final GeneratedColumn<DateTime> completionDate =
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> targetDate =
       GeneratedColumn<DateTime>(
-        'completion_date',
+        'target_date',
         aliasedName,
         true,
         type: DriftSqlType.dateTime,
         requiredDuringInsert: false,
-      );
+      ).withConverter<DateTime?>($GoalsTableTable.$convertertargetDaten);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  completionDate = GeneratedColumn<DateTime>(
+    'completion_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  ).withConverter<DateTime?>($GoalsTableTable.$convertercompletionDaten);
   static const VerificationMeta _progressPercentageMeta =
       const VerificationMeta('progressPercentage');
   @override
@@ -9092,18 +9136,16 @@ class $GoalsTableTable extends GoalsTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($GoalsTableTable.$converterupdatedAt);
   static const VerificationMeta _projectIDMeta = const VerificationMeta(
     'projectID',
   );
@@ -9170,8 +9212,6 @@ class $GoalsTableTable extends GoalsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('title')) {
       context.handle(
@@ -9208,21 +9248,6 @@ class $GoalsTableTable extends GoalsTable
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
-    if (data.containsKey('target_date')) {
-      context.handle(
-        _targetDateMeta,
-        targetDate.isAcceptableOrUnknown(data['target_date']!, _targetDateMeta),
-      );
-    }
-    if (data.containsKey('completion_date')) {
-      context.handle(
-        _completionDateMeta,
-        completionDate.isAcceptableOrUnknown(
-          data['completion_date']!,
-          _completionDateMeta,
-        ),
-      );
-    }
     if (data.containsKey('progress_percentage')) {
       context.handle(
         _progressPercentageMeta,
@@ -9236,12 +9261,6 @@ class $GoalsTableTable extends GoalsTable
       context.handle(
         _createdAtMeta,
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
       );
     }
     if (data.containsKey('project_id')) {
@@ -9274,7 +9293,7 @@ class $GoalsTableTable extends GoalsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       title: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}title'],
@@ -9295,13 +9314,17 @@ class $GoalsTableTable extends GoalsTable
         DriftSqlType.string,
         data['${effectivePrefix}status'],
       )!,
-      targetDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}target_date'],
+      targetDate: $GoalsTableTable.$convertertargetDaten.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}target_date'],
+        ),
       ),
-      completionDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}completion_date'],
+      completionDate: $GoalsTableTable.$convertercompletionDaten.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}completion_date'],
+        ),
       ),
       progressPercentage: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
@@ -9311,10 +9334,12 @@ class $GoalsTableTable extends GoalsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      updatedAt: $GoalsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
       projectID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -9326,13 +9351,24 @@ class $GoalsTableTable extends GoalsTable
   $GoalsTableTable createAlias(String alias) {
     return $GoalsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertertargetDate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertertargetDaten =
+      NullAwareTypeConverter.wrap($convertertargetDate);
+  static TypeConverter<DateTime, DateTime> $convertercompletionDate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertercompletionDaten =
+      NullAwareTypeConverter.wrap($convertercompletionDate);
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class GoalData extends DataClass implements Insertable<GoalData> {
   final String id;
   final String? tenantID;
   final String? goalID;
-  final String personID;
+  final String? personID;
   final String title;
   final String? description;
   final String category;
@@ -9348,7 +9384,7 @@ class GoalData extends DataClass implements Insertable<GoalData> {
     required this.id,
     this.tenantID,
     this.goalID,
-    required this.personID,
+    this.personID,
     required this.title,
     this.description,
     required this.category,
@@ -9371,7 +9407,9 @@ class GoalData extends DataClass implements Insertable<GoalData> {
     if (!nullToAbsent || goalID != null) {
       map['goal_id'] = Variable<String>(goalID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['title'] = Variable<String>(title);
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
@@ -9380,14 +9418,22 @@ class GoalData extends DataClass implements Insertable<GoalData> {
     map['priority'] = Variable<int>(priority);
     map['status'] = Variable<String>(status);
     if (!nullToAbsent || targetDate != null) {
-      map['target_date'] = Variable<DateTime>(targetDate);
+      map['target_date'] = Variable<DateTime>(
+        $GoalsTableTable.$convertertargetDaten.toSql(targetDate),
+      );
     }
     if (!nullToAbsent || completionDate != null) {
-      map['completion_date'] = Variable<DateTime>(completionDate);
+      map['completion_date'] = Variable<DateTime>(
+        $GoalsTableTable.$convertercompletionDaten.toSql(completionDate),
+      );
     }
     map['progress_percentage'] = Variable<int>(progressPercentage);
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $GoalsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
@@ -9403,7 +9449,9 @@ class GoalData extends DataClass implements Insertable<GoalData> {
       goalID: goalID == null && nullToAbsent
           ? const Value.absent()
           : Value(goalID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       title: Value(title),
       description: description == null && nullToAbsent
           ? const Value.absent()
@@ -9435,7 +9483,7 @@ class GoalData extends DataClass implements Insertable<GoalData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       goalID: serializer.fromJson<String?>(json['goalID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       title: serializer.fromJson<String>(json['title']),
       description: serializer.fromJson<String?>(json['description']),
       category: serializer.fromJson<String>(json['category']),
@@ -9456,7 +9504,7 @@ class GoalData extends DataClass implements Insertable<GoalData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'goalID': serializer.toJson<String?>(goalID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'title': serializer.toJson<String>(title),
       'description': serializer.toJson<String?>(description),
       'category': serializer.toJson<String>(category),
@@ -9475,7 +9523,7 @@ class GoalData extends DataClass implements Insertable<GoalData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> goalID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? title,
     Value<String?> description = const Value.absent(),
     String? category,
@@ -9491,7 +9539,7 @@ class GoalData extends DataClass implements Insertable<GoalData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     goalID: goalID.present ? goalID.value : this.goalID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     title: title ?? this.title,
     description: description.present ? description.value : this.description,
     category: category ?? this.category,
@@ -9599,7 +9647,7 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> goalID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> title;
   final Value<String?> description;
   final Value<String> category;
@@ -9634,7 +9682,7 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.goalID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String title,
     this.description = const Value.absent(),
     this.category = const Value.absent(),
@@ -9648,7 +9696,6 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
     this.projectID = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        title = Value(title);
   static Insertable<GoalData> custom({
     Expression<String>? id,
@@ -9692,7 +9739,7 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? goalID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? title,
     Value<String?>? description,
     Value<String>? category,
@@ -9757,10 +9804,14 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
       map['status'] = Variable<String>(status.value);
     }
     if (targetDate.present) {
-      map['target_date'] = Variable<DateTime>(targetDate.value);
+      map['target_date'] = Variable<DateTime>(
+        $GoalsTableTable.$convertertargetDaten.toSql(targetDate.value),
+      );
     }
     if (completionDate.present) {
-      map['completion_date'] = Variable<DateTime>(completionDate.value);
+      map['completion_date'] = Variable<DateTime>(
+        $GoalsTableTable.$convertercompletionDaten.toSql(completionDate.value),
+      );
     }
     if (progressPercentage.present) {
       map['progress_percentage'] = Variable<int>(progressPercentage.value);
@@ -9769,7 +9820,9 @@ class GoalsTableCompanion extends UpdateCompanion<GoalData> {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $GoalsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (projectID.present) {
       map['project_id'] = Variable<String>(projectID.value);
@@ -9851,9 +9904,9 @@ class $HabitsTableTable extends HabitsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -9953,30 +10006,26 @@ class $HabitsTableTable extends HabitsTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($HabitsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($HabitsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -10028,8 +10077,6 @@ class $HabitsTableTable extends HabitsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('goal_id')) {
       context.handle(
@@ -10095,18 +10142,6 @@ class $HabitsTableTable extends HabitsTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -10131,7 +10166,7 @@ class $HabitsTableTable extends HabitsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       goalID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}goal_id'],
@@ -10164,14 +10199,18 @@ class $HabitsTableTable extends HabitsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}started_date'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $HabitsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $HabitsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -10179,13 +10218,18 @@ class $HabitsTableTable extends HabitsTable
   $HabitsTableTable createAlias(String alias) {
     return $HabitsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class HabitData extends DataClass implements Insertable<HabitData> {
   final String id;
   final String? tenantID;
   final String? habitID;
-  final String personID;
+  final String? personID;
   final String? goalID;
   final String habitName;
   final String? description;
@@ -10200,7 +10244,7 @@ class HabitData extends DataClass implements Insertable<HabitData> {
     required this.id,
     this.tenantID,
     this.habitID,
-    required this.personID,
+    this.personID,
     this.goalID,
     required this.habitName,
     this.description,
@@ -10222,7 +10266,9 @@ class HabitData extends DataClass implements Insertable<HabitData> {
     if (!nullToAbsent || habitID != null) {
       map['habit_id'] = Variable<String>(habitID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     if (!nullToAbsent || goalID != null) {
       map['goal_id'] = Variable<String>(goalID);
     }
@@ -10237,8 +10283,16 @@ class HabitData extends DataClass implements Insertable<HabitData> {
     map['target_count'] = Variable<int>(targetCount);
     map['is_active'] = Variable<bool>(isActive);
     map['started_date'] = Variable<DateTime>(startedDate);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $HabitsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $HabitsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -10251,7 +10305,9 @@ class HabitData extends DataClass implements Insertable<HabitData> {
       habitID: habitID == null && nullToAbsent
           ? const Value.absent()
           : Value(habitID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       goalID: goalID == null && nullToAbsent
           ? const Value.absent()
           : Value(goalID),
@@ -10280,7 +10336,7 @@ class HabitData extends DataClass implements Insertable<HabitData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       habitID: serializer.fromJson<String?>(json['habitID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       goalID: serializer.fromJson<String?>(json['goalID']),
       habitName: serializer.fromJson<String>(json['habitName']),
       description: serializer.fromJson<String?>(json['description']),
@@ -10300,7 +10356,7 @@ class HabitData extends DataClass implements Insertable<HabitData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'habitID': serializer.toJson<String?>(habitID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'goalID': serializer.toJson<String?>(goalID),
       'habitName': serializer.toJson<String>(habitName),
       'description': serializer.toJson<String?>(description),
@@ -10318,7 +10374,7 @@ class HabitData extends DataClass implements Insertable<HabitData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> habitID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     Value<String?> goalID = const Value.absent(),
     String? habitName,
     Value<String?> description = const Value.absent(),
@@ -10333,7 +10389,7 @@ class HabitData extends DataClass implements Insertable<HabitData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     habitID: habitID.present ? habitID.value : this.habitID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     goalID: goalID.present ? goalID.value : this.goalID,
     habitName: habitName ?? this.habitName,
     description: description.present ? description.value : this.description,
@@ -10436,7 +10492,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> habitID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String?> goalID;
   final Value<String> habitName;
   final Value<String?> description;
@@ -10469,7 +10525,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.habitID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     this.goalID = const Value.absent(),
     required String habitName,
     this.description = const Value.absent(),
@@ -10482,7 +10538,6 @@ class HabitsTableCompanion extends UpdateCompanion<HabitData> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        habitName = Value(habitName),
        frequency = Value(frequency);
   static Insertable<HabitData> custom({
@@ -10525,7 +10580,7 @@ class HabitsTableCompanion extends UpdateCompanion<HabitData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? habitID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String?>? goalID,
     Value<String>? habitName,
     Value<String?>? description,
@@ -10597,10 +10652,14 @@ class HabitsTableCompanion extends UpdateCompanion<HabitData> {
       map['started_date'] = Variable<DateTime>(startedDate.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $HabitsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $HabitsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -10806,30 +10865,26 @@ class $BlogPostsTableTable extends BlogPostsTable
     type: DriftSqlType.dateTime,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($BlogPostsTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($BlogPostsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -10962,18 +11017,6 @@ class $BlogPostsTableTable extends BlogPostsTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -11045,14 +11088,18 @@ class $BlogPostsTableTable extends BlogPostsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}scheduled_for'],
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $BlogPostsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $BlogPostsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -11063,6 +11110,10 @@ class $BlogPostsTableTable extends BlogPostsTable
 
   static JsonTypeConverter2<PostStatus, String, String> $converterstatus =
       const EnumNameConverter<PostStatus>(PostStatus.values);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class BlogPostData extends DataClass implements Insertable<BlogPostData> {
@@ -11136,8 +11187,16 @@ class BlogPostData extends DataClass implements Insertable<BlogPostData> {
     if (!nullToAbsent || scheduledFor != null) {
       map['scheduled_for'] = Variable<DateTime>(scheduledFor);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $BlogPostsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $BlogPostsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -11562,10 +11621,14 @@ class BlogPostsTableCompanion extends UpdateCompanion<BlogPostData> {
       map['scheduled_for'] = Variable<DateTime>(scheduledFor.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $BlogPostsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $BlogPostsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -11646,9 +11709,9 @@ class $PersonWidgetsTableTable extends PersonWidgetsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -11800,8 +11863,6 @@ class $PersonWidgetsTableTable extends PersonWidgetsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('widget_name')) {
       context.handle(
@@ -11879,7 +11940,7 @@ class $PersonWidgetsTableTable extends PersonWidgetsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       widgetName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}widget_name'],
@@ -11931,7 +11992,7 @@ class PersonWidgetData extends DataClass
   final String id;
   final String? tenantID;
   final int? personWidgetID;
-  final String personID;
+  final String? personID;
   final String widgetName;
   final String widgetType;
   final String configuration;
@@ -11944,7 +12005,7 @@ class PersonWidgetData extends DataClass
     required this.id,
     this.tenantID,
     this.personWidgetID,
-    required this.personID,
+    this.personID,
     required this.widgetName,
     required this.widgetType,
     required this.configuration,
@@ -11964,7 +12025,9 @@ class PersonWidgetData extends DataClass
     if (!nullToAbsent || personWidgetID != null) {
       map['person_widget_id'] = Variable<int>(personWidgetID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['widget_name'] = Variable<String>(widgetName);
     map['widget_type'] = Variable<String>(widgetType);
     map['configuration'] = Variable<String>(configuration);
@@ -11993,7 +12056,9 @@ class PersonWidgetData extends DataClass
       personWidgetID: personWidgetID == null && nullToAbsent
           ? const Value.absent()
           : Value(personWidgetID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       widgetName: Value(widgetName),
       widgetType: Value(widgetType),
       configuration: Value(configuration),
@@ -12018,7 +12083,7 @@ class PersonWidgetData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       personWidgetID: serializer.fromJson<int?>(json['personWidgetID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       widgetName: serializer.fromJson<String>(json['widgetName']),
       widgetType: serializer.fromJson<String>(json['widgetType']),
       configuration: serializer.fromJson<String>(json['configuration']),
@@ -12038,7 +12103,7 @@ class PersonWidgetData extends DataClass
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'personWidgetID': serializer.toJson<int?>(personWidgetID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'widgetName': serializer.toJson<String>(widgetName),
       'widgetType': serializer.toJson<String>(widgetType),
       'configuration': serializer.toJson<String>(configuration),
@@ -12056,7 +12121,7 @@ class PersonWidgetData extends DataClass
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<int?> personWidgetID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? widgetName,
     String? widgetType,
     String? configuration,
@@ -12071,7 +12136,7 @@ class PersonWidgetData extends DataClass
     personWidgetID: personWidgetID.present
         ? personWidgetID.value
         : this.personWidgetID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     widgetName: widgetName ?? this.widgetName,
     widgetType: widgetType ?? this.widgetType,
     configuration: configuration ?? this.configuration,
@@ -12164,7 +12229,7 @@ class PersonWidgetsTableCompanion extends UpdateCompanion<PersonWidgetData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<int?> personWidgetID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> widgetName;
   final Value<String> widgetType;
   final Value<String> configuration;
@@ -12193,7 +12258,7 @@ class PersonWidgetsTableCompanion extends UpdateCompanion<PersonWidgetData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.personWidgetID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String widgetName,
     required String widgetType,
     this.configuration = const Value.absent(),
@@ -12204,7 +12269,6 @@ class PersonWidgetsTableCompanion extends UpdateCompanion<PersonWidgetData> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        widgetName = Value(widgetName),
        widgetType = Value(widgetType);
   static Insertable<PersonWidgetData> custom({
@@ -12243,7 +12307,7 @@ class PersonWidgetsTableCompanion extends UpdateCompanion<PersonWidgetData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<int?>? personWidgetID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? widgetName,
     Value<String>? widgetType,
     Value<String>? configuration,
@@ -12386,9 +12450,9 @@ class $CVAddressesTableTable extends CVAddressesTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'UNIQUE REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -12501,30 +12565,26 @@ class $CVAddressesTableTable extends CVAddressesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($CVAddressesTableTable.$convertercreatedAt);
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($CVAddressesTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -12581,8 +12641,6 @@ class $CVAddressesTableTable extends CVAddressesTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('github_url')) {
       context.handle(
@@ -12650,18 +12708,6 @@ class $CVAddressesTableTable extends CVAddressesTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -12686,7 +12732,7 @@ class $CVAddressesTableTable extends CVAddressesTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       githubUrl: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}github_url'],
@@ -12727,14 +12773,18 @@ class $CVAddressesTableTable extends CVAddressesTable
         DriftSqlType.string,
         data['${effectivePrefix}linkedin_url'],
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      createdAt: $CVAddressesTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $CVAddressesTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -12742,13 +12792,18 @@ class $CVAddressesTableTable extends CVAddressesTable
   $CVAddressesTableTable createAlias(String alias) {
     return $CVAddressesTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class CVAddressData extends DataClass implements Insertable<CVAddressData> {
   final String id;
   final String? tenantID;
   final String? cvAddressID;
-  final String personID;
+  final String? personID;
   final String? githubUrl;
   final String? websiteUrl;
   final String? company;
@@ -12765,7 +12820,7 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     required this.id,
     this.tenantID,
     this.cvAddressID,
-    required this.personID,
+    this.personID,
     this.githubUrl,
     this.websiteUrl,
     this.company,
@@ -12789,7 +12844,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     if (!nullToAbsent || cvAddressID != null) {
       map['cv_address_id'] = Variable<String>(cvAddressID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     if (!nullToAbsent || githubUrl != null) {
       map['github_url'] = Variable<String>(githubUrl);
     }
@@ -12820,8 +12877,16 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     if (!nullToAbsent || linkedinUrl != null) {
       map['linkedin_url'] = Variable<String>(linkedinUrl);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $CVAddressesTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $CVAddressesTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -12834,7 +12899,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       cvAddressID: cvAddressID == null && nullToAbsent
           ? const Value.absent()
           : Value(cvAddressID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       githubUrl: githubUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(githubUrl),
@@ -12877,7 +12944,7 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       cvAddressID: serializer.fromJson<String?>(json['cvAddressID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       githubUrl: serializer.fromJson<String?>(json['githubUrl']),
       websiteUrl: serializer.fromJson<String?>(json['websiteUrl']),
       company: serializer.fromJson<String?>(json['company']),
@@ -12899,7 +12966,7 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'cvAddressID': serializer.toJson<String?>(cvAddressID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'githubUrl': serializer.toJson<String?>(githubUrl),
       'websiteUrl': serializer.toJson<String?>(websiteUrl),
       'company': serializer.toJson<String?>(company),
@@ -12919,7 +12986,7 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> cvAddressID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     Value<String?> githubUrl = const Value.absent(),
     Value<String?> websiteUrl = const Value.absent(),
     Value<String?> company = const Value.absent(),
@@ -12936,7 +13003,7 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     cvAddressID: cvAddressID.present ? cvAddressID.value : this.cvAddressID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     githubUrl: githubUrl.present ? githubUrl.value : this.githubUrl,
     websiteUrl: websiteUrl.present ? websiteUrl.value : this.websiteUrl,
     company: company.present ? company.value : this.company,
@@ -13053,7 +13120,7 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> cvAddressID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String?> githubUrl;
   final Value<String?> websiteUrl;
   final Value<String?> company;
@@ -13090,7 +13157,7 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.cvAddressID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     this.githubUrl = const Value.absent(),
     this.websiteUrl = const Value.absent(),
     this.company = const Value.absent(),
@@ -13104,8 +13171,7 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       personID = Value(personID);
+  }) : id = Value(id);
   static Insertable<CVAddressData> custom({
     Expression<String>? id,
     Expression<String>? tenantID,
@@ -13150,7 +13216,7 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? cvAddressID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String?>? githubUrl,
     Value<String?>? websiteUrl,
     Value<String?>? company,
@@ -13232,10 +13298,14 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
       map['linkedin_url'] = Variable<String>(linkedinUrl.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $CVAddressesTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $CVAddressesTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -13328,18 +13398,16 @@ class $SessionTableTable extends SessionTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SessionTableTable.$convertercreatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -13392,12 +13460,6 @@ class $SessionTableTable extends SessionTable
         username.isAcceptableOrUnknown(data['username']!, _usernameMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
     return context;
   }
 
@@ -13427,10 +13489,12 @@ class $SessionTableTable extends SessionTable
         DriftSqlType.string,
         data['${effectivePrefix}username'],
       ),
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $SessionTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
     );
   }
 
@@ -13438,6 +13502,9 @@ class $SessionTableTable extends SessionTable
   $SessionTableTable createAlias(String alias) {
     return $SessionTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class SessionData extends DataClass implements Insertable<SessionData> {
@@ -13469,7 +13536,11 @@ class SessionData extends DataClass implements Insertable<SessionData> {
     if (!nullToAbsent || username != null) {
       map['username'] = Variable<String>(username);
     }
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $SessionTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     return map;
   }
 
@@ -13657,7 +13728,9 @@ class SessionTableCompanion extends UpdateCompanion<SessionData> {
       map['username'] = Variable<String>(username.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $SessionTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -13727,28 +13800,28 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _dateMeta = const VerificationMeta('date');
   @override
-  late final GeneratedColumn<DateTime> date = GeneratedColumn<DateTime>(
-    'date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> date =
+      GeneratedColumn<DateTime>(
+        'date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($HealthMetricsTableTable.$converterdate);
   static const VerificationMeta _stepsMeta = const VerificationMeta('steps');
   @override
   late final GeneratedColumn<int> steps = GeneratedColumn<int>(
     'steps',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13760,7 +13833,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> heartRate = GeneratedColumn<int>(
     'heart_rate',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13772,7 +13845,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<double> sleepHours = GeneratedColumn<double>(
     'sleep_hours',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.double,
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
@@ -13784,7 +13857,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> waterGlasses = GeneratedColumn<int>(
     'water_glasses',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13796,7 +13869,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> exerciseMinutes = GeneratedColumn<int>(
     'exercise_minutes',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13808,7 +13881,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> focusMinutes = GeneratedColumn<int>(
     'focus_minutes',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13820,7 +13893,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<double> weightKg = GeneratedColumn<double>(
     'weight_kg',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.double,
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
@@ -13832,7 +13905,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> caloriesConsumed = GeneratedColumn<int>(
     'calories_consumed',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
@@ -13844,23 +13917,21 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   late final GeneratedColumn<int> caloriesBurned = GeneratedColumn<int>(
     'calories_burned',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($HealthMetricsTableTable.$converterupdatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -13913,16 +13984,6 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
-    }
-    if (data.containsKey('date')) {
-      context.handle(
-        _dateMeta,
-        date.isAcceptableOrUnknown(data['date']!, _dateMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_dateMeta);
     }
     if (data.containsKey('steps')) {
       context.handle(
@@ -13993,12 +14054,6 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         ),
       );
     }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
     return context;
   }
 
@@ -14027,51 +14082,55 @@ class $HealthMetricsTableTable extends HealthMetricsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
-      date: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}date'],
-      )!,
+      ),
+      date: $HealthMetricsTableTable.$converterdate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date'],
+        )!,
+      ),
       steps: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}steps'],
-      )!,
+      ),
       heartRate: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}heart_rate'],
-      )!,
+      ),
       sleepHours: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}sleep_hours'],
-      )!,
+      ),
       waterGlasses: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}water_glasses'],
-      )!,
+      ),
       exerciseMinutes: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}exercise_minutes'],
-      )!,
+      ),
       focusMinutes: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}focus_minutes'],
-      )!,
+      ),
       weightKg: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}weight_kg'],
-      )!,
+      ),
       caloriesConsumed: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}calories_consumed'],
-      )!,
+      ),
       caloriesBurned: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}calories_burned'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
+      ),
+      updatedAt: $HealthMetricsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -14079,6 +14138,11 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   $HealthMetricsTableTable createAlias(String alias) {
     return $HealthMetricsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $converterdate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
 }
 
 class HealthMetricsLocal extends DataClass
@@ -14086,33 +14150,33 @@ class HealthMetricsLocal extends DataClass
   final String id;
   final String? tenantID;
   final String? metricID;
-  final String personID;
+  final String? personID;
   final DateTime date;
-  final int steps;
-  final int heartRate;
-  final double sleepHours;
-  final int waterGlasses;
-  final int exerciseMinutes;
-  final int focusMinutes;
-  final double weightKg;
-  final int caloriesConsumed;
-  final int caloriesBurned;
+  final int? steps;
+  final int? heartRate;
+  final double? sleepHours;
+  final int? waterGlasses;
+  final int? exerciseMinutes;
+  final int? focusMinutes;
+  final double? weightKg;
+  final int? caloriesConsumed;
+  final int? caloriesBurned;
   final DateTime updatedAt;
   const HealthMetricsLocal({
     required this.id,
     this.tenantID,
     this.metricID,
-    required this.personID,
+    this.personID,
     required this.date,
-    required this.steps,
-    required this.heartRate,
-    required this.sleepHours,
-    required this.waterGlasses,
-    required this.exerciseMinutes,
-    required this.focusMinutes,
-    required this.weightKg,
-    required this.caloriesConsumed,
-    required this.caloriesBurned,
+    this.steps,
+    this.heartRate,
+    this.sleepHours,
+    this.waterGlasses,
+    this.exerciseMinutes,
+    this.focusMinutes,
+    this.weightKg,
+    this.caloriesConsumed,
+    this.caloriesBurned,
     required this.updatedAt,
   });
   @override
@@ -14125,18 +14189,46 @@ class HealthMetricsLocal extends DataClass
     if (!nullToAbsent || metricID != null) {
       map['metric_id'] = Variable<String>(metricID);
     }
-    map['person_id'] = Variable<String>(personID);
-    map['date'] = Variable<DateTime>(date);
-    map['steps'] = Variable<int>(steps);
-    map['heart_rate'] = Variable<int>(heartRate);
-    map['sleep_hours'] = Variable<double>(sleepHours);
-    map['water_glasses'] = Variable<int>(waterGlasses);
-    map['exercise_minutes'] = Variable<int>(exerciseMinutes);
-    map['focus_minutes'] = Variable<int>(focusMinutes);
-    map['weight_kg'] = Variable<double>(weightKg);
-    map['calories_consumed'] = Variable<int>(caloriesConsumed);
-    map['calories_burned'] = Variable<int>(caloriesBurned);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    {
+      map['date'] = Variable<DateTime>(
+        $HealthMetricsTableTable.$converterdate.toSql(date),
+      );
+    }
+    if (!nullToAbsent || steps != null) {
+      map['steps'] = Variable<int>(steps);
+    }
+    if (!nullToAbsent || heartRate != null) {
+      map['heart_rate'] = Variable<int>(heartRate);
+    }
+    if (!nullToAbsent || sleepHours != null) {
+      map['sleep_hours'] = Variable<double>(sleepHours);
+    }
+    if (!nullToAbsent || waterGlasses != null) {
+      map['water_glasses'] = Variable<int>(waterGlasses);
+    }
+    if (!nullToAbsent || exerciseMinutes != null) {
+      map['exercise_minutes'] = Variable<int>(exerciseMinutes);
+    }
+    if (!nullToAbsent || focusMinutes != null) {
+      map['focus_minutes'] = Variable<int>(focusMinutes);
+    }
+    if (!nullToAbsent || weightKg != null) {
+      map['weight_kg'] = Variable<double>(weightKg);
+    }
+    if (!nullToAbsent || caloriesConsumed != null) {
+      map['calories_consumed'] = Variable<int>(caloriesConsumed);
+    }
+    if (!nullToAbsent || caloriesBurned != null) {
+      map['calories_burned'] = Variable<int>(caloriesBurned);
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $HealthMetricsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
     return map;
   }
 
@@ -14149,17 +14241,37 @@ class HealthMetricsLocal extends DataClass
       metricID: metricID == null && nullToAbsent
           ? const Value.absent()
           : Value(metricID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       date: Value(date),
-      steps: Value(steps),
-      heartRate: Value(heartRate),
-      sleepHours: Value(sleepHours),
-      waterGlasses: Value(waterGlasses),
-      exerciseMinutes: Value(exerciseMinutes),
-      focusMinutes: Value(focusMinutes),
-      weightKg: Value(weightKg),
-      caloriesConsumed: Value(caloriesConsumed),
-      caloriesBurned: Value(caloriesBurned),
+      steps: steps == null && nullToAbsent
+          ? const Value.absent()
+          : Value(steps),
+      heartRate: heartRate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(heartRate),
+      sleepHours: sleepHours == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sleepHours),
+      waterGlasses: waterGlasses == null && nullToAbsent
+          ? const Value.absent()
+          : Value(waterGlasses),
+      exerciseMinutes: exerciseMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(exerciseMinutes),
+      focusMinutes: focusMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(focusMinutes),
+      weightKg: weightKg == null && nullToAbsent
+          ? const Value.absent()
+          : Value(weightKg),
+      caloriesConsumed: caloriesConsumed == null && nullToAbsent
+          ? const Value.absent()
+          : Value(caloriesConsumed),
+      caloriesBurned: caloriesBurned == null && nullToAbsent
+          ? const Value.absent()
+          : Value(caloriesBurned),
       updatedAt: Value(updatedAt),
     );
   }
@@ -14173,17 +14285,17 @@ class HealthMetricsLocal extends DataClass
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       metricID: serializer.fromJson<String?>(json['metricID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       date: serializer.fromJson<DateTime>(json['date']),
-      steps: serializer.fromJson<int>(json['steps']),
-      heartRate: serializer.fromJson<int>(json['heartRate']),
-      sleepHours: serializer.fromJson<double>(json['sleepHours']),
-      waterGlasses: serializer.fromJson<int>(json['waterGlasses']),
-      exerciseMinutes: serializer.fromJson<int>(json['exerciseMinutes']),
-      focusMinutes: serializer.fromJson<int>(json['focusMinutes']),
-      weightKg: serializer.fromJson<double>(json['weightKg']),
-      caloriesConsumed: serializer.fromJson<int>(json['caloriesConsumed']),
-      caloriesBurned: serializer.fromJson<int>(json['caloriesBurned']),
+      steps: serializer.fromJson<int?>(json['steps']),
+      heartRate: serializer.fromJson<int?>(json['heartRate']),
+      sleepHours: serializer.fromJson<double?>(json['sleepHours']),
+      waterGlasses: serializer.fromJson<int?>(json['waterGlasses']),
+      exerciseMinutes: serializer.fromJson<int?>(json['exerciseMinutes']),
+      focusMinutes: serializer.fromJson<int?>(json['focusMinutes']),
+      weightKg: serializer.fromJson<double?>(json['weightKg']),
+      caloriesConsumed: serializer.fromJson<int?>(json['caloriesConsumed']),
+      caloriesBurned: serializer.fromJson<int?>(json['caloriesBurned']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -14194,17 +14306,17 @@ class HealthMetricsLocal extends DataClass
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'metricID': serializer.toJson<String?>(metricID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'date': serializer.toJson<DateTime>(date),
-      'steps': serializer.toJson<int>(steps),
-      'heartRate': serializer.toJson<int>(heartRate),
-      'sleepHours': serializer.toJson<double>(sleepHours),
-      'waterGlasses': serializer.toJson<int>(waterGlasses),
-      'exerciseMinutes': serializer.toJson<int>(exerciseMinutes),
-      'focusMinutes': serializer.toJson<int>(focusMinutes),
-      'weightKg': serializer.toJson<double>(weightKg),
-      'caloriesConsumed': serializer.toJson<int>(caloriesConsumed),
-      'caloriesBurned': serializer.toJson<int>(caloriesBurned),
+      'steps': serializer.toJson<int?>(steps),
+      'heartRate': serializer.toJson<int?>(heartRate),
+      'sleepHours': serializer.toJson<double?>(sleepHours),
+      'waterGlasses': serializer.toJson<int?>(waterGlasses),
+      'exerciseMinutes': serializer.toJson<int?>(exerciseMinutes),
+      'focusMinutes': serializer.toJson<int?>(focusMinutes),
+      'weightKg': serializer.toJson<double?>(weightKg),
+      'caloriesConsumed': serializer.toJson<int?>(caloriesConsumed),
+      'caloriesBurned': serializer.toJson<int?>(caloriesBurned),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -14213,33 +14325,39 @@ class HealthMetricsLocal extends DataClass
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> metricID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     DateTime? date,
-    int? steps,
-    int? heartRate,
-    double? sleepHours,
-    int? waterGlasses,
-    int? exerciseMinutes,
-    int? focusMinutes,
-    double? weightKg,
-    int? caloriesConsumed,
-    int? caloriesBurned,
+    Value<int?> steps = const Value.absent(),
+    Value<int?> heartRate = const Value.absent(),
+    Value<double?> sleepHours = const Value.absent(),
+    Value<int?> waterGlasses = const Value.absent(),
+    Value<int?> exerciseMinutes = const Value.absent(),
+    Value<int?> focusMinutes = const Value.absent(),
+    Value<double?> weightKg = const Value.absent(),
+    Value<int?> caloriesConsumed = const Value.absent(),
+    Value<int?> caloriesBurned = const Value.absent(),
     DateTime? updatedAt,
   }) => HealthMetricsLocal(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     metricID: metricID.present ? metricID.value : this.metricID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     date: date ?? this.date,
-    steps: steps ?? this.steps,
-    heartRate: heartRate ?? this.heartRate,
-    sleepHours: sleepHours ?? this.sleepHours,
-    waterGlasses: waterGlasses ?? this.waterGlasses,
-    exerciseMinutes: exerciseMinutes ?? this.exerciseMinutes,
-    focusMinutes: focusMinutes ?? this.focusMinutes,
-    weightKg: weightKg ?? this.weightKg,
-    caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
-    caloriesBurned: caloriesBurned ?? this.caloriesBurned,
+    steps: steps.present ? steps.value : this.steps,
+    heartRate: heartRate.present ? heartRate.value : this.heartRate,
+    sleepHours: sleepHours.present ? sleepHours.value : this.sleepHours,
+    waterGlasses: waterGlasses.present ? waterGlasses.value : this.waterGlasses,
+    exerciseMinutes: exerciseMinutes.present
+        ? exerciseMinutes.value
+        : this.exerciseMinutes,
+    focusMinutes: focusMinutes.present ? focusMinutes.value : this.focusMinutes,
+    weightKg: weightKg.present ? weightKg.value : this.weightKg,
+    caloriesConsumed: caloriesConsumed.present
+        ? caloriesConsumed.value
+        : this.caloriesConsumed,
+    caloriesBurned: caloriesBurned.present
+        ? caloriesBurned.value
+        : this.caloriesBurned,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   HealthMetricsLocal copyWithCompanion(HealthMetricsTableCompanion data) {
@@ -14339,17 +14457,17 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> metricID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<DateTime> date;
-  final Value<int> steps;
-  final Value<int> heartRate;
-  final Value<double> sleepHours;
-  final Value<int> waterGlasses;
-  final Value<int> exerciseMinutes;
-  final Value<int> focusMinutes;
-  final Value<double> weightKg;
-  final Value<int> caloriesConsumed;
-  final Value<int> caloriesBurned;
+  final Value<int?> steps;
+  final Value<int?> heartRate;
+  final Value<double?> sleepHours;
+  final Value<int?> waterGlasses;
+  final Value<int?> exerciseMinutes;
+  final Value<int?> focusMinutes;
+  final Value<double?> weightKg;
+  final Value<int?> caloriesConsumed;
+  final Value<int?> caloriesBurned;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const HealthMetricsTableCompanion({
@@ -14374,7 +14492,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     required String id,
     this.tenantID = const Value.absent(),
     this.metricID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required DateTime date,
     this.steps = const Value.absent(),
     this.heartRate = const Value.absent(),
@@ -14388,7 +14506,6 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        date = Value(date);
   static Insertable<HealthMetricsLocal> custom({
     Expression<String>? id,
@@ -14432,17 +14549,17 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? metricID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<DateTime>? date,
-    Value<int>? steps,
-    Value<int>? heartRate,
-    Value<double>? sleepHours,
-    Value<int>? waterGlasses,
-    Value<int>? exerciseMinutes,
-    Value<int>? focusMinutes,
-    Value<double>? weightKg,
-    Value<int>? caloriesConsumed,
-    Value<int>? caloriesBurned,
+    Value<int?>? steps,
+    Value<int?>? heartRate,
+    Value<double?>? sleepHours,
+    Value<int?>? waterGlasses,
+    Value<int?>? exerciseMinutes,
+    Value<int?>? focusMinutes,
+    Value<double?>? weightKg,
+    Value<int?>? caloriesConsumed,
+    Value<int?>? caloriesBurned,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -14482,7 +14599,9 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       map['person_id'] = Variable<String>(personID.value);
     }
     if (date.present) {
-      map['date'] = Variable<DateTime>(date.value);
+      map['date'] = Variable<DateTime>(
+        $HealthMetricsTableTable.$converterdate.toSql(date.value),
+      );
     }
     if (steps.present) {
       map['steps'] = Variable<int>(steps.value);
@@ -14512,7 +14631,9 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       map['calories_burned'] = Variable<int>(caloriesBurned.value);
     }
     if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+      map['updated_at'] = Variable<DateTime>(
+        $HealthMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -14589,9 +14710,9 @@ class $MealsTableTable extends MealsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -14666,18 +14787,16 @@ class $MealsTableTable extends MealsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
-  static const VerificationMeta _eatenAtMeta = const VerificationMeta(
-    'eatenAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> eatenAt = GeneratedColumn<DateTime>(
-    'eaten_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> eatenAt =
+      GeneratedColumn<DateTime>(
+        'eaten_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($MealsTableTable.$convertereatenAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -14726,8 +14845,6 @@ class $MealsTableTable extends MealsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('meal_name')) {
       context.handle(
@@ -14770,12 +14887,6 @@ class $MealsTableTable extends MealsTable
         calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta),
       );
     }
-    if (data.containsKey('eaten_at')) {
-      context.handle(
-        _eatenAtMeta,
-        eatenAt.isAcceptableOrUnknown(data['eaten_at']!, _eatenAtMeta),
-      );
-    }
     return context;
   }
 
@@ -14800,7 +14911,7 @@ class $MealsTableTable extends MealsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       mealName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}meal_name'],
@@ -14825,10 +14936,12 @@ class $MealsTableTable extends MealsTable
         DriftSqlType.double,
         data['${effectivePrefix}calories'],
       )!,
-      eatenAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}eaten_at'],
-      )!,
+      eatenAt: $MealsTableTable.$convertereatenAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}eaten_at'],
+        )!,
+      ),
     );
   }
 
@@ -14836,13 +14949,16 @@ class $MealsTableTable extends MealsTable
   $MealsTableTable createAlias(String alias) {
     return $MealsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertereatenAt =
+      const DateTimeUTCConverter();
 }
 
 class MealData extends DataClass implements Insertable<MealData> {
   final String id;
   final String? tenantID;
   final String? mealID;
-  final String personID;
+  final String? personID;
   final String mealName;
   final String? mealImageUrl;
   final double fat;
@@ -14854,7 +14970,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     required this.id,
     this.tenantID,
     this.mealID,
-    required this.personID,
+    this.personID,
     required this.mealName,
     this.mealImageUrl,
     required this.fat,
@@ -14873,7 +14989,9 @@ class MealData extends DataClass implements Insertable<MealData> {
     if (!nullToAbsent || mealID != null) {
       map['meal_id'] = Variable<String>(mealID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['meal_name'] = Variable<String>(mealName);
     if (!nullToAbsent || mealImageUrl != null) {
       map['meal_image_url'] = Variable<String>(mealImageUrl);
@@ -14882,7 +15000,11 @@ class MealData extends DataClass implements Insertable<MealData> {
     map['carbs'] = Variable<double>(carbs);
     map['protein'] = Variable<double>(protein);
     map['calories'] = Variable<double>(calories);
-    map['eaten_at'] = Variable<DateTime>(eatenAt);
+    {
+      map['eaten_at'] = Variable<DateTime>(
+        $MealsTableTable.$convertereatenAt.toSql(eatenAt),
+      );
+    }
     return map;
   }
 
@@ -14895,7 +15017,9 @@ class MealData extends DataClass implements Insertable<MealData> {
       mealID: mealID == null && nullToAbsent
           ? const Value.absent()
           : Value(mealID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       mealName: Value(mealName),
       mealImageUrl: mealImageUrl == null && nullToAbsent
           ? const Value.absent()
@@ -14917,7 +15041,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       mealID: serializer.fromJson<String?>(json['mealID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       mealName: serializer.fromJson<String>(json['mealName']),
       mealImageUrl: serializer.fromJson<String?>(json['mealImageUrl']),
       fat: serializer.fromJson<double>(json['fat']),
@@ -14934,7 +15058,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'mealID': serializer.toJson<String?>(mealID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'mealName': serializer.toJson<String>(mealName),
       'mealImageUrl': serializer.toJson<String?>(mealImageUrl),
       'fat': serializer.toJson<double>(fat),
@@ -14949,7 +15073,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> mealID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? mealName,
     Value<String?> mealImageUrl = const Value.absent(),
     double? fat,
@@ -14961,7 +15085,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     mealID: mealID.present ? mealID.value : this.mealID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     mealName: mealName ?? this.mealName,
     mealImageUrl: mealImageUrl.present ? mealImageUrl.value : this.mealImageUrl,
     fat: fat ?? this.fat,
@@ -15041,7 +15165,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> mealID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> mealName;
   final Value<String?> mealImageUrl;
   final Value<double> fat;
@@ -15068,7 +15192,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.mealID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String mealName,
     this.mealImageUrl = const Value.absent(),
     this.fat = const Value.absent(),
@@ -15078,7 +15202,6 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     this.eatenAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        mealName = Value(mealName);
   static Insertable<MealData> custom({
     Expression<String>? id,
@@ -15114,7 +15237,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? mealID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? mealName,
     Value<String?>? mealImageUrl,
     Value<double>? fat,
@@ -15174,7 +15297,9 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
       map['calories'] = Variable<double>(calories.value);
     }
     if (eatenAt.present) {
-      map['eaten_at'] = Variable<DateTime>(eatenAt.value);
+      map['eaten_at'] = Variable<DateTime>(
+        $MealsTableTable.$convertereatenAt.toSql(eatenAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -16251,19 +16376,16 @@ class $ThemeTableTable extends ThemeTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
-    'tenantID',
+  static const VerificationMeta _organizationIdMeta = const VerificationMeta(
+    'organizationId',
   );
   @override
-  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
-    'tenant_id',
+  late final GeneratedColumn<String> organizationId = GeneratedColumn<String>(
+    'organization_id',
     aliasedName,
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES organizations (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _themeIDMeta = const VerificationMeta(
     'themeID',
@@ -16301,7 +16423,7 @@ class $ThemeTableTable extends ThemeTable
   @override
   List<GeneratedColumn> get $columns => [
     id,
-    tenantID,
+    organizationId,
     themeID,
     themeName,
     themePath,
@@ -16323,10 +16445,13 @@ class $ThemeTableTable extends ThemeTable
     } else if (isInserting) {
       context.missing(_idMeta);
     }
-    if (data.containsKey('tenant_id')) {
+    if (data.containsKey('organization_id')) {
       context.handle(
-        _tenantIDMeta,
-        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+        _organizationIdMeta,
+        organizationId.isAcceptableOrUnknown(
+          data['organization_id']!,
+          _organizationIdMeta,
+        ),
       );
     }
     if (data.containsKey('theme_id')) {
@@ -16364,9 +16489,9 @@ class $ThemeTableTable extends ThemeTable
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
-      tenantID: attachedDatabase.typeMapping.read(
+      organizationId: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}tenant_id'],
+        data['${effectivePrefix}organization_id'],
       ),
       themeID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -16391,13 +16516,13 @@ class $ThemeTableTable extends ThemeTable
 
 class ThemeData extends DataClass implements Insertable<ThemeData> {
   final String id;
-  final String? tenantID;
+  final String? organizationId;
   final String? themeID;
   final String themeName;
   final String themePath;
   const ThemeData({
     required this.id,
-    this.tenantID,
+    this.organizationId,
     this.themeID,
     required this.themeName,
     required this.themePath,
@@ -16406,8 +16531,8 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || tenantID != null) {
-      map['tenant_id'] = Variable<String>(tenantID);
+    if (!nullToAbsent || organizationId != null) {
+      map['organization_id'] = Variable<String>(organizationId);
     }
     if (!nullToAbsent || themeID != null) {
       map['theme_id'] = Variable<String>(themeID);
@@ -16420,9 +16545,9 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
   ThemeTableCompanion toCompanion(bool nullToAbsent) {
     return ThemeTableCompanion(
       id: Value(id),
-      tenantID: tenantID == null && nullToAbsent
+      organizationId: organizationId == null && nullToAbsent
           ? const Value.absent()
-          : Value(tenantID),
+          : Value(organizationId),
       themeID: themeID == null && nullToAbsent
           ? const Value.absent()
           : Value(themeID),
@@ -16438,7 +16563,7 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ThemeData(
       id: serializer.fromJson<String>(json['id']),
-      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      organizationId: serializer.fromJson<String?>(json['organizationId']),
       themeID: serializer.fromJson<String?>(json['themeID']),
       themeName: serializer.fromJson<String>(json['themeName']),
       themePath: serializer.fromJson<String>(json['themePath']),
@@ -16449,7 +16574,7 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'tenantID': serializer.toJson<String?>(tenantID),
+      'organizationId': serializer.toJson<String?>(organizationId),
       'themeID': serializer.toJson<String?>(themeID),
       'themeName': serializer.toJson<String>(themeName),
       'themePath': serializer.toJson<String>(themePath),
@@ -16458,13 +16583,15 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
 
   ThemeData copyWith({
     String? id,
-    Value<String?> tenantID = const Value.absent(),
+    Value<String?> organizationId = const Value.absent(),
     Value<String?> themeID = const Value.absent(),
     String? themeName,
     String? themePath,
   }) => ThemeData(
     id: id ?? this.id,
-    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    organizationId: organizationId.present
+        ? organizationId.value
+        : this.organizationId,
     themeID: themeID.present ? themeID.value : this.themeID,
     themeName: themeName ?? this.themeName,
     themePath: themePath ?? this.themePath,
@@ -16472,7 +16599,9 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
   ThemeData copyWithCompanion(ThemeTableCompanion data) {
     return ThemeData(
       id: data.id.present ? data.id.value : this.id,
-      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      organizationId: data.organizationId.present
+          ? data.organizationId.value
+          : this.organizationId,
       themeID: data.themeID.present ? data.themeID.value : this.themeID,
       themeName: data.themeName.present ? data.themeName.value : this.themeName,
       themePath: data.themePath.present ? data.themePath.value : this.themePath,
@@ -16483,7 +16612,7 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
   String toString() {
     return (StringBuffer('ThemeData(')
           ..write('id: $id, ')
-          ..write('tenantID: $tenantID, ')
+          ..write('organizationId: $organizationId, ')
           ..write('themeID: $themeID, ')
           ..write('themeName: $themeName, ')
           ..write('themePath: $themePath')
@@ -16492,13 +16621,14 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
   }
 
   @override
-  int get hashCode => Object.hash(id, tenantID, themeID, themeName, themePath);
+  int get hashCode =>
+      Object.hash(id, organizationId, themeID, themeName, themePath);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is ThemeData &&
           other.id == this.id &&
-          other.tenantID == this.tenantID &&
+          other.organizationId == this.organizationId &&
           other.themeID == this.themeID &&
           other.themeName == this.themeName &&
           other.themePath == this.themePath);
@@ -16506,14 +16636,14 @@ class ThemeData extends DataClass implements Insertable<ThemeData> {
 
 class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
   final Value<String> id;
-  final Value<String?> tenantID;
+  final Value<String?> organizationId;
   final Value<String?> themeID;
   final Value<String> themeName;
   final Value<String> themePath;
   final Value<int> rowid;
   const ThemeTableCompanion({
     this.id = const Value.absent(),
-    this.tenantID = const Value.absent(),
+    this.organizationId = const Value.absent(),
     this.themeID = const Value.absent(),
     this.themeName = const Value.absent(),
     this.themePath = const Value.absent(),
@@ -16521,7 +16651,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
   });
   ThemeTableCompanion.insert({
     required String id,
-    this.tenantID = const Value.absent(),
+    this.organizationId = const Value.absent(),
     this.themeID = const Value.absent(),
     required String themeName,
     required String themePath,
@@ -16531,7 +16661,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
        themePath = Value(themePath);
   static Insertable<ThemeData> custom({
     Expression<String>? id,
-    Expression<String>? tenantID,
+    Expression<String>? organizationId,
     Expression<String>? themeID,
     Expression<String>? themeName,
     Expression<String>? themePath,
@@ -16539,7 +16669,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
-      if (tenantID != null) 'tenant_id': tenantID,
+      if (organizationId != null) 'organization_id': organizationId,
       if (themeID != null) 'theme_id': themeID,
       if (themeName != null) 'theme_name': themeName,
       if (themePath != null) 'theme_path': themePath,
@@ -16549,7 +16679,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
 
   ThemeTableCompanion copyWith({
     Value<String>? id,
-    Value<String?>? tenantID,
+    Value<String?>? organizationId,
     Value<String?>? themeID,
     Value<String>? themeName,
     Value<String>? themePath,
@@ -16557,7 +16687,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
   }) {
     return ThemeTableCompanion(
       id: id ?? this.id,
-      tenantID: tenantID ?? this.tenantID,
+      organizationId: organizationId ?? this.organizationId,
       themeID: themeID ?? this.themeID,
       themeName: themeName ?? this.themeName,
       themePath: themePath ?? this.themePath,
@@ -16571,8 +16701,8 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
     if (id.present) {
       map['id'] = Variable<String>(id.value);
     }
-    if (tenantID.present) {
-      map['tenant_id'] = Variable<String>(tenantID.value);
+    if (organizationId.present) {
+      map['organization_id'] = Variable<String>(organizationId.value);
     }
     if (themeID.present) {
       map['theme_id'] = Variable<String>(themeID.value);
@@ -16593,7 +16723,7 @@ class ThemeTableCompanion extends UpdateCompanion<ThemeData> {
   String toString() {
     return (StringBuffer('ThemeTableCompanion(')
           ..write('id: $id, ')
-          ..write('tenantID: $tenantID, ')
+          ..write('organizationId: $organizationId, ')
           ..write('themeID: $themeID, ')
           ..write('themeName: $themeName, ')
           ..write('themePath: $themePath, ')
@@ -16650,9 +16780,9 @@ class $TransactionsTableTable extends TransactionsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -16710,18 +16840,16 @@ class $TransactionsTableTable extends TransactionsTable
         requiredDuringInsert: false,
         defaultValue: currentDateAndTime,
       );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($TransactionsTableTable.$convertercreatedAt);
   static const VerificationMeta _projectIDMeta = const VerificationMeta(
     'projectID',
   );
@@ -16787,8 +16915,6 @@ class $TransactionsTableTable extends TransactionsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('category')) {
       context.handle(
@@ -16832,12 +16958,6 @@ class $TransactionsTableTable extends TransactionsTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
     if (data.containsKey('project_id')) {
       context.handle(
         _projectIDMeta,
@@ -16868,7 +16988,7 @@ class $TransactionsTableTable extends TransactionsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       category: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}category'],
@@ -16889,10 +17009,12 @@ class $TransactionsTableTable extends TransactionsTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}transaction_date'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $TransactionsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
       projectID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -16904,13 +17026,16 @@ class $TransactionsTableTable extends TransactionsTable
   $TransactionsTableTable createAlias(String alias) {
     return $TransactionsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class TransactionData extends DataClass implements Insertable<TransactionData> {
   final String id;
   final String? tenantID;
   final String? transactionID;
-  final String personID;
+  final String? personID;
   final String category;
   final String type;
   final double amount;
@@ -16922,7 +17047,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     required this.id,
     this.tenantID,
     this.transactionID,
-    required this.personID,
+    this.personID,
     required this.category,
     required this.type,
     required this.amount,
@@ -16941,7 +17066,9 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     if (!nullToAbsent || transactionID != null) {
       map['transaction_id'] = Variable<String>(transactionID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['category'] = Variable<String>(category);
     map['type'] = Variable<String>(type);
     map['amount'] = Variable<double>(amount);
@@ -16949,7 +17076,11 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       map['description'] = Variable<String>(description);
     }
     map['transaction_date'] = Variable<DateTime>(transactionDate);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $TransactionsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
@@ -16965,7 +17096,9 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       transactionID: transactionID == null && nullToAbsent
           ? const Value.absent()
           : Value(transactionID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       category: Value(category),
       type: Value(type),
       amount: Value(amount),
@@ -16989,7 +17122,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       transactionID: serializer.fromJson<String?>(json['transactionID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       category: serializer.fromJson<String>(json['category']),
       type: serializer.fromJson<String>(json['type']),
       amount: serializer.fromJson<double>(json['amount']),
@@ -17006,7 +17139,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'transactionID': serializer.toJson<String?>(transactionID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'category': serializer.toJson<String>(category),
       'type': serializer.toJson<String>(type),
       'amount': serializer.toJson<double>(amount),
@@ -17021,7 +17154,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> transactionID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? category,
     String? type,
     double? amount,
@@ -17035,7 +17168,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     transactionID: transactionID.present
         ? transactionID.value
         : this.transactionID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     category: category ?? this.category,
     type: type ?? this.type,
     amount: amount ?? this.amount,
@@ -17119,7 +17252,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> transactionID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> category;
   final Value<String> type;
   final Value<double> amount;
@@ -17146,7 +17279,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.transactionID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String category,
     required String type,
     required double amount,
@@ -17156,7 +17289,6 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     this.projectID = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        category = Value(category),
        type = Value(type),
        amount = Value(amount);
@@ -17194,7 +17326,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? transactionID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? category,
     Value<String>? type,
     Value<double>? amount,
@@ -17251,7 +17383,9 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
       map['transaction_date'] = Variable<DateTime>(transactionDate.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $TransactionsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (projectID.present) {
       map['project_id'] = Variable<String>(projectID.value);
@@ -17329,9 +17463,9 @@ class $FocusSessionsTableTable extends FocusSessionsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -17482,8 +17616,6 @@ class $FocusSessionsTableTable extends FocusSessionsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('project_id')) {
       context.handle(
@@ -17569,7 +17701,7 @@ class $FocusSessionsTableTable extends FocusSessionsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       projectID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
@@ -17616,7 +17748,7 @@ class FocusSessionData extends DataClass
   final String id;
   final String? tenantID;
   final int? sessionID;
-  final String personID;
+  final String? personID;
   final String? projectID;
   final DateTime startTime;
   final DateTime? endTime;
@@ -17629,7 +17761,7 @@ class FocusSessionData extends DataClass
     required this.id,
     this.tenantID,
     this.sessionID,
-    required this.personID,
+    this.personID,
     this.projectID,
     required this.startTime,
     this.endTime,
@@ -17649,7 +17781,9 @@ class FocusSessionData extends DataClass
     if (!nullToAbsent || sessionID != null) {
       map['session_id'] = Variable<int>(sessionID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
@@ -17678,7 +17812,9 @@ class FocusSessionData extends DataClass
       sessionID: sessionID == null && nullToAbsent
           ? const Value.absent()
           : Value(sessionID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       projectID: projectID == null && nullToAbsent
           ? const Value.absent()
           : Value(projectID),
@@ -17707,7 +17843,7 @@ class FocusSessionData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       sessionID: serializer.fromJson<int?>(json['sessionID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       projectID: serializer.fromJson<String?>(json['projectID']),
       startTime: serializer.fromJson<DateTime>(json['startTime']),
       endTime: serializer.fromJson<DateTime?>(json['endTime']),
@@ -17725,7 +17861,7 @@ class FocusSessionData extends DataClass
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'sessionID': serializer.toJson<int?>(sessionID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'projectID': serializer.toJson<String?>(projectID),
       'startTime': serializer.toJson<DateTime>(startTime),
       'endTime': serializer.toJson<DateTime?>(endTime),
@@ -17741,7 +17877,7 @@ class FocusSessionData extends DataClass
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<int?> sessionID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     Value<String?> projectID = const Value.absent(),
     DateTime? startTime,
     Value<DateTime?> endTime = const Value.absent(),
@@ -17754,7 +17890,7 @@ class FocusSessionData extends DataClass
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     sessionID: sessionID.present ? sessionID.value : this.sessionID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     projectID: projectID.present ? projectID.value : this.projectID,
     startTime: startTime ?? this.startTime,
     endTime: endTime.present ? endTime.value : this.endTime,
@@ -17841,7 +17977,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<int?> sessionID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String?> projectID;
   final Value<DateTime> startTime;
   final Value<DateTime?> endTime;
@@ -17870,7 +18006,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.sessionID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     this.projectID = const Value.absent(),
     required DateTime startTime,
     this.endTime = const Value.absent(),
@@ -17881,7 +18017,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     this.notes = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        startTime = Value(startTime),
        durationSeconds = Value(durationSeconds),
        status = Value(status);
@@ -17921,7 +18056,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<int?>? sessionID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String?>? projectID,
     Value<DateTime>? startTime,
     Value<DateTime?>? endTime,
@@ -18114,6 +18249,39 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('General'),
+  );
+  static const VerificationMeta _priorityMeta = const VerificationMeta(
+    'priority',
+  );
+  @override
+  late final GeneratedColumn<String> priority = GeneratedColumn<String>(
+    'priority',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('Normal'),
+  );
+  static const VerificationMeta _iconMeta = const VerificationMeta('icon');
+  @override
+  late final GeneratedColumn<String> icon = GeneratedColumn<String>(
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _isEnabledMeta = const VerificationMeta(
     'isEnabled',
   );
@@ -18129,18 +18297,18 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>(
+        $CustomNotificationsTableTable.$convertercreatedAt,
+      );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -18151,6 +18319,9 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     scheduledTime,
     repeatFrequency,
     repeatDays,
+    category,
+    priority,
+    icon,
     isEnabled,
     createdAt,
   ];
@@ -18228,16 +18399,28 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
         repeatDays.isAcceptableOrUnknown(data['repeat_days']!, _repeatDaysMeta),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
+    if (data.containsKey('priority')) {
+      context.handle(
+        _priorityMeta,
+        priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('icon')) {
+      context.handle(
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
+    }
     if (data.containsKey('is_enabled')) {
       context.handle(
         _isEnabledMeta,
         isEnabled.isAcceptableOrUnknown(data['is_enabled']!, _isEnabledMeta),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
     return context;
@@ -18281,14 +18464,28 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
         DriftSqlType.string,
         data['${effectivePrefix}repeat_days'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
+      priority: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}priority'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
       isEnabled: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_enabled'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $CustomNotificationsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
     );
   }
 
@@ -18296,6 +18493,9 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
   $CustomNotificationsTableTable createAlias(String alias) {
     return $CustomNotificationsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class CustomNotificationData extends DataClass
@@ -18308,6 +18508,9 @@ class CustomNotificationData extends DataClass
   final DateTime scheduledTime;
   final String? repeatFrequency;
   final String? repeatDays;
+  final String category;
+  final String priority;
+  final String? icon;
   final bool isEnabled;
   final DateTime createdAt;
   const CustomNotificationData({
@@ -18319,6 +18522,9 @@ class CustomNotificationData extends DataClass
     required this.scheduledTime,
     this.repeatFrequency,
     this.repeatDays,
+    required this.category,
+    required this.priority,
+    this.icon,
     required this.isEnabled,
     required this.createdAt,
   });
@@ -18341,8 +18547,17 @@ class CustomNotificationData extends DataClass
     if (!nullToAbsent || repeatDays != null) {
       map['repeat_days'] = Variable<String>(repeatDays);
     }
+    map['category'] = Variable<String>(category);
+    map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || icon != null) {
+      map['icon'] = Variable<String>(icon);
+    }
     map['is_enabled'] = Variable<bool>(isEnabled);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     return map;
   }
 
@@ -18364,6 +18579,9 @@ class CustomNotificationData extends DataClass
       repeatDays: repeatDays == null && nullToAbsent
           ? const Value.absent()
           : Value(repeatDays),
+      category: Value(category),
+      priority: Value(priority),
+      icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       isEnabled: Value(isEnabled),
       createdAt: Value(createdAt),
     );
@@ -18383,6 +18601,9 @@ class CustomNotificationData extends DataClass
       scheduledTime: serializer.fromJson<DateTime>(json['scheduledTime']),
       repeatFrequency: serializer.fromJson<String?>(json['repeatFrequency']),
       repeatDays: serializer.fromJson<String?>(json['repeatDays']),
+      category: serializer.fromJson<String>(json['category']),
+      priority: serializer.fromJson<String>(json['priority']),
+      icon: serializer.fromJson<String?>(json['icon']),
       isEnabled: serializer.fromJson<bool>(json['isEnabled']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -18399,6 +18620,9 @@ class CustomNotificationData extends DataClass
       'scheduledTime': serializer.toJson<DateTime>(scheduledTime),
       'repeatFrequency': serializer.toJson<String?>(repeatFrequency),
       'repeatDays': serializer.toJson<String?>(repeatDays),
+      'category': serializer.toJson<String>(category),
+      'priority': serializer.toJson<String>(priority),
+      'icon': serializer.toJson<String?>(icon),
       'isEnabled': serializer.toJson<bool>(isEnabled),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -18413,6 +18637,9 @@ class CustomNotificationData extends DataClass
     DateTime? scheduledTime,
     Value<String?> repeatFrequency = const Value.absent(),
     Value<String?> repeatDays = const Value.absent(),
+    String? category,
+    String? priority,
+    Value<String?> icon = const Value.absent(),
     bool? isEnabled,
     DateTime? createdAt,
   }) => CustomNotificationData(
@@ -18428,6 +18655,9 @@ class CustomNotificationData extends DataClass
         ? repeatFrequency.value
         : this.repeatFrequency,
     repeatDays: repeatDays.present ? repeatDays.value : this.repeatDays,
+    category: category ?? this.category,
+    priority: priority ?? this.priority,
+    icon: icon.present ? icon.value : this.icon,
     isEnabled: isEnabled ?? this.isEnabled,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -18451,6 +18681,9 @@ class CustomNotificationData extends DataClass
       repeatDays: data.repeatDays.present
           ? data.repeatDays.value
           : this.repeatDays,
+      category: data.category.present ? data.category.value : this.category,
+      priority: data.priority.present ? data.priority.value : this.priority,
+      icon: data.icon.present ? data.icon.value : this.icon,
       isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -18467,6 +18700,9 @@ class CustomNotificationData extends DataClass
           ..write('scheduledTime: $scheduledTime, ')
           ..write('repeatFrequency: $repeatFrequency, ')
           ..write('repeatDays: $repeatDays, ')
+          ..write('category: $category, ')
+          ..write('priority: $priority, ')
+          ..write('icon: $icon, ')
           ..write('isEnabled: $isEnabled, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -18483,6 +18719,9 @@ class CustomNotificationData extends DataClass
     scheduledTime,
     repeatFrequency,
     repeatDays,
+    category,
+    priority,
+    icon,
     isEnabled,
     createdAt,
   );
@@ -18498,6 +18737,9 @@ class CustomNotificationData extends DataClass
           other.scheduledTime == this.scheduledTime &&
           other.repeatFrequency == this.repeatFrequency &&
           other.repeatDays == this.repeatDays &&
+          other.category == this.category &&
+          other.priority == this.priority &&
+          other.icon == this.icon &&
           other.isEnabled == this.isEnabled &&
           other.createdAt == this.createdAt);
 }
@@ -18512,6 +18754,9 @@ class CustomNotificationsTableCompanion
   final Value<DateTime> scheduledTime;
   final Value<String?> repeatFrequency;
   final Value<String?> repeatDays;
+  final Value<String> category;
+  final Value<String> priority;
+  final Value<String?> icon;
   final Value<bool> isEnabled;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -18524,6 +18769,9 @@ class CustomNotificationsTableCompanion
     this.scheduledTime = const Value.absent(),
     this.repeatFrequency = const Value.absent(),
     this.repeatDays = const Value.absent(),
+    this.category = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.icon = const Value.absent(),
     this.isEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -18537,6 +18785,9 @@ class CustomNotificationsTableCompanion
     required DateTime scheduledTime,
     this.repeatFrequency = const Value.absent(),
     this.repeatDays = const Value.absent(),
+    this.category = const Value.absent(),
+    this.priority = const Value.absent(),
+    this.icon = const Value.absent(),
     this.isEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -18553,6 +18804,9 @@ class CustomNotificationsTableCompanion
     Expression<DateTime>? scheduledTime,
     Expression<String>? repeatFrequency,
     Expression<String>? repeatDays,
+    Expression<String>? category,
+    Expression<String>? priority,
+    Expression<String>? icon,
     Expression<bool>? isEnabled,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -18566,6 +18820,9 @@ class CustomNotificationsTableCompanion
       if (scheduledTime != null) 'scheduled_time': scheduledTime,
       if (repeatFrequency != null) 'repeat_frequency': repeatFrequency,
       if (repeatDays != null) 'repeat_days': repeatDays,
+      if (category != null) 'category': category,
+      if (priority != null) 'priority': priority,
+      if (icon != null) 'icon': icon,
       if (isEnabled != null) 'is_enabled': isEnabled,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -18581,6 +18838,9 @@ class CustomNotificationsTableCompanion
     Value<DateTime>? scheduledTime,
     Value<String?>? repeatFrequency,
     Value<String?>? repeatDays,
+    Value<String>? category,
+    Value<String>? priority,
+    Value<String?>? icon,
     Value<bool>? isEnabled,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -18594,6 +18854,9 @@ class CustomNotificationsTableCompanion
       scheduledTime: scheduledTime ?? this.scheduledTime,
       repeatFrequency: repeatFrequency ?? this.repeatFrequency,
       repeatDays: repeatDays ?? this.repeatDays,
+      category: category ?? this.category,
+      priority: priority ?? this.priority,
+      icon: icon ?? this.icon,
       isEnabled: isEnabled ?? this.isEnabled,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -18627,11 +18890,24 @@ class CustomNotificationsTableCompanion
     if (repeatDays.present) {
       map['repeat_days'] = Variable<String>(repeatDays.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
+    if (priority.present) {
+      map['priority'] = Variable<String>(priority.value);
+    }
+    if (icon.present) {
+      map['icon'] = Variable<String>(icon.value);
+    }
     if (isEnabled.present) {
       map['is_enabled'] = Variable<bool>(isEnabled.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$convertercreatedAt.toSql(
+          createdAt.value,
+        ),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -18650,6 +18926,9 @@ class CustomNotificationsTableCompanion
           ..write('scheduledTime: $scheduledTime, ')
           ..write('repeatFrequency: $repeatFrequency, ')
           ..write('repeatDays: $repeatDays, ')
+          ..write('category: $category, ')
+          ..write('priority: $priority, ')
+          ..write('icon: $icon, ')
           ..write('isEnabled: $isEnabled, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -18733,18 +19012,16 @@ class $QuotesTableTable extends QuotesTable
     ),
     defaultValue: const Constant(true),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($QuotesTableTable.$convertercreatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -18804,12 +19081,6 @@ class $QuotesTableTable extends QuotesTable
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
     return context;
   }
 
@@ -18843,10 +19114,12 @@ class $QuotesTableTable extends QuotesTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $QuotesTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
     );
   }
 
@@ -18854,6 +19127,9 @@ class $QuotesTableTable extends QuotesTable
   $QuotesTableTable createAlias(String alias) {
     return $QuotesTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class QuoteData extends DataClass implements Insertable<QuoteData> {
@@ -18888,7 +19164,11 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
       map['author'] = Variable<String>(author);
     }
     map['is_active'] = Variable<bool>(isActive);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $QuotesTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     return map;
   }
 
@@ -19094,7 +19374,9 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
       map['is_active'] = Variable<bool>(isActive.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $QuotesTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -19163,9 +19445,9 @@ class $WaterLogsTableTable extends WaterLogsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -19235,8 +19517,6 @@ class $WaterLogsTableTable extends WaterLogsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('amount')) {
       context.handle(
@@ -19274,7 +19554,7 @@ class $WaterLogsTableTable extends WaterLogsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       amount: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}amount'],
@@ -19296,14 +19576,14 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
   final String id;
   final String? tenantID;
   final String? logID;
-  final String personID;
+  final String? personID;
   final int amount;
   final DateTime timestamp;
   const WaterLogData({
     required this.id,
     this.tenantID,
     this.logID,
-    required this.personID,
+    this.personID,
     required this.amount,
     required this.timestamp,
   });
@@ -19317,7 +19597,9 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     if (!nullToAbsent || logID != null) {
       map['log_id'] = Variable<String>(logID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['amount'] = Variable<int>(amount);
     map['timestamp'] = Variable<DateTime>(timestamp);
     return map;
@@ -19332,7 +19614,9 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       logID: logID == null && nullToAbsent
           ? const Value.absent()
           : Value(logID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       amount: Value(amount),
       timestamp: Value(timestamp),
     );
@@ -19347,7 +19631,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       logID: serializer.fromJson<String?>(json['logID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       amount: serializer.fromJson<int>(json['amount']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
     );
@@ -19359,7 +19643,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'logID': serializer.toJson<String?>(logID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'amount': serializer.toJson<int>(amount),
       'timestamp': serializer.toJson<DateTime>(timestamp),
     };
@@ -19369,14 +19653,14 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> logID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     int? amount,
     DateTime? timestamp,
   }) => WaterLogData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     logID: logID.present ? logID.value : this.logID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     amount: amount ?? this.amount,
     timestamp: timestamp ?? this.timestamp,
   );
@@ -19423,7 +19707,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> logID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<int> amount;
   final Value<DateTime> timestamp;
   final Value<int> rowid;
@@ -19440,12 +19724,11 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.logID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     this.amount = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.rowid = const Value.absent(),
-  }) : id = Value(id),
-       personID = Value(personID);
+  }) : id = Value(id);
   static Insertable<WaterLogData> custom({
     Expression<String>? id,
     Expression<String>? tenantID,
@@ -19470,7 +19753,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? logID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<int>? amount,
     Value<DateTime>? timestamp,
     Value<int>? rowid,
@@ -19573,9 +19856,9 @@ class $SleepLogsTableTable extends SleepLogsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -19658,8 +19941,6 @@ class $SleepLogsTableTable extends SleepLogsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('start_time')) {
       context.handle(
@@ -19705,7 +19986,7 @@ class $SleepLogsTableTable extends SleepLogsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       startTime: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}start_time'],
@@ -19731,7 +20012,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
   final String id;
   final String? tenantID;
   final String? logID;
-  final String personID;
+  final String? personID;
   final DateTime startTime;
   final DateTime? endTime;
   final int quality;
@@ -19739,7 +20020,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     required this.id,
     this.tenantID,
     this.logID,
-    required this.personID,
+    this.personID,
     required this.startTime,
     this.endTime,
     required this.quality,
@@ -19754,7 +20035,9 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     if (!nullToAbsent || logID != null) {
       map['log_id'] = Variable<String>(logID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['start_time'] = Variable<DateTime>(startTime);
     if (!nullToAbsent || endTime != null) {
       map['end_time'] = Variable<DateTime>(endTime);
@@ -19772,7 +20055,9 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       logID: logID == null && nullToAbsent
           ? const Value.absent()
           : Value(logID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       startTime: Value(startTime),
       endTime: endTime == null && nullToAbsent
           ? const Value.absent()
@@ -19790,7 +20075,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       logID: serializer.fromJson<String?>(json['logID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       startTime: serializer.fromJson<DateTime>(json['startTime']),
       endTime: serializer.fromJson<DateTime?>(json['endTime']),
       quality: serializer.fromJson<int>(json['quality']),
@@ -19803,7 +20088,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'logID': serializer.toJson<String?>(logID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'startTime': serializer.toJson<DateTime>(startTime),
       'endTime': serializer.toJson<DateTime?>(endTime),
       'quality': serializer.toJson<int>(quality),
@@ -19814,7 +20099,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> logID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     DateTime? startTime,
     Value<DateTime?> endTime = const Value.absent(),
     int? quality,
@@ -19822,7 +20107,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     logID: logID.present ? logID.value : this.logID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     startTime: startTime ?? this.startTime,
     endTime: endTime.present ? endTime.value : this.endTime,
     quality: quality ?? this.quality,
@@ -19873,7 +20158,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> logID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<DateTime> startTime;
   final Value<DateTime?> endTime;
   final Value<int> quality;
@@ -19892,13 +20177,12 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.logID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required DateTime startTime,
     this.endTime = const Value.absent(),
     this.quality = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        startTime = Value(startTime);
   static Insertable<SleepLogData> custom({
     Expression<String>? id,
@@ -19926,7 +20210,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? logID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<DateTime>? startTime,
     Value<DateTime?>? endTime,
     Value<int>? quality,
@@ -20035,9 +20319,9 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
   late final GeneratedColumn<String> personID = GeneratedColumn<String>(
     'person_id',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
       'REFERENCES persons (id) ON DELETE CASCADE',
     ),
@@ -20131,8 +20415,6 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
         _personIDMeta,
         personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
-    } else if (isInserting) {
-      context.missing(_personIDMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
@@ -20189,7 +20471,7 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
-      )!,
+      ),
       type: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}type'],
@@ -20219,7 +20501,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
   final String id;
   final String? tenantID;
   final int? logID;
-  final String personID;
+  final String? personID;
   final String type;
   final int durationMinutes;
   final String intensity;
@@ -20228,7 +20510,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     required this.id,
     this.tenantID,
     this.logID,
-    required this.personID,
+    this.personID,
     required this.type,
     required this.durationMinutes,
     required this.intensity,
@@ -20244,7 +20526,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     if (!nullToAbsent || logID != null) {
       map['log_id'] = Variable<int>(logID);
     }
-    map['person_id'] = Variable<String>(personID);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     map['type'] = Variable<String>(type);
     map['duration_minutes'] = Variable<int>(durationMinutes);
     map['intensity'] = Variable<String>(intensity);
@@ -20261,7 +20545,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       logID: logID == null && nullToAbsent
           ? const Value.absent()
           : Value(logID),
-      personID: Value(personID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       type: Value(type),
       durationMinutes: Value(durationMinutes),
       intensity: Value(intensity),
@@ -20278,7 +20564,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       logID: serializer.fromJson<int?>(json['logID']),
-      personID: serializer.fromJson<String>(json['personID']),
+      personID: serializer.fromJson<String?>(json['personID']),
       type: serializer.fromJson<String>(json['type']),
       durationMinutes: serializer.fromJson<int>(json['durationMinutes']),
       intensity: serializer.fromJson<String>(json['intensity']),
@@ -20292,7 +20578,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'logID': serializer.toJson<int?>(logID),
-      'personID': serializer.toJson<String>(personID),
+      'personID': serializer.toJson<String?>(personID),
       'type': serializer.toJson<String>(type),
       'durationMinutes': serializer.toJson<int>(durationMinutes),
       'intensity': serializer.toJson<String>(intensity),
@@ -20304,7 +20590,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<int?> logID = const Value.absent(),
-    String? personID,
+    Value<String?> personID = const Value.absent(),
     String? type,
     int? durationMinutes,
     String? intensity,
@@ -20313,7 +20599,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     logID: logID.present ? logID.value : this.logID,
-    personID: personID ?? this.personID,
+    personID: personID.present ? personID.value : this.personID,
     type: type ?? this.type,
     durationMinutes: durationMinutes ?? this.durationMinutes,
     intensity: intensity ?? this.intensity,
@@ -20378,7 +20664,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<int?> logID;
-  final Value<String> personID;
+  final Value<String?> personID;
   final Value<String> type;
   final Value<int> durationMinutes;
   final Value<String> intensity;
@@ -20399,14 +20685,13 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.logID = const Value.absent(),
-    required String personID,
+    this.personID = const Value.absent(),
     required String type,
     required int durationMinutes,
     this.intensity = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
-       personID = Value(personID),
        type = Value(type),
        durationMinutes = Value(durationMinutes);
   static Insertable<ExerciseLogData> custom({
@@ -20437,7 +20722,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<int?>? logID,
-    Value<String>? personID,
+    Value<String?>? personID,
     Value<String>? type,
     Value<int>? durationMinutes,
     Value<String>? intensity,
@@ -20644,18 +20929,16 @@ class $QuestsTableTable extends QuestsTable
     ),
     defaultValue: const Constant(false),
   );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
   @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($QuestsTableTable.$convertercreatedAt);
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -20762,12 +21045,6 @@ class $QuestsTableTable extends QuestsTable
         ),
       );
     }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
     return context;
   }
 
@@ -20821,10 +21098,12 @@ class $QuestsTableTable extends QuestsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_completed'],
       )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
+      createdAt: $QuestsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
     );
   }
 
@@ -20832,6 +21111,9 @@ class $QuestsTableTable extends QuestsTable
   $QuestsTableTable createAlias(String alias) {
     return $QuestsTableTable(attachedDatabase, alias);
   }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
 }
 
 class QuestData extends DataClass implements Insertable<QuestData> {
@@ -20881,7 +21163,11 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     map['category'] = Variable<String>(category);
     map['reward_exp'] = Variable<int>(rewardExp);
     map['is_completed'] = Variable<bool>(isCompleted);
-    map['created_at'] = Variable<DateTime>(createdAt);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $QuestsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
     return map;
   }
 
@@ -21197,7 +21483,9 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
       map['is_completed'] = Variable<bool>(isCompleted.value);
     }
     if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
+      map['created_at'] = Variable<DateTime>(
+        $QuestsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -21358,13 +21646,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('external_widgets', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'organizations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('themes', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -21630,13 +21911,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         'organizations',
         limitUpdateKind: UpdateKind.delete,
       ),
-      result: [TableUpdate('themes_config', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'organizations',
-        limitUpdateKind: UpdateKind.delete,
-      ),
       result: [TableUpdate('transactions', kind: UpdateKind.delete)],
     ),
     WritePropagation(
@@ -21802,27 +22076,6 @@ final class $$OrganizationsTableTableReferences
     final cache = $_typedResult.readTableOrNull(
       _externalWidgetsTableRefsTable($_db),
     );
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$ThemesTableTable, List<LocalThemeData>>
-  _themesTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.themesTable,
-    aliasName: $_aliasNameGenerator(
-      db.organizationsTable.id,
-      db.themesTable.tenantID,
-    ),
-  );
-
-  $$ThemesTableTableProcessedTableManager get themesTableRefs {
-    final manager = $$ThemesTableTableTableManager(
-      $_db,
-      $_db.themesTable,
-    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_themesTableRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -22258,27 +22511,6 @@ final class $$OrganizationsTableTableReferences
     );
   }
 
-  static MultiTypedResultKey<$ThemeTableTable, List<ThemeData>>
-  _themeTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.themeTable,
-    aliasName: $_aliasNameGenerator(
-      db.organizationsTable.id,
-      db.themeTable.tenantID,
-    ),
-  );
-
-  $$ThemeTableTableProcessedTableManager get themeTableRefs {
-    final manager = $$ThemeTableTableTableManager(
-      $_db,
-      $_db.themeTable,
-    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_themeTableRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
   static MultiTypedResultKey<$TransactionsTableTable, List<TransactionData>>
   _transactionsTableRefsTable(_$AppDatabase db) =>
       MultiTypedResultKey.fromTable(
@@ -22488,15 +22720,17 @@ class $$OrganizationsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   Expression<bool> externalWidgetsTableRefs(
     Expression<bool> Function($$ExternalWidgetsTableTableFilterComposer f) f,
@@ -22514,31 +22748,6 @@ class $$OrganizationsTableTableFilterComposer
           }) => $$ExternalWidgetsTableTableFilterComposer(
             $db: $db,
             $table: $db.externalWidgetsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> themesTableRefs(
-    Expression<bool> Function($$ThemesTableTableFilterComposer f) f,
-  ) {
-    final $$ThemesTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.themesTable,
-      getReferencedColumn: (t) => t.tenantID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ThemesTableTableFilterComposer(
-            $db: $db,
-            $table: $db.themesTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -23024,31 +23233,6 @@ class $$OrganizationsTableTableFilterComposer
     return f(composer);
   }
 
-  Expression<bool> themeTableRefs(
-    Expression<bool> Function($$ThemeTableTableFilterComposer f) f,
-  ) {
-    final $$ThemeTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.themeTable,
-      getReferencedColumn: (t) => t.tenantID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ThemeTableTableFilterComposer(
-            $db: $db,
-            $table: $db.themeTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<bool> transactionsTableRefs(
     Expression<bool> Function($$TransactionsTableTableFilterComposer f) f,
   ) {
@@ -23305,10 +23489,10 @@ class $$OrganizationsTableTableAnnotationComposer
   GeneratedColumn<String> get domain =>
       $composableBuilder(column: $table.domain, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   Expression<T> externalWidgetsTableRefs<T extends Object>(
@@ -23334,31 +23518,6 @@ class $$OrganizationsTableTableAnnotationComposer
                     $removeJoinBuilderFromRootComposer,
               ),
         );
-    return f(composer);
-  }
-
-  Expression<T> themesTableRefs<T extends Object>(
-    Expression<T> Function($$ThemesTableTableAnnotationComposer a) f,
-  ) {
-    final $$ThemesTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.themesTable,
-      getReferencedColumn: (t) => t.tenantID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ThemesTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.themesTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
     return f(composer);
   }
 
@@ -23844,31 +24003,6 @@ class $$OrganizationsTableTableAnnotationComposer
     return f(composer);
   }
 
-  Expression<T> themeTableRefs<T extends Object>(
-    Expression<T> Function($$ThemeTableTableAnnotationComposer a) f,
-  ) {
-    final $$ThemeTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.themeTable,
-      getReferencedColumn: (t) => t.tenantID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ThemeTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.themeTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
   Expression<T> transactionsTableRefs<T extends Object>(
     Expression<T> Function($$TransactionsTableTableAnnotationComposer a) f,
   ) {
@@ -24090,7 +24224,6 @@ class $$OrganizationsTableTableTableManager
           OrganizationData,
           PrefetchHooks Function({
             bool externalWidgetsTableRefs,
-            bool themesTableRefs,
             bool internalWidgetsTableRefs,
             bool personsTableRefs,
             bool projectsTableRefs,
@@ -24110,7 +24243,6 @@ class $$OrganizationsTableTableTableManager
             bool mealsTableRefs,
             bool daysTableRefs,
             bool scoresTableRefs,
-            bool themeTableRefs,
             bool transactionsTableRefs,
             bool focusSessionsTableRefs,
             bool customNotificationsTableRefs,
@@ -24180,7 +24312,6 @@ class $$OrganizationsTableTableTableManager
           prefetchHooksCallback:
               ({
                 externalWidgetsTableRefs = false,
-                themesTableRefs = false,
                 internalWidgetsTableRefs = false,
                 personsTableRefs = false,
                 projectsTableRefs = false,
@@ -24200,7 +24331,6 @@ class $$OrganizationsTableTableTableManager
                 mealsTableRefs = false,
                 daysTableRefs = false,
                 scoresTableRefs = false,
-                themeTableRefs = false,
                 transactionsTableRefs = false,
                 focusSessionsTableRefs = false,
                 customNotificationsTableRefs = false,
@@ -24214,7 +24344,6 @@ class $$OrganizationsTableTableTableManager
                   db: db,
                   explicitlyWatchedTables: [
                     if (externalWidgetsTableRefs) db.externalWidgetsTable,
-                    if (themesTableRefs) db.themesTable,
                     if (internalWidgetsTableRefs) db.internalWidgetsTable,
                     if (personsTableRefs) db.personsTable,
                     if (projectsTableRefs) db.projectsTable,
@@ -24234,7 +24363,6 @@ class $$OrganizationsTableTableTableManager
                     if (mealsTableRefs) db.mealsTable,
                     if (daysTableRefs) db.daysTable,
                     if (scoresTableRefs) db.scoresTable,
-                    if (themeTableRefs) db.themeTable,
                     if (transactionsTableRefs) db.transactionsTable,
                     if (focusSessionsTableRefs) db.focusSessionsTable,
                     if (customNotificationsTableRefs)
@@ -24263,27 +24391,6 @@ class $$OrganizationsTableTableTableManager
                                 table,
                                 p0,
                               ).externalWidgetsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.tenantID == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                      if (themesTableRefs)
-                        await $_getPrefetchedData<
-                          OrganizationData,
-                          $OrganizationsTableTable,
-                          LocalThemeData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$OrganizationsTableTableReferences
-                              ._themesTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$OrganizationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).themesTableRefs,
                           referencedItemsForCurrentItem:
                               (item, referencedItems) => referencedItems.where(
                                 (e) => e.tenantID == item.id,
@@ -24689,27 +24796,6 @@ class $$OrganizationsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (themeTableRefs)
-                        await $_getPrefetchedData<
-                          OrganizationData,
-                          $OrganizationsTableTable,
-                          ThemeData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$OrganizationsTableTableReferences
-                              ._themeTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$OrganizationsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).themeTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.tenantID == item.id,
-                              ),
-                          typedResults: items,
-                        ),
                       if (transactionsTableRefs)
                         await $_getPrefetchedData<
                           OrganizationData,
@@ -24900,7 +24986,6 @@ typedef $$OrganizationsTableTableProcessedTableManager =
       OrganizationData,
       PrefetchHooks Function({
         bool externalWidgetsTableRefs,
-        bool themesTableRefs,
         bool internalWidgetsTableRefs,
         bool personsTableRefs,
         bool projectsTableRefs,
@@ -24920,7 +25005,6 @@ typedef $$OrganizationsTableTableProcessedTableManager =
         bool mealsTableRefs,
         bool daysTableRefs,
         bool scoresTableRefs,
-        bool themeTableRefs,
         bool transactionsTableRefs,
         bool focusSessionsTableRefs,
         bool customNotificationsTableRefs,
@@ -25371,7 +25455,7 @@ typedef $$ExternalWidgetsTableTableProcessedTableManager =
 typedef $$ThemesTableTableCreateCompanionBuilder =
     ThemesTableCompanion Function({
       required String id,
-      Value<String?> tenantID,
+      Value<String?> organizationId,
       Value<String?> themeID,
       required String name,
       required String alias,
@@ -25383,7 +25467,7 @@ typedef $$ThemesTableTableCreateCompanionBuilder =
 typedef $$ThemesTableTableUpdateCompanionBuilder =
     ThemesTableCompanion Function({
       Value<String> id,
-      Value<String?> tenantID,
+      Value<String?> organizationId,
       Value<String?> themeID,
       Value<String> name,
       Value<String> alias,
@@ -25392,30 +25476,6 @@ typedef $$ThemesTableTableUpdateCompanionBuilder =
       Value<DateTime> addedDate,
       Value<int> rowid,
     });
-
-final class $$ThemesTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ThemesTableTable, LocalThemeData> {
-  $$ThemesTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
-      db.organizationsTable.createAlias(
-        $_aliasNameGenerator(db.themesTable.tenantID, db.organizationsTable.id),
-      );
-
-  $$OrganizationsTableTableProcessedTableManager? get tenantID {
-    final $_column = $_itemColumn<String>('tenant_id');
-    if ($_column == null) return null;
-    final manager = $$OrganizationsTableTableTableManager(
-      $_db,
-      $_db.organizationsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$ThemesTableTableFilterComposer
     extends Composer<_$AppDatabase, $ThemesTableTable> {
@@ -25428,6 +25488,11 @@ class $$ThemesTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -25461,29 +25526,6 @@ class $$ThemesTableTableFilterComposer
         column: $table.addedDate,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
-
-  $$OrganizationsTableTableFilterComposer get tenantID {
-    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.tenantID,
-      referencedTable: $db.organizationsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrganizationsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.organizationsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ThemesTableTableOrderingComposer
@@ -25497,6 +25539,11 @@ class $$ThemesTableTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -25529,29 +25576,6 @@ class $$ThemesTableTableOrderingComposer
     column: $table.addedDate,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$OrganizationsTableTableOrderingComposer get tenantID {
-    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.tenantID,
-      referencedTable: $db.organizationsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrganizationsTableTableOrderingComposer(
-            $db: $db,
-            $table: $db.organizationsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ThemesTableTableAnnotationComposer
@@ -25565,6 +25589,11 @@ class $$ThemesTableTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get themeID =>
       $composableBuilder(column: $table.themeID, builder: (column) => column);
@@ -25583,30 +25612,6 @@ class $$ThemesTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, String> get addedDate =>
       $composableBuilder(column: $table.addedDate, builder: (column) => column);
-
-  $$OrganizationsTableTableAnnotationComposer get tenantID {
-    final $$OrganizationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.tenantID,
-          referencedTable: $db.organizationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$OrganizationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.organizationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return composer;
-  }
 }
 
 class $$ThemesTableTableTableManager
@@ -25620,9 +25625,12 @@ class $$ThemesTableTableTableManager
           $$ThemesTableTableAnnotationComposer,
           $$ThemesTableTableCreateCompanionBuilder,
           $$ThemesTableTableUpdateCompanionBuilder,
-          (LocalThemeData, $$ThemesTableTableReferences),
+          (
+            LocalThemeData,
+            BaseReferences<_$AppDatabase, $ThemesTableTable, LocalThemeData>,
+          ),
           LocalThemeData,
-          PrefetchHooks Function({bool tenantID})
+          PrefetchHooks Function()
         > {
   $$ThemesTableTableTableManager(_$AppDatabase db, $ThemesTableTable table)
     : super(
@@ -25638,7 +25646,7 @@ class $$ThemesTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String?> tenantID = const Value.absent(),
+                Value<String?> organizationId = const Value.absent(),
                 Value<String?> themeID = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String> alias = const Value.absent(),
@@ -25648,7 +25656,7 @@ class $$ThemesTableTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => ThemesTableCompanion(
                 id: id,
-                tenantID: tenantID,
+                organizationId: organizationId,
                 themeID: themeID,
                 name: name,
                 alias: alias,
@@ -25660,7 +25668,7 @@ class $$ThemesTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                Value<String?> tenantID = const Value.absent(),
+                Value<String?> organizationId = const Value.absent(),
                 Value<String?> themeID = const Value.absent(),
                 required String name,
                 required String alias,
@@ -25670,7 +25678,7 @@ class $$ThemesTableTableTableManager
                 Value<int> rowid = const Value.absent(),
               }) => ThemesTableCompanion.insert(
                 id: id,
-                tenantID: tenantID,
+                organizationId: organizationId,
                 themeID: themeID,
                 name: name,
                 alias: alias,
@@ -25680,54 +25688,9 @@ class $$ThemesTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ThemesTableTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({tenantID = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (tenantID) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.tenantID,
-                                referencedTable: $$ThemesTableTableReferences
-                                    ._tenantIDTable(db),
-                                referencedColumn: $$ThemesTableTableReferences
-                                    ._tenantIDTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -25742,9 +25705,12 @@ typedef $$ThemesTableTableProcessedTableManager =
       $$ThemesTableTableAnnotationComposer,
       $$ThemesTableTableCreateCompanionBuilder,
       $$ThemesTableTableUpdateCompanionBuilder,
-      (LocalThemeData, $$ThemesTableTableReferences),
+      (
+        LocalThemeData,
+        BaseReferences<_$AppDatabase, $ThemesTableTable, LocalThemeData>,
+      ),
       LocalThemeData,
-      PrefetchHooks Function({bool tenantID})
+      PrefetchHooks Function()
     >;
 typedef $$InternalWidgetsTableTableCreateCompanionBuilder =
     InternalWidgetsTableCompanion Function({
@@ -26149,7 +26115,6 @@ typedef $$PersonsTableTableCreateCompanionBuilder =
     PersonsTableCompanion Function({
       required String id,
       Value<String?> tenantID,
-      Value<String?> personID,
       required String firstName,
       Value<String?> lastName,
       Value<DateTime?> dateOfBirth,
@@ -26167,7 +26132,6 @@ typedef $$PersonsTableTableUpdateCompanionBuilder =
     PersonsTableCompanion Function({
       Value<String> id,
       Value<String?> tenantID,
-      Value<String?> personID,
       Value<String> firstName,
       Value<String?> lastName,
       Value<DateTime?> dateOfBirth,
@@ -26691,11 +26655,6 @@ class $$PersonsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get personID => $composableBuilder(
-    column: $table.personID,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<String> get firstName => $composableBuilder(
     column: $table.firstName,
     builder: (column) => ColumnFilters(column),
@@ -26706,9 +26665,10 @@ class $$PersonsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get dateOfBirth => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get dateOfBirth => $composableBuilder(
     column: $table.dateOfBirth,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<String> get gender => $composableBuilder(
@@ -26741,15 +26701,17 @@ class $$PersonsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -27315,11 +27277,6 @@ class $$PersonsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get personID => $composableBuilder(
-    column: $table.personID,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get firstName => $composableBuilder(
     column: $table.firstName,
     builder: (column) => ColumnOrderings(column),
@@ -27411,19 +27368,17 @@ class $$PersonsTableTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<String> get personID =>
-      $composableBuilder(column: $table.personID, builder: (column) => column);
-
   GeneratedColumn<String> get firstName =>
       $composableBuilder(column: $table.firstName, builder: (column) => column);
 
   GeneratedColumn<String> get lastName =>
       $composableBuilder(column: $table.lastName, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get dateOfBirth => $composableBuilder(
-    column: $table.dateOfBirth,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get dateOfBirth =>
+      $composableBuilder(
+        column: $table.dateOfBirth,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get gender =>
       $composableBuilder(column: $table.gender, builder: (column) => column);
@@ -27449,10 +27404,10 @@ class $$PersonsTableTableAnnotationComposer
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -28067,7 +28022,6 @@ class $$PersonsTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
-                Value<String?> personID = const Value.absent(),
                 Value<String> firstName = const Value.absent(),
                 Value<String?> lastName = const Value.absent(),
                 Value<DateTime?> dateOfBirth = const Value.absent(),
@@ -28083,7 +28037,6 @@ class $$PersonsTableTableTableManager
               }) => PersonsTableCompanion(
                 id: id,
                 tenantID: tenantID,
-                personID: personID,
                 firstName: firstName,
                 lastName: lastName,
                 dateOfBirth: dateOfBirth,
@@ -28101,7 +28054,6 @@ class $$PersonsTableTableTableManager
               ({
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
-                Value<String?> personID = const Value.absent(),
                 required String firstName,
                 Value<String?> lastName = const Value.absent(),
                 Value<DateTime?> dateOfBirth = const Value.absent(),
@@ -28117,7 +28069,6 @@ class $$PersonsTableTableTableManager
               }) => PersonsTableCompanion.insert(
                 id: id,
                 tenantID: tenantID,
-                personID: personID,
                 firstName: firstName,
                 lastName: lastName,
                 dateOfBirth: dateOfBirth,
@@ -28716,7 +28667,7 @@ typedef $$ProjectsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> projectID,
-      required String personID,
+      Value<String?> personID,
       required String name,
       Value<String?> description,
       Value<String?> category,
@@ -28731,7 +28682,7 @@ typedef $$ProjectsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> projectID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> name,
       Value<String?> description,
       Value<String?> category,
@@ -28777,9 +28728,9 @@ final class $$ProjectsTableTableReferences
         $_aliasNameGenerator(db.projectsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -28929,15 +28880,17 @@ class $$ProjectsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -29219,10 +29172,10 @@ class $$ProjectsTableTableAnnotationComposer
   GeneratedColumn<int> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -29414,7 +29367,7 @@ class $$ProjectsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -29442,7 +29395,7 @@ class $$ProjectsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String name,
                 Value<String?> description = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -29787,15 +29740,17 @@ class $$ProjectNotesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -29997,10 +29952,10 @@ class $$ProjectNotesTableTableAnnotationComposer
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -30258,7 +30213,7 @@ typedef $$EmailAddressesTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> emailAddressID,
-      required String personID,
+      Value<String?> personID,
       required String emailAddress,
       Value<String> emailType,
       Value<bool> isPrimary,
@@ -30272,7 +30227,7 @@ typedef $$EmailAddressesTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> emailAddressID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> emailAddress,
       Value<String> emailType,
       Value<bool> isPrimary,
@@ -30325,9 +30280,9 @@ final class $$EmailAddressesTableTableReferences
         ),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -30404,15 +30359,17 @@ class $$EmailAddressesTableTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
-  ColumnFilters<DateTime> get verifiedAt => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get verifiedAt => $composableBuilder(
     column: $table.verifiedAt,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -30613,12 +30570,13 @@ class $$EmailAddressesTableTableAnnotationComposer
   GeneratedColumnWithTypeConverter<EmailStatus, String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get verifiedAt => $composableBuilder(
-    column: $table.verifiedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get verifiedAt =>
+      $composableBuilder(
+        column: $table.verifiedAt,
+        builder: (column) => column,
+      );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -30738,7 +30696,7 @@ class $$EmailAddressesTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> emailAddressID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> emailAddress = const Value.absent(),
                 Value<String> emailType = const Value.absent(),
                 Value<bool> isPrimary = const Value.absent(),
@@ -30764,7 +30722,7 @@ class $$EmailAddressesTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> emailAddressID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String emailAddress,
                 Value<String> emailType = const Value.absent(),
                 Value<bool> isPrimary = const Value.absent(),
@@ -30907,17 +30865,17 @@ typedef $$UserAccountsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> accountID,
-      required String personID,
-      required String username,
-      required String passwordHash,
+      Value<String?> personID,
+      Value<String?> username,
+      Value<String?> passwordHash,
       Value<String?> primaryEmailID,
       Value<UserRole> role,
-      Value<bool> isLocked,
-      Value<int> failedLoginAttempts,
+      Value<bool?> isLocked,
+      Value<int?> failedLoginAttempts,
       Value<DateTime?> lastLoginAt,
-      Value<DateTime> passwordChangedAt,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> passwordChangedAt,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
       Value<int> rowid,
     });
 typedef $$UserAccountsTableTableUpdateCompanionBuilder =
@@ -30925,17 +30883,17 @@ typedef $$UserAccountsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> accountID,
-      Value<String> personID,
-      Value<String> username,
-      Value<String> passwordHash,
+      Value<String?> personID,
+      Value<String?> username,
+      Value<String?> passwordHash,
       Value<String?> primaryEmailID,
       Value<UserRole> role,
-      Value<bool> isLocked,
-      Value<int> failedLoginAttempts,
+      Value<bool?> isLocked,
+      Value<int?> failedLoginAttempts,
       Value<DateTime?> lastLoginAt,
-      Value<DateTime> passwordChangedAt,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
+      Value<DateTime?> passwordChangedAt,
+      Value<DateTime?> createdAt,
+      Value<DateTime?> updatedAt,
       Value<int> rowid,
     });
 
@@ -30979,9 +30937,9 @@ final class $$UserAccountsTableTableReferences
         $_aliasNameGenerator(db.userAccountsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -31061,25 +31019,29 @@ class $$UserAccountsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get lastLoginAt => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get lastLoginAt => $composableBuilder(
     column: $table.lastLoginAt,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
-  ColumnFilters<DateTime> get passwordChangedAt => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get passwordChangedAt => $composableBuilder(
     column: $table.passwordChangedAt,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -31320,20 +31282,22 @@ class $$UserAccountsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get lastLoginAt => $composableBuilder(
-    column: $table.lastLoginAt,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get lastLoginAt =>
+      $composableBuilder(
+        column: $table.lastLoginAt,
+        builder: (column) => column,
+      );
 
-  GeneratedColumn<DateTime> get passwordChangedAt => $composableBuilder(
-    column: $table.passwordChangedAt,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get passwordChangedAt =>
+      $composableBuilder(
+        column: $table.passwordChangedAt,
+        builder: (column) => column,
+      );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -31448,17 +31412,17 @@ class $$UserAccountsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> accountID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
-                Value<String> username = const Value.absent(),
-                Value<String> passwordHash = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String?> username = const Value.absent(),
+                Value<String?> passwordHash = const Value.absent(),
                 Value<String?> primaryEmailID = const Value.absent(),
                 Value<UserRole> role = const Value.absent(),
-                Value<bool> isLocked = const Value.absent(),
-                Value<int> failedLoginAttempts = const Value.absent(),
+                Value<bool?> isLocked = const Value.absent(),
+                Value<int?> failedLoginAttempts = const Value.absent(),
                 Value<DateTime?> lastLoginAt = const Value.absent(),
-                Value<DateTime> passwordChangedAt = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> passwordChangedAt = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserAccountsTableCompanion(
                 id: id,
@@ -31482,17 +31446,17 @@ class $$UserAccountsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> accountID = const Value.absent(),
-                required String personID,
-                required String username,
-                required String passwordHash,
+                Value<String?> personID = const Value.absent(),
+                Value<String?> username = const Value.absent(),
+                Value<String?> passwordHash = const Value.absent(),
                 Value<String?> primaryEmailID = const Value.absent(),
                 Value<UserRole> role = const Value.absent(),
-                Value<bool> isLocked = const Value.absent(),
-                Value<int> failedLoginAttempts = const Value.absent(),
+                Value<bool?> isLocked = const Value.absent(),
+                Value<int?> failedLoginAttempts = const Value.absent(),
                 Value<DateTime?> lastLoginAt = const Value.absent(),
-                Value<DateTime> passwordChangedAt = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-                Value<DateTime> updatedAt = const Value.absent(),
+                Value<DateTime?> passwordChangedAt = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => UserAccountsTableCompanion.insert(
                 id: id,
@@ -31619,7 +31583,7 @@ typedef $$ProfilesTableTableCreateCompanionBuilder =
     ProfilesTableCompanion Function({
       required String id,
       Value<String?> profileID,
-      required String personID,
+      Value<String?> personID,
       Value<String?> bio,
       Value<String?> occupation,
       Value<String?> educationLevel,
@@ -31637,7 +31601,7 @@ typedef $$ProfilesTableTableUpdateCompanionBuilder =
     ProfilesTableCompanion Function({
       Value<String> id,
       Value<String?> profileID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String?> bio,
       Value<String?> occupation,
       Value<String?> educationLevel,
@@ -31665,9 +31629,9 @@ final class $$ProfilesTableTableReferences
         $_aliasNameGenerator(db.profilesTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -31744,15 +31708,17 @@ class $$ProfilesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$PersonsTableTableFilterComposer get personID {
     final $$PersonsTableTableFilterComposer composer = $composerBuilder(
@@ -31928,10 +31894,10 @@ class $$ProfilesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$PersonsTableTableAnnotationComposer get personID {
@@ -31988,7 +31954,7 @@ class $$ProfilesTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String?> profileID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> bio = const Value.absent(),
                 Value<String?> occupation = const Value.absent(),
                 Value<String?> educationLevel = const Value.absent(),
@@ -32022,7 +31988,7 @@ class $$ProfilesTableTableTableManager
               ({
                 required String id,
                 Value<String?> profileID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 Value<String?> bio = const Value.absent(),
                 Value<String?> occupation = const Value.absent(),
                 Value<String?> educationLevel = const Value.absent(),
@@ -32124,7 +32090,7 @@ typedef $$SkillsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> skillID,
-      required String personID,
+      Value<String?> personID,
       required String skillName,
       Value<String?> skillCategory,
       Value<SkillLevel> proficiencyLevel,
@@ -32140,7 +32106,7 @@ typedef $$SkillsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> skillID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> skillName,
       Value<String?> skillCategory,
       Value<SkillLevel> proficiencyLevel,
@@ -32180,9 +32146,9 @@ final class $$SkillsTableTableReferences
         $_aliasNameGenerator(db.skillsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -32245,15 +32211,17 @@ class $$SkillsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -32452,10 +32420,10 @@ class $$SkillsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -32537,7 +32505,7 @@ class $$SkillsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> skillID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> skillName = const Value.absent(),
                 Value<String?> skillCategory = const Value.absent(),
                 Value<SkillLevel> proficiencyLevel = const Value.absent(),
@@ -32567,7 +32535,7 @@ class $$SkillsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> skillID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String skillName,
                 Value<String?> skillCategory = const Value.absent(),
                 Value<SkillLevel> proficiencyLevel = const Value.absent(),
@@ -32677,7 +32645,7 @@ typedef $$FinancialAccountsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> accountID,
-      required String personID,
+      Value<String?> personID,
       required String accountName,
       Value<String> accountType,
       Value<double> balance,
@@ -32693,7 +32661,7 @@ typedef $$FinancialAccountsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> accountID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> accountName,
       Value<String> accountType,
       Value<double> balance,
@@ -32748,9 +32716,9 @@ final class $$FinancialAccountsTableTableReferences
         ),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -32813,15 +32781,17 @@ class $$FinancialAccountsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -33013,10 +32983,10 @@ class $$FinancialAccountsTableTableAnnotationComposer
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -33109,7 +33079,7 @@ class $$FinancialAccountsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> accountID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> accountName = const Value.absent(),
                 Value<String> accountType = const Value.absent(),
                 Value<double> balance = const Value.absent(),
@@ -33139,7 +33109,7 @@ class $$FinancialAccountsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> accountID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String accountName,
                 Value<String> accountType = const Value.absent(),
                 Value<double> balance = const Value.absent(),
@@ -33253,7 +33223,7 @@ typedef $$AssetsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> assetID,
-      required String personID,
+      Value<String?> personID,
       required String assetName,
       required String assetCategory,
       Value<DateTime?> purchaseDate,
@@ -33273,7 +33243,7 @@ typedef $$AssetsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> assetID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> assetName,
       Value<String> assetCategory,
       Value<DateTime?> purchaseDate,
@@ -33317,9 +33287,9 @@ final class $$AssetsTableTableReferences
         $_aliasNameGenerator(db.assetsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -33402,15 +33372,17 @@ class $$AssetsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -33638,10 +33610,10 @@ class $$AssetsTableTableAnnotationComposer
   GeneratedColumn<bool> get isInsured =>
       $composableBuilder(column: $table.isInsured, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -33723,7 +33695,7 @@ class $$AssetsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> assetID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> assetName = const Value.absent(),
                 Value<String> assetCategory = const Value.absent(),
                 Value<DateTime?> purchaseDate = const Value.absent(),
@@ -33761,7 +33733,7 @@ class $$AssetsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> assetID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String assetName,
                 required String assetCategory,
                 Value<DateTime?> purchaseDate = const Value.absent(),
@@ -33879,7 +33851,7 @@ typedef $$GoalsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> goalID,
-      required String personID,
+      Value<String?> personID,
       required String title,
       Value<String?> description,
       Value<String> category,
@@ -33898,7 +33870,7 @@ typedef $$GoalsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> goalID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> title,
       Value<String?> description,
       Value<String> category,
@@ -33941,9 +33913,9 @@ final class $$GoalsTableTableReferences
         $_aliasNameGenerator(db.goalsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -34061,14 +34033,16 @@ class $$GoalsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get targetDate => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get targetDate => $composableBuilder(
     column: $table.targetDate,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
-  ColumnFilters<DateTime> get completionDate => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get completionDate => $composableBuilder(
     column: $table.completionDate,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<int> get progressPercentage => $composableBuilder(
@@ -34081,10 +34055,11 @@ class $$GoalsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -34377,15 +34352,17 @@ class $$GoalsTableTableAnnotationComposer
   GeneratedColumn<String> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get targetDate => $composableBuilder(
-    column: $table.targetDate,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get targetDate =>
+      $composableBuilder(
+        column: $table.targetDate,
+        builder: (column) => column,
+      );
 
-  GeneratedColumn<DateTime> get completionDate => $composableBuilder(
-    column: $table.completionDate,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get completionDate =>
+      $composableBuilder(
+        column: $table.completionDate,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<int> get progressPercentage => $composableBuilder(
     column: $table.progressPercentage,
@@ -34395,7 +34372,7 @@ class $$GoalsTableTableAnnotationComposer
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -34557,7 +34534,7 @@ class $$GoalsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> goalID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String> category = const Value.absent(),
@@ -34593,7 +34570,7 @@ class $$GoalsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> goalID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String title,
                 Value<String?> description = const Value.absent(),
                 Value<String> category = const Value.absent(),
@@ -34784,7 +34761,7 @@ typedef $$HabitsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> habitID,
-      required String personID,
+      Value<String?> personID,
       Value<String?> goalID,
       required String habitName,
       Value<String?> description,
@@ -34802,7 +34779,7 @@ typedef $$HabitsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> habitID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String?> goalID,
       Value<String> habitName,
       Value<String?> description,
@@ -34844,9 +34821,9 @@ final class $$HabitsTableTableReferences
         $_aliasNameGenerator(db.habitsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -34932,15 +34909,17 @@ class $$HabitsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -35190,10 +35169,10 @@ class $$HabitsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -35298,7 +35277,7 @@ class $$HabitsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> habitID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> goalID = const Value.absent(),
                 Value<String> habitName = const Value.absent(),
                 Value<String?> description = const Value.absent(),
@@ -35332,7 +35311,7 @@ class $$HabitsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> habitID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 Value<String?> goalID = const Value.absent(),
                 required String habitName,
                 Value<String?> description = const Value.absent(),
@@ -35629,15 +35608,17 @@ class $$BlogPostsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -35873,10 +35854,10 @@ class $$BlogPostsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -36122,7 +36103,7 @@ typedef $$PersonWidgetsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<int?> personWidgetID,
-      required String personID,
+      Value<String?> personID,
       required String widgetName,
       required String widgetType,
       Value<String> configuration,
@@ -36138,7 +36119,7 @@ typedef $$PersonWidgetsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<int?> personWidgetID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> widgetName,
       Value<String> widgetType,
       Value<String> configuration,
@@ -36193,9 +36174,9 @@ final class $$PersonWidgetsTableTableReferences
         ),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -36554,7 +36535,7 @@ class $$PersonWidgetsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> personWidgetID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> widgetName = const Value.absent(),
                 Value<String> widgetType = const Value.absent(),
                 Value<String> configuration = const Value.absent(),
@@ -36584,7 +36565,7 @@ class $$PersonWidgetsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> personWidgetID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String widgetName,
                 required String widgetType,
                 Value<String> configuration = const Value.absent(),
@@ -36698,7 +36679,7 @@ typedef $$CVAddressesTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> cvAddressID,
-      required String personID,
+      Value<String?> personID,
       Value<String?> githubUrl,
       Value<String?> websiteUrl,
       Value<String?> company,
@@ -36718,7 +36699,7 @@ typedef $$CVAddressesTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> cvAddressID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String?> githubUrl,
       Value<String?> websiteUrl,
       Value<String?> company,
@@ -36770,9 +36751,9 @@ final class $$CVAddressesTableTableReferences
         $_aliasNameGenerator(db.cVAddressesTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -36854,15 +36835,17 @@ class $$CVAddressesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -37094,10 +37077,10 @@ class $$CVAddressesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -37181,7 +37164,7 @@ class $$CVAddressesTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> cvAddressID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> githubUrl = const Value.absent(),
                 Value<String?> websiteUrl = const Value.absent(),
                 Value<String?> company = const Value.absent(),
@@ -37219,7 +37202,7 @@ class $$CVAddressesTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> cvAddressID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 Value<String?> githubUrl = const Value.absent(),
                 Value<String?> websiteUrl = const Value.absent(),
                 Value<String?> company = const Value.absent(),
@@ -37413,10 +37396,11 @@ class $$SessionTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -37521,7 +37505,7 @@ class $$SessionTableTableAnnotationComposer
   GeneratedColumn<String> get username =>
       $composableBuilder(column: $table.username, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -37683,17 +37667,17 @@ typedef $$HealthMetricsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> metricID,
-      required String personID,
+      Value<String?> personID,
       required DateTime date,
-      Value<int> steps,
-      Value<int> heartRate,
-      Value<double> sleepHours,
-      Value<int> waterGlasses,
-      Value<int> exerciseMinutes,
-      Value<int> focusMinutes,
-      Value<double> weightKg,
-      Value<int> caloriesConsumed,
-      Value<int> caloriesBurned,
+      Value<int?> steps,
+      Value<int?> heartRate,
+      Value<double?> sleepHours,
+      Value<int?> waterGlasses,
+      Value<int?> exerciseMinutes,
+      Value<int?> focusMinutes,
+      Value<double?> weightKg,
+      Value<int?> caloriesConsumed,
+      Value<int?> caloriesBurned,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -37702,17 +37686,17 @@ typedef $$HealthMetricsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> metricID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<DateTime> date,
-      Value<int> steps,
-      Value<int> heartRate,
-      Value<double> sleepHours,
-      Value<int> waterGlasses,
-      Value<int> exerciseMinutes,
-      Value<int> focusMinutes,
-      Value<double> weightKg,
-      Value<int> caloriesConsumed,
-      Value<int> caloriesBurned,
+      Value<int?> steps,
+      Value<int?> heartRate,
+      Value<double?> sleepHours,
+      Value<int?> waterGlasses,
+      Value<int?> exerciseMinutes,
+      Value<int?> focusMinutes,
+      Value<double?> weightKg,
+      Value<int?> caloriesConsumed,
+      Value<int?> caloriesBurned,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -37760,9 +37744,9 @@ final class $$HealthMetricsTableTableReferences
         ),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -37794,10 +37778,11 @@ class $$HealthMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get date => $composableBuilder(
-    column: $table.date,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get date =>
+      $composableBuilder(
+        column: $table.date,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   ColumnFilters<int> get steps => $composableBuilder(
     column: $table.steps,
@@ -37844,10 +37829,11 @@ class $$HealthMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-    column: $table.updatedAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -38032,7 +38018,7 @@ class $$HealthMetricsTableTableAnnotationComposer
   GeneratedColumn<String> get metricID =>
       $composableBuilder(column: $table.metricID, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get date =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
   GeneratedColumn<int> get steps =>
@@ -38074,7 +38060,7 @@ class $$HealthMetricsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get updatedAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -38161,17 +38147,17 @@ class $$HealthMetricsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> metricID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
-                Value<int> steps = const Value.absent(),
-                Value<int> heartRate = const Value.absent(),
-                Value<double> sleepHours = const Value.absent(),
-                Value<int> waterGlasses = const Value.absent(),
-                Value<int> exerciseMinutes = const Value.absent(),
-                Value<int> focusMinutes = const Value.absent(),
-                Value<double> weightKg = const Value.absent(),
-                Value<int> caloriesConsumed = const Value.absent(),
-                Value<int> caloriesBurned = const Value.absent(),
+                Value<int?> steps = const Value.absent(),
+                Value<int?> heartRate = const Value.absent(),
+                Value<double?> sleepHours = const Value.absent(),
+                Value<int?> waterGlasses = const Value.absent(),
+                Value<int?> exerciseMinutes = const Value.absent(),
+                Value<int?> focusMinutes = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<int?> caloriesConsumed = const Value.absent(),
+                Value<int?> caloriesBurned = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion(
@@ -38197,17 +38183,17 @@ class $$HealthMetricsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> metricID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required DateTime date,
-                Value<int> steps = const Value.absent(),
-                Value<int> heartRate = const Value.absent(),
-                Value<double> sleepHours = const Value.absent(),
-                Value<int> waterGlasses = const Value.absent(),
-                Value<int> exerciseMinutes = const Value.absent(),
-                Value<int> focusMinutes = const Value.absent(),
-                Value<double> weightKg = const Value.absent(),
-                Value<int> caloriesConsumed = const Value.absent(),
-                Value<int> caloriesBurned = const Value.absent(),
+                Value<int?> steps = const Value.absent(),
+                Value<int?> heartRate = const Value.absent(),
+                Value<double?> sleepHours = const Value.absent(),
+                Value<int?> waterGlasses = const Value.absent(),
+                Value<int?> exerciseMinutes = const Value.absent(),
+                Value<int?> focusMinutes = const Value.absent(),
+                Value<double?> weightKg = const Value.absent(),
+                Value<int?> caloriesConsumed = const Value.absent(),
+                Value<int?> caloriesBurned = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion.insert(
@@ -38317,7 +38303,7 @@ typedef $$MealsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> mealID,
-      required String personID,
+      Value<String?> personID,
       required String mealName,
       Value<String?> mealImageUrl,
       Value<double> fat,
@@ -38332,7 +38318,7 @@ typedef $$MealsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> mealID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> mealName,
       Value<String?> mealImageUrl,
       Value<double> fat,
@@ -38371,9 +38357,9 @@ final class $$MealsTableTableReferences
         $_aliasNameGenerator(db.mealsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -38435,10 +38421,11 @@ class $$MealsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get eatenAt => $composableBuilder(
-    column: $table.eatenAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get eatenAt =>
+      $composableBuilder(
+        column: $table.eatenAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -38623,7 +38610,7 @@ class $$MealsTableTableAnnotationComposer
   GeneratedColumn<double> get calories =>
       $composableBuilder(column: $table.calories, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get eatenAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get eatenAt =>
       $composableBuilder(column: $table.eatenAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -38705,7 +38692,7 @@ class $$MealsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> mealID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> mealName = const Value.absent(),
                 Value<String?> mealImageUrl = const Value.absent(),
                 Value<double> fat = const Value.absent(),
@@ -38733,7 +38720,7 @@ class $$MealsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> mealID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String mealName,
                 Value<String?> mealImageUrl = const Value.absent(),
                 Value<double> fat = const Value.absent(),
@@ -39672,7 +39659,7 @@ typedef $$ScoresTableTableProcessedTableManager =
 typedef $$ThemeTableTableCreateCompanionBuilder =
     ThemeTableCompanion Function({
       required String id,
-      Value<String?> tenantID,
+      Value<String?> organizationId,
       Value<String?> themeID,
       required String themeName,
       required String themePath,
@@ -39681,36 +39668,12 @@ typedef $$ThemeTableTableCreateCompanionBuilder =
 typedef $$ThemeTableTableUpdateCompanionBuilder =
     ThemeTableCompanion Function({
       Value<String> id,
-      Value<String?> tenantID,
+      Value<String?> organizationId,
       Value<String?> themeID,
       Value<String> themeName,
       Value<String> themePath,
       Value<int> rowid,
     });
-
-final class $$ThemeTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ThemeTableTable, ThemeData> {
-  $$ThemeTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
-      db.organizationsTable.createAlias(
-        $_aliasNameGenerator(db.themeTable.tenantID, db.organizationsTable.id),
-      );
-
-  $$OrganizationsTableTableProcessedTableManager? get tenantID {
-    final $_column = $_itemColumn<String>('tenant_id');
-    if ($_column == null) return null;
-    final manager = $$OrganizationsTableTableTableManager(
-      $_db,
-      $_db.organizationsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
 
 class $$ThemeTableTableFilterComposer
     extends Composer<_$AppDatabase, $ThemeTableTable> {
@@ -39723,6 +39686,11 @@ class $$ThemeTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -39740,29 +39708,6 @@ class $$ThemeTableTableFilterComposer
     column: $table.themePath,
     builder: (column) => ColumnFilters(column),
   );
-
-  $$OrganizationsTableTableFilterComposer get tenantID {
-    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.tenantID,
-      referencedTable: $db.organizationsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrganizationsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.organizationsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ThemeTableTableOrderingComposer
@@ -39776,6 +39721,11 @@ class $$ThemeTableTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -39793,29 +39743,6 @@ class $$ThemeTableTableOrderingComposer
     column: $table.themePath,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$OrganizationsTableTableOrderingComposer get tenantID {
-    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.tenantID,
-      referencedTable: $db.organizationsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$OrganizationsTableTableOrderingComposer(
-            $db: $db,
-            $table: $db.organizationsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ThemeTableTableAnnotationComposer
@@ -39830,6 +39757,11 @@ class $$ThemeTableTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get organizationId => $composableBuilder(
+    column: $table.organizationId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get themeID =>
       $composableBuilder(column: $table.themeID, builder: (column) => column);
 
@@ -39838,30 +39770,6 @@ class $$ThemeTableTableAnnotationComposer
 
   GeneratedColumn<String> get themePath =>
       $composableBuilder(column: $table.themePath, builder: (column) => column);
-
-  $$OrganizationsTableTableAnnotationComposer get tenantID {
-    final $$OrganizationsTableTableAnnotationComposer composer =
-        $composerBuilder(
-          composer: this,
-          getCurrentColumn: (t) => t.tenantID,
-          referencedTable: $db.organizationsTable,
-          getReferencedColumn: (t) => t.id,
-          builder:
-              (
-                joinBuilder, {
-                $addJoinBuilderToRootComposer,
-                $removeJoinBuilderFromRootComposer,
-              }) => $$OrganizationsTableTableAnnotationComposer(
-                $db: $db,
-                $table: $db.organizationsTable,
-                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-                joinBuilder: joinBuilder,
-                $removeJoinBuilderFromRootComposer:
-                    $removeJoinBuilderFromRootComposer,
-              ),
-        );
-    return composer;
-  }
 }
 
 class $$ThemeTableTableTableManager
@@ -39875,9 +39783,12 @@ class $$ThemeTableTableTableManager
           $$ThemeTableTableAnnotationComposer,
           $$ThemeTableTableCreateCompanionBuilder,
           $$ThemeTableTableUpdateCompanionBuilder,
-          (ThemeData, $$ThemeTableTableReferences),
+          (
+            ThemeData,
+            BaseReferences<_$AppDatabase, $ThemeTableTable, ThemeData>,
+          ),
           ThemeData,
-          PrefetchHooks Function({bool tenantID})
+          PrefetchHooks Function()
         > {
   $$ThemeTableTableTableManager(_$AppDatabase db, $ThemeTableTable table)
     : super(
@@ -39893,14 +39804,14 @@ class $$ThemeTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String?> tenantID = const Value.absent(),
+                Value<String?> organizationId = const Value.absent(),
                 Value<String?> themeID = const Value.absent(),
                 Value<String> themeName = const Value.absent(),
                 Value<String> themePath = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ThemeTableCompanion(
                 id: id,
-                tenantID: tenantID,
+                organizationId: organizationId,
                 themeID: themeID,
                 themeName: themeName,
                 themePath: themePath,
@@ -39909,68 +39820,23 @@ class $$ThemeTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                Value<String?> tenantID = const Value.absent(),
+                Value<String?> organizationId = const Value.absent(),
                 Value<String?> themeID = const Value.absent(),
                 required String themeName,
                 required String themePath,
                 Value<int> rowid = const Value.absent(),
               }) => ThemeTableCompanion.insert(
                 id: id,
-                tenantID: tenantID,
+                organizationId: organizationId,
                 themeID: themeID,
                 themeName: themeName,
                 themePath: themePath,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ThemeTableTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({tenantID = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (tenantID) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.tenantID,
-                                referencedTable: $$ThemeTableTableReferences
-                                    ._tenantIDTable(db),
-                                referencedColumn: $$ThemeTableTableReferences
-                                    ._tenantIDTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -39985,16 +39851,16 @@ typedef $$ThemeTableTableProcessedTableManager =
       $$ThemeTableTableAnnotationComposer,
       $$ThemeTableTableCreateCompanionBuilder,
       $$ThemeTableTableUpdateCompanionBuilder,
-      (ThemeData, $$ThemeTableTableReferences),
+      (ThemeData, BaseReferences<_$AppDatabase, $ThemeTableTable, ThemeData>),
       ThemeData,
-      PrefetchHooks Function({bool tenantID})
+      PrefetchHooks Function()
     >;
 typedef $$TransactionsTableTableCreateCompanionBuilder =
     TransactionsTableCompanion Function({
       required String id,
       Value<String?> tenantID,
       Value<String?> transactionID,
-      required String personID,
+      Value<String?> personID,
       required String category,
       required String type,
       required double amount,
@@ -40009,7 +39875,7 @@ typedef $$TransactionsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> transactionID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> category,
       Value<String> type,
       Value<double> amount,
@@ -40060,9 +39926,9 @@ final class $$TransactionsTableTableReferences
         $_aliasNameGenerator(db.transactionsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -40141,10 +40007,11 @@ class $$TransactionsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -40371,7 +40238,7 @@ class $$TransactionsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -40481,7 +40348,7 @@ class $$TransactionsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> transactionID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<double> amount = const Value.absent(),
@@ -40509,7 +40376,7 @@ class $$TransactionsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> transactionID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String category,
                 required String type,
                 required double amount,
@@ -40637,7 +40504,7 @@ typedef $$FocusSessionsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<int?> sessionID,
-      required String personID,
+      Value<String?> personID,
       Value<String?> projectID,
       required DateTime startTime,
       Value<DateTime?> endTime,
@@ -40653,7 +40520,7 @@ typedef $$FocusSessionsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<int?> sessionID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String?> projectID,
       Value<DateTime> startTime,
       Value<DateTime?> endTime,
@@ -40708,9 +40575,9 @@ final class $$FocusSessionsTableTableReferences
         ),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -41220,7 +41087,7 @@ class $$FocusSessionsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> sessionID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<DateTime> startTime = const Value.absent(),
                 Value<DateTime?> endTime = const Value.absent(),
@@ -41250,7 +41117,7 @@ class $$FocusSessionsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> sessionID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 required DateTime startTime,
                 Value<DateTime?> endTime = const Value.absent(),
@@ -41410,6 +41277,9 @@ typedef $$CustomNotificationsTableTableCreateCompanionBuilder =
       required DateTime scheduledTime,
       Value<String?> repeatFrequency,
       Value<String?> repeatDays,
+      Value<String> category,
+      Value<String> priority,
+      Value<String?> icon,
       Value<bool> isEnabled,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -41424,6 +41294,9 @@ typedef $$CustomNotificationsTableTableUpdateCompanionBuilder =
       Value<DateTime> scheduledTime,
       Value<String?> repeatFrequency,
       Value<String?> repeatDays,
+      Value<String> category,
+      Value<String> priority,
+      Value<String?> icon,
       Value<bool> isEnabled,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -41509,15 +41382,31 @@ class $$CustomNotificationsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get icon => $composableBuilder(
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnFilters<bool> get isEnabled => $composableBuilder(
     column: $table.isEnabled,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -41584,6 +41473,21 @@ class $$CustomNotificationsTableTableOrderingComposer
 
   ColumnOrderings<String> get repeatDays => $composableBuilder(
     column: $table.repeatDays,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get priority => $composableBuilder(
+    column: $table.priority,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get icon => $composableBuilder(
+    column: $table.icon,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -41659,10 +41563,19 @@ class $$CustomNotificationsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get priority =>
+      $composableBuilder(column: $table.priority, builder: (column) => column);
+
+  GeneratedColumn<String> get icon =>
+      $composableBuilder(column: $table.icon, builder: (column) => column);
+
   GeneratedColumn<bool> get isEnabled =>
       $composableBuilder(column: $table.isEnabled, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -41737,6 +41650,9 @@ class $$CustomNotificationsTableTableTableManager
                 Value<DateTime> scheduledTime = const Value.absent(),
                 Value<String?> repeatFrequency = const Value.absent(),
                 Value<String?> repeatDays = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -41749,6 +41665,9 @@ class $$CustomNotificationsTableTableTableManager
                 scheduledTime: scheduledTime,
                 repeatFrequency: repeatFrequency,
                 repeatDays: repeatDays,
+                category: category,
+                priority: priority,
+                icon: icon,
                 isEnabled: isEnabled,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -41763,6 +41682,9 @@ class $$CustomNotificationsTableTableTableManager
                 required DateTime scheduledTime,
                 Value<String?> repeatFrequency = const Value.absent(),
                 Value<String?> repeatDays = const Value.absent(),
+                Value<String> category = const Value.absent(),
+                Value<String> priority = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -41775,6 +41697,9 @@ class $$CustomNotificationsTableTableTableManager
                 scheduledTime: scheduledTime,
                 repeatFrequency: repeatFrequency,
                 repeatDays: repeatDays,
+                category: category,
+                priority: priority,
+                icon: icon,
                 isEnabled: isEnabled,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -41929,10 +41854,11 @@ class $$QuotesTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -42045,7 +41971,7 @@ class $$QuotesTableTableAnnotationComposer
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
@@ -42211,7 +42137,7 @@ typedef $$WaterLogsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> logID,
-      required String personID,
+      Value<String?> personID,
       Value<int> amount,
       Value<DateTime> timestamp,
       Value<int> rowid,
@@ -42221,7 +42147,7 @@ typedef $$WaterLogsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> logID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<int> amount,
       Value<DateTime> timestamp,
       Value<int> rowid,
@@ -42262,9 +42188,9 @@ final class $$WaterLogsTableTableReferences
         $_aliasNameGenerator(db.waterLogsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -42531,7 +42457,7 @@ class $$WaterLogsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> logID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<int> amount = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -42549,7 +42475,7 @@ class $$WaterLogsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> logID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 Value<int> amount = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -42649,7 +42575,7 @@ typedef $$SleepLogsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> logID,
-      required String personID,
+      Value<String?> personID,
       required DateTime startTime,
       Value<DateTime?> endTime,
       Value<int> quality,
@@ -42660,7 +42586,7 @@ typedef $$SleepLogsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> logID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<DateTime> startTime,
       Value<DateTime?> endTime,
       Value<int> quality,
@@ -42702,9 +42628,9 @@ final class $$SleepLogsTableTableReferences
         $_aliasNameGenerator(db.sleepLogsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -42984,7 +42910,7 @@ class $$SleepLogsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> logID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<DateTime> startTime = const Value.absent(),
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<int> quality = const Value.absent(),
@@ -43004,7 +42930,7 @@ class $$SleepLogsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> logID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required DateTime startTime,
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<int> quality = const Value.absent(),
@@ -43106,7 +43032,7 @@ typedef $$ExerciseLogsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<int?> logID,
-      required String personID,
+      Value<String?> personID,
       required String type,
       required int durationMinutes,
       Value<String> intensity,
@@ -43118,7 +43044,7 @@ typedef $$ExerciseLogsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<int?> logID,
-      Value<String> personID,
+      Value<String?> personID,
       Value<String> type,
       Value<int> durationMinutes,
       Value<String> intensity,
@@ -43166,9 +43092,9 @@ final class $$ExerciseLogsTableTableReferences
         $_aliasNameGenerator(db.exerciseLogsTable.personID, db.personsTable.id),
       );
 
-  $$PersonsTableTableProcessedTableManager get personID {
-    final $_column = $_itemColumn<String>('person_id')!;
-
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
     final manager = $$PersonsTableTableTableManager(
       $_db,
       $_db.personsTable,
@@ -43466,7 +43392,7 @@ class $$ExerciseLogsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> logID = const Value.absent(),
-                Value<String> personID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<int> durationMinutes = const Value.absent(),
                 Value<String> intensity = const Value.absent(),
@@ -43488,7 +43414,7 @@ class $$ExerciseLogsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<int?> logID = const Value.absent(),
-                required String personID,
+                Value<String?> personID = const Value.absent(),
                 required String type,
                 required int durationMinutes,
                 Value<String> intensity = const Value.absent(),
@@ -43705,10 +43631,11 @@ class $$QuestsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
 
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
@@ -43869,7 +43796,7 @@ class $$QuestsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
-  GeneratedColumn<DateTime> get createdAt =>
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {

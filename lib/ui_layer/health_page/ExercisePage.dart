@@ -51,11 +51,11 @@ class _ExercisePageState extends State<ExercisePage> {
                 icon: const Icon(Icons.analytics_rounded, color: Colors.orange),
                 tooltip: 'Exercise Analysis',
               ),
-              IconButton(
-                onPressed: () => context.go('/health/habits'),
-                icon: const Icon(Icons.grid_view_rounded, color: Colors.orange),
-                tooltip: 'Habit Dashboard',
-              ),
+              // IconButton(
+              //   onPressed: () => context.go('/health/habits'),
+              //   icon: const Icon(Icons.grid_view_rounded, color: Colors.orange),
+              //   tooltip: 'Habit Dashboard',
+              // ),
             ],
           ),
           body: SingleChildScrollView(
@@ -117,10 +117,7 @@ class _ExercisePageState extends State<ExercisePage> {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                    TextButton(
-                      onPressed: () => context.go('/health/habits'),
-                      child: const Text("View All"),
-                    ),
+                
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -284,7 +281,7 @@ class _ExercisePageState extends State<ExercisePage> {
           ),
           floatingActionButton: FloatingActionButton.extended(
             onPressed: () => _showAddExerciseDialog(context, dao),
-            label: const Text("Add Exercise"),
+            label: const Text("Add"),
             icon: const Icon(Icons.add),
             backgroundColor: Colors.orange,
             foregroundColor: Colors.white,
@@ -398,8 +395,9 @@ class _ExercisePageState extends State<ExercisePage> {
                   await dao.insertExerciseLog(
                     ExerciseLogsTableCompanion.insert(
                       id: IDGen.generateUuid(),
-                      personID:
-                          Supabase.instance.client.auth.currentUser?.id ?? "",
+                      personID: drift.Value(
+                        Supabase.instance.client.auth.currentUser?.id ?? "",
+                      ),
                       type: type,
                       durationMinutes: mins,
                       intensity: drift.Value(selectedIntensity),

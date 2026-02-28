@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';

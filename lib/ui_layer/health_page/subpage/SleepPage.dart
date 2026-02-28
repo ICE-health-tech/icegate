@@ -348,7 +348,7 @@ class _SleepPageState extends State<SleepPage> {
     await dao.insertSleepLog(
       SleepLogsTableCompanion.insert(
         id: IDGen.generateUuid(),
-        personID: Supabase.instance.client.auth.currentUser?.id ?? "",
+        personID: drift.Value(Supabase.instance.client.auth.currentUser?.id ?? ""),
         startTime: start,
         endTime: drift.Value(end),
         quality: drift.Value(quality),

@@ -263,21 +263,41 @@ class SettingsWidget extends StatelessWidget {
                     ThemeManager.showThemeSelectionDialog(context);
                   },
                 ),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: 'Notifications',
-                  icon: Icons.notifications_rounded,
-                  color: Colors.amber,
-                  trailingWidget: Watch((context) {
-                    final notificationService = context
-                        .read<LocalNotificationService>();
-                    return Switch.adaptive(
-                      value: notificationService.notificationsEnabled.value,
+                Watch((context) {
+                  final notificationService = context
+                      .read<LocalNotificationService>();
+                  final isEnabled = notificationService.notificationsEnabled
+                      .watch(context);
+
+                  return _buildPremiumSettingTile(
+                    context: context,
+                    title: 'System Notifications',
+                    subtitle: isEnabled
+                        ? 'Notifications are active'
+                        : 'Notifications are paused',
+                    icon: isEnabled
+                        ? Icons.notifications_active_rounded
+                        : Icons.notifications_off_rounded,
+                    color: isEnabled ? Colors.green : Colors.amber,
+                    trailingWidget: Switch.adaptive(
+                      value: isEnabled,
+                      activeTrackColor: Colors.green.withValues(alpha: 0.5),
+                      activeColor: Colors.green,
                       onChanged: (bool value) {
                         notificationService.setNotificationsEnabled(value);
                       },
-                    );
-                  }),
+                    ),
+                  );
+                }),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: 'Custom Reminders',
+                  subtitle: 'Manage your personal notifications',
+                  icon: Icons.notification_add_rounded,
+                  color: Colors.blue,
+                  onTap: () {
+                    context.push('/custom-notifications');
+                  },
                 ),
               ],
             ),

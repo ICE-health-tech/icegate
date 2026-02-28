@@ -24,6 +24,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
     //   _isInteractingWithCard = isInteracting;
     // });
   }
+  
 
   @override
   Widget build(BuildContext context) {
@@ -287,8 +288,8 @@ class _UserInformationPageState extends State<UserInformationPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            user.alias.isNotEmpty
-                                ? "@${user.alias.toLowerCase()}"
+                            user.username.isNotEmpty
+                                ? "@${user.username.toLowerCase()}"
                                 : "Awaiting Credentials...",
                             style: TextStyle(
                               color: const Color(0xFF00E5FF).withOpacity(0.6),

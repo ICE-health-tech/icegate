@@ -2,6 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:provider/provider.dart';
+import 'dart:math' as math;
 
 class HealthAnalysisPage extends StatelessWidget {
   const HealthAnalysisPage({super.key});
@@ -10,6 +15,17 @@ class HealthAnalysisPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+
+    final authBlock = context.read<AuthBlock>();
+    final personID = authBlock.user.value?['id'] as String?;
+
+    if (personID == null) {
+      return const Scaffold(
+        body: Center(child: Text("User session not found")),
+      );
+    }
+
+    final healthMetricsDao = context.watch<HealthMetricsDAO>();
 
     return SwipeablePage(
       direction: SwipeablePageDirection.leftToRight,
@@ -51,29 +67,101 @@ class HealthAnalysisPage extends StatelessWidget {
             ),
           ],
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // --- PERFORMANCE ANALYSIS SECTION ---
-              _buildPerformanceCard(context, colorScheme, textTheme),
-              const SizedBox(height: 24),
+        body: StreamBuilder<List<HealthMetricsLocal>>(
+          stream: healthMetricsDao.watchAllMetrics(personID),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-              // --- ACTIVITY BALANCE SECTION ---
-              _buildActivityBalanceCard(context, colorScheme, textTheme),
-              const SizedBox(height: 24),
+            final allMetrics = snapshot.data!;
+            if (allMetrics.isEmpty) {
+              return _buildEmptyState(
+                context,
+                "No health data found",
+                Icons.health_and_safety_outlined,
+              );
+            }
 
-              // --- WEEKLY TRENDS SECTION ---
-              _buildWeeklyTrendsCard(context, colorScheme, textTheme),
-              const SizedBox(height: 24),
+            // --- DATA ANALYSIS ---
+            final latest = allMetrics.first;
+            final last7Days = allMetrics.take(7).toList();
 
-              // --- HEALTH INSIGHTS SECTION ---
-              _buildInsightsCard(context, colorScheme, textTheme),
-              const SizedBox(height: 40),
-            ],
-          ),
+            // Efficiency (Today's steps vs Goal)
+            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
+              0.0,
+              1.0,
+            );
+
+            // Consistency (Average variation in last 7 days)
+            double avgSteps =
+                last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
+                last7Days.length;
+            double variance =
+                last7Days.fold(
+                  0.0,
+                  (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
+                ) /
+                last7Days.length;
+            double consistency =
+                (1.0 - (math.sqrt(variance) / (avgSteps > 0 ? avgSteps : 1.0)))
+                    .clamp(0.0, 1.0);
+
+            return SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // --- PERFORMANCE ANALYSIS SECTION ---
+                  _buildPerformanceCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    efficiency: efficiency,
+                    consistency: consistency,
+                    metabolism: (latest.caloriesBurned ?? 0) > 2000
+                        ? "Active"
+                        : "Normal",
+                    intensity: (latest.exerciseMinutes ?? 0) > 45
+                        ? "High"
+                        : (latest.exerciseMinutes ?? 0) > 20
+                        ? "Optimal"
+                        : "Low",
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- ACTIVITY BALANCE SECTION ---
+                  _buildActivityBalanceCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    latest: latest,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- WEEKLY TRENDS SECTION ---
+                  _buildWeeklyTrendsCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    last7Days: last7Days,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- HEALTH INSIGHTS SECTION ---
+                  _buildInsightsCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    latest: latest,
+                    avgSteps: avgSteps,
+                  ),
+                  const SizedBox(height: 40),
+                ],
+              ),
+            );
+          },
         ),
       ),
     );
@@ -82,8 +170,12 @@ class HealthAnalysisPage extends StatelessWidget {
   Widget _buildPerformanceCard(
     BuildContext context,
     ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
+    TextTheme textTheme, {
+    required double efficiency,
+    required double consistency,
+    required String metabolism,
+    required String intensity,
+  }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -141,28 +233,32 @@ class HealthAnalysisPage extends StatelessWidget {
               _buildAnalysisGridItem(
                 context,
                 'Efficiency',
-                '92%',
+                '${(efficiency * 100).toStringAsFixed(0)}%',
                 Icons.bolt_rounded,
                 Colors.amber,
               ),
               _buildAnalysisGridItem(
                 context,
                 'Consistency',
-                'High',
+                consistency > 0.8
+                    ? 'High'
+                    : consistency > 0.5
+                    ? 'Medium'
+                    : 'Low',
                 Icons.repeat_rounded,
                 Colors.green,
               ),
               _buildAnalysisGridItem(
                 context,
                 'Metabolism',
-                'Active',
+                metabolism,
                 Icons.speed_rounded,
                 Colors.orange,
               ),
               _buildAnalysisGridItem(
                 context,
                 'Intensity',
-                'Optimal',
+                intensity,
                 Icons.fitness_center_rounded,
                 Colors.blue,
               ),
@@ -176,8 +272,31 @@ class HealthAnalysisPage extends StatelessWidget {
   Widget _buildActivityBalanceCard(
     BuildContext context,
     ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
+    TextTheme textTheme, {
+    required HealthMetricsLocal latest,
+  }) {
+    final stepsPoints = (latest.steps ?? 0) / STEPS_PER_POINT;
+    final exercisePoints = (latest.exerciseMinutes ?? 0) / EXERCISE_PER_POINT;
+    final focusPoints = (latest.focusMinutes ?? 0) / FOCUS_MINUTES_PER_POINT;
+    final waterPoints = (latest.waterGlasses ?? 0) >= WATER_GOAL
+        ? WATER_BONUS_POINTS.toDouble()
+        : 0.0;
+
+    final totalPoints =
+        stepsPoints + exercisePoints + focusPoints + waterPoints;
+
+    final stepsWeight = totalPoints > 0
+        ? (stepsPoints / totalPoints * 100).round()
+        : 0;
+    final exerciseWeight = totalPoints > 0
+        ? (exercisePoints / totalPoints * 100).round()
+        : 0;
+    final focusWeight = totalPoints > 0
+        ? (focusPoints / totalPoints * 100).round()
+        : 0;
+    final otherWeight = (100 - stepsWeight - exerciseWeight - focusWeight)
+        .clamp(0, 100);
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -210,7 +329,12 @@ class HealthAnalysisPage extends StatelessWidget {
           Row(
             children: [
               SimplePieChart(
-                data: {'Steps': 40, 'Exercise': 30, 'Other': 30},
+                data: {
+                  'Steps': stepsWeight.toDouble(),
+                  'Exercise': exerciseWeight.toDouble(),
+                  'Focus': focusWeight.toDouble(),
+                  'Other': otherWeight.toDouble(),
+                },
                 colors: [
                   colorScheme.primary,
                   colorScheme.secondary,
@@ -232,7 +356,9 @@ class HealthAnalysisPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      'Your workout distribution looks balanced today.',
+                      stepsWeight > 60
+                          ? 'You are moving a lot! Great step count.'
+                          : 'Your workout distribution looks balanced today.',
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
@@ -241,21 +367,21 @@ class HealthAnalysisPage extends StatelessWidget {
                     _buildLegendRow(
                       colorScheme.primary,
                       'Steps',
-                      '40%',
+                      '$stepsWeight%',
                       textTheme,
                     ),
                     const SizedBox(height: 4),
                     _buildLegendRow(
                       colorScheme.secondary,
                       'Exercise',
-                      '30%',
+                      '$exerciseWeight%',
                       textTheme,
                     ),
                     const SizedBox(height: 4),
                     _buildLegendRow(
                       colorScheme.tertiary,
                       'Other',
-                      '30%',
+                      '$otherWeight%',
                       textTheme,
                     ),
                   ],
@@ -298,8 +424,17 @@ class HealthAnalysisPage extends StatelessWidget {
   Widget _buildWeeklyTrendsCard(
     BuildContext context,
     ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
+    TextTheme textTheme, {
+    required List<HealthMetricsLocal> last7Days,
+  }) {
+    final reversedList = last7Days.reversed.toList();
+    final maxSteps = last7Days.isEmpty
+        ? 1.0
+        : last7Days
+              .map((m) => m.steps ?? 0)
+              .reduce((a, b) => math.max(a, b))
+              .toDouble();
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -338,19 +473,23 @@ class HealthAnalysisPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 20),
-          // Simple bar chart representation
+          // Bar chart based on real data
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              _buildBarDay('M', 0.6, colorScheme),
-              _buildBarDay('T', 0.8, colorScheme),
-              _buildBarDay('W', 0.5, colorScheme),
-              _buildBarDay('T', 0.9, colorScheme),
-              _buildBarDay('F', 0.7, colorScheme),
-              _buildBarDay('S', 1.0, colorScheme),
-              _buildBarDay('S', 0.4, colorScheme),
-            ],
+            children: reversedList.map((m) {
+              final label = [
+                'M',
+                'T',
+                'W',
+                'T',
+                'F',
+                'S',
+                'S',
+              ][m.date.weekday - 1];
+              final ratio = ((m.steps ?? 0) / maxSteps).clamp(0.1, 1.0);
+              return _buildBarDay(label, ratio, colorScheme);
+            }).toList(),
           ),
         ],
       ),
@@ -384,8 +523,10 @@ class HealthAnalysisPage extends StatelessWidget {
   Widget _buildInsightsCard(
     BuildContext context,
     ColorScheme colorScheme,
-    TextTheme textTheme,
-  ) {
+    TextTheme textTheme, {
+    required HealthMetricsLocal latest,
+    required double avgSteps,
+  }) {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -424,17 +565,21 @@ class HealthAnalysisPage extends StatelessWidget {
           _buildInsightItem(
             Icons.trending_up_rounded,
             Colors.green,
-            'Great Progress',
-            'Your activity levels are 15% higher than last week.',
+            (latest.steps ?? 0) > avgSteps ? 'Above Average' : 'Keep Pushing',
+            (latest.steps ?? 0) > avgSteps
+                ? 'Your activity levels are higher than your 7-day average.'
+                : 'Try to take a short walk to reach your daily average of ${avgSteps.toInt()} steps.',
             colorScheme,
             textTheme,
           ),
           const SizedBox(height: 12),
           _buildInsightItem(
-            Icons.bedtime_rounded,
-            Colors.indigo,
-            'Sleep Quality',
-            'Consider going to bed 30 minutes earlier for optimal recovery.',
+            Icons.bolt_rounded,
+            Colors.amber,
+            'Efficiency',
+            (latest.steps ?? 0) >= STEP_GOAL
+                ? 'Goal reached! You are highly efficient today.'
+                : 'You are at ${((latest.steps ?? 0) / STEP_GOAL * 100).toStringAsFixed(0)}% of your daily goal.',
             colorScheme,
             textTheme,
           ),
@@ -575,6 +720,32 @@ class HealthAnalysisPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.2),
+          ),
+          const SizedBox(height: 24),
+          Text(
+            title,
+            style: textTheme.titleMedium?.copyWith(
+              color: colorScheme.onSurface,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

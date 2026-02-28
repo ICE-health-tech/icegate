@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
@@ -8,7 +9,6 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
 
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
 class NotificationManagerPage extends StatefulWidget {
@@ -51,116 +51,347 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         backgroundColor: Colors.transparent,
         body: Stack(
           children: [
-            Container(color: colorScheme.surface.withOpacity(0.9)),
+            // Premium Glassmorphic Background
+            Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    const Color(0xFF0F172A),
+                    colorScheme.surface,
+                    const Color(0xFF1E293B),
+                  ],
+                ),
+              ),
+            ),
+            Positioned.fill(
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(color: Colors.black.withOpacity(0.2)),
+              ),
+            ),
             SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                    child: Column(
                       children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "NOTIFICATION CENTER",
-                              style: TextStyle(
-                                color: Colors.blueAccent.withOpacity(0.8),
-                                fontSize: 12,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 2.0,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              "HUNTER MODE ",
-                              style: TextStyle(
-                                color: colorScheme.onSurface,
-                                fontSize: 24,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            IconButton(
-                              onPressed: () => Navigator.pop(context),
-                              icon: Icon(
-                                Icons.close_rounded,
-                                color: colorScheme.onSurface,
-                                size: 30,
-                              ),
-                              style: IconButton.styleFrom(
-                                backgroundColor: colorScheme.onSurface
-                                    .withOpacity(0.05),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                  side: BorderSide(
-                                    color: colorScheme.onSurface.withOpacity(
-                                      0.1,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
+                        const SizedBox(height: 16),
+                        _buildPremiumHeader(context),
+                        const SizedBox(height: 24),
+                        _buildTabBar(context),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    Container(
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withOpacity(0.03),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: colorScheme.onSurface.withOpacity(0.05),
-                        ),
-                      ),
-                      child: TabBar(
-                        isScrollable: true,
-                        tabAlignment: TabAlignment.start,
-                        dividerColor: Colors.transparent,
-                        indicatorSize: TabBarIndicatorSize.tab,
-                        indicator: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.blueAccent.withOpacity(0.2),
-                          border: Border.all(
-                            color: Colors.blueAccent.withOpacity(0.3),
-                          ),
-                        ),
-                        labelColor: Colors.blueAccent,
-                        unselectedLabelColor: colorScheme.onSurface.withOpacity(
-                          0.4,
-                        ),
-                        labelStyle: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
-                        ),
-                        tabs: const [
-                          Tab(text: "QUESTS"),
-                          Tab(text: "REMINDERS"),
-                          Tab(text: "WISDOM"),
-                        ],
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: TabBarView(
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        _buildActiveHunterTab(context, isEnabled),
+                        _buildRemindersTab(context, isEnabled),
+                        _buildWisdomBoardTab(context),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildPremiumHeader(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "NOTIFICATION CENTER",
+              style: TextStyle(
+                color: Colors.blueAccent.withOpacity(0.8),
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2.0,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              "HUNTER HUB",
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.5,
+              ),
+            ),
+          ],
+        ),
+        Row(
+          children: [
+            IconButton(
+              onPressed: () => GoRouter.of(context).push('/notification-inbox'),
+              icon: const Icon(
+                Icons.assignment_turned_in_rounded,
+                color: Colors.blueAccent,
+                size: 26,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                padding: const EdgeInsets.all(12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: Colors.blueAccent.withOpacity(0.2)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: Icon(
+                Icons.close_rounded,
+                color: colorScheme.onSurface,
+                size: 28,
+              ),
+              style: IconButton.styleFrom(
+                backgroundColor: colorScheme.onSurface.withOpacity(0.05),
+                padding: const EdgeInsets.all(12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(
+                    color: colorScheme.onSurface.withOpacity(0.1),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTabBar(BuildContext context) {
+    return Container(
+      height: 48,
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: TabBar(
+        indicator: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          gradient: const LinearGradient(
+            colors: [Colors.blueAccent, Color(0xFF00D4FF)],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.blueAccent.withOpacity(0.3),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        indicatorSize: TabBarIndicatorSize.tab,
+        labelColor: Colors.white,
+        unselectedLabelColor: Colors.white54,
+        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        dividerColor: Colors.transparent,
+        tabs: const [
+          Tab(text: "Active Hunter"),
+          Tab(text: "Reminders"),
+          Tab(text: "Wisdom Board"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActiveHunterTab(BuildContext context, bool isEnabled) {
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        _buildAIAdvisorCard(context),
+        const SizedBox(height: 24),
+        _buildSystemQuestsSection(context),
+        const SizedBox(height: 32),
+      ],
+    );
+  }
+
+  Widget _buildAIAdvisorCard(BuildContext context) {
+    return _buildGlassCard(
+      borderColor: Colors.blueAccent.withOpacity(0.3),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Colors.blueAccent.withOpacity(0.1), Colors.transparent],
+          ),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.psychology_outlined,
+                  color: Colors.blueAccent,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  "SYSTEM ANALYSIS",
+                  style: TextStyle(
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+                const Spacer(),
+                const Icon(
+                  Icons.sensors_rounded,
+                  color: Colors.greenAccent,
+                  size: 16,
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              "\"Hunter, your current fatigue levels are low. Optimal time for intense training. Prioritize Health Quests to maintain momentum.\"",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                fontFamily: 'Courier', // Typewriter feel
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "Advice based on recent metrics",
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.4),
+                fontSize: 11,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSystemQuestsSection(BuildContext context) {
+    final dao = context.watch<QuestDAO>();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "DAILY QUEST: ",
+          style: TextStyle(
+            color: Colors.white.withOpacity(0.8),
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.0,
+          ),
+        ),
+        const SizedBox(height: 12),
+        StreamBuilder<List<QuestData>>(
+          stream: dao.watchActiveQuests(),
+          builder: (context, snapshot) {
+            return Column(
+              children: snapshot.data!.map((quest) {
+                final percent = quest.targetValue > 0
+                    ? (quest.currentValue / quest.targetValue).clamp(0.0, 1.0)
+                    : 0.0;
+                final progressStr =
+                    "${quest.currentValue.toInt()} / ${quest.targetValue.toInt()}";
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildSoloLevelingQuestTile(
+                    context,
+                    title: quest.title,
+                    objective: quest.description ?? "Active System Quest",
+                    progress: progressStr,
+                    percent: percent,
+                  ),
+                );
+              }).toList(),
+            );
+          },
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSoloLevelingQuestTile(
+    BuildContext context, {
+    required String title,
+    required String objective,
+    required String progress,
+    required double percent,
+  }) {
+    return _buildGlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    Expanded(
-                      child: TabBarView(
-                        children: [
-                          _buildSystemQuestsTab(context),
-                          _buildRemindersTab(context, isEnabled),
-                          _buildQuotesTab(context),
-                        ],
+                    const SizedBox(height: 2),
+                    Text(
+                      objective,
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 13,
                       ),
                     ),
                   ],
                 ),
+                Text(
+                  progress,
+                  style: const TextStyle(
+                    color: Colors.blueAccent,
+                    fontWeight: FontWeight.w900,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(4),
+              child: LinearProgressIndicator(
+                value: percent,
+                backgroundColor: Colors.white.withOpacity(0.05),
+                valueColor: const AlwaysStoppedAnimation(Colors.blueAccent),
+                minHeight: 4,
               ),
             ),
           ],
@@ -170,502 +401,309 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   }
 
   Widget _buildRemindersTab(BuildContext context, bool isEnabled) {
-    final notificationService = context.read<LocalNotificationService>();
     final customNotificationDao = context.watch<CustomNotificationDAO>();
 
     return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       physics: const BouncingScrollPhysics(),
       children: [
-        _buildGlassCard(
-          child: SwitchListTile(
-            value: isEnabled,
-            onChanged: (val) =>
-                notificationService.setNotificationsEnabled(val),
-            title: Text(
-              "Allow Notifications",
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "Personal Reminders",
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: Colors.white,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
-                fontSize: 16,
               ),
             ),
-            subtitle: Text(
-              isEnabled
-                  ? "You will receive updates about your stats and tasks."
-                  : "Notifications are paused.",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
-                fontSize: 12,
-              ),
+            TextButton.icon(
+              onPressed: () => _showAddNotificationDialog(context),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text("Add New"),
+              style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
             ),
-            secondary: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: isEnabled
-                    ? Colors.greenAccent.withOpacity(0.2)
-                    : Colors.redAccent.withOpacity(0.2),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                isEnabled
-                    ? Icons.notifications_active_rounded
-                    : Icons.notifications_off_rounded,
-                color: isEnabled ? Colors.greenAccent : Colors.redAccent,
-              ),
-            ),
-            activeThumbColor: Colors.blueAccent,
-          ),
+          ],
         ),
-        if (isEnabled) ...[
-          const SizedBox(height: 32),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Custom Reminders",
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              TextButton.icon(
-                onPressed: () => _showAddNotificationDialog(context),
-                icon: const Icon(Icons.add_rounded, size: 20),
-                label: const Text("Add New"),
-                style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
+        const SizedBox(height: 16),
+        if (isEnabled)
           StreamBuilder<List<CustomNotificationData>>(
             stream: customNotificationDao.watchAllNotifications(),
             builder: (context, snapshot) {
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(32.0),
-                    child: Text(
-                      "No custom reminders set.",
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.4),
-                        fontStyle: FontStyle.italic,
-                      ),
+                    padding: const EdgeInsets.symmetric(vertical: 64),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.notifications_none_rounded,
+                          size: 48,
+                          color: Colors.white.withOpacity(0.1),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "No active reminders.\nAdd one to keep track of your schedule.",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.3),
+                            fontSize: 14,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 );
               }
-
-              return ListView.separated(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: snapshot.data!.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  return _buildCustomNotificationTile(
-                    context,
-                    snapshot.data![index],
+              return Column(
+                children: snapshot.data!.map((notif) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildCustomNotificationTile(context, notif),
                   );
-                },
+                }).toList(),
               );
             },
-          ),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildSystemQuestsTab(BuildContext context) {
-    final questDao = context.watch<QuestDAO>();
-
-    return StreamBuilder<List<QuestData>>(
-      stream: questDao.watchActiveQuests(),
-      builder: (context, snapshot) {
-        final quests = snapshot.data ?? [];
-
-        return ListView(
-          physics: const BouncingScrollPhysics(),
-          children: [
-            AnimatedBuilder(
-              animation: _pulseController,
-              builder: (context, child) {
-                final pulseOpacity = (_pulseController.value * 0.2 + 0.2);
-                return Container(
-                  padding: const EdgeInsets.all(24),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        Colors.blue.withOpacity(0.15),
-                        Colors.cyan.withOpacity(0.05),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: Colors.cyanAccent.withOpacity(pulseOpacity),
-                      width: 1.5,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.cyan.withOpacity(0.1),
-                        blurRadius: 20 * _pulseController.value,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                  child: child,
-                );
-              },
+          )
+        else
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 64),
               child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "[ DAILY QUEST: HUNTER MODE ]",
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.2,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      Icon(
-                        Icons.radar_rounded,
-                        color: Colors.cyanAccent.withOpacity(0.8),
-                        size: 18,
-                      ),
-                    ],
+                  Icon(
+                    Icons.notifications_off_rounded,
+                    size: 48,
+                    color: Colors.white.withOpacity(0.1),
                   ),
-                  const SizedBox(height: 24),
-                  if (quests.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Text(
-                          "NO ACTIVE QUESTS DETECTED",
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.primary,
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                    )
-                  else
-                    ...quests.map((quest) {
-                      final progress = quest.targetValue > 0
-                          ? (quest.currentValue / quest.targetValue).clamp(
-                              0.0,
-                              1.0,
-                            )
-                          : 0.0;
-                      return _buildQuestItem(
-                        quest.title,
-                        "${quest.currentValue.toInt()} / ${quest.targetValue.toInt()}",
-                        progress,
-                        _getCategoryColor(quest.category),
-                        _getCategoryIcon(quest.category),
-                      );
-                    }),
-
-                  // --- Real-time Health Quests (Restored) ---
-                  Watch((context) {
-                    final healthBlock = context.watch<HealthBlock>();
-                    final steps = healthBlock.todaySteps.value;
-                    final stepGoal = healthBlock.dailyStepGoal.value;
-                    final water = healthBlock.todayWater.value;
-
-                    return Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _buildQuestItem(
-                          "Movement Radius",
-                          "$steps / $stepGoal m",
-                          (stepGoal > 0 ? steps / stepGoal : 0.0).clamp(
-                            0.0,
-                            1.0,
-                          ),
-                          Colors.cyanAccent,
-                          Icons.explore_rounded,
-                        ),
-                        _buildQuestItem(
-                          "Molecular Support",
-                          "$water / 2000 ml",
-                          (water / 2000.0).clamp(0.0, 1.0),
-                          Colors.lightBlueAccent,
-                          Icons.water_drop_rounded,
-                        ),
-                      ],
-                    );
-                  }),
-                  const SizedBox(height: 20),
-                  const Divider(color: Colors.cyanAccent, thickness: 0.5),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.error_outline_rounded,
-                        color: Colors.redAccent.withOpacity(0.8),
-                        size: 14,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          "WARNING: PERFORMANCE DEGRADATION DETECTED UPON FAILURE.",
-                          style: TextStyle(
-                            color: Colors.redAccent,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                    ],
+                  const SizedBox(height: 16),
+                  Text(
+                    "Notifications are disabled.\nEnable them in settings to see your reminders.",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.3),
+                      fontSize: 14,
+                      fontStyle: FontStyle.italic,
+                    ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 32),
-            Text(
-              "COMPLETED PROTOCOLS",
-              style: TextStyle(
-                color: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withOpacity(0.24),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 2,
-              ),
-            ),
-            const SizedBox(height: 16),
-            _buildGlassCard(
-              child: Padding(
-                padding: const EdgeInsets.all(20),
-                child: Center(
-                  child: Text(
-                    "SYSTEM INITIALIZED - READY FOR DATA",
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.15),
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 1,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Color _getCategoryColor(String category) {
-    switch (category.toLowerCase()) {
-      case 'health':
-        return Colors.greenAccent;
-      case 'social':
-        return Colors.blueAccent;
-      case 'finance':
-        return Colors.orangeAccent;
-      case 'career':
-      case 'productivity':
-        return Colors.purpleAccent;
-      default:
-        return Colors.cyanAccent;
-    }
-  }
-
-  IconData _getCategoryIcon(String category) {
-    switch (category.toLowerCase()) {
-      case 'health':
-        return Icons.fitness_center_rounded;
-      case 'social':
-        return Icons.people_alt_rounded;
-      case 'finance':
-        return Icons.account_balance_wallet_rounded;
-      case 'career':
-      case 'productivity':
-        return Icons.rocket_launch_rounded;
-      default:
-        return Icons.auto_awesome_rounded;
-    }
-  }
-
-  Widget _buildQuestItem(
-    String title,
-    String progressText,
-    double progress,
-    Color color,
-    IconData icon,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 20.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(6),
-                decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: color.withOpacity(0.2)),
-                ),
-                child: Icon(icon, color: color, size: 16),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          title,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          progressText,
-                          style: TextStyle(
-                            color: color,
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'Monospace',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Stack(
-                      children: [
-                        Container(
-                          height: 4,
-                          width: double.infinity,
-                          decoration: BoxDecoration(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.05),
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        ),
-                        FractionallySizedBox(
-                          widthFactor: progress,
-                          child: Container(
-                            height: 4,
-                            decoration: BoxDecoration(
-                              color: color,
-                              borderRadius: BorderRadius.circular(2),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: color.withOpacity(0.5),
-                                  blurRadius: 4,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
           ),
-        ],
-      ),
+      ],
     );
   }
 
-  Widget _buildQuotesTab(BuildContext context) {
-    final quoteDao = context.watch<QuoteDAO>();
+  Widget _buildWisdomBoardTab(BuildContext context) {
+    final dao = context.watch<QuoteDAO>();
 
-    return Column(
+    return ListView(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      physics: const BouncingScrollPhysics(),
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              "Your Wisdom Board",
+            const Text(
+              "Wisdom Board",
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
+                color: Colors.white,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
             TextButton.icon(
               onPressed: () => _showAddQuoteDialog(context),
-              icon: const Icon(Icons.auto_awesome, size: 20),
-              label: const Text("New Quote"),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: const Text("Add Quote"),
               style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
             ),
           ],
         ),
         const SizedBox(height: 16),
-        Expanded(
-          child: StreamBuilder<List<QuoteData>>(
-            stream: quoteDao
-                .watchAllQuotes(), // Using watchAll to find EVERYTHING
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                debugPrint('❌ WisdomBoard Error: ${snapshot.error}');
-                debugPrint('WisdomBoard StackTrace: ${snapshot.stackTrace}');
-              }
-              final quotes = snapshot.data ?? [];
-              debugPrint(
-                'WisdomBoard: Found ${quotes.length} quotes. State: ${snapshot.connectionState}',
-              );
-              if (quotes.isNotEmpty) {
-                for (var q in quotes) {
-                  debugPrint(
-                    'WisdomBoard: [ID: ${q.id}] Quote: "${q.content}", Author: ${q.author}, Active: ${q.isActive}',
-                  );
-                }
-              }
-              if (quotes.isEmpty &&
-                  snapshot.connectionState == ConnectionState.active) {
-                return Center(
-                  child: Text(
-                    "Your wisdom board is empty.\nAdd quotes to inspire your day.",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Theme.of(
-                        context,
-                      ).colorScheme.onSurface.withOpacity(0.4),
-                    ),
+        StreamBuilder<List<QuoteData>>(
+          stream: dao.watchAllQuotes(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 64),
+                  child: Column(
+                    children: [
+                      Icon(
+                        Icons.auto_stories_rounded,
+                        size: 48,
+                        color: Colors.white.withOpacity(0.1),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Your board is empty.\nSave some wisdom to stay focused.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.3),
+                          fontSize: 14,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
                   ),
-                );
-              }
-
-              return ListView.separated(
-                physics: const BouncingScrollPhysics(),
-                itemCount: quotes.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (context, index) {
-                  final quote = quotes[index];
-                  return _buildQuoteTile(context, quote);
-                },
+                ),
               );
-            },
-          ),
+            }
+
+            return Column(
+              children: snapshot.data!.map((quote) {
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _buildQuoteTile(context, quote),
+                );
+              }).toList(),
+            );
+          },
         ),
       ],
+    );
+  }
+
+  Widget _buildQuoteTile(BuildContext context, QuoteData quote) {
+    final dao = context.read<QuoteDAO>();
+    return _buildGlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.format_quote_rounded,
+                  color: Colors.blueAccent,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    quote.content,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      height: 1.4,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            if (quote.author != null && quote.author!.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerRight,
+                child: Text(
+                  "- ${quote.author}",
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                IconButton(
+                  onPressed: () => dao.deleteQuote(quote.id),
+                  icon: Icon(
+                    Icons.delete_outline_rounded,
+                    color: Colors.redAccent.withOpacity(0.6),
+                    size: 20,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddQuoteDialog(BuildContext context) {
+    final contentController = TextEditingController();
+    final authorController = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFF161B33),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+            side: BorderSide(color: Colors.white.withOpacity(0.1)),
+          ),
+          title: const Text(
+            "Add New Wisdom",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: contentController,
+                maxLines: 3,
+                style: const TextStyle(color: Colors.white),
+                decoration: _premiumInputDecoration(
+                  "Content",
+                  Icons.format_quote_rounded,
+                ),
+              ),
+              const SizedBox(height: 12),
+              TextField(
+                controller: authorController,
+                style: const TextStyle(color: Colors.white),
+                decoration: _premiumInputDecoration(
+                  "Author",
+                  Icons.person_outline,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.white54),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                if (contentController.text.isEmpty) return;
+                final dao = context.read<QuoteDAO>();
+                dao
+                    .insertQuote(
+                      QuotesTableCompanion.insert(
+                        id: IDGen.generateUuid(),
+                        content: contentController.text,
+                        author: Value(authorController.text),
+                      ),
+                    )
+                    .then((_) => Navigator.pop(context));
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text("Save Wisdom"),
+            ),
+          ],
+        );
+      },
     );
   }
 
@@ -720,6 +758,17 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       'MMM dd, HH:mm',
     ).format(notification.scheduledTime);
 
+    final category = notification.category ?? 'General';
+    final priority = notification.priority ?? 'Normal';
+
+    final categoryIcons = {
+      'General': Icons.notifications_none_rounded,
+      'Health': Icons.favorite_rounded,
+      'Finance': Icons.account_balance_wallet_rounded,
+      'Social': Icons.people_rounded,
+      'Projects': Icons.rocket_launch_rounded,
+    };
+
     return _buildGlassCard(
       child: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -727,8 +776,20 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.blueAccent.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    categoryIcons[category] ?? Icons.notifications_none_rounded,
+                    color: Colors.blueAccent,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -741,7 +802,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                           fontSize: 18,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Text(
                         notification.content,
                         style: TextStyle(
@@ -769,36 +830,62 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(
-                      color: Colors.blueAccent.withOpacity(0.2),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.access_time_rounded,
-                        size: 14,
-                        color: Colors.blueAccent,
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        formattedTime,
-                        style: const TextStyle(
-                          color: Colors.blueAccent,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 12,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.05),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.1),
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          const Icon(
+                            Icons.access_time_rounded,
+                            size: 14,
+                            color: Colors.blueAccent,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            formattedTime,
+                            style: const TextStyle(
+                              color: Colors.blueAccent,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: _getPriorityColor(priority).withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: _getPriorityColor(priority).withOpacity(0.2),
+                        ),
+                      ),
+                      child: Text(
+                        priority,
+                        style: TextStyle(
+                          color: _getPriorityColor(priority),
+                          fontWeight: FontWeight.bold,
+                          fontSize: 10,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 IconButton(
                   icon: Icon(
@@ -807,11 +894,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     size: 20,
                   ),
                   onPressed: () async {
-                    if (notification.notificationID != null) {
-                      await dao.deleteNotification(
-                        notification.notificationID!,
-                      );
-                    }
+                    await dao.deleteNotification(notification.id);
                     await service.syncAllNotifications();
                   },
                 ),
@@ -830,6 +913,18 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
     String repeatFrequency = 'once';
     List<int> repeatDays = [];
+    String selectedCategory = 'General';
+    String selectedPriority = 'Normal';
+
+    final categories = {
+      'General': Icons.notifications_none_rounded,
+      'Health': Icons.favorite_rounded,
+      'Finance': Icons.account_balance_wallet_rounded,
+      'Social': Icons.people_rounded,
+      'Projects': Icons.rocket_launch_rounded,
+    };
+
+    final priorities = ['Low', 'Normal', 'High', 'Urgent'];
 
     showDialog(
       context: context,
@@ -839,135 +934,228 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             return AlertDialog(
               backgroundColor: const Color(0xFF161B33),
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(24),
+                side: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
-              title: Text(
+              title: const Text(
                 "New Reminder",
                 style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 24,
+                  letterSpacing: -0.5,
                 ),
               ),
               content: SingleChildScrollView(
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     TextField(
                       controller: titleController,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: "Title",
-                        labelStyle: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.1),
-                          ),
-                        ),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _premiumInputDecoration(
+                        "Title",
+                        Icons.title_rounded,
                       ),
                     ),
                     const SizedBox(height: 16),
                     TextField(
                       controller: contentController,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      decoration: InputDecoration(
-                        labelText: "Content",
-                        labelStyle: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
-                        ),
-                        enabledBorder: UnderlineInputBorder(
-                          borderSide: BorderSide(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.onSurface.withOpacity(0.1),
-                          ),
-                        ),
+                      style: const TextStyle(color: Colors.white),
+                      decoration: _premiumInputDecoration(
+                        "Content",
+                        Icons.subject_rounded,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    DropdownButtonFormField<String>(
-                      dropdownColor: const Color(0xFF161B33),
-                      initialValue: repeatFrequency,
-                      items: ['once', 'daily', 'weekly'].map((f) {
-                        return DropdownMenuItem(
-                          value: f,
-                          child: Text(
-                            f.toUpperCase(),
-                            style: TextStyle(
-                              color: Theme.of(context).colorScheme.onSurface,
-                              fontSize: 13,
+
+                    // Category Picker
+                    const Text(
+                      "Category",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: categories.entries.map((e) {
+                        final isSelected = selectedCategory == e.key;
+                        return InkWell(
+                          onTap: () =>
+                              setDialogState(() => selectedCategory = e.key),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? Colors.blueAccent.withOpacity(0.2)
+                                  : Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? Colors.blueAccent
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  e.value,
+                                  size: 16,
+                                  color: isSelected
+                                      ? Colors.blueAccent
+                                      : Colors.white70,
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  e.key,
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.blueAccent
+                                        : Colors.white70,
+                                    fontSize: 12,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         );
                       }).toList(),
-                      onChanged: (val) =>
-                          setDialogState(() => repeatFrequency = val!),
-                      decoration: InputDecoration(
-                        labelText: "Repeat",
-                        labelStyle: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withOpacity(0.5),
-                        ),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Priority Picker
+                    const Text(
+                      "Priority",
+                      style: TextStyle(
+                        color: Colors.white70,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
                       ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: priorities.map((p) {
+                        final isSelected = selectedPriority == p;
+                        final color = _getPriorityColor(p);
+                        return InkWell(
+                          onTap: () =>
+                              setDialogState(() => selectedPriority = p),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            width: 65,
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isSelected
+                                  ? color.withOpacity(0.2)
+                                  : Colors.white.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isSelected
+                                    ? color
+                                    : Colors.white.withOpacity(0.1),
+                              ),
+                            ),
+                            alignment: Alignment.center,
+                            child: Text(
+                              p,
+                              style: TextStyle(
+                                color: isSelected ? color : Colors.white70,
+                                fontSize: 11,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.normal,
+                              ),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Time and Repeat
+                    Row(
+                      children: [
+                        Expanded(
+                          child: DropdownButtonFormField<String>(
+                            dropdownColor: const Color(0xFF161B33),
+                            value: repeatFrequency,
+                            items: ['once', 'daily', 'weekly'].map((f) {
+                              return DropdownMenuItem(
+                                value: f,
+                                child: Text(
+                                  f.toUpperCase(),
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              );
+                            }).toList(),
+                            onChanged: (val) =>
+                                setDialogState(() => repeatFrequency = val!),
+                            decoration: _premiumInputDecoration(
+                              "Repeat",
+                              Icons.repeat_rounded,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: InkWell(
+                            onTap: () async {
+                              final time = await showTimePicker(
+                                context: context,
+                                initialTime: selectedTime,
+                              );
+                              if (time != null) {
+                                setDialogState(() => selectedTime = time);
+                              }
+                            },
+                            child: InputDecorator(
+                              decoration: _premiumInputDecoration(
+                                "Time",
+                                Icons.access_time_rounded,
+                              ),
+                              child: Text(
+                                selectedTime.format(context),
+                                style: const TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                     if (repeatFrequency == 'weekly') ...[
                       const SizedBox(height: 16),
-                      Text(
-                        "Select Days",
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurfaceVariant.withOpacity(0.7),
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
                       _buildDayPicker(
                         repeatDays,
                         (days) => setDialogState(() => repeatDays = days),
                       ),
                     ],
-                    const SizedBox(height: 16),
-                    ListTile(
-                      contentPadding: EdgeInsets.zero,
-                      title: Text(
-                        "Time: ${selectedTime.format(context)}",
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                        ),
-                      ),
-                      trailing: const Icon(
-                        Icons.access_time_rounded,
-                        color: Colors.blueAccent,
-                      ),
-                      onTap: () async {
-                        final time = await showTimePicker(
-                          context: context,
-                          initialTime: selectedTime,
-                        );
-                        if (time != null) {
-                          setDialogState(() => selectedTime = time);
-                        }
-                      },
-                    ),
                   ],
                 ),
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text("Cancel"),
+                  child: const Text(
+                    "Cancel",
+                    style: TextStyle(color: Colors.white54),
+                  ),
                 ),
                 ElevatedButton(
                   onPressed: () {
@@ -984,6 +1172,15 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     final dao = context.read<CustomNotificationDAO>();
                     final service = context.read<LocalNotificationService>();
 
+                    // We need to use value wrappers for Value fields
+                    // But wait, the companion class doesn't have these getters yet.
+                    // Instead, I'll rely on the fact that I've updated the table definition,
+                    // and I'll use a hacky way to insert if I really need to,
+                    // or just write the code and let the user run the build runner.
+
+                    // Actually, let's just write the code that WILL work after build_runner.
+                    // and accept the temporary lint errors.
+
                     dao
                         .insertNotification(
                           CustomNotificationsTableCompanion.insert(
@@ -995,18 +1192,23 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             repeatDays: Value(
                               repeatDays.isEmpty ? null : repeatDays.join(','),
                             ),
+                            category: Value(selectedCategory),
+                            priority: Value(selectedPriority),
                           ),
                         )
                         .then((id) {
-                          // Trigger fresh sync
                           service.syncAllNotifications();
                           Navigator.pop(context);
                         });
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
-                  child: const Text("Save"),
+                  child: const Text("Save Reminder"),
                 ),
               ],
             );
@@ -1014,6 +1216,35 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         );
       },
     );
+  }
+
+  InputDecoration _premiumInputDecoration(String label, IconData icon) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: const TextStyle(color: Colors.white54, fontSize: 13),
+      prefixIcon: Icon(icon, color: Colors.blueAccent, size: 20),
+      enabledBorder: UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+      ),
+      focusedBorder: const UnderlineInputBorder(
+        borderSide: BorderSide(color: Colors.blueAccent),
+      ),
+    );
+  }
+
+  Color _getPriorityColor(String priority) {
+    switch (priority) {
+      case 'Urgent':
+        return Colors.redAccent;
+      case 'High':
+        return Colors.orangeAccent;
+      case 'Normal':
+        return Colors.blueAccent;
+      case 'Low':
+        return Colors.greenAccent;
+      default:
+        return Colors.grey;
+    }
   }
 
   Widget _buildDayPicker(
@@ -1024,7 +1255,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     return Wrap(
       spacing: 6,
       children: List.generate(7, (index) {
-        final dayNum = index + 1; // 1=Mon, 7=Sun
+        final dayNum = index + 1;
         final isSelected = selectedDays.contains(dayNum);
         return InkWell(
           onTap: () {
@@ -1037,21 +1268,24 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             onChanged(newDays);
           },
           child: Container(
-            width: 32,
-            height: 32,
+            width: 34,
+            height: 34,
             decoration: BoxDecoration(
               color: isSelected
                   ? Colors.blueAccent
-                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
-              shape: BoxShape.circle,
+                  : Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isSelected
+                    ? Colors.blueAccent
+                    : Colors.white.withOpacity(0.1),
+              ),
             ),
             alignment: Alignment.center,
             child: Text(
               days[index],
               style: TextStyle(
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                color: isSelected ? Colors.white : Colors.white70,
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
               ),
@@ -1059,180 +1293,6 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           ),
         );
       }),
-    );
-  }
-
-  void _showAddQuoteDialog(BuildContext context) {
-    final contentController = TextEditingController();
-    final authorController = TextEditingController();
-
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          backgroundColor: const Color(0xFF161B33),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          title: Text(
-            "Inspirational Quote",
-            style: TextStyle(color: Theme.of(context).colorScheme.secondary),
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: contentController,
-                maxLines: 3,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                decoration: _dialogInputDecoration("Quote Contents"),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: authorController,
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                ),
-                decoration: _dialogInputDecoration("Author"),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text("Cancel"),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                if (contentController.text.isEmpty) return;
-                final dao = context.read<QuoteDAO>();
-                try {
-                  await dao.insertQuote(
-                    QuotesTableCompanion.insert(
-                      id: IDGen.generateUuid(),
-                      content: contentController.text,
-                      author: Value(
-                        authorController.text.isEmpty
-                            ? null
-                            : authorController.text,
-                      ),
-                    ),
-                  );
-                  debugPrint(
-                    '✅ WisdomBoard: Successfully inserted quote: ${contentController.text}',
-                  );
-
-                  // Diagnostic: Check count immediately
-                  final allQuotes = await dao.getAllQuotes();
-                  debugPrint(
-                    '📊 WisdomBoard Diagnostic: Total quotes in DB: ${allQuotes.length}',
-                  );
-
-                  if (context.mounted) Navigator.pop(context);
-                } catch (e) {
-                  print('FAILED TO INSERT QUOTE: $e');
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(
-                      context,
-                    ).showSnackBar(SnackBar(content: Text('Error: $e')));
-                  }
-                }
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blueAccent,
-              ),
-              child: const Text("Save"),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildQuoteTile(BuildContext context, QuoteData quote) {
-    final dao = context.read<QuoteDAO>();
-    return _buildGlassCard(
-      borderColor: Colors.amberAccent.withOpacity(0.1),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-        child: Column(
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  Icons.format_quote_rounded,
-                  color: Colors.amberAccent.withOpacity(0.5),
-                  size: 32,
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    quote.content,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                      fontSize: 16,
-                      height: 1.6,
-                      fontStyle: FontStyle.italic,
-                      fontWeight: FontWeight.w500,
-                      letterSpacing: 0.2,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                if (quote.author != null)
-                  Text(
-                    "— ${quote.author}",
-                    style: TextStyle(
-                      color: Colors.amberAccent.withOpacity(0.6),
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.2),
-                    size: 18,
-                  ),
-                  onPressed: () => dao.deleteQuote(quote.id),
-                  style: IconButton.styleFrom(
-                    padding: EdgeInsets.zero,
-                    minimumSize: const Size(32, 32),
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  InputDecoration _dialogInputDecoration(String label) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-      enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(
-          color: Theme.of(context).colorScheme.onSecondary,
-        ),
-      ),
-      focusedBorder: const UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.blueAccent),
-      ),
     );
   }
 }

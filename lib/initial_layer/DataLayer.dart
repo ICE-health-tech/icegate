@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
@@ -120,6 +121,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       final heartRate = await HealthService.fetchLatestHeartRate();
       debugPrint("DataLayer: HealthService returned $heartRate bpm");
 
+      // Sync Calories
+      final calories = await HealthService.fetchCalories();
+      debugPrint("DataLayer: HealthService returned $calories kcal");
+
       if (mounted) {
         setState(() {
           currentSteps = steps;
@@ -136,6 +141,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
           debugPrint("DataLayer: Forwarding $heartRate bpm to healthBlock");
           healthBlock.updateHeartRate(heartRate);
+
+          debugPrint(
+            "DataLayer: Forwarding ${calories.toInt()} kcal to healthBlock",
+          );
+          healthBlock.updateCalories(calories.toInt());
         } else {
           debugPrint(
             "DataLayer: healthBlock not initialized yet, skipping health update",
@@ -161,7 +171,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       // 2. Initialize PowerSync and Database
       final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, 'powersync.db');
+      final dbPath = p.join(dir.path, 'powersync24.db');
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
@@ -245,7 +255,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         database.scoreDAO,
         database.personManagementDAO,
         database.financeDAO,
-        database.healthMetricsDAO,
+        healthBlock,
         database.healthMealDAO,
         "", // Initial fallback
       );
@@ -277,7 +287,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 database.scoreDAO,
                 database.personManagementDAO,
                 database.financeDAO,
-                database.healthMetricsDAO,
+                healthBlock,
                 database.healthMealDAO,
                 personId,
               );
@@ -305,21 +315,21 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         authBlock.checkSession(context);
       }
 
-      String jsonString = await rootBundle.loadString(
-        "assets/LightThemePurple.json",
-      );
-      print("DUYLONG>>");
-      await database.themesTableDAO.insertNewTheme(
-        name: "Light theme",
-        jsonContent: jsonString,
-        author: "Duy Long",
-      );
-      print("DUYLONG>>");
+      // String jsonString = await rootBundle.loadString(
+      //   "assets/LightThemePurple.json",
+      // );
+      // print("DUYLONG>>");
+      // await database.themesTableDAO.insertNewTheme(
+      //   name: "Light theme",
+      //   jsonContent: jsonString,
+      //   author: "Duy Long",
+      // );
+      // print("DUYLONG>>");
       //Error
 
-      // Disabling DataSeeder to avoid local data conflicts with Supabase
+      // Re-enabling DataSeeder to provide initial mission/widget data
       // await DataSeeder.seed(database);
-      // print("DUYLONG>>>>");
+      print("DUYLONG>>>> Seeded database");
       if (mounted) {
         setState(() {
           _isInitialized = true;
@@ -344,7 +354,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     await DatabaseAgent.monitoring(database);
 
     // --- NEW: Supabase Auth Listener for PowerSync ---
-    Supabase.instance.client.auth.onAuthStateChange.listen((data) {
+    Supabase.instance.client.auth.onAuthStateChange.listen((data) async {
       final AuthChangeEvent event = data.event;
       final Session? session = data.session;
       final ps = database.powerSync;
@@ -362,9 +372,24 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         authBlock.username.value = session.user.email ?? "Google User";
 
         // --- NEW: Persist to local DB for auto-login on next start ---
+
+        print("PERSON ID : " + session.user.id);
+        personBlock.information.value = personBlock.information.value.copyWith(
+          profiles: personBlock.information.value.profiles.copyWith(
+            id: session.user.id,
+            firstName: session.user.userMetadata?['full_name'] ?? 'User',
+          ),
+        );
+        if (ps == null) {
+          print(
+            "⚠️ [DataLayer] PowerSync instance is null. Skipping sync connect.",
+          );
+          return;
+        }
+
         authBlock.persistSession(
           session.accessToken,
-          authBlock.username.value!,
+          authBlock.username.value ?? "User",
         );
 
         // --- NEW: Synchronize user data with public schema ---
@@ -374,66 +399,63 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           print(
             "🔑 [DataLayer] Transitioning AuthBlock to 'authenticated' state",
           );
+
           authBlock.status.value = AuthStatus.authenticated;
 
           // Only fetch user if we transitioned to authenticated
           authBlock.fetchUser();
         }
       }
-
-      if (ps == null) {
-        print(
-          "⚠️ [DataLayer] PowerSync instance is null. Skipping sync connect.",
-        );
-        return;
-      }
-
-      if (event == AuthChangeEvent.signedIn ||
-          event == AuthChangeEvent.tokenRefreshed ||
-          event == AuthChangeEvent.initialSession) {
-        if (session != null) {
-          print(
-            "☁️ [DataLayer] Supabase Auth Event: $event. Connecting PowerSync...",
-          );
-          final connector = MyPowerSyncConnector(
-            authBlock: authBlock,
-            powerSyncUrl:
-                "https://69967e7cd17eab7f63d96041.powersync.journeyapps.com",
-            baseUrl: "https://backend.duylong.art",
-          );
-          ps.connect(connector: connector);
-        }
-      } else if (event == AuthChangeEvent.signedOut) {
-        print(
-          "☁️ [DataLayer] Supabase Signed Out. Disconnecting PowerSync and clearing local session...",
-        );
-        ps.disconnect();
-        authBlock.logout(); // Trigger local state clear
-      }
     });
 
     // --- NEW: Global Data Initializer ---
     // Listen to AuthBlock token changes to trigger initial data fetch and PowerSync Cloud connect
+    // --- NEW: Global Data Initializer ---
     _effectCleanups.add(
       effect(() {
         final token = authBlock.jwt.value;
-        if (token != null && token.isNotEmpty) {
-          // Trigger PowerSync Cloud Connect
+        final status = authBlock.status.value; // Lắng nghe trạng thái Auth
+
+        // CHỈ kết nối PowerSync khi có Token và trạng thái đã Authenticated
+        if (token != null &&
+            token.isNotEmpty &&
+            status == AuthStatus.authenticated) {
           final ps = database.powerSync;
+
           if (ps != null) {
-            // --- MONITOR STATUS ---
+            print(
+              "🚀 [DataLayer] Auth Signal là Authenticated. Đang khởi động PowerSync...",
+            );
+
+            // 1. Lắng nghe trạng thái
             ps.statusStream.listen((status) {
               print(
-                "🌐 [PowerSync] Status: ${status.connected ? 'Connected' : 'Disconnected'} (Last synced: ${status.lastSyncedAt})",
+                "🌐 [PowerSync] Trạng thái: ${status.connected ? 'Connected' : 'Disconnected'}",
               );
               if (status.anyError != null) {
-                print("❌ [PowerSync] Error: ${status.anyError}");
+                print("❌ [PowerSync] Lỗi: ${status.anyError}");
               }
+            });
+
+            // 2. Khởi tạo Connector
+            final connector = MyPowerSyncConnector(
+              authBlock: authBlock,
+              powerSyncUrl:
+                  "https://69967e7cd17eab7f63d96041.powersync.journeyapps.com",
+              baseUrl: "https://backend.duylong.art",
+            );
+
+            // 3. Ép ngắt kết nối cũ và tạo kết nối mới
+            ps.disconnect().then((_) {
+              print(
+                "☁️ [PowerSync] Gọi lệnh connect(). fetchCredentials SẼ chạy ngay sau dòng này!",
+              );
+              ps.connect(connector: connector);
             });
           }
 
+          // Khởi tạo các dữ liệu phụ thuộc
           personBlock.fetchInitialData(token).then((_) {
-            // Update object database urls after initial fetch
             objectDatabaseBlock.updateUrlOfUser(personBlock);
           });
         }

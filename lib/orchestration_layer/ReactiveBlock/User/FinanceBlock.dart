@@ -150,7 +150,7 @@ class FinanceBlock {
           .map(
             (e) => FinancialAccountProtocol(
               financialAccountID: e.accountID ?? "",
-              personID: e.personID,
+              personID: e.personID??"",
               accountName: e.accountName,
               accountType: e.accountType,
               balance: e.balance,
@@ -169,7 +169,7 @@ class FinanceBlock {
           .map(
             (e) => AssetProtocol(
               id: e.assetID ?? "",
-              personId: e.personID,
+              personId: e.personID??"",
               assetName: e.assetName,
               assetCategory: e.assetCategory,
               purchaseDate: e.purchaseDate,
@@ -206,7 +206,7 @@ class FinanceBlock {
     await _dao.insertTransaction(
       TransactionsTableCompanion.insert(
         id: IDGen.generateUuid(),
-        personID: _personId,
+        personID:Value( _personId),
         category: category,
         type: type,
         amount: amount,

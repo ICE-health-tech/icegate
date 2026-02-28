@@ -19,9 +19,7 @@ class InternalWidgetBlock {
   void refreshBlock(InternalWidgetsDAO internalWidgetDAO) {
     // 1. Cancel any existing subscription to prevent leaks
     _widgetSubscription?.cancel();
-    print(
-      "DUYLONG Internal widget: ${internalWidgetDAO.getInternalWidgetByName("Health")}",
-    );
+   
     _widgetSubscription = internalWidgetDAO.watchAllWidgets().listen(
       (driftData) {
         // print("Mapping element: ${driftData.first.name}, Image: ${driftData.first.imageUrl}");

@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 class WaterPage extends StatefulWidget {
   const WaterPage({super.key});
@@ -17,7 +18,7 @@ class WaterPage extends StatefulWidget {
 class _WaterPageState extends State<WaterPage>
     with SingleTickerProviderStateMixin {
   late AnimationController _waveController;
-  final int _goalWater = 2000;
+  final int _goalWater = WATER_GOAL;
 
   @override
   void initState() {
@@ -122,6 +123,50 @@ class _WaterPageState extends State<WaterPage>
 
                     const Spacer(),
 
+                    // Statistics Card
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withAlpha(25),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(color: Colors.white.withAlpha(40)),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _statItem(
+                              "GOAL",
+                              "$_goalWater ml",
+                              Icons.flag_rounded,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.white24,
+                            ),
+                            _statItem(
+                              "POINTS",
+                              "+$WATER_BONUS_POINTS XP",
+                              Icons.stars_rounded,
+                            ),
+                            Container(
+                              width: 1,
+                              height: 40,
+                              color: Colors.white24,
+                            ),
+                            _statItem(
+                              "LEFT",
+                              "${math.max(0, _goalWater - totalWater)} ml",
+                              Icons.opacity_rounded,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+
                     // Quick Add Tactile Buttons
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -135,8 +180,8 @@ class _WaterPageState extends State<WaterPage>
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
-                            _tactileButton(context, dao, 100, "100"),
-                            _tactileButton(context, dao, 250, "250"),
+                            _tactileButton(context, dao, 200, "200"),
+                            _tactileButton(context, dao, 300, "300"),
                             _tactileButton(context, dao, 500, "500"),
                             _customButton(context, dao),
                           ],
@@ -199,7 +244,9 @@ class _WaterPageState extends State<WaterPage>
         await dao.insertWaterLog(
           WaterLogsTableCompanion.insert(
             id: IDGen.generateUuid(),
-            personID: Supabase.instance.client.auth.currentUser?.id ?? "",
+            personID: drift.Value(
+              Supabase.instance.client.auth.currentUser?.id ?? "",
+            ),
             amount: drift.Value(amount),
             timestamp: drift.Value(DateTime.now()),
           ),
@@ -264,8 +311,9 @@ class _WaterPageState extends State<WaterPage>
                 await dao.insertWaterLog(
                   WaterLogsTableCompanion.insert(
                     id: IDGen.generateUuid(),
-                    personID:
-                        Supabase.instance.client.auth.currentUser?.id ?? "",
+                    personID: drift.Value(
+                      Supabase.instance.client.auth.currentUser?.id ?? "",
+                    ),
                     amount: drift.Value(amount),
                     timestamp: drift.Value(DateTime.now()),
                   ),
@@ -289,7 +337,14 @@ class _WaterPageState extends State<WaterPage>
       ),
       child: Row(
         children: [
-          const Icon(Icons.water_drop, color: Colors.white70, size: 18),
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: Colors.white.withAlpha(20),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.water_drop, color: Colors.white, size: 16),
+          ),
           const SizedBox(width: 15),
           Text(
             "${log.amount} ML",
@@ -306,6 +361,32 @@ class _WaterPageState extends State<WaterPage>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _statItem(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, color: Colors.white70, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white38,
+            fontSize: 10,
+            letterSpacing: 1,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ],
     );
   }
 }

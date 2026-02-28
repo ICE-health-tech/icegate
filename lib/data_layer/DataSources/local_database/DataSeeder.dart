@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/PersonProtocol.dart';
@@ -18,7 +19,7 @@ class DataSeeder {
 
     // 1. Create Person using PersonProtocol
     final personProtocol = PersonProtocol(
-      personID: guestPersonId,
+      id: guestPersonId,
       firstName: 'Long',
       lastName: 'Duy',
       dateOfBirth: DateTime(1, 1, 1),
@@ -163,6 +164,59 @@ class DataSeeder {
     //     ),
     //   );
     // }
+
+    // 12. Seed Quests
+    await db.questDAO.insertQuest(
+      QuestsTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        title: 'Stamina Boost',
+        description: Value('Walk 10,000 steps today.'),
+        targetValue: const Value(10000.0),
+        currentValue: const Value(4320.0),
+        category: const Value('health'),
+      ),
+    );
+    await db.questDAO.insertQuest(
+      QuestsTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        title: 'Iron Will',
+        description: Value('Complete 3 heavy focus sessions.'),
+        targetValue: const Value(3.0),
+        currentValue: const Value(1.0),
+        category: const Value('productivity'),
+      ),
+    );
+
+    // 13. Seed External Widgets
+    await db.externalWidgetsDAO.insertNewWidget(
+      externalWidgetProtocol: const ExternalWidgetProtocol(
+        name: 'System Monitor',
+        protocol: 'https',
+        host: 'example.com',
+        url: '/widgets/monitor',
+        imageUrl: 'https://img.icons8.com/isometric/512/processor.png',
+      ),
+    );
+    await db.externalWidgetsDAO.insertNewWidget(
+      externalWidgetProtocol: const ExternalWidgetProtocol(
+        name: 'Weather Core',
+        protocol: 'https',
+        host: 'example.com',
+        url: '/widgets/weather',
+        imageUrl: 'https://img.icons8.com/isometric/512/cloud.png',
+      ),
+    );
+
+    // 14. Seed Reminders
+    await db.customNotificationDAO.insertNotification(
+      CustomNotificationsTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        title: 'Hydration Protocol',
+        content: 'Drink 500ml of water to maintain peak performance.',
+        scheduledTime: DateTime.now().add(const Duration(hours: 2)),
+        category: const Value('Health'),
+      ),
+    );
 
     print("Database seeded successfully.");
   }

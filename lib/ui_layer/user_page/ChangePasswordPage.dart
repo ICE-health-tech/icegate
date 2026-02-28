@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:drift/drift.dart' as Drift;
+import 'package:flutter/material.dart' ;
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
@@ -85,7 +86,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               authUsername,
             );
             if (account != null) {
-              final now = DateTime.now();
+              final now = Drift.Value(DateTime.now());
               // Note: if Database.dart uses DateTimeColumn, this might crash if PowerSync synced text.
 
               final passwordBytes = utf8.encode(_passwordController.text);
@@ -94,7 +95,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               final updatedAccount = account.copyWith(
                 passwordChangedAt: now,
                 updatedAt: now,
-                passwordHash: passwordHash,
+                passwordHash: Drift.Value(passwordHash),
               );
               await db.personManagementDAO.updateAccount(updatedAccount);
             }

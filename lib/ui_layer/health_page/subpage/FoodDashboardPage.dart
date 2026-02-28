@@ -157,7 +157,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
       MealsTableCompanion.insert(
         id: IDGen.generateUuid(),
         mealName: _foodController.text.isEmpty ? "Meal" : _foodController.text,
-        personID: widget.personID,
+        personID: Value(widget.personID),
         mealImageUrl: Value(_imagePath),
         carbs: Value(carbs),
         protein: Value(protein),

@@ -4,7 +4,7 @@ import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:provider/provider.dart' show ReadContext;
 
@@ -310,7 +310,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: personId,
+                personID: Value(personId),
                 date: day,
                 steps: Value(liveSteps),
                 updatedAt: Value(DateTime.now()),
@@ -333,7 +333,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: personId,
+                personID: Value(personId),
                 date: day,
                 sleepHours: Value(liveSleep),
                 updatedAt: Value(DateTime.now()),
@@ -356,7 +356,7 @@ class HealthMetricsData {
             await healthMetricsDAO.insertOrUpdateMetrics(
               HealthMetricsTableCompanion.insert(
                 id: IDGen.generateUuid(),
-                personID: personId,
+                personID: Value(personId),
                 date: day,
                 heartRate: Value(liveHeartRate),
                 updatedAt: Value(DateTime.now()),

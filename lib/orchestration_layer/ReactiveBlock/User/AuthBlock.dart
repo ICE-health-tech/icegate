@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:drift/drift.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
@@ -43,6 +44,8 @@ class AuthBlock {
        _passkeyService = passkeyService,
        _personDao = personDao;
 
+  StreamSubscription? _accountSubscription;
+
   /// Helper to persist session locally (e.g. after Google OAuth)
   Future<void> persistSession(String token, String name) async {
     print("💾 [AuthBlock] Persisting session locally for $name...");
@@ -81,28 +84,22 @@ class AuthBlock {
         'updated_at': DateTime.now().toIso8601String(),
       });
 
-      // 2. Ensure initial profile exists
-      print("   - Ensuring 'profiles' row exists...");
       await client.from('profiles').upsert({
-        'id': userId, // Primary key
-        'person_id': userId, // Linked person
-        'bio': 'Securing the digital frontier.',
+        'id': userId, // Dùng ID của User làm PK
+        'person_id': userId, // Khớp với bảng persons
         'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'person_id'); // Use person_id for uniqueness
+      }, onConflict: 'id'); // LUÔN LUÔN dùng 'id' làm conflict target cho PK
 
       // 3. Ensure email address exists
       if (user.email != null) {
         print("   - Ensuring 'email_addresses' row exists...");
-        await client.from('email_addresses').upsert(
-          {
-            'id': userId, // Using user ID as primary key
-            'person_id': userId,
-            'email_address': user.email,
-            'is_primary': true,
-            'status': 'verified',
-          },
-          onConflict: 'person_id, email_address',
-        ); // Standard conflict for emails
+        await client.from('email_addresses').upsert({
+          'id': userId, // Using user ID as primary key
+          'person_id': userId,
+          'email_address': user.email,
+          'is_primary': true,
+          'status': 'verified',
+        }, onConflict: 'id'); // Standard conflict for emails
       }
 
       // 4. Ensure user_account exists
@@ -118,25 +115,16 @@ class AuthBlock {
         'username': usernameStr,
         'password_hash': 'EXTERNAL_AUTH',
         'role': 'user',
-        'is_locked': false,
-      }, onConflict: 'person_id'); // Match person_id to existing account
+        'is_locked': 0,
+      }, onConflict: 'id'); // Match person_id to existing account
 
       // 5. Ensure detail_information exists
-      print("   - Ensuring 'detail_information' row exists...");
-      await client.from('detail_information').upsert({
-        'id': userId,
-        'person_id': userId,
-        'bio': 'Securing the digital frontier.',
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'person_id');
 
       print(
-        "✅ [AuthBlock] Identity synchronization successfully completed in Flutter.",
+        "✅ [AuthBlock] Identity sync complete for User: $userId, Username: $usernameStr",
       );
     } catch (e) {
-      print(
-        "❌ [AuthBlock] Identity synchronization failed in Flutter logic: $e",
-      );
+      print("❌ [AuthBlock] Identity synchronization failed: $e");
     }
   }
 
@@ -330,7 +318,11 @@ class AuthBlock {
         jwt.value = session.accessToken;
         username.value = session.user.email ?? ident;
 
-        await persistSession(jwt.value!, username.value!);
+        final token = jwt.value;
+        final user = username.value;
+        if (token != null && user != null) {
+          await persistSession(token, user);
+        }
         await syncUserWithSupabase(session.user);
 
         status.value = AuthStatus.authenticated;
@@ -361,8 +353,12 @@ class AuthBlock {
       );
 
       final user = Supabase.instance.client.auth.currentUser;
+
       if (user != null) {
-        print("👤 [AuthBlock] User already present, syncing identity...");
+        print(
+          "👤 [AuthBlock] User already present, syncing identity... with " +
+              user.id,
+        );
         await syncUserWithSupabase(user);
       }
 
@@ -431,6 +427,8 @@ class AuthBlock {
 
     // 2. Clear Database
     await _sessionDao.clearSession();
+    await _accountSubscription?.cancel();
+    _accountSubscription = null;
 
     // 3. Notify Backend (Fire and forget)
     if (currentToken != null) {
@@ -472,43 +470,48 @@ class AuthBlock {
       final accountResponse = await Supabase.instance.client
           .from('user_accounts')
           .select('username')
-          .eq('person_id', personId) // Assuming person_id is linked to user.id
+          .eq('person_id', personId)
           .maybeSingle();
 
       if (profileResponse != null) {
         user.value = Map<String, dynamic>.from(profileResponse);
-
-        // Use username from user_accounts, fallback to email
         username.value =
             accountResponse?['username'] ??
             session.user.email ??
             "SupabaseUser";
-
-        // Ensure email is present in the user map for UI
         user.value!['email'] = session.user.email;
 
         status.value = AuthStatus.authenticated;
         print(
           "✅ [AuthBlock] Profile fetched for ${username.value} with email ${session.user.email}",
         );
-        return;
+
+        _startWatchingAccount(personId);
+        return; // THOÁT HÀM THÀNH CÔNG
       } else {
         print(
           "⚠️ [AuthBlock] Profile record not found. Syncing existing user...",
         );
         await syncUserWithSupabase(session.user);
+
         user.value = {
           'id': session.user.id,
           'email': session.user.email,
           'userName': session.user.userMetadata?['user_name'] ?? 'User',
         };
+
+        // BẮT BUỘC THÊM 3 DÒNG NÀY ĐỂ CHẶN FALLBACK
+        status.value = AuthStatus.authenticated;
+        _startWatchingAccount(session.user.id);
+        return; // THOÁT HÀM, NGĂN KHÔNG CHO CHẠY XUỐNG DƯỚI
       }
     } catch (e) {
       print(
         "⚠️ [AuthBlock] Remote fetch failed: $e. Falling back to local/guest.",
       );
+      // Chỉ chạy fallback nếu thực sự có lỗi mạng (catch error)
+      await _fetchLocalFallback();
     }
-    await _fetchLocalFallback();
   }
 
   Future<void> _fetchLocalFallback() async {
@@ -519,22 +522,15 @@ class AuthBlock {
       );
 
       if (localPerson == null) {
-        print("✅ [AuthBlock] Using IN-MEMORY Guest User (Database Empty)");
-        user.value = {
-          'id': 'guest-id',
-          'userName': 'Guest',
-          'firstName': 'Guest',
-          'lastName': 'User',
-          'email': 'guest@offline',
-          'role': 'guest',
-        };
-        username.value = 'Guest';
-        status.value = AuthStatus.authenticated;
+        print("⚠️ [AuthBlock] Local guest fallback failed. No persons record.");
         return;
       }
 
+      // Start watching the account reactively
+      _startWatchingAccount(localPerson.id);
+
       print(
-        "✅ [AuthBlock] Falling back to local user ID ${localPerson.personID}: ${localPerson.firstName}",
+        "✅ [AuthBlock] Falling back to local user ID ${localPerson.id}: ${localPerson.firstName}",
       );
 
       user.value = {
@@ -568,18 +564,16 @@ class AuthBlock {
       );
 
       // 2. Update public user_accounts table (remote)
-      print("   - Updating 'user_accounts.username'...");
       await client
           .from('user_accounts')
           .update({'username': newUsername})
           .eq('person_id', personId);
 
       // 3. Update local database
-      print("   - Updating local database...");
       final personAccount = await _personDao.getAccountByPersonId(personId);
       if (personAccount != null) {
         await _personDao.updateAccount(
-          personAccount.copyWith(username: newUsername),
+          personAccount.copyWith(username: Value<String?>(newUsername)),
         );
       }
 
@@ -590,5 +584,22 @@ class AuthBlock {
       print("❌ [AuthBlock] Failed to change username: $e");
       rethrow;
     }
+  }
+
+  void _startWatchingAccount(String personId) {
+    _accountSubscription?.cancel();
+    print("👀 [AuthBlock] Starting reactive watch for account: $personId");
+    _accountSubscription = _personDao.watchAccountByPersonId(personId).listen((
+      account,
+    ) {
+      if (account != null && account.username != null) {
+        if (username.value != account.username) {
+          print(
+            "🔄 [AuthBlock] Username synced from local DB: ${account.username}",
+          );
+          username.value = account.username;
+        }
+      }
+    });
   }
 }

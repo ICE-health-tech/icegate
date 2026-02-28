@@ -83,7 +83,9 @@ class _HeartRatePageState extends State<HeartRatePage>
         await dao.insertOrUpdateMetrics(
           HealthMetricsTableCompanion.insert(
             id: IDGen.generateUuid(),
-            personID: Supabase.instance.client.auth.currentUser?.id ?? "",
+            personID: drift.Value(
+              Supabase.instance.client.auth.currentUser?.id ?? "",
+            ),
             date: today,
             heartRate: drift.Value(bpm),
             updatedAt: drift.Value(DateTime.now()),

@@ -4,12 +4,16 @@
 // Edit these to tune the entire scoring system.
 
 // ─── 🏃 Health ───
-const int STEPS_PER_POINT = 100; // 100 steps = 1 point
+const int STEPS_PER_POINT = 500; // 100 steps = 1 point
 const int STEP_GOAL = 10000; // Daily step goal
 const int CALORIE_LIMIT = 1500; // daily kcal threshold
 const int CALORIE_BONUS_POINTS = 15; // points if day < 1500 kcal
 const int WATER_GOAL = 2000; // ml
+const int WATER_BONUS_POINTS = 10; // points if water >= goal
 const int EXERCISE_GOAL = 60; // min
+const int EXERCISE_PER_POINT = 5; // 5 min = 1 point
+const int FOCUS_SESSION_POINTS = 5; // points per completed session
+const int FOCUS_MINUTES_PER_POINT = 10; // 10 min = 1 point
 const double SLEEP_GOAL = 8.0; // hours
 
 // ─── ❤️ Social ───

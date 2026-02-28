@@ -2,9 +2,10 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/Const.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 
 class ScoreBlock {
   final _score = signal<ScoreData>(ScoreData.empty());
@@ -12,11 +13,14 @@ class ScoreBlock {
   // DAOs stored locally for access in update methods
   late ScoreDAO _dao;
   late FinanceDAO _financeDAO;
+  late HealthBlock _healthBlock;
 
   late String _personID;
 
-  // Track subscriptions to cancel them on dispose
-  final List<StreamSubscription> _subscriptions = [];
+  final _latestMeals = signal<List<DayWithMeal>>([]);
+
+  // Track subscriptions and effect cleanups to cancel them on dispose
+  final List<dynamic> _subscriptions = [];
 
   ScoreBlock({ScoreData? initialScore}) {
     if (initialScore != null) {
@@ -75,7 +79,7 @@ class ScoreBlock {
     ScoreDAO dao,
     PersonManagementDAO personDAO,
     FinanceDAO financeDAO,
-    HealthMetricsDAO healthDAO,
+    HealthBlock healthBlock,
     HealthMealDAO mealDAO,
     String personID,
   ) {
@@ -93,6 +97,7 @@ class ScoreBlock {
     _dao = dao;
     _financeDAO = financeDAO;
     _personID = personID;
+    _healthBlock = healthBlock;
 
     // 1. Listen to Score changes (read)
     _subscriptions.add(
@@ -134,128 +139,172 @@ class ScoreBlock {
       ),
     );
 
-    // Health Watcher
+    // Meal Watcher (Update signal)
     _subscriptions.add(
-      healthDAO.watchAllMetrics(personID).listen(
-        (metrics) async {
-          final meals = await mealDAO.watchDaysWithMeals().first;
-          _updateHealthScore(metrics, meals);
-        },
-        onError: (e) =>
-            debugPrint("ScoreBlock: Error watching health metrics: $e"),
-      ),
-    );
-    _subscriptions.add(
-      mealDAO.watchDaysWithMeals().listen((meals) async {
-        final metrics = await healthDAO.watchAllMetrics(personID).first;
-        _updateHealthScore(metrics, meals);
+      mealDAO.watchDaysWithMeals().listen((meals) {
+        _latestMeals.value = meals;
       }, onError: (e) => debugPrint("ScoreBlock: Error watching meals: $e")),
     );
+
+    // Health Watcher (Reactive to Signals)
+    _subscriptions.add(
+      effect(() {
+        final steps = _healthBlock.totalSteps.value;
+        final calories = _healthBlock.todayCaloriesBurned.value;
+        final water = _healthBlock.todayWater.value;
+        final exercise = _healthBlock.todayExerciseMinutes.value;
+        final focus = _healthBlock.todayFocusMinutes.value;
+        final meals = _latestMeals.value;
+
+        _triggerHealthUpdate(steps, calories, water, exercise, focus, meals);
+      }),
+    );
   }
 
-  Future<void> _updateFinanceScore(
+  void _triggerHealthUpdate(
+    int totalSteps,
+    int caloriesBurned,
+    int waterIntake,
+    int exerciseMinutes,
+    int focusMinutes,
+    List<DayWithMeal> meals,
+  ) {
+    _healthDebounce?.cancel();
+    _healthDebounce = Timer(const Duration(milliseconds: 500), () async {
+      _updateHealthScore(
+        totalSteps,
+        caloriesBurned,
+        waterIntake,
+        exerciseMinutes,
+        focusMinutes,
+        meals,
+      );
+    });
+  }
+
+  Timer? _healthDebounce;
+  Timer? _financeDebounce;
+  Timer? _socialDebounce;
+
+  void _updateFinanceScore(
     List<FinancialAccountData> accounts,
     List<AssetData> assets,
-  ) async {
-    if (_personID.isEmpty) return;
-    debugPrint("ScoreBlock: triggering _updateFinanceScore...");
-    try {
-      double totalNetWorth = 0;
-      for (var acc in accounts) {
-        totalNetWorth += acc.balance;
-      }
-      for (var asset in assets) {
-        totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
-      }
-      debugPrint("ScoreBlock: Total net worth: $totalNetWorth");
+  ) {
+    _financeDebounce?.cancel();
+    _financeDebounce = Timer(const Duration(milliseconds: 500), () async {
+      if (_personID.isEmpty) return;
+      debugPrint("ScoreBlock: triggering _updateFinanceScore...");
+      try {
+        double totalNetWorth = 0;
+        for (var acc in accounts) {
+          totalNetWorth += acc.balance;
+        }
+        for (var asset in assets) {
+          totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
+        }
+        debugPrint("ScoreBlock: Total net worth: $totalNetWorth");
 
-      // Points calculation using milestone from Const.dart
-      double financeScore = 0;
-      if (FINANCE_SAVINGS_MILESTONE > 0) {
-        financeScore =
-            (totalNetWorth / FINANCE_SAVINGS_MILESTONE) *
-            FINANCE_SAVINGS_POINTS;
-      }
+        double financeScore = 0;
+        if (FINANCE_SAVINGS_MILESTONE > 0) {
+          financeScore =
+              (totalNetWorth / FINANCE_SAVINGS_MILESTONE) *
+              FINANCE_SAVINGS_POINTS;
+        }
 
-      debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
-      await _dao.updateFinancialScore(_personID, financeScore);
-    } catch (e) {
-      debugPrint("Error updating finance score: $e");
-    }
+        debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
+        await _dao.updateFinancialScore(_personID, financeScore);
+      } catch (e) {
+        debugPrint("Error updating finance score: $e");
+      }
+    });
   }
 
-  Future<void> _updateSocialScore(List<SocialContact> contacts) async {
-    if (_personID.isEmpty) return;
-    debugPrint("ScoreBlock: triggering _updateSocialScore...");
-    try {
-      int totalAffection = 0;
-      for (var contact in contacts) {
-        totalAffection += contact.affection;
+  void _updateSocialScore(List<SocialContact> contacts) {
+    _socialDebounce?.cancel();
+    _socialDebounce = Timer(const Duration(milliseconds: 500), () async {
+      if (_personID.isEmpty) return;
+      debugPrint("ScoreBlock: triggering _updateSocialScore...");
+      try {
+        int totalAffection = 0;
+        for (var contact in contacts) {
+          totalAffection += contact.affection;
+        }
+
+        final socialScore =
+            (contacts.length * CONTACT_POINTS) +
+            ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
+
+        debugPrint(
+          "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
+        );
+        await _dao.updateSocialScore(_personID, socialScore.toDouble());
+      } catch (e) {
+        debugPrint("Error updating social score: $e");
       }
-
-      final socialScore =
-          (contacts.length * CONTACT_POINTS) +
-          ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
-
-      debugPrint(
-        "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
-      );
-      await _dao.updateSocialScore(_personID, socialScore.toDouble());
-    } catch (e) {
-      debugPrint("Error updating social score: $e");
-    }
+    });
   }
 
   Future<void> _updateHealthScore(
-    List<HealthMetricsLocal> allMetrics,
+    int totalSteps,
+    int caloriesBurned,
+    int waterIntake,
+    int exerciseMinutes,
+    int focusMinutes,
     List<DayWithMeal> allMealsWrapper,
   ) async {
     if (_personID.isEmpty) return;
-    debugPrint("ScoreBlock: triggering _updateHealthScore...");
+
     try {
-      // 1. Steps
+      // 1. Steps Points
       int stepsPoints = 0;
-      debugPrint(
-        "ScoreBlock: Processing ${allMetrics.length} health metrics for personID: $_personID",
-      );
-
-      int totalSteps = 0;
-      for (var m in allMetrics) {
-        totalSteps += m.steps;
-      }
-      debugPrint("ScoreBlock: Total steps sum: $totalSteps");
-
       if (STEPS_PER_POINT > 0) {
         stepsPoints = (totalSteps / STEPS_PER_POINT).floor();
       }
 
-      // 2. Diet
+      // 2. Nutrition Points
       int dietPoints = 0;
       final Map<String, double> dailyCalories = {};
-
       for (var item in allMealsWrapper) {
-        // Group by YYYY-MM-DD
-        final d = item.meal.eatenAt; // Skip meals without a valid date
-
+        final d = item.meal.eatenAt;
         final dateKey = "${d.year}-${d.month}-${d.day}";
         dailyCalories[dateKey] =
             (dailyCalories[dateKey] ?? 0) + item.meal.calories;
       }
-
       dailyCalories.forEach((_, calories) {
         if (calories > 0 && calories < CALORIE_LIMIT) {
           dietPoints += CALORIE_BONUS_POINTS;
         }
       });
-      debugPrint(
-        "ScoreBlock: Calculated health metrics — Steps: $stepsPoints, Diet: $dietPoints",
-      );
 
-      final healthScore = (stepsPoints + dietPoints).toDouble();
-      debugPrint("ScoreBlock: Final Health Global Score: $healthScore");
-      // if (_personID != null) {
+      // 3. Exercise Points
+      int exercisePoints = 0;
+      if (EXERCISE_PER_POINT > 0) {
+        exercisePoints = (exerciseMinutes / EXERCISE_PER_POINT).floor();
+      }
+
+      // 4. Focus Points
+      int focusPoints = 0;
+      if (FOCUS_MINUTES_PER_POINT > 0) {
+        focusPoints = (focusMinutes / FOCUS_MINUTES_PER_POINT).floor();
+      }
+
+      // 5. Water Points
+      int waterPoints = 0;
+      if (waterIntake >= WATER_GOAL) {
+        waterPoints = WATER_BONUS_POINTS;
+      }
+
+      final healthScore =
+          (stepsPoints +
+                  dietPoints +
+                  exercisePoints +
+                  focusPoints +
+                  waterPoints)
+              .toDouble();
+      debugPrint(
+        "ScoreBlock: Recalculated Health Score: $healthScore (Steps: $stepsPoints, Diet: $dietPoints, Exercise: $exercisePoints, Focus: $focusPoints, Water: $waterPoints)",
+      );
       await _dao.updateHealthScore(_personID, healthScore);
-      // }
     } catch (e, stack) {
       debugPrint("Error updating health score: $e");
       debugPrint("Stack trace: $stack");
@@ -279,8 +328,15 @@ class ScoreBlock {
 
   void dispose() {
     for (var s in _subscriptions) {
-      s.cancel();
+      if (s is StreamSubscription) {
+        s.cancel();
+      } else if (s is Function) {
+        s(); // Stop effect
+      }
     }
+    _healthDebounce?.cancel();
+    _financeDebounce?.cancel();
+    _socialDebounce?.cancel();
     _score.dispose();
   }
 }

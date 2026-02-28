@@ -12,6 +12,7 @@ import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:ice_shield/data_layer/Services/YoutubeService.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 enum FocusStatus { idle, running, paused, completed }
 
@@ -540,6 +541,11 @@ class FocusBlock {
         );
       }
 
+      // Add focus session bonus points
+      if (scoreBlock != null && !isExerciseMode.value) {
+        scoreBlock!.addPoints(FOCUS_SESSION_POINTS.toDouble());
+      }
+
       // We keep the selectedTaskId so they can run another session on the same task,
       // UNLESS they explicitly marked it as done.
       if (markTaskDone) {
@@ -662,7 +668,7 @@ class FocusBlock {
 
     final session = FocusSessionsTableCompanion.insert(
       id: IDGen.generateUuid(),
-      personID: _currentPersonId,
+      personID: drift.Value(_currentPersonId),
       projectID: drift.Value(selectedProjectId.value),
       taskID: drift.Value(selectedTaskId.value),
       startTime: _actualStartTime!,
@@ -696,7 +702,7 @@ class FocusBlock {
     if (isExerciseMode.value && status == 'completed') {
       final exerciseLog = ExerciseLogsTableCompanion.insert(
         id: IDGen.generateUuid(),
-        personID: _currentPersonId,
+        personID: drift.Value(_currentPersonId),
         type: exerciseType.value,
         durationMinutes: duration ~/ 60,
         timestamp: drift.Value(DateTime.now()),
@@ -704,9 +710,11 @@ class FocusBlock {
       await _healthLogsDao.insertExerciseLog(exerciseLog);
       print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
 
-      // Auto-increase points for exercise
+      // Auto-increase points for exercise bonus
       if (scoreBlock != null) {
-        scoreBlock!.addPoints(25); // Bonus for exercise completion
+        scoreBlock!.addPoints(
+          25.0,
+        ); // Keep old bonus or use new constant if requested
       }
     }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/material.dart';
 import 'package:powersync/powersync.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
@@ -15,28 +16,38 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
     required this.baseUrl,
   });
 
-  /// PowerSync calls this to get a JWT for authentication with the PowerSync service.
   @override
   Future<PowerSyncCredentials?> fetchCredentials() async {
-    final session = Supabase.instance.client.auth.currentSession;
+    final client = Supabase.instance.client;
+    var session = client.auth.currentSession;
+
     if (session == null || session.isExpired) {
       try {
-        // If this fails with 500, we must catch it and force a login
-        final response = await Supabase.instance.client.auth.refreshSession();
-        if (response.session == null) return null;
-        return PowerSyncCredentials(
-          endpoint: powerSyncUrl,
-          token: response.session!.accessToken,
-        );
+        final response = await client.auth.refreshSession();
+        session = response.session;
       } catch (e) {
-        // debugPrint("Auth Refresh Failed: $e. Redirecting to login...");
-        // Logic to trigger UI logout here
+        debugPrint("❌ [PowerSync] Refresh session failed: $e");
         return null;
       }
     }
+
+    // Đảm bảo có cả Token và User ID
+    final userId = session?.user.id;
+    final token = session?.accessToken;
+
+    if (token == null || userId == null) {
+      debugPrint(
+        "⚠️ [PowerSync] Missing credentials: token=$token, userId=$userId",
+      );
+      return null;
+    }
+
+    debugPrint("🔑 [PowerSync] Connecting with UserID: $userId");
+
     return PowerSyncCredentials(
       endpoint: powerSyncUrl,
-      token: session.accessToken,
+      token: token,
+      userId: userId,
     );
   }
 
@@ -49,29 +60,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
     Map<String, dynamic>? data,
   ) {
     if (data == null) return {};
-    final map = Map<String, dynamic>.from(data);
-
-    // Many legacy tables have a SERIAL column that Drift defaults to 0 locally.
-    // We must NOT send 0 to Supabase, or we'll get a 23505 Duplicate Key violation
-    // and PowerSync will silently drop the record.
-    final serialKeys = {
-      'custom_notifications': 'notification_id',
-      'blog_posts': 'post_id',
-      'focus_sessions': 'session_id',
-      // widget_id is SERIAL (integer) in Supabase — strip UUID/empty values before upload
-      'external_widgets': 'widget_id',
-      // internal_widgets has no widget_id column in Supabase — strip to avoid 42703
-      'internal_widgets': 'widget_id',
-    };
-
-    final serialKey = serialKeys[table];
-    if (serialKey != null) {
-      // Supabase is missing quote_id and other serials on newly created tables,
-      // or they are 0 locally. We should strip them entirely during upload.
-      map.remove(serialKey);
-    }
-
-    return map;
+    return Map<String, dynamic>.from(data);
   }
 
   /// PowerSync calls this to upload local changes to your backend.

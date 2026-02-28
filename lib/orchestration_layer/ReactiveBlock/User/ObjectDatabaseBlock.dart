@@ -180,11 +180,11 @@ class ObjectDatabaseBlock {
   Future<void> updateUrlOfUser(PersonBlock personBlock) async {
     final profile = personBlock.information.value.profiles;
     final String? userId = Supabase.instance.client.auth.currentUser?.id;
-    final String alias = profile.alias;
+    final String username = profile.username;
 
-    print("userId: $userId, alias: $alias");
+    print("userId: $userId, username: $username");
 
-    if (userId == null && alias.isEmpty) {
+    if (userId == null && username.isEmpty) {
       userObjectResource.value = UserObjectResource(
         avatarImage: '',
         coverImage: '',
@@ -192,7 +192,7 @@ class ObjectDatabaseBlock {
       return;
     }
 
-    final pathId = userId ?? alias;
+    final pathId = userId ?? username;
 
     // Ensure baseObjectUrl doesn't end with slash, prevent double slashes
     final baseUrl = UserObjectResource.baseObjectUrl.endsWith('/')
@@ -202,7 +202,7 @@ class ObjectDatabaseBlock {
           )
         : UserObjectResource.baseObjectUrl;
 
-    if (alias == 'Guest-Shield') {
+    if (username == 'Guest-Shield') {
       userObjectResource.value = UserObjectResource(
         avatarImage:
             "https://ui-avatars.com/api/?name=Guest+User&background=6366F1&color=fff",

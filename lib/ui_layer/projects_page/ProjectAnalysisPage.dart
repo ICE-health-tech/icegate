@@ -16,9 +16,9 @@ class ProjectAnalysisPage extends StatelessWidget {
       type: "grid",
       destination: "/project-analysis",
       size: size,
-      icon: Icons.rocket_launch_rounded,
+      icon: Icons.home,
       mainFunction: () {
-        context.go("/project-analysis");
+        context.go("/");
         HapticFeedback.heavyImpact();
       },
       onLongPress: () {

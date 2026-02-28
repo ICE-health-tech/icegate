@@ -129,7 +129,7 @@ class StepsDashboardPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final maxSteps = recentMetrics.fold<int>(
       1,
-      (max, m) => m.steps > max ? m.steps : max,
+      (max, m) => (m.steps ?? 0) > max ? (m.steps ?? 0) : max,
     );
 
     return Container(
@@ -156,7 +156,7 @@ class StepsDashboardPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.end,
             children: recentMetrics.map((m) {
-              final heightFactor = (m.steps / maxSteps).clamp(0.1, 1.0);
+              final heightFactor = ((m.steps ?? 0) / maxSteps).clamp(0.1, 1.0);
               return Column(
                 children: [
                   Container(
@@ -195,7 +195,7 @@ class StepsDashboardPage extends StatelessWidget {
     BuildContext context,
     List<HealthMetricsLocal> metrics,
   ) {
-    final totalSteps = metrics.fold<int>(0, (sum, m) => sum + m.steps);
+    final totalSteps = metrics.fold<int>(0, (sum, m) => sum + (m.steps ?? 0));
     final avgSteps = metrics.isEmpty
         ? 0
         : (totalSteps / metrics.length).round();
@@ -317,7 +317,7 @@ class StepsDashboardPage extends StatelessWidget {
               const Icon(Icons.run_circle, color: Colors.purple, size: 24),
               const SizedBox(width: 8),
               Text(
-                metric.steps.toString(),
+                (metric.steps ?? 0).toString(),
                 style: const TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 20,

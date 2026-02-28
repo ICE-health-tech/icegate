@@ -13,7 +13,7 @@ class GamificationService {
     final allMetrics = await _healthMetricsDAO.watchAllMetrics(personID).first;
     int totalSteps = 0;
     for (var m in allMetrics) {
-      totalSteps += m.steps;
+      totalSteps += m.steps ?? 0;
     }
     stepsPoints = (totalSteps / 100).floor();
 

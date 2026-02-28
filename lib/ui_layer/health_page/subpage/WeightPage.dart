@@ -107,8 +107,9 @@ class _WeightPageState extends State<WeightPage> {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final data = snapshot.data!.where((m) => m.weightKg > 0).toList()
-              ..sort((a, b) => b.date.compareTo(a.date));
+            final data =
+                snapshot.data!.where((m) => (m.weightKg ?? 0) > 0).toList()
+                  ..sort((a, b) => b.date.compareTo(a.date));
 
             if (data.isEmpty) {
               return const Center(child: Text("No weight data logged yet."));
@@ -153,7 +154,7 @@ class _WeightListItem extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                metric.weightKg.toStringAsFixed(1) + " kg",
+                (metric.weightKg ?? 0.0).toStringAsFixed(1) + " kg",
                 style: TextStyle(
                   fontSize: 20,
                   color: Theme.of(context).colorScheme.primary,

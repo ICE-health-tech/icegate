@@ -172,7 +172,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
         MealsTableCompanion.insert(
           id: IDGen.generateUuid(),
           mealName: _foodController.text,
-          personID: personID,
+          personID: Value(personID),
           mealImageUrl: Value(_imagePath),
           carbs: Value(carbs),
           protein: Value(protein),

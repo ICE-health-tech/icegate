@@ -93,7 +93,7 @@ class UserProfile {
   final int friends;
   final int mutual;
   final String profileImageUrl;
-  final String alias;
+  final String username;
 
   const UserProfile({
     this.id,
@@ -102,8 +102,20 @@ class UserProfile {
     this.friends = 0,
     this.mutual = 0,
     this.profileImageUrl = '',
-    this.alias = '',
+    this.username = '',
   });
+
+  // UserProfile copyWith({
+  //   String? id,
+  //   String? firstName,
+  //   String? profileImageUrl,
+  // }) {
+  //   return UserProfile(
+  //     id: id ?? this.id,
+  //     firstName: firstName ?? this.firstName,
+  //     profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+  //   );
+  // }
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
@@ -114,23 +126,27 @@ class UserProfile {
       mutual: json['mutual'] ?? 0,
       profileImageUrl:
           json['profileImageUrl'] ?? json['profile_image_url'] ?? '',
-      alias: json['alias'] ?? '',
+      username: json['username'] ?? '',
     );
   }
 
   UserProfile copyWith({
+    String? id,
     String? firstName,
     String? lastName,
+    int? friends,
+    int? mutual,
     String? profileImageUrl,
+    String? username,
   }) {
     return UserProfile(
-      id: id,
+      id: id ?? this.id,
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
-      friends: friends,
-      mutual: mutual,
+      friends: friends ?? this.friends,
+      mutual: mutual ?? this.mutual,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      alias: alias,
+      username: username??this.username,
     );
   }
 }
@@ -140,6 +156,12 @@ class UserInformation {
   final UserProfile profiles;
 
   const UserInformation({required this.details, required this.profiles});
+  UserInformation copyWith({UserDetails? details, UserProfile? profiles}) {
+    return UserInformation(
+      details: details ?? this.details,
+      profiles: profiles ?? this.profiles,
+    );
+  }
 }
 
 class UserAccount {
@@ -173,7 +195,7 @@ class SkillType {
 // --- Person Block ---
 class PersonBlock {
   // State Signals
-  final information = signal<UserInformation>(
+  var information = signal<UserInformation>(
     UserInformation(
       details: const UserDetails(),
       profiles: const UserProfile(
@@ -261,8 +283,10 @@ class PersonBlock {
               'User',
           lastName:
               personData?['last_name'] ?? user.userMetadata?['last_name'] ?? '',
-          alias:
-              personData?['alias'] ?? user.userMetadata?['user_name'] ?? 'user',
+          username:
+              personData?['username'] ??
+              user.userMetadata?['user_name'] ??
+              'user',
           profileImageUrl:
               personData?['profile_image_url'] ??
               user.userMetadata?['avatar_url'] ??
@@ -274,7 +298,7 @@ class PersonBlock {
           details: details,
         );
         print(
-          "✅ [PersonBlock] Multi-source Profile fetched for ${profile.alias}",
+          "✅ [PersonBlock] Multi-source Profile fetched for ${profile.username}",
         );
       } else {
         print("⚠️ [PersonBlock] No profile found in Supabase. Falling back...");
@@ -295,7 +319,7 @@ class PersonBlock {
         id: DataSeeder.guestPersonId,
         firstName: 'DuyLong',
         lastName: 'Art',
-        alias: 'Guest-Shield',
+        username: 'Guest-Shield',
         profileImageUrl:
             'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
       ),

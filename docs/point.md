@@ -11,26 +11,27 @@
 | LV 5  | 100+200+300+400+500 points     |
 | ...   | LV × 100       |
 
-## How to Earn Points
-
-### 🏃 Health - Steps
-- **100 steps = 1 point**
-
-### 🍎 Health - Nutrition  
+### 🏃 Health - Activities
+- **500 steps = 1 point**
+- **5 min exercise = 1 point**
+- **Daily water goal (2000ml) = +10 points**
 - **A day with < 1500 kcals = +15 points**
+
+### 💼 Projects - Focus
+- **Each focus session completed = +5 points**
+- **10 min focus = 1 point**
+- **Task completion = +2 points**
+- **Project completion = +50 points**
 
 ### ❤️ Social - Affection
 - **Each contact = +30 points**
 - **Every 5 affection = +10 points**
 
 ### 💰 Finance - Wealth
-- **Every $1000 in savings = +50 points**
+- **Every $50 in savings = +50 points**
+- **Staying under budget = +50 points**
 - **Every 5% investment return = +10 points**
 
-### 💼 Projects - TBD
-
-task 2 points
-project 50 points
 
 ## Applies to All Categories
 - Health (steps, calories)

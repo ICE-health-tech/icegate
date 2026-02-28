@@ -5,6 +5,7 @@ import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/subpage/FoodInputPage.dart';
 import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
 import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_shield/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
 // import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
@@ -74,8 +75,9 @@ class MainShell extends StatelessWidget {
         pageIcon = ProjectsPage.icon(context, size: responsiveSize);
         break;
       case '/project-analysis':
-        pageIcon = ProjectsPage.icon(context, size: responsiveSize);
+        pageIcon = ProjectAnalysisPage.icon(context, size: responsiveSize);
         break;
+
       case '/projects/editor':
         return const SizedBox.shrink();
       case '/personal-info':
@@ -85,6 +87,8 @@ class MainShell extends StatelessWidget {
         pageIcon = ProjectsPage.icon(context, size: responsiveSize);
         break;
       case '/health/focus':
+        return const SizedBox.shrink();
+      case '/notifications':
         return const SizedBox.shrink();
       default:
         // Default to home icon

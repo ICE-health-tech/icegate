@@ -31,8 +31,8 @@ import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 
 class HomePage extends StatefulWidget {
-  final String title;
-  const HomePage({super.key, required this.title});
+  // final String title;
+  const HomePage({super.key});
 
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
@@ -199,7 +199,7 @@ class _HomePageState extends State<HomePage> {
       final parts = name.split('/');
       if (parts.length > 2) {
         final id = (parts.last);
-        
+
         if (id != null) {
           context.push('/projects/$id');
           return;
@@ -232,6 +232,7 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final personBlock = context.read<PersonBlock>();
     final double sizeOfDepartment = UIConstants.getSizeOfDepartment(context);
     final double sizeOfWidget = UIConstants.getSizeOfWidget(context);
     return SwipeablePage(
@@ -294,7 +295,9 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       TextButton(
                         child: Text(
-                          widget.title,
+                          personBlock.information.value.profiles.firstName +
+                              " " +
+                              personBlock.information.value.profiles.lastName,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
@@ -306,12 +309,12 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ],
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 10),
                   // --- SECTION: GAMIFIED HEADER ---
                   _buildGamifiedHeader(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   _buildQuotesSection(context),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                   // --- SECTION: 4 life elements ---
                   _buildSectionHeader(context, '4 life elements', '/profile'),
                   const SizedBox(height: 12),
@@ -401,8 +404,10 @@ class _HomePageState extends State<HomePage> {
                                     'value': '${info.profiles.mutual}',
                                   },
                                   {
-                                    'label': 'Alias',
-                                    'value': info.profiles.alias,
+                                    'label': 'Username',
+                                    'value':
+                                        authBlock.username.value ??
+                                        info.profiles.username,
                                   },
                                 ],
                                 route: '/social',

@@ -5,6 +5,8 @@ import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
 // import 'package:ice_shield/data_layer/Protocol/User/PersonProtocols.dart';
 import 'package:ice_shield/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<String> saveProfileAction(
   String name,
@@ -36,7 +38,7 @@ Future<String> saveProfileAction(
 
   // Create user account protocol
   UserAccountProtocol insertedAccount = UserAccountProtocol.create(
-    personID: insertedPerson.personID,
+    personID: Supabase.instance.client.auth.currentUser?.id ?? "",
     username: username,
     primaryEmail: email,
     role: 'user',
@@ -46,13 +48,13 @@ Future<String> saveProfileAction(
 
   // Create email address protocol
   EmailAddressProtocol insertedEmail = EmailAddressProtocol.create(
-    personID: insertedPerson.personID,
+    personID: Supabase.instance.client.auth.currentUser?.id ?? "",
     emailAddress: email,
   );
 
   // Create CV address protocol
   CVAddressProtocol insertedCVAddress = CVAddressProtocol.create(
-    personID: insertedPerson.personID,
+    personID: Supabase.instance.client.auth.currentUser?.id ?? "",
     githubUrl: '',
     websiteUrl: website,
     company: company,
@@ -66,7 +68,7 @@ Future<String> saveProfileAction(
 
   // Create profile protocol
   ProfileProtocol insertedProfile = ProfileProtocol.create(
-    personID: insertedPerson.personID,
+    personID: Supabase.instance.client.auth.currentUser?.id ?? "",
     bio: bio,
     occupation: occupation,
     websiteUrl: website,
@@ -81,5 +83,5 @@ Future<String> saveProfileAction(
     profile: insertedProfile,
     cvAddress: insertedCVAddress,
   );
-  return insertedPerson.personID;
+  return Supabase.instance.client.auth.currentUser?.id ?? "";
 }

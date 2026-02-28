@@ -36,14 +36,9 @@ class HealthService {
       HealthDataType.SLEEP_IN_BED,
       HealthDataType.SLEEP_AWAKE,
       HealthDataType.HEART_RATE,
+      HealthDataType.ACTIVE_ENERGY_BURNED,
     ];
-    final permissions = [
-      HealthDataAccess.READ,
-      HealthDataAccess.READ,
-      HealthDataAccess.READ,
-      HealthDataAccess.READ,
-      HealthDataAccess.READ,
-    ];
+    final permissions = List.filled(6, HealthDataAccess.READ);
 
     try {
       debugPrint("HealthService: Requesting health authorization...");
@@ -144,6 +139,39 @@ class HealthService {
       return totalHours;
     } catch (e) {
       debugPrint("HealthService: Error fetching sleep data: $e");
+      return 0.0;
+    }
+  }
+
+  /// Fetches today's active calories burned from Apple Health/Google Fit.
+  static Future<double> fetchCalories() async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0.0;
+
+    final now = DateTime.now();
+    final midnight = DateTime(now.year, now.month, now.day);
+
+    try {
+      final types = [HealthDataType.ACTIVE_ENERGY_BURNED];
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: midnight,
+        endTime: now,
+        types: types,
+      );
+
+      double totalCalories = 0.0;
+      for (var data in healthData) {
+        final value = data.value;
+        if (value is NumericHealthValue) {
+          totalCalories += value.numericValue;
+        }
+      }
+      debugPrint(
+        "HealthService: Fetched calories from HealthKit: $totalCalories",
+      );
+      return totalCalories;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching calories: $e");
       return 0.0;
     }
   }

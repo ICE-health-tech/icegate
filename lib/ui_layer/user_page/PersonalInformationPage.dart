@@ -43,7 +43,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
   final TextEditingController _occupationController = TextEditingController();
   final TextEditingController _companyController = TextEditingController();
   final TextEditingController _websiteController = TextEditingController();
-  final TextEditingController _aliasController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
   final TextEditingController _githubController = TextEditingController();
   final TextEditingController _linkedinController = TextEditingController();
   final TextEditingController _universityController = TextEditingController();
@@ -98,7 +98,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     _linkedinController.text = info.details.linkedinUrl;
     _universityController.text = info.details.university;
     _educationController.text = info.details.educationLevel;
-    _aliasController.text = info.profiles.alias;
+    _usernameController.text = info.profiles.username;
     _emailController.text = info.details.email;
   }
 
@@ -119,7 +119,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     _universityController.dispose();
     _educationController.dispose();
     _animationController.dispose();
-    _aliasController.dispose();
+    _usernameController.dispose();
     super.dispose();
   }
 
@@ -385,7 +385,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                   context,
                   colorScheme,
                   textTheme,
-                  _aliasController,
+                  _usernameController,
                   objectResource,
                   info,
                 ),
@@ -814,7 +814,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        "@${info.profiles.alias.split('-').first}",
+                        "@${info.profiles.username.split('-').first}",
                         style: textTheme.labelMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
