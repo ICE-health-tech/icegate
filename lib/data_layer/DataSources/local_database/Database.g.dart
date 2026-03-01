@@ -20999,6 +20999,17 @@ class $QuestsTableTable extends QuestsTable
         requiredDuringInsert: false,
         defaultValue: currentDateAndTime,
       ).withConverter<DateTime>($QuestsTableTable.$convertercreatedAt);
+  static const VerificationMeta _imageUrlMeta = const VerificationMeta(
+    'imageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> imageUrl = GeneratedColumn<String>(
+    'image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -21013,6 +21024,7 @@ class $QuestsTableTable extends QuestsTable
     rewardExp,
     isCompleted,
     createdAt,
+    imageUrl,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -21105,6 +21117,12 @@ class $QuestsTableTable extends QuestsTable
         ),
       );
     }
+    if (data.containsKey('image_url')) {
+      context.handle(
+        _imageUrlMeta,
+        imageUrl.isAcceptableOrUnknown(data['image_url']!, _imageUrlMeta),
+      );
+    }
     return context;
   }
 
@@ -21164,6 +21182,10 @@ class $QuestsTableTable extends QuestsTable
           data['${effectivePrefix}created_at'],
         )!,
       ),
+      imageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}image_url'],
+      ),
     );
   }
 
@@ -21189,6 +21211,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
   final int rewardExp;
   final bool isCompleted;
   final DateTime createdAt;
+  final String? imageUrl;
   const QuestData({
     required this.id,
     this.tenantID,
@@ -21202,6 +21225,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     required this.rewardExp,
     required this.isCompleted,
     required this.createdAt,
+    this.imageUrl,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -21228,6 +21252,9 @@ class QuestData extends DataClass implements Insertable<QuestData> {
         $QuestsTableTable.$convertercreatedAt.toSql(createdAt),
       );
     }
+    if (!nullToAbsent || imageUrl != null) {
+      map['image_url'] = Variable<String>(imageUrl);
+    }
     return map;
   }
 
@@ -21251,6 +21278,9 @@ class QuestData extends DataClass implements Insertable<QuestData> {
       rewardExp: Value(rewardExp),
       isCompleted: Value(isCompleted),
       createdAt: Value(createdAt),
+      imageUrl: imageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(imageUrl),
     );
   }
 
@@ -21272,6 +21302,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
       rewardExp: serializer.fromJson<int>(json['rewardExp']),
       isCompleted: serializer.fromJson<bool>(json['isCompleted']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      imageUrl: serializer.fromJson<String?>(json['imageUrl']),
     );
   }
   @override
@@ -21290,6 +21321,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
       'rewardExp': serializer.toJson<int>(rewardExp),
       'isCompleted': serializer.toJson<bool>(isCompleted),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'imageUrl': serializer.toJson<String?>(imageUrl),
     };
   }
 
@@ -21306,6 +21338,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     int? rewardExp,
     bool? isCompleted,
     DateTime? createdAt,
+    Value<String?> imageUrl = const Value.absent(),
   }) => QuestData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -21319,6 +21352,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     rewardExp: rewardExp ?? this.rewardExp,
     isCompleted: isCompleted ?? this.isCompleted,
     createdAt: createdAt ?? this.createdAt,
+    imageUrl: imageUrl.present ? imageUrl.value : this.imageUrl,
   );
   QuestData copyWithCompanion(QuestsTableCompanion data) {
     return QuestData(
@@ -21342,6 +21376,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           ? data.isCompleted.value
           : this.isCompleted,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      imageUrl: data.imageUrl.present ? data.imageUrl.value : this.imageUrl,
     );
   }
 
@@ -21359,7 +21394,8 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           ..write('category: $category, ')
           ..write('rewardExp: $rewardExp, ')
           ..write('isCompleted: $isCompleted, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('imageUrl: $imageUrl')
           ..write(')'))
         .toString();
   }
@@ -21378,6 +21414,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     rewardExp,
     isCompleted,
     createdAt,
+    imageUrl,
   );
   @override
   bool operator ==(Object other) =>
@@ -21394,7 +21431,8 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           other.category == this.category &&
           other.rewardExp == this.rewardExp &&
           other.isCompleted == this.isCompleted &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.imageUrl == this.imageUrl);
 }
 
 class QuestsTableCompanion extends UpdateCompanion<QuestData> {
@@ -21410,6 +21448,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
   final Value<int> rewardExp;
   final Value<bool> isCompleted;
   final Value<DateTime> createdAt;
+  final Value<String?> imageUrl;
   final Value<int> rowid;
   const QuestsTableCompanion({
     this.id = const Value.absent(),
@@ -21424,6 +21463,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     this.rewardExp = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   QuestsTableCompanion.insert({
@@ -21439,6 +21479,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     this.rewardExp = const Value.absent(),
     this.isCompleted = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.imageUrl = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title);
@@ -21455,6 +21496,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     Expression<int>? rewardExp,
     Expression<bool>? isCompleted,
     Expression<DateTime>? createdAt,
+    Expression<String>? imageUrl,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -21470,6 +21512,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
       if (rewardExp != null) 'reward_exp': rewardExp,
       if (isCompleted != null) 'is_completed': isCompleted,
       if (createdAt != null) 'created_at': createdAt,
+      if (imageUrl != null) 'image_url': imageUrl,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -21487,6 +21530,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     Value<int>? rewardExp,
     Value<bool>? isCompleted,
     Value<DateTime>? createdAt,
+    Value<String?>? imageUrl,
     Value<int>? rowid,
   }) {
     return QuestsTableCompanion(
@@ -21502,6 +21546,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
       rewardExp: rewardExp ?? this.rewardExp,
       isCompleted: isCompleted ?? this.isCompleted,
       createdAt: createdAt ?? this.createdAt,
+      imageUrl: imageUrl ?? this.imageUrl,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -21547,6 +21592,9 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
         $QuestsTableTable.$convertercreatedAt.toSql(createdAt.value),
       );
     }
+    if (imageUrl.present) {
+      map['image_url'] = Variable<String>(imageUrl.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -21568,6 +21616,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
           ..write('rewardExp: $rewardExp, ')
           ..write('isCompleted: $isCompleted, ')
           ..write('createdAt: $createdAt, ')
+          ..write('imageUrl: $imageUrl, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -43819,6 +43868,7 @@ typedef $$QuestsTableTableCreateCompanionBuilder =
       Value<int> rewardExp,
       Value<bool> isCompleted,
       Value<DateTime> createdAt,
+      Value<String?> imageUrl,
       Value<int> rowid,
     });
 typedef $$QuestsTableTableUpdateCompanionBuilder =
@@ -43835,6 +43885,7 @@ typedef $$QuestsTableTableUpdateCompanionBuilder =
       Value<int> rewardExp,
       Value<bool> isCompleted,
       Value<DateTime> createdAt,
+      Value<String?> imageUrl,
       Value<int> rowid,
     });
 
@@ -43927,6 +43978,11 @@ class $$QuestsTableTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnFilters<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -44015,6 +44071,11 @@ class $$QuestsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get imageUrl => $composableBuilder(
+    column: $table.imageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$OrganizationsTableTableOrderingComposer get tenantID {
     final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -44089,6 +44150,9 @@ class $$QuestsTableTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumn<String> get imageUrl =>
+      $composableBuilder(column: $table.imageUrl, builder: (column) => column);
+
   $$OrganizationsTableTableAnnotationComposer get tenantID {
     final $$OrganizationsTableTableAnnotationComposer composer =
         $composerBuilder(
@@ -44154,6 +44218,7 @@ class $$QuestsTableTableTableManager
                 Value<int> rewardExp = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuestsTableCompanion(
                 id: id,
@@ -44168,6 +44233,7 @@ class $$QuestsTableTableTableManager
                 rewardExp: rewardExp,
                 isCompleted: isCompleted,
                 createdAt: createdAt,
+                imageUrl: imageUrl,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -44184,6 +44250,7 @@ class $$QuestsTableTableTableManager
                 Value<int> rewardExp = const Value.absent(),
                 Value<bool> isCompleted = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> imageUrl = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => QuestsTableCompanion.insert(
                 id: id,
@@ -44198,6 +44265,7 @@ class $$QuestsTableTableTableManager
                 rewardExp: rewardExp,
                 isCompleted: isCompleted,
                 createdAt: createdAt,
+                imageUrl: imageUrl,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

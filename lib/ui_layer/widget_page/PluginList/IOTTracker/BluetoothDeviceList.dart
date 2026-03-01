@@ -41,8 +41,13 @@ class BluetoothDeviceList extends StatelessWidget {
           label: Text(isScanning ? 'Scanning...' : 'Scan for Devices'),
           style: ElevatedButton.styleFrom(
             padding: const EdgeInsets.symmetric(vertical: 16),
-            backgroundColor: colorScheme.primary,
-            foregroundColor: colorScheme.onPrimary,
+            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            foregroundColor: colorScheme.primary,
+            elevation: 0,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
+              side: BorderSide(color: colorScheme.primary.withOpacity(0.3)),
+            ),
           ),
         ),
 
@@ -65,9 +70,9 @@ class BluetoothDeviceList extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.2)),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
       ),
       child: Column(
         children: [

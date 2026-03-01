@@ -387,7 +387,7 @@ class PersonBlock {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
       print("❌ [PersonBlock] No user logged in to update profile.");
-      return;
+      throw Exception("No user logged in");
     }
 
     try {
@@ -413,6 +413,7 @@ class PersonBlock {
       print("   - Updating 'profiles' table...");
       await Supabase.instance.client.from('profiles').upsert({
         'id': user.id,
+        'person_id': user.id, // Ensure link to persons table
         'bio': details.bio,
         'occupation': details.occupation,
         'education_level': details.educationLevel,
@@ -428,6 +429,7 @@ class PersonBlock {
       print("   - Updating 'detail_information' table...");
       await Supabase.instance.client.from('detail_information').upsert({
         'id': user.id, // Primary key is id (uuid)
+        'person_id': user.id, // Ensure link to persons table
         'company': details.company,
         'university': details.university,
         'country': details.country,
@@ -447,6 +449,7 @@ class PersonBlock {
       );
     } catch (e) {
       print("❌ [PersonBlock] Failed to update profile in database: $e");
+      rethrow;
     }
   }
 

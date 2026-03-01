@@ -183,9 +183,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text(
-              'Personal information saved (Local Optimistic)',
-            ),
+            content: const Text('Personal information saved successfully'),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -199,7 +197,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       setState(() {
         _isSaving = false;
       });
-      // ... error handling
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save changes: $e'),
+          backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -507,7 +511,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Physical Location',
+                        title: 'Location',
                         icon: Icons.public_rounded,
                         children: [
                           _buildModernTextField(
@@ -528,24 +532,24 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Digital Matrix',
+                        title: 'Digital',
                         icon: Icons.alternate_email_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _githubController,
-                            label: 'GitHub Node',
+                            label: 'GitHub',
                             icon: Icons.code_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _linkedinController,
-                            label: 'LinkedIn Link',
+                            label: 'LinkedIn',
                             icon: Icons.link_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _websiteController,
-                            label: 'External Web',
+                            label: 'Personal Web',
                             icon: Icons.language_rounded,
                             enabled: _isEditing,
                           ),

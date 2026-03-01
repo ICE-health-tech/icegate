@@ -1203,6 +1203,7 @@ class QuestsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('created_at')();
+  TextColumn get imageUrl => text().nullable().named('image_url')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -3413,7 +3414,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 32;
+  int get schemaVersion => 33;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -3431,6 +3432,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 33) {
+          // The image_url column was added to quests. However, since quests is
+          // synced via PowerSync, it is a VIEW in SQLite, not a base table.
+          // PowerSync automatically handles recreating this view based on the
+          // new schema, so we DO NOT use `m.addColumn` here.
+        }
         if (from < 31) {
           // PowerSync tables (like custom_notifications) are views in SQLite.
           // They should be updated via the PowerSync schema, NOT via ALTER TABLE.

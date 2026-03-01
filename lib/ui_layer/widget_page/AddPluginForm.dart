@@ -369,7 +369,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         category: PluginCategory.productivity,
       ),
       _InternalPlugin(
-        name: 'GPS Tracker',
+        name: 'Location Tracker',
         url: '/widgets/gps',
         icon: Icons.location_on_rounded,
         description: 'Live location tracking.',

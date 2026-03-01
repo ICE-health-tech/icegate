@@ -13,6 +13,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'TaskItem.dart';
 import 'CreateProjectDialog.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
@@ -222,127 +223,46 @@ class ProjectsPage extends StatelessWidget {
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = projectList[index];
-                    final projectColor = project.color != null
-                        ? Color(int.parse(project.color!))
-                        : colorScheme.primary;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12.0),
-                      child: InkWell(
-                        onTap: () {
-                          context.push('/projects/${project.projectID}');
-                        },
-                        onLongPress: () async {
-                          final confirm = await showDialog<bool>(
-                            context: context,
-                            builder: (ctx) => AlertDialog(
-                              title: const Text('Delete Project?'),
-                              content: Text(
-                                'Are you sure you want to delete "${project.name}"?',
-                              ),
-                              actions: [
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, false),
-                                  child: const Text('Cancel'),
-                                ),
-                                TextButton(
-                                  onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text(
-                                    'Delete',
-                                    style: TextStyle(color: Colors.red),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                          if (confirm == true && context.mounted) {
-                            final projectBlock = context.read<ProjectBlock>();
-                            await projectBlock.deleteProject(project.id);
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Project deleted.'),
-                                  duration: Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          }
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: projectColor.withOpacity(0.08),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: projectColor.withOpacity(0.2),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: projectColor.withOpacity(0.15),
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: Icon(
-                                  Icons.folder_rounded,
-                                  color: projectColor,
-                                  size: 24,
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      project.name,
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 16,
-                                        color: colorScheme.onSurface,
-                                      ),
-                                    ),
-                                    if (project.description != null &&
-                                        project.description!.isNotEmpty)
-                                      Padding(
-                                        padding: const EdgeInsets.only(top: 4),
-                                        child: Text(
-                                          project.description!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: colorScheme.onSurface
-                                                .withOpacity(0.6),
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ),
-                                    Padding(
-                                      padding: const EdgeInsets.only(top: 4),
-                                      child: Text(
-                                        'Created ${DateFormat.MMMd().format(project.createdAt)}',
-                                        style: TextStyle(
-                                          color: colorScheme.onSurface
-                                              .withOpacity(0.4),
-                                          fontSize: 11,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Icon(
-                                Icons.chevron_right,
-                                color: colorScheme.onSurface.withOpacity(0.4),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
+                    return _ProjectCard(project: project);
                   }, childCount: projectList.length),
+                ),
+              );
+            }),
+            // --- COMPLETED PROJECTS SECTION ---
+            SliverToBoxAdapter(
+              child: Watch((context) {
+                final projectBlock = context.read<ProjectBlock>();
+                final completedList = projectBlock.projects.value
+                    .where((p) => p.status == 1)
+                    .toList();
+
+                if (completedList.isEmpty) return const SizedBox.shrink();
+
+                return Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                  child: _buildSectionTitle(context, 'Completed Projects'),
+                );
+              }),
+            ),
+            Watch((context) {
+              final projectBlock = context.read<ProjectBlock>();
+              final completedList = projectBlock.projects.value
+                  .where((p) => p.status == 1)
+                  .toList();
+
+              if (completedList.isEmpty)
+                return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                sliver: SliverList(
+                  delegate: SliverChildBuilderDelegate((context, index) {
+                    final project = completedList[index];
+                    return Opacity(
+                      opacity: 0.6,
+                      child: _ProjectCard(project: project),
+                    );
+                  }, childCount: completedList.length),
                 ),
               );
             }),
@@ -794,3 +714,130 @@ class _RecentNoteItem extends StatelessWidget {
   }
 }
 
+class _ProjectCard extends StatelessWidget {
+  final ProjectProtocol project;
+
+  const _ProjectCard({required this.project});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final projectColor = project.color != null
+        ? Color(int.parse(project.color!))
+        : colorScheme.primary;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: InkWell(
+        onTap: () {
+          context.push('/projects/${project.projectID}');
+        },
+        onLongPress: () async {
+          final confirm = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Delete Project?'),
+              content: Text(
+                'Are you sure you want to delete "${project.name}"?',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Cancel'),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text(
+                    'Delete',
+                    style: TextStyle(color: Colors.red),
+                  ),
+                ),
+              ],
+            ),
+          );
+          if (confirm == true && context.mounted) {
+            final projectBlock = context.read<ProjectBlock>();
+            await projectBlock.deleteProject(project.id);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('Project deleted.'),
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+          }
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: projectColor.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: projectColor.withOpacity(0.2)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: projectColor.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  Icons.folder_rounded,
+                  color: projectColor,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      project.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    if (project.description != null &&
+                        project.description!.isNotEmpty)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          project.description!,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withOpacity(0.6),
+                            fontSize: 13,
+                          ),
+                        ),
+                      ),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 4),
+                      child: Text(
+                        'Created ${DateFormat.MMMd().format(project.createdAt)}',
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withOpacity(0.4),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                Icons.chevron_right,
+                color: colorScheme.onSurface.withOpacity(0.4),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

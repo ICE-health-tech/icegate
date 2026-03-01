@@ -6,7 +6,7 @@ import 'GPSTrackingPage.dart';
 class IOTTrackerPlugin extends BasePluginProtocol {
   const IOTTrackerPlugin()
     : super(
-        name: 'GPS Tracker',
+        name: 'Location Tracker',
         description: 'Track location using Bluetooth GPS devices',
         icon: Icons.gps_fixed,
         protocol: 'bluetooth',

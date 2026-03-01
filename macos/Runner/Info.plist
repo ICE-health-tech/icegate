@@ -32,6 +32,14 @@
 	<string>We need photo library access to let you select food photos for calorie tracking</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to track your running distance and movement quests in the real world.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to track your running distance and movement quests in the real world.</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

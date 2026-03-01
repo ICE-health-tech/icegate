@@ -365,6 +365,7 @@ const Schema schema = Schema([
     Column.integer('reward_exp'),
     Column.integer('is_completed'),
     Column.text('created_at'),
+    Column.text('image_url'),
   ]),
   Table('days', [
     Column.text('day_id'),

@@ -29,6 +29,7 @@ import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
   // final String title;
@@ -124,6 +125,7 @@ class _HomePageState extends State<HomePage> {
   int? _currentQuoteIndex;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
+  int? _lastSeenLevel;
 
   @override
   void initState() {
@@ -146,13 +148,29 @@ class _HomePageState extends State<HomePage> {
     _fetchInitialData();
 
     // Level Up effect
-    int? lastLevel;
+    _initLevelTracking();
+  }
+
+  Future<void> _initLevelTracking() async {
+    final prefs = await SharedPreferences.getInstance();
+    _lastSeenLevel = prefs.getInt('last_seen_level');
+
     _levelEffect = effect(() {
       final currentLevel = scoreBlock.globalLevel.value;
-      if (lastLevel != null && currentLevel > lastLevel!) {
-        _levelUpToShow.value = currentLevel;
+
+      // If we haven't seen a level before, initialize it to the current level
+      // instead of showing a level up from 0/1.
+      if (_lastSeenLevel == null) {
+        _lastSeenLevel = currentLevel;
+        prefs.setInt('last_seen_level', currentLevel);
+        return;
       }
-      lastLevel = currentLevel;
+
+      if (currentLevel > _lastSeenLevel!) {
+        _levelUpToShow.value = currentLevel;
+        _lastSeenLevel = currentLevel;
+        prefs.setInt('last_seen_level', currentLevel);
+      }
     });
   }
 
@@ -202,7 +220,7 @@ class _HomePageState extends State<HomePage> {
 
         context.push('/projects/$id');
         return;
-            }
+      }
       context.push('/projects');
       return;
     }
@@ -297,6 +315,14 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
+
+                            shadows: [
+                              Shadow(
+                                color: Colors.black54,
+                                blurRadius: 4,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
                           ),
                         ),
                         onPressed: () {
@@ -390,7 +416,7 @@ class _HomePageState extends State<HomePage> {
                                 Icons.people_alt_rounded,
                                 Colors.purple,
                                 metrics: [
-                                  {'label': 'Connections', 'value': '$count'},
+                                  {'label': 'Total Users', 'value': '$count'},
                                   {
                                     'label': 'Friends',
                                     'value': '${info.profiles.friends}',
@@ -484,48 +510,79 @@ class _HomePageState extends State<HomePage> {
 
                   SizedBox(
                     height: sizeOfWidget,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      padding: const EdgeInsets.only(right: 20),
-                      itemCount:
-                          internalWidgets.length + externalWidgets.length + 1,
-                      itemBuilder: (context, index) {
-                        if (index == 0) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 16),
-                            child: SizedBox(
-                              width: sizeOfWidget,
-                              height: sizeOfWidget,
-                              child: _buildAddButton(context),
-                            ),
-                          );
-                        } else if (index <= internalWidgets.length) {
-                          final widget = internalWidgets[index - 1];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 16),
+                    child: Watch((context) {
+                      final allProjects = projectBlock.projects.value;
+                      final finishedProjectIds = allProjects
+                          .where((p) => p.status == 1)
+                          .map((p) => p.projectID)
+                          .toSet();
 
-                            child: SizedBox(
-                              width: sizeOfWidget,
-                              height: sizeOfWidget,
-                              child: _buildInternalWidget(context, widget),
-                            ),
-                          );
-                        } else {
-                          final ext =
-                              externalWidgets[index -
-                                  internalWidgets.length -
-                                  1];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 16),
-                            child: SizedBox(
-                              width: sizeOfWidget,
-                              child: _buildExternalWidget(context, ext),
-                            ),
-                          );
+                      // Filter out widgets that point to finished projects
+                      final filteredInternalWidgets = internalWidgets.where((
+                        w,
+                      ) {
+                        if (w.url.startsWith('/projects/') ||
+                            w.url.startsWith('/project/')) {
+                          final id = w.url.split('/').last;
+                          return !finishedProjectIds.contains(id);
                         }
-                      },
-                    ),
+                        return true;
+                      }).toList();
+
+                      final itemCount =
+                          filteredInternalWidgets.length +
+                          externalWidgets.length +
+                          1;
+
+                      return ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        padding: const EdgeInsets.only(right: 20),
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: SizedBox(
+                                width: sizeOfWidget,
+                                height: sizeOfWidget,
+                                child: _buildAddButton(context),
+                              ),
+                            );
+                          }
+
+                          int adjustedIndex = index - 1;
+
+                          if (adjustedIndex < filteredInternalWidgets.length) {
+                            final widget =
+                                filteredInternalWidgets[adjustedIndex];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: SizedBox(
+                                width: sizeOfWidget,
+                                height: sizeOfWidget,
+                                child: _buildInternalWidget(context, widget),
+                              ),
+                            );
+                          }
+
+                          adjustedIndex -= filteredInternalWidgets.length;
+
+                          if (adjustedIndex < externalWidgets.length) {
+                            final ext = externalWidgets[adjustedIndex];
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 16),
+                              child: SizedBox(
+                                width: sizeOfWidget,
+                                child: _buildExternalWidget(context, ext),
+                              ),
+                            );
+                          }
+
+                          return const SizedBox.shrink();
+                        },
+                      );
+                    }),
                   ),
 
                   const SizedBox(height: 32),

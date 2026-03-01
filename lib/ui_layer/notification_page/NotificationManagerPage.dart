@@ -58,11 +58,17 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [
-                    const Color(0xFF0F172A),
-                    colorScheme.surface,
-                    const Color(0xFF1E293B),
-                  ],
+                  colors: Theme.of(context).brightness == Brightness.light
+                      ? [
+                          const Color(0xFFF1F5F9),
+                          colorScheme.surface,
+                          const Color(0xFFE2E8F0),
+                        ]
+                      : [
+                          const Color(0xFF0F172A),
+                          colorScheme.surface,
+                          const Color(0xFF1E293B),
+                        ],
                 ),
               ),
             ),
@@ -181,12 +187,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   }
 
   Widget _buildTabBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 48,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: colorScheme.onSurface.withOpacity(0.05),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: colorScheme.onSurface.withOpacity(0.1)),
       ),
       child: TabBar(
         indicator: BoxDecoration(
@@ -204,7 +211,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.white54,
+        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         dividerColor: Colors.transparent,
         tabs: const [
@@ -271,10 +278,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               ],
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               "\"Hunter, your current fatigue levels are low. Optimal time for intense training. Prioritize Health Quests to maintain momentum.\"",
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 15,
                 fontFamily: 'Courier', // Typewriter feel
                 height: 1.4,
@@ -284,7 +291,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Text(
               "Advice based on recent metrics",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
               ),
@@ -304,7 +311,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Text(
           "DAILY QUEST: ",
           style: TextStyle(
-            color: Colors.white.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.0,
@@ -366,8 +373,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   children: [
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -376,7 +383,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     Text(
                       objective,
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.onSurface.withOpacity(0.6),
                         fontSize: 13,
                       ),
                     ),
@@ -397,7 +406,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: percent,
-                backgroundColor: Colors.white.withOpacity(0.05),
+                backgroundColor: Theme.of(
+                  context,
+                ).colorScheme.onSurface.withOpacity(0.1),
                 valueColor: const AlwaysStoppedAnimation(Colors.blueAccent),
                 minHeight: 4,
               ),
@@ -418,10 +429,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "Personal Reminders",
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -514,10 +525,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "Wisdom Board",
               style: TextStyle(
-                color: Colors.white,
+                color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
@@ -595,8 +606,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 Expanded(
                   child: Text(
                     quote.content,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
                       fontSize: 16,
                       height: 1.4,
                     ),
@@ -611,7 +622,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 child: Text(
                   "- ${quote.author}",
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.5),
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.5),
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),

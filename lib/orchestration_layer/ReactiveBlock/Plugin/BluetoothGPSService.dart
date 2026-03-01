@@ -213,20 +213,28 @@ class BluetoothGPSService {
         _updateLocation(location);
       },
       onError: (error) {
-        errorMessage.value = 'GPS error: $error';
+        Future.microtask(() {
+          errorMessage.value = 'GPS error: $error';
+        });
       },
     );
   }
 
   /// Update current location and add to history
   void _updateLocation(GpsLocation location) {
-    currentLocation.value = location;
+    // Run in microtask and batch to avoid SignalEffectException if stream
+    // fires synchronously during an active effect/computed context.
+    Future.microtask(() {
+      batch(() {
+        currentLocation.value = location;
 
-    // Add to history (keep last 100 locations)
-    locationHistory.insert(0, location);
-    if (locationHistory.length > 100) {
-      locationHistory.removeLast();
-    }
+        // Add to history (keep last 100 locations)
+        locationHistory.insert(0, location);
+        if (locationHistory.length > 100) {
+          locationHistory.removeLast();
+        }
+      });
+    });
   }
 
   /// Parse NMEA sentence (for future use with real Bluetooth GPS)

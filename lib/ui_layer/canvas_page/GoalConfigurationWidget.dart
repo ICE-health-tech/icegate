@@ -124,16 +124,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                                     letterSpacing: -0.5,
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  "PROTOCOL [7-X]",
-                                  style: TextStyle(
-                                    color: colorScheme.primary,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 2.0,
-                                  ),
-                                ),
+                              
                               ],
                             ),
                             Container(
@@ -263,26 +254,8 @@ class GoalConfigurationWidget extends StatelessWidget {
                         color: colorScheme.primary.withOpacity(0.1),
                       ),
                     ),
-                    child: Row(
-                      children: [
-                        Icon(
-                          Icons.info_outline_rounded,
-                          color: colorScheme.primary,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Text(
-                            "Consistent parameter settings enhance predictive accuracy for energy expenditure analysis.",
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.6),
-                              fontSize: 12,
-                              height: 1.4,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                    
+                    
                   ),
                 ],
               ),

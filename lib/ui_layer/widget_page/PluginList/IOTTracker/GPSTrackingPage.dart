@@ -5,6 +5,7 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPS
 import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
 import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart';
 import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
+import 'dart:ui';
 // import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
 
 /// Main GPS tracking page with Bluetooth device connection
@@ -53,121 +54,206 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('GPS Tracking'),
-        backgroundColor: colorScheme.surface,
-        elevation: 0,
-        actions: [
-          Watch(
-            (context) => _gpsService.connectedDevice.value != null
-                ? IconButton(
-                    icon: const Icon(Icons.bluetooth_connected),
-                    onPressed: () => _showDisconnectDialog(),
-                    tooltip: 'Disconnect',
-                  )
-                : const SizedBox.shrink(),
-          ),
-        ],
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
-          child: Watch(
-            (context) =>
-                _gpsService.connectedDevice.value != null &&
-                    _gpsService.currentLocation.value != null
-                ? TabBar(
-                    controller: _tabController,
-                    tabs: const [
-                      Tab(icon: Icon(Icons.map), text: 'Map'),
-                      Tab(icon: Icon(Icons.list), text: 'Data'),
-                    ],
-                  )
-                : const SizedBox.shrink(),
+      extendBodyBehindAppBar: true,
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(70),
+        child: ClipRRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: AppBar(
+              backgroundColor: colorScheme.surface.withOpacity(0.4),
+              elevation: 0,
+              centerTitle: true,
+              title: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    "LOCATION TRACKER",
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                Watch(
+                  (context) => _gpsService.connectedDevice.value != null
+                      ? IconButton(
+                          icon: const Icon(Icons.bluetooth_connected),
+                          onPressed: () => _showDisconnectDialog(),
+                          tooltip: 'Disconnect',
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+              bottom: PreferredSize(
+                preferredSize: const Size.fromHeight(48),
+                child: Watch(
+                  (context) =>
+                      _gpsService.connectedDevice.value != null &&
+                          _gpsService.currentLocation.value != null
+                      ? TabBar(
+                          controller: _tabController,
+                          indicatorColor: colorScheme.primary,
+                          labelColor: colorScheme.primary,
+                          unselectedLabelColor: colorScheme.onSurface
+                              .withOpacity(0.5),
+                          tabs: const [
+                            Tab(icon: Icon(Icons.map), text: 'Map'),
+                            Tab(icon: Icon(Icons.list), text: 'Data'),
+                          ],
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ),
+            ),
           ),
         ),
       ),
-      body: Watch((context) {
-        // If connected and has location, show tab view
-        if (_gpsService.connectedDevice.value != null &&
-            _gpsService.currentLocation.value != null) {
-          return TabBarView(
-            controller: _tabController,
-            children: [
-              // Map View
-              OSMMapWidget(
-                initialLocation: _gpsService.currentLocation.value,
-                locationHistory: _gpsService.locationHistory,
-                showUserLocation: true,
-                showLocationHistory: true,
-                onMarkerTap: (location) {
-                  _showLocationDetails(location);
-                },
+      body: Stack(
+        children: [
+          Positioned.fill(
+            child: Opacity(
+              opacity: Theme.of(context).brightness == Brightness.dark
+                  ? 0.15
+                  : 0.08,
+              child: Image.asset(
+                'assets/tactical_bg.png',
+                fit: BoxFit.cover,
+                color: Theme.of(context).brightness == Brightness.dark
+                    ? null
+                    : colorScheme.primary.withOpacity(0.5),
+                colorBlendMode: Theme.of(context).brightness == Brightness.dark
+                    ? BlendMode.dst
+                    : BlendMode.srcATop,
               ),
-              // Data View
-              _buildDataView(),
-            ],
-          );
-        }
-
-        // Otherwise show connection/setup screen
-        return RefreshIndicator(
-          onRefresh: () async {
-            if (_gpsService.connectedDevice.value == null) {
-              await _gpsService.startScan();
-            }
-          },
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Connection status
-                _buildConnectionStatus(),
-
-                const SizedBox(height: 24),
-
-                // Show device list if not connected
-                if (_gpsService.connectedDevice.value == null) ...[
-                  Text(
-                    'Connect to GPS Device',
-                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  BluetoothDeviceList(
-                    devices: _gpsService.availableDevices,
-                    isScanning: _gpsService.isScanning.value,
-                    onDeviceSelected: (deviceId) async {
-                      await _gpsService.connectToDevice(deviceId);
-                      if (_gpsService.errorMessage.value != null && mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text(_gpsService.errorMessage.value!),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    },
-                    onScanPressed: () => _gpsService.startScan(),
-                  ),
-                ],
-
-                // Show waiting for GPS if connected but no location yet
-                if (_gpsService.connectedDevice.value != null &&
-                    _gpsService.currentLocation.value == null)
-                  _buildWaitingForGPS(),
-
-                // Error message
-                if (_gpsService.errorMessage.value != null) ...[
-                  const SizedBox(height: 16),
-                  _buildErrorMessage(),
-                ],
-              ],
             ),
           ),
-        );
-      }),
+          Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  colorScheme.primary.withOpacity(0.05),
+                  colorScheme.surface,
+                ],
+              ),
+            ),
+            child: SafeArea(
+              child: Watch((context) {
+                // If connected and has location, show tab view
+                if (_gpsService.connectedDevice.value != null &&
+                    _gpsService.currentLocation.value != null) {
+                  return TabBarView(
+                    controller: _tabController,
+                    children: [
+                      // Map View
+                      OSMMapWidget(
+                        initialLocation: _gpsService.currentLocation.value,
+                        locationHistory: _gpsService.locationHistory,
+                        showUserLocation: true,
+                        showLocationHistory: true,
+                        onMarkerTap: (location) {
+                          _showLocationDetails(location);
+                        },
+                      ),
+                      // Data View
+                      _buildDataView(),
+                    ],
+                  );
+                }
+
+                // Otherwise show connection/setup screen
+                return RefreshIndicator(
+                  onRefresh: () async {
+                    if (_gpsService.connectedDevice.value == null) {
+                      await _gpsService.startScan();
+                    }
+                  },
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // Show device list if not connected
+                        if (_gpsService.connectedDevice.value == null) ...[
+                          Text(
+                            'SYSTEM SCAN',
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            'Connect to External Receiver',
+                            style: TextStyle(
+                              color: colorScheme.onSurface,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          BluetoothDeviceList(
+                            devices: _gpsService.availableDevices,
+                            isScanning: _gpsService.isScanning.value,
+                            onDeviceSelected: (deviceId) async {
+                              await _gpsService.connectToDevice(deviceId);
+                              if (_gpsService.errorMessage.value != null &&
+                                  mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      _gpsService.errorMessage.value!,
+                                    ),
+                                    backgroundColor: Colors.red,
+                                  ),
+                                );
+                              }
+                            },
+                            onScanPressed: () => _gpsService.startScan(),
+                          ),
+                        ],
+
+                        if (_gpsService.connectedDevice.value != null) ...[
+                          const SizedBox(height: 24),
+                        ],
+
+                        // Connection status
+                        _buildConnectionStatus(),
+
+                        // Show waiting for GPS if connected but no location yet
+                        if (_gpsService.connectedDevice.value != null &&
+                            _gpsService.currentLocation.value == null)
+                          Padding(
+                            padding: const EdgeInsets.only(top: 24),
+                            child: _buildWaitingForGPS(),
+                          ),
+
+                        // Error message
+                        if (_gpsService.errorMessage.value != null) ...[
+                          const SizedBox(height: 24),
+                          _buildErrorMessage(),
+                        ],
+                      ],
+                    ),
+                  ),
+                );
+              }),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
