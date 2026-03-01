@@ -64,7 +64,34 @@ class HealthService {
 
     try {
       final steps = await health.getTotalStepsInInterval(midnight, now);
-      debugPrint("HealthService: Fetched steps from HealthKit: $steps");
+      debugPrint(
+        "HealthService: [iPhone Sync] Steps for $midnight to $now: $steps",
+      );
+
+      // Fallback: Get raw points if getTotalStepsInInterval returns 0 or null
+      if (steps == null || steps == 0) {
+        final rawSteps = await health.getHealthDataFromTypes(
+          startTime: midnight,
+          endTime: now,
+          types: [HealthDataType.STEPS],
+        );
+        debugPrint(
+          "HealthService: [iPhone Sync] Raw Points Check: ${rawSteps.length} points found.",
+        );
+
+        int sumRaw = 0;
+        for (var p in rawSteps) {
+          final v = p.value;
+          if (v is NumericHealthValue) sumRaw += v.numericValue.toInt();
+        }
+        if (sumRaw > 0) {
+          debugPrint(
+            "HealthService: [iPhone Sync] Fallback Success: Summed $sumRaw steps from raw points.",
+          );
+          return sumRaw;
+        }
+      }
+
       return steps ?? 0;
     } catch (e) {
       debugPrint("HealthService: Error fetching steps: $e");
@@ -143,35 +170,69 @@ class HealthService {
     }
   }
 
-  /// Fetches today's active calories burned from Apple Health/Google Fit.
-  static Future<double> fetchCalories() async {
+  /// Fetches step count for a specific day.
+  static Future<int> fetchStepsForDay(DateTime day) async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0;
+
+    final start = DateTime(day.year, day.month, day.day);
+    final end = day.day == DateTime.now().day
+        ? DateTime.now()
+        : start.add(const Duration(days: 1));
+
+    try {
+      final steps = await health.getTotalStepsInInterval(start, end);
+      debugPrint(
+        "HealthService: fetchStepsForDay for $start to $end returned $steps",
+      );
+      if (steps == null || steps == 0) {
+        final rawSteps = await health.getHealthDataFromTypes(
+          startTime: start,
+          endTime: end,
+          types: [HealthDataType.STEPS],
+        );
+        debugPrint(
+          "HealthService: Raw points count for same interval: ${rawSteps.length}",
+        );
+        int sumRaw = 0;
+        for (var p in rawSteps) {
+          final v = p.value;
+          if (v is NumericHealthValue) sumRaw += v.numericValue.toInt();
+        }
+        debugPrint("HealthService: Sum of raw points: $sumRaw");
+        return sumRaw;
+      }
+      return steps;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching steps for $day: $e");
+      return 0;
+    }
+  }
+
+  /// Fetches calories burned for a specific day.
+  static Future<double> fetchCaloriesForDay(DateTime day) async {
     final authorized = await requestPermissions();
     if (!authorized) return 0.0;
 
-    final now = DateTime.now();
-    final midnight = DateTime(now.year, now.month, now.day);
+    final start = DateTime(day.year, day.month, day.day);
+    final end = day.day == DateTime.now().day
+        ? DateTime.now()
+        : start.add(const Duration(days: 1));
 
     try {
-      final types = [HealthDataType.ACTIVE_ENERGY_BURNED];
       final healthData = await health.getHealthDataFromTypes(
-        startTime: midnight,
-        endTime: now,
-        types: types,
+        startTime: start,
+        endTime: end,
+        types: [HealthDataType.ACTIVE_ENERGY_BURNED],
       );
-
       double totalCalories = 0.0;
       for (var data in healthData) {
         final value = data.value;
-        if (value is NumericHealthValue) {
-          totalCalories += value.numericValue;
-        }
+        if (value is NumericHealthValue) totalCalories += value.numericValue;
       }
-      debugPrint(
-        "HealthService: Fetched calories from HealthKit: $totalCalories",
-      );
       return totalCalories;
     } catch (e) {
-      debugPrint("HealthService: Error fetching calories: $e");
+      debugPrint("HealthService: Error fetching calories for $day: $e");
       return 0.0;
     }
   }

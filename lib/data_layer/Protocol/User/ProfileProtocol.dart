@@ -32,7 +32,7 @@ abstract class ProfileProtocol with _$ProfileProtocol {
     String? githubUrl,
   }) {
     return ProfileProtocol(
-      profileID: profileID ?? IDGen.generateUuid(),
+      profileID: profileID ?? IDGen.UUIDV7(),
       personID: personID,
       bio: bio,
       occupation: occupation,

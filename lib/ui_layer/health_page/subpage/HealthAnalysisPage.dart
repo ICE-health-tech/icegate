@@ -84,28 +84,54 @@ class HealthAnalysisPage extends StatelessWidget {
             }
 
             // --- DATA ANALYSIS ---
-            final latest = allMetrics.first;
+            final now = DateTime.now();
+            final todayKey = "${now.year}-${now.month}-${now.day}";
+
+            // Find today's record (it should be first in DESC order, but let's be safe)
+            final todayMetric = allMetrics.firstWhere(
+              (m) => "${m.date.year}-${m.date.month}-${m.date.day}" == todayKey,
+              orElse: () => HealthMetricsLocal(
+                id: '',
+                date: now,
+                steps: 0,
+                caloriesBurned: 0,
+                sleepHours: 0.0,
+                heartRate: 0,
+                exerciseMinutes: 0,
+                focusMinutes: 0,
+                updatedAt: now,
+              ),
+            );
+
+            final latest = todayMetric;
             final last7Days = allMetrics.take(7).toList();
 
-            // Efficiency (Today's steps vs Goal)
+            // Efficiency (Steps vs Goal)
             final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
               0.0,
               1.0,
             );
 
             // Consistency (Average variation in last 7 days)
-            double avgSteps =
-                last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
-                last7Days.length;
-            double variance =
-                last7Days.fold(
-                  0.0,
-                  (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
-                ) /
-                last7Days.length;
-            double consistency =
-                (1.0 - (math.sqrt(variance) / (avgSteps > 0 ? avgSteps : 1.0)))
-                    .clamp(0.0, 1.0);
+            double avgSteps = last7Days.isEmpty
+                ? 0.0
+                : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
+                      last7Days.length;
+
+            double consistency = 0.0;
+            if (last7Days.length > 1) {
+              double variance =
+                  last7Days.fold(
+                    0.0,
+                    (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
+                  ) /
+                  last7Days.length;
+              consistency =
+                  (1.0 -
+                          (math.sqrt(variance) /
+                              (avgSteps > 0 ? avgSteps : 1.0)))
+                      .clamp(0.0, 1.0);
+            }
 
             return SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -435,6 +461,19 @@ class HealthAnalysisPage extends StatelessWidget {
               .reduce((a, b) => math.max(a, b))
               .toDouble();
 
+    final avgSteps = last7Days.isEmpty
+        ? 0.0
+        : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
+              last7Days.length;
+    final avgSleep = last7Days.isEmpty
+        ? 0.0
+        : last7Days.fold(0.0, (sum, m) => sum + (m.sleepHours ?? 0.0)) /
+              last7Days.length;
+    final avgHR = last7Days.isEmpty
+        ? 0.0
+        : last7Days.fold(0.0, (sum, m) => sum + (m.heartRate ?? 0)) /
+              last7Days.length;
+
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -467,9 +506,24 @@ class HealthAnalysisPage extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildTrendStat('Avg Steps', '5,230', colorScheme, textTheme),
-              _buildTrendStat('Avg Sleep', '7.2h', colorScheme, textTheme),
-              _buildTrendStat('Avg HR', '72 bpm', colorScheme, textTheme),
+              _buildTrendStat(
+                'Avg Steps',
+                '${avgSteps.toInt()}',
+                colorScheme,
+                textTheme,
+              ),
+              _buildTrendStat(
+                'Avg Sleep',
+                '${avgSleep.toStringAsFixed(1)}h',
+                colorScheme,
+                textTheme,
+              ),
+              _buildTrendStat(
+                'Avg HR',
+                '${avgHR.toInt()} bpm',
+                colorScheme,
+                textTheme,
+              ),
             ],
           ),
           const SizedBox(height: 20),

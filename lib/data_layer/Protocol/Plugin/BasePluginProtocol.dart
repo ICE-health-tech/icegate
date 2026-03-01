@@ -42,7 +42,7 @@ abstract class BasePluginProtocol {
       url: url,
       imageUrl: imageUrl,
       alias: customAlias ?? name,
-      widgetID: customWidgetID ?? IDGen.generateUuid(),
+      widgetID: customWidgetID ?? IDGen.UUIDV7(),
       dateAdded: DateTime.now().toString(),
       description: description,
       icon: icon,

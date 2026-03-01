@@ -87,6 +87,26 @@ class _StepsPageState extends State<StepsPage> {
                       ),
                       IconButton(
                         icon: Icon(
+                          Icons.refresh_rounded,
+                          color: colorScheme.primary,
+                        ),
+                        onPressed: () {
+                          HealthService.fetchStepCount().then((steps) {
+                            if (mounted) {
+                              context.read<HealthBlock>().updateSteps(steps);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text('Syncing health data...'),
+                                  duration: Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          });
+                        },
+                        tooltip: 'Refresh Steps',
+                      ),
+                      IconButton(
+                        icon: Icon(
                           Icons.grid_view_rounded,
                           color: colorScheme.primary,
                         ),
@@ -254,7 +274,7 @@ class _StepsPageState extends State<StepsPage> {
                           children: [
                             _buildModernStatCard(
                               context,
-                              'Total Steps',
+                              'Lifetime Total',
                               total.toString(),
                               'steps',
                               Icons.workspace_premium_rounded,

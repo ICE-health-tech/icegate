@@ -53,7 +53,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
 
   /// No global transformation needed.
   /// Drift schema `.named()` values are now aligned directly with Supabase column names:
-  /// - Tables use UUIDs (via IDGen.generateUuid()) for IDs.
+  /// - Tables use UUIDs (via IDGen.UUIDV7()) for IDs.
   /// - Column names use snake_case in both Drift and Supabase to match PowerSync schema.
   Map<String, dynamic> _transformOpData(
     String table,

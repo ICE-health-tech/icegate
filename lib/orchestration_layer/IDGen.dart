@@ -5,6 +5,16 @@ class IDGen {
   static const _uuid = Uuid();
 
   static String generateUuid() => _uuid.v4();
+
+  /// Generates a time-ordered UUID v7
+  static String UUIDV7() => _uuid.v7();
+
+  /// Generates a deterministic UUID v5 based on a namespace and name.
+  /// Useful for ensuring the same ID is generated for the same "business key" (e.g., personId + date).
+  static String generateDeterministicUuid(String namespace, String name) {
+    return _uuid.v5(namespace, name);
+  }
+
   // Static random instance to avoid creating a new one every call
   static final Random _rng = Random.secure();
 

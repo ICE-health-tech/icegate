@@ -47,7 +47,7 @@ class _WeightPageState extends State<WeightPage> {
 
                 await db.healthMetricsDAO.insertOrUpdateMetrics(
                   HealthMetricsTableCompanion(
-                    id: Value(IDGen.generateUuid()),
+                    id: Value(IDGen.UUIDV7()),
                     personID: Value(personId),
                     date: Value(
                       DateTime(
@@ -140,7 +140,7 @@ class _WeightListItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceVariant.withOpacity(0.3),
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(
@@ -154,7 +154,7 @@ class _WeightListItem extends StatelessWidget {
                 style: const TextStyle(fontWeight: FontWeight.bold),
               ),
               Text(
-                (metric.weightKg ?? 0.0).toStringAsFixed(1) + " kg",
+                "${(metric.weightKg ?? 0.0).toStringAsFixed(1)} kg",
                 style: TextStyle(
                   fontSize: 20,
                   color: Theme.of(context).colorScheme.primary,

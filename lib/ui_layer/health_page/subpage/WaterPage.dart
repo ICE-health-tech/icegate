@@ -243,7 +243,7 @@ class _WaterPageState extends State<WaterPage>
         Feedback.forTap(context);
         await dao.insertWaterLog(
           WaterLogsTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: IDGen.UUIDV7(),
             personID: drift.Value(
               Supabase.instance.client.auth.currentUser?.id ?? "",
             ),
@@ -310,7 +310,7 @@ class _WaterPageState extends State<WaterPage>
               if (amount > 0) {
                 await dao.insertWaterLog(
                   WaterLogsTableCompanion.insert(
-                    id: IDGen.generateUuid(),
+                    id: IDGen.UUIDV7(),
                     personID: drift.Value(
                       Supabase.instance.client.auth.currentUser?.id ?? "",
                     ),

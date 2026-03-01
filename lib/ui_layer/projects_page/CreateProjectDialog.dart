@@ -57,7 +57,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         final taskTitle = _taskTitleController.text.trim();
         final noteTitle = _noteTitleController.text.trim();
 
-        final widgetID = IDGen.generateUuid();
+        final widgetID = IDGen.UUIDV7();
         // 1. Force it to UTC before converting
         final dateAdded = DateTime.now().toUtc().toIso8601String();
 

@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationInboxPage.dart';
-import 'package:ice_shield/ui_layer/notification_page/CustomNotificationManagerPage.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:ice_shield/ui_layer/ReusableWidget/SettingWidget.dart';
@@ -134,11 +133,6 @@ final GoRouter router = GoRouter(
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const NotificationInboxPage(),
     ),
-    GoRoute(
-      path: '/custom-notifications',
-      parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const CustomNotificationManagerPage(),
-    ),
 
     // --- SHELL ROUTE (Wraps pages with the App Bar) ---
     ShellRoute(
@@ -203,7 +197,7 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const HealthPage(),
           routes: [
             GoRoute(
-               path: '/dashboard',
+              path: '/dashboard',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HealthAnalysisPage(),
             ),

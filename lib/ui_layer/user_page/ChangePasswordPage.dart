@@ -241,8 +241,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Please enter current password';
+                  }
                   return null;
                 },
               ),
@@ -280,10 +281,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Please enter a password';
-                  if (value.length < 6)
+                  }
+                  if (value.length < 6) {
                     return 'Password must be at least 6 characters';
+                  }
                   return null;
                 },
               ),
@@ -322,10 +325,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   ),
                 ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return 'Please confirm your password';
-                  if (value != _passwordController.text)
+                  }
+                  if (value != _passwordController.text) {
                     return 'Passwords do not match';
+                  }
                   return null;
                 },
               ),

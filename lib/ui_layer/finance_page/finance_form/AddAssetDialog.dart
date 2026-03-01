@@ -39,7 +39,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
 
     context.read<AppDatabase>().financeDAO.createAsset(
       AssetsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         personID: personID,
         assetName: symbol,
         assetCategory: _selectedType.name,

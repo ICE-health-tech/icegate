@@ -28,7 +28,7 @@ abstract class UserAccountProtocol with _$UserAccountProtocol {
     DateTime? lastLoginAt,
   }) {
     return UserAccountProtocol(
-      accountID: accountID ?? IDGen.generateUuid(),
+      accountID: accountID ?? IDGen.UUIDV7(),
       personID: personID,
       username: username,
       primaryEmail: primaryEmail,

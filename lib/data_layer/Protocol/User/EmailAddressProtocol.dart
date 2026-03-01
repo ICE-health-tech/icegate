@@ -27,7 +27,7 @@ abstract class EmailAddressProtocol with _$EmailAddressProtocol {
     DateTime? verifiedAt,
   }) {
     return EmailAddressProtocol(
-      emailAddressID: emailAddressID ?? IDGen.generateUuid(),
+      emailAddressID: emailAddressID ?? IDGen.UUIDV7(),
       personID: personID,
       emailAddress: emailAddress,
       emailType: emailType,

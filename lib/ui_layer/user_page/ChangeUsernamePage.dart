@@ -121,12 +121,15 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                     ),
                   ),
                   validator: (value) {
-                    if (value == null || value.trim().isEmpty)
+                    if (value == null || value.trim().isEmpty) {
                       return 'Please enter a username';
-                    if (value.trim().length < 3)
+                    }
+                    if (value.trim().length < 3) {
                       return 'Username must be at least 3 characters';
-                    if (value.contains('@'))
+                    }
+                    if (value.contains('@')) {
                       return 'Username cannot contain "@"';
+                    }
                     return null;
                   },
                 ),

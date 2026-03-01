@@ -68,7 +68,7 @@ class DataSeeder {
     // 5. Create Financial Accounts
     await db.financeDAO.createAccount(
       FinancialAccountsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         accountName: const Value('Main Checking'),
         accountType: const Value('checking'),
@@ -79,7 +79,7 @@ class DataSeeder {
     );
     await db.financeDAO.createAccount(
       FinancialAccountsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         accountName: const Value('Savings'),
         accountType: const Value('savings'),
@@ -91,7 +91,7 @@ class DataSeeder {
     // 6. Create Assets
     await db.financeDAO.createAsset(
       AssetsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         assetName: const Value('Unknown'),
         assetCategory: const Value('electronics'),
@@ -103,7 +103,7 @@ class DataSeeder {
     // 7. Create Goals
     final goalId = await db.growthDAO.createGoal(
       GoalsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         title: const Value('Learn Rust'),
         category: const Value('education'),
@@ -115,7 +115,7 @@ class DataSeeder {
     // 8. Create Habits
     await db.growthDAO.createHabit(
       HabitsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         goalID: Value(goalId),
         habitName: const Value('Code Rust daily'),
@@ -127,7 +127,7 @@ class DataSeeder {
     // 9. Create Skills
     await db.growthDAO.createSkill(
       SkillsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         skillName: const Value('Flutter'),
         proficiencyLevel: const Value(SkillLevel.expert),
@@ -139,7 +139,7 @@ class DataSeeder {
     // 10. Create Blog Posts
     await db.contentDAO.createPost(
       BlogPostsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         authorID: Value(personId),
         title: const Value('Hello World'),
         slug: const Value('hello-world'),
@@ -156,7 +156,7 @@ class DataSeeder {
     //   final normalizedDate = DateTime(date.year, date.month, date.day);
     //   await db.healthMetricsDAO.insertOrUpdateMetrics(
     //     HealthMetricsTableCompanion(
-    //       id: Value(IDGen.generateUuid()),
+    //       id: Value(IDGen.UUIDV7()),
     //       personID: Value(personId),
     //       steps: Value(5000 + (i * 100)), // 5000 to 5600 steps per day
     //       date: Value(normalizedDate),
@@ -168,7 +168,7 @@ class DataSeeder {
     // 12. Seed Quests
     await db.questDAO.insertQuest(
       QuestsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         title: 'Stamina Boost',
         description: Value('Walk 10,000 steps today.'),
         targetValue: const Value(10000.0),
@@ -178,7 +178,7 @@ class DataSeeder {
     );
     await db.questDAO.insertQuest(
       QuestsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         title: 'Iron Will',
         description: Value('Complete 3 heavy focus sessions.'),
         targetValue: const Value(3.0),
@@ -210,7 +210,7 @@ class DataSeeder {
     // 14. Seed Reminders
     await db.customNotificationDAO.insertNotification(
       CustomNotificationsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         title: 'Hydration Protocol',
         content: 'Drink 500ml of water to maintain peak performance.',
         scheduledTime: DateTime.now().add(const Duration(hours: 2)),

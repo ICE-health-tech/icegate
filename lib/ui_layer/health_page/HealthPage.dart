@@ -11,6 +11,10 @@ import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
 import 'package:ice_shield/ui_layer/health_page/widgets/QuickActionButton.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
 
 class HealthPage extends StatefulWidget {
   const HealthPage({super.key});
@@ -180,6 +184,35 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
                 leading: const SizedBox.shrink(),
                 actions: [
                   IconButton(
+                    icon: const Icon(Icons.sync, color: Colors.blue, size: 30),
+                    onPressed: () async {
+                      // Request permissions and trigger sync
+                      final authorized =
+                          await HealthService.requestPermissions();
+                      if (authorized) {
+                        // The DataLayer periodic timer or the direct call in DataLayer will handle it,
+                        // but we can trigger an immediate one-off sync here too if we have access.
+                        // However, HealthBlock doesn't have a direct 'syncNow' method yet.
+                        // Let's just show a snackbar for now, as the DataLayer sync runs every minute.
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Syncing with Apple Health...'),
+                            duration: Duration(seconds: 2),
+                          ),
+                        );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Health permissions not granted.'),
+                            duration: Duration(seconds: 3),
+                          ),
+                        );
+                      }
+                    },
+                    tooltip: 'Sync with Apple Health',
+                  ),
+                 
+                  IconButton(
                     icon: const Icon(Icons.home_rounded, size: 30),
                     onPressed: () {
                       WidgetNavigatorAction.smartPop(context);
@@ -222,22 +255,71 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
                       hasScrollBody: false,
                       child: Center(child: CircularProgressIndicator()),
                     )
-                  : SliverPadding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                      sliver: SliverGrid(
-                        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: compact ? 2 : 3,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: compact ? 0.95 : 1.2,
+                  : Watch((context) {
+                      // Obtain the block once. Since it's not a signal, use read().
+                      // The Watch() widget will track individual signals inside the block.
+                      final healthBlock = context.read<HealthBlock>();
+                      final currentSteps = healthBlock.todaySteps.value;
+
+                      // Construct reactive metrics list for today
+                      final stepGoal = STEP_GOAL;
+                      final currentSleep = healthBlock.todaySleep.value;
+                      final currentHR = healthBlock.todayHeartRate.value;
+
+                      // Create a local copy/list to avoid mutating _healthMetrics during build
+                      final List<HealthMetric> displayMetrics = _healthMetrics
+                          .values
+                          .map((m) {
+                            if (m.id == 'steps') {
+                              return m.copyWith(
+                                value: currentSteps.toString(),
+                                progress: (currentSteps / stepGoal).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                            }
+                            if (m.id == 'sleep') {
+                              return m.copyWith(
+                                value: currentSleep.toStringAsFixed(1),
+                                progress: (currentSleep / SLEEP_GOAL).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                            }
+                            if (m.id == 'heart_rate') {
+                              return m.copyWith(
+                                value: currentHR > 0
+                                    ? currentHR.toString()
+                                    : m.value,
+                              );
+                            }
+                            return m;
+                          })
+                          .toList();
+
+                      return SliverPadding(
+                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                        sliver: SliverGrid(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: compact ? 2 : 3,
+                                crossAxisSpacing: 16,
+                                mainAxisSpacing: 16,
+                                childAspectRatio: compact ? 0.95 : 1.2,
+                              ),
+                          delegate: SliverChildBuilderDelegate((
+                            context,
+                            index,
+                          ) {
+                            return HealthMetricCard(
+                              metrics: displayMetrics[index],
+                            );
+                          }, childCount: displayMetrics.length),
                         ),
-                        delegate: SliverChildBuilderDelegate((context, index) {
-                          return HealthMetricCard(
-                            metrics: _healthMetrics.values.elementAt(index),
-                          );
-                        }, childCount: _healthMetrics.length),
-                      ),
-                    ),
+                      );
+                    }),
 
               // Bottom padding to avoid FAB overlap
               const SliverToBoxAdapter(child: SizedBox(height: 140)),
@@ -247,5 +329,4 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
       ),
     );
   }
-
 }

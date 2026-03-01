@@ -1,8 +1,13 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
-    show HealthMetricsDAO, HealthMetricsTableCompanion, HealthLogsDAO;
+    show
+        HealthLogsDAO,
+        HealthMealDAO,
+        HealthMetricsDAO,
+        HealthMetricsTableCompanion;
 import 'package:signals/signals.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 
@@ -17,9 +22,15 @@ class HealthBlock {
   final todayCaloriesBurned = signal<int>(0);
   final dailyStepGoal = signal<int>(10000);
   final dailyKcalGoal = signal<int>(2500);
+  final dailyWaterGoal = signal<int>(2000);
+  final dailyFocusGoal = signal<int>(60);
+  final dailyExerciseGoal = signal<int>(30);
+  final dailySleepGoal = signal<double>(8.0);
   final todayWater = signal<int>(0);
   final todayExerciseMinutes = signal<int>(0);
   final todayFocusMinutes = signal<int>(0);
+  final todayCaloriesConsumed = signal<int>(0);
+  final hasInitialSync = signal<bool>(false);
 
   late final totalSteps = computed(
     () => todaySteps.value + historicalSteps.value,
@@ -31,6 +42,7 @@ class HealthBlock {
     required String personId,
     required HealthMetricsDAO healthDao,
     required HealthLogsDAO healthLogsDao,
+    required HealthMealDAO healthMealDao,
   }) : personId = personId,
        _healthDao = healthDao,
        _healthLogsDao = healthLogsDao;
@@ -39,57 +51,85 @@ class HealthBlock {
   StreamSubscription? _waterSubscription;
 
   void init() {
+    _loadGoals();
     if (personId.isEmpty) {
       debugPrint("HealthBlock: Skipping init, personId is empty.");
       return;
     }
-    // Watch all metrics to calculate historical steps (excluding today)
-    _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
-      (metrics) {
-        final today = DateTime.now();
-        final todayStr = "${today.year}-${today.month}-${today.day}";
+    // 0. Cleanup duplicates before starting watch to prevent sync conflicts
+    _healthDao.cleanupDuplicates(personId).then((_) {
+      // Watch all metrics to calculate historical steps (excluding today)
+      _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
+        (metrics) {
+          final today = DateTime.now();
+          final todayStr = "${today.year}-${today.month}-${today.day}";
 
-        int totalHistorical = 0;
-        int foundTodaySteps = 0;
-        double foundTodaySleep = 0;
-        int foundTodayHeartRate = 0;
-        int foundTodayCaloriesBurned = 0;
+          int totalHistorical = 0;
+          int foundTodaySteps = 0;
+          double foundTodaySleep = 0;
+          int foundTodayHeartRate = 0;
+          int foundTodayCaloriesBurned = 0;
 
-        for (var m in metrics) {
-          final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
-          if (dateStr == todayStr) {
-            foundTodaySteps = m.steps ?? 0;
-            foundTodaySleep = m.sleepHours ?? 0.0;
-            foundTodayHeartRate = m.heartRate ?? 0;
-            foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
-            todayExerciseMinutes.value = m.exerciseMinutes ?? 0;
-            todayFocusMinutes.value = m.focusMinutes ?? 0;
-          } else {
-            totalHistorical += m.steps ?? 0;
+          debugPrint(
+            "HealthBlock: 📊 Received ${metrics.length} metrics from DB",
+          );
+          for (var m in metrics) {
+            final dateStr = "${m.date.year}-${m.date.month}-${m.date.day}";
+            final isTodayMatch = dateStr == todayStr;
+            debugPrint(
+              "HealthBlock:   - Date: ${m.date} (Str: $dateStr), Steps: ${m.steps}, isToday: $isTodayMatch",
+            );
+
+            if (isTodayMatch) {
+              foundTodaySteps = m.steps ?? 0;
+              foundTodaySleep = m.sleepHours ?? 0.0;
+              foundTodayHeartRate = m.heartRate ?? 0;
+              foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+              todayExerciseMinutes.value = m.exerciseMinutes ?? 0;
+              todayFocusMinutes.value = m.focusMinutes ?? 0;
+            } else {
+              totalHistorical += m.steps ?? 0;
+            }
           }
-        }
 
-        historicalSteps.value = totalHistorical;
-        // Only update todaySteps from DB if it's larger than current volatile state
-        if (foundTodaySteps > todaySteps.value) {
-          todaySteps.value = foundTodaySteps;
-        }
+          debugPrint(
+            "HealthBlock: 🔄 Result: foundTodaySteps=$foundTodaySteps, totalHistorical=$totalHistorical",
+          );
+          historicalSteps.value = totalHistorical;
+          // Only update todaySteps from DB if it's larger than current volatile state
+          if (foundTodaySteps > todaySteps.value) {
+            debugPrint(
+              "HealthBlock: 📈 Updating todaySteps to $foundTodaySteps (was ${todaySteps.value})",
+            );
+            todaySteps.value = foundTodaySteps;
+          } else if (foundTodaySteps < todaySteps.value) {
+            debugPrint(
+              "HealthBlock: 🛡️ Protected todaySteps: keeps ${todaySteps.value} (DB has $foundTodaySteps)",
+            );
+          }
 
-        if (foundTodaySleep > todaySleep.value) {
-          todaySleep.value = foundTodaySleep;
-        }
+          if (foundTodaySleep > todaySleep.value) {
+            todaySleep.value = foundTodaySleep;
+          }
 
-        if (foundTodayHeartRate > todayHeartRate.value) {
-          todayHeartRate.value = foundTodayHeartRate;
-        }
+          if (foundTodayHeartRate > todayHeartRate.value) {
+            todayHeartRate.value = foundTodayHeartRate;
+          }
 
-        if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
-          todayCaloriesBurned.value = foundTodayCaloriesBurned;
-        }
-      },
-      onError: (e) =>
-          debugPrint("HealthBlock: Error watching health metrics: $e"),
-    );
+          if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
+            todayCaloriesBurned.value = foundTodayCaloriesBurned;
+          }
+
+          // Mark initial sync complete
+          if (!hasInitialSync.value) {
+            debugPrint("HealthBlock: ✅ Initial DB sync complete.");
+            hasInitialSync.value = true;
+          }
+        },
+        onError: (e) =>
+            debugPrint("HealthBlock: Error watching health metrics: $e"),
+      );
+    });
 
     _waterSubscription = _healthLogsDao
         .watchDailyWaterLogs(personId, DateTime.now())
@@ -103,6 +143,43 @@ class HealthBlock {
           onError: (e) =>
               debugPrint("HealthBlock: Error watching water logs: $e"),
         );
+
+    // Watch goals and save to SharedPreferences
+    effect(() => _saveGoal('dailyStepGoal', dailyStepGoal.value));
+    effect(() => _saveGoal('dailyKcalGoal', dailyKcalGoal.value));
+    effect(() => _saveGoal('dailyWaterGoal', dailyWaterGoal.value));
+    effect(() => _saveGoal('dailyFocusGoal', dailyFocusGoal.value));
+    effect(() => _saveGoal('dailyExerciseGoal', dailyExerciseGoal.value));
+    effect(() => _saveGoal('dailySleepGoal', dailySleepGoal.value));
+  }
+
+  Future<void> _loadGoals() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      dailyStepGoal.value = prefs.getInt('dailyStepGoal') ?? 10000;
+      dailyKcalGoal.value = prefs.getInt('dailyKcalGoal') ?? 2500;
+      dailyWaterGoal.value = prefs.getInt('dailyWaterGoal') ?? 2000;
+      dailyFocusGoal.value = prefs.getInt('dailyFocusGoal') ?? 60;
+      dailyExerciseGoal.value = prefs.getInt('dailyExerciseGoal') ?? 30;
+      dailySleepGoal.value = prefs.getDouble('dailySleepGoal') ?? 8.0;
+      debugPrint("HealthBlock: 🎯 Goals loaded from SharedPreferences");
+    } catch (e) {
+      debugPrint("HealthBlock: Error loading goals: $e");
+    }
+  }
+
+  Future<void> _saveGoal(String key, dynamic value) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (value is int) {
+        await prefs.setInt(key, value);
+      } else if (value is double) {
+        await prefs.setDouble(key, value);
+      }
+      debugPrint("HealthBlock: 💾 Saved $key = $value");
+    } catch (e) {
+      debugPrint("HealthBlock: Error saving goal $key: $e");
+    }
   }
 
   void updateSteps(int steps) {
@@ -155,7 +232,7 @@ class HealthBlock {
     );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         date: Value(normalizedToday),
         caloriesBurned: Value(calories),
@@ -172,7 +249,7 @@ class HealthBlock {
     debugPrint("HealthBlock: Saving $steps steps to DB for $normalizedToday");
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         date: Value(normalizedToday),
         steps: Value(steps),
@@ -191,7 +268,7 @@ class HealthBlock {
     );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         date: Value(normalizedToday),
         sleepHours: Value(hours),
@@ -210,7 +287,7 @@ class HealthBlock {
     );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
-        id: Value(IDGen.generateUuid()),
+        id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         date: Value(normalizedToday),
         heartRate: Value(bpm),

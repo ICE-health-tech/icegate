@@ -36,7 +36,7 @@ abstract class CVAddressProtocol with _$CVAddressProtocol {
     String? linkedinUrl,
   }) {
     return CVAddressProtocol(
-      cvAddressID: cvAddressID ?? IDGen.generateUuid(),
+      cvAddressID: cvAddressID ?? IDGen.UUIDV7(),
       personID: personID,
       githubUrl: githubUrl,
       websiteUrl: websiteUrl,

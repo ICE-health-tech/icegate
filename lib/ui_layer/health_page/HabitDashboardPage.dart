@@ -138,7 +138,7 @@ class HabitDashboardPage extends StatelessWidget {
     try {
       await dao.insertExerciseLog(
         ExerciseLogsTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           personID: const Value(''),
           type: type,
           durationMinutes: minutes,
@@ -155,7 +155,7 @@ class HabitDashboardPage extends StatelessWidget {
     try {
       await dao.insertWaterLog(
         WaterLogsTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           personID: Value(Supabase.instance.client.auth.currentUser!.id),
           amount: Value(amount),
           timestamp: Value(DateTime.now()),
@@ -173,7 +173,7 @@ class HabitDashboardPage extends StatelessWidget {
       final now = DateTime.now();
       await dao.insertSleepLog(
         SleepLogsTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           personID: const Value(''),
           startTime: now.subtract(const Duration(hours: 8)),
           endTime: Value(now),

@@ -289,16 +289,6 @@ class SettingsWidget extends StatelessWidget {
                     ),
                   );
                 }),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: 'Custom Reminders',
-                  subtitle: 'Manage your personal notifications',
-                  icon: Icons.notification_add_rounded,
-                  color: Colors.blue,
-                  onTap: () {
-                    context.push('/custom-notifications');
-                  },
-                ),
               ],
             ),
 

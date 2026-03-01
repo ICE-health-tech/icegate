@@ -205,7 +205,7 @@ class FinanceBlock {
     if (_personId.isEmpty) return;
     await _dao.insertTransaction(
       TransactionsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         personID:Value( _personId),
         category: category,
         type: type,

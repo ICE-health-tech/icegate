@@ -24,56 +24,65 @@ class ScoreBlock {
 
   ScoreBlock({ScoreData? initialScore}) {
     if (initialScore != null) {
-      _score.value = initialScore;
+      updateScore(initialScore);
+    } else {
+      updateScore(ScoreData.empty());
     }
   }
 
   ScoreData get score => _score.value;
   set score(ScoreData value) => _score.value = value;
 
-  late final averageScore = computed(() {
-    final s = _score.value;
-    return (s.healthGlobalScore +
-            s.socialGlobalScore +
-            s.financialGlobalScore +
-            s.careerGlobalScore) /
-        4;
-  });
+  final averageScore = signal<double>(0);
+  final totalXP = signal<double>(0);
+  final globalLevel = signal<int>(1);
+  final levelProgress = signal<double>(0);
+  final rankTitle = signal<String>("Novice");
 
-  /// Raw sum of all scores (Range: 0.0 - 4.0)
-  late final totalXP = computed(() {
-    final s = _score.value;
-    return s.healthGlobalScore +
-        s.socialGlobalScore +
-        s.financialGlobalScore +
-        s.careerGlobalScore;
-  });
+  void updateScore(ScoreData scoreValue) {
+    batch(() {
+      _score.value = scoreValue;
 
-  /// Global level (Cumulative: Level L requires 50*L*(L+1) pts)
-  late final globalLevel = computed(() {
-    return GamificationService.getLevel(totalXP.value.toInt());
-  });
+      final avg =
+          (scoreValue.healthGlobalScore +
+              scoreValue.socialGlobalScore +
+              scoreValue.financialGlobalScore +
+              scoreValue.careerGlobalScore) /
+          4;
+      averageScore.value = avg;
 
-  /// Percentage progress towards the next level
-  late final levelProgress = computed(() {
-    return GamificationService.getProgressToNextLevel(totalXP.value.toInt());
-  });
+      final xp =
+          scoreValue.healthGlobalScore +
+          scoreValue.socialGlobalScore +
+          scoreValue.financialGlobalScore +
+          scoreValue.careerGlobalScore;
+      totalXP.value = xp;
 
-  /// Descriptive rank based on Level
-  late final rankTitle = computed(() {
-    final level = globalLevel.value;
-    if (level < 10) return "Novice";
-    if (level < 20) return "Protector";
-    if (level < 30) return "Guardian";
-    if (level < 50) return "Hero";
-    if (level < 70) return "Legend";
-    if (level < 90) return "Saint";
-    return "God";
-  });
+      final level = GamificationService.getLevel(xp.toInt());
+      globalLevel.value = level;
 
-  void updateScore(ScoreData score) {
-    _score.value = score;
+      levelProgress.value = GamificationService.getProgressToNextLevel(
+        xp.toInt(),
+      );
+
+      if (level < 10)
+        rankTitle.value = "Novice";
+      else if (level < 20)
+        rankTitle.value = "Protector";
+      else if (level < 30)
+        rankTitle.value = "Guardian";
+      else if (level < 50)
+        rankTitle.value = "Hero";
+      else if (level < 70)
+        rankTitle.value = "Legend";
+      else if (level < 90)
+        rankTitle.value = "Saint";
+      else
+        rankTitle.value = "God";
+    });
   }
+
+  String? _initializedPersonID;
 
   void init(
     ScoreDAO dao,
@@ -88,9 +97,21 @@ class ScoreBlock {
       return;
     }
 
-    // Clear old subscriptions to avoid overlapping updates if init is called again (e.g. on user login)
+    if (_initializedPersonID == personID) {
+      debugPrint("ScoreBlock: ℹ️ Already initialized for $personID");
+      return;
+    }
+
+    debugPrint("ScoreBlock: 🚀 Initializing for personID: $personID");
+    _initializedPersonID = personID;
+
+    // Clear old subscriptions safely
     for (var s in _subscriptions) {
-      s.cancel();
+      if (s is StreamSubscription) {
+        s.cancel();
+      } else if (s is void Function()) {
+        s(); // Effect cleanup
+      }
     }
     _subscriptions.clear();
 
@@ -149,14 +170,30 @@ class ScoreBlock {
     // Health Watcher (Reactive to Signals)
     _subscriptions.add(
       effect(() {
+        if (!_healthBlock.hasInitialSync.value) {
+          debugPrint(
+            "ScoreBlock: Skipping health update, initial sync pending.",
+          );
+          return;
+        }
+
         final steps = _healthBlock.totalSteps.value;
         final calories = _healthBlock.todayCaloriesBurned.value;
         final water = _healthBlock.todayWater.value;
         final exercise = _healthBlock.todayExerciseMinutes.value;
         final focus = _healthBlock.todayFocusMinutes.value;
+        final sleep = _healthBlock.todaySleep.value;
         final meals = _latestMeals.value;
 
-        _triggerHealthUpdate(steps, calories, water, exercise, focus, meals);
+        _triggerHealthUpdate(
+          steps,
+          calories,
+          water,
+          exercise,
+          focus,
+          sleep,
+          meals,
+        );
       }),
     );
   }
@@ -167,6 +204,7 @@ class ScoreBlock {
     int waterIntake,
     int exerciseMinutes,
     int focusMinutes,
+    double sleepHours,
     List<DayWithMeal> meals,
   ) {
     _healthDebounce?.cancel();
@@ -177,6 +215,7 @@ class ScoreBlock {
         waterIntake,
         exerciseMinutes,
         focusMinutes,
+        sleepHours,
         meals,
       );
     });
@@ -250,6 +289,7 @@ class ScoreBlock {
     int waterIntake,
     int exerciseMinutes,
     int focusMinutes,
+    double sleepHours,
     List<DayWithMeal> allMealsWrapper,
   ) async {
     if (_personID.isEmpty) return;
@@ -259,6 +299,9 @@ class ScoreBlock {
       int stepsPoints = 0;
       if (STEPS_PER_POINT > 0) {
         stepsPoints = (totalSteps / STEPS_PER_POINT).floor();
+      }
+      if (totalSteps >= _healthBlock.dailyStepGoal.value) {
+        stepsPoints += STEP_GOAL_BONUS.toInt();
       }
 
       // 2. Nutrition Points
@@ -271,8 +314,8 @@ class ScoreBlock {
             (dailyCalories[dateKey] ?? 0) + item.meal.calories;
       }
       dailyCalories.forEach((_, calories) {
-        if (calories > 0 && calories < CALORIE_LIMIT) {
-          dietPoints += CALORIE_BONUS_POINTS;
+        if (calories > 0 && calories < _healthBlock.dailyKcalGoal.value) {
+          dietPoints += CALORIE_LIMIT_BONUS.toInt();
         }
       });
 
@@ -281,17 +324,29 @@ class ScoreBlock {
       if (EXERCISE_PER_POINT > 0) {
         exercisePoints = (exerciseMinutes / EXERCISE_PER_POINT).floor();
       }
+      if (exerciseMinutes >= _healthBlock.dailyExerciseGoal.value) {
+        exercisePoints += EXERCISE_GOAL_BONUS.toInt();
+      }
 
       // 4. Focus Points
       int focusPoints = 0;
       if (FOCUS_MINUTES_PER_POINT > 0) {
         focusPoints = (focusMinutes / FOCUS_MINUTES_PER_POINT).floor();
       }
+      if (focusMinutes >= _healthBlock.dailyFocusGoal.value) {
+        focusPoints += FOCUS_GOAL_BONUS.toInt();
+      }
 
       // 5. Water Points
       int waterPoints = 0;
-      if (waterIntake >= WATER_GOAL) {
-        waterPoints = WATER_BONUS_POINTS;
+      if (waterIntake >= _healthBlock.dailyWaterGoal.value) {
+        waterPoints = WATER_GOAL_BONUS.toInt();
+      }
+
+      // 6. Sleep Points
+      int sleepPoints = 0;
+      if (sleepHours >= _healthBlock.dailySleepGoal.value) {
+        sleepPoints = SLEEP_GOAL_BONUS.toInt();
       }
 
       final healthScore =
@@ -299,10 +354,11 @@ class ScoreBlock {
                   dietPoints +
                   exercisePoints +
                   focusPoints +
-                  waterPoints)
+                  waterPoints +
+                  sleepPoints)
               .toDouble();
       debugPrint(
-        "ScoreBlock: Recalculated Health Score: $healthScore (Steps: $stepsPoints, Diet: $dietPoints, Exercise: $exercisePoints, Focus: $focusPoints, Water: $waterPoints)",
+        "ScoreBlock: Recalculated Health Score: $healthScore (Steps: $stepsPoints, Diet: $dietPoints, Exercise: $exercisePoints, Focus: $focusPoints, Water: $waterPoints, Sleep: $sleepPoints)",
       );
       await _dao.updateHealthScore(_personID, healthScore);
     } catch (e, stack) {
@@ -330,13 +386,20 @@ class ScoreBlock {
     for (var s in _subscriptions) {
       if (s is StreamSubscription) {
         s.cancel();
-      } else if (s is Function) {
-        s(); // Stop effect
+      } else if (s is void Function()) {
+        s(); // Effect cleanup
       }
     }
+    _subscriptions.clear();
     _healthDebounce?.cancel();
     _financeDebounce?.cancel();
     _socialDebounce?.cancel();
     _score.dispose();
+    averageScore.dispose();
+    totalXP.dispose();
+    globalLevel.dispose();
+    levelProgress.dispose();
+    rankTitle.dispose();
+    _latestMeals.dispose();
   }
 }

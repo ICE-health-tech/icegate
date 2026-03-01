@@ -31,4 +31,12 @@ const int FINANCE_SAVINGS_POINTS = 50; // ...= +50 points
 const int FINANCE_BUDGET_ADHERENCE_POINTS =
     50; // Staying under budget = +50 points
 const double FINANCE_INVESTMENT_RETURN_THRESHOLD = 5.0; // Every 5% return
-const int FINANCE_INVESTMENT_POINTS = 10; // ...= +10 points
+const double FINANCE_INVESTMENT_POINTS = 10; // ...= +10 points
+
+// ─── 🏆 Completion Bonuses ───
+const double STEP_GOAL_BONUS = 10.0;
+const double WATER_GOAL_BONUS = 10.0;
+const double FOCUS_GOAL_BONUS = 30.0;
+const double EXERCISE_GOAL_BONUS = 20.0;
+const double SLEEP_GOAL_BONUS = 15.0;
+const double CALORIE_LIMIT_BONUS = 20.0;

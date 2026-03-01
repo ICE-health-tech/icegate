@@ -1,11 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
-import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:drift/drift.dart' show Value;
 import 'package:provider/provider.dart' show ReadContext;
 
 /// Protocol for managing health metrics data
@@ -267,7 +264,7 @@ class HealthMetricsData {
       day,
     );
     double calories = 0;
-    print("Day that get fetch calories for: " + day.toString());
+    print("Day that get fetch calories for: $day");
     try {
       calories = await healthMealDAO.getCaloriesByDate(day);
     } catch (e) {
@@ -287,87 +284,8 @@ class HealthMetricsData {
       debugPrint("Error fetching yesterday calories: $e");
     }
 
-    // 4. Fetch live steps from HealthService (Pedometer)
+    // 4. Extract current steps from DB result
     int currentSteps = metricsLocal?.steps ?? 0;
-
-    final now = DateTime.now();
-    final isToday =
-        day.year == now.year && day.month == now.month && day.day == now.day;
-
-    if (isToday) {
-      try {
-        // Sync Steps
-        final liveSteps = await HealthService.fetchStepCount();
-        if (liveSteps > currentSteps) {
-          currentSteps = liveSteps;
-
-          // Sync back to DB
-          if (metricsLocal != null) {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              metricsLocal.toCompanion(true).copyWith(steps: Value(liveSteps)),
-            );
-          } else {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              HealthMetricsTableCompanion.insert(
-                id: IDGen.generateUuid(),
-                personID: Value(personId),
-                date: day,
-                steps: Value(liveSteps),
-                updatedAt: Value(DateTime.now()),
-              ),
-            );
-          }
-        }
-
-        // Sync Sleep
-        final liveSleep = await HealthService.fetchSleepData();
-        if (liveSleep > (metricsLocal?.sleepHours ?? 0.0)) {
-          // Sync back to DB
-          if (metricsLocal != null) {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              metricsLocal
-                  .toCompanion(true)
-                  .copyWith(sleepHours: Value(liveSleep)),
-            );
-          } else {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              HealthMetricsTableCompanion.insert(
-                id: IDGen.generateUuid(),
-                personID: Value(personId),
-                date: day,
-                sleepHours: Value(liveSleep),
-                updatedAt: Value(DateTime.now()),
-              ),
-            );
-          }
-        }
-
-        // Sync Heart Rate
-        final liveHeartRate = await HealthService.fetchLatestHeartRate();
-        if (liveHeartRate > 0) {
-          // Sync back to DB
-          if (metricsLocal != null) {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              metricsLocal
-                  .toCompanion(true)
-                  .copyWith(heartRate: Value(liveHeartRate)),
-            );
-          } else {
-            await healthMetricsDAO.insertOrUpdateMetrics(
-              HealthMetricsTableCompanion.insert(
-                id: IDGen.generateUuid(),
-                personID: Value(personId),
-                date: day,
-                heartRate: Value(liveHeartRate),
-                updatedAt: Value(DateTime.now()),
-              ),
-            );
-          }
-        }
-      } catch (e) {
-        debugPrint("Error syncing live health data: $e");
-      }
-    }
 
     // 5. Helper for trend calculation
     String trendStr(num today, num yesterday, String unit) {

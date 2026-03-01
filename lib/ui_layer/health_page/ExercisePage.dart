@@ -394,7 +394,7 @@ class _ExercisePageState extends State<ExercisePage> {
                 if (mins > 0) {
                   await dao.insertExerciseLog(
                     ExerciseLogsTableCompanion.insert(
-                      id: IDGen.generateUuid(),
+                      id: IDGen.UUIDV7(),
                       personID: drift.Value(
                         Supabase.instance.client.auth.currentUser?.id ?? "",
                       ),

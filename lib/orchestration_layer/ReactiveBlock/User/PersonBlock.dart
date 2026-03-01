@@ -146,7 +146,7 @@ class UserProfile {
       friends: friends ?? this.friends,
       mutual: mutual ?? this.mutual,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
-      username: username??this.username,
+      username: username ?? this.username,
     );
   }
 }
@@ -209,8 +209,7 @@ class PersonBlock {
   final account = signal<UserAccount>(const UserAccount());
   final skills = signal<List<SkillType>>([]);
 
-  /// Computed signal that returns the current person's ID (UUID string)
-  late final currentPersonID = computed(() => information.value.profiles.id);
+  final currentPersonID = signal<String?>(null);
 
   PersonBlock({required CustomAuthService authService});
 
@@ -293,10 +292,13 @@ class PersonBlock {
               '',
         );
 
-        information.value = UserInformation(
-          profiles: profile,
-          details: details,
-        );
+        batch(() {
+          information.value = UserInformation(
+            profiles: profile,
+            details: details,
+          );
+          currentPersonID.value = profile.id;
+        });
         print(
           "✅ [PersonBlock] Multi-source Profile fetched for ${profile.username}",
         );
@@ -314,22 +316,25 @@ class PersonBlock {
 
   void _applyGuestFallback() {
     print("👤 [PersonBlock] Applying default fallback data...");
-    information.value = UserInformation(
-      profiles: const UserProfile(
-        id: DataSeeder.guestPersonId,
-        firstName: 'DuyLong',
-        lastName: 'Art',
-        username: 'Guest-Shield',
-        profileImageUrl:
-            'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
-      ),
-      details: const UserDetails(
-        bio: 'Securing the digital frontier.',
-        occupation: 'Core Security Agent',
-        location: 'Unknown Sector',
-        email: 'agent@ice-shield.net',
-      ),
-    );
+    batch(() {
+      information.value = UserInformation(
+        profiles: const UserProfile(
+          id: DataSeeder.guestPersonId,
+          firstName: 'DuyLong',
+          lastName: 'Art',
+          username: 'Guest-Shield',
+          profileImageUrl:
+              'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
+        ),
+        details: const UserDetails(
+          bio: 'Securing the digital frontier.',
+          occupation: 'Core Security Agent',
+          location: 'Unknown Sector',
+          email: 'agent@ice-shield.net',
+        ),
+      );
+      currentPersonID.value = DataSeeder.guestPersonId;
+    });
   }
 
   // Update local profile image URL

@@ -170,7 +170,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
       // 1. Insert Meal details
       await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           mealName: _foodController.text,
           personID: Value(personID),
           mealImageUrl: Value(_imagePath),
@@ -185,7 +185,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
       // 2. Insert Day log
       await _healthMealDAO.insertDay(
         DaysTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           dayID: now,
           caloriesOut: Value(0),
           weight: Value(0),

@@ -356,8 +356,7 @@ class AuthBlock {
 
       if (user != null) {
         print(
-          "👤 [AuthBlock] User already present, syncing identity... with " +
-              user.id,
+          "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
         );
         await syncUserWithSupabase(user);
       }
@@ -597,7 +596,9 @@ class AuthBlock {
           print(
             "🔄 [AuthBlock] Username synced from local DB: ${account.username}",
           );
-          username.value = account.username;
+          batch(() {
+            username.value = account.username;
+          });
         }
       }
     });

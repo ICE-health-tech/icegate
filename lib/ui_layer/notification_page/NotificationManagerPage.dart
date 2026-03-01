@@ -10,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
 
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -128,7 +129,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               "HUNTER HUB",
               style: TextStyle(
                 color: colorScheme.onSurface,
-                fontSize: 28,
+                fontSize: 22, // Reduced from 28 to prevent overflow
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.5,
               ),
@@ -136,6 +137,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           ],
         ),
         Row(
+          mainAxisSize: MainAxisSize.min,
           children: [
             IconButton(
               onPressed: () => GoRouter.of(context).push('/notification-inbox'),
@@ -312,8 +314,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         StreamBuilder<List<QuestData>>(
           stream: dao.watchActiveQuests(),
           builder: (context, snapshot) {
+            if (!snapshot.hasData || snapshot.data == null) {
+              return const SizedBox.shrink();
+            }
+            final quests = snapshot.data!;
+            if (quests.isEmpty) return const SizedBox.shrink();
+
             return Column(
-              children: snapshot.data!.map((quest) {
+              children: quests.map((quest) {
                 final percent = quest.targetValue > 0
                     ? (quest.currentValue / quest.targetValue).clamp(0.0, 1.0)
                     : 0.0;
@@ -685,7 +693,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 dao
                     .insertQuote(
                       QuotesTableCompanion.insert(
-                        id: IDGen.generateUuid(),
+                        id: IDGen.UUIDV7(),
                         content: contentController.text,
                         author: Value(authorController.text),
                       ),
@@ -887,16 +895,31 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     ),
                   ],
                 ),
-                IconButton(
-                  icon: Icon(
-                    Icons.delete_outline_rounded,
-                    color: Colors.redAccent.withOpacity(0.6),
-                    size: 20,
-                  ),
-                  onPressed: () async {
-                    await dao.deleteNotification(notification.id);
-                    await service.syncAllNotifications();
-                  },
+                Row(
+                  children: [
+                    IconButton(
+                      icon: Icon(
+                        Icons.edit_rounded,
+                        color: Colors.blueAccent.withOpacity(0.6),
+                        size: 20,
+                      ),
+                      onPressed: () => _showAddNotificationDialog(
+                        context,
+                        existing: notification,
+                      ),
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Icons.delete_outline_rounded,
+                        color: Colors.redAccent.withOpacity(0.6),
+                        size: 20,
+                      ),
+                      onPressed: () async {
+                        await dao.deleteNotification(notification.id);
+                        await service.syncAllNotifications();
+                      },
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -906,18 +929,30 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     );
   }
 
-  void _showAddNotificationDialog(BuildContext context) {
-    final titleController = TextEditingController();
-    final contentController = TextEditingController();
-    DateTime selectedDate = DateTime.now().add(const Duration(minutes: 5));
+  void _showAddNotificationDialog(
+    BuildContext context, {
+    CustomNotificationData? existing,
+  }) {
+    final titleController = TextEditingController(text: existing?.title);
+    final contentController = TextEditingController(text: existing?.content);
+    DateTime selectedDate =
+        existing?.scheduledTime ??
+        DateTime.now().add(const Duration(minutes: 5));
     TimeOfDay selectedTime = TimeOfDay.fromDateTime(selectedDate);
-    String repeatFrequency = 'once';
-    List<int> repeatDays = [];
-    String selectedCategory = 'General';
-    String selectedPriority = 'Normal';
+    String repeatFrequency = existing?.repeatFrequency ?? 'once';
+    List<int> repeatDays =
+        existing?.repeatDays
+            ?.split(',')
+            .where((s) => s.isNotEmpty)
+            .map((s) => int.parse(s))
+            .toList() ??
+        [];
+    String selectedCategory = existing?.category ?? 'General';
+    String selectedPriority = existing?.priority ?? 'Normal';
 
     final categories = {
       'General': Icons.notifications_none_rounded,
+      'Daily': Icons.calendar_today_rounded,
       'Health': Icons.favorite_rounded,
       'Finance': Icons.account_balance_wallet_rounded,
       'Social': Icons.people_rounded,
@@ -937,9 +972,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 borderRadius: BorderRadius.circular(24),
                 side: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
-              title: const Text(
-                "New Reminder",
-                style: TextStyle(
+              title: Text(
+                existing == null ? "New Reminder" : "Edit Reminder",
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
                   fontSize: 24,
@@ -1051,33 +1086,41 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       children: priorities.map((p) {
                         final isSelected = selectedPriority == p;
                         final color = _getPriorityColor(p);
-                        return InkWell(
-                          onTap: () =>
-                              setDialogState(() => selectedPriority = p),
-                          child: AnimatedContainer(
-                            duration: const Duration(milliseconds: 200),
-                            width: 65,
-                            padding: const EdgeInsets.symmetric(vertical: 8),
-                            decoration: BoxDecoration(
-                              color: isSelected
-                                  ? color.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.05),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: isSelected
-                                    ? color
-                                    : Colors.white.withOpacity(0.1),
-                              ),
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              p,
-                              style: TextStyle(
-                                color: isSelected ? color : Colors.white70,
-                                fontSize: 11,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.normal,
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 2),
+                            child: InkWell(
+                              onTap: () =>
+                                  setDialogState(() => selectedPriority = p),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 8,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? color.withOpacity(0.2)
+                                      : Colors.white.withOpacity(0.05),
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? color
+                                        : Colors.white.withOpacity(0.1),
+                                  ),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  p,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: isSelected ? color : Colors.white70,
+                                    fontSize: 10,
+                                    fontWeight: isSelected
+                                        ? FontWeight.bold
+                                        : FontWeight.normal,
+                                  ),
+                                ),
                               ),
                             ),
                           ),
@@ -1092,7 +1135,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         Expanded(
                           child: DropdownButtonFormField<String>(
                             dropdownColor: const Color(0xFF161B33),
-                            value: repeatFrequency,
+                            initialValue: repeatFrequency,
                             items: ['once', 'daily', 'weekly'].map((f) {
                               return DropdownMenuItem(
                                 value: f,
@@ -1139,6 +1182,34 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         ),
                       ],
                     ),
+                    if (repeatFrequency == 'once') ...[
+                      const SizedBox(height: 16),
+                      InkWell(
+                        onTap: () async {
+                          final date = await showDatePicker(
+                            context: context,
+                            initialDate: selectedDate,
+                            firstDate: DateTime.now(),
+                            lastDate: DateTime.now().add(
+                              const Duration(days: 365),
+                            ),
+                          );
+                          if (date != null) {
+                            setDialogState(() => selectedDate = date);
+                          }
+                        },
+                        child: InputDecorator(
+                          decoration: _premiumInputDecoration(
+                            "Date",
+                            Icons.calendar_today_rounded,
+                          ),
+                          child: Text(
+                            DateFormat('MMM dd, yyyy').format(selectedDate),
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                        ),
+                      ),
+                    ],
                     if (repeatFrequency == 'weekly') ...[
                       const SizedBox(height: 16),
                       _buildDayPicker(
@@ -1159,47 +1230,121 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 ),
                 ElevatedButton(
                   onPressed: () {
-                    if (titleController.text.isEmpty) return;
-                    final now = DateTime.now();
+                    if (titleController.text.trim().isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text("Please enter a title")),
+                      );
+                      return;
+                    }
+                    final dao = context.read<CustomNotificationDAO>();
+                    final service = context.read<LocalNotificationService>();
+                    final personBlock = context.read<PersonBlock>();
+                    final personId = personBlock.currentPersonID.value;
+
                     final scheduled = DateTime(
-                      now.year,
-                      now.month,
-                      now.day,
+                      selectedDate.year,
+                      selectedDate.month,
+                      selectedDate.day,
                       selectedTime.hour,
                       selectedTime.minute,
                     );
 
-                    final dao = context.read<CustomNotificationDAO>();
-                    final service = context.read<LocalNotificationService>();
+                    // Generate numeric ID from time: HHmm
+                    final hourStr = selectedTime.hour.toString().padLeft(
+                      2,
+                      '0',
+                    );
+                    final minStr = selectedTime.minute.toString().padLeft(
+                      2,
+                      '0',
+                    );
+                    final numericIdStr = "$hourStr$minStr";
 
-                    // We need to use value wrappers for Value fields
-                    // But wait, the companion class doesn't have these getters yet.
-                    // Instead, I'll rely on the fact that I've updated the table definition,
-                    // and I'll use a hacky way to insert if I really need to,
-                    // or just write the code and let the user run the build runner.
-
-                    // Actually, let's just write the code that WILL work after build_runner.
-                    // and accept the temporary lint errors.
-
-                    dao
-                        .insertNotification(
-                          CustomNotificationsTableCompanion.insert(
-                            id: IDGen.generateUuid(),
-                            title: titleController.text,
-                            content: contentController.text,
-                            scheduledTime: scheduled,
-                            repeatFrequency: Value(repeatFrequency),
-                            repeatDays: Value(
-                              repeatDays.isEmpty ? null : repeatDays.join(','),
+                    if (existing == null) {
+                      dao
+                          .insertNotification(
+                            CustomNotificationsTableCompanion.insert(
+                              id: IDGen.UUIDV7(),
+                              title: titleController.text,
+                              content: contentController.text,
+                              notificationID: Value(numericIdStr),
+                              scheduledTime: scheduled,
+                              repeatFrequency: Value(repeatFrequency),
+                              repeatDays: Value(
+                                repeatDays.isEmpty
+                                    ? null
+                                    : repeatDays.join(','),
+                              ),
+                              category: Value(selectedCategory),
+                              priority: Value(selectedPriority),
+                              personID: Value(personId),
+                              isEnabled: const Value(true),
+                              createdAt: Value(DateTime.now()),
                             ),
-                            category: Value(selectedCategory),
-                            priority: Value(selectedPriority),
-                          ),
-                        )
-                        .then((id) {
-                          service.syncAllNotifications();
-                          Navigator.pop(context);
-                        });
+                          )
+                          .then((id) async {
+                            try {
+                              await service.syncAllNotifications();
+                              if (context.mounted) Navigator.pop(context);
+                            } catch (e) {
+                              debugPrint("Error syncing notifications: $e");
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error syncing: $e")),
+                                );
+                              }
+                            }
+                          })
+                          .catchError((e) {
+                            debugPrint("Error inserting notification: $e");
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error saving: $e")),
+                              );
+                            }
+                          });
+                    } else {
+                      dao
+                          .patchNotification(
+                            existing.id,
+                            CustomNotificationsTableCompanion(
+                              title: Value(titleController.text),
+                              content: Value(contentController.text),
+                              notificationID: Value(numericIdStr),
+                              scheduledTime: Value(scheduled),
+                              repeatFrequency: Value(repeatFrequency),
+                              repeatDays: Value(
+                                repeatDays.isEmpty
+                                    ? null
+                                    : repeatDays.join(','),
+                              ),
+                              category: Value(selectedCategory),
+                              priority: Value(selectedPriority),
+                              personID: Value(personId),
+                            ),
+                          )
+                          .then((_) async {
+                            try {
+                              await service.syncAllNotifications();
+                              if (context.mounted) Navigator.pop(context);
+                            } catch (e) {
+                              debugPrint("Error syncing notifications: $e");
+                              if (context.mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text("Error syncing: $e")),
+                                );
+                              }
+                            }
+                          })
+                          .catchError((e) {
+                            debugPrint("Error patching notification: $e");
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(content: Text("Error updating: $e")),
+                              );
+                            }
+                          });
+                    }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blueAccent,
@@ -1208,7 +1353,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text("Save Reminder"),
+                  child: Text(existing == null ? "Save Reminder" : "Update"),
                 ),
               ],
             );

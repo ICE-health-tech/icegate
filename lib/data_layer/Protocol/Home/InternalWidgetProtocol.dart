@@ -126,7 +126,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   @override
   InternalWidgetData toDatabase() {
     return InternalWidgetData(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       url: _url,
       name: _name,
       imageUrl: _imageUrl ?? 'Unknown',

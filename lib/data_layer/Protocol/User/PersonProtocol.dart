@@ -30,7 +30,7 @@ abstract class PersonProtocol with _$PersonProtocol {
     bool isActive = true,
   }) {
     return PersonProtocol(
-      id: id ?? IDGen.generateUuid(),
+      id: id ?? IDGen.UUIDV7(),
       firstName: firstName,
       lastName: lastName,
       dateOfBirth: dateOfBirth,

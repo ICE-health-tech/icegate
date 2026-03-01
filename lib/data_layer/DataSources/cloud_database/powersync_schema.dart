@@ -337,9 +337,11 @@ const Schema schema = Schema([
     Column.text('repeat_days'),
     Column.text('category'),
     Column.text('priority'),
+    Column.text('person_id'),
     Column.text('icon'),
     Column.integer('is_enabled'),
     Column.text('created_at'),
+    Column.text('updated_at'),
   ]),
   Table('quotes', [
     // Column.text('id'),

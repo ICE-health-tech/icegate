@@ -1,5 +1,6 @@
 // 1. Core Drift and Platform Imports
 import 'package:drift/drift.dart';
+import 'package:flutter/foundation.dart';
 import 'package:drift/native.dart'; // For NativeDatabase on mobile/desktop
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
@@ -46,8 +47,9 @@ class DateTimeUTCConverter extends TypeConverter<DateTime, DateTime> {
     final dynamic value = fromDb;
     if (value is DateTime) return value.toLocal();
     if (value is String) return DateTime.parse(value).toLocal();
-    if (value is int)
+    if (value is int) {
       return DateTime.fromMillisecondsSinceEpoch(value).toLocal();
+    }
     return DateTime.now(); // Fallback for unexpected types
   }
 
@@ -147,7 +149,7 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
   }) {
     return into(internalWidgetsTable).insert(
       InternalWidgetsTableCompanion.insert(
-        id: id ?? IDGen.generateUuid(),
+        id: id ?? IDGen.UUIDV7(),
         widgetID: Value(widgetID),
         name: Value(name),
         alias: Value(alias),
@@ -1137,7 +1139,8 @@ class CustomNotificationsTable extends Table {
   TextColumn get notificationID => text().nullable().named('notification_id')();
   TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
   TextColumn get content => text().named('content')();
-  DateTimeColumn get scheduledTime => dateTime().named('scheduled_time')();
+  DateTimeColumn get scheduledTime =>
+      dateTime().map(const DateTimeUTCConverter()).named('scheduled_time')();
   TextColumn get repeatFrequency => text()
       .nullable()
       .withDefault(const Constant('none'))
@@ -1151,6 +1154,10 @@ class CustomNotificationsTable extends Table {
   TextColumn get priority => text()
       .withDefault(const Constant('Normal'))
       .named('priority')(); // Low, Normal, High, Urgent
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
   TextColumn get icon => text().nullable().named('icon')();
   BoolColumn get isEnabled =>
       boolean().withDefault(const Constant(true)).named('is_enabled')();
@@ -1303,9 +1310,14 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ),
         );
       } else {
+        // Use deterministic ID for score record per person
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
         await into(scoresTable).insert(
           ScoresTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: deterministicId,
             personID: Value(personID),
             careerGlobalScore: Value(points),
             updatedAt: Value(DateTime.now()),
@@ -1328,9 +1340,13 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ),
         );
       } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
         await into(scoresTable).insert(
           ScoresTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: deterministicId,
             personID: Value(personID),
             socialGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
@@ -1353,9 +1369,13 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ),
         );
       } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
         await into(scoresTable).insert(
           ScoresTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: deterministicId,
             personID: Value(personID),
             financialGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
@@ -1380,9 +1400,13 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ),
         );
       } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
         await into(scoresTable).insert(
           ScoresTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: deterministicId,
             personID: Value(personID),
             healthGlobalScore: Value(points),
             updatedAt: Value(DateTime.now()),
@@ -1396,18 +1420,26 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     await transaction(() async {
       final existing = await getScoreByPersonID(personID);
       if (existing != null) {
-        await (update(
-          scoresTable,
-        )..where((t) => t.personID.equals(personID))).write(
-          ScoresTableCompanion(
-            healthGlobalScore: Value(score),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
+        // Only update if the new score is higher or significantly different
+        // This prevents a device with stale/unsynced data from zeroing out the score
+        if (score > (existing.healthGlobalScore ?? 0.0)) {
+          await (update(
+            scoresTable,
+          )..where((t) => t.personID.equals(personID))).write(
+            ScoresTableCompanion(
+              healthGlobalScore: Value(score),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        }
       } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
         await into(scoresTable).insert(
           ScoresTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: deterministicId,
             personID: Value(personID),
             healthGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
@@ -1440,14 +1472,14 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     required ExternalWidgetProtocol externalWidgetProtocol,
   }) {
     final entry = ExternalWidgetsTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       name: Value(
         externalWidgetProtocol.name.isEmpty
             ? 'Unnamed Widget'
             : externalWidgetProtocol.name,
       ),
       alias: Value(_generateRandomAlias(8)),
-      widgetID: Value(IDGen.generateUuid()),
+      widgetID: Value(IDGen.UUIDV7()),
       host: Value(externalWidgetProtocol.host),
       protocol: Value(externalWidgetProtocol.protocol),
       dateAdded: Value(DateTime.now().toString()),
@@ -1536,7 +1568,7 @@ class ThemesTableDAO extends DatabaseAccessor<AppDatabase>
     final alias = _generateRandomAlias(8);
 
     final entry = ThemesTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       name: name,
       alias: alias,
       json: jsonContent,
@@ -1563,7 +1595,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     required String content,
     String? projectID,
   }) async {
-    final uuid = IDGen.generateUuid();
+    final uuid = IDGen.UUIDV7();
     into(projectNotesTable).insert(
       ProjectNotesTableCompanion.insert(
         id: uuid,
@@ -1699,7 +1731,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     String? id,
     String? relationship,
   }) async {
-    final String newUuid = id ?? IDGen.generateUuid();
+    final String newUuid = id ?? IDGen.UUIDV7();
 
     final companion = PersonsTableCompanion.insert(
       id: newUuid, // Use the provided or generated UUID
@@ -1732,7 +1764,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 
   Future<int> createMailAddress(EmailAddressProtocol email) {
     final companion = EmailAddressesTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       emailAddressID: Value(email.emailAddressID),
       emailAddress: email.emailAddress,
       personID: Value(email.personID),
@@ -1896,7 +1928,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     }
 
     final companion = EmailAddressesTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       emailAddressID: Value(email.emailAddressID),
       personID: Value(email.personID),
       emailAddress: email.emailAddress,
@@ -1942,7 +1974,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     }
 
     final companion = UserAccountsTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       accountID: Value(account.accountID),
       personID: Value(overridePersonID ?? account.personID),
       username: Value(safeUsername),
@@ -1975,7 +2007,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   // Profiles
   Future<int> createProfile(ProfileProtocol profile, String? overridePersonID) {
     final companion = ProfilesTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       profileID: Value(profile.profileID),
       personID: Value(overridePersonID ?? profile.personID),
       bio: Value(profile.bio),
@@ -2004,7 +2036,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     String? overridePersonID,
   }) {
     final companion = CVAddressesTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       cvAddressID: Value(cvAddress.cvAddressID),
       personID: Value(overridePersonID ?? cvAddress.personID),
       githubUrl: Value(cvAddress.githubUrl),
@@ -2296,7 +2328,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
 
   Future<String> createGoal(GoalsTableCompanion goal) async {
     // 1. Generate your unique ID
-    final String goalId = IDGen.generateUuid();
+    final String goalId = IDGen.UUIDV7();
 
     // 2. Create a new version of the goal including the generated ID
     final goalToInsert = goal.copyWith(
@@ -2622,7 +2654,7 @@ class WidgetDAO extends DatabaseAccessor<AppDatabase> with _$WidgetDAOMixin {
 
         await into(personWidgetsTable).insert(
           PersonWidgetsTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: IDGen.UUIDV7(),
             personID: Value(personId),
             widgetName: widget.name,
             widgetType: widget.alias,
@@ -2645,7 +2677,7 @@ class SessionDAO extends DatabaseAccessor<AppDatabase> with _$SessionDAOMixin {
       await delete(sessionTable).go(); // Only one session at a time
       return into(sessionTable).insert(
         SessionTableCompanion.insert(
-          id: IDGen.generateUuid(),
+          id: IDGen.UUIDV7(),
           jwt: jwt,
           username: Value(username),
         ),
@@ -2677,45 +2709,118 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Future<HealthMetricsLocal?> getMetricsForDate(
-    String? personID, // Changed to String?
+    String? personID,
     DateTime date,
   ) async {
-    // 1. Guard clause for null or empty string
     if (personID == null || personID.isEmpty) {
       return null;
     }
 
-    final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = startOfDay.add(const Duration(days: 1));
+    final targetDateStr = "${date.year}-${date.month}-${date.day}";
+    final targetId = IDGen.generateDeterministicUuid(personID, targetDateStr);
 
-    // 2. The Drift query
-    return (select(healthMetricsTable)
-          ..where(
-            (t) =>
-                t.personID.equals(personID) &
-                t.date.isBiggerOrEqualValue(startOfDay) &
-                t.date.isSmallerThanValue(endOfDay),
-          )
-          ..limit(1))
-        .getSingleOrNull();
+    // 1. Fast path: check exact deterministic ID
+    final existingById = await (select(
+      healthMetricsTable,
+    )..where((t) => t.id.equals(targetId))).getSingleOrNull();
+    if (existingById != null) return existingById;
+
+    // 2. Slow path for legacy records containing random UUIDs
+    final all = await (select(
+      healthMetricsTable,
+    )..where((t) => t.personID.equals(personID))).get();
+    if (all.isEmpty) return null;
+
+    final noonTarget = DateTime(date.year, date.month, date.day, 12);
+    HealthMetricsLocal? bestMatch;
+    int minDiff = 24; // We care if it's within the same logical day
+
+    for (final m in all) {
+      final diff = m.date.difference(noonTarget).inHours.abs();
+      if (diff < minDiff) {
+        minDiff = diff;
+        bestMatch = m;
+      }
+    }
+
+    // A valid match should be securely within 14 hours (max timezone offset is +/- 14)
+    if (minDiff <= 14) {
+      return bestMatch;
+    }
+
+    return null;
   }
 
   Future<void> insertOrUpdateMetrics(HealthMetricsTableCompanion entry) async {
     final d = entry.date.value;
-    final normalized = DateTime(d.year, d.month, d.day);
+    // Normalize to local noon to preserve the date across global UTC boundaries
+    // Supabase DATE extraction safely aligns 12:00 Local for almost all timezones.
+    final normalized = DateTime(d.year, d.month, d.day, 12, 0, 0);
     final personId = entry.personID.value;
+
+    if (personId == null || personId.isEmpty) return;
+
+    // Generate deterministic ID based on personId and normalized date
+    final dateStr = "${normalized.year}-${normalized.month}-${normalized.day}";
+    final deterministicId = IDGen.generateDeterministicUuid(personId, dateStr);
 
     final existing = await getMetricsForDate(personId, normalized);
 
     if (existing != null) {
-      await (update(healthMetricsTable)..where((t) => t.id.equals(existing.id)))
-          .write(entry.copyWith(date: Value(normalized)));
+      debugPrint(
+        "HealthMetricsDAO: Found existing record for $normalized (ID: ${existing.id})",
+      );
+      // "Highest wins" for cumulative metrics
+      final currentSteps = entry.steps.value ?? 0;
+      final savedSteps = existing.steps ?? 0;
+      final updatedSteps = entry.steps.present
+          ? (currentSteps > savedSteps)
+                ? entry.steps
+                : Value(savedSteps)
+          : Value(savedSteps);
+
+      if (entry.steps.present && currentSteps < savedSteps) {
+        debugPrint(
+          "HealthMetricsDAO: 🛡️ Steps highest wins: keeping $savedSteps (received $currentSteps)",
+        );
+      } else if (entry.steps.present && currentSteps > savedSteps) {
+        debugPrint(
+          "HealthMetricsDAO: 📈 Steps highest wins: updating to $currentSteps (was $savedSteps)",
+        );
+      }
+
+      final currentCalories = entry.caloriesBurned.value ?? 0;
+      final savedCalories = existing.caloriesBurned ?? 0;
+      final updatedCaloriesBurned = entry.caloriesBurned.present
+          ? (currentCalories > savedCalories)
+                ? entry.caloriesBurned
+                : Value(savedCalories)
+          : Value(savedCalories);
+
+      await (update(
+        healthMetricsTable,
+      )..where((t) => t.id.equals(existing.id))).write(
+        entry.copyWith(
+          id: Value(existing.id),
+          date: Value(
+            existing.date,
+          ), // Preserve exact existing date representation
+          steps: updatedSteps,
+          caloriesBurned: updatedCaloriesBurned,
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     } else {
+      debugPrint(
+        "HealthMetricsDAO: No existing record for $normalized. Inserting with ID: $deterministicId",
+      );
       await into(healthMetricsTable).insert(
         entry.copyWith(
-          id: entry.id.present ? entry.id : Value(IDGen.generateUuid()),
+          id: Value(deterministicId),
           date: Value(normalized),
+          updatedAt: Value(DateTime.now()),
         ),
+        mode: InsertMode.insertOrReplace,
       );
     }
   }
@@ -2724,6 +2829,46 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
     return (delete(
       healthMetricsTable,
     )..where((t) => t.personID.equals(personID))).go();
+  }
+
+  Future<void> cleanupDuplicates(String personId) async {
+    final all =
+        await (select(healthMetricsTable)
+              ..where((t) => t.personID.equals(personId))
+              ..orderBy([
+                (t) => OrderingTerm(expression: t.date, mode: OrderingMode.asc),
+              ]))
+            .get();
+
+    final Map<String, List<HealthMetricsLocal>> grouped = {};
+    for (var m in all) {
+      final key = "${m.date.year}-${m.date.month}-${m.date.day}";
+      grouped.putIfAbsent(key, () => []).add(m);
+    }
+
+    for (var entry in grouped.entries) {
+      if (entry.value.length > 1) {
+        debugPrint("HealthMetricsDAO: 🧹 Merging duplicates for ${entry.key}");
+        final targetId = IDGen.generateDeterministicUuid(personId, entry.key);
+        HealthMetricsLocal? winner;
+        for (var m in entry.value) {
+          if (m.id == targetId) {
+            winner = m;
+            break;
+          }
+        }
+        winner ??= entry.value.first;
+
+        for (var m in entry.value) {
+          if (m.id != winner.id) {
+            debugPrint("HealthMetricsDAO:   - removing duplicate ID: ${m.id}");
+            await (delete(
+              healthMetricsTable,
+            )..where((t) => t.id.equals(m.id))).go();
+          }
+        }
+      }
+    }
   }
 }
 
@@ -2745,7 +2890,7 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    print("The date that fetch: " + date.toString());
+    print("The date that fetch: $date");
 
     final rows =
         await (select(mealsTable)..where(
@@ -2787,6 +2932,26 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
         );
       }).toList();
     });
+  }
+
+  Stream<double> watchDailyCalories(String personId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return (select(mealsTable)..where(
+          (tbl) =>
+              tbl.personID.equals(personId) &
+              tbl.eatenAt.isBiggerOrEqualValue(startOfDay) &
+              tbl.eatenAt.isSmallerThanValue(endOfDay),
+        ))
+        .watch()
+        .map((rows) {
+          double calories = 0.0;
+          for (var row in rows) {
+            calories += row.calories;
+          }
+          return calories;
+        });
   }
 
   Stream<List<DayWithMeal>> watchDaysWithMeals() {
@@ -3242,12 +3407,13 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.powersync(PowerSyncDatabase db) {
     return AppDatabase(SqliteAsyncDriftConnection(db), db);
   }
+  @override
   DriftDatabaseOptions get options => const DriftDatabaseOptions(
     // Ép Drift lưu DateTime dưới dạng chuỗi ISO8601 thay vì số nguyên
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 31; // Increment schema version to 31 to bypass broken v30 migration
+  int get schemaVersion => 32;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -3494,6 +3660,17 @@ class AppDatabase extends _$AppDatabase {
             );
           } catch (e) {
             print('Drift: Error adding person_id column to meals: $e');
+          }
+        }
+        if (from < 32) {
+          try {
+            await customStatement(
+              "ALTER TABLE custom_notifications ADD COLUMN person_id TEXT REFERENCES persons(id) ON DELETE CASCADE;",
+            );
+          } catch (e) {
+            print(
+              'Drift: Error adding person_id column to custom_notifications: $e',
+            );
           }
         }
       },

@@ -155,7 +155,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
     await widget.healthMealDAO.insertMeal(
       MealsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         mealName: _foodController.text.isEmpty ? "Meal" : _foodController.text,
         personID: Value(widget.personID),
         mealImageUrl: Value(_imagePath),
@@ -169,7 +169,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
     await widget.healthMealDAO.insertDay(
       DaysTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         dayID: now,
         caloriesOut: const Value(0),
         weight: const Value(0),

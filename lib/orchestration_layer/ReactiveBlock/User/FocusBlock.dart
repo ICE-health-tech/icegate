@@ -667,7 +667,7 @@ class FocusBlock {
     if (duration < 60) return;
 
     final session = FocusSessionsTableCompanion.insert(
-      id: IDGen.generateUuid(),
+      id: IDGen.UUIDV7(),
       personID: drift.Value(_currentPersonId),
       projectID: drift.Value(selectedProjectId.value),
       taskID: drift.Value(selectedTaskId.value),
@@ -701,7 +701,7 @@ class FocusBlock {
     // Record Exercise Log if in Exercise Mode
     if (isExerciseMode.value && status == 'completed') {
       final exerciseLog = ExerciseLogsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         personID: drift.Value(_currentPersonId),
         type: exerciseType.value,
         durationMinutes: duration ~/ 60,

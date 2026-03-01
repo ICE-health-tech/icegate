@@ -127,6 +127,7 @@ mixin _$QuoteDAOMixin on DatabaseAccessor<AppDatabase> {
 mixin _$CustomNotificationDAOMixin on DatabaseAccessor<AppDatabase> {
   $OrganizationsTableTable get organizationsTable =>
       attachedDatabase.organizationsTable;
+  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
   $CustomNotificationsTableTable get customNotificationsTable =>
       attachedDatabase.customNotificationsTable;
 }
@@ -17445,17 +17446,6 @@ class $FocusSessionsTableTable extends FocusSessionsTable
       'REFERENCES organizations (id) ON DELETE CASCADE',
     ),
   );
-  static const VerificationMeta _sessionIDMeta = const VerificationMeta(
-    'sessionID',
-  );
-  @override
-  late final GeneratedColumn<int> sessionID = GeneratedColumn<int>(
-    'session_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
   );
@@ -17571,7 +17561,6 @@ class $FocusSessionsTableTable extends FocusSessionsTable
   List<GeneratedColumn> get $columns => [
     id,
     tenantID,
-    sessionID,
     personID,
     projectID,
     startTime,
@@ -17603,12 +17592,6 @@ class $FocusSessionsTableTable extends FocusSessionsTable
       context.handle(
         _tenantIDMeta,
         tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
-      );
-    }
-    if (data.containsKey('session_id')) {
-      context.handle(
-        _sessionIDMeta,
-        sessionID.isAcceptableOrUnknown(data['session_id']!, _sessionIDMeta),
       );
     }
     if (data.containsKey('person_id')) {
@@ -17694,10 +17677,6 @@ class $FocusSessionsTableTable extends FocusSessionsTable
         DriftSqlType.string,
         data['${effectivePrefix}tenant_id'],
       ),
-      sessionID: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}session_id'],
-      ),
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -17747,7 +17726,6 @@ class FocusSessionData extends DataClass
     implements Insertable<FocusSessionData> {
   final String id;
   final String? tenantID;
-  final int? sessionID;
   final String? personID;
   final String? projectID;
   final DateTime startTime;
@@ -17760,7 +17738,6 @@ class FocusSessionData extends DataClass
   const FocusSessionData({
     required this.id,
     this.tenantID,
-    this.sessionID,
     this.personID,
     this.projectID,
     required this.startTime,
@@ -17777,9 +17754,6 @@ class FocusSessionData extends DataClass
     map['id'] = Variable<String>(id);
     if (!nullToAbsent || tenantID != null) {
       map['tenant_id'] = Variable<String>(tenantID);
-    }
-    if (!nullToAbsent || sessionID != null) {
-      map['session_id'] = Variable<int>(sessionID);
     }
     if (!nullToAbsent || personID != null) {
       map['person_id'] = Variable<String>(personID);
@@ -17809,9 +17783,6 @@ class FocusSessionData extends DataClass
       tenantID: tenantID == null && nullToAbsent
           ? const Value.absent()
           : Value(tenantID),
-      sessionID: sessionID == null && nullToAbsent
-          ? const Value.absent()
-          : Value(sessionID),
       personID: personID == null && nullToAbsent
           ? const Value.absent()
           : Value(personID),
@@ -17842,7 +17813,6 @@ class FocusSessionData extends DataClass
     return FocusSessionData(
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
-      sessionID: serializer.fromJson<int?>(json['sessionID']),
       personID: serializer.fromJson<String?>(json['personID']),
       projectID: serializer.fromJson<String?>(json['projectID']),
       startTime: serializer.fromJson<DateTime>(json['startTime']),
@@ -17860,7 +17830,6 @@ class FocusSessionData extends DataClass
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
-      'sessionID': serializer.toJson<int?>(sessionID),
       'personID': serializer.toJson<String?>(personID),
       'projectID': serializer.toJson<String?>(projectID),
       'startTime': serializer.toJson<DateTime>(startTime),
@@ -17876,7 +17845,6 @@ class FocusSessionData extends DataClass
   FocusSessionData copyWith({
     String? id,
     Value<String?> tenantID = const Value.absent(),
-    Value<int?> sessionID = const Value.absent(),
     Value<String?> personID = const Value.absent(),
     Value<String?> projectID = const Value.absent(),
     DateTime? startTime,
@@ -17889,7 +17857,6 @@ class FocusSessionData extends DataClass
   }) => FocusSessionData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
-    sessionID: sessionID.present ? sessionID.value : this.sessionID,
     personID: personID.present ? personID.value : this.personID,
     projectID: projectID.present ? projectID.value : this.projectID,
     startTime: startTime ?? this.startTime,
@@ -17904,7 +17871,6 @@ class FocusSessionData extends DataClass
     return FocusSessionData(
       id: data.id.present ? data.id.value : this.id,
       tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
-      sessionID: data.sessionID.present ? data.sessionID.value : this.sessionID,
       personID: data.personID.present ? data.personID.value : this.personID,
       projectID: data.projectID.present ? data.projectID.value : this.projectID,
       startTime: data.startTime.present ? data.startTime.value : this.startTime,
@@ -17926,7 +17892,6 @@ class FocusSessionData extends DataClass
     return (StringBuffer('FocusSessionData(')
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
-          ..write('sessionID: $sessionID, ')
           ..write('personID: $personID, ')
           ..write('projectID: $projectID, ')
           ..write('startTime: $startTime, ')
@@ -17944,7 +17909,6 @@ class FocusSessionData extends DataClass
   int get hashCode => Object.hash(
     id,
     tenantID,
-    sessionID,
     personID,
     projectID,
     startTime,
@@ -17961,7 +17925,6 @@ class FocusSessionData extends DataClass
       (other is FocusSessionData &&
           other.id == this.id &&
           other.tenantID == this.tenantID &&
-          other.sessionID == this.sessionID &&
           other.personID == this.personID &&
           other.projectID == this.projectID &&
           other.startTime == this.startTime &&
@@ -17976,7 +17939,6 @@ class FocusSessionData extends DataClass
 class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   final Value<String> id;
   final Value<String?> tenantID;
-  final Value<int?> sessionID;
   final Value<String?> personID;
   final Value<String?> projectID;
   final Value<DateTime> startTime;
@@ -17990,7 +17952,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   const FocusSessionsTableCompanion({
     this.id = const Value.absent(),
     this.tenantID = const Value.absent(),
-    this.sessionID = const Value.absent(),
     this.personID = const Value.absent(),
     this.projectID = const Value.absent(),
     this.startTime = const Value.absent(),
@@ -18005,7 +17966,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   FocusSessionsTableCompanion.insert({
     required String id,
     this.tenantID = const Value.absent(),
-    this.sessionID = const Value.absent(),
     this.personID = const Value.absent(),
     this.projectID = const Value.absent(),
     required DateTime startTime,
@@ -18023,7 +17983,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   static Insertable<FocusSessionData> custom({
     Expression<String>? id,
     Expression<String>? tenantID,
-    Expression<int>? sessionID,
     Expression<String>? personID,
     Expression<String>? projectID,
     Expression<DateTime>? startTime,
@@ -18038,7 +17997,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     return RawValuesInsertable({
       if (id != null) 'id': id,
       if (tenantID != null) 'tenant_id': tenantID,
-      if (sessionID != null) 'session_id': sessionID,
       if (personID != null) 'person_id': personID,
       if (projectID != null) 'project_id': projectID,
       if (startTime != null) 'start_time': startTime,
@@ -18055,7 +18013,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   FocusSessionsTableCompanion copyWith({
     Value<String>? id,
     Value<String?>? tenantID,
-    Value<int?>? sessionID,
     Value<String?>? personID,
     Value<String?>? projectID,
     Value<DateTime>? startTime,
@@ -18070,7 +18027,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     return FocusSessionsTableCompanion(
       id: id ?? this.id,
       tenantID: tenantID ?? this.tenantID,
-      sessionID: sessionID ?? this.sessionID,
       personID: personID ?? this.personID,
       projectID: projectID ?? this.projectID,
       startTime: startTime ?? this.startTime,
@@ -18092,9 +18048,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     }
     if (tenantID.present) {
       map['tenant_id'] = Variable<String>(tenantID.value);
-    }
-    if (sessionID.present) {
-      map['session_id'] = Variable<int>(sessionID.value);
     }
     if (personID.present) {
       map['person_id'] = Variable<String>(personID.value);
@@ -18134,7 +18087,6 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
     return (StringBuffer('FocusSessionsTableCompanion(')
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
-          ..write('sessionID: $sessionID, ')
           ..write('personID: $personID, ')
           ..write('projectID: $projectID, ')
           ..write('startTime: $startTime, ')
@@ -18214,17 +18166,17 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _scheduledTimeMeta = const VerificationMeta(
-    'scheduledTime',
-  );
   @override
-  late final GeneratedColumn<DateTime> scheduledTime =
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime>
+  scheduledTime =
       GeneratedColumn<DateTime>(
         'scheduled_time',
         aliasedName,
         false,
         type: DriftSqlType.dateTime,
         requiredDuringInsert: true,
+      ).withConverter<DateTime>(
+        $CustomNotificationsTableTable.$converterscheduledTime,
       );
   static const VerificationMeta _repeatFrequencyMeta = const VerificationMeta(
     'repeatFrequency',
@@ -18273,6 +18225,20 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('Normal'),
   );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
   static const VerificationMeta _iconMeta = const VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
@@ -18310,6 +18276,18 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
         $CustomNotificationsTableTable.$convertercreatedAt,
       );
   @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>(
+        $CustomNotificationsTableTable.$converterupdatedAt,
+      );
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     tenantID,
@@ -18321,9 +18299,11 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     repeatDays,
     category,
     priority,
+    personID,
     icon,
     isEnabled,
     createdAt,
+    updatedAt,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -18373,17 +18353,6 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     } else if (isInserting) {
       context.missing(_contentMeta);
     }
-    if (data.containsKey('scheduled_time')) {
-      context.handle(
-        _scheduledTimeMeta,
-        scheduledTime.isAcceptableOrUnknown(
-          data['scheduled_time']!,
-          _scheduledTimeMeta,
-        ),
-      );
-    } else if (isInserting) {
-      context.missing(_scheduledTimeMeta);
-    }
     if (data.containsKey('repeat_frequency')) {
       context.handle(
         _repeatFrequencyMeta,
@@ -18409,6 +18378,12 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
       context.handle(
         _priorityMeta,
         priority.isAcceptableOrUnknown(data['priority']!, _priorityMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
       );
     }
     if (data.containsKey('icon')) {
@@ -18452,10 +18427,13 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
         DriftSqlType.string,
         data['${effectivePrefix}content'],
       )!,
-      scheduledTime: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}scheduled_time'],
-      )!,
+      scheduledTime: $CustomNotificationsTableTable.$converterscheduledTime
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.dateTime,
+              data['${effectivePrefix}scheduled_time'],
+            )!,
+          ),
       repeatFrequency: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}repeat_frequency'],
@@ -18472,6 +18450,10 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
         DriftSqlType.string,
         data['${effectivePrefix}priority'],
       )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
       icon: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}icon'],
@@ -18486,6 +18468,12 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
           data['${effectivePrefix}created_at'],
         )!,
       ),
+      updatedAt: $CustomNotificationsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
     );
   }
 
@@ -18494,7 +18482,11 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     return $CustomNotificationsTableTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<DateTime, DateTime> $converterscheduledTime =
+      const DateTimeUTCConverter();
   static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
       const DateTimeUTCConverter();
 }
 
@@ -18510,9 +18502,11 @@ class CustomNotificationData extends DataClass
   final String? repeatDays;
   final String category;
   final String priority;
+  final String? personID;
   final String? icon;
   final bool isEnabled;
   final DateTime createdAt;
+  final DateTime updatedAt;
   const CustomNotificationData({
     required this.id,
     this.tenantID,
@@ -18524,9 +18518,11 @@ class CustomNotificationData extends DataClass
     this.repeatDays,
     required this.category,
     required this.priority,
+    this.personID,
     this.icon,
     required this.isEnabled,
     required this.createdAt,
+    required this.updatedAt,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -18540,7 +18536,13 @@ class CustomNotificationData extends DataClass
     }
     map['title'] = Variable<String>(title);
     map['content'] = Variable<String>(content);
-    map['scheduled_time'] = Variable<DateTime>(scheduledTime);
+    {
+      map['scheduled_time'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$converterscheduledTime.toSql(
+          scheduledTime,
+        ),
+      );
+    }
     if (!nullToAbsent || repeatFrequency != null) {
       map['repeat_frequency'] = Variable<String>(repeatFrequency);
     }
@@ -18549,6 +18551,9 @@ class CustomNotificationData extends DataClass
     }
     map['category'] = Variable<String>(category);
     map['priority'] = Variable<String>(priority);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
     if (!nullToAbsent || icon != null) {
       map['icon'] = Variable<String>(icon);
     }
@@ -18556,6 +18561,11 @@ class CustomNotificationData extends DataClass
     {
       map['created_at'] = Variable<DateTime>(
         $CustomNotificationsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$converterupdatedAt.toSql(updatedAt),
       );
     }
     return map;
@@ -18581,9 +18591,13 @@ class CustomNotificationData extends DataClass
           : Value(repeatDays),
       category: Value(category),
       priority: Value(priority),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
       icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
       isEnabled: Value(isEnabled),
       createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
     );
   }
 
@@ -18603,9 +18617,11 @@ class CustomNotificationData extends DataClass
       repeatDays: serializer.fromJson<String?>(json['repeatDays']),
       category: serializer.fromJson<String>(json['category']),
       priority: serializer.fromJson<String>(json['priority']),
+      personID: serializer.fromJson<String?>(json['personID']),
       icon: serializer.fromJson<String?>(json['icon']),
       isEnabled: serializer.fromJson<bool>(json['isEnabled']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
   @override
@@ -18622,9 +18638,11 @@ class CustomNotificationData extends DataClass
       'repeatDays': serializer.toJson<String?>(repeatDays),
       'category': serializer.toJson<String>(category),
       'priority': serializer.toJson<String>(priority),
+      'personID': serializer.toJson<String?>(personID),
       'icon': serializer.toJson<String?>(icon),
       'isEnabled': serializer.toJson<bool>(isEnabled),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
 
@@ -18639,9 +18657,11 @@ class CustomNotificationData extends DataClass
     Value<String?> repeatDays = const Value.absent(),
     String? category,
     String? priority,
+    Value<String?> personID = const Value.absent(),
     Value<String?> icon = const Value.absent(),
     bool? isEnabled,
     DateTime? createdAt,
+    DateTime? updatedAt,
   }) => CustomNotificationData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -18657,9 +18677,11 @@ class CustomNotificationData extends DataClass
     repeatDays: repeatDays.present ? repeatDays.value : this.repeatDays,
     category: category ?? this.category,
     priority: priority ?? this.priority,
+    personID: personID.present ? personID.value : this.personID,
     icon: icon.present ? icon.value : this.icon,
     isEnabled: isEnabled ?? this.isEnabled,
     createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
   );
   CustomNotificationData copyWithCompanion(
     CustomNotificationsTableCompanion data,
@@ -18683,9 +18705,11 @@ class CustomNotificationData extends DataClass
           : this.repeatDays,
       category: data.category.present ? data.category.value : this.category,
       priority: data.priority.present ? data.priority.value : this.priority,
+      personID: data.personID.present ? data.personID.value : this.personID,
       icon: data.icon.present ? data.icon.value : this.icon,
       isEnabled: data.isEnabled.present ? data.isEnabled.value : this.isEnabled,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
 
@@ -18702,9 +18726,11 @@ class CustomNotificationData extends DataClass
           ..write('repeatDays: $repeatDays, ')
           ..write('category: $category, ')
           ..write('priority: $priority, ')
+          ..write('personID: $personID, ')
           ..write('icon: $icon, ')
           ..write('isEnabled: $isEnabled, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -18721,9 +18747,11 @@ class CustomNotificationData extends DataClass
     repeatDays,
     category,
     priority,
+    personID,
     icon,
     isEnabled,
     createdAt,
+    updatedAt,
   );
   @override
   bool operator ==(Object other) =>
@@ -18739,9 +18767,11 @@ class CustomNotificationData extends DataClass
           other.repeatDays == this.repeatDays &&
           other.category == this.category &&
           other.priority == this.priority &&
+          other.personID == this.personID &&
           other.icon == this.icon &&
           other.isEnabled == this.isEnabled &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
 }
 
 class CustomNotificationsTableCompanion
@@ -18756,9 +18786,11 @@ class CustomNotificationsTableCompanion
   final Value<String?> repeatDays;
   final Value<String> category;
   final Value<String> priority;
+  final Value<String?> personID;
   final Value<String?> icon;
   final Value<bool> isEnabled;
   final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const CustomNotificationsTableCompanion({
     this.id = const Value.absent(),
@@ -18771,9 +18803,11 @@ class CustomNotificationsTableCompanion
     this.repeatDays = const Value.absent(),
     this.category = const Value.absent(),
     this.priority = const Value.absent(),
+    this.personID = const Value.absent(),
     this.icon = const Value.absent(),
     this.isEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   CustomNotificationsTableCompanion.insert({
@@ -18787,9 +18821,11 @@ class CustomNotificationsTableCompanion
     this.repeatDays = const Value.absent(),
     this.category = const Value.absent(),
     this.priority = const Value.absent(),
+    this.personID = const Value.absent(),
     this.icon = const Value.absent(),
     this.isEnabled = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -18806,9 +18842,11 @@ class CustomNotificationsTableCompanion
     Expression<String>? repeatDays,
     Expression<String>? category,
     Expression<String>? priority,
+    Expression<String>? personID,
     Expression<String>? icon,
     Expression<bool>? isEnabled,
     Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -18822,9 +18860,11 @@ class CustomNotificationsTableCompanion
       if (repeatDays != null) 'repeat_days': repeatDays,
       if (category != null) 'category': category,
       if (priority != null) 'priority': priority,
+      if (personID != null) 'person_id': personID,
       if (icon != null) 'icon': icon,
       if (isEnabled != null) 'is_enabled': isEnabled,
       if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -18840,9 +18880,11 @@ class CustomNotificationsTableCompanion
     Value<String?>? repeatDays,
     Value<String>? category,
     Value<String>? priority,
+    Value<String?>? personID,
     Value<String?>? icon,
     Value<bool>? isEnabled,
     Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
     return CustomNotificationsTableCompanion(
@@ -18856,9 +18898,11 @@ class CustomNotificationsTableCompanion
       repeatDays: repeatDays ?? this.repeatDays,
       category: category ?? this.category,
       priority: priority ?? this.priority,
+      personID: personID ?? this.personID,
       icon: icon ?? this.icon,
       isEnabled: isEnabled ?? this.isEnabled,
       createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -18882,7 +18926,11 @@ class CustomNotificationsTableCompanion
       map['content'] = Variable<String>(content.value);
     }
     if (scheduledTime.present) {
-      map['scheduled_time'] = Variable<DateTime>(scheduledTime.value);
+      map['scheduled_time'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$converterscheduledTime.toSql(
+          scheduledTime.value,
+        ),
+      );
     }
     if (repeatFrequency.present) {
       map['repeat_frequency'] = Variable<String>(repeatFrequency.value);
@@ -18896,6 +18944,9 @@ class CustomNotificationsTableCompanion
     if (priority.present) {
       map['priority'] = Variable<String>(priority.value);
     }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
     if (icon.present) {
       map['icon'] = Variable<String>(icon.value);
     }
@@ -18906,6 +18957,13 @@ class CustomNotificationsTableCompanion
       map['created_at'] = Variable<DateTime>(
         $CustomNotificationsTableTable.$convertercreatedAt.toSql(
           createdAt.value,
+        ),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $CustomNotificationsTableTable.$converterupdatedAt.toSql(
+          updatedAt.value,
         ),
       );
     }
@@ -18928,9 +18986,11 @@ class CustomNotificationsTableCompanion
           ..write('repeatDays: $repeatDays, ')
           ..write('category: $category, ')
           ..write('priority: $priority, ')
+          ..write('personID: $personID, ')
           ..write('icon: $icon, ')
           ..write('isEnabled: $isEnabled, ')
           ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -21958,6 +22018,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     WritePropagation(
       on: TableUpdateQuery.onTableName(
         'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('custom_notifications', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('custom_notifications', kind: UpdateKind.delete)],
@@ -26574,6 +26641,34 @@ final class $$PersonsTableTableReferences
     );
   }
 
+  static MultiTypedResultKey<
+    $CustomNotificationsTableTable,
+    List<CustomNotificationData>
+  >
+  _customNotificationsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.customNotificationsTable,
+        aliasName: $_aliasNameGenerator(
+          db.personsTable.id,
+          db.customNotificationsTable.personID,
+        ),
+      );
+
+  $$CustomNotificationsTableTableProcessedTableManager
+  get customNotificationsTableRefs {
+    final manager = $$CustomNotificationsTableTableTableManager(
+      $_db,
+      $_db.customNotificationsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _customNotificationsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
   static MultiTypedResultKey<$WaterLogsTableTable, List<WaterLogData>>
   _waterLogsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
     db.waterLogsTable,
@@ -27184,6 +27279,33 @@ class $$PersonsTableTableFilterComposer
                 $removeJoinBuilderFromRootComposer,
           ),
     );
+    return f(composer);
+  }
+
+  Expression<bool> customNotificationsTableRefs(
+    Expression<bool> Function($$CustomNotificationsTableTableFilterComposer f)
+    f,
+  ) {
+    final $$CustomNotificationsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.customNotificationsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CustomNotificationsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.customNotificationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
     return f(composer);
   }
 
@@ -27892,6 +28014,33 @@ class $$PersonsTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> customNotificationsTableRefs<T extends Object>(
+    Expression<T> Function($$CustomNotificationsTableTableAnnotationComposer a)
+    f,
+  ) {
+    final $$CustomNotificationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.customNotificationsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$CustomNotificationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.customNotificationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> waterLogsTableRefs<T extends Object>(
     Expression<T> Function($$WaterLogsTableTableAnnotationComposer a) f,
   ) {
@@ -28002,6 +28151,7 @@ class $$PersonsTableTableTableManager
             bool scoresTableRefs,
             bool transactionsTableRefs,
             bool focusSessionsTableRefs,
+            bool customNotificationsTableRefs,
             bool waterLogsTableRefs,
             bool sleepLogsTableRefs,
             bool exerciseLogsTableRefs,
@@ -28111,6 +28261,7 @@ class $$PersonsTableTableTableManager
                 scoresTableRefs = false,
                 transactionsTableRefs = false,
                 focusSessionsTableRefs = false,
+                customNotificationsTableRefs = false,
                 waterLogsTableRefs = false,
                 sleepLogsTableRefs = false,
                 exerciseLogsTableRefs = false,
@@ -28136,6 +28287,8 @@ class $$PersonsTableTableTableManager
                     if (scoresTableRefs) db.scoresTable,
                     if (transactionsTableRefs) db.transactionsTable,
                     if (focusSessionsTableRefs) db.focusSessionsTable,
+                    if (customNotificationsTableRefs)
+                      db.customNotificationsTable,
                     if (waterLogsTableRefs) db.waterLogsTable,
                     if (sleepLogsTableRefs) db.sleepLogsTable,
                     if (exerciseLogsTableRefs) db.exerciseLogsTable,
@@ -28554,6 +28707,27 @@ class $$PersonsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (customNotificationsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          CustomNotificationData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._customNotificationsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).customNotificationsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (waterLogsTableRefs)
                         await $_getPrefetchedData<
                           PersonData,
@@ -28657,6 +28831,7 @@ typedef $$PersonsTableTableProcessedTableManager =
         bool scoresTableRefs,
         bool transactionsTableRefs,
         bool focusSessionsTableRefs,
+        bool customNotificationsTableRefs,
         bool waterLogsTableRefs,
         bool sleepLogsTableRefs,
         bool exerciseLogsTableRefs,
@@ -40503,7 +40678,6 @@ typedef $$FocusSessionsTableTableCreateCompanionBuilder =
     FocusSessionsTableCompanion Function({
       required String id,
       Value<String?> tenantID,
-      Value<int?> sessionID,
       Value<String?> personID,
       Value<String?> projectID,
       required DateTime startTime,
@@ -40519,7 +40693,6 @@ typedef $$FocusSessionsTableTableUpdateCompanionBuilder =
     FocusSessionsTableCompanion Function({
       Value<String> id,
       Value<String?> tenantID,
-      Value<int?> sessionID,
       Value<String?> personID,
       Value<String?> projectID,
       Value<DateTime> startTime,
@@ -40642,11 +40815,6 @@ class $$FocusSessionsTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get sessionID => $composableBuilder(
-    column: $table.sessionID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -40787,11 +40955,6 @@ class $$FocusSessionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get sessionID => $composableBuilder(
-    column: $table.sessionID,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get startTime => $composableBuilder(
     column: $table.startTime,
     builder: (column) => ColumnOrderings(column),
@@ -40926,9 +41089,6 @@ class $$FocusSessionsTableTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get sessionID =>
-      $composableBuilder(column: $table.sessionID, builder: (column) => column);
 
   GeneratedColumn<DateTime> get startTime =>
       $composableBuilder(column: $table.startTime, builder: (column) => column);
@@ -41086,7 +41246,6 @@ class $$FocusSessionsTableTableTableManager
               ({
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
-                Value<int?> sessionID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<DateTime> startTime = const Value.absent(),
@@ -41100,7 +41259,6 @@ class $$FocusSessionsTableTableTableManager
               }) => FocusSessionsTableCompanion(
                 id: id,
                 tenantID: tenantID,
-                sessionID: sessionID,
                 personID: personID,
                 projectID: projectID,
                 startTime: startTime,
@@ -41116,7 +41274,6 @@ class $$FocusSessionsTableTableTableManager
               ({
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
-                Value<int?> sessionID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 required DateTime startTime,
@@ -41130,7 +41287,6 @@ class $$FocusSessionsTableTableTableManager
               }) => FocusSessionsTableCompanion.insert(
                 id: id,
                 tenantID: tenantID,
-                sessionID: sessionID,
                 personID: personID,
                 projectID: projectID,
                 startTime: startTime,
@@ -41279,9 +41435,11 @@ typedef $$CustomNotificationsTableTableCreateCompanionBuilder =
       Value<String?> repeatDays,
       Value<String> category,
       Value<String> priority,
+      Value<String?> personID,
       Value<String?> icon,
       Value<bool> isEnabled,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 typedef $$CustomNotificationsTableTableUpdateCompanionBuilder =
@@ -41296,9 +41454,11 @@ typedef $$CustomNotificationsTableTableUpdateCompanionBuilder =
       Value<String?> repeatDays,
       Value<String> category,
       Value<String> priority,
+      Value<String?> personID,
       Value<String?> icon,
       Value<bool> isEnabled,
       Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
       Value<int> rowid,
     });
 
@@ -41336,6 +41496,28 @@ final class $$CustomNotificationsTableTableReferences
       manager.$state.copyWith(prefetchedData: [item]),
     );
   }
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(
+          db.customNotificationsTable.personID,
+          db.personsTable.id,
+        ),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
 }
 
 class $$CustomNotificationsTableTableFilterComposer
@@ -41367,9 +41549,10 @@ class $$CustomNotificationsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<DateTime> get scheduledTime => $composableBuilder(
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime>
+  get scheduledTime => $composableBuilder(
     column: $table.scheduledTime,
-    builder: (column) => ColumnFilters(column),
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnFilters<String> get repeatFrequency => $composableBuilder(
@@ -41408,6 +41591,12 @@ class $$CustomNotificationsTableTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -41422,6 +41611,29 @@ class $$CustomNotificationsTableTableFilterComposer
           }) => $$OrganizationsTableTableFilterComposer(
             $db: $db,
             $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -41501,6 +41713,11 @@ class $$CustomNotificationsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$OrganizationsTableTableOrderingComposer get tenantID {
     final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -41515,6 +41732,29 @@ class $$CustomNotificationsTableTableOrderingComposer
           }) => $$OrganizationsTableTableOrderingComposer(
             $db: $db,
             $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -41548,10 +41788,11 @@ class $$CustomNotificationsTableTableAnnotationComposer
   GeneratedColumn<String> get content =>
       $composableBuilder(column: $table.content, builder: (column) => column);
 
-  GeneratedColumn<DateTime> get scheduledTime => $composableBuilder(
-    column: $table.scheduledTime,
-    builder: (column) => column,
-  );
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get scheduledTime =>
+      $composableBuilder(
+        column: $table.scheduledTime,
+        builder: (column) => column,
+      );
 
   GeneratedColumn<String> get repeatFrequency => $composableBuilder(
     column: $table.repeatFrequency,
@@ -41578,6 +41819,9 @@ class $$CustomNotificationsTableTableAnnotationComposer
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
   $$OrganizationsTableTableAnnotationComposer get tenantID {
     final $$OrganizationsTableTableAnnotationComposer composer =
         $composerBuilder(
@@ -41601,6 +41845,29 @@ class $$CustomNotificationsTableTableAnnotationComposer
         );
     return composer;
   }
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$CustomNotificationsTableTableTableManager
@@ -41616,7 +41883,7 @@ class $$CustomNotificationsTableTableTableManager
           $$CustomNotificationsTableTableUpdateCompanionBuilder,
           (CustomNotificationData, $$CustomNotificationsTableTableReferences),
           CustomNotificationData,
-          PrefetchHooks Function({bool tenantID})
+          PrefetchHooks Function({bool tenantID, bool personID})
         > {
   $$CustomNotificationsTableTableTableManager(
     _$AppDatabase db,
@@ -41652,9 +41919,11 @@ class $$CustomNotificationsTableTableTableManager
                 Value<String?> repeatDays = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<String> priority = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> icon = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CustomNotificationsTableCompanion(
                 id: id,
@@ -41667,9 +41936,11 @@ class $$CustomNotificationsTableTableTableManager
                 repeatDays: repeatDays,
                 category: category,
                 priority: priority,
+                personID: personID,
                 icon: icon,
                 isEnabled: isEnabled,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -41684,9 +41955,11 @@ class $$CustomNotificationsTableTableTableManager
                 Value<String?> repeatDays = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<String> priority = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
                 Value<String?> icon = const Value.absent(),
                 Value<bool> isEnabled = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => CustomNotificationsTableCompanion.insert(
                 id: id,
@@ -41699,9 +41972,11 @@ class $$CustomNotificationsTableTableTableManager
                 repeatDays: repeatDays,
                 category: category,
                 priority: priority,
+                personID: personID,
                 icon: icon,
                 isEnabled: isEnabled,
                 createdAt: createdAt,
+                updatedAt: updatedAt,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -41712,7 +41987,7 @@ class $$CustomNotificationsTableTableTableManager
                 ),
               )
               .toList(),
-          prefetchHooksCallback: ({tenantID = false}) {
+          prefetchHooksCallback: ({tenantID = false, personID = false}) {
             return PrefetchHooks(
               db: db,
               explicitlyWatchedTables: [],
@@ -41747,6 +42022,21 @@ class $$CustomNotificationsTableTableTableManager
                               )
                               as T;
                     }
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable:
+                                    $$CustomNotificationsTableTableReferences
+                                        ._personIDTable(db),
+                                referencedColumn:
+                                    $$CustomNotificationsTableTableReferences
+                                        ._personIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
 
                     return state;
                   },
@@ -41771,7 +42061,7 @@ typedef $$CustomNotificationsTableTableProcessedTableManager =
       $$CustomNotificationsTableTableUpdateCompanionBuilder,
       (CustomNotificationData, $$CustomNotificationsTableTableReferences),
       CustomNotificationData,
-      PrefetchHooks Function({bool tenantID})
+      PrefetchHooks Function({bool tenantID, bool personID})
     >;
 typedef $$QuotesTableTableCreateCompanionBuilder =
     QuotesTableCompanion Function({

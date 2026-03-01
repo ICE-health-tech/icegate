@@ -82,7 +82,7 @@ class _HeartRatePageState extends State<HeartRatePage>
       } else {
         await dao.insertOrUpdateMetrics(
           HealthMetricsTableCompanion.insert(
-            id: IDGen.generateUuid(),
+            id: IDGen.UUIDV7(),
             personID: drift.Value(
               Supabase.instance.client.auth.currentUser?.id ?? "",
             ),

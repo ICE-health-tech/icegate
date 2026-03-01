@@ -63,7 +63,7 @@ class ProjectBlock {
     String? color,
   ) async {
     if (_personId.isEmpty) return "";
-    final uuid = IDGen.generateUuid();
+    final uuid = IDGen.UUIDV7();
     await _dao.insertProject(
       ProjectsTableCompanion.insert(
         id: uuid, // Use the same UUID

@@ -46,10 +46,8 @@ class GoalConfigurationWidget extends StatelessWidget {
                       letterSpacing: 4,
                     ),
                   ),
-                
                 ],
               ),
-              
             ),
           ),
         ),
@@ -171,7 +169,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                         _buildGoalSlider(
                           context: context,
                           label: "STEP TARGET",
-                    
+
                           icon: Icons.directions_run_rounded,
                           color: colorScheme.primary,
                           valueSignal: healthBlock.dailyStepGoal,
@@ -185,13 +183,69 @@ class GoalConfigurationWidget extends StatelessWidget {
                         _buildGoalSlider(
                           context: context,
                           label: "CALORIE LIMIT",
-                       
                           icon: Icons.local_fire_department_rounded,
                           color: const Color(0xFFFF3D00),
                           valueSignal: healthBlock.dailyKcalGoal,
                           min: 1200,
                           max: 5000,
                           divisions: 38,
+                          suffix: " kcal",
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        _buildGoalSlider(
+                          context: context,
+                          label: "WATER TARGET",
+                          icon: Icons.water_drop_rounded,
+                          color: Colors.blueAccent,
+                          valueSignal: healthBlock.dailyWaterGoal,
+                          min: 500,
+                          max: 5000,
+                          divisions: 45,
+                          suffix: " ml",
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        _buildGoalSlider(
+                          context: context,
+                          label: "FOCUS TARGET",
+                          icon: Icons.timer_rounded,
+                          color: Colors.purpleAccent,
+                          valueSignal: healthBlock.dailyFocusGoal,
+                          min: 10,
+                          max: 480,
+                          divisions: 47,
+                          suffix: " min",
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        _buildGoalSlider(
+                          context: context,
+                          label: "EXERCISE TARGET",
+                          icon: Icons.fitness_center_rounded,
+                          color: Colors.orangeAccent,
+                          valueSignal: healthBlock.dailyExerciseGoal,
+                          min: 10,
+                          max: 180,
+                          divisions: 17,
+                          suffix: " min",
+                        ),
+
+                        const SizedBox(height: 48),
+
+                        _buildDoubleGoalSlider(
+                          context: context,
+                          label: "SLEEP TARGET",
+                          icon: Icons.bedtime_rounded,
+                          color: Colors.indigoAccent,
+                          valueSignal: healthBlock.dailySleepGoal,
+                          min: 4.0,
+                          max: 12.0,
+                          divisions: 16,
+                          suffix: " hours",
                         ),
                       ],
                     ),
@@ -249,6 +303,7 @@ class GoalConfigurationWidget extends StatelessWidget {
     required double min,
     required double max,
     required int divisions,
+    String suffix = "",
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Watch((context) {
@@ -276,7 +331,6 @@ class GoalConfigurationWidget extends StatelessWidget {
                           letterSpacing: 1.5,
                         ),
                       ),
-                    
                     ],
                   ),
                 ],
@@ -292,10 +346,10 @@ class GoalConfigurationWidget extends StatelessWidget {
                   border: Border.all(color: color.withOpacity(0.2)),
                 ),
                 child: Text(
-                  value.toInt().toString(),
+                  "${value.toInt()}$suffix",
                   style: TextStyle(
                     color: color,
-                    fontSize: 18,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                     fontFamily: 'Monospace',
                   ),
@@ -330,6 +384,105 @@ class GoalConfigurationWidget extends StatelessWidget {
                 if (newValue != value) {
                   HapticFeedback.selectionClick();
                   valueSignal.value = newValue.toInt();
+                }
+              },
+            ),
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildDoubleGoalSlider({
+    required BuildContext context,
+    required String label,
+    required IconData icon,
+    required Color color,
+    required Signal<double> valueSignal,
+    required double min,
+    required double max,
+    required int divisions,
+    String suffix = "",
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Watch((context) {
+      final value = valueSignal.value;
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Row(
+                children: [
+                  Icon(icon, color: color, size: 18),
+                  const SizedBox(width: 12),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        label,
+                        style: TextStyle(
+                          color: colorScheme.onSurface.withOpacity(0.7),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: color.withOpacity(0.05),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: color.withOpacity(0.2)),
+                ),
+                child: Text(
+                  "${value.toStringAsFixed(1)}$suffix",
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w900,
+                    fontFamily: 'Monospace',
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              trackHeight: 2,
+              activeTrackColor: color,
+              inactiveTrackColor: colorScheme.onSurface.withOpacity(0.1),
+              thumbColor: colorScheme.onSurface,
+              thumbShape: const RoundSliderThumbShape(
+                enabledThumbRadius: 8,
+                elevation: 10,
+              ),
+              overlayColor: color.withOpacity(0.2),
+              valueIndicatorColor: color,
+              valueIndicatorTextStyle: TextStyle(
+                color: colorScheme.surface,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            child: Slider(
+              value: value.clamp(min, max),
+              min: min,
+              max: max,
+              divisions: divisions,
+              onChanged: (newValue) {
+                if (newValue != value) {
+                  HapticFeedback.selectionClick();
+                  valueSignal.value = newValue;
                 }
               },
             ),

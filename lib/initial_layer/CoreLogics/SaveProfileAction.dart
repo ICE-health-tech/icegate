@@ -5,7 +5,6 @@ import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
 // import 'package:ice_shield/data_layer/Protocol/User/PersonProtocols.dart';
 import 'package:ice_shield/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 Future<String> saveProfileAction(

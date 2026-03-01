@@ -562,7 +562,7 @@ class _SocialPageState extends State<SocialPage>
                   PersonProtocol.create(
                     firstName: c.name.first,
                     lastName: c.name.last,
-                    id: IDGen.generateUuid(),
+                    id: IDGen.UUIDV7(),
                     isActive: true,
                   ),
                   relationship: 'friend',

@@ -1,8 +1,9 @@
 import 'dart:async';
+import 'package:drift/drift.dart' show Value;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
@@ -29,12 +30,12 @@ import 'package:powersync/powersync.dart' hide Column;
 import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart'
     as ps_schema;
 import 'package:path_provider/path_provider.dart';
+import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_shield/security_routing_layer/Routing/url_route/InternalRoute.dart';
 import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
-import 'package:flutter/services.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 // Note: We are assuming AppDatabase and ExternalWidgetsDAO are defined in this file.
@@ -76,6 +77,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   Timer? _healthSyncTimer;
 
   late HealthMetricsDAO healthMetricsDAO;
+  late HealthMealDAO healthMealDao;
   int currentSteps = 0;
   bool _isInitialized = false;
   bool _hasError = false;
@@ -107,53 +109,85 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
   Future<void> _syncHealthData() async {
     try {
-      debugPrint("DataLayer: Periodic health sync started...");
+      debugPrint("DataLayer: Starting multi-day health sync...");
+      final now = DateTime.now();
 
-      // Sync Steps
-      final steps = await HealthService.fetchStepCount();
-      debugPrint("DataLayer: HealthService returned $steps steps");
-
-      // Sync Sleep
-      final sleepHours = await HealthService.fetchSleepData();
-      debugPrint("DataLayer: HealthService returned $sleepHours sleep hours");
-
-      // Sync Heart Rate
-      final heartRate = await HealthService.fetchLatestHeartRate();
-      debugPrint("DataLayer: HealthService returned $heartRate bpm");
-
-      // Sync Calories
-      final calories = await HealthService.fetchCalories();
-      debugPrint("DataLayer: HealthService returned $calories kcal");
-
-      if (mounted) {
-        setState(() {
-          currentSteps = steps;
-        });
-
-        if (_isInitialized) {
-          debugPrint("DataLayer: Forwarding $steps steps to healthBlock");
-          healthBlock.updateSteps(steps);
-
-          debugPrint(
-            "DataLayer: Forwarding $sleepHours sleep hours to healthBlock",
-          );
-          healthBlock.updateSleep(sleepHours);
-
-          debugPrint("DataLayer: Forwarding $heartRate bpm to healthBlock");
-          healthBlock.updateHeartRate(heartRate);
-
-          debugPrint(
-            "DataLayer: Forwarding ${calories.toInt()} kcal to healthBlock",
-          );
-          healthBlock.updateCalories(calories.toInt());
-        } else {
-          debugPrint(
-            "DataLayer: healthBlock not initialized yet, skipping health update",
-          );
-        }
+      // Sync last 3 days to catch any missed boundary data
+      for (int i = 0; i < 3; i++) {
+        final targetDate = now.subtract(Duration(days: i));
+        await _syncHealthDataForDay(targetDate);
       }
+      debugPrint("DataLayer: Multi-day health sync completed.");
     } catch (e) {
       debugPrint("DataLayer: Error in _syncHealthData: $e");
+    }
+  }
+
+  Future<void> _syncHealthDataForDay(DateTime date) async {
+    final isToday =
+        date.day == DateTime.now().day &&
+        date.month == DateTime.now().month &&
+        date.year == DateTime.now().year;
+
+    // Sync Steps
+    final steps = await HealthService.fetchStepsForDay(date);
+    debugPrint("DataLayer: HealthService returned $steps steps for $date");
+
+    // Sync Calories
+    final calories = await HealthService.fetchCaloriesForDay(date);
+    debugPrint("DataLayer: HealthService returned $calories kcal for $date");
+
+    // Guard: On macOS/Web/Linux/Windows, HealthService returns 0 because it can't fetch.
+    // We should NOT overwrite existing data with 0 if it's likely just a platform limitation.
+    if (steps == 0 && calories == 0) {
+      final isDesktop =
+          kIsWeb ||
+          defaultTargetPlatform == TargetPlatform.macOS ||
+          defaultTargetPlatform == TargetPlatform.linux ||
+          defaultTargetPlatform == TargetPlatform.windows;
+
+      if (isDesktop) {
+        debugPrint(
+          "DataLayer: Skipping sync for $date on ${defaultTargetPlatform.name} (0 values detected)",
+        );
+        return;
+      }
+    }
+
+    // For historical days, we save directly to DAO to avoid HealthBlock logic overhead
+    // For today, we use HealthBlock to ensure reactive signals stay in sync
+    if (isToday) {
+      debugPrint("DataLayer: [iPhone Sync] Updating HealthBlock for TODAY...");
+      // Sync Sleep (usually only relevant for today/yesterday context)
+      final sleepHours = await HealthService.fetchSleepData();
+      // Sync Heart Rate (latest only)
+      final heartRate = await HealthService.fetchLatestHeartRate();
+
+      if (mounted && _isInitialized) {
+        // Use direct signal access to avoid lint issues if analyzer is slow
+        healthBlock.updateSteps(steps);
+        healthBlock.updateSleep(sleepHours);
+        healthBlock.updateHeartRate(heartRate);
+        healthBlock.updateCalories(calories.toInt());
+      }
+    } else {
+      debugPrint(
+        "DataLayer: [iPhone Sync] Saving HISTORICAL data for $date to DB...",
+      );
+      // Save historical data directly to DB using insertOrUpdateMetrics which handles IDs properly
+      await database.healthMetricsDAO.insertOrUpdateMetrics(
+        HealthMetricsTableCompanion.insert(
+          id: IDGen.generateDeterministicUuid(
+            healthBlock.personId,
+            "${date.year}-${date.month}-${date.day}",
+          ),
+          personID: Value(healthBlock.personId),
+          date: DateTime(date.year, date.month, date.day, 12),
+          steps: Value(steps),
+          caloriesBurned: Value(calories.toInt()),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
     }
   }
 
@@ -171,7 +205,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       // 2. Initialize PowerSync and Database
       final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, 'powersync24.db');
+      final dbPath = p.join(dir.path, 'powersync27.db');
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
@@ -218,6 +252,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         personId: "",
         healthDao: database.healthMetricsDAO,
         healthLogsDao: database.healthLogsDAO,
+        healthMealDao: database.healthMealDAO,
       );
       growthBlock = GrowthBlock();
       growthBlock.init(database.growthDAO, "");
@@ -275,7 +310,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
               // Re-initialize blocks with the correct identity
               healthBlock.personId = personId;
-              healthBlock.init();
+              Future.microtask(() => healthBlock.init());
+
+              // Trigger immediate health sync for the new person
+              _syncHealthData();
 
               growthBlock.init(database.growthDAO, personId);
               projectBlock.init(database.projectsDAO, personId);
@@ -364,46 +402,52 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       );
 
       if (session != null) {
-        print(
-          "🔑 [DataLayer] Session Token: ${session.accessToken.substring(0, 10)}...",
-        );
-        // Sync state to AuthBlock so downstream effects (PowerSync, fetchUser) trigger
-        authBlock.jwt.value = session.accessToken;
-        authBlock.username.value = session.user.email ?? "Google User";
+        // Use microtask to decouple signal updates from the auth listener execution
+        // which prevents SignalEffectException during batch processing.
+        Future.microtask(() {
+          batch(() {
+            print(
+              "🔑 [DataLayer] Session Token: ${session.accessToken.substring(0, 10)}...",
+            );
+            // Sync state to AuthBlock so downstream effects (PowerSync, fetchUser) trigger
+            authBlock.jwt.value = session.accessToken;
+            authBlock.username.value = session.user.email ?? "Google User";
 
-        // --- NEW: Persist to local DB for auto-login on next start ---
+            // --- NEW: Persist to local DB for auto-login on next start ---
 
-        print("PERSON ID : " + session.user.id);
-        personBlock.information.value = personBlock.information.value.copyWith(
-          profiles: personBlock.information.value.profiles.copyWith(
-            id: session.user.id,
-            firstName: session.user.userMetadata?['full_name'] ?? 'User',
-          ),
-        );
-        if (ps == null) {
+            print("PERSON ID : ${session.user.id}");
+            personBlock.information.value = personBlock.information.value
+                .copyWith(
+                  profiles: personBlock.information.value.profiles.copyWith(
+                    id: session.user.id,
+                    firstName:
+                        session.user.userMetadata?['full_name'] ?? 'User',
+                  ),
+                );
+
+            authBlock.persistSession(
+              session.accessToken,
+              session.user.email ?? "Google User",
+            );
+
+            if (authBlock.status.value != AuthStatus.authenticated) {
+              print(
+                "🔑 [DataLayer] Transitioning AuthBlock to 'authenticated' state",
+              );
+              authBlock.status.value = AuthStatus.authenticated;
+            }
+          });
+        });
+
+        if (ps != null) {
+          // --- NEW: Synchronize user data with public schema ---
+          authBlock.syncUserWithSupabase(session.user);
+          // Only fetch user if we transitioned to authenticated
+          authBlock.fetchUser();
+        } else {
           print(
             "⚠️ [DataLayer] PowerSync instance is null. Skipping sync connect.",
           );
-          return;
-        }
-
-        authBlock.persistSession(
-          session.accessToken,
-          authBlock.username.value ?? "User",
-        );
-
-        // --- NEW: Synchronize user data with public schema ---
-        authBlock.syncUserWithSupabase(session.user);
-
-        if (authBlock.status.value != AuthStatus.authenticated) {
-          print(
-            "🔑 [DataLayer] Transitioning AuthBlock to 'authenticated' state",
-          );
-
-          authBlock.status.value = AuthStatus.authenticated;
-
-          // Only fetch user if we transitioned to authenticated
-          authBlock.fetchUser();
         }
       }
     });
@@ -490,6 +534,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           );
           authBlock.showWelcomeBack.value = true;
         }
+
+        // Trigger immediate health sync on resume
+        _syncHealthData();
       }
     }
   }

@@ -41,7 +41,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
         imageUrl: '',
         alias: '',
         dateAdded: '',
-        widgetID: IDGen.generateUuid(),
+        widgetID: IDGen.UUIDV7(),
       );
 
   // We use a single factory that implements the parent fields + new fields
@@ -104,7 +104,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
       imageUrl: '',
       alias: 'empty',
       dateAdded: '',
-      widgetID: IDGen.generateUuid(),
+      widgetID: IDGen.UUIDV7(),
       color: 'white',
       isStay: false,
       isTarget: false, // Default for empty

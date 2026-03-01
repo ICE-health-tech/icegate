@@ -200,11 +200,9 @@ class _HomePageState extends State<HomePage> {
       if (parts.length > 2) {
         final id = (parts.last);
 
-        if (id != null) {
-          context.push('/projects/$id');
-          return;
-        }
-      }
+        context.push('/projects/$id');
+        return;
+            }
       context.push('/projects');
       return;
     }
@@ -295,9 +293,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       TextButton(
                         child: Text(
-                          personBlock.information.value.profiles.firstName +
-                              " " +
-                              personBlock.information.value.profiles.lastName,
+                          "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 20,
@@ -326,7 +322,7 @@ class _HomePageState extends State<HomePage> {
                       children: [
                         Watch((context) {
                           final steps = healthBlock.todaySteps.value;
-                          final kcal = healthMetricsData['food']?.value ?? 0;
+                          final kcal = healthBlock.todayCaloriesConsumed.value;
                           final sleep = healthBlock.todaySleep.value;
                           final hr = healthBlock.todayHeartRate.value;
                           return _buildQuickAccessCard(

@@ -140,7 +140,7 @@ class GrowthBlock {
     if (_personId.isEmpty) return;
     await _dao.createGoal(
       GoalsTableCompanion.insert(
-        id: IDGen.generateUuid(),
+        id: IDGen.UUIDV7(),
         personID: Value(_personId),
         title: title,
         projectID: Value(projectID),
