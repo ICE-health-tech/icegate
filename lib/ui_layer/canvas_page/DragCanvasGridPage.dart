@@ -235,12 +235,12 @@ class _DragCanvasState extends State<DragCanvas> {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.4),
+          color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.7), width: 2.5),
+          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 2.5),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),

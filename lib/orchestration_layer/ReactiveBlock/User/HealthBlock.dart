@@ -139,6 +139,7 @@ class HealthBlock {
               0,
               (sum, log) => sum + log.amount,
             );
+            _saveWater(todayWater.value);
           },
           onError: (e) =>
               debugPrint("HealthBlock: Error watching water logs: $e"),
@@ -272,6 +273,23 @@ class HealthBlock {
         personID: Value(personId),
         date: Value(normalizedToday),
         sleepHours: Value(hours),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> _saveWater(int ml) async {
+    if (personId.isEmpty) return;
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+
+    debugPrint("HealthBlock: Saving $ml ml water to DB for $normalizedToday");
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        id: Value(IDGen.UUIDV7()),
+        personID: Value(personId),
+        date: Value(normalizedToday),
+        waterGlasses: Value((ml / 250).round()), // Estimate glasses from ML
         updatedAt: Value(DateTime.now()),
       ),
     );

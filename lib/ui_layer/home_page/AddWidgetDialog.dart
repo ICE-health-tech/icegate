@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:provider/provider.dart';
 
 class AddWidgetDialog extends StatefulWidget {
@@ -122,9 +123,11 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
   void _addInternalWidget(BuildContext context, Map<String, dynamic> route) {
     context.read<AppDatabase>().internalWidgetsDAO.insertInternalWidget(
       name: route['name'] as String,
+      personID: context.read<PersonBlock>().information.value.profiles.id ?? "",
       imageUrl: '',
       url: route['url'] as String,
       alias: route['alias'] as String,
+      scope: 'home',
     );
     Navigator.of(context).pop();
   }
@@ -154,6 +157,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
 
     context.read<AppDatabase>().externalWidgetsDAO.insertNewWidget(
       externalWidgetProtocol: protocolObj,
+      personID: context.read<PersonBlock>().information.value.profiles.id ?? "",
     );
     Navigator.of(context).pop();
   }

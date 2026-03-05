@@ -79,7 +79,8 @@ class MainShell extends StatelessWidget {
         break;
 
       case '/projects/editor':
-        return const SizedBox.shrink();
+         pageIcon = SizedBox.shrink();
+      break;
       case '/personal-info':
         pageIcon = PersonalInformationPage.icon(context, size: responsiveSize);
         break;
@@ -114,6 +115,7 @@ class MainShell extends StatelessWidget {
         currentRoute == '/profile' ||
         currentRoute == '/settings' ||
         currentRoute == '/manual' ||
+        currentRoute == '/projects/editor' ||
         currentRoute.startsWith('/widgets/webview');
 
     return Scaffold(

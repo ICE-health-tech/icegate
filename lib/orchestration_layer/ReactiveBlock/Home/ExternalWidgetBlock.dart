@@ -7,9 +7,9 @@ class ExternalWidgetBlock {
   final listExternalWidgets = signal<List<ExternalWidgetData>>([]);
   StreamSubscription<List<ExternalWidgetData>>? _subscription;
 
-  void refreshBlock(ExternalWidgetsDAO dao) {
+  void refreshBlock(ExternalWidgetsDAO dao, String personID) {
     _subscription?.cancel();
-    _subscription = dao.watchAllWidgets().listen(
+    _subscription = dao.watchAllWidgets(personID).listen(
       (data) {
         listExternalWidgets.value = data;
       },

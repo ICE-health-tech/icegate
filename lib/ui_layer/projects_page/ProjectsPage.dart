@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -12,8 +12,12 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBloc
 import 'package:signals_flutter/signals_flutter.dart';
 import 'TaskItem.dart';
 import 'CreateProjectDialog.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
@@ -43,11 +47,42 @@ class ProjectsPage extends StatelessWidget {
     );
   }
 
+  void _showAddPluginDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+        child: AddPluginForm(
+          data: FormData(
+            title: "Add App Plugin",
+            description: "Choose a plugin to extend your dashboard",
+          ),
+          scope: 'projects',
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final growthBlock = context.watch<GrowthBlock>();
     final scoreBlock = context.read<ScoreBlock>();
+    final internalWidgetBlock = context.read<InternalWidgetBlock>();
+    final database = context.read<AppDatabase>();
+
+    // Initial fetch for projects scope
+    final String personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+    if (personId.isNotEmpty) {
+      Future.microtask(() {
+        internalWidgetBlock.refreshBlock(
+          database.internalWidgetsDAO,
+          personId,
+          'projects',
+        );
+      });
+    }
 
     return SwipeablePage(
       onSwipe: () => Navigator.maybePop(context),
@@ -133,14 +168,14 @@ class ProjectsPage extends StatelessWidget {
                             _buildSummaryItem(
                               context,
                               'Projects',
-                              '$projectsDone/$projectsActive',
+                              '${projectsDone}/${projectsActive + projectsDone}',
                               Icons.folder_copy_rounded,
                               Colors.blue,
                             ),
                             _buildSummaryItem(
                               context,
                               'Tasks',
-                              '$tasksDone/$tasksActive',
+                              '${tasksActive}/${tasksDone + tasksActive}',
                               Icons.task_alt_rounded,
                               Colors.orange,
                             ),
@@ -151,47 +186,74 @@ class ProjectsPage extends StatelessWidget {
                     const SizedBox(height: 32),
                     _buildSectionTitle(context, 'Quick Actions'),
                     const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _ActionCard(
-                            icon: Icons.note_add_rounded,
-                            label: 'New Note',
-                            color: Colors.orange,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (context) => const TextEditorPage(),
-                                ),
-                              );
-                            },
-                          ),
+                    Watch((context) {
+                      final apps = internalWidgetBlock
+                          .listInternalWidgetProjectsPage
+                          .value;
+
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        physics: const BouncingScrollPhysics(),
+                        child: Row(
+                          children: [
+                            _ActionCard(
+                              width: 100,
+                              icon: Icons.note_add_rounded,
+                              label: 'New',
+                              color: Colors.orange,
+                              onTap: () => context.push('/projects/editor'),
+                            ),
+                            const SizedBox(width: 12),
+                            _ActionCard(
+                              width: 130,
+                              icon: Icons.library_books_rounded,
+                              label: 'Notes',
+                              color: Colors.blue,
+                              onTap: () {
+                                context.push("/project_notes");
+                              },
+                            ),
+                            const SizedBox(width: 12),
+                            // Plugin Slot (Limit 1 - Showing Latest)
+                            if (apps.isEmpty)
+                              _ActionCard(
+                                width: 130,
+                                icon: Icons.add_circle_outline_rounded,
+                                label: 'Plugin',
+                                color: Colors.grey,
+                                onTap: () {
+                                  _showAddPluginDialog(context);
+                                },
+                              )
+                            else ...[
+                              (() {
+                                final sortedApps =
+                                    List<InternalWidgetProtocol>.from(apps);
+                                sortedApps.sort((a, b) {
+                                  final dateA = a.dateAdded;
+                                  final dateB = b.dateAdded;
+                                  return dateB.compareTo(dateA);
+                                });
+                                final latestApp = sortedApps.first;
+
+                                return _ActionCard(
+                                  width: 130,
+                                  icon: _getAppIcon(latestApp.name),
+                                  label: latestApp.name,
+                                  color: Colors.teal,
+                                  onTap: () {
+                                    context.push(latestApp.url);
+                                  },
+                                  onLongPress: () {
+                                    _showDeletePluginDialog(context, latestApp);
+                                  },
+                                );
+                              })(),
+                            ],
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ActionCard(
-                            icon: Icons.library_books_rounded,
-                            label: 'Archive',
-                            color: Colors.blue,
-                            onTap: () {
-                              context.push("/project_notes");
-                            },
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _ActionCard(
-                            icon: Icons.timer_rounded,
-                            label: 'Focus',
-                            color: Colors.purple,
-                            onTap: () {
-                              context.push('/health/focus');
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
+                      );
+                    }),
                     const SizedBox(height: 32),
                     _buildSectionTitle(context, 'My Projects'),
                     const SizedBox(height: 16),
@@ -364,7 +426,10 @@ class ProjectsPage extends StatelessWidget {
               ),
             ),
             StreamBuilder<List<ProjectNoteData>>(
-              stream: context.read<ProjectNoteDAO>().watchRecentNotes(6),
+              stream: context.read<ProjectNoteDAO>().watchRecentNotes(
+                context.read<PersonBlock>().information.value.profiles.id ?? "",
+                6,
+              ),
               builder: (context, snapshot) {
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return SliverToBoxAdapter(
@@ -468,6 +533,53 @@ class ProjectsPage extends StatelessWidget {
     );
   }
 
+  IconData _getAppIcon(String? name) {
+    if (name == null) return Icons.apps_rounded;
+    final n = name.toLowerCase();
+    if (n.contains('health')) return Icons.favorite_rounded;
+    if (n.contains('finance')) return Icons.account_balance_wallet_rounded;
+    if (n.contains('project')) return Icons.rocket_launch_rounded;
+    if (n.contains('social')) return Icons.people_alt_rounded;
+    if (n.contains('profile')) return Icons.person_rounded;
+    if (n.contains('focus')) return Icons.timer_rounded;
+    if (n.contains('note')) return Icons.edit_note_rounded;
+    if (n.contains('tracker') || n.contains('gps')) {
+      return Icons.location_on_rounded;
+    }
+    if (n.contains('setting')) return Icons.settings_rounded;
+    return Icons.apps_rounded;
+  }
+
+  void _showDeletePluginDialog(
+    BuildContext context,
+    InternalWidgetProtocol app,
+  ) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Remove Plugin?'),
+        content: Text(
+          'Do you want to remove "${app.name}" from quick actions?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () async {
+              await context.read<InternalWidgetsDAO>().deleteInternalWidget(
+                app.name,
+              );
+              if (context.mounted) Navigator.pop(ctx);
+            },
+            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showAddTaskDialog(BuildContext context, GrowthBlock growthBlock) {
     final titleController = TextEditingController();
     final descController = TextEditingController();
@@ -559,12 +671,16 @@ class _ActionCard extends StatelessWidget {
   final String label;
   final Color color;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final double? width;
 
   const _ActionCard({
     required this.icon,
     required this.label,
     required this.color,
     required this.onTap,
+    this.onLongPress,
+    this.width,
   });
 
   @override
@@ -574,8 +690,10 @@ class _ActionCard extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(16),
         child: Container(
+          width: width,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
@@ -626,10 +744,7 @@ class _RecentNoteItem extends StatelessWidget {
 
     return InkWell(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TextEditorPage(note: note)),
-        );
+        context.push('/projects/editor', extra: note);
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(

@@ -52,7 +52,7 @@ class _WaterPageState extends State<WaterPage>
           extendBodyBehindAppBar: true,
           appBar: AppBar(
             title: const Text(
-              'Water Intensity',
+              'Water Log',
               style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1),
             ),
             centerTitle: true,
@@ -248,7 +248,7 @@ class _WaterPageState extends State<WaterPage>
               Supabase.instance.client.auth.currentUser?.id ?? "",
             ),
             amount: drift.Value(amount),
-            timestamp: drift.Value(DateTime.now()),
+            timestamp: drift.Value(DateTime.now().toUtc()),
           ),
         );
       },

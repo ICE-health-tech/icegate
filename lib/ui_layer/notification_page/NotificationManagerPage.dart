@@ -1,8 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
-    hide ThemeData;
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -11,6 +10,7 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -148,7 +148,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             IconButton(
               onPressed: () => GoRouter.of(context).push('/notification-inbox'),
               icon: const Icon(
-                Icons.assignment_turned_in_rounded,
+                Icons.history,
                 color: Colors.blueAccent,
                 size: 26,
               ),
@@ -199,7 +199,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         indicator: BoxDecoration(
           borderRadius: BorderRadius.circular(12),
           gradient: const LinearGradient(
-            colors: [Colors.blueAccent, Color(0xFF00D4FF)],
+            colors: [Colors.blueAccent, Color.fromARGB(255, 58, 129, 187)],
           ),
           boxShadow: [
             BoxShadow(
@@ -237,6 +237,29 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   }
 
   Widget _buildAIAdvisorCard(BuildContext context) {
+    final contentBlock = context.watch<ContentBlock>();
+    final analyses = contentBlock.analyses.watch(context);
+
+    // Pick the latest featured analysis, or just the latest one
+    final featured = analyses.where((a) => a.isFeatured == true).toList()
+      ..sort(
+        (a, b) => (b.publishedAt ?? DateTime(0)).compareTo(
+          a.publishedAt ?? DateTime(0),
+        ),
+      );
+    final latest = featured.isNotEmpty
+        ? featured.first
+        : (analyses.isNotEmpty ? analyses.first : null);
+
+    final displayText =
+        latest?.summary ??
+        latest?.detailedAnalysis ??
+        "No analysis available yet. The System will generate insights based on your recent metrics.";
+    final subtitle = latest != null
+        ? "Advice based on recent metrics"
+        : "Awaiting data synchronization";
+    final hasLiveData = latest != null;
+
     return _buildGlassCard(
       borderColor: Colors.blueAccent.withOpacity(0.3),
       child: Container(
@@ -270,16 +293,18 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   ),
                 ),
                 const Spacer(),
-                const Icon(
+                Icon(
                   Icons.sensors_rounded,
-                  color: Colors.greenAccent,
+                  color: hasLiveData
+                      ? Colors.greenAccent
+                      : Colors.greenAccent.withOpacity(0.3),
                   size: 16,
                 ),
               ],
             ),
             const SizedBox(height: 16),
             Text(
-              "\"Hunter, your current fatigue levels are low. Optimal time for intense training. Prioritize Health Quests to maintain momentum.\"",
+              "\"$displayText\"",
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 15,
@@ -289,7 +314,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             ),
             const SizedBox(height: 12),
             Text(
-              "Advice based on recent metrics",
+              subtitle,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                 fontSize: 11,
@@ -304,6 +329,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
   Widget _buildSystemQuestsSection(BuildContext context) {
     final dao = context.watch<QuestDAO>();
+    final personBlock = context.watch<PersonBlock>();
+    final personId = personBlock.currentPersonID.watch(context) ?? "";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -319,7 +346,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ),
         const SizedBox(height: 12),
         StreamBuilder<List<QuestData>>(
-          stream: dao.watchActiveQuests(),
+          stream: dao.watchActiveQuests(personId),
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data == null) {
               return const SizedBox.shrink();
@@ -329,18 +356,18 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
             return Column(
               children: quests.map((quest) {
-                final percent = quest.targetValue > 0
-                    ? (quest.currentValue / quest.targetValue).clamp(0.0, 1.0)
+                final targetV = quest.targetValue ?? 0.0;
+                final currentV = quest.currentValue ?? 0.0;
+                final percent = targetV > 0
+                    ? (currentV / targetV).clamp(0.0, 1.0)
                     : 0.0;
-                final progressStr =
-                    "${quest.currentValue.toInt()} / ${quest.targetValue.toInt()}";
+                final progressStr = "${currentV.toInt()} / ${targetV.toInt()}";
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
                   child: _buildSoloLevelingQuestTile(
                     context,
-                    title: quest.title,
-                    objective: quest.description ?? "Active System Quest",
+                    quest: quest,
                     progress: progressStr,
                     percent: percent,
                   ),
@@ -355,8 +382,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
   Widget _buildSoloLevelingQuestTile(
     BuildContext context, {
-    required String title,
-    required String objective,
+    required QuestData quest,
     required String progress,
     required double percent,
   }) {
@@ -368,36 +394,63 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        quest.title ?? "Unnamed Quest",
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurface,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        quest.description ?? "Active System Quest",
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.6),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      title,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
+                      progress,
+                      style: const TextStyle(
+                        color: Colors.blueAccent,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    Text(
-                      objective,
-                      style: TextStyle(
-                        color: Theme.of(
-                          context,
-                        ).colorScheme.onSurface.withOpacity(0.6),
-                        fontSize: 13,
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () => _handleCompleteQuest(context, quest),
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(4),
+                        decoration: BoxDecoration(
+                          color: Colors.greenAccent.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.greenAccent.withOpacity(0.5),
+                          ),
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.greenAccent,
+                          size: 20,
+                        ),
                       ),
                     ),
                   ],
-                ),
-                Text(
-                  progress,
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                  ),
                 ),
               ],
             ),
@@ -417,6 +470,41 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ),
       ),
     );
+  }
+
+  Future<void> _handleCompleteQuest(
+    BuildContext context,
+    QuestData quest,
+  ) async {
+    final dao = context.read<QuestDAO>();
+    final targetV = quest.targetValue ?? 0.0;
+    await dao.updateQuestProgress(quest.id, targetV > 0 ? targetV : 1.0);
+
+    // Award EXP to Social Score
+    try {
+      final personBlock = context.read<PersonBlock>();
+      final pID = personBlock.currentPersonID.value;
+      final reward = quest.rewardExp ?? 0;
+      if (pID != null && reward > 0) {
+        await context.read<ScoreDAO>().incrementSocialScore(
+          pID,
+          reward.toDouble(),
+        );
+      }
+    } catch (e) {
+      debugPrint('Error awarding social EXP: $e');
+    }
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            "[SYSTEM] Quest '${quest.title ?? "Unnamed"}' Completed! +${quest.rewardExp ?? 0} EXP",
+          ),
+          backgroundColor: Colors.blueAccent.withOpacity(0.8),
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 
   Widget _buildRemindersTab(BuildContext context, bool isEnabled) {
@@ -447,42 +535,48 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ),
         const SizedBox(height: 16),
         if (isEnabled)
-          StreamBuilder<List<CustomNotificationData>>(
-            stream: customNotificationDao.watchAllNotifications(),
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Center(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 64),
-                    child: Column(
-                      children: [
-                        Icon(
-                          Icons.notifications_none_rounded,
-                          size: 48,
-                          color: Colors.white.withOpacity(0.1),
+          Builder(
+            builder: (context) {
+              final personBlock = context.watch<PersonBlock>();
+              final personId = personBlock.currentPersonID.watch(context) ?? "";
+              return StreamBuilder<List<CustomNotificationData>>(
+                stream: customNotificationDao.watchAllNotifications(personId),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 64),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.notifications_none_rounded,
+                              size: 48,
+                              color: Theme.of(context).colorScheme.onSurface,
+                            ),
+                            const SizedBox(height: 16),
+                            Text(
+                              "No active reminders.\nAdd one to keep track of your schedule.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                color: Theme.of(context).colorScheme.onSurface,
+                                fontSize: 14,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ],
                         ),
-                        const SizedBox(height: 16),
-                        Text(
-                          "No active reminders.\nAdd one to keep track of your schedule.",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white.withOpacity(0.3),
-                            fontSize: 14,
-                            fontStyle: FontStyle.italic,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }
-              return Column(
-                children: snapshot.data!.map((notif) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _buildCustomNotificationTile(context, notif),
+                      ),
+                    );
+                  }
+                  return Column(
+                    children: snapshot.data!.map((notif) {
+                      return Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: _buildCustomNotificationTile(context, notif),
+                      );
+                    }).toList(),
                   );
-                }).toList(),
+                },
               );
             },
           )
@@ -554,14 +648,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       Icon(
                         Icons.auto_stories_rounded,
                         size: 48,
-                        color: Colors.white.withOpacity(0.1),
+                        color: Theme.of(context).colorScheme.onSurface,
                       ),
                       const SizedBox(height: 16),
                       Text(
                         "Your board is empty.\nSave some wisdom to stay focused.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.3),
+                          color: Theme.of(context).colorScheme.onSurface,
                           fontSize: 14,
                           fontStyle: FontStyle.italic,
                         ),
@@ -654,6 +748,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   void _showAddQuoteDialog(BuildContext context) {
     final contentController = TextEditingController();
     final authorController = TextEditingController();
+    final personBlock = context.read<PersonBlock>();
 
     showDialog(
       context: context,
@@ -709,6 +804,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         id: IDGen.UUIDV7(),
                         content: contentController.text,
                         author: Value(authorController.text),
+                        personID: Value(personBlock.currentPersonID.value),
                       ),
                     )
                     .then((_) => Navigator.pop(context));
@@ -775,6 +871,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
   ) {
     final dao = context.read<CustomNotificationDAO>();
     final service = context.read<LocalNotificationService>();
+    final personBlock = context.read<PersonBlock>();
+    final personId = personBlock.currentPersonID.value ?? "";
     final formattedTime = DateFormat(
       'MMM dd, HH:mm',
     ).format(notification.scheduledTime);
@@ -841,7 +939,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   onChanged: (val) async {
                     final updated = notification.copyWith(isEnabled: val);
                     await dao.updateNotification(updated);
-                    await service.syncAllNotifications();
+                    await service.syncAllNotifications(personId);
                   },
                   activeThumbColor: Colors.blueAccent,
                 ),
@@ -929,7 +1027,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       ),
                       onPressed: () async {
                         await dao.deleteNotification(notification.id);
-                        await service.syncAllNotifications();
+                        await service.syncAllNotifications(personId);
                       },
                     ),
                   ],
@@ -1297,7 +1395,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                           )
                           .then((id) async {
                             try {
-                              await service.syncAllNotifications();
+                              await service.syncAllNotifications(
+                                personId ?? "",
+                              );
                               if (context.mounted) Navigator.pop(context);
                             } catch (e) {
                               debugPrint("Error syncing notifications: $e");
@@ -1338,7 +1438,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                           )
                           .then((_) async {
                             try {
-                              await service.syncAllNotifications();
+                              await service.syncAllNotifications(
+                                personId ?? "",
+                              );
                               if (context.mounted) Navigator.pop(context);
                             } catch (e) {
                               debugPrint("Error syncing notifications: $e");

@@ -85,18 +85,22 @@ class HealthAnalysisPage extends StatelessWidget {
 
             // --- DATA ANALYSIS ---
             final now = DateTime.now();
-            final todayKey = "${now.year}-${now.month}-${now.day}";
-
             // Find today's record (it should be first in DESC order, but let's be safe)
+            final todayKey =
+                "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
             final todayMetric = allMetrics.firstWhere(
-              (m) => "${m.date.year}-${m.date.month}-${m.date.day}" == todayKey,
+              (m) =>
+                  "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}" ==
+                  todayKey,
               orElse: () => HealthMetricsLocal(
                 id: '',
                 date: now,
                 steps: 0,
                 caloriesBurned: 0,
+                caloriesConsumed: 0,
                 sleepHours: 0.0,
                 heartRate: 0,
+                waterGlasses: 0,
                 exerciseMinutes: 0,
                 focusMinutes: 0,
                 updatedAt: now,

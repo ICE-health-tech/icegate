@@ -183,35 +183,7 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
                 leadingWidth: 0,
                 leading: const SizedBox.shrink(),
                 actions: [
-                  IconButton(
-                    icon: const Icon(Icons.sync, color: Colors.blue, size: 30),
-                    onPressed: () async {
-                      // Request permissions and trigger sync
-                      final authorized =
-                          await HealthService.requestPermissions();
-                      if (authorized) {
-                        // The DataLayer periodic timer or the direct call in DataLayer will handle it,
-                        // but we can trigger an immediate one-off sync here too if we have access.
-                        // However, HealthBlock doesn't have a direct 'syncNow' method yet.
-                        // Let's just show a snackbar for now, as the DataLayer sync runs every minute.
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Syncing with Apple Health...'),
-                            duration: Duration(seconds: 2),
-                          ),
-                        );
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Health permissions not granted.'),
-                            duration: Duration(seconds: 3),
-                          ),
-                        );
-                      }
-                    },
-                    tooltip: 'Sync with Apple Health',
-                  ),
-                 
+                
                   IconButton(
                     icon: const Icon(Icons.home_rounded, size: 30),
                     onPressed: () {

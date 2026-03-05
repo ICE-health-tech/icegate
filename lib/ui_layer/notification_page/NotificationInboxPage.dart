@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -11,6 +13,8 @@ class NotificationInboxPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final personBlock = context.watch<PersonBlock>();
+    final personId = personBlock.currentPersonID.watch(context) ?? "";
     final questDao = context.watch<QuestDAO>();
     final notificationDao = context.watch<CustomNotificationDAO>();
     final focusSessionDao = context.watch<FocusSessionsDAO>();
@@ -46,10 +50,10 @@ class NotificationInboxPage extends StatelessWidget {
                 _buildHeader(context),
                 Expanded(
                   child: StreamBuilder<List<QuestData>>(
-                    stream: questDao.watchAllQuests(),
+                    stream: questDao.watchAllQuests(personId),
                     builder: (context, questSnapshot) {
                       return StreamBuilder<List<CustomNotificationData>>(
-                        stream: notificationDao.watchAllNotifications(),
+                        stream: notificationDao.watchAllNotifications(personId),
                         builder: (context, notificationSnapshot) {
                           return StreamBuilder<List<FocusSessionData>>(
                             stream: focusSessionDao.watchAllSessions(),
@@ -60,7 +64,7 @@ class NotificationInboxPage extends StatelessWidget {
                               final allFocusSessions = focusSnapshot.data ?? [];
 
                               final completedQuests = allQuests
-                                  .where((q) => q.isCompleted)
+                                  .where((q) => q.isCompleted == true)
                                   .toList();
 
                               final completedFocusSessions = allFocusSessions
@@ -232,7 +236,7 @@ class NotificationInboxPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  quest.title,
+                  quest.title ?? "Unnamed Quest",
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,

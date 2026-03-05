@@ -10,6 +10,7 @@ import '../../data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import '../../initial_layer/FireAPI/UrlNavigate.dart';
 import '../../data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import '../../orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import '../widget_page/PluginList/IOTTracker/CompactOSMMapWidget.dart';
 import '../../orchestration_layer/Action/WebView/WebViewWidget.dart';
 // import '../../data_layer/Protocol/Widget/InternalWidgetDragProtocol.dart';
@@ -23,7 +24,11 @@ class ExternalDragWidget extends StatefulWidget {
   final int index;
   final WidgetManagerBlock store;
 
-  const ExternalDragWidget({super.key, required this.index, required this.store});
+  const ExternalDragWidget({
+    super.key,
+    required this.index,
+    required this.store,
+  });
 
   @override
   State<ExternalDragWidget> createState() => _ExternalDragWidgetState();
@@ -78,6 +83,9 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
             // TODO: You can use 'dao' here to persist the new item
             _widgetDAO.insertNewWidget(
               externalWidgetProtocol: externalWidgetProtocol,
+              personID:
+                  context.read<PersonBlock>().information.value.profiles.id ??
+                  "",
             );
           }
         },

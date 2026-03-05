@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
@@ -7,11 +8,13 @@ import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/Protocol/User/PersonProtocol.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:drift/drift.dart' show Value; // Added for Drift Value
+import 'package:url_launcher/url_launcher.dart';
+import 'package:drift/drift.dart' show Value;
+import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
@@ -151,7 +154,7 @@ class _SocialPageState extends State<SocialPage>
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 40,
-      margin: const EdgeInsets.symmetric(horizontal: 15),
+      // margin: const EdgeInsets.symmetric(horizontal: 15),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(16),
@@ -370,43 +373,58 @@ class _SocialPageState extends State<SocialPage>
   }
 
   Widget _buildMergedContactList(BuildContext context) {
-    final dao = context.watch<PersonManagementDAO>();
+    return Watch((context) {
+      final dao = context.read<PersonManagementDAO>();
 
-    return StreamBuilder<List<PersonData>>(
-      stream: dao.watchAllPersons(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
+      return StreamBuilder<List<PersonContactData>>(
+        stream: dao.watchAllContacts(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        final allContacts = snapshot.data!;
-        final filtered = allContacts
-            .where(
-              (p) =>
-                  p.relationship == 'friend' ||
-                  p.relationship == 'dating' ||
-                  p.relationship == 'family',
-            )
-            .toList();
+          final allContacts = snapshot.data!;
+          final filtered = allContacts
+              .where(
+                (p) =>
+                    p.relationship == 'friend' ||
+                    p.relationship == 'dating' ||
+                    p.relationship == 'family',
+              )
+              .toList();
 
-        if (filtered.isEmpty) {
-          return _buildEmptyState(
-            context,
-            'No agents registered in your network.',
-            Icons.people_outline_rounded,
+          if (filtered.isEmpty) {
+            return _buildEmptyState(
+              context,
+              'No agents registered in your network.',
+              Icons.people_outline_rounded,
+            );
+          }
+
+          return ListView.builder(
+            padding: const EdgeInsets.all(24),
+            itemCount: filtered.length,
+            itemBuilder: (context, index) {
+              final contact = filtered[index];
+              // Convert to PersonData for UI compatibility
+              final person = PersonData(
+                id: contact.id,
+                firstName: contact.firstName,
+                lastName: contact.lastName,
+                relationship: contact.relationship,
+                affection: contact.affection,
+                isActive: true,
+                createdAt: contact.createdAt,
+                updatedAt: contact.updatedAt,
+                phoneNumber: contact.phoneNumber,
+                profileImageUrl: contact.profileImageUrl,
+              );
+              return _buildRelationshipCard(context, person);
+            },
           );
-        }
-
-        return ListView.builder(
-          padding: const EdgeInsets.all(24),
-          itemCount: filtered.length,
-          itemBuilder: (context, index) {
-            final person = filtered[index];
-            return _buildRelationshipCard(context, person);
-          },
-        );
-      },
-    );
+        },
+      );
+    });
   }
 
   Widget _buildRelationshipCard(BuildContext context, PersonData person) {
@@ -591,7 +609,7 @@ class _SocialPageState extends State<SocialPage>
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              'BOND STABILITY',
+                              'INCREASE AFFECTION',
                               style: TextStyle(
                                 color: Colors.white38,
                                 fontSize: 8,
@@ -629,19 +647,24 @@ class _SocialPageState extends State<SocialPage>
                 color: Theme.of(context).colorScheme.surfaceContainerHighest,
                 onSelected: (value) async {
                   if (value == 'delete') {
-                    await dao.deletePerson(person.id);
+                    await dao.deleteContact(person.id);
                   } else if (value == 'increase') {
-                    await dao.increaseAffection(person.id, amount: 20);
+                    await dao.increaseContactAffection(
+                      person.id,
+                      amount: DEFAULT_AFFECTION_INCREASE,
+                    );
                   } else {
-                    await dao.updateRelationship(person.id, value);
+                    await dao.updateContactRelationship(person.id, value);
                   }
                 },
                 itemBuilder: (context) => [
-                  const PopupMenuItem(
+                  PopupMenuItem(
                     value: 'increase',
                     child: Text(
-                      'BOND +20',
-                      style: TextStyle(color: Colors.cyanAccent),
+                      'INCREASE RELATIONSHIP',
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
                     ),
                   ),
                   const PopupMenuDivider(),
@@ -709,9 +732,9 @@ class _SocialPageState extends State<SocialPage>
           const SizedBox(height: 16),
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
-              color: Colors.white38,
+              color: colorScheme.primary,
               fontWeight: FontWeight.bold,
               letterSpacing: 1,
             ),
@@ -722,47 +745,62 @@ class _SocialPageState extends State<SocialPage>
   }
 
   Widget _buildAchievementsGrid(BuildContext context) {
-    final questDao = context.watch<QuestDAO>();
+    return Watch((context) {
+      final questDao = context.read<QuestDAO>();
+      final personBlock = context.read<PersonBlock>();
+      final currentPersonId = personBlock.currentPersonID.value ?? "";
 
-    return StreamBuilder<List<QuestData>>(
-      stream: questDao.watchAllQuests(), // Watch all to show completed feats
-      builder: (context, snapshot) {
-        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-          return _buildEmptyState(
-            context,
-            'No achievements recorded in the System.',
-            Icons.emoji_events_outlined,
+      return StreamBuilder<List<QuestData>>(
+        stream: questDao.watchQuestsByPerson(
+          currentPersonId,
+        ), // Filter by current user
+        builder: (context, snapshot) {
+          if (!snapshot.hasData || snapshot.data!.isEmpty) {
+            return _buildEmptyState(
+              context,
+              'No achievements recorded in the System.',
+              Icons.emoji_events_outlined,
+            );
+          }
+
+          // Filter for 'feat' category to show only achievements
+          final quests = snapshot.data!
+              .where((q) => q.category?.toLowerCase() == 'feat')
+              .toList();
+
+          if (quests.isEmpty) {
+            return _buildEmptyState(
+              context,
+              'No achievements recorded in the System.',
+              Icons.emoji_events_outlined,
+            );
+          }
+
+          // Sort: completed feats first, then other completed, then active
+          quests.sort((a, b) {
+            if (a.isCompleted != b.isCompleted) {
+              return a.isCompleted == true ? -1 : 1;
+            }
+            return 0;
+          });
+
+          return GridView.builder(
+            padding: const EdgeInsets.all(24),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 20,
+              mainAxisSpacing: 20,
+              childAspectRatio: 0.85,
+            ),
+            itemCount: quests.length,
+            itemBuilder: (context, index) {
+              final quest = quests[index];
+              return _buildAchievementCard(context, quest);
+            },
           );
-        }
-
-        final quests = snapshot.data!
-            .where((q) => q.category == 'feat' || q.isCompleted)
-            .toList();
-
-        if (quests.isEmpty) {
-          return _buildEmptyState(
-            context,
-            'No feats unlocked yet.',
-            Icons.stars_rounded,
-          );
-        }
-
-        return GridView.builder(
-          padding: const EdgeInsets.all(24),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: 20,
-            mainAxisSpacing: 20,
-            childAspectRatio: 0.85,
-          ),
-          itemCount: quests.length,
-          itemBuilder: (context, index) {
-            final quest = quests[index];
-            return _buildAchievementCard(context, quest);
-          },
-        );
-      },
-    );
+        },
+      );
+    });
   }
 
   Widget _buildAchievementCard(BuildContext context, QuestData quest) {
@@ -803,7 +841,7 @@ class _SocialPageState extends State<SocialPage>
                   return Container(
                     color: colorScheme.surfaceContainerHighest,
                     child: Icon(
-                      _getFeatIcon(quest.title),
+                      _getFeatIcon(quest.title ?? ""),
                       color: colorScheme.primary.withOpacity(0.1),
                     ),
                   );
@@ -836,7 +874,7 @@ class _SocialPageState extends State<SocialPage>
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
-                        _getFeatIcon(quest.title),
+                        _getFeatIcon(quest.title ?? ""),
                         color: colorScheme.primary,
                         size: 32,
                       ),
@@ -845,7 +883,7 @@ class _SocialPageState extends State<SocialPage>
                     const SizedBox(height: 32),
                   const SizedBox(height: 12),
                   Text(
-                    quest.title,
+                    quest.title ?? "Unnamed Quest",
                     textAlign: TextAlign.center,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
@@ -890,20 +928,39 @@ class _SocialPageState extends State<SocialPage>
           Positioned(
             top: 8,
             right: 8,
-            child: IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: Colors.black45,
-                  shape: BoxShape.circle,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Native Share Button
+                IconButton(
+                  icon: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: const BoxDecoration(
+                      color: Colors.black45,
+                      shape: BoxShape.circle,
+                    ),
+                    child: const Icon(
+                      Icons.share_rounded,
+                      size: 16,
+                      color: Colors.white,
+                    ),
+                  ),
+                  onPressed: () {
+                    final String textToShare =
+                        "I just unlocked the '${quest.title ?? "Unnamed"}' feat in ICE Gate! +${quest.rewardExp ?? 0} System EXP.";
+
+                    if (quest.imageUrl != null &&
+                        quest.imageUrl!.isNotEmpty &&
+                        !quest.imageUrl!.startsWith('http')) {
+                      Share.shareXFiles([
+                        XFile(quest.imageUrl!),
+                      ], text: textToShare);
+                    } else {
+                      Share.share(textToShare);
+                    }
+                  },
                 ),
-                child: Icon(Icons.share_rounded, size: 16, color: Colors.white),
-              ),
-              onPressed: () {
-                Share.share(
-                  "I just unlocked the '${quest.title}' feat in ICE Gate! +${quest.rewardExp} System EXP.",
-                );
-              },
+              ],
             ),
           ),
         ],
@@ -1048,27 +1105,52 @@ class _SocialPageState extends State<SocialPage>
               ElevatedButton(
                 onPressed: () async {
                   if (titleController.text.isNotEmpty) {
-                    final dao = context.read<QuestDAO>();
-                    await dao.insertQuest(
-                      QuestsTableCompanion(
-                        id: Value(IDGen.UUIDV7()),
-                        title: Value(titleController.text),
-                        rewardExp: Value(
-                          int.tryParse(expController.text) ?? 50,
+                    try {
+                      final dao = context.read<QuestDAO>();
+                      final personBlock = context.read<PersonBlock>();
+                      final personId = personBlock.currentPersonID.value;
+
+                      await dao.insertQuest(
+                        QuestsTableCompanion(
+                          id: Value(IDGen.UUIDV7()),
+                          title: Value(titleController.text),
+                          personID: Value(personId),
+                          rewardExp: Value(
+                            int.tryParse(expController.text) ?? 50,
+                          ),
+                          isCompleted: const Value(true),
+                          category: const Value('feat'),
+                          currentValue: const Value(1.0),
+                          targetValue: const Value(1.0),
+                          createdAt: Value(DateTime.now()),
+                          imageUrl: Value(
+                            imageController.text.isNotEmpty
+                                ? imageController.text
+                                : null,
+                          ),
                         ),
-                        isCompleted: const Value(true),
-                        category: const Value('feat'),
-                        currentValue: const Value(1.0),
-                        targetValue: const Value(1.0),
-                        createdAt: Value(DateTime.now()),
-                        imageUrl: Value(
-                          imageController.text.isNotEmpty
-                              ? imageController.text
-                              : null,
-                        ),
-                      ),
-                    );
-                    if (context.mounted) Navigator.pop(context);
+                      );
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("ACHIEVEMENT RECORDED IN SYSTEM"),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      debugPrint("Error adding feat: $e");
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("SYSTEM ERROR: $e"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -1136,11 +1218,134 @@ class _SocialPageState extends State<SocialPage>
               title: const Text('Add Manually'),
               onTap: () {
                 Navigator.pop(context);
-                // Manual add logic
+                _showManualAddPersonDialog(context);
               },
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showManualAddPersonDialog(BuildContext context) {
+    final firstNameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    String selectedRelationship = 'friend';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            title: Text(
+              "REGISTER AGENT",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: firstNameController,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: _buildInputDecoration(context, "First Name"),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: lastNameController,
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurface,
+                  ),
+                  decoration: _buildInputDecoration(context, "Last Name"),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                  decoration: BoxDecoration(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: DropdownButtonHideUnderline(
+                    child: DropdownButton<String>(
+                      value: selectedRelationship,
+                      isExpanded: true,
+                      dropdownColor: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHigh,
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                      ),
+                      onChanged: (String? newValue) {
+                        if (newValue != null) {
+                          setModalState(() {
+                            selectedRelationship = newValue;
+                          });
+                        }
+                      },
+                      items: <String>['friend', 'dating', 'family']
+                          .map<DropdownMenuItem<String>>((String value) {
+                            return DropdownMenuItem<String>(
+                              value: value,
+                              child: Text(value.toUpperCase()),
+                            );
+                          })
+                          .toList(),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "CANCEL",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (firstNameController.text.isNotEmpty) {
+                    final dao = context.read<PersonManagementDAO>();
+                    await dao.createContact(
+                      firstName: firstNameController.text,
+                      lastName: lastNameController.text,
+                      relationship: selectedRelationship,
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "CREATE LINK",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
@@ -1152,26 +1357,91 @@ class _SocialPageState extends State<SocialPage>
       );
       if (!mounted) return;
 
+      final dao = context.read<PersonManagementDAO>();
+      final existingPeopleStream = await dao.watchAllPersons().first;
+      final existingFullNames = existingPeopleStream.map((p) {
+        final first = p.firstName;
+        final last = p.lastName;
+        return '$first $last'.trim().toLowerCase();
+      }).toSet();
+
+      final newContacts = <Contact>[];
+      final seenNewNames = <String>{};
+
+      for (var c in allContacts) {
+        // Fallback to first + last name if displayName is weird
+        String contactName = c.displayName.trim();
+        if (contactName.isEmpty ||
+            contactName.toLowerCase() == 'null null' ||
+            contactName.toLowerCase() == 'null') {
+          final first = c.name.first.trim();
+          final last = c.name.last.trim();
+          contactName = '$first $last'.trim();
+        }
+
+        contactName = contactName.toLowerCase();
+
+        // Skip if still empty
+        if (contactName.isEmpty) continue;
+
+        if (!existingFullNames.contains(contactName) &&
+            !seenNewNames.contains(contactName)) {
+          newContacts.add(c);
+          seenNewNames.add(contactName);
+        }
+      }
+
       showModalBottomSheet(
         context: context,
         builder: (context) => ListView.builder(
-          itemCount: allContacts.length,
+          itemCount: newContacts.length,
           itemBuilder: (context, index) {
-            final c = allContacts[index];
+            final c = newContacts[index];
+
+            // Build a clean display name
+            String displayName = c.displayName.trim();
+            if (displayName.isEmpty ||
+                displayName.toLowerCase() == 'null null' ||
+                displayName.toLowerCase() == 'null') {
+              final first = c.name.first.trim();
+              final last = c.name.last.trim();
+              displayName = '$first $last'.trim();
+            }
+
             return ListTile(
-              title: Text(c.displayName),
+              title: Text(
+                displayName.isNotEmpty ? displayName : 'Unknown Contact',
+              ),
               onTap: () async {
-                final dao = context.read<PersonManagementDAO>();
-                await dao.createPerson(
-                  PersonProtocol.create(
-                    firstName: c.name.first,
-                    lastName: c.name.last,
-                    id: IDGen.UUIDV7(),
-                    isActive: true,
-                  ),
+                String first = c.name.first.trim();
+                String last = c.name.last.trim();
+
+                // DB requires firstName strictly > 0 chars. Fallback aggressively.
+                if (first.isEmpty) {
+                  if (displayName.isNotEmpty &&
+                      displayName != 'Unknown Contact') {
+                    final parts = displayName.split(' ');
+                    if (parts.length > 1) {
+                      first = parts.first;
+                      last = parts.sublist(1).join(' ');
+                    } else {
+                      first = displayName;
+                      last = '';
+                    }
+                  } else if (last.isNotEmpty) {
+                    first = last;
+                    last = '';
+                  } else {
+                    first = 'Unknown';
+                  }
+                }
+
+                await dao.createContact(
+                  firstName: first,
+                  lastName: last,
                   relationship: 'friend',
                 );
-                if (mounted) Navigator.pop(context);
+                if (context.mounted) Navigator.pop(context);
               },
             );
           },

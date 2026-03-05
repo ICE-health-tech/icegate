@@ -1,31 +1,29 @@
-class BlogPostProtocol {
-  final String blogPostID;
-  final String authorID;
+class AiAnalysisProtocol {
+  final String analysisID;
+  final String? personID;
   final String title;
-  final String slug;
-  final String? excerpt;
-  final String content;
-  final String? featuredImageUrl;
+  final String? summary;
+  final String detailedAnalysis;
   final String status;
-  final bool isFeatured;
-  final int viewCount;
-  final int likeCount;
+  final bool? isFeatured;
   final DateTime? publishedAt;
-  final DateTime? scheduledFor;
+  final String? category;
+  final String? aiModel;
+  final String? promptContext;
+  final double? sentimentScore;
 
-  BlogPostProtocol({
-    required this.blogPostID,
-    required this.authorID,
+  AiAnalysisProtocol({
+    required this.analysisID,
+    this.personID,
     required this.title,
-    required this.slug,
-    this.excerpt,
-    required this.content,
-    this.featuredImageUrl,
+    this.summary,
+    required this.detailedAnalysis,
     this.status = 'draft',
     this.isFeatured = false,
-    this.viewCount = 0,
-    this.likeCount = 0,
     this.publishedAt,
-    this.scheduledFor,
+    this.category,
+    this.aiModel,
+    this.promptContext,
+    this.sentimentScore,
   });
 }

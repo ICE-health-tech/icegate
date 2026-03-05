@@ -101,17 +101,35 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         // 2. Perform the specific Supabase operation
         switch (crud.op) {
           case UpdateType.put:
-            // Use upsert to handle both inserts and full updates
-            await Supabase.instance.client.from(table).upsert({
-              'id': id,
-              ...opData,
-            });
+            if (table == 'health_metrics') {
+              // health_metrics has a unique constraint on (person_id, date).
+              // Use onConflict to merge into existing rows regardless of ID.
+              await Supabase.instance.client.from(table).upsert({
+                'id': id,
+                ...opData,
+              }, onConflict: 'person_id,date');
+            } else {
+              // Use upsert to handle both inserts and full updates
+              await Supabase.instance.client.from(table).upsert({
+                'id': id,
+                ...opData,
+              });
+            }
             break;
           case UpdateType.patch:
-            await Supabase.instance.client
-                .from(table)
-                .update(opData)
-                .eq('id', id);
+            if (table == 'health_metrics') {
+              // For health_metrics, the local deterministic ID may not match
+              // the existing Supabase row. Use upsert with onConflict instead.
+              await Supabase.instance.client.from(table).upsert({
+                'id': id,
+                ...opData,
+              }, onConflict: 'person_id,date');
+            } else {
+              await Supabase.instance.client
+                  .from(table)
+                  .update(opData)
+                  .eq('id', id);
+            }
             break;
           case UpdateType.delete:
             await Supabase.instance.client.from(table).delete().eq('id', id);

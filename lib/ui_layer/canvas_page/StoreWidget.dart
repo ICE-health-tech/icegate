@@ -11,6 +11,7 @@ import '../../data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import '../../data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -50,26 +51,7 @@ class StoreWidget extends StatelessWidget {
         widgetID: '102',
         score: 10,
       ),
-      InternalWidgetDragProtocol.item(
-        name: "Phone",
-        color: "0xFF34C759",
-        url: 'tel:',
-        imageUrl: '',
-        alias: 'phone',
-        dateAdded: DateTime.now().toIso8601String(),
-        widgetID: '103',
-        score: 5,
-      ),
-      InternalWidgetDragProtocol.item(
-        name: "Messages",
-        color: "0xFF007AFF",
-        url: 'sms:',
-        imageUrl: '',
-        alias: 'messages',
-        dateAdded: DateTime.now().toIso8601String(),
-        widgetID: '104',
-        score: 50,
-      ),
+     
       InternalWidgetDragProtocol.item(
         name: "Mail",
         color: "0xFFEA4335",
@@ -172,7 +154,9 @@ class StoreWidget extends StatelessWidget {
           child: ClipRRect(
             borderRadius: BorderRadius.circular(40),
             child: StreamBuilder<List<ExternalWidgetData>>(
-              stream: dao.watchAllWidgets(),
+              stream: dao.watchAllWidgets(
+                context.read<PersonBlock>().information.value.profiles.id ?? "",
+              ),
               builder: (context, snapshot) {
                 final List<InternalWidgetDragProtocol> combinedList =
                     _getDefaultItems();

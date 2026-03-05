@@ -10,6 +10,7 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart
 import 'package:provider/provider.dart';
 
 import '../orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class Adapter extends StatefulWidget {
   final Widget childWidget;
@@ -27,6 +28,7 @@ class _adapterState extends State<Adapter> {
   InternalWidgetBlock internalWidgetBlock = InternalWidgetBlock();
   ExternalWidgetBlock externalWidgetBlock = ExternalWidgetBlock();
   late AuthBlock authBlock;
+  late PersonBlock personBlock;
   late AppDatabase appDatabase;
 
   void _initAsyncDatabaseLink() async {
@@ -38,10 +40,13 @@ class _adapterState extends State<Adapter> {
     final savedTheme = await themeDao.getCurrentTheme();
     themeStore.loadTheme(savedTheme.themePath);
 
+    final personId = personBlock.information.value.profiles.id ?? "";
+
     final existingWidget = await dao.getInternalWidgetByName("WidgetPage");
     if (existingWidget == null) {
       await dao.insertInternalWidget(
         name: "WidgetPage",
+        personID: personId,
         imageUrl: "assets/internalwidget/defaul.png",
         url: "/canvas",
         alias: "WidgetPage",
@@ -49,14 +54,15 @@ class _adapterState extends State<Adapter> {
 
       await dao.insertInternalWidget(
         name: "Health Department",
+        personID: personId,
         imageUrl: "assets/internalwidget/defaul.png",
         url: "/health",
         alias: "HealthPage",
       );
     }
 
-    internalWidgetBlock.refreshBlock(dao);
-    externalWidgetBlock.refreshBlock(externalDao);
+    internalWidgetBlock.refreshBlock(dao, personId, 'home');
+    externalWidgetBlock.refreshBlock(externalDao, personId);
   }
 
   @override
@@ -65,6 +71,7 @@ class _adapterState extends State<Adapter> {
     appDatabase = context.read<AppDatabase>();
     themeStore = context.read<ThemeStore>();
     authBlock = context.read<AuthBlock>();
+    personBlock = context.read<PersonBlock>();
     _initAsyncDatabaseLink();
   }
 

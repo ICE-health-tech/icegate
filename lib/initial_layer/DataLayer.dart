@@ -17,6 +17,8 @@ import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/WidgetSettings
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
@@ -72,6 +74,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late WidgetSettingsBlock widgetSettingsBlock;
   late InternalWidgetBlock internalWidgetBlock;
   late ExternalWidgetBlock externalWidgetBlock;
+  late QuoteBlock quoteBlock;
+  late QuestBlock questBlock;
   DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
@@ -179,7 +183,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         HealthMetricsTableCompanion.insert(
           id: IDGen.generateDeterministicUuid(
             healthBlock.personId,
-            "${date.year}-${date.month}-${date.day}",
+            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
           ),
           personID: Value(healthBlock.personId),
           date: DateTime(date.year, date.month, date.day, 12),
@@ -205,7 +209,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       // 2. Initialize PowerSync and Database
       final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, 'powersync27.db');
+      final dbPath = p.join(dir.path, 'powersync29.db');
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
@@ -239,7 +243,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       var authService = CustomAuthService(baseUrl: "http://localhost"); // Dummy
       var passkeyService = PasskeyAuthService();
 
-      personBlock = PersonBlock(authService: authService);
+      personBlock = PersonBlock(
+        authService: authService,
+        personDao: database.personManagementDAO,
+      );
       authBlock = AuthBlock(
         authService: authService,
         sessionDao: database.sessionDAO,
@@ -266,8 +273,14 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       financeBlock = FinanceBlock();
       financeBlock.init(database.financeDAO, "");
 
+      quoteBlock = QuoteBlock();
+      quoteBlock.init(database.quoteDAO);
+
+      questBlock = QuestBlock();
+      questBlock.init(database.questDAO, "");
+
       contentBlock = ContentBlock();
-      contentBlock.init(database.contentDAO, "");
+      contentBlock.init(database.aiAnalysisDAO, "");
 
       widgetSettingsBlock = WidgetSettingsBlock();
       widgetSettingsBlock.init(database.widgetDAO, "");
@@ -318,7 +331,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
               growthBlock.init(database.growthDAO, personId);
               projectBlock.init(database.projectsDAO, personId);
               financeBlock.init(database.financeDAO, personId);
-              contentBlock.init(database.contentDAO, personId);
+              questBlock.init(database.questDAO, personId);
+              contentBlock.init(database.aiAnalysisDAO, personId);
               widgetSettingsBlock.init(database.widgetDAO, personId);
 
               scoreBlock.init(
@@ -332,6 +346,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
               focusBlock.personId = personId;
               focusBlock.fetchDailyStats();
+
+              notificationService.syncAllNotifications(personId);
             });
           }
         }),
@@ -611,7 +627,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<InternalWidgetsDAO>.value(value: database.internalWidgetsDAO),
 
         StreamProvider<List<ExternalWidgetData>>(
-          create: (_) => database.externalWidgetsDAO.watchAllWidgets(),
+          create: (_) => database.externalWidgetsDAO.watchAllWidgets(
+            personBlock.information.value.profiles.id ?? "",
+          ),
           initialData: const [],
           catchError: (_, error) {
             debugPrint('Error watching widgets: $error');
@@ -620,7 +638,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         ),
 
         StreamProvider<List<InternalWidgetData>>(
-          create: (_) => database.internalWidgetsDAO.watchAllWidgets(),
+          create: (_) => database.internalWidgetsDAO.watchAllWidgets(
+            personBlock.information.value.profiles.id ?? "",
+          ),
           initialData: const [],
           catchError: (_, error) {
             debugPrint('DUYLONG watching widgets: $error');
@@ -633,7 +653,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         ),
         Provider<FinanceDAO>.value(value: database.financeDAO),
         Provider<GrowthDAO>.value(value: database.growthDAO),
-        Provider<ContentDAO>.value(value: database.contentDAO),
+        Provider<AiAnalysisDAO>.value(value: database.aiAnalysisDAO),
         Provider<WidgetDAO>.value(value: database.widgetDAO),
         Provider<HealthMetricsDAO>.value(value: database.healthMetricsDAO),
         Provider<ProjectsDAO>.value(value: database.projectsDAO),
@@ -674,6 +694,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         // --- Home Logic ---
         Provider<InternalWidgetBlock>.value(value: internalWidgetBlock),
         Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
+        Provider<QuoteBlock>.value(value: quoteBlock),
+        Provider<QuestBlock>.value(value: questBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
 
         // --- Focus ---

@@ -9,6 +9,7 @@ import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_shield/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import 'package:provider/provider.dart';
@@ -89,6 +90,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         await internalWidgetsDAO.insertInternalWidget(
           id: widgetID,
           widgetID: widgetID,
+          personID:
+              context.read<PersonBlock>().information.value.profiles.id ?? "",
           name: internalWidget.name,
           alias: internalWidget.alias,
           url: internalWidget.url,
@@ -142,10 +145,12 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
 
         // 4. Create Note if provided
         if (noteTitle.isNotEmpty) {
+          final personBlock = context.read<PersonBlock>();
           await projectNoteDAO.insertNote(
             title: noteTitle,
             content: jsonEncode({'content': 'Initial note for $name'}),
             projectID: projectId,
+            personID: personBlock.currentPersonID.value,
           );
         }
 

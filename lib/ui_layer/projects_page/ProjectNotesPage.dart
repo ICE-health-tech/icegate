@@ -1,9 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class ProjectNotesPage extends StatelessWidget {
   const ProjectNotesPage({super.key});
@@ -25,10 +26,7 @@ class ProjectNotesPage extends StatelessWidget {
       backgroundColor: colorScheme.surface,
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TextEditorPage()),
-          );
+          context.push('/projects/editor');
         },
         backgroundColor: colorScheme.primary,
         foregroundColor: colorScheme.onPrimary,
@@ -63,7 +61,9 @@ class ProjectNotesPage extends StatelessWidget {
             ],
           ),
           StreamBuilder<List<ProjectNoteData>>(
-            stream: context.read<ProjectNoteDAO>().watchAllNotes(),
+            stream: context.read<ProjectNoteDAO>().watchAllNotes(
+              context.read<PersonBlock>().information.value.profiles.id ?? "",
+            ),
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return SliverFillRemaining(
@@ -138,10 +138,7 @@ class _NoteCard extends StatelessWidget {
 
     return GestureDetector(
       onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => TextEditorPage(note: note)),
-        );
+        context.push('/projects/editor', extra: note);
       },
       child: Container(
         decoration: BoxDecoration(
@@ -217,7 +214,7 @@ class _NoteCard extends StatelessWidget {
                           TextButton(
                             onPressed: () {
                               context.read<ProjectNoteDAO>().deleteNote(
-                                note.noteID!,
+                                note.id,
                               );
                               Navigator.pop(context);
                             },
@@ -241,18 +238,30 @@ class _NoteCard extends StatelessWidget {
     );
   }
 
-  String _getPreviewText(String jsonContent) {
+  String _getPreviewText(String content) {
     try {
-      // Simple heuristic to extract text from Quill JSON
-      // This assumes a standard structure. For robust extraction,
-      // we might need to parse the JSON properly.
-      // For now, let's just return a placeholder or try a regex if simple.
-      // Actually, let's try to parse it since we have dart:convert
-      // But we don't want to import dart:convert here if not already.
-      // Let's assume the content is just the JSON string for now.
-      return "Tap to view content";
-    } catch (e) {
-      return "No preview";
-    }
+      // Try to parse as Quill Delta JSON (legacy)
+      final decoded = jsonDecode(content);
+      if (decoded is List) {
+        final buffer = StringBuffer();
+        for (final op in decoded) {
+          if (op is Map && op.containsKey('insert')) {
+            buffer.write(op['insert']);
+          }
+        }
+        final text = buffer.toString().trim();
+        return text.isEmpty ? 'No content' : text;
+      }
+    } catch (_) {}
+    // Plain markdown — strip common markdown syntax for preview
+    final stripped = content
+        .replaceAll(RegExp(r'#{1,6}\s'), '')
+        .replaceAll(RegExp(r'\*{1,2}'), '')
+        .replaceAll(RegExp(r'~~'), '')
+        .replaceAll(RegExp(r'`'), '')
+        .replaceAll(RegExp(r'>\s'), '')
+        .replaceAll(RegExp(r'- '), '')
+        .trim();
+    return stripped.isEmpty ? 'No content' : stripped;
   }
 }

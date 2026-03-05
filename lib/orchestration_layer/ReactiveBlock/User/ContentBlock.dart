@@ -5,36 +5,35 @@ import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/User/ContentProtocols.dart';
 
 class ContentBlock {
-  final posts = listSignal<BlogPostProtocol>([]);
+  final analyses = listSignal<AiAnalysisProtocol>([]);
 
-  StreamSubscription? _postsSubscription;
+  StreamSubscription? _analysisSubscription;
 
-  void updatePosts(List<BlogPostProtocol> data) => posts.value = data;
+  void updateAnalyses(List<AiAnalysisProtocol> data) => analyses.value = data;
 
-  void init(ContentDAO dao, String authorID) {
-    if (authorID.isEmpty) {
-      debugPrint("ContentBlock: Skipping init, authorID is empty.");
+  void init(AiAnalysisDAO dao, String personID) {
+    if (personID.isEmpty) {
+      debugPrint("ContentBlock: Skipping init, personID is empty.");
       return;
     }
-    _postsSubscription?.cancel();
-    _postsSubscription = dao.watchPosts(authorID).listen((data) {
-      updatePosts(
+    _analysisSubscription?.cancel();
+    _analysisSubscription = dao.watchAnalyses(personID).listen((data) {
+      updateAnalyses(
         data
             .map(
-              (e) => BlogPostProtocol(
-                blogPostID: e.postID ?? "",
-                authorID: e.authorID,
+              (e) => AiAnalysisProtocol(
+                analysisID: e.id,
+                personID: e.personID,
                 title: e.title,
-                slug: e.slug,
-                excerpt: e.excerpt,
-                content: e.content,
-                featuredImageUrl: e.featuredImageUrl,
-                status: e.status.name,
+                summary: e.summary,
+                detailedAnalysis: e.detailedAnalysis,
+                status: e.status,
                 isFeatured: e.isFeatured,
-                viewCount: e.viewCount,
-                likeCount: e.likeCount,
                 publishedAt: e.publishedAt,
-                scheduledFor: e.scheduledFor,
+                category: e.category,
+                aiModel: e.aiModel,
+                promptContext: e.promptContext,
+                sentimentScore: e.sentimentScore,
               ),
             )
             .toList(),
@@ -43,6 +42,6 @@ class ContentBlock {
   }
 
   void dispose() {
-    _postsSubscription?.cancel();
+    _analysisSubscription?.cancel();
   }
 }

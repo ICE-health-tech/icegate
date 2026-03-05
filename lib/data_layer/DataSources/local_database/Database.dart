@@ -13,6 +13,7 @@ import 'package:ice_shield/data_layer/Protocol/User/UserAccountProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
+import 'package:rxdart/rxdart.dart';
 import 'dart:io'; // For File
 import 'dart:math'; // For Random() used in DAOs
 import 'dart:convert';
@@ -77,6 +78,10 @@ class InternalWidgetsTable extends Table {
       .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
 
   // These are currently nullable in your DB
   TextColumn get name =>
@@ -88,6 +93,7 @@ class InternalWidgetsTable extends Table {
 
   TextColumn get imageUrl => text().named("image_url").nullable()();
   TextColumn get alias => text().named("alias").nullable()();
+  TextColumn get scope => text().named("scope").nullable()(); // Added scope
 
   @override
   Set<Column> get primaryKey => {id};
@@ -116,45 +122,53 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     )..where((tbl) => tbl.name.isIn(listName))).get();
   }
 
-  Stream<List<InternalWidgetData>> watchAllWidgets() {
-    return customSelect(
-      'SELECT * FROM internal_widgets',
-      readsFrom: {internalWidgetsTable},
-    ).watch().map((rows) {
-      return rows
-          .where((row) => row.data['id'] != null) // Skip rows with null id
-          .map(
-            (row) => InternalWidgetData(
-              id: row.data['id']?.toString() ?? '',
-              widgetID: row.data['widget_id']?.toString(),
-              name: row.data['name']?.toString(),
-              url: row.data['url']?.toString(),
-              dateAdded: row.data['date_added']?.toString(),
-              imageUrl: row.data['image_url']?.toString(),
-              alias: row.data['alias']?.toString(),
-            ),
-          )
-          .toList();
-    });
+  Stream<List<InternalWidgetData>> watchScopedWidgets(
+    String personID,
+    String scope,
+  ) {
+    return (select(internalWidgetsTable)..where(
+          (tbl) =>
+              (tbl.personID.equals(personID) | tbl.personID.isNull()) &
+              tbl.scope.equals(scope),
+        ))
+        .watch();
+  }
+
+  Stream<List<InternalWidgetData>> watchAllWidgets(String personID) {
+    return (select(internalWidgetsTable)..where(
+          (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+        ))
+        .watch();
+  }
+
+  Future<void> deleteScopedWidgets(String personID, String scope) {
+    return (delete(internalWidgetsTable)..where(
+          (tbl) => tbl.personID.equals(personID) & tbl.scope.equals(scope),
+        ))
+        .go();
   }
 
   // void insertInternalWidget(){
   Future<int> insertInternalWidget({
     String? id,
     String? widgetID,
+    required String personID,
     required String name,
     required String alias,
     required String url,
     String? imageUrl,
+    String? scope,
   }) {
     return into(internalWidgetsTable).insert(
       InternalWidgetsTableCompanion.insert(
         id: id ?? IDGen.UUIDV7(),
         widgetID: Value(widgetID),
+        personID: Value(personID),
         name: Value(name),
         alias: Value(alias),
         url: Value(url),
         imageUrl: Value(imageUrl ?? "assets/internalwidget/default_plugin.png"),
+        scope: Value(scope),
         dateAdded: Value(DateTime.now().toIso8601String()),
       ),
     );
@@ -182,6 +196,10 @@ class ExternalWidgetsTable extends Table {
       .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
   TextColumn get name =>
       text().withLength(min: 1, max: 100).named("name").nullable()();
   TextColumn get alias => text()
@@ -350,6 +368,40 @@ class PersonsTable extends Table {
       integer().withDefault(const Constant(0)).named('affection')();
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local-only contacts table. NOT synced via PowerSync.
+/// Used when importing contacts from the device address book.
+@DataClassName('PersonContactData')
+class PersonContactsTable extends Table {
+  @override
+  String get tableName => 'person_contacts';
+  TextColumn get id => text()(); // Local UUID
+  TextColumn get personID => text().nullable().named(
+    'person_id',
+  )(); // Owner person ID (the logged-in user)
+  TextColumn get firstName =>
+      text().withLength(min: 1, max: 100).named('first_name')();
+  TextColumn get lastName => text().nullable().named('last_name')();
+  TextColumn get phoneNumber =>
+      text().withLength(max: 20).nullable().named('phone_number')();
+  TextColumn get profileImageUrl =>
+      text().nullable().named('profile_image_url')();
+  TextColumn get relationship =>
+      text().withDefault(const Constant('friend')).named('relationship')();
+  IntColumn get affection =>
+      integer().withDefault(const Constant(0)).named('affection')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -769,6 +821,10 @@ class ScoresTable extends Table {
       .withDefault(const Constant(0.0))
       .named('career_global_score')
       .nullable()();
+  RealColumn get penaltyScore => real()
+      .withDefault(const Constant(0.0))
+      .named('penalty_score')
+      .nullable()();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .named('created_at')
@@ -825,46 +881,44 @@ class HabitsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-@DataClassName('BlogPostData')
-class BlogPostsTable extends Table {
+@DataClassName('AiAnalysisData')
+class AiAnalysisTable extends Table {
   @override
-  String get tableName => 'blog_posts';
+  String get tableName => 'ai_analysis';
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
       .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
       .named('tenant_id')();
-  TextColumn get postID => text().nullable().named('post_id')();
-  TextColumn get authorID => text()
+  TextColumn get personID => text()
+      .nullable()
       .references(PersonsTable, #id, onDelete: KeyAction.restrict)
-      .named('author_id')();
+      .named('person_id')();
   TextColumn get title => text().named('title')();
-  TextColumn get slug => text().unique().named('slug')();
-  TextColumn get excerpt => text().nullable().named('excerpt')();
-  TextColumn get content => text().named('content')();
-  TextColumn get featuredImageUrl =>
-      text().nullable().named('featured_image_url')();
-  TextColumn get status => textEnum<PostStatus>()
-      .withDefault(const Constant('draft'))
-      .named('status')();
-  BoolColumn get isFeatured =>
-      boolean().withDefault(const Constant(false)).named('is_featured')();
-  IntColumn get viewCount =>
-      integer().withDefault(const Constant(0)).named('view_count')();
-  IntColumn get likeCount =>
-      integer().withDefault(const Constant(0)).named('like_count')();
+  TextColumn get summary => text().nullable().named('summary')();
+  TextColumn get detailedAnalysis => text().named('detailed_analysis')();
+  TextColumn get status =>
+      text().withDefault(const Constant('draft')).named('status')();
+  BoolColumn get isFeatured => boolean()
+      .nullable()
+      .withDefault(const Constant(false))
+      .named('is_featured')();
   DateTimeColumn get publishedAt =>
       dateTime().nullable().named('published_at')();
-  DateTimeColumn get scheduledFor =>
-      dateTime().nullable().named('scheduled_for')();
   DateTimeColumn get createdAt => dateTime()
+      .nullable()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('created_at')();
   DateTimeColumn get updatedAt => dateTime()
+      .nullable()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('updated_at')();
+  TextColumn get category => text().nullable().named('category')();
+  TextColumn get aiModel => text().nullable().named('ai_model')();
+  TextColumn get promptContext => text().nullable().named('prompt_context')();
+  RealColumn get sentimentScore => real().nullable().named('sentiment_score')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1183,27 +1237,46 @@ class QuestsTable extends Table {
       .nullable()
       .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
       .named('tenant_id')();
-  TextColumn get questID => text().nullable().named('quest_id')();
-  TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  TextColumn get title =>
+      text().withLength(min: 1, max: 200).nullable().named('title')();
   TextColumn get description => text().nullable().named('description')();
   TextColumn get type => text()
+      .nullable()
       .withDefault(const Constant('daily'))
       .named('type')(); // daily, weekly, permanent
-  RealColumn get targetValue =>
-      real().withDefault(const Constant(0.0)).named('target_value')();
-  RealColumn get currentValue =>
-      real().withDefault(const Constant(0.0)).named('current_value')();
-  TextColumn get category =>
-      text().withDefault(const Constant('health')).named('category')();
-  IntColumn get rewardExp =>
-      integer().withDefault(const Constant(10)).named('reward_exp')();
-  BoolColumn get isCompleted =>
-      boolean().withDefault(const Constant(false)).named('is_completed')();
+  RealColumn get targetValue => real()
+      .nullable()
+      .withDefault(const Constant(0.0))
+      .named('target_value')();
+  RealColumn get currentValue => real()
+      .nullable()
+      .withDefault(const Constant(0.0))
+      .named('current_value')();
+  TextColumn get category => text()
+      .nullable()
+      .withDefault(const Constant('health'))
+      .named('category')();
+  IntColumn get rewardExp => integer()
+      .nullable()
+      .withDefault(const Constant(10))
+      .named('reward_exp')();
+  BoolColumn get isCompleted => boolean()
+      .nullable()
+      .withDefault(const Constant(false))
+      .named('is_completed')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('created_at')();
   TextColumn get imageUrl => text().nullable().named('image_url')();
+  IntColumn get penaltyScore => integer()
+      .nullable()
+      .withDefault(const Constant(0))
+      .named('penalty_score')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1285,15 +1358,18 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
   }
 
   Future<ScoreLocalData?> getScoreByPersonID(String personID) {
-    return (select(scoresTable)..where((tbl) => tbl.personID.equals(personID)))
+    return (select(scoresTable)..where(
+          (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+        ))
         .get()
         .then((list) => list.firstOrNull);
   }
 
   Stream<ScoreLocalData?> watchScoreByPersonID(String personID) {
-    return (select(
-      scoresTable,
-    )..where((tbl) => tbl.personID.equals(personID))).watchSingleOrNull();
+    return (select(scoresTable)..where(
+          (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+        ))
+        .watchSingleOrNull();
   }
 
   Future<void> incrementCareerScore(String personID, double points) async {
@@ -1321,6 +1397,37 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
             id: deterministicId,
             personID: Value(personID),
             careerGlobalScore: Value(points),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> incrementSocialScore(String personID, double points) async {
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            socialGlobalScore: Value(
+              (existing.socialGlobalScore ?? 0.0) + points,
+            ),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            id: deterministicId,
+            personID: Value(personID),
+            socialGlobalScore: Value(points),
             updatedAt: Value(DateTime.now()),
           ),
         );
@@ -1471,9 +1578,11 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<int> insertNewWidget({
     required ExternalWidgetProtocol externalWidgetProtocol,
+    required String personID,
   }) {
     final entry = ExternalWidgetsTableCompanion.insert(
       id: IDGen.UUIDV7(),
+      personID: Value(personID),
       name: Value(
         externalWidgetProtocol.name.isEmpty
             ? 'Unnamed Widget'
@@ -1518,9 +1627,10 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
         .write(ExternalWidgetsTableCompanion(name: Value(newName)));
   }
 
-  Stream<List<ExternalWidgetData>> watchAllWidgets() {
+  Stream<List<ExternalWidgetData>> watchAllWidgets(String personID) {
     return customSelect(
-      'SELECT * FROM external_widgets',
+      'SELECT * FROM external_widgets WHERE person_id = ? OR person_id IS NULL',
+      variables: [Variable.withString(personID)],
       readsFrom: {externalWidgetsTable},
     ).watch().map((rows) {
       return rows
@@ -1528,6 +1638,8 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
           .map(
             (row) => ExternalWidgetData(
               id: row.data['id']?.toString() ?? '',
+              tenantID: row.data['tenant_id']?.toString(),
+              personID: row.data['person_id']?.toString(),
               widgetID: row.data['widget_id']?.toString(),
               name: row.data['name']?.toString(),
               alias: row.data['alias']?.toString(),
@@ -1595,6 +1707,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     required String title,
     required String content,
     String? projectID,
+    String? personID,
   }) async {
     final uuid = IDGen.UUIDV7();
     into(projectNotesTable).insert(
@@ -1603,6 +1716,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
         title: title,
         content: content,
         projectID: Value(projectID),
+        personID: Value(personID),
         createdAt: Value(DateTime.now()),
         updatedAt: Value(DateTime.now()),
       ),
@@ -1620,12 +1734,18 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     return (delete(projectNotesTable)..where((tbl) => tbl.id.equals(id))).go();
   }
 
-  Stream<List<ProjectNoteData>> watchAllNotes() {
-    return select(projectNotesTable).watch();
+  Stream<List<ProjectNoteData>> watchAllNotes(String personID) {
+    return (select(projectNotesTable)..where(
+          (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+        ))
+        .watch();
   }
 
-  Stream<List<ProjectNoteData>> watchRecentNotes(int limit) {
+  Stream<List<ProjectNoteData>> watchRecentNotes(String personID, int limit) {
     return (select(projectNotesTable)
+          ..where(
+            (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+          )
           ..orderBy([
             (tbl) => OrderingTerm(
               expression: tbl.updatedAt,
@@ -1720,6 +1840,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     UserAccountsTable,
     ProfilesTable,
     CVAddressesTable,
+    PersonContactsTable,
   ],
 )
 class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
@@ -1908,6 +2029,113 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       updates: {personsTable},
       updateKind: UpdateKind.update,
     );
+  }
+
+  // --- Person Contacts (local-only, NOT synced) ---
+
+  /// Create a local-only contact (not synced to Supabase)
+  Future<String> createContact({
+    required String firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? personID,
+    String relationship = 'friend',
+  }) async {
+    final newId = IDGen.UUIDV7();
+    await into(personContactsTable).insert(
+      PersonContactsTableCompanion.insert(
+        id: newId,
+        firstName: firstName,
+        lastName: Value(lastName),
+        phoneNumber: Value(phoneNumber),
+        personID: Value(personID),
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    // Set relationship via raw SQL since it may not be in the generated companion
+    await customUpdate(
+      'UPDATE person_contacts SET relationship = ? WHERE id = ?',
+      variables: [
+        Variable.withString(relationship),
+        Variable.withString(newId),
+      ],
+      updates: {personContactsTable},
+      updateKind: UpdateKind.update,
+    );
+    return newId;
+  }
+
+  /// Watch all local contacts
+  Stream<List<PersonContactData>> watchAllContacts() {
+    return select(personContactsTable).watch();
+  }
+
+  /// Delete a local contact
+  Future<int> deleteContact(String contactId) {
+    return (delete(
+      personContactsTable,
+    )..where((t) => t.id.equals(contactId))).go();
+  }
+
+  /// Increase affection on a local contact
+  Future<void> increaseContactAffection(
+    String contactId, {
+    int amount = 1,
+  }) async {
+    await customUpdate(
+      'UPDATE person_contacts SET affection = affection + ? WHERE id = ?',
+      variables: [Variable.withInt(amount), Variable.withString(contactId)],
+      updates: {personContactsTable},
+      updateKind: UpdateKind.update,
+    );
+  }
+
+  /// Update relationship on a local contact
+  Future<void> updateContactRelationship(
+    String contactId,
+    String relationship,
+  ) async {
+    await customUpdate(
+      'UPDATE person_contacts SET relationship = ? WHERE id = ?',
+      variables: [
+        Variable.withString(relationship),
+        Variable.withString(contactId),
+      ],
+      updates: {personContactsTable},
+      updateKind: UpdateKind.update,
+    );
+  }
+
+  /// Watch all persons AND local contacts merged into a unified PersonData stream.
+  /// Local contacts are converted to PersonData objects for UI compatibility.
+  Stream<List<PersonData>> watchAllPersonsAndContacts() {
+    final personsStream = select(personsTable).watch();
+    final contactsStream = select(personContactsTable).watch();
+
+    return Rx.combineLatest2<
+      List<PersonData>,
+      List<PersonContactData>,
+      List<PersonData>
+    >(personsStream, contactsStream, (persons, contacts) {
+      final contactsAsPersonData = contacts
+          .map(
+            (c) => PersonData(
+              id: c.id,
+              firstName: c.firstName,
+              lastName: c.lastName,
+              relationship: c.relationship,
+              affection: c.affection,
+              isActive: true,
+              createdAt: c.createdAt,
+              updatedAt: c.updatedAt,
+              phoneNumber: c.phoneNumber,
+              profileImageUrl: c.profileImageUrl,
+            ),
+          )
+          .toList();
+      return [...persons, ...contactsAsPersonData];
+    });
   }
 
   // Emails
@@ -2148,6 +2376,119 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       await createCVAddress(cvAddress, overridePersonID: personID);
 
       return personID;
+    });
+  }
+
+  Future<void> upsertPersonProfileData({
+    required String personId,
+    required String firstName,
+    required String lastName,
+    required String profileImageUrl,
+    required String bio,
+    required String occupation,
+    required String educationLevel,
+    required String location,
+    required String websiteUrl,
+    required String linkedinUrl,
+    required String githubUrl,
+    required String company,
+    required String university,
+    required String country,
+  }) async {
+    await transaction(() async {
+      final now = Value(DateTime.now());
+      // Persons
+      final existingPerson = await getPersonById(personId);
+      if (existingPerson != null) {
+        await update(personsTable).replace(
+          existingPerson.copyWith(
+            firstName: firstName,
+            lastName: Value(lastName),
+            profileImageUrl: Value(profileImageUrl),
+            updatedAt: DateTime.now(),
+          ),
+        );
+      } else {
+        await into(personsTable).insert(
+          PersonsTableCompanion.insert(
+            id: personId,
+            firstName: firstName,
+            lastName: Value(lastName),
+            profileImageUrl: Value(profileImageUrl),
+            updatedAt: now,
+          ),
+        );
+      }
+
+      // Profiles
+      final existingProfile = await getProfileForPerson(personId);
+      if (existingProfile != null) {
+        await update(profilesTable).replace(
+          existingProfile.copyWith(
+            bio: Value(bio),
+            occupation: Value(occupation),
+            educationLevel: Value(educationLevel),
+            location: Value(location),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            githubUrl: Value(githubUrl),
+            updatedAt: DateTime.now(),
+          ),
+        );
+      } else {
+        await into(profilesTable).insert(
+          ProfilesTableCompanion.insert(
+            id: personId,
+            personID: Value(personId),
+            bio: Value(bio),
+            occupation: Value(occupation),
+            educationLevel: Value(educationLevel),
+            location: Value(location),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            githubUrl: Value(githubUrl),
+            updatedAt: now,
+          ),
+        );
+      }
+
+      // CV Address (Detail Information)
+      final existingCV = await getCVAddressForPerson(personId);
+      if (existingCV != null) {
+        await update(cVAddressesTable).replace(
+          existingCV.copyWith(
+            company: Value(company),
+            university: Value(university),
+            country: Value(country),
+            bio: Value(bio),
+            occupation: Value(occupation),
+            location: Value(location),
+            githubUrl: Value(githubUrl),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            educationLevel: Value(educationLevel),
+            updatedAt: DateTime.now(),
+          ),
+        );
+      } else {
+        await into(cVAddressesTable).insert(
+          CVAddressesTableCompanion.insert(
+            id: personId,
+            personID: Value(personId),
+            company: Value(company),
+            university: Value(university),
+            country: Value(country),
+            bio: Value(bio),
+            occupation: Value(occupation),
+            location: Value(location),
+            githubUrl: Value(githubUrl),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            educationLevel: Value(educationLevel),
+            updatedAt: now,
+          ),
+        );
+      }
     });
   }
 }
@@ -2540,19 +2881,22 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
   }
 }
 
-// 4.7 ContentDAO
-@DriftAccessor(tables: [BlogPostsTable])
-class ContentDAO extends DatabaseAccessor<AppDatabase> with _$ContentDAOMixin {
-  ContentDAO(super.db);
+// 4.7 AiAnalysisDAO
+@DriftAccessor(tables: [AiAnalysisTable])
+class AiAnalysisDAO extends DatabaseAccessor<AppDatabase>
+    with _$AiAnalysisDAOMixin {
+  AiAnalysisDAO(super.db);
 
-  Future<int> createPost(BlogPostsTableCompanion post) =>
-      into(blogPostsTable).insert(post);
-  Stream<List<BlogPostData>> watchPosts(String authorID) => (select(
-    blogPostsTable,
-  )..where((t) => t.authorID.equals(authorID))).watch();
-  Future<BlogPostData?> getPostBySlug(String slug) => (select(
-    blogPostsTable,
-  )..where((t) => t.slug.equals(slug))).getSingleOrNull();
+  Future<int> createAnalysis(AiAnalysisTableCompanion analysis) =>
+      into(aiAnalysisTable).insert(analysis);
+
+  Stream<List<AiAnalysisData>> watchAnalyses(String personID) => (select(
+    aiAnalysisTable,
+  )..where((t) => t.personID.equals(personID) | t.personID.isNull())).watch();
+
+  Future<AiAnalysisData?> getAnalysisById(String id) => (select(
+    aiAnalysisTable,
+  )..where((t) => t.id.equals(id))).getSingleOrNull();
 }
 
 // 4.8 WidgetDAO
@@ -2698,7 +3042,7 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
   Stream<List<HealthMetricsLocal>> watchAllMetrics(String personID) {
     return (select(healthMetricsTable)
-          ..where((t) => t.personID.equals(personID))
+          ..where((t) => t.personID.equals(personID) | t.personID.isNull())
           ..orderBy([
             (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
           ]))
@@ -2717,7 +3061,8 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       return null;
     }
 
-    final targetDateStr = "${date.year}-${date.month}-${date.day}";
+    final targetDateStr =
+        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
     final targetId = IDGen.generateDeterministicUuid(personID, targetDateStr);
 
     // 1. Fast path: check exact deterministic ID
@@ -2762,7 +3107,8 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
     if (personId == null || personId.isEmpty) return;
 
     // Generate deterministic ID based on personId and normalized date
-    final dateStr = "${normalized.year}-${normalized.month}-${normalized.day}";
+    final dateStr =
+        "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
     final deterministicId = IDGen.generateDeterministicUuid(personId, dateStr);
 
     final existing = await getMetricsForDate(personId, normalized);
@@ -2772,7 +3118,7 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         "HealthMetricsDAO: Found existing record for $normalized (ID: ${existing.id})",
       );
       // "Highest wins" for cumulative metrics
-      final currentSteps = entry.steps.value ?? 0;
+      final currentSteps = entry.steps.present ? entry.steps.value ?? 0 : 0;
       final savedSteps = existing.steps ?? 0;
       final updatedSteps = entry.steps.present
           ? (currentSteps > savedSteps)
@@ -2790,7 +3136,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         );
       }
 
-      final currentCalories = entry.caloriesBurned.value ?? 0;
+      final currentCalories = entry.caloriesBurned.present
+          ? entry.caloriesBurned.value ?? 0
+          : 0;
       final savedCalories = existing.caloriesBurned ?? 0;
       final updatedCaloriesBurned = entry.caloriesBurned.present
           ? (currentCalories > savedCalories)
@@ -2843,7 +3191,8 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
     final Map<String, List<HealthMetricsLocal>> grouped = {};
     for (var m in all) {
-      final key = "${m.date.year}-${m.date.month}-${m.date.day}";
+      final key =
+          "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}";
       grouped.putIfAbsent(key, () => []).add(m);
     }
 
@@ -3091,7 +3440,11 @@ class QuotesTable extends Table {
       .nullable()
       .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
       .named('tenant_id')();
-  IntColumn get quoteID => integer().nullable().named('quote_id')();
+  // IntColumn get quoteID => integer().nullable().named('quote_id')();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
   TextColumn get content => text()();
   TextColumn get author => text().nullable()();
   BoolColumn get isActive =>
@@ -3133,7 +3486,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
 
       return QuoteData(
         id: row.data['id'] as String,
-        quoteID: row.data['quote_id'] as int?,
+        personID: row.data['person_id'] as String,
         content: row.data['content'] as String? ?? '',
         author: row.data['author'] as String?,
         isActive:
@@ -3159,7 +3512,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
           .map(
             (row) => QuoteData(
               id: row.data['id'] as String,
-              quoteID: row.data['quote_id'] as int?,
+              personID: row.data['person_id'] as String?,
               content: row.data['content'] as String,
               author: row.data['author'] as String?,
               isActive:
@@ -3203,18 +3556,25 @@ class CustomNotificationDAO extends DatabaseAccessor<AppDatabase>
     )..where((t) => t.id.equals(id))).go();
   }
 
-  Stream<List<CustomNotificationData>> watchAllNotifications() {
-    return (select(customNotificationsTable)..orderBy([
-          (t) =>
-              OrderingTerm(expression: t.scheduledTime, mode: OrderingMode.asc),
-        ]))
+  Stream<List<CustomNotificationData>> watchAllNotifications(String personId) {
+    return (select(customNotificationsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.scheduledTime,
+              mode: OrderingMode.asc,
+            ),
+          ]))
         .watch();
   }
 
-  Future<List<CustomNotificationData>> getAllEnabledNotifications() {
+  Future<List<CustomNotificationData>> getAllEnabledNotifications(
+    String personId,
+  ) {
     return (select(
-      customNotificationsTable,
-    )..where((t) => t.isEnabled.equals(true))).get();
+          customNotificationsTable,
+        )..where((t) => t.isEnabled.equals(true) & t.personID.equals(personId)))
+        .get();
   }
 
   Future<void> patchNotification(
@@ -3244,29 +3604,57 @@ class GlobalRankingEntry {
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   QuestDAO(super.db);
 
-  Future<int> insertQuest(QuestsTableCompanion entry) =>
-      into(questsTable).insert(entry);
+  Future<int> insertQuest(QuestsTableCompanion entry) {
+    // Force category to lowercase if present
+    var updatedEntry = entry;
+    if (entry.category.present) {
+      final categoryValue = entry.category.value;
+      updatedEntry = entry.copyWith(
+        category: Value(categoryValue?.toLowerCase()),
+      );
+    }
+    return into(questsTable).insert(updatedEntry);
+  }
 
-  Future<bool> updateQuest(QuestData entry) =>
-      update(questsTable).replace(entry);
+  Future<bool> updateQuest(QuestData entry) {
+    final updatedEntry = entry.copyWith(
+      category: Value(entry.category?.toLowerCase()),
+    );
+    return update(questsTable).replace(updatedEntry);
+  }
 
   Future<int> deleteQuest(String id) =>
       (delete(questsTable)..where((t) => t.id.equals(id))).go();
 
-  Stream<List<QuestData>> watchActiveQuests() {
-    return (select(
-      questsTable,
-    )..where((t) => t.isCompleted.equals(false))).watch();
-  }
-
-  Stream<List<QuestData>> watchAllQuests() {
-    return (select(questsTable)..orderBy([
-          (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
-        ]))
+  Stream<List<QuestData>> watchActiveQuests(String personId) {
+    return (select(questsTable)..where(
+          (t) => t.isCompleted.equals(false) & t.personID.equals(personId),
+        ))
         .watch();
   }
 
-  Future<List<QuestData>> getAllQuests() => select(questsTable).get();
+  Stream<List<QuestData>> watchAllQuests(String personId) {
+    return (select(questsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Stream<List<QuestData>> watchQuestsByPerson(String personId) {
+    return (select(questsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Future<List<QuestData>> getAllQuests(String personId) =>
+      (select(questsTable)..where((t) => t.personID.equals(personId))).get();
 
   Future<void> updateQuestProgress(String id, double value) async {
     final existing = await (select(
@@ -3275,7 +3663,8 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
 
     if (existing != null) {
       final newValue = value;
-      final isNowCompleted = newValue >= existing.targetValue;
+      final target = existing.targetValue ?? 0.0;
+      final isNowCompleted = newValue >= target;
       await (update(questsTable)..where((t) => t.id.equals(id))).write(
         QuestsTableCompanion(
           currentValue: Value(newValue),
@@ -3353,7 +3742,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     AssetsTable,
     GoalsTable,
     HabitsTable,
-    BlogPostsTable,
+    AiAnalysisTable,
     PersonWidgetsTable,
     CVAddressesTable,
     SessionTable,
@@ -3371,6 +3760,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     SleepLogsTable,
     ExerciseLogsTable,
     QuestsTable,
+    PersonContactsTable,
   ],
   daos: [
     ThemesTableDAO,
@@ -3382,7 +3772,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     PersonManagementDAO,
     FinanceDAO,
     GrowthDAO,
-    ContentDAO,
+    AiAnalysisDAO,
     WidgetDAO,
     PersonDAO,
     SessionDAO,
@@ -3414,7 +3804,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 33;
+  int get schemaVersion => 35;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -3454,7 +3844,7 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(assetsTable);
           await m.createTable(goalsTable);
           await m.createTable(habitsTable);
-          await m.createTable(blogPostsTable);
+          await m.createTable(aiAnalysisTable);
           await m.createTable(personWidgetsTable);
         }
         if (from < 3) {
@@ -3678,6 +4068,14 @@ class AppDatabase extends _$AppDatabase {
             print(
               'Drift: Error adding person_id column to custom_notifications: $e',
             );
+          }
+        }
+
+        if (from < 35) {
+          try {
+            await m.addColumn(internalWidgetsTable, internalWidgetsTable.scope);
+          } catch (e) {
+            print('Drift: Error adding scope column to internal_widgets: $e');
           }
         }
       },

@@ -124,7 +124,6 @@ class GoalConfigurationWidget extends StatelessWidget {
                                     letterSpacing: -0.5,
                                   ),
                                 ),
-                              
                               ],
                             ),
                             Container(
@@ -245,18 +244,6 @@ class GoalConfigurationWidget extends StatelessWidget {
                   const SizedBox(height: 32),
 
                   // Tactical Tip Card
-                  Container(
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.03),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        color: colorScheme.primary.withOpacity(0.1),
-                      ),
-                    ),
-                    
-                    
-                  ),
                 ],
               ),
             ),

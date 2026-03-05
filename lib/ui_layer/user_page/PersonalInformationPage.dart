@@ -963,7 +963,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                   Text(
                     controller.text.isNotEmpty
                         ? controller.text
-                        : 'Pending Matrix...',
+                        : 'Enter your...',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

@@ -88,18 +88,16 @@ class LocalNotificationService {
     );
 
     // Schedule daily briefing and custom notifications
-    try {
-      await syncAllNotifications();
-    } catch (e) {
-      print("Warning: Failed to sync notifications on startup: $e");
-    }
+    // Removed automatic sync on init, as personId might not be available yet.
+    // syncAllNotifications should be called when personId is resolved.
   }
 
   /// Toggle notifications on or off
   Future<void> setNotificationsEnabled(bool enabled) async {
     notificationsEnabled.value = enabled;
     if (enabled) {
-      await syncAllNotifications();
+      // Note: syncAllNotifications now requires personId.
+      // Callers should handle re-syncing when enabled.
       print('🔔 Notifications enabled');
     } else {
       await cancelAllNotifications();
@@ -116,16 +114,26 @@ class LocalNotificationService {
     await _notificationsPlugin.cancel(id: id);
   }
 
-  /// Sync all custom notifications from DB
-  Future<void> syncAllNotifications() async {
-    if (!notificationsEnabled.value) return;
+  /// Sync all custom notifications from DB for a specific person
+  Future<void> syncAllNotifications(String personId) async {
+    if (!notificationsEnabled.value || personId.isEmpty) return;
 
     // Custom notifications from database
     if (_database != null) {
-      final customNotifications = await _database!.customNotificationDAO
-          .getAllEnabledNotifications();
-      for (final notification in customNotifications) {
-        await scheduleCustomNotification(notification);
+      try {
+        final customNotifications = await _database!.customNotificationDAO
+            .getAllEnabledNotifications(personId);
+        for (final notification in customNotifications) {
+          try {
+            await scheduleCustomNotification(notification);
+          } catch (e) {
+            print(
+              "Warning: Failed to schedule notification ${notification.id}: $e",
+            );
+          }
+        }
+      } catch (e) {
+        print("Warning: Failed to sync notifications: $e");
       }
     }
   }

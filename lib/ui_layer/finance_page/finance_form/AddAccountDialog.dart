@@ -37,7 +37,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
     context.read<AppDatabase>().financeDAO.createAccount(
       FinancialAccountsTableCompanion.insert(
         id: IDGen.UUIDV7(),
-        personID: personID,
+        personID: drift.Value(personID),
         accountName: name,
         accountType: drift.Value(_selectedType),
         balance: drift.Value(balance),

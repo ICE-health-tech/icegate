@@ -25,7 +25,7 @@ class GamificationService {
           .first;
       int totalSteps = 0;
       for (var m in allMetrics) {
-        totalSteps += m.steps??0;
+        totalSteps += m.steps ?? 0;
       }
       stepsPoints = (totalSteps / STEPS_PER_POINT).floor();
     } catch (e) {
@@ -105,7 +105,7 @@ class GamificationService {
           .first;
       int totalSteps = 0;
       for (var m in allMetrics) {
-        totalSteps += m.steps??0;
+        totalSteps += m.steps ?? 0;
       }
       stepsPoints = (totalSteps / STEPS_PER_POINT).floor();
     } catch (_) {}

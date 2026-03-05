@@ -18,9 +18,13 @@ class _WeightPageState extends State<WeightPage> {
   final TextEditingController _weightController = TextEditingController();
 
   Future<void> _showAddWeightDialog() async {
+    final db = context.read<AppDatabase>();
+    final personBlock = context.read<PersonBlock>();
+    final personId = personBlock.information.value.profiles.id ?? "";
+
     return showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text("Log Weight"),
         content: TextField(
           controller: _weightController,
@@ -33,18 +37,13 @@ class _WeightPageState extends State<WeightPage> {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(dialogContext),
             child: const Text("Cancel"),
           ),
           ElevatedButton(
             onPressed: () async {
               final weight = double.tryParse(_weightController.text);
-              if (weight != null) {
-                final db = context.read<AppDatabase>();
-                final personBlock = context.read<PersonBlock>();
-                final personId =
-                    personBlock.information.value.profiles.id ?? "";
-
+              if (weight != null && personId.isNotEmpty) {
                 await db.healthMetricsDAO.insertOrUpdateMetrics(
                   HealthMetricsTableCompanion(
                     id: Value(IDGen.UUIDV7()),
@@ -61,7 +60,7 @@ class _WeightPageState extends State<WeightPage> {
                   ),
                 );
                 _weightController.clear();
-                if (mounted) Navigator.pop(context);
+                if (mounted) Navigator.pop(dialogContext);
               }
             },
             child: const Text("Save"),
@@ -140,7 +139,9 @@ class _WeightListItem extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: Theme.of(
+          context,
+        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Row(

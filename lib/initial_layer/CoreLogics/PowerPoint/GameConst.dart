@@ -20,6 +20,7 @@ const double SLEEP_GOAL = 8.0; // hours
 const int CONTACT_POINTS = 30; // each contact = +30 points
 const int AFFECTION_PER_UNIT = 5; // every 5 affection...
 const int AFFECTION_POINTS = 10; // ...= +10 points
+const int DEFAULT_AFFECTION_INCREASE = 5; // default increase on manual action
 
 // ─── 💼 Projects ───
 const double TASK_SCORE_INCREMENT = 10; // each task completion = +2

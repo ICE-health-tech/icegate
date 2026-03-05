@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
@@ -12,7 +13,6 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'TaskItem.dart';
-import 'TextEditorPage.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
   final ProjectProtocol project;
@@ -196,7 +196,9 @@ class ProjectDetailsPage extends StatelessWidget {
                           );
                         },
                       ),
-                      const SizedBox(height: 20),
+                      const SizedBox(
+                        height: 60,
+                      ), // Increased height to prevent overlap with title
                     ],
                   ),
                 ),
@@ -502,18 +504,17 @@ class ProjectDetailsPage extends StatelessWidget {
     ProjectNoteDAO dao,
     String projectID,
   ) async {
+    final personBlock = context.read<PersonBlock>();
     final noteID = await dao.insertNote(
       title: 'New Project Note',
-      content: '', // Empty quill content
+      content: '',
       projectID: projectID,
+      personID: personBlock.currentPersonID.value,
     );
 
     final note = await dao.getNoteById(noteID);
     if (note != null && context.mounted) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => TextEditorPage(note: note)),
-      );
+      context.push('/projects/editor', extra: note);
     }
   }
 }
@@ -530,10 +531,7 @@ class _NoteItem extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12.0),
       child: InkWell(
         onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => TextEditorPage(note: note)),
-          );
+          context.push('/projects/editor', extra: note);
         },
         borderRadius: BorderRadius.circular(12),
         child: Container(

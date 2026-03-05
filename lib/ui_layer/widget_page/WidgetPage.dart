@@ -6,6 +6,7 @@ import 'package:ice_shield/ui_layer/ReusableWidget/WidgetCard.dart';
 // hide ExternalWidget, ExternalWidgetsDAO;
 import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:provider/provider.dart';
 
 class WidgetPage extends StatefulWidget {
@@ -109,7 +110,9 @@ class _WidgetPage extends State<WidgetPage> {
         ],
       ),
       body: StreamBuilder<List<ExternalWidgetData>>(
-        stream: dao.watchAllWidgets(),
+        stream: dao.watchAllWidgets(
+          context.read<PersonBlock>().information.value.profiles.id ?? "",
+        ),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             // 4. Use accent color for loading indicator

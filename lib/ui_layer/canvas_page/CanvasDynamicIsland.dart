@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 
 import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_shield/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:provider/provider.dart';
 
@@ -47,11 +48,12 @@ class CanvasDynamicIsland extends StatelessWidget {
     final double scalingFactor = isSmallDevice ? 0.85 : 1.0;
 
     final focusBlock = context.watch<FocusBlock>();
+    final questBlock = context.watch<QuestBlock>();
 
     return Watch((context) {
       final activeTab = DragCanvasGrid.activeCanvasTab.value;
       final isAnyTabOpen = isCanvas && activeTab != 'none';
-      final sessionsCount = focusBlock.sessionsCompletedToday.value;
+      final numberOfQuests = questBlock.numberOfQuests.value;
       final isFocusRunning = focusBlock.isRunning.value;
       final remainingSecs = focusBlock.remainingTime.value;
       final sessionType = focusBlock.currentSessionType.value;
@@ -76,7 +78,7 @@ class CanvasDynamicIsland extends StatelessWidget {
       final Color focusColor = sessionType == 'Focus'
           ? Colors.blueAccent
           : Colors.greenAccent;
-
+      final String location = GoRouterState.of(context).uri.toString();
       return AnimatedContainer(
         duration: const Duration(milliseconds: 500),
         curve: Curves.elasticOut,
@@ -118,6 +120,11 @@ class CanvasDynamicIsland extends StatelessWidget {
             GestureDetector(
               onTap: () {
                 HapticFeedback.mediumImpact();
+                print("Current location: " + location);
+                if (location.startsWith('/projects/editor')) {
+                  context.go("/projects");
+                }
+
                 if (Navigator.canPop(context)) {
                   Navigator.pop(context);
                 } else {
@@ -153,7 +160,6 @@ class CanvasDynamicIsland extends StatelessWidget {
                         ? Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                             
                               const SizedBox(width: 8),
                               Container(
                                 width: 6,
@@ -252,7 +258,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                           size: 22 * scalingFactor, // Increased from 20
                         ),
                       ),
-                      if (sessionsCount > 0)
+                      if (numberOfQuests > 0)
                         Positioned(
                           right: -2,
                           top: -2,
@@ -267,7 +273,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                               minHeight: 14 * scalingFactor,
                             ),
                             child: Text(
-                              '$sessionsCount',
+                              '$numberOfQuests',
                               style: TextStyle(
                                 color: colorScheme.onError,
                                 fontSize: 8 * scalingFactor,

@@ -11,6 +11,7 @@ class InternalWidgetProtocol implements PluginProtocol {
   final String _dateAdded;
   final String _widgetID;
   final String _alias;
+  final String? _scope; // New field
 
   // NEW: Enhanced metadata fields
   final String _description;
@@ -40,6 +41,8 @@ class InternalWidgetProtocol implements PluginProtocol {
 
   @override
   String get widgetID => _widgetID;
+
+  String? get scope => _scope;
 
   // Getters for new fields
   @override
@@ -75,6 +78,7 @@ class InternalWidgetProtocol implements PluginProtocol {
     required String dateAdded,
     required String widgetID,
     String? imageUrl,
+    String? scope,
     // NEW: Enhanced parameters with defaults for backward compatibility
     String description = '',
     IconData icon = Icons.widgets,
@@ -97,7 +101,8 @@ class InternalWidgetProtocol implements PluginProtocol {
        _category = category,
        _tags = tags,
        _isActive = isActive,
-       _requiresAuth = requiresAuth;
+       _requiresAuth = requiresAuth,
+       _scope = scope;
 
   @override
   InternalWidgetProtocol createInstance({
@@ -112,6 +117,7 @@ class InternalWidgetProtocol implements PluginProtocol {
       dateAdded: dateAdded,
       widgetID: widgetID,
       imageUrl: _imageUrl,
+      scope: _scope,
       description: _description,
       icon: _icon,
       protocol: _protocol,
@@ -133,6 +139,7 @@ class InternalWidgetProtocol implements PluginProtocol {
       dateAdded: _dateAdded,
       widgetID: _widgetID,
       alias: _alias,
+      scope: _scope,
     );
   }
 
@@ -149,9 +156,10 @@ class InternalWidgetProtocol implements PluginProtocol {
       // SAFE CHECK: This prevents the specific "Null check" crash
       imageUrl: (data.imageUrl != null && data.imageUrl!.isNotEmpty)
           ? data.imageUrl!
-          : 'assets/internalwidget/default.png',
+          : 'assets/internalwidget/default_plugin.png',
 
       dateAdded: data.dateAdded ?? DateTime.now().toIso8601String(),
+      scope: data.scope,
 
       // Use defaults for new fields when adapting from database
       description: 'Unknown',
@@ -175,59 +183,87 @@ class InternalWidgetProtocol implements PluginProtocol {
         lower.endsWith(' ui') ||
         lower.contains('user interface') ||
         lower.contains('design')) {
-      return Icons.design_services;
+      return Icons.design_services_rounded;
     }
 
     if (lower.contains('health') ||
         lower.contains('heart') ||
         lower.contains('fit')) {
-      return Icons.favorite;
+      return Icons.favorite_rounded;
     }
     if (lower.contains('finance') ||
         lower.contains('money') ||
         lower.contains('wallet') ||
         lower.contains('bank')) {
-      return Icons.account_balance_wallet;
+      return Icons.account_balance_wallet_rounded;
     }
     if (lower.contains('social') ||
         lower.contains('chat') ||
         lower.contains('friend')) {
-      return Icons.people;
+      return Icons.groups_rounded;
+    }
+    if (lower.contains('note') || lower.contains('memo')) {
+      return Icons.sticky_note_2_rounded;
+    }
+    if (lower.contains('project') || lower.contains('task')) {
+      return Icons.rocket_launch_rounded;
     }
     if (lower.contains('calendar') ||
         lower.contains('schedule') ||
         lower.contains('date')) {
-      return Icons.calendar_month;
+      return Icons.calendar_month_rounded;
     }
     if (lower.contains('map') ||
         lower.contains('gps') ||
-        lower.contains('location')) {
-      return Icons.map;
+        lower.contains('location') ||
+        lower.contains('tracker') ||
+        lower.contains('iot')) {
+      return Icons.explore_rounded;
     }
     if (lower.contains('music') ||
         lower.contains('song') ||
         lower.contains('audio')) {
-      return Icons.music_note;
+      return Icons.headphones_rounded;
     }
     if (lower.contains('weather') ||
         lower.contains('forecast') ||
         lower.contains('sun')) {
-      return Icons.wb_sunny;
+      return Icons.wb_sunny_rounded;
+    }
+    if (lower.contains('focus') ||
+        lower.contains('timer') ||
+        lower.contains('pomodoro')) {
+      return Icons.timer_rounded;
+    }
+    if (lower.contains('crypto') ||
+        lower.contains('bitcoin') ||
+        lower.contains('coin')) {
+      return Icons.currency_bitcoin_rounded;
     }
     if (lower.contains('widget') || lower.contains('component')) {
-      return Icons.widgets;
+      return Icons.widgets_rounded;
     }
     if (lower.contains('setting') || lower.contains('config')) {
-      return Icons.settings;
+      return Icons.tune_rounded;
     }
     if (lower.contains('news') || lower.contains('article')) {
-      return Icons.newspaper;
+      return Icons.feed_rounded;
     }
     if (lower.contains('shop') || lower.contains('cart')) {
-      return Icons.shopping_cart;
+      return Icons.shopping_bag_rounded;
     }
-    if (lower.contains('video') || lower.contains('movie')) return Icons.movie;
+    if (lower.contains('video') || lower.contains('movie')) {
+      return Icons.smart_display_rounded;
+    }
+    if (lower.contains('mail') || lower.contains('email')) {
+      return Icons.mark_email_unread_rounded;
+    }
+    if (lower.contains('photo') ||
+        lower.contains('gallery') ||
+        lower.contains('image')) {
+      return Icons.photo_library_rounded;
+    }
 
-    return Icons.dashboard_customize; // Default fallback
+    return Icons.grid_view_rounded; // Default fallback — clean grid icon
   }
 }

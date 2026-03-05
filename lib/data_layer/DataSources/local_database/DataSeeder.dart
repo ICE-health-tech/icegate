@@ -136,15 +136,18 @@ class DataSeeder {
       ),
     );
 
-    // 10. Create Blog Posts
-    await db.contentDAO.createPost(
-      BlogPostsTableCompanion(
+    // 10. Create AI Analysis
+    await db.aiAnalysisDAO.createAnalysis(
+      AiAnalysisTableCompanion(
         id: Value(IDGen.UUIDV7()),
-        authorID: Value(personId),
-        title: const Value('Hello World'),
-        slug: const Value('hello-world'),
-        content: const Value('This is my first post on the new platform.'),
-        status: const Value(PostStatus.published),
+        personID: Value(personId),
+        title: const Value('Welcome Analysis'),
+        detailedAnalysis: const Value(
+          'Initial system analysis of your profile and goals.',
+        ),
+        status: const Value('published'),
+        category: const Value('Overall'),
+        aiModel: const Value('system'),
         publishedAt: Value(DateTime.now()),
       ),
     );
@@ -167,20 +170,22 @@ class DataSeeder {
 
     // 12. Seed Quests
     await db.questDAO.insertQuest(
-      QuestsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        title: 'Stamina Boost',
-        description: Value('Walk 10,000 steps today.'),
+      QuestsTableCompanion(
+        id: Value(IDGen.UUIDV7()),
+        title: const Value('Stamina Boost'),
+        personID: Value(personId),
+        description: const Value('Walk 10,000 steps today.'),
         targetValue: const Value(10000.0),
         currentValue: const Value(4320.0),
         category: const Value('health'),
       ),
     );
     await db.questDAO.insertQuest(
-      QuestsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        title: 'Iron Will',
-        description: Value('Complete 3 heavy focus sessions.'),
+      QuestsTableCompanion(
+        id: Value(IDGen.UUIDV7()),
+        title: const Value('Iron Will'),
+        personID: Value(personId),
+        description: const Value('Complete 3 heavy focus sessions.'),
         targetValue: const Value(3.0),
         currentValue: const Value(1.0),
         category: const Value('productivity'),
@@ -196,6 +201,7 @@ class DataSeeder {
         url: '/widgets/monitor',
         imageUrl: 'https://img.icons8.com/isometric/512/processor.png',
       ),
+      personID: personId,
     );
     await db.externalWidgetsDAO.insertNewWidget(
       externalWidgetProtocol: const ExternalWidgetProtocol(
@@ -205,6 +211,7 @@ class DataSeeder {
         url: '/widgets/weather',
         imageUrl: 'https://img.icons8.com/isometric/512/cloud.png',
       ),
+      personID: personId,
     );
 
     // 14. Seed Reminders

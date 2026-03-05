@@ -1,5 +1,6 @@
 import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -209,9 +210,15 @@ class PersonBlock {
   final account = signal<UserAccount>(const UserAccount());
   final skills = signal<List<SkillType>>([]);
 
-  final currentPersonID = signal<String?>(null);
+  // Computed currentPersonID avoids stale state during login transitions
+  late final currentPersonID = computed(() => information.value.profiles.id);
 
-  PersonBlock({required CustomAuthService authService});
+  final PersonManagementDAO personDao;
+
+  PersonBlock({
+    required CustomAuthService authService,
+    required this.personDao,
+  });
 
   // --- ACTIONS ---
 
@@ -297,7 +304,6 @@ class PersonBlock {
             profiles: profile,
             details: details,
           );
-          currentPersonID.value = profile.id;
         });
         print(
           "✅ [PersonBlock] Multi-source Profile fetched for ${profile.username}",
@@ -333,7 +339,6 @@ class PersonBlock {
           email: 'agent@ice-shield.net',
         ),
       );
-      currentPersonID.value = DataSeeder.guestPersonId;
     });
   }
 
@@ -398,54 +403,29 @@ class PersonBlock {
         "💾 [PersonBlock] Updating profile across tables for ${user.id}...",
       );
 
-      // 1. Update persons table (Identity)
-      print("   - Updating 'persons' table...");
-      await Supabase.instance.client.from('persons').upsert({
-        'id': user.id,
-        'first_name': profile.firstName,
-        'last_name': profile.lastName,
-        'profile_image_url': profile.profileImageUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-      print("   ✅ 'persons' update successful.");
-
-      // 2. Update profiles table (Social/Bio)
-      print("   - Updating 'profiles' table...");
-      await Supabase.instance.client.from('profiles').upsert({
-        'id': user.id,
-        'person_id': user.id, // Ensure link to persons table
-        'bio': details.bio,
-        'occupation': details.occupation,
-        'education_level': details.educationLevel,
-        'location': details.location,
-        'website_url': details.websiteUrl,
-        'linkedin_url': details.linkedinUrl,
-        'github_url': details.githubUrl,
-        'updated_at': DateTime.now().toIso8601String(),
-      });
-      print("   ✅ 'profiles' update successful.");
-
-      // 3. Update detail_information table (Professional/Location)
-      print("   - Updating 'detail_information' table...");
-      await Supabase.instance.client.from('detail_information').upsert({
-        'id': user.id, // Primary key is id (uuid)
-        'person_id': user.id, // Ensure link to persons table
-        'company': details.company,
-        'university': details.university,
-        'country': details.country,
-        'bio': details.bio,
-        'occupation': details.occupation,
-        'location': details.location,
-        'github_url': details.githubUrl,
-        'website_url': details.websiteUrl,
-        'linkedin_url': details.linkedinUrl,
-        'education_level': details.educationLevel,
-        'updated_at': DateTime.now().toIso8601String(),
-      }, onConflict: 'id');
-      print("   ✅ 'detail_information' update successful.");
+      // We'll update via Drift first, and PowerSync will handle the remote sync.
+      print(
+        "   - Updating local database via Drift (PowerSync will sync to Supabase)...",
+      );
+      await personDao.upsertPersonProfileData(
+        personId: user.id,
+        firstName: profile.firstName,
+        lastName: profile.lastName,
+        profileImageUrl: profile.profileImageUrl,
+        bio: details.bio,
+        occupation: details.occupation,
+        educationLevel: details.educationLevel,
+        location: details.location,
+        websiteUrl: details.websiteUrl,
+        linkedinUrl: details.linkedinUrl,
+        githubUrl: details.githubUrl,
+        company: details.company,
+        university: details.university,
+        country: details.country,
+      );
 
       print(
-        "✅ [PersonBlock] Multi-table Profile Update COMPLETED for ${user.id}",
+        "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally for ${user.id}. PowerSync will sync shortly.",
       );
     } catch (e) {
       print("❌ [PersonBlock] Failed to update profile in database: $e");

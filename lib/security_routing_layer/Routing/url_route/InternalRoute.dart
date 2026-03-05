@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_shield/ui_layer/notification_page/NotificationInboxPage.dart';
@@ -132,6 +133,14 @@ final GoRouter router = GoRouter(
       path: '/notification-inbox',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) => const NotificationInboxPage(),
+    ),
+    GoRoute(
+      path: '/projects/editor',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) {
+        final note = state.extra as ProjectNoteData?;
+        return TextEditorPage(note: note);
+      },
     ),
 
     // --- SHELL ROUTE (Wraps pages with the App Bar) ---
@@ -304,12 +313,6 @@ final GoRouter router = GoRouter(
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const ProjectsPage(),
           routes: [
-            GoRoute(
-              path: 'editor',
-              parentNavigatorKey: _shellNavigatorKey,
-              builder: (context, state) => const TextEditorPage(),
-            ),
-
             GoRoute(
               path:
                   ':projectId', // Đường dẫn con của /projects nên URL sẽ là /projects/123

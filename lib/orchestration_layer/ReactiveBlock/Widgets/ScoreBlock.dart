@@ -4,6 +4,7 @@ import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 
@@ -115,6 +116,13 @@ class ScoreBlock {
     }
     _subscriptions.clear();
 
+    SharedPreferences.getInstance().then((prefs) {
+      _lastContactBasedScore =
+          prefs.getDouble('lastContactBasedScore_$personID') ?? 0.0;
+      _lastHealthBasedScore =
+          prefs.getDouble('lastHealthBasedScore_$personID') ?? 0.0;
+    });
+
     _dao = dao;
     _financeDAO = financeDAO;
     _personID = personID;
@@ -224,6 +232,8 @@ class ScoreBlock {
   Timer? _healthDebounce;
   Timer? _financeDebounce;
   Timer? _socialDebounce;
+  double _lastContactBasedScore = 0;
+  double _lastHealthBasedScore = 0;
 
   void _updateFinanceScore(
     List<FinancialAccountData> accounts,
@@ -269,14 +279,35 @@ class ScoreBlock {
           totalAffection += contact.affection;
         }
 
-        final socialScore =
-            (contacts.length * CONTACT_POINTS) +
-            ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
+        final newContactScore =
+            ((contacts.length * CONTACT_POINTS) +
+                    ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS))
+                .toDouble();
+
+        // Read current DB value to preserve quest XP
+        final currentData = await _dao.getScoreByPersonID(_personID);
+        final currentTotal = currentData?.socialGlobalScore ?? 0.0;
+
+        // Only replace the contact-based portion, keep quest XP intact
+        final questXP = (currentTotal - _lastContactBasedScore).clamp(
+          0.0,
+          double.infinity,
+        );
+        final finalScore = newContactScore + questXP;
 
         debugPrint(
-          "ScoreBlock: Final Social Global Score: ${socialScore.toDouble()}",
+          "ScoreBlock: Social Score — base: $newContactScore, questXP: $questXP, final: $finalScore",
         );
-        await _dao.updateSocialScore(_personID, socialScore.toDouble());
+
+        _lastContactBasedScore = newContactScore;
+        SharedPreferences.getInstance().then(
+          (prefs) => prefs.setDouble(
+            'lastContactBasedScore_$_personID',
+            newContactScore,
+          ),
+        );
+
+        await _dao.updateSocialScore(_personID, finalScore);
       } catch (e) {
         debugPrint("Error updating social score: $e");
       }
@@ -349,7 +380,7 @@ class ScoreBlock {
         sleepPoints = SLEEP_GOAL_BONUS.toInt();
       }
 
-      final healthScore =
+      final newHealthScore =
           (stepsPoints +
                   dietPoints +
                   exercisePoints +
@@ -357,10 +388,26 @@ class ScoreBlock {
                   waterPoints +
                   sleepPoints)
               .toDouble();
-      debugPrint(
-        "ScoreBlock: Recalculated Health Score: $healthScore (Steps: $stepsPoints, Diet: $dietPoints, Exercise: $exercisePoints, Focus: $focusPoints, Water: $waterPoints, Sleep: $sleepPoints)",
+
+      final currentData = await _dao.getScoreByPersonID(_personID);
+      final currentTotal = currentData?.healthGlobalScore ?? 0.0;
+
+      final questXP = (currentTotal - _lastHealthBasedScore).clamp(
+        0.0,
+        double.infinity,
       );
-      await _dao.updateHealthScore(_personID, healthScore);
+      final finalScore = newHealthScore + questXP;
+
+      _lastHealthBasedScore = newHealthScore;
+      SharedPreferences.getInstance().then(
+        (prefs) =>
+            prefs.setDouble('lastHealthBasedScore_$_personID', newHealthScore),
+      );
+
+      debugPrint(
+        "ScoreBlock: Recalculated Health Score: $finalScore (Base: $newHealthScore, QuestXP: $questXP)",
+      );
+      await _dao.updateHealthScore(_personID, finalScore);
     } catch (e, stack) {
       debugPrint("Error updating health score: $e");
       debugPrint("Stack trace: $stack");

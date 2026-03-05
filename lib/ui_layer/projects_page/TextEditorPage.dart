@@ -3,10 +3,10 @@ import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_quill/flutter_quill.dart';
+import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:intl/intl.dart';
 
 class TextEditorPage extends StatefulWidget {
@@ -20,7 +20,7 @@ class TextEditorPage extends StatefulWidget {
 
 class _TextEditorPageState extends State<TextEditorPage>
     with SingleTickerProviderStateMixin {
-  late final QuillController _controller;
+  late final TextEditingController _contentController;
   late final TextEditingController _titleController;
   late final FocusNode _editorFocusNode;
   late final FocusNode _titleFocusNode;
@@ -28,7 +28,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   bool _hasUnsavedChanges = false;
   bool _isSaving = false;
   bool _focusMode = false;
-  bool _showToolbar = false;
+  bool _isPreview = false;
   Timer? _autoSaveTimer;
   DateTime? _lastSaved;
 
@@ -52,22 +52,15 @@ class _TextEditorPageState extends State<TextEditorPage>
       CurvedAnimation(parent: _headerAnimController, curve: Curves.easeInOut),
     );
 
-    if (widget.note != null) {
-      try {
-        final json = jsonDecode(widget.note!.content);
-        _controller = QuillController(
-          document: Document.fromJson(json),
-          selection: const TextSelection.collapsed(offset: 0),
-        );
-      } catch (e) {
-        _controller = QuillController.basic();
-      }
-    } else {
-      _controller = QuillController.basic();
+    // Load content — handle legacy Quill Delta JSON gracefully
+    String initialContent = '';
+    if (widget.note != null && widget.note!.content.isNotEmpty) {
+      initialContent = _extractContent(widget.note!.content);
     }
+    _contentController = TextEditingController(text: initialContent);
 
     // Listen for changes
-    _controller.document.changes.listen((_) {
+    _contentController.addListener(() {
       if (!_hasUnsavedChanges && mounted) {
         setState(() => _hasUnsavedChanges = true);
       }
@@ -82,6 +75,26 @@ class _TextEditorPageState extends State<TextEditorPage>
     });
   }
 
+  /// Extract content — if JSON (old Quill Delta), convert to plain text.
+  /// Otherwise return as-is (markdown).
+  String _extractContent(String raw) {
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        // Quill Delta format — extract plain text
+        final buffer = StringBuffer();
+        for (final op in decoded) {
+          if (op is Map && op.containsKey('insert')) {
+            buffer.write(op['insert']);
+          }
+        }
+        return buffer.toString().trim();
+      }
+    } catch (_) {}
+    // Already plain text / markdown
+    return raw;
+  }
+
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 5), () {
@@ -94,7 +107,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   @override
   void dispose() {
     _autoSaveTimer?.cancel();
-    _controller.dispose();
+    _contentController.dispose();
     _titleController.dispose();
     _editorFocusNode.dispose();
     _titleFocusNode.dispose();
@@ -113,7 +126,7 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   Future<void> _saveNote({bool showSnackbar = true}) async {
     final title = _titleController.text;
-    final content = jsonEncode(_controller.document.toDelta().toJson());
+    final content = _contentController.text; // Store as plain markdown
 
     if (title.isEmpty) {
       if (showSnackbar) {
@@ -135,9 +148,11 @@ class _TextEditorPageState extends State<TextEditorPage>
           widget.note!.copyWith(title: title, content: content),
         );
       } else {
+        final personBlock = context.read<PersonBlock>();
         await context.read<ProjectNoteDAO>().insertNote(
           title: title,
           content: content,
+          personID: personBlock.currentPersonID.value,
         );
       }
       if (mounted) {
@@ -183,13 +198,13 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   void _showStats() {
-    final plainText = _controller.document.toPlainText().trim();
+    final plainText = _contentController.text.trim();
     final wordCount = plainText.isEmpty
         ? 0
         : plainText.split(RegExp(r'\s+')).length;
     final charCount = plainText.length;
-    final lineCount = _controller.document.toPlainText().split('\n').length;
-    final readTime = (wordCount / 200).ceil(); // ~200 wpm
+    final lineCount = _contentController.text.split('\n').length;
+    final readTime = (wordCount / 200).ceil();
 
     showModalBottomSheet(
       context: context,
@@ -370,14 +385,14 @@ class _TextEditorPageState extends State<TextEditorPage>
               _optionTile(
                 ctx,
                 icon: Icons.copy_rounded,
-                label: 'Copy as Plain Text',
+                label: 'Copy as Markdown',
                 color: Colors.teal,
                 onTap: () async {
                   Navigator.pop(ctx);
-                  final text = _controller.document.toPlainText();
-                  await Clipboard.setData(ClipboardData(text: text));
+                  await Clipboard.setData(
+                    ClipboardData(text: _contentController.text),
+                  );
                   if (!mounted) return;
-                  // Copy to clipboard
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
                       content: Text('Copied to clipboard'),
@@ -417,7 +432,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                     );
                     if (confirm == true && context.mounted) {
                       await context.read<ProjectNoteDAO>().deleteNote(
-                        widget.note!.noteID!,
+                        widget.note!.id,
                       );
                       if (context.mounted) Navigator.pop(context);
                     }
@@ -460,6 +475,23 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
+  /// Insert markdown syntax at cursor
+  void _insertMarkdown(String prefix, {String suffix = ''}) {
+    final text = _contentController.text;
+    final sel = _contentController.selection;
+    final start = sel.start;
+    final end = sel.end;
+
+    if (start < 0) return;
+
+    final selectedText = text.substring(start, end);
+    final newText = '$prefix$selectedText$suffix';
+    _contentController.text = text.replaceRange(start, end, newText);
+    _contentController.selection = TextSelection.collapsed(
+      offset: start + prefix.length + selectedText.length,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -495,7 +527,7 @@ class _TextEditorPageState extends State<TextEditorPage>
         extendBodyBehindAppBar: true,
         body: Stack(
           children: [
-            // Background
+            // Background gradient
             Positioned.fill(
               child: Container(
                 decoration: BoxDecoration(
@@ -528,12 +560,12 @@ class _TextEditorPageState extends State<TextEditorPage>
                   },
                 ),
 
-                // Editor
+                // Editor / Preview
                 Expanded(
                   child: GestureDetector(
                     onDoubleTap: _toggleFocusMode,
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 28.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -642,69 +674,11 @@ class _TextEditorPageState extends State<TextEditorPage>
                           ] else
                             const SizedBox(height: 12),
 
-                          // Editor
+                          // Toggle Edit / Preview
                           Expanded(
-                            child: QuillEditor.basic(
-                              controller: _controller,
-                              focusNode: _editorFocusNode,
-                              config: QuillEditorConfig(
-                                placeholder: 'Start writing...',
-                                padding: const EdgeInsets.only(bottom: 120),
-                                customStyles: DefaultStyles(
-                                  paragraph: DefaultTextBlockStyle(
-                                    TextStyle(
-                                      fontSize: 16,
-                                      height: 1.7,
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.85,
-                                      ),
-                                    ),
-                                    const HorizontalSpacing(0, 0),
-                                    const VerticalSpacing(6, 0),
-                                    const VerticalSpacing(0, 0),
-                                    null,
-                                  ),
-                                  h1: DefaultTextBlockStyle(
-                                    TextStyle(
-                                      fontSize: 28,
-                                      fontWeight: FontWeight.w900,
-                                      height: 1.3,
-                                      color: colorScheme.onSurface,
-                                    ),
-                                    const HorizontalSpacing(0, 0),
-                                    const VerticalSpacing(16, 8),
-                                    const VerticalSpacing(0, 0),
-                                    null,
-                                  ),
-                                  h2: DefaultTextBlockStyle(
-                                    TextStyle(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.3,
-                                      color: colorScheme.onSurface,
-                                    ),
-                                    const HorizontalSpacing(0, 0),
-                                    const VerticalSpacing(12, 6),
-                                    const VerticalSpacing(0, 0),
-                                    null,
-                                  ),
-                                  h3: DefaultTextBlockStyle(
-                                    TextStyle(
-                                      fontSize: 18,
-                                      fontWeight: FontWeight.w700,
-                                      height: 1.4,
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.9,
-                                      ),
-                                    ),
-                                    const HorizontalSpacing(0, 0),
-                                    const VerticalSpacing(10, 4),
-                                    const VerticalSpacing(0, 0),
-                                    null,
-                                  ),
-                                ),
-                              ),
-                            ),
+                            child: _isPreview
+                                ? _buildMarkdownPreview(colorScheme)
+                                : _buildMarkdownEditor(colorScheme),
                           ),
                         ],
                       ),
@@ -714,182 +688,257 @@ class _TextEditorPageState extends State<TextEditorPage>
               ],
             ),
 
-            // Floating Toolbar — toggled by MainButton
-            if (!_focusMode)
-              AnimatedPositioned(
-                duration: const Duration(milliseconds: 300),
-                curve: Curves.easeOutCubic,
-                bottom: _showToolbar ? 90 : -80,
-                left: 24,
-                right: 24,
-                child: Center(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(20),
-                    child: BackdropFilter(
-                      filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withOpacity(0.7),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: colorScheme.outline.withOpacity(0.08),
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.08),
-                              blurRadius: 24,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: QuillSimpleToolbar(
-                          controller: _controller,
-                          config: const QuillSimpleToolbarConfig(
-                            showFontFamily: false,
-                            showFontSize: false,
-                            showSearchButton: false,
-                            showSubscript: false,
-                            showSuperscript: false,
-                            showInlineCode: false,
-                            showColorButton: false,
-                            showBackgroundColorButton: false,
-                            showClearFormat: false,
-                            showAlignmentButtons: false,
-                            showDirection: false,
-                            showIndent: false,
-                            multiRowsDisplay: false,
-                            toolbarIconAlignment: WrapAlignment.center,
-                            buttonOptions: QuillSimpleToolbarButtonOptions(
-                              base: QuillToolbarBaseButtonOptions(
-                                iconTheme: QuillIconTheme(
-                                  iconButtonSelectedData: IconButtonData(
-                                    style: ButtonStyle(
-                                      backgroundColor: WidgetStatePropertyAll(
-                                        Colors.white24,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            // Floating Markdown Toolbar
+            if (!_focusMode && !_isPreview) _buildMarkdownToolbar(colorScheme),
 
-            // MainButton to toggle toolbar
-            if (!_focusMode)
-              Positioned(
-                bottom: 24,
-                right: 0,
-                left: 0,
-                child: Center(
-                  child: MainButton(
-                    type: 'editor',
-                    destination: '/projects/editor',
-                    size: 48,
-                    icon: _showToolbar
-                        ? Icons.close_rounded
-                        : Icons.edit_rounded,
-                    mainFunction: () {
-                      setState(() => _showToolbar = !_showToolbar);
-                    },
-                    subButtons: [
-                      SubButton(
-                        icon: Icons.save_rounded,
-                        backgroundColor: Colors.green,
-                        tooltip: 'Save',
-                        onPressed: _saveNote,
+            Positioned(
+              bottom: 16,
+              // left: 24,
+              right: 24,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                width: 100,
+                height: 40,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: _isPreview
+                      ? colorScheme.primary.withOpacity(0.15)
+                      : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: InkWell(
+                  onTap: () => setState(() => _isPreview = !_isPreview),
+                  child: Row(
+                    // mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        _isPreview ? Icons.edit_rounded : Icons.preview_rounded,
+                        size: 16,
+                        color: _isPreview
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withOpacity(0.6),
                       ),
-                      SubButton(
-                        icon: Icons.bar_chart_rounded,
-                        backgroundColor: Colors.blueAccent,
-                        tooltip: 'Statistics',
-                        onPressed: _showStats,
-                      ),
-                      if (widget.note != null)
-                        SubButton(
-                          icon: Icons.delete_outline_rounded,
-                          backgroundColor: Colors.redAccent,
-                          tooltip: 'Delete',
-                          onPressed: () async {
-                            final confirm = await showDialog<bool>(
-                              context: context,
-                              builder: (ctx) => AlertDialog(
-                                title: const Text('Delete Note?'),
-                                content: const Text(
-                                  'This action cannot be undone.',
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, false),
-                                    child: const Text('Cancel'),
-                                  ),
-                                  TextButton(
-                                    onPressed: () => Navigator.pop(ctx, true),
-                                    child: const Text(
-                                      'Delete',
-                                      style: TextStyle(color: Colors.red),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            );
-                            if (confirm == true && context.mounted) {
-                              await context.read<ProjectNoteDAO>().deleteNote(
-                                widget.note!.noteID!,
-                              );
-                              if (context.mounted) Navigator.pop(context);
-                            }
-                          },
+                      const SizedBox(width: 4),
+                      Text(
+                        _isPreview ? 'EDIT' : 'PREVIEW',
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.8,
+                          color: _isPreview
+                              ? colorScheme.primary
+                              : colorScheme.onSurface.withOpacity(0.6),
                         ),
+                      ),
                     ],
                   ),
                 ),
               ),
-
-            // Focus mode exit hint
-            if (_focusMode)
-              Positioned(
-                bottom: 24,
-                left: 0,
-                right: 0,
-                child: Center(
-                  child: GestureDetector(
-                    onTap: _toggleFocusMode,
-                    child: AnimatedOpacity(
-                      opacity: 0.4,
-                      duration: const Duration(milliseconds: 300),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withOpacity(0.5),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          'Double-tap to exit focus mode',
-                          style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.5),
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildMarkdownEditor(ColorScheme colorScheme) {
+    return TextField(
+      controller: _contentController,
+      focusNode: _editorFocusNode,
+      maxLines: null,
+      expands: true,
+      textAlignVertical: TextAlignVertical.top,
+      keyboardType: TextInputType.multiline,
+      style: TextStyle(
+        fontSize: 15,
+        height: 1.8,
+        color: colorScheme.onSurface.withOpacity(0.85),
+        fontFamily: 'monospace',
+      ),
+      decoration: InputDecoration(
+        hintText:
+            'Write in markdown...\n\n# Heading\n## Subheading\n**bold** *italic* ~~strikethrough~~\n- bullet list\n1. numbered list\n> blockquote\n`inline code`',
+        hintStyle: TextStyle(
+          color: colorScheme.onSurface.withOpacity(0.15),
+          fontSize: 14,
+          height: 1.8,
+        ),
+        border: InputBorder.none,
+        contentPadding: const EdgeInsets.only(bottom: 120),
+      ),
+    );
+  }
+
+  Widget _buildMarkdownPreview(ColorScheme colorScheme) {
+    return Markdown(
+      data: _contentController.text,
+      padding: const EdgeInsets.only(bottom: 120),
+      selectable: true,
+      styleSheet: MarkdownStyleSheet(
+        h1: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w900,
+          height: 1.3,
+          color: colorScheme.onSurface,
+        ),
+        h2: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w800,
+          height: 1.3,
+          color: colorScheme.onSurface,
+        ),
+        h3: TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w700,
+          height: 1.4,
+          color: colorScheme.onSurface.withOpacity(0.9),
+        ),
+        p: TextStyle(
+          fontSize: 16,
+          height: 1.7,
+          color: colorScheme.onSurface.withOpacity(0.85),
+        ),
+        code: TextStyle(
+          fontSize: 14,
+          backgroundColor: colorScheme.primary.withOpacity(0.08),
+          color: colorScheme.primary,
+          fontFamily: 'monospace',
+        ),
+        codeblockDecoration: BoxDecoration(
+          color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withOpacity(0.2),
+          ),
+        ),
+        blockquoteDecoration: BoxDecoration(
+          border: Border(
+            left: BorderSide(
+              color: colorScheme.primary.withOpacity(0.4),
+              width: 3,
+            ),
+          ),
+        ),
+        blockquotePadding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
+        listBullet: TextStyle(
+          color: colorScheme.primary,
+          fontWeight: FontWeight.bold,
+        ),
+        horizontalRuleDecoration: BoxDecoration(
+          border: Border(
+            top: BorderSide(
+              color: colorScheme.outlineVariant.withOpacity(0.3),
+              width: 1,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMarkdownToolbar(ColorScheme colorScheme) {
+    return Positioned(
+      bottom: 10,
+      left: 24,
+      right: 24,
+      child: Center(
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ui.ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.7),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: colorScheme.outline.withOpacity(0.08),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.08),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _toolbarBtn(Icons.format_bold, 'Bold', () {
+                      _insertMarkdown('**', suffix: '**');
+                    }),
+                    _toolbarBtn(Icons.format_italic, 'Italic', () {
+                      _insertMarkdown('*', suffix: '*');
+                    }),
+                    _toolbarBtn(Icons.strikethrough_s, 'Strike', () {
+                      _insertMarkdown('~~', suffix: '~~');
+                    }),
+                    _toolbarDivider(colorScheme),
+                    _toolbarBtn(Icons.title, 'H1', () {
+                      _insertMarkdown('# ');
+                    }),
+                    _toolbarBtn(Icons.text_fields, 'H2', () {
+                      _insertMarkdown('## ');
+                    }),
+                    _toolbarBtn(Icons.text_fields_outlined, 'H3', () {
+                      _insertMarkdown('### ');
+                    }),
+                    _toolbarDivider(colorScheme),
+                    _toolbarBtn(Icons.format_list_bulleted, 'List', () {
+                      _insertMarkdown('- ');
+                    }),
+                    _toolbarBtn(Icons.format_list_numbered, 'Numbered', () {
+                      _insertMarkdown('1. ');
+                    }),
+                    _toolbarBtn(Icons.format_quote, 'Quote', () {
+                      _insertMarkdown('> ');
+                    }),
+                    _toolbarBtn(Icons.code, 'Code', () {
+                      _insertMarkdown('`', suffix: '`');
+                    }),
+                    _toolbarBtn(Icons.link, 'Link', () {
+                      _insertMarkdown('[', suffix: '](url)');
+                    }),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toolbarBtn(IconData icon, String tooltip, VoidCallback onTap) {
+    return Tooltip(
+      message: tooltip,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(8),
+        child: Padding(
+          padding: const EdgeInsets.all(8),
+          child: Icon(
+            icon,
+            size: 20,
+            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _toolbarDivider(ColorScheme colorScheme) {
+    return Container(
+      width: 1,
+      height: 20,
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      color: colorScheme.onSurface.withOpacity(0.1),
     );
   }
 
@@ -897,112 +946,89 @@ class _TextEditorPageState extends State<TextEditorPage>
     return SafeArea(
       bottom: false,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+        padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             // Back button
-            IconButton(
-              icon: Icon(
-                Icons.arrow_back_ios_new,
-                color: colorScheme.onSurface,
-                size: 18,
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(14),
               ),
-              onPressed: () {
-                if (_hasUnsavedChanges) {
-                  // WillPopScope handles it
-                  Navigator.maybePop(context);
-                } else {
-                  Navigator.pop(context);
-                }
-              },
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.surfaceContainerHighest
-                    .withOpacity(0.5),
-                padding: const EdgeInsets.all(12),
+              child: IconButton(
+                icon: Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  size: 18,
+                  color: colorScheme.onSurface,
+                ),
+                onPressed: () {
+                  if (_hasUnsavedChanges) {
+                    _saveNote(showSnackbar: false).then((_) {
+                      if (context.mounted) Navigator.pop(context);
+                    });
+                  } else {
+                    Navigator.pop(context);
+                  }
+                },
+              ),
+            ),
+            const Spacer(),
+
+            // Preview / Edit toggle chip
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: _isPreview
+                    ? colorScheme.primary.withOpacity(0.15)
+                    : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(20),
+              ),
+              child: InkWell(
+                onTap: () => setState(() => _isPreview = !_isPreview),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      _isPreview ? Icons.edit_rounded : Icons.preview_rounded,
+                      size: 16,
+                      color: _isPreview
+                          ? colorScheme.primary
+                          : colorScheme.onSurface.withOpacity(0.6),
+                    ),
+                    const SizedBox(width: 4),
+                    Text(
+                      _isPreview ? 'EDIT' : 'PREVIEW',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.8,
+                        color: _isPreview
+                            ? colorScheme.primary
+                            : colorScheme.onSurface.withOpacity(0.6),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
 
-            // Actions
-            Row(
-              children: [
-                // Save status indicator
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: _hasUnsavedChanges
-                        ? Colors.orange.withOpacity(0.1)
-                        : Colors.green.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        _isSaving
-                            ? Icons.sync_rounded
-                            : _hasUnsavedChanges
-                            ? Icons.edit_rounded
-                            : Icons.check_circle_rounded,
-                        size: 14,
-                        color: _hasUnsavedChanges
-                            ? Colors.orange
-                            : Colors.green,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        _isSaving
-                            ? 'Saving'
-                            : _hasUnsavedChanges
-                            ? 'Edited'
-                            : 'Saved',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: _hasUnsavedChanges
-                              ? Colors.orange
-                              : Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
+            const SizedBox(width: 8),
+
+            // More options button
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.more_horiz_rounded,
+                  size: 20,
+                  color: colorScheme.onSurface,
                 ),
-                const SizedBox(width: 8),
-                // Save button
-                IconButton(
-                  icon: Icon(
-                    Icons.save_rounded,
-                    color: colorScheme.primary,
-                    size: 20,
-                  ),
-                  onPressed: _saveNote,
-                  style: IconButton.styleFrom(
-                    backgroundColor: colorScheme.primaryContainer.withOpacity(
-                      0.5,
-                    ),
-                    padding: const EdgeInsets.all(12),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                // More options
-                IconButton(
-                  icon: Icon(
-                    Icons.more_horiz,
-                    color: colorScheme.onSurface,
-                    size: 20,
-                  ),
-                  onPressed: _showMoreOptions,
-                  style: IconButton.styleFrom(
-                    backgroundColor: colorScheme.surfaceContainerHighest
-                        .withOpacity(0.5),
-                    padding: const EdgeInsets.all(12),
-                  ),
-                ),
-              ],
+                onPressed: _showMoreOptions,
+              ),
             ),
           ],
         ),

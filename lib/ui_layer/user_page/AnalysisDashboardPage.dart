@@ -73,7 +73,6 @@ class AnalysisDashboardPage extends StatelessWidget {
               ),
               const SizedBox(height: 24),
 
-            
               // --- SECTOR GRID ---
               _buildSectorGrid(context, scoreBlock),
               const SizedBox(height: 32),

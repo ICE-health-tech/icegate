@@ -300,7 +300,7 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                           "LEVEL UP",
                           style: TextStyle(
                             color: Colors.white,
-                            fontSize: 40,
+                            fontSize: 35,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 4,
                           ),

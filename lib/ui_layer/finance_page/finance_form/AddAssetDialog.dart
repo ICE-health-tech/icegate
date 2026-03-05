@@ -40,7 +40,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
     context.read<AppDatabase>().financeDAO.createAsset(
       AssetsTableCompanion.insert(
         id: IDGen.UUIDV7(),
-        personID: personID,
+        personID: drift.Value(personID),
         assetName: symbol,
         assetCategory: _selectedType.name,
         currentEstimatedValue: drift.Value(quantity * price),

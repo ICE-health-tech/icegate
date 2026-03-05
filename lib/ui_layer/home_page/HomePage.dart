@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
-import 'dart:math';
 import '../UIConstants.dart';
 import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
@@ -29,6 +28,7 @@ import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -122,7 +122,7 @@ class _HomePageState extends State<HomePage> {
   late GrowthBlock growthBlock;
   late HealthBlock healthBlock;
   late ProjectBlock projectBlock;
-  int? _currentQuoteIndex;
+  late QuoteBlock quoteBlock;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
   int? _lastSeenLevel;
@@ -144,6 +144,7 @@ class _HomePageState extends State<HomePage> {
     financeBlock = context.read<FinanceBlock>();
     healthBlock = context.read<HealthBlock>();
     projectBlock = context.read<ProjectBlock>();
+    quoteBlock = context.read<QuoteBlock>();
 
     _fetchInitialData();
 
@@ -182,8 +183,17 @@ class _HomePageState extends State<HomePage> {
 
     Future.microtask(() {
       print("DUYLONG>>");
-      internalWidgetBlock.refreshBlock(database.internalWidgetsDAO);
-      externalWidgetBlock.refreshBlock(database.externalWidgetsDAO);
+      final String personIdToUse =
+          Supabase.instance.client.auth.currentUser?.id ?? "";
+      internalWidgetBlock.refreshBlock(
+        database.internalWidgetsDAO,
+        personIdToUse,
+        'home',
+      );
+      externalWidgetBlock.refreshBlock(
+        database.externalWidgetsDAO,
+        personIdToUse,
+      );
 
       // print("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
       // );
@@ -236,9 +246,9 @@ class _HomePageState extends State<HomePage> {
         child: AddPluginForm(
           data: FormData(
             title: "Add App Plugin",
-
             description: "Choose a plugin to extend your dashboard",
           ),
+          scope: 'home',
         ),
       ),
     );
@@ -300,7 +310,7 @@ class _HomePageState extends State<HomePage> {
               physics: const BouncingScrollPhysics(),
               padding: const EdgeInsets.symmetric(
                 horizontal: 20.0,
-                vertical: 10,
+                // vertical: 10,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -313,7 +323,7 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
                           style: TextStyle(
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w900,
                             fontSize: 20,
 
                             shadows: [
@@ -511,28 +521,15 @@ class _HomePageState extends State<HomePage> {
                   SizedBox(
                     height: sizeOfWidget,
                     child: Watch((context) {
-                      final allProjects = projectBlock.projects.value;
-                      final finishedProjectIds = allProjects
-                          .where((p) => p.status == 1)
-                          .map((p) => p.projectID)
-                          .toSet();
-
-                      // Filter out widgets that point to finished projects
-                      final filteredInternalWidgets = internalWidgets.where((
-                        w,
-                      ) {
-                        if (w.url.startsWith('/projects/') ||
-                            w.url.startsWith('/project/')) {
-                          final id = w.url.split('/').last;
-                          return !finishedProjectIds.contains(id);
-                        }
-                        return true;
-                      }).toList();
+                      final sortedInternal = List<InternalWidgetProtocol>.from(
+                        internalWidgets,
+                      );
+                      sortedInternal.sort(
+                        (a, b) => b.dateAdded.compareTo(a.dateAdded),
+                      );
 
                       final itemCount =
-                          filteredInternalWidgets.length +
-                          externalWidgets.length +
-                          1;
+                          sortedInternal.length + externalWidgets.length + 1;
 
                       return ListView.builder(
                         scrollDirection: Axis.horizontal,
@@ -540,9 +537,10 @@ class _HomePageState extends State<HomePage> {
                         padding: const EdgeInsets.only(right: 20),
                         itemCount: itemCount,
                         itemBuilder: (context, index) {
-                          if (index == 0) {
+                          // Show Add Button at the END
+                          if (index == itemCount - 1) {
                             return Padding(
-                              padding: const EdgeInsets.only(right: 16),
+                              padding: const EdgeInsets.only(left: 4),
                               child: SizedBox(
                                 width: sizeOfWidget,
                                 height: sizeOfWidget,
@@ -551,11 +549,8 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          int adjustedIndex = index - 1;
-
-                          if (adjustedIndex < filteredInternalWidgets.length) {
-                            final widget =
-                                filteredInternalWidgets[adjustedIndex];
+                          if (index < sortedInternal.length) {
+                            final widget = sortedInternal[index];
                             return Padding(
                               padding: const EdgeInsets.only(right: 16),
                               child: SizedBox(
@@ -566,10 +561,9 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          adjustedIndex -= filteredInternalWidgets.length;
-
-                          if (adjustedIndex < externalWidgets.length) {
-                            final ext = externalWidgets[adjustedIndex];
+                          final extIndex = index - sortedInternal.length;
+                          if (extIndex < externalWidgets.length) {
+                            final ext = externalWidgets[extIndex];
                             return Padding(
                               padding: const EdgeInsets.only(right: 16),
                               child: SizedBox(
@@ -973,7 +967,7 @@ class _HomePageState extends State<HomePage> {
       return InkWell(
         onTap: () => _showAddPluginDialog(context),
         borderRadius: BorderRadius.circular(28),
-        customBorder: Border.all(color: colorScheme.outline.withAlpha(90)),
+        customBorder: Border.all(color: colorScheme.outline.withAlpha(90),width: 3),
         child: Container(
           width: sizeOfWidget,
           height: sizeOfWidget,
@@ -983,7 +977,7 @@ class _HomePageState extends State<HomePage> {
 
             border: Border.all(
               color: colorScheme.outline.withAlpha(90),
-              width: UIConstants.getBorderWidth(context, sizeOfWidget),
+              width:3,
               style: BorderStyle
                   .none, // Can change to solid for dashed effect if custom painter
             ),
@@ -997,7 +991,7 @@ class _HomePageState extends State<HomePage> {
                   color: colorScheme.primary.withOpacity(0.1),
                   border: Border.all(
                     color: colorScheme.primary.withOpacity(0.2),
-                    width: 5,
+                    width: 3,
                     style: BorderStyle
                         .none, // Can change to solid for dashed effect if custom painter
                   ),
@@ -1019,11 +1013,9 @@ class _HomePageState extends State<HomePage> {
     final item = Container(
       width: sizeOfWidget,
       height: sizeOfWidget,
-      //  padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(28),
-
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -1032,8 +1024,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         border: Border.all(
-          color: colorScheme.outline.withAlpha(90),
-          width: UIConstants.getBorderWidth(context, sizeOfWidget),
+          color: colorScheme.primary.withOpacity(0.15),
+          width: 3.0, // Thinner, cleaner border
         ),
       ),
       child: Column(
@@ -1041,23 +1033,26 @@ class _HomePageState extends State<HomePage> {
         children: [
           Container(
             padding: const EdgeInsets.all(12),
-
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.2),
+              color: colorScheme.primary.withOpacity(0.1),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(widgetData.icon, color: colorScheme.primary, size: 28),
           ),
           const SizedBox(height: 10),
-          AutoSizeText(
-            widgetData.name,
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: colorScheme.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: AutoSizeText(
+              widgetData.name,
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: colorScheme.primary,
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
           ),
         ],
       ),
@@ -1129,9 +1124,8 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: colorScheme.primary.withOpacity(0.05),
         borderRadius: BorderRadius.circular(28),
-
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -1140,8 +1134,8 @@ class _HomePageState extends State<HomePage> {
           ),
         ],
         border: Border.all(
-          color: colorScheme.outline.withAlpha(90),
-          width: UIConstants.getBorderWidth(context, sizeOfWidget),
+          color: colorScheme.primary.withOpacity(0.15),
+          width: 3.0,
         ),
       ),
       child: Column(
@@ -1160,15 +1154,19 @@ class _HomePageState extends State<HomePage> {
             ),
           ),
           const SizedBox(height: 10),
-          AutoSizeText(
-            data.name ?? 'Untitled',
-            style: TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 13,
-              color: colorScheme.primary,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            child: AutoSizeText(
+              data.name ?? 'Untitled',
+              style: TextStyle(
+                fontWeight: FontWeight.w800,
+                fontSize: 14,
+                color: colorScheme.primary,
+                letterSpacing: -0.5,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
             ),
-            textAlign: TextAlign.center,
-            maxLines: 1,
           ),
         ],
       ),
@@ -1307,106 +1305,62 @@ class _HomePageState extends State<HomePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return StreamBuilder<List<QuoteData>>(
-      stream: database.quoteDAO.watchActiveQuotes(),
-      builder: (context, snapshot) {
-        final activeQuotes = snapshot.data ?? [];
-        String quote;
-        String? author;
+    return Watch((context) {
+      final quote = quoteBlock.currentQuote.value;
+      final author = quoteBlock.currentAuthor.value;
 
-        if (activeQuotes.isNotEmpty) {
-          // Initialize or keep index within bounds
-          if (_currentQuoteIndex == null ||
-              _currentQuoteIndex! >= activeQuotes.length) {
-            _currentQuoteIndex = DateTime.now().day % activeQuotes.length;
-          }
-          final qData = activeQuotes[_currentQuoteIndex!];
-          quote = qData.content;
-          author = qData.author;
-        } else {
-          // Fallback static quotes
-          final defaultQuotes = [
-            "The only way to do great work is to love what you do.",
-            "Innovation distinguishes between a leader and a follower.",
-            "Stay hungry, stay foolish.",
-            "Your time is limited, don't waste it living someone else's life.",
-            "Design is not just what it looks like and feels like. Design is how it works.",
-          ];
-          if (_currentQuoteIndex == null ||
-              _currentQuoteIndex! >= defaultQuotes.length) {
-            _currentQuoteIndex = DateTime.now().day % defaultQuotes.length;
-          }
-          quote = defaultQuotes[_currentQuoteIndex!];
-          author = null;
-        }
-
-        return InkWell(
-          onTap: () {
-            setState(() {
-              if (activeQuotes.isNotEmpty) {
-                _currentQuoteIndex =
-                    (Random().nextInt(activeQuotes.length)) %
-                    activeQuotes.length;
-              } else {
-                _currentQuoteIndex =
-                    (Random().nextInt(5)) % 5; // fallback length
-              }
-            });
-            HapticFeedback.lightImpact();
-          },
-          borderRadius: BorderRadius.circular(16),
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
-            // decoration: BoxDecoration(
-            //   color: colorScheme.primary.withOpacity(0.05),
-            //   borderRadius: BorderRadius.circular(32),
-            //   border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
-            // ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.format_quote_rounded,
-                  color: colorScheme.primary.withOpacity(0.5),
-                  size: 18,
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: AutoSizeText(
-                    quote,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      fontStyle: FontStyle.italic,
-                      color: colorScheme.onSurface.withOpacity(0.8),
-                    ),
+      return InkWell(
+        onTap: () {
+          quoteBlock.shuffle();
+          HapticFeedback.lightImpact();
+        },
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+          child: Row(
+            children: [
+              Icon(
+                Icons.format_quote_rounded,
+                color: colorScheme.primary.withOpacity(0.5),
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: AutoSizeText(
+                  quote,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.w600,
+                    fontStyle: FontStyle.italic,
+                    color: colorScheme.onSurface.withOpacity(0.8),
                   ),
                 ),
-                const SizedBox(width: 8),
-                if (author != null && author.isNotEmpty) ...[
-                  Text(
-                    "- $author",
-                    style: textTheme.bodySmall?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 10,
-                      color: colorScheme.primary.withOpacity(0.7),
-                    ),
+              ),
+              const SizedBox(width: 8),
+              if (author != null && author.isNotEmpty) ...[
+                Text(
+                  "- $author",
+                  style: textTheme.bodySmall?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 10,
+                    color: colorScheme.primary.withOpacity(0.7),
                   ),
-                  const SizedBox(width: 4),
-                ],
-                Icon(
-                  Icons.format_quote_rounded,
-                  color: colorScheme.primary.withOpacity(0.5),
-                  size: 18,
                 ),
+                const SizedBox(width: 4),
               ],
-            ),
+              Icon(
+                Icons.format_quote_rounded,
+                color: colorScheme.primary.withOpacity(0.5),
+                size: 18,
+              ),
+            ],
           ),
-        );
-      },
-    );
+        ),
+      );
+    });
   }
 
   Widget _buildAddButton(BuildContext context) {
@@ -1419,7 +1373,7 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+          border: Border.all(color: colorScheme.primary.withOpacity(0.2),width: 3),
         ),
         child: Center(
           child: Column(

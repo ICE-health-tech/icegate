@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+
 import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
 import 'package:provider/provider.dart';
 import '../../data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'PluginList/AvailablePlugins.dart';
 import '../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 
@@ -29,8 +32,9 @@ class _InternalPlugin extends BasePluginProtocol {
 // --- MAIN WIDGET ---
 class AddPluginForm extends StatefulWidget {
   final FormData data;
+  final String scope;
 
-  const AddPluginForm({super.key, required this.data});
+  const AddPluginForm({super.key, required this.data, this.scope = 'home'});
 
   @override
   State<AddPluginForm> createState() => _WidgetFormDataState();
@@ -86,13 +90,24 @@ class _WidgetFormDataState extends State<AddPluginForm> {
           return;
         }
 
+        final personId =
+            context.read<PersonBlock>().information.value.profiles.id ?? "";
+
+        // Enforce "limit to 1" for specific scopes (like 'projects')
+        if (widget.scope != 'home') {
+          await internalWidgetsDAO.deleteScopedWidgets(personId, widget.scope);
+        }
+
         await internalWidgetsDAO.insertInternalWidget(
-          
+          personID: personId,
           name: _selectedPlugin!.name,
           url: _selectedPlugin!.url,
           alias: _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_'),
-            imageUrl: _selectedPlugin!.imageUrl ?? "assets/internalwidget/default.png",
-          );
+          imageUrl:
+              _selectedPlugin!.imageUrl ??
+              "assets/internalwidget/default_plugin.png",
+          scope: widget.scope,
+        );
       } else {
         // --- EXTERNAL MODE ---
         if (_isPluginMode) {
@@ -111,6 +126,8 @@ class _WidgetFormDataState extends State<AddPluginForm> {
           );
           await externalWidgetsDAO.insertNewWidget(
             externalWidgetProtocol: protocol,
+            personID:
+                context.read<PersonBlock>().information.value.profiles.id ?? "",
           );
         } else {
           final String name = _nameController.text.trim();
@@ -132,12 +149,24 @@ class _WidgetFormDataState extends State<AddPluginForm> {
           );
           await externalWidgetsDAO.insertNewWidget(
             externalWidgetProtocol: protocol,
+            personID:
+                context.read<PersonBlock>().information.value.profiles.id ?? "",
           );
         }
       }
 
       if (mounted) {
+        final urlToNavigate = _selectedPlugin?.url;
+        final isInternal = _selectedTab == 0;
+
+        // 1. Close dialog
         Navigator.of(context).pop();
+
+        // 2. Navigate if applicable
+        if (isInternal && urlToNavigate != null) {
+          context.push(urlToNavigate);
+        }
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Widget added successfully")),
         );
@@ -460,7 +489,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         crossAxisCount: 3,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        childAspectRatio: 1.1,
+        childAspectRatio: 0.85, // Decreased from 1.1 for more vertical space
       ),
       itemCount: plugins.length,
       itemBuilder: (context, index) {
@@ -502,18 +531,19 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                         : colorScheme.onSurface,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: Text(
-                    plugin.description,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: colorScheme.onSurfaceVariant,
+                Flexible(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: Text(
+                      plugin.description,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 2, // Allowed 2 lines
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
