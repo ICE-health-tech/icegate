@@ -222,7 +222,7 @@ class PersonBlock {
 
   // --- ACTIONS ---
 
-  /// Fetch user profile and details together from Supabase
+  /// Fetch user profile and details together (Local-first with Supabase fallback)
   Future<void> fetchFromDatabase(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") {
@@ -232,86 +232,115 @@ class PersonBlock {
 
     try {
       print(
-        "🔍 [PersonBlock] Fetching profile for ${user.id} from Supabase (persons + profiles)...",
+        "🔍 [PersonBlock] Syncing profile for ${user.id} (Local + Remote)...",
       );
 
-      // Fetch from both tables using a single request if possible, or parallel
-      final results = await Future.wait([
-        Supabase.instance.client
-            .from('persons')
-            .select()
-            .eq('id', user.id)
-            .maybeSingle(),
-        Supabase.instance.client
-            .from('profiles')
-            .select()
-            .eq('id', user.id)
-            .maybeSingle(),
-        Supabase.instance.client
-            .from('detail_information')
-            .select()
-            .eq('id', user.id)
-            .maybeSingle(),
-      ]);
+      // Fetch from ALL sources (Separate remote and local to avoid type inference issues)
+      final remotePerson = await Supabase.instance.client
+          .from('persons')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+      final remoteProfile = await Supabase.instance.client
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
+      final remoteDetails = await Supabase.instance.client
+          .from('detail_information')
+          .select()
+          .eq('id', user.id)
+          .maybeSingle();
 
-      final personData = results[0];
-      final profileData = results[1];
-      final detailData = results[2];
+      final localPerson = await personDao.getPersonById(user.id);
+      final localProfile = await personDao.getProfileForPerson(user.id);
+      final localDetails = await personDao.getCVAddressForPerson(user.id);
 
-      if (personData != null || profileData != null) {
-        // Map data from multiple sources
-        final details = UserDetails(
-          bio: profileData?['bio'] ?? detailData?['bio'] ?? '',
-          occupation:
-              profileData?['occupation'] ?? detailData?['occupation'] ?? '',
-          location: profileData?['location'] ?? detailData?['location'] ?? '',
-          company: detailData?['company'] ?? '',
-          university: detailData?['university'] ?? '',
-          country: detailData?['country'] ?? '',
-          githubUrl:
-              profileData?['github_url'] ?? detailData?['github_url'] ?? '',
-          linkedinUrl:
-              profileData?['linkedin_url'] ?? detailData?['linkedin_url'] ?? '',
-          educationLevel:
-              profileData?['education_level'] ??
-              detailData?['education_level'] ??
-              '',
-          websiteUrl:
-              profileData?['website_url'] ?? detailData?['website_url'] ?? '',
-          email: user.email ?? '',
+      // 1. Construct Details (Prioritize Local > Remote > Auth)
+      final details = UserDetails(
+        bio:
+            localDetails?.bio ??
+            localProfile?.bio ??
+            remoteProfile?['bio'] ??
+            remoteDetails?['bio'] ??
+            '',
+        occupation:
+            localDetails?.occupation ??
+            localProfile?.occupation ??
+            remoteProfile?['occupation'] ??
+            remoteDetails?['occupation'] ??
+            '',
+        location:
+            localDetails?.location ??
+            localProfile?.location ??
+            remoteProfile?['location'] ??
+            remoteDetails?['location'] ??
+            '',
+        company: localDetails?.company ?? remoteDetails?['company'] ?? '',
+        university:
+            localDetails?.university ?? remoteDetails?['university'] ?? '',
+        country: localDetails?.country ?? remoteDetails?['country'] ?? '',
+        githubUrl:
+            localDetails?.githubUrl ??
+            localProfile?.githubUrl ??
+            remoteProfile?['github_url'] ??
+            remoteDetails?['github_url'] ??
+            '',
+        linkedinUrl:
+            localDetails?.linkedinUrl ??
+            localProfile?.linkedinUrl ??
+            remoteProfile?['linkedin_url'] ??
+            remoteDetails?['linkedin_url'] ??
+            '',
+        educationLevel:
+            localDetails?.educationLevel ??
+            localProfile?.educationLevel ??
+            remoteProfile?['education_level'] ??
+            remoteDetails?['education_level'] ??
+            '',
+        websiteUrl:
+            localDetails?.websiteUrl ??
+            localProfile?.websiteUrl ??
+            remoteProfile?['website_url'] ??
+            remoteDetails?['website_url'] ??
+            '',
+        email: user.email ?? '',
+      );
+
+      // 2. Construct Profile (Prioritize Local > Remote > Metadata)
+      final profile = UserProfile(
+        id: localPerson?.id ?? remotePerson?['id'] ?? user.id,
+        firstName:
+            localPerson?.firstName ??
+            remotePerson?['first_name'] ??
+            user.userMetadata?['first_name'] ??
+            'User',
+        lastName:
+            localPerson?.lastName ??
+            remotePerson?['last_name'] ??
+            user.userMetadata?['last_name'] ??
+            '',
+        username:
+            remotePerson?['username'] ??
+            user.userMetadata?['user_name'] ??
+            'user',
+        profileImageUrl:
+            localPerson?.profileImageUrl ??
+            remotePerson?['profile_image_url'] ??
+            user.userMetadata?['avatar_url'] ??
+            '',
+      );
+
+      batch(() {
+        information.value = UserInformation(
+          profiles: profile,
+          details: details,
         );
+      });
 
-        final profile = UserProfile(
-          id: personData?['id'] ?? personData?['person_id'] ?? user.id,
-          firstName:
-              personData?['first_name'] ??
-              user.userMetadata?['first_name'] ??
-              'User',
-          lastName:
-              personData?['last_name'] ?? user.userMetadata?['last_name'] ?? '',
-          username:
-              personData?['username'] ??
-              user.userMetadata?['user_name'] ??
-              'user',
-          profileImageUrl:
-              personData?['profile_image_url'] ??
-              user.userMetadata?['avatar_url'] ??
-              '',
-        );
-
-        batch(() {
-          information.value = UserInformation(
-            profiles: profile,
-            details: details,
-          );
-        });
-        print(
-          "✅ [PersonBlock] Multi-source Profile fetched for ${profile.username}",
-        );
-      } else {
-        print("⚠️ [PersonBlock] No profile found in Supabase. Falling back...");
-        _applyGuestFallback();
-      }
+      print(
+        "✅ [PersonBlock] Profile synced from merged sources for ${profile.username}",
+      );
     } catch (e) {
       print("❌ [PersonBlock] Failed to fetch user profile: $e");
       if (information.value.profiles.firstName == 'Initial') {

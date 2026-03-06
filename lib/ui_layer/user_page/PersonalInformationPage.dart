@@ -422,12 +422,26 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           ),
                         ),
 
+                      // Bio (Edit Mode)
+                      if (_isEditing)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 24),
+                          child: _buildModernTextField(
+                            controller: _bioController,
+                            label: 'Bio',
+                            icon: Icons.notes_rounded,
+                            enabled: true,
+                            maxLines: 5,
+                            minLines: 3,
+                          ),
+                        ),
+
                       // Skills Section (Horizontal Scroll/Wrap)
-                      _buildSectionHeader(
-                        context,
-                        'Skills',
-                        Icons.auto_awesome_rounded,
-                      ),
+                      // _buildSectionHeader(
+                      //   context,
+                      //   'Skills',
+                      //   Icons.auto_awesome_rounded,
+                      // ),
                       const SizedBox(height: 12),
                       _buildSkillsSection(personBlock, colorScheme),
 
@@ -925,6 +939,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     required IconData icon,
     required bool enabled,
     TextInputType? keyboardType,
+    int? maxLines = 1,
+    int? minLines,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
@@ -980,6 +996,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      maxLines: maxLines,
+      minLines: minLines,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),

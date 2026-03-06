@@ -414,6 +414,11 @@ class ScoreBlock {
     }
   }
 
+  Future<void> manualSocialIncrement(double points) async {
+    if (_personID.isEmpty) return;
+    await _dao.incrementSocialScore(_personID, points);
+  }
+
   Future<void> persistentCareerIncrement(double points) async {
     if (_personID.isEmpty) return;
     await _dao.incrementCareerScore(_personID, points);

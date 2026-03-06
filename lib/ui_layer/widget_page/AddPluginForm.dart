@@ -163,9 +163,9 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         Navigator.of(context).pop();
 
         // 2. Navigate if applicable
-        if (isInternal && urlToNavigate != null) {
-          context.push(urlToNavigate);
-        }
+        // if (isInternal && urlToNavigate != null) {
+        //   context.push(urlToNavigate);
+        // }
 
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Widget added successfully")),

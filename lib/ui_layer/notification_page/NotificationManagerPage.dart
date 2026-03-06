@@ -542,7 +542,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               return StreamBuilder<List<CustomNotificationData>>(
                 stream: customNotificationDao.watchAllNotifications(personId),
                 builder: (context, snapshot) {
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  final notifications = snapshot.data ?? [];
+                  if (notifications.isEmpty) {
                     return Center(
                       child: Padding(
                         padding: const EdgeInsets.symmetric(vertical: 64),
@@ -569,7 +570,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     );
                   }
                   return Column(
-                    children: snapshot.data!.map((notif) {
+                    children: notifications.map((notif) {
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 12),
                         child: _buildCustomNotificationTile(context, notif),

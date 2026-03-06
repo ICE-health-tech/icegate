@@ -1,21 +1,21 @@
 import '../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
-import 'CarTracker.dart';
+// import 'CarTracker.dart';
 import 'IOTTracker/IOTTracker.dart';
 import '../../../orchestration_layer/Action/WebView/LiveMapPlugin.dart';
-import 'GoogleCalendar.dart';
-import 'Gmail.dart';
-import 'Trello.dart';
+import 'WebPlugin/GoogleCalendar.dart';
+import 'WebPlugin/Gmail.dart';
+import 'WebPlugin/Trello.dart';
 import 'Notion/Notion.dart';
-import 'Spotify.dart';
-import 'GitHub.dart';
-import 'Weather.dart';
-import 'CryptoTracker.dart';
+import 'WebPlugin/Spotify.dart';
+import 'WebPlugin/GitHub.dart';
+import 'WebPlugin/Weather.dart';
+import 'WebPlugin/CryptoTracker.dart';
 
 /// Registry of all available plugins
 class AvailablePlugins {
   static const List<BasePluginProtocol> all = [
-    CarTrackerPlugin(),
+    // CarTrackerPlugin(),
     IOTTrackerPlugin(),
     // OSMMapPlugin(),
     LiveMapPlugin(),

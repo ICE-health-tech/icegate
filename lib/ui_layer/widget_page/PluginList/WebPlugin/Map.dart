@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
+import '../../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
 
 /// OpenStreetMap plugin for displaying interactive maps

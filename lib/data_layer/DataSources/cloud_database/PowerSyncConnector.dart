@@ -117,9 +117,10 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
             }
             break;
           case UpdateType.patch:
-            if (table == 'health_metrics') {
-              // For health_metrics, the local deterministic ID may not match
-              // the existing Supabase row. Use upsert with onConflict instead.
+            if (table == 'health_metrics' &&
+                opData.containsKey('person_id') &&
+                opData.containsKey('date')) {
+              // Only use onConflict upsert when both fields are present.
               await Supabase.instance.client.from(table).upsert({
                 'id': id,
                 ...opData,
@@ -150,6 +151,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
       // 22008 = "date/time field value out of range" (stale integer timestamp)
       // 23505 = "duplicate key violation" (stale data conflicts)
       // 23503 = "foreign key violation" (missing parent data like guest ID)
+      // 23502 = "not-null constraint" (missing required fields in partial sync)
       // 22P02 = "invalid text representation" (e.g. UUID/empty string for integer column)
       // These are unrecoverable stale data — skip to unblock the queue.
       if (errorCode == 'PGRST204' ||
@@ -157,6 +159,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
           errorCode == '22008' ||
           errorCode == '23505' ||
           errorCode == '23503' ||
+          errorCode == '23502' ||
           errorCode == '22P02') {
         print(
           '⚠️ PowerSync: Skipping unrecoverable error ($errorCode). Completing transaction to clear queue.',

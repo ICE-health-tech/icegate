@@ -692,7 +692,7 @@ class _TextEditorPageState extends State<TextEditorPage>
             if (!_focusMode && !_isPreview) _buildMarkdownToolbar(colorScheme),
 
             Positioned(
-              bottom: 16,
+              bottom: 64,
               // left: 24,
               right: 24,
               child: AnimatedContainer(

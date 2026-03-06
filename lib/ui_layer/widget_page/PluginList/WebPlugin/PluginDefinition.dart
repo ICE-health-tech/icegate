@@ -1,4 +1,4 @@
-import '../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
+import '../../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 
 /// Base class for plugin definitions
 /// @deprecated Use BasePluginDefinition instead for enhanced functionality

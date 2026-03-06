@@ -50,6 +50,7 @@ class _adapterState extends State<Adapter> {
         imageUrl: "assets/internalwidget/defaul.png",
         url: "/canvas",
         alias: "WidgetPage",
+        scope: 'home',
       );
 
       await dao.insertInternalWidget(
@@ -58,6 +59,7 @@ class _adapterState extends State<Adapter> {
         imageUrl: "assets/internalwidget/defaul.png",
         url: "/health",
         alias: "HealthPage",
+        scope: 'home',
       );
     }
 

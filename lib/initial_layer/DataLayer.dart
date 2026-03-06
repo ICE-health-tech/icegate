@@ -348,6 +348,17 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
               focusBlock.fetchDailyStats();
 
               notificationService.syncAllNotifications(personId);
+
+              // Re-initialize widget blocks with resolved personID
+              internalWidgetBlock.refreshBlock(
+                database.internalWidgetsDAO,
+                personId,
+                'home',
+              );
+              externalWidgetBlock.refreshBlock(
+                database.externalWidgetsDAO,
+                personId,
+              );
             });
           }
         }),

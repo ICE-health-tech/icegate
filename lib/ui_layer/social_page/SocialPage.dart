@@ -10,42 +10,538 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_shield/orchestration_layer/IDGen.dart';
 import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
+
 import 'package:drift/drift.dart' show Value;
 import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
 
+  static final activeTab = signal(0);
+
   static Widget icon(BuildContext context, {double? size}) {
-    return MainButton(
-      type: "social",
-      destination: "/social",
-      mainFunction: () => context.go("/"),
-      onSwipeUp: () {
-        WidgetNavigatorAction.smartPop(context);
-      },
-      onSwipeRight: () {
-        WidgetNavigatorAction.smartPop(context);
-      },
-      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
-      size: size,
-      icon: Icons.account_circle_outlined,
-      subButtons: [
-        // SubButton(
-        //   icon: Icons.favorite,
-        //   backgroundColor: Colors.pink,
-        //   onPressed: () {},
-        // ),
-        // SubButton(
-        //   icon: Icons.family_restroom,
-        //   backgroundColor: Colors.orange,
-        //   onPressed: () {},
-        // ),
-      ],
+    return Watch((context) {
+      final index = activeTab.value;
+      IconData iconData;
+      VoidCallback action;
+
+      switch (index) {
+        case 0:
+          iconData = Icons.share_rounded;
+          action = () {
+            Share.share(
+              'Check out my rank on ICE Shield! I am making progress!',
+            );
+          };
+          break;
+        case 1:
+          iconData = Icons.person_add_rounded;
+          action = () => showAddOrImportOptions(context);
+          break;
+        case 2:
+          iconData = Icons.add_task_rounded;
+          action = () => showAddFeatDialog(context);
+          break;
+        default:
+          iconData = Icons.account_circle_outlined;
+          action = () => context.go("/");
+      }
+
+      return MainButton(
+        type: "social",
+        destination: "/social",
+        mainFunction: action,
+        onSwipeUp: () {
+          WidgetNavigatorAction.smartPop(context);
+        },
+        onSwipeRight: () {
+          WidgetNavigatorAction.smartPop(context);
+        },
+        onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
+        size: size,
+        icon: iconData,
+        subButtons: [],
+      );
+    });
+  }
+
+  static void showAddFeatDialog(BuildContext context, {QuestData? quest}) {
+    final titleController = TextEditingController(text: quest?.title);
+    final expController = TextEditingController(
+      text: quest?.rewardExp?.toString() ?? "50",
     );
+    final imageController = TextEditingController(text: quest?.imageUrl);
+    final ImagePicker picker = ImagePicker();
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            title: Text(
+              quest == null ? "RECORD ACHIEVEMENT" : "UPDATE ACHIEVEMENT",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: titleController,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: buildInputDecoration(
+                      context,
+                      "Achievement Title (e.g. Swinging in 2h)",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: expController,
+                    keyboardType: TextInputType.number,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: buildInputDecoration(
+                      context,
+                      "System EXP Reward",
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (imageController.text.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(12),
+                        child: imageController.text.startsWith('http')
+                            ? Image.network(
+                                imageController.text,
+                                height: 100,
+                                width: 350,
+                                fit: BoxFit.cover,
+                              )
+                            : Image.file(
+                                File(imageController.text),
+                                height: 100,
+                                width: 350,
+                                fit: BoxFit.cover,
+                              ),
+                      ),
+                    ),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: imageController,
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                          decoration: buildInputDecoration(
+                            context,
+                            "Image URL",
+                          ),
+                          onChanged: (v) => setModalState(() {}),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      IconButton.filled(
+                        onPressed: () async {
+                          final XFile? image = await picker.pickImage(
+                            source: ImageSource.gallery,
+                          );
+                          if (image != null) {
+                            setModalState(() {
+                              imageController.text = image.path;
+                            });
+                          }
+                        },
+                        icon: const Icon(Icons.add_photo_alternate_rounded),
+                        style: IconButton.styleFrom(
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primaryContainer,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "CANCEL",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (titleController.text.isNotEmpty) {
+                    try {
+                      final dao = context.read<QuestDAO>();
+                      final personBlock = context.read<PersonBlock>();
+                      final personId = personBlock.currentPersonID.value;
+
+                      if (quest == null) {
+                        await dao.insertQuest(
+                          QuestsTableCompanion(
+                            id: Value(IDGen.UUIDV7()),
+                            title: Value(titleController.text),
+                            personID: Value(personId),
+                            rewardExp: Value(
+                              int.tryParse(expController.text) ?? 50,
+                            ),
+                            isCompleted: const Value(true),
+                            category: const Value('feat'),
+                            currentValue: const Value(1.0),
+                            targetValue: const Value(1.0),
+                            createdAt: Value(DateTime.now()),
+                            imageUrl: Value(
+                              imageController.text.isNotEmpty
+                                  ? imageController.text
+                                  : null,
+                            ),
+                          ),
+                        );
+                      } else {
+                        await dao.updateQuest(
+                          quest.copyWith(
+                            title: Value(titleController.text),
+                            rewardExp: Value(
+                              int.tryParse(expController.text) ?? 50,
+                            ),
+                            imageUrl: Value(
+                              imageController.text.isNotEmpty
+                                  ? imageController.text
+                                  : null,
+                            ),
+                          ),
+                        );
+                      }
+
+                      if (context.mounted) {
+                        Navigator.pop(context);
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              quest == null
+                                  ? "ACHIEVEMENT RECORDED IN SYSTEM"
+                                  : "ACHIEVEMENT UPDATED",
+                            ),
+                            backgroundColor: Colors.green,
+                          ),
+                        );
+                      }
+                    } catch (e) {
+                      debugPrint("Error saving feat: $e");
+                      if (context.mounted) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text("SYSTEM ERROR: $e"),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                      }
+                    }
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: Text(
+                  quest == null ? "RECORD FEAT" : "UPDATE FEAT",
+                  style: const TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static InputDecoration buildInputDecoration(
+    BuildContext context,
+    String label,
+  ) {
+    return InputDecoration(
+      labelText: label,
+      labelStyle: TextStyle(
+        color: Theme.of(context).colorScheme.onSurfaceVariant,
+        fontSize: 14,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.outlineVariant,
+        ),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+      ),
+      filled: true,
+      fillColor: Theme.of(context).colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+    );
+  }
+
+  static void showAddOrImportOptions(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.contact_phone_rounded),
+              title: const Text('Import from Contacts'),
+              onTap: () {
+                Navigator.pop(context);
+                importContacts(context);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.person_add_rounded),
+              title: const Text('Add Manually'),
+              onTap: () {
+                Navigator.pop(context);
+                showManualAddPersonDialog(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  static void showManualAddPersonDialog(BuildContext context) {
+    final firstNameController = TextEditingController();
+    final lastNameController = TextEditingController();
+    String selectedRelationship = 'friend';
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) {
+          return AlertDialog(
+            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+              side: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+            title: Text(
+              "REGISTER AGENT",
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1,
+              ),
+            ),
+            content: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: firstNameController,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: buildInputDecoration(context, "First Name"),
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: lastNameController,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface,
+                    ),
+                    decoration: buildInputDecoration(context, "Last Name"),
+                  ),
+                  const SizedBox(height: 24),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      "RELATIONSHIP TYPE",
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                        color: Theme.of(context).colorScheme.primary,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  DropdownButtonFormField<String>(
+                    value: selectedRelationship,
+                    dropdownColor: Theme.of(
+                      context,
+                    ).colorScheme.surfaceContainerHigh,
+                    decoration: buildInputDecoration(context, ""),
+                    items: ['friend', 'dating', 'family'].map((type) {
+                      return DropdownMenuItem(
+                        value: type,
+                        child: Text(
+                          type.toUpperCase(),
+                          style: TextStyle(
+                            color: Theme.of(context).colorScheme.onSurface,
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (v) {
+                      if (v != null) {
+                        setModalState(() {
+                          selectedRelationship = v;
+                        });
+                      }
+                    },
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(
+                  "CANCEL",
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  if (firstNameController.text.isNotEmpty) {
+                    final dao = context.read<PersonManagementDAO>();
+                    await dao.createContact(
+                      firstName: firstNameController.text,
+                      lastName: lastNameController.text,
+                      relationship: selectedRelationship,
+                    );
+                    if (context.mounted) Navigator.pop(context);
+                  }
+                },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text(
+                  "CREATE LINK",
+                  style: TextStyle(fontWeight: FontWeight.w900),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  static Future<void> importContacts(BuildContext context) async {
+    if (await FlutterContacts.requestPermission()) {
+      final allContacts = await FlutterContacts.getContacts(
+        withProperties: true,
+      );
+
+      final dao = context.read<PersonManagementDAO>();
+      final existingPeopleStream = await dao.watchAllPersons().first;
+      final existingFullNames = existingPeopleStream.map((p) {
+        final first = p.firstName;
+        final last = p.lastName;
+        return '$first $last'.trim().toLowerCase();
+      }).toSet();
+
+      final newContacts = <Contact>[];
+      final seenNewNames = <String>{};
+
+      for (var c in allContacts) {
+        String contactName = c.displayName.trim();
+        if (contactName.isEmpty ||
+            contactName.toLowerCase() == 'null null' ||
+            contactName.toLowerCase() == 'null') {
+          final first = c.name.first.trim();
+          final last = c.name.last.trim();
+          contactName = '$first $last'.trim();
+        }
+
+        contactName = contactName.toLowerCase();
+        if (contactName.isEmpty) continue;
+
+        if (!existingFullNames.contains(contactName) &&
+            !seenNewNames.contains(contactName)) {
+          newContacts.add(c);
+          seenNewNames.add(contactName);
+        }
+      }
+
+      if (context.mounted) {
+        showModalBottomSheet(
+          context: context,
+          builder: (context) => ListView.builder(
+            itemCount: newContacts.length,
+            itemBuilder: (context, index) {
+              final c = newContacts[index];
+              String displayName = c.displayName.trim();
+              if (displayName.isEmpty ||
+                  displayName.toLowerCase() == 'null null' ||
+                  displayName.toLowerCase() == 'null') {
+                final first = c.name.first.trim();
+                final last = c.name.last.trim();
+                displayName = '$first $last'.trim();
+              }
+
+              return ListTile(
+                title: Text(
+                  displayName.isNotEmpty ? displayName : 'Unknown Contact',
+                ),
+                onTap: () async {
+                  String first = c.name.first.trim();
+                  String last = c.name.last.trim();
+
+                  if (first.isEmpty && last.isEmpty) {
+                    first = displayName;
+                  }
+
+                  await dao.createContact(
+                    firstName: first,
+                    lastName: last,
+                    relationship: 'friend',
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                },
+              );
+            },
+          ),
+        );
+      }
+    }
   }
 
   @override
@@ -60,6 +556,9 @@ class _SocialPageState extends State<SocialPage>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    _tabController.addListener(() {
+      SocialPage.activeTab.value = _tabController.index;
+    });
   }
 
   @override
@@ -97,7 +596,6 @@ class _SocialPageState extends State<SocialPage>
             ),
           ],
         ),
-        floatingActionButton: _buildFloatingActionButton(context),
       ),
     );
   }
@@ -122,29 +620,9 @@ class _SocialPageState extends State<SocialPage>
           ),
         ],
       ),
-      child: Column(
+      child: const Column(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              // Column(
-              //   crossAxisAlignment: CrossAxisAlignment.start,
-              //   children: [
-              //     Text(
-              //       "SYSTEM STATUS",
-              //       style: TextStyle(
-              //         color: colorScheme.primary.withOpacity(0.7),
-              //         fontSize: 10,
-              //         fontWeight: FontWeight.bold,
-              //         letterSpacing: 2,
-              //       ),
-              //     ),
-              //     const SizedBox(height: 4),
-
-              //   ],
-              // ),
-            ],
-          ),
+          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: []),
         ],
       ),
     );
@@ -154,10 +632,10 @@ class _SocialPageState extends State<SocialPage>
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       height: 40,
-      // margin: const EdgeInsets.symmetric(horizontal: 15),
+      // padding: EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(5),
         border: Border.all(color: colorScheme.outlineVariant),
       ),
       child: TabBar(
@@ -171,38 +649,13 @@ class _SocialPageState extends State<SocialPage>
         labelColor: colorScheme.primary,
         unselectedLabelColor: colorScheme.onSurfaceVariant,
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        padding: EdgeInsets.symmetric(horizontal: 10),
         tabs: const [
           Tab(text: 'RANKING'),
           Tab(text: 'RELATIONSHIP'),
           Tab(text: 'ACHIEVEMENTS'),
         ],
       ),
-    );
-  }
-
-  Widget _buildFloatingActionButton(BuildContext context) {
-    return ListenableBuilder(
-      listenable: _tabController,
-      builder: (context, child) {
-        return FloatingActionButton(
-          onPressed: () {
-            if (_tabController.index == 2) {
-              _showAddFeatDialog(context);
-            } else {
-              _showAddOrImportOptions(context);
-            }
-          },
-          backgroundColor: Theme.of(context).colorScheme.primary,
-          elevation: 4,
-          child: Icon(
-            _tabController.index == 2
-                ? Icons.add_task_rounded
-                : Icons.person_add_rounded,
-            color: Colors.white,
-            size: 28,
-          ),
-        );
-      },
     );
   }
 
@@ -236,12 +689,13 @@ class _SocialPageState extends State<SocialPage>
             final isTopThree = index < 3;
 
             Color rankColor = Colors.white38;
-            if (index == 0)
+            if (index == 0) {
               rankColor = Colors.amber;
-            else if (index == 1)
+            } else if (index == 1) {
               rankColor = const Color(0xFFC0C0C0); // Silver
-            else if (index == 2)
+            } else if (index == 2) {
               rankColor = const Color(0xFFCD7F32); // Bronze
+            }
 
             return Container(
               margin: const EdgeInsets.only(bottom: 16),
@@ -396,7 +850,7 @@ class _SocialPageState extends State<SocialPage>
           if (filtered.isEmpty) {
             return _buildEmptyState(
               context,
-              'No agents registered in your network.',
+              'No person registered in your network.',
               Icons.people_outline_rounded,
             );
           }
@@ -466,229 +920,379 @@ class _SocialPageState extends State<SocialPage>
             ),
             Padding(
               padding: const EdgeInsets.all(20),
-              child: Row(
+              child: Column(
                 children: [
-                  // Avatar with Facebook-style status ring
-                  Stack(
-                    alignment: Alignment.bottomRight,
+                  Row(
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(3),
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              relationshipColor,
-                              relationshipColor.withOpacity(0.3),
-                            ],
+                      // Tactical Avatar
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          Container(
+                            width: 72,
+                            height: 72,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              border: Border.all(
+                                color: relationshipColor.withOpacity(0.5),
+                                width: 2,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: relationshipColor.withOpacity(0.2),
+                                  blurRadius: 10,
+                                  spreadRadius: 2,
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 32,
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.onSurface,
-                          backgroundImage: person.profileImageUrl != null
-                              ? NetworkImage(person.profileImageUrl!)
-                              : null,
-                          child: person.profileImageUrl == null
-                              ? Text(
-                                  person.firstName[0].toUpperCase(),
+                          CircleAvatar(
+                            radius: 32,
+                            backgroundColor:
+                                colorScheme.surfaceContainerHighest,
+                            backgroundImage: person.profileImageUrl != null
+                                ? NetworkImage(person.profileImageUrl!)
+                                : null,
+                            child: person.profileImageUrl == null
+                                ? Text(
+                                    person.firstName[0].toUpperCase(),
+                                    style: TextStyle(
+                                      color: relationshipColor,
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 22,
+                                    ),
+                                  )
+                                : null,
+                          ),
+                          // Status Indicator
+                          Positioned(
+                            bottom: 2,
+                            right: 2,
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF00FFA3),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: colorScheme.surface,
+                                  width: 2,
+                                ),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: const Color(
+                                      0xFF00FFA3,
+                                    ).withOpacity(0.5),
+                                    blurRadius: 5,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    '${person.firstName} ${person.lastName ?? ''}',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 18,
+                                      letterSpacing: 0.5,
+                                    ),
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.verified_rounded,
+                                  size: 16,
+                                  color: colorScheme.primary,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              person.relationship.toUpperCase(),
+                              style: TextStyle(
+                                color: relationshipColor.withOpacity(0.8),
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            // BOND / AFFECTION BAR
+                            Stack(
+                              children: [
+                                Container(
+                                  height: 6,
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(3),
+                                  ),
+                                ),
+                                FractionallySizedBox(
+                                  widthFactor: (person.affection % 100) / 100,
+                                  child: Container(
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(3),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: relationshipColor.withOpacity(
+                                            0.4,
+                                          ),
+                                          blurRadius: 8,
+                                        ),
+                                      ],
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          relationshipColor,
+                                          relationshipColor.withOpacity(0.6),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
+                                  'TRUST LEVEL',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurfaceVariant
+                                        .withOpacity(0.6),
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                Text(
+                                  'LVL ${(person.affection / 100).floor() + 1}',
                                   style: TextStyle(
                                     color: relationshipColor,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 22,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w900,
                                   ),
-                                )
-                              : null,
-                        ),
-                      ),
-                      // Facebook Active Status Dot
-                      Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF31A24C), // FB Active Green
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.surfaceContainerHigh,
-                            width: 3,
-                          ),
+                                ),
+                              ],
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(width: 18),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Flexible(
-                              child: Text(
-                                '${person.firstName} ${person.lastName ?? ''}',
-                                style: TextStyle(
-                                  color: Theme.of(
-                                    context,
-                                  ).colorScheme.onSurface,
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 18,
-                                  letterSpacing: -0.3,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // FACEBOOK STYLE VERIFIED BADGE
-                            Container(
-                              padding: const EdgeInsets.all(3),
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF1877F2), // FB Blue
-                                shape: BoxShape.circle,
-                              ),
-                              child: const Icon(
-                                Icons.check,
-                                size: 10,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          person.relationship.toUpperCase(),
-                          style: TextStyle(
-                            color: relationshipColor.withOpacity(0.9),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                          ),
-                        ),
-                        const SizedBox(height: 14),
-                        // BOND / AFFECTION BAR (Glowing FB Style)
-                        Stack(
-                          children: [
-                            Container(
-                              height: 8,
-                              decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.06),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                            ),
-                            FractionallySizedBox(
-                              widthFactor: (person.affection % 100) / 100,
-                              child: Container(
-                                height: 8,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(4),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: relationshipColor.withOpacity(0.4),
-                                      blurRadius: 10,
-                                      spreadRadius: 1,
-                                    ),
-                                  ],
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      relationshipColor,
-                                      relationshipColor.withOpacity(0.6),
+                  const SizedBox(height: 16),
+                  // ACTION BUTTONS
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextButton(
+                          onPressed: () async {
+                            final scoreBlock = context.read<ScoreBlock>();
+
+                            // 1. Increase affection in local DB
+                            await dao.increaseContactAffection(
+                              person.id,
+                              amount: DEFAULT_AFFECTION_INCREASE,
+                            );
+
+                            // 2. Add points to Social Score manually
+                            await scoreBlock.manualSocialIncrement(5.0);
+
+                            if (mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.auto_awesome,
+                                        color: relationshipColor,
+                                        size: 16,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        'Bond Strengthened! Social Score +5.0',
+                                        style: TextStyle(
+                                          color: colorScheme.onPrimaryContainer,
+                                        ),
+                                      ),
                                     ],
                                   ),
+                                  backgroundColor: colorScheme.primaryContainer,
+                                  behavior: SnackBarBehavior.floating,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  duration: const Duration(seconds: 1),
+                                ),
+                              );
+                            }
+                          },
+                          style: TextButton.styleFrom(
+                            backgroundColor: relationshipColor.withOpacity(0.1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: BorderSide(
+                                color: relationshipColor.withOpacity(0.3),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                          ),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.favorite_rounded,
+                                size: 16,
+                                color: relationshipColor,
+                              ),
+                              const SizedBox(width: 8),
+                              const Text(
+                                'STRENGTHEN BOND',
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 1,
                                 ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              'INCREASE AFFECTION',
-                              style: TextStyle(
-                                color: Colors.white38,
-                                fontSize: 8,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 1,
-                              ),
-                            ),
-                            Text(
-                              'LVL ${(person.affection / 100).floor() + 1}',
-                              style: TextStyle(
-                                color: relationshipColor,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                          ],
+                      ),
+                      const SizedBox(width: 12),
+                      Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerHighest
+                              .withOpacity(0.3),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: colorScheme.outlineVariant),
                         ),
-                      ],
-                    ),
+                        child: IconButton(
+                          onPressed: () =>
+                              _showRelationshipOptions(context, person, dao),
+                          icon: const Icon(Icons.settings_outlined, size: 20),
+                          tooltip: 'Options',
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
-            // Menu Button at top right
-            Positioned(
-              top: 8,
-              right: 8,
-              child: PopupMenuButton<String>(
-                icon: const Icon(
-                  Icons.more_vert_rounded,
-                  color: Colors
-                      .white, // Or colorScheme.onSurface if you want it to change
-                  size: 20,
-                ),
-                color: Theme.of(context).colorScheme.surfaceContainerHighest,
-                onSelected: (value) async {
-                  if (value == 'delete') {
-                    await dao.deleteContact(person.id);
-                  } else if (value == 'increase') {
-                    await dao.increaseContactAffection(
-                      person.id,
-                      amount: DEFAULT_AFFECTION_INCREASE,
-                    );
-                  } else {
-                    await dao.updateContactRelationship(person.id, value);
-                  }
-                },
-                itemBuilder: (context) => [
-                  PopupMenuItem(
-                    value: 'increase',
-                    child: Text(
-                      'INCREASE RELATIONSHIP',
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                    ),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'friend',
-                    child: Text('CHANGE TO FRIEND'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'dating',
-                    child: Text('CHANGE TO DATING'),
-                  ),
-                  const PopupMenuItem(
-                    value: 'family',
-                    child: Text('CHANGE TO FAMILY'),
-                  ),
-                  const PopupMenuDivider(),
-                  const PopupMenuItem(
-                    value: 'delete',
-                    child: Text(
-                      'DELTE LINK',
-                      style: TextStyle(color: Colors.redAccent),
-                    ),
-                  ),
-                ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showRelationshipOptions(
+    BuildContext context,
+    PersonData person,
+    PersonManagementDAO dao,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) => Container(
+        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'MANAGE RELATIONSHIP',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+                color: Theme.of(context).colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            _buildOptionItem(
+              context,
+              icon: Icons.person_add_disabled_rounded,
+              title: 'Change to Friend',
+              onTap: () {
+                dao.updateContactRelationship(person.id, 'friend');
+                Navigator.pop(context);
+              },
+            ),
+            _buildOptionItem(
+              context,
+              icon: Icons.favorite_rounded,
+              title: 'Change to Dating',
+              onTap: () {
+                dao.updateContactRelationship(person.id, 'dating');
+                Navigator.pop(context);
+              },
+            ),
+            _buildOptionItem(
+              context,
+              icon: Icons.family_restroom_rounded,
+              title: 'Change to Family',
+              onTap: () {
+                dao.updateContactRelationship(person.id, 'family');
+                Navigator.pop(context);
+              },
+            ),
+            const Divider(height: 32),
+            _buildOptionItem(
+              context,
+              icon: Icons.delete_outline_rounded,
+              title: 'Delete Bond',
+              isDestructive: true,
+              onTap: () {
+                dao.deleteContact(person.id);
+                Navigator.pop(context);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildOptionItem(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required VoidCallback onTap,
+    bool isDestructive = false,
+  }) {
+    final color = isDestructive
+        ? Colors.redAccent
+        : Theme.of(context).colorScheme.onSurface;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 16),
+            Text(
+              title,
+              style: TextStyle(
+                color: color,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
               ),
             ),
           ],
@@ -700,13 +1304,26 @@ class _SocialPageState extends State<SocialPage>
   IconData _getRelationshipIcon(String type) {
     switch (type.toLowerCase()) {
       case 'friend':
-        return Icons.radar_rounded;
+        return Icons.people_rounded;
       case 'dating':
         return Icons.favorite_rounded;
       case 'family':
-        return Icons.shield_rounded;
+        return Icons.family_restroom_rounded;
       default:
-        return Icons.person_pin_rounded;
+        return Icons.person_rounded;
+    }
+  }
+
+  Color _getRelationshipColor(String type) {
+    switch (type.toLowerCase()) {
+      case 'friend':
+        return const Color(0xFF1877F2); // Vibrant FB Blue
+      case 'dating':
+        return const Color(0xFFFF2D55); // Neon Pink
+      case 'family':
+        return const Color.fromARGB(255, 30, 214, 40); // System Green
+      default:
+        return const Color(0xFF8E8E93); // System Gray
     }
   }
 
@@ -751,19 +1368,12 @@ class _SocialPageState extends State<SocialPage>
       final currentPersonId = personBlock.currentPersonID.value ?? "";
 
       return StreamBuilder<List<QuestData>>(
-        stream: questDao.watchQuestsByPerson(
-          currentPersonId,
-        ), // Filter by current user
+        stream: questDao.watchQuestsByPerson(currentPersonId),
         builder: (context, snapshot) {
-          if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return _buildEmptyState(
-              context,
-              'No achievements recorded in the System.',
-              Icons.emoji_events_outlined,
-            );
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
           }
 
-          // Filter for 'feat' category to show only achievements
           final quests = snapshot.data!
               .where((q) => q.category?.toLowerCase() == 'feat')
               .toList();
@@ -776,26 +1386,21 @@ class _SocialPageState extends State<SocialPage>
             );
           }
 
-          // Sort: completed feats first, then other completed, then active
-          quests.sort((a, b) {
-            if (a.isCompleted != b.isCompleted) {
-              return a.isCompleted == true ? -1 : 1;
-            }
-            return 0;
-          });
+          final screenWidth = MediaQuery.of(context).size.width;
+          final crossAxisCount = screenWidth < 600 ? 2 : 3;
 
           return GridView.builder(
             padding: const EdgeInsets.all(24),
-            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: 2,
-              crossAxisSpacing: 20,
-              mainAxisSpacing: 20,
+            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: crossAxisCount,
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
               childAspectRatio: 0.85,
             ),
             itemCount: quests.length,
             itemBuilder: (context, index) {
               final quest = quests[index];
-              return _buildAchievementCard(context, quest);
+              return _buildFeatCard(context, quest);
             },
           );
         },
@@ -803,663 +1408,179 @@ class _SocialPageState extends State<SocialPage>
     });
   }
 
-  Widget _buildAchievementCard(BuildContext context, QuestData quest) {
+  Widget _buildFeatCard(BuildContext context, QuestData quest) {
     final colorScheme = Theme.of(context).colorScheme;
-    final hasImage = quest.imageUrl != null && quest.imageUrl!.isNotEmpty;
-
-    ImageProvider? imageProvider;
-    if (hasImage) {
-      if (quest.imageUrl!.startsWith('http')) {
-        imageProvider = NetworkImage(quest.imageUrl!);
-      } else {
-        imageProvider = FileImage(File(quest.imageUrl!));
-      }
-    }
-
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.05),
-            blurRadius: 10,
-            spreadRadius: 2,
-          ),
-        ],
-      ),
-      child: Stack(
-        children: [
-          if (hasImage)
-            Positioned.fill(
-              child: Image(
-                image: imageProvider!,
-                fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
-                  return Container(
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Icon(
-                      _getFeatIcon(quest.title ?? ""),
-                      color: colorScheme.primary.withOpacity(0.1),
-                    ),
-                  );
-                },
-              ),
+    return GestureDetector(
+      onLongPress: () {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: const Text("DELETE FEAT"),
+            content: const Text(
+              "Are you sure you want to remove this achievement from your system history?",
             ),
-          if (hasImage)
-            Positioned.fill(
-              child: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Colors.transparent, Colors.black.withOpacity(0.8)],
-                  ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("CANCEL"),
+              ),
+              TextButton(
+                onPressed: () async {
+                  final dao = context.read<QuestDAO>();
+                  await dao.deleteQuest(quest.id);
+                  if (context.mounted) Navigator.pop(context);
+                },
+                child: const Text(
+                  "DELETE",
+                  style: TextStyle(color: Colors.red),
                 ),
               ),
+            ],
+          ),
+        );
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.onPrimaryContainer.withOpacity(0.4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.outlineVariant, width: 1.5),
+          boxShadow: [
+            BoxShadow(
+              color: colorScheme.primary.withOpacity(0.05),
+              blurRadius: 15,
+              spreadRadius: -5,
             ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (!hasImage)
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.1),
-                        shape: BoxShape.circle,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    if (quest.imageUrl != null && quest.imageUrl!.isNotEmpty)
+                      quest.imageUrl!.startsWith('http')
+                          ? Image.network(
+                              quest.imageUrl!,
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                          : Image.file(
+                              File(quest.imageUrl!),
+                              width: double.infinity,
+                              height: double.infinity,
+                              fit: BoxFit.cover,
+                            )
+                    else
+                      Container(
+                        color: colorScheme.primary.withOpacity(0.05),
+                        child: Center(
+                          child: Icon(
+                            _getFeatIcon(quest.title ?? ""),
+                            size: 40,
+                            color: colorScheme.primary.withOpacity(0.3),
+                          ),
+                        ),
                       ),
-                      child: Icon(
-                        _getFeatIcon(quest.title ?? ""),
-                        color: colorScheme.primary,
-                        size: 32,
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.black.withOpacity(0.6),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: colorScheme.primary.withOpacity(0.5),
+                          ),
+                        ),
+                        child: Text(
+                          '+${quest.rewardExp} EXP',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
                       ),
-                    )
-                  else
-                    const SizedBox(height: 32),
-                  const SizedBox(height: 12),
-                  Text(
-                    quest.title ?? "Unnamed Quest",
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                      shadows: [
-                        Shadow(
-                          color: Colors.black,
-                          blurRadius: 8,
-                          offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            quest.title?.toUpperCase() ?? "LEGENDARY FEAT",
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontSize: 9,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1,
+                            ),
+                          ),
+                        ),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                Icons.edit_rounded,
+                                size: 14,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              onPressed: () => SocialPage.showAddFeatDialog(
+                                context,
+                                quest: quest,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              visualDensity: VisualDensity.compact,
+                              padding: EdgeInsets.zero,
+                              constraints: const BoxConstraints(),
+                              icon: Icon(
+                                Icons.ios_share_rounded,
+                                size: 14,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
+                              onPressed: () {
+                                final String textToShare =
+                                    "I just unlocked the '${quest.title ?? "Unnamed"}' feat in ICE Gate! +${quest.rewardExp ?? 0} System EXP.";
+                                Share.share(textToShare);
+                              },
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ),
-                  const SizedBox(height: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.amber.withOpacity(0.25),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: Colors.amber.withOpacity(0.5)),
-                    ),
-                    child: Text(
-                      "+${quest.rewardExp} EXP",
-                      style: const TextStyle(
-                        color: Colors.amber,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        shadows: [Shadow(color: Colors.black26, blurRadius: 2)],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Positioned(
-            top: 8,
-            right: 8,
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Native Share Button
-                IconButton(
-                  icon: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Colors.black45,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.share_rounded,
-                      size: 16,
-                      color: Colors.white,
-                    ),
-                  ),
-                  onPressed: () {
-                    final String textToShare =
-                        "I just unlocked the '${quest.title ?? "Unnamed"}' feat in ICE Gate! +${quest.rewardExp ?? 0} System EXP.";
-
-                    if (quest.imageUrl != null &&
-                        quest.imageUrl!.isNotEmpty &&
-                        !quest.imageUrl!.startsWith('http')) {
-                      Share.shareXFiles([
-                        XFile(quest.imageUrl!),
-                      ], text: textToShare);
-                    } else {
-                      Share.share(textToShare);
-                    }
-                  },
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 
   IconData _getFeatIcon(String title) {
-    final t = title.toLowerCase();
-    if (t.contains('swing')) return Icons.fitness_center_rounded;
-    if (t.contains('run')) return Icons.directions_run_rounded;
-    if (t.contains('walk')) return Icons.directions_walk_rounded;
-    if (t.contains('code')) return Icons.code_rounded;
-    if (t.contains('study')) return Icons.menu_book_rounded;
-    return Icons.stars_rounded;
-  }
-
-  void _showAddFeatDialog(BuildContext context) {
-    final titleController = TextEditingController();
-    final expController = TextEditingController(text: "50");
-    final imageController = TextEditingController();
-    final ImagePicker picker = ImagePicker();
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            title: Text(
-              "RECORD ACHIEVEMENT",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-            content: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: titleController,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    decoration: _buildInputDecoration(
-                      context,
-                      "Achievement Title (e.g. Swinging in 2h)",
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  TextField(
-                    controller: expController,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface,
-                    ),
-                    decoration: _buildInputDecoration(
-                      context,
-                      "System EXP Reward",
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  if (imageController.text.isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: imageController.text.startsWith('http')
-                            ? Image.network(
-                                imageController.text,
-                                height: 100,
-                                width:
-                                    350, // Fixed width prevents IntrinsicWidth crash in AlertDialog
-                                fit: BoxFit.cover,
-                              )
-                            : Image.file(
-                                File(imageController.text),
-                                height: 100,
-                                width:
-                                    350, // Fixed width prevents IntrinsicWidth crash in AlertDialog
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    ),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: imageController,
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.onSurface,
-                          ),
-                          decoration: _buildInputDecoration(
-                            context,
-                            "Image URL",
-                          ),
-                          onChanged: (v) => setModalState(() {}),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      IconButton.filled(
-                        onPressed: () async {
-                          final XFile? image = await picker.pickImage(
-                            source: ImageSource.gallery,
-                          );
-                          if (image != null) {
-                            setModalState(() {
-                              imageController.text = image.path;
-                            });
-                          }
-                        },
-                        icon: const Icon(Icons.add_photo_alternate_rounded),
-                        style: IconButton.styleFrom(
-                          backgroundColor: Theme.of(
-                            context,
-                          ).colorScheme.primaryContainer,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "CANCEL",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (titleController.text.isNotEmpty) {
-                    try {
-                      final dao = context.read<QuestDAO>();
-                      final personBlock = context.read<PersonBlock>();
-                      final personId = personBlock.currentPersonID.value;
-
-                      await dao.insertQuest(
-                        QuestsTableCompanion(
-                          id: Value(IDGen.UUIDV7()),
-                          title: Value(titleController.text),
-                          personID: Value(personId),
-                          rewardExp: Value(
-                            int.tryParse(expController.text) ?? 50,
-                          ),
-                          isCompleted: const Value(true),
-                          category: const Value('feat'),
-                          currentValue: const Value(1.0),
-                          targetValue: const Value(1.0),
-                          createdAt: Value(DateTime.now()),
-                          imageUrl: Value(
-                            imageController.text.isNotEmpty
-                                ? imageController.text
-                                : null,
-                          ),
-                        ),
-                      );
-
-                      if (context.mounted) {
-                        Navigator.pop(context);
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text("ACHIEVEMENT RECORDED IN SYSTEM"),
-                            backgroundColor: Colors.green,
-                          ),
-                        );
-                      }
-                    } catch (e) {
-                      debugPrint("Error adding feat: $e");
-                      if (context.mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content: Text("SYSTEM ERROR: $e"),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                      }
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
-                ),
-                child: const Text(
-                  "COMPLETE",
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  InputDecoration _buildInputDecoration(BuildContext context, String label) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
-      filled: true,
-      fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.5),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      enabledBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: colorScheme.primary, width: 1),
-      ),
-    );
-  }
-
-  void _showAddOrImportOptions(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              leading: const Icon(Icons.contact_phone_rounded),
-              title: const Text('Import from Contacts'),
-              onTap: () {
-                Navigator.pop(context);
-                _importContacts();
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.person_add_rounded),
-              title: const Text('Add Manually'),
-              onTap: () {
-                Navigator.pop(context);
-                _showManualAddPersonDialog(context);
-              },
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  void _showManualAddPersonDialog(BuildContext context) {
-    final firstNameController = TextEditingController();
-    final lastNameController = TextEditingController();
-    String selectedRelationship = 'friend';
-
-    showDialog(
-      context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setModalState) {
-          return AlertDialog(
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(20),
-              side: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
-              ),
-            ),
-            title: Text(
-              "REGISTER AGENT",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1,
-              ),
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: firstNameController,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  decoration: _buildInputDecoration(context, "First Name"),
-                ),
-                const SizedBox(height: 16),
-                TextField(
-                  controller: lastNameController,
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                  ),
-                  decoration: _buildInputDecoration(context, "Last Name"),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12),
-                  decoration: BoxDecoration(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: DropdownButtonHideUnderline(
-                    child: DropdownButton<String>(
-                      value: selectedRelationship,
-                      isExpanded: true,
-                      dropdownColor: Theme.of(
-                        context,
-                      ).colorScheme.surfaceContainerHigh,
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      onChanged: (String? newValue) {
-                        if (newValue != null) {
-                          setModalState(() {
-                            selectedRelationship = newValue;
-                          });
-                        }
-                      },
-                      items: <String>['friend', 'dating', 'family']
-                          .map<DropdownMenuItem<String>>((String value) {
-                            return DropdownMenuItem<String>(
-                              value: value,
-                              child: Text(value.toUpperCase()),
-                            );
-                          })
-                          .toList(),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: Text(
-                  "CANCEL",
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              ElevatedButton(
-                onPressed: () async {
-                  if (firstNameController.text.isNotEmpty) {
-                    final dao = context.read<PersonManagementDAO>();
-                    await dao.createContact(
-                      firstName: firstNameController.text,
-                      lastName: lastNameController.text,
-                      relationship: selectedRelationship,
-                    );
-                    if (context.mounted) Navigator.pop(context);
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                ),
-                child: const Text(
-                  "CREATE LINK",
-                  style: TextStyle(fontWeight: FontWeight.w900),
-                ),
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-
-  Future<void> _importContacts() async {
-    if (await FlutterContacts.requestPermission()) {
-      final allContacts = await FlutterContacts.getContacts(
-        withProperties: true,
-      );
-      if (!mounted) return;
-
-      final dao = context.read<PersonManagementDAO>();
-      final existingPeopleStream = await dao.watchAllPersons().first;
-      final existingFullNames = existingPeopleStream.map((p) {
-        final first = p.firstName;
-        final last = p.lastName;
-        return '$first $last'.trim().toLowerCase();
-      }).toSet();
-
-      final newContacts = <Contact>[];
-      final seenNewNames = <String>{};
-
-      for (var c in allContacts) {
-        // Fallback to first + last name if displayName is weird
-        String contactName = c.displayName.trim();
-        if (contactName.isEmpty ||
-            contactName.toLowerCase() == 'null null' ||
-            contactName.toLowerCase() == 'null') {
-          final first = c.name.first.trim();
-          final last = c.name.last.trim();
-          contactName = '$first $last'.trim();
-        }
-
-        contactName = contactName.toLowerCase();
-
-        // Skip if still empty
-        if (contactName.isEmpty) continue;
-
-        if (!existingFullNames.contains(contactName) &&
-            !seenNewNames.contains(contactName)) {
-          newContacts.add(c);
-          seenNewNames.add(contactName);
-        }
-      }
-
-      showModalBottomSheet(
-        context: context,
-        builder: (context) => ListView.builder(
-          itemCount: newContacts.length,
-          itemBuilder: (context, index) {
-            final c = newContacts[index];
-
-            // Build a clean display name
-            String displayName = c.displayName.trim();
-            if (displayName.isEmpty ||
-                displayName.toLowerCase() == 'null null' ||
-                displayName.toLowerCase() == 'null') {
-              final first = c.name.first.trim();
-              final last = c.name.last.trim();
-              displayName = '$first $last'.trim();
-            }
-
-            return ListTile(
-              title: Text(
-                displayName.isNotEmpty ? displayName : 'Unknown Contact',
-              ),
-              onTap: () async {
-                String first = c.name.first.trim();
-                String last = c.name.last.trim();
-
-                // DB requires firstName strictly > 0 chars. Fallback aggressively.
-                if (first.isEmpty) {
-                  if (displayName.isNotEmpty &&
-                      displayName != 'Unknown Contact') {
-                    final parts = displayName.split(' ');
-                    if (parts.length > 1) {
-                      first = parts.first;
-                      last = parts.sublist(1).join(' ');
-                    } else {
-                      first = displayName;
-                      last = '';
-                    }
-                  } else if (last.isNotEmpty) {
-                    first = last;
-                    last = '';
-                  } else {
-                    first = 'Unknown';
-                  }
-                }
-
-                await dao.createContact(
-                  firstName: first,
-                  lastName: last,
-                  relationship: 'friend',
-                );
-                if (context.mounted) Navigator.pop(context);
-              },
-            );
-          },
-        ),
-      );
-    }
-  }
-
-  Color _getRelationshipColor(String type) {
-    switch (type.toLowerCase()) {
-      case 'friend':
-        return const Color(0xFF1877F2); // Vibrant FB Blue
-      case 'dating':
-        return const Color(0xFFFF2D55); // Neon Pink
-      case 'family':
-        return const Color.fromARGB(255, 30, 214, 40); // System Orange
-      default:
-        return const Color(0xFF8E8E93); // System Gray
-    }
+    return Icons.military_tech_rounded;
   }
 }
