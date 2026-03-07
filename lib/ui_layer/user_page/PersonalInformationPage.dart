@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
@@ -82,6 +83,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       curve: Curves.easeInOut,
     );
     _animationController.forward();
+
+    // Initialize MinIO URLs in ObjectDatabaseBlock
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        final objectBlock = context.read<ObjectDatabaseBlock>();
+        objectBlock.updateUrlOfUser(context.read<PersonBlock>());
+        // Log folders for debugging on device
+        objectBlock.logFolderContents('profile_images');
+        objectBlock.logFolderContents('meals');
+        objectBlock.logFolderContents('quests');
+      }
+    });
   }
 
   // Helper to sync controllers with current state (call in build or listener)
@@ -231,11 +244,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       final success = localPath != null && localPath.isNotEmpty;
 
       if (success) {
+        // Evict Flutter's image cache for this path so the UI reloads from disk
+        final cacheKey = FileImage(File(localPath));
+        imageCache.evict(cacheKey);
+
         final personBlock = context.read<PersonBlock>();
-        personBlock.updateAvatarLocalPath(localPath);
-        personBlock.updateProfileImageUrl(
-          objectBlock.userObjectResource.value.avatarImage,
+        personBlock.setAvatarImage(
+          remoteUrl: objectBlock.userObjectResource.value.avatarImage,
+          localPath: localPath,
         );
+
+        // Auto-save to database to ensure the URL and local path are persisted
+        await personBlock.updateProfileDatabase(token);
       }
 
       if (mounted) {
@@ -256,12 +276,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       }
     } catch (e) {
       if (mounted) {
-        if (!mounted) return;
         setState(() => _isUploadingAvatar = false);
+        debugPrint('❌ [PersonalInformationPage] Avatar upload failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Upload failed: $e'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -291,11 +312,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       final success = localPath != null && localPath.isNotEmpty;
 
       if (success) {
+        // Evict Flutter's image cache for this path so the UI reloads from disk
+        final cacheKey = FileImage(File(localPath));
+        imageCache.evict(cacheKey);
+
         final personBlock = context.read<PersonBlock>();
-        personBlock.updateCoverLocalPath(localPath);
-        personBlock.updateCoverImageUrl(
-          objectBlock.userObjectResource.value.coverImage,
+        personBlock.setCoverImage(
+          remoteUrl: objectBlock.userObjectResource.value.coverImage,
+          localPath: localPath,
         );
+
+        // Auto-save to database to ensure the URL and local path are persisted
+        await personBlock.updateProfileDatabase(token);
       }
 
       if (mounted) {
@@ -316,12 +344,13 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       }
     } catch (e) {
       if (mounted) {
-        if (!mounted) return;
         setState(() => _isUploadingCover = false);
+        debugPrint('❌ [PersonalInformationPage] Cover upload failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Upload failed: $e'),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
           ),
         );
       }
@@ -416,14 +445,14 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 ),
 
                 Padding(
-                  padding: const EdgeInsets.all(20.0),
+                  padding: const EdgeInsets.all(12.0),
                   child: Column(
                     children: [
                       // Bio Summary (Quick View)
                       if (!_isEditing && info.details.bio.isNotEmpty)
                         Container(
-                          margin: const EdgeInsets.only(bottom: 24),
-                          padding: const EdgeInsets.all(20),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(6),
                           decoration: BoxDecoration(
                             color: colorScheme.primaryContainer.withOpacity(
                               0.05,
@@ -446,7 +475,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       // Bio (Edit Mode)
                       if (_isEditing)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 24),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: _buildModernTextField(
                             controller: _bioController,
                             label: 'Bio',
@@ -456,17 +485,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             minLines: 3,
                           ),
                         ),
-
-                      // Skills Section (Horizontal Scroll/Wrap)
-                      // _buildSectionHeader(
-                      //   context,
-                      //   'Skills',
-                      //   Icons.auto_awesome_rounded,
-                      // ),
-                      const SizedBox(height: 12),
-                      _buildSkillsSection(personBlock, colorScheme),
-
-                      const SizedBox(height: 32),
 
                       // Information Groups
                       _buildInfoGroup(
@@ -652,14 +670,14 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     UserInformation info,
   ) {
     return SizedBox(
-      height: 320,
+      height: 325,
       child: Stack(
         children: [
           // Background Gradient / Cover
           GestureDetector(
             onTap: _isEditing ? _uploadCover : null,
             child: Container(
-              height: 190,
+              height: 220,
               clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 gradient: objectResource.coverImage.isEmpty
@@ -779,7 +797,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
           // Profile Info Overlap
           Positioned(
-            top: 100,
+            top: 120,
             left: 0,
             right: 0,
             child: Column(

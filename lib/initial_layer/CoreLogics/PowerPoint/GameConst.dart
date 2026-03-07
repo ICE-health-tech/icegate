@@ -15,6 +15,8 @@ const int EXERCISE_PER_POINT = 5; // 5 min = 1 point
 const int FOCUS_SESSION_POINTS = 5; // points per completed session
 const int FOCUS_MINUTES_PER_POINT = 10; // 10 min = 1 point
 const double SLEEP_GOAL = 8.0; // hours
+const int SLEEP_POINTS_PER_HOUR = 2; // 1 hour = 2 points
+const int WEIGHT_POINTS_PER_KG = 100; // 1 kg = 100 points
 
 // ─── ❤️ Social ───
 const int CONTACT_POINTS = 30; // each contact = +30 points

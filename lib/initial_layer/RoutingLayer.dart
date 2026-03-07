@@ -61,6 +61,15 @@ class _adapterState extends State<Adapter> {
         alias: "HealthPage",
         scope: 'home',
       );
+
+      await dao.insertInternalWidget(
+        name: "Block Reminder",
+        personID: personId,
+        imageUrl: "assets/internalwidget/defaul.png",
+        url: "/health/block-reminder",
+        alias: "BlockReminder",
+        scope: 'home',
+      );
     }
 
     internalWidgetBlock.refreshBlock(dao, personId, 'home');

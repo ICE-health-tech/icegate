@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:image_picker/image_picker.dart';
@@ -12,6 +11,8 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:drift/drift.dart' show Value;
@@ -78,6 +79,7 @@ class SocialPage extends StatefulWidget {
     );
     final imageController = TextEditingController(text: quest?.imageUrl);
     final ImagePicker picker = ImagePicker();
+    XFile? pickedXFile; // Temporary storage for freshly picked file
 
     showDialog(
       context: context,
@@ -138,8 +140,10 @@ class SocialPage extends StatefulWidget {
                                 width: 350,
                                 fit: BoxFit.cover,
                               )
-                            : Image.file(
-                                File(imageController.text),
+                            : LocalFirstImage(
+                                localPath: imageController.text,
+                                remoteUrl: '', // Locally picked, no remote yet
+                                subFolder: 'quests',
                                 height: 100,
                                 width: 350,
                                 fit: BoxFit.cover,
@@ -169,7 +173,8 @@ class SocialPage extends StatefulWidget {
                           );
                           if (image != null) {
                             setModalState(() {
-                              imageController.text = image.path;
+                              pickedXFile = image;
+                              imageController.text = image.name;
                             });
                           }
                         },
@@ -201,7 +206,18 @@ class SocialPage extends StatefulWidget {
                     try {
                       final dao = context.read<QuestDAO>();
                       final personBlock = context.read<PersonBlock>();
+                      final objectBlock = context.read<ObjectDatabaseBlock>();
                       final personId = personBlock.currentPersonID.value;
+
+                      String finalImageUrl = imageController.text;
+
+                      // If we have a freshly picked file, save it to app directory first
+                      if (pickedXFile != null) {
+                        finalImageUrl = await objectBlock.saveAnyLocalImage(
+                          pickedXFile!,
+                          subFolder: 'quests',
+                        );
+                      }
 
                       if (quest == null) {
                         await dao.insertQuest(
@@ -218,9 +234,7 @@ class SocialPage extends StatefulWidget {
                             targetValue: const Value(1.0),
                             createdAt: Value(DateTime.now()),
                             imageUrl: Value(
-                              imageController.text.isNotEmpty
-                                  ? imageController.text
-                                  : null,
+                              finalImageUrl.isNotEmpty ? finalImageUrl : null,
                             ),
                           ),
                         );
@@ -232,9 +246,7 @@ class SocialPage extends StatefulWidget {
                               int.tryParse(expController.text) ?? 50,
                             ),
                             imageUrl: Value(
-                              imageController.text.isNotEmpty
-                                  ? imageController.text
-                                  : null,
+                              finalImageUrl.isNotEmpty ? finalImageUrl : null,
                             ),
                           ),
                         );
@@ -1463,19 +1475,16 @@ class _SocialPageState extends State<SocialPage>
                 child: Stack(
                   children: [
                     if (quest.imageUrl != null && quest.imageUrl!.isNotEmpty)
-                      quest.imageUrl!.startsWith('http')
-                          ? Image.network(
-                              quest.imageUrl!,
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                            )
-                          : Image.file(
-                              File(quest.imageUrl!),
-                              width: double.infinity,
-                              height: double.infinity,
-                              fit: BoxFit.cover,
-                            )
+                      LocalFirstImage(
+                        localPath: quest.imageUrl!,
+                        remoteUrl: quest.imageUrl!.startsWith('http')
+                            ? quest.imageUrl!
+                            : '',
+                        subFolder: 'quests',
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                      )
                     else
                       Container(
                         color: colorScheme.primary.withOpacity(0.05),

@@ -6,7 +6,6 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -24,6 +23,38 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   bool _obscureCurrentPassword = true;
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _requiresCurrentPassword = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkPasswordRequirement();
+  }
+
+  Future<void> _checkPasswordRequirement() async {
+    try {
+      final db = context.read<AppDatabase>();
+      final userId = Supabase.instance.client.auth.currentUser?.id;
+
+      if (userId != null) {
+        final account = await db.personManagementDAO.getAccountByPersonId(
+          userId,
+        );
+        if (account != null) {
+          final hash = account.passwordHash;
+          if (hash == 'EXTERNAL_AUTH' || hash == null || hash.isEmpty) {
+            if (mounted) {
+              setState(() {
+                _requiresCurrentPassword = false;
+              });
+            }
+          }
+        }
+      }
+    } catch (e) {
+      debugPrint("Error checking password requirement: $e");
+    }
+  }
 
   Future<void> _changePassword() async {
     if (!_formKey.currentState!.validate()) return;
@@ -31,92 +62,56 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     setState(() => _isLoading = true);
 
     try {
-      final email = Supabase.instance.client.auth.currentUser?.email;
+      final client = Supabase.instance.client;
+      final email = client.auth.currentUser?.email;
       if (email == null) throw Exception("No authenticated user found");
 
-      // 1. Re-authenticate to verify current password
-      print("🔐 [ChangePassword] Verifying current password for $email...");
-      try {
-        await Supabase.instance.client.auth.signInWithPassword(
-          email: email,
-          password: _currentPasswordController.text,
-        );
-      } catch (authErr) {
-        throw Exception(
-          "Current password verification failed. Please check your credentials.",
+      // 1. Re-authenticate to verify current password (if required)
+      if (_requiresCurrentPassword) {
+        print("🔐 [ChangePassword] Verifying current password for $email...");
+        try {
+          await client.auth.signInWithPassword(
+            email: email,
+            password: _currentPasswordController.text,
+          );
+        } catch (authErr) {
+          throw Exception(
+            "Current password verification failed. Please check your credentials.",
+          );
+        }
+      } else {
+        print(
+          "🔐 [ChangePassword] Skipping current password verification (External Auth/No Password).",
         );
       }
 
       // 2. Update password
       print("🔐 [ChangePassword] Updating to new password...");
-      await Supabase.instance.client.auth.updateUser(
+      final currentUser = client.auth.currentUser;
+      if (currentUser == null)
+        throw Exception("User session lost during update");
+
+      await client.auth.updateUser(
         UserAttributes(password: _passwordController.text),
       );
-      // 1. First, explicitly update public.user_accounts
-      try {
-        final nowIso = DateTime.now().toIso8601String();
-        // Since we are updating OUR OWN user_account, we can rely on RLS
-        // or just update by finding our own row via supabase user ID implicitly
-        // Let's just update using our own email as username
-        final email = Supabase.instance.client.auth.currentUser?.email;
-        if (email != null) {
-          final passwordBytes = utf8.encode(_passwordController.text);
-          final passwordHash = sha256.convert(passwordBytes).toString();
 
-          await Supabase.instance.client
-              .from('user_accounts')
-              .update({
-                'password_changed_at': nowIso,
-                'updated_at': nowIso,
-                'password_hash': passwordHash,
-              })
-              .eq('username', email);
-        }
-      } catch (supaErr) {
-        debugPrint("Remote user_accounts table update failed: $supaErr");
-      }
-
-      // 2. Next, Attempt to update local database (Safely wrap in try/catch to avoid Drift Date parsing errors)
-      if (mounted) {
-        try {
-          final db = context.read<AppDatabase>();
-          final authUsername = context.read<AuthBlock>().username.value;
-          if (authUsername != null) {
-            final account = await db.personManagementDAO.getAccountByUsername(
-              authUsername,
-            );
-            if (account != null) {
-              final now = Drift.Value(DateTime.now());
-              // Note: if Database.dart uses DateTimeColumn, this might crash if PowerSync synced text.
-
-              final passwordBytes = utf8.encode(_passwordController.text);
-              final passwordHash = sha256.convert(passwordBytes).toString();
-
-              final updatedAccount = account.copyWith(
-                passwordChangedAt: now,
-                updatedAt: now,
-                passwordHash: Drift.Value(passwordHash),
-              );
-              await db.personManagementDAO.updateAccount(updatedAccount);
-            }
-          }
-        } catch (dbErr) {
-          debugPrint(
-            "Local DB update failed (likely Drift date issue): $dbErr",
-          );
-        }
-      }
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Password changed successfully!'),
-            backgroundColor: Colors.green,
-          ),
-        );
-        WidgetNavigatorAction.smartPop(context);
-      }
+      // 3. Sync metadata and finish
+      await _syncMetadataAndPop(currentUser);
     } on AuthException catch (e) {
+      // If setting password for the first time and it's already this password in Supabase,
+      // we consider it a success and still update our public user_accounts table.
+      if (e.message.toLowerCase().contains("different") &&
+          !_requiresCurrentPassword) {
+        final currentUser = Supabase.instance.client.auth.currentUser;
+        if (currentUser != null) {
+          print(
+            "🔐 [ChangePassword] Password is already set to this value in Supabase. Proceeding to sync metadata.",
+          );
+          await _syncMetadataAndPop(currentUser);
+          return;
+        }
+      }
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(e.message), backgroundColor: Colors.red),
@@ -136,6 +131,64 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       if (mounted) {
         setState(() => _isLoading = false);
       }
+    }
+  }
+
+  Future<void> _syncMetadataAndPop(User user) async {
+    // 1. First, explicitly update public.user_accounts on Supabase
+    try {
+      final nowIso = DateTime.now().toIso8601String();
+      final passwordBytes = utf8.encode(_passwordController.text);
+      final passwordHash = sha256.convert(passwordBytes).toString();
+
+      print("🌐 [ChangePassword] Syncing user_accounts record on Supabase...");
+      await Supabase.instance.client
+          .from('user_accounts')
+          .update({
+            'password_changed_at': nowIso,
+            'updated_at': nowIso,
+            'password_hash': passwordHash,
+          })
+          .eq('id', user.id);
+    } catch (supaErr) {
+      debugPrint("Remote user_accounts table update failed: $supaErr");
+    }
+
+    // 2. Next, update local database
+    if (mounted) {
+      try {
+        final db = context.read<AppDatabase>();
+        final personId = user.id;
+
+        final account = await db.personManagementDAO.getAccountByPersonId(
+          personId,
+        );
+        if (account != null) {
+          final now = Drift.Value(DateTime.now());
+          final passwordBytes = utf8.encode(_passwordController.text);
+          final passwordHash = sha256.convert(passwordBytes).toString();
+
+          final updatedAccount = account.copyWith(
+            passwordChangedAt: now,
+            updatedAt: now,
+            passwordHash: Drift.Value(passwordHash),
+          );
+          await db.personManagementDAO.updateAccount(updatedAccount);
+          print("💾 [ChangePassword] Local user_accounts record updated.");
+        }
+      } catch (dbErr) {
+        debugPrint("Local DB update failed: $dbErr");
+      }
+    }
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Password set successfully!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+      WidgetNavigatorAction.smartPop(context);
     }
   }
 
@@ -189,7 +242,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      'Change Password',
+                      _requiresCurrentPassword
+                          ? 'Change Password'
+                          : 'Set Password',
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
@@ -197,7 +252,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Your new password must be at least 6 characters long and different from previous ones.',
+                      _requiresCurrentPassword
+                          ? 'Your new password must be at least 6 characters long and different from previous ones.'
+                          : 'You haven\'t set a local password yet. Create one to enable email/password login.',
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
@@ -209,45 +266,48 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               const SizedBox(height: 32),
 
               // Current Password
-              Text(
-                'Current Password',
-                style: textTheme.labelLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 8),
-              TextFormField(
-                controller: _currentPasswordController,
-                obscureText: _obscureCurrentPassword,
-                decoration: InputDecoration(
-                  hintText: 'Enter current password',
-                  prefixIcon: const Icon(Icons.lock_person_outlined),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscureCurrentPassword
-                          ? Icons.visibility_off
-                          : Icons.visibility,
-                    ),
-                    onPressed: () => setState(
-                      () => _obscureCurrentPassword = !_obscureCurrentPassword,
-                    ),
-                  ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerLow,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(16),
-                    borderSide: BorderSide.none,
+              if (_requiresCurrentPassword) ...[
+                Text(
+                  'Current Password',
+                  style: textTheme.labelLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: colorScheme.primary,
                   ),
                 ),
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'Please enter current password';
-                  }
-                  return null;
-                },
-              ),
-              const SizedBox(height: 20),
+                const SizedBox(height: 8),
+                TextFormField(
+                  controller: _currentPasswordController,
+                  obscureText: _obscureCurrentPassword,
+                  decoration: InputDecoration(
+                    hintText: 'Enter current password',
+                    prefixIcon: const Icon(Icons.lock_person_outlined),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscureCurrentPassword
+                            ? Icons.visibility_off
+                            : Icons.visibility,
+                      ),
+                      onPressed: () => setState(
+                        () =>
+                            _obscureCurrentPassword = !_obscureCurrentPassword,
+                      ),
+                    ),
+                    filled: true,
+                    fillColor: colorScheme.surfaceContainerLow,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(16),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) {
+                      return 'Please enter current password';
+                    }
+                    return null;
+                  },
+                ),
+                const SizedBox(height: 20),
+              ],
 
               // New Password
               Text(
@@ -356,9 +416,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           color: Colors.white,
                         ),
                       )
-                    : const Text(
-                        'Update Password',
-                        style: TextStyle(
+                    : Text(
+                        _requiresCurrentPassword
+                            ? 'Update Password'
+                            : 'Set Password',
+                        style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),

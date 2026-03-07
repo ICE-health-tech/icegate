@@ -525,6 +525,8 @@ class _TimerControls extends StatelessWidget {
             padding: const EdgeInsets.all(12),
           ),
         ),
+    
+       
       ],
     );
   }

@@ -118,6 +118,26 @@ class CustomAuthService {
 
   /// Optional: Check for session JWT (similar to the TS machine's getJWT)
 
+  /// Trigger backend user synchronization
+  Future<Map<String, dynamic>> appSync(String token) async {
+    final url = Uri.parse('$baseUrl/backend/person/app_sync');
+    try {
+      _logger.info('Triggering app_sync to $url');
+      final response = await http.get(
+        url,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      return _handleJsonResponse(response);
+    } catch (e) {
+      _logger.severe('Error during app_sync: $e');
+      throw Exception('Sync failed: $e');
+    }
+  }
+
   /// Fetch current user profile from backend
   Future<Map<String, dynamic>> fetchCurrentUser(String token) async {
     final url = Uri.parse('$baseUrl/backend/account/information');
@@ -136,6 +156,7 @@ class CustomAuthService {
       throw Exception('Connection error: $e');
     }
   }
+
 
   /// Logout from backend (optional but recommended)
   Future<void> logout(String token) async {

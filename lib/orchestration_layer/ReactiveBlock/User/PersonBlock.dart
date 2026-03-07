@@ -1,3 +1,7 @@
+import 'dart:async';
+import 'dart:convert';
+import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
 import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -238,7 +242,51 @@ class PersonBlock {
 
   // --- ACTIONS ---
 
-  /// Fetch user profile and details together (Local-first with Supabase fallback)
+  /// Sync with the Java Backend for latest profile data
+  Future<void> appSync(String token) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || token == "mock_guest_jwt_token") return;
+
+    try {
+      const baseUrl = 'https://backend.duylong.art';
+      debugPrint(
+        '🔄 [PersonBlock] Syncing with backend: $baseUrl/backend/person/app_sync',
+      );
+
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/backend/person/app_sync'),
+            headers: {
+              'Authorization': 'Bearer $token',
+              'Accept': 'application/json',
+            },
+          )
+          .timeout(const Duration(seconds: 15));
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        debugPrint('✅ [PersonBlock] app_sync success: $data');
+
+        // Update local database with latest remote paths from backend
+        if (data['profileImageUrl'] != null) {
+          unawaited(
+            personDao.updateAvatarImageUrl(user.id, data['profileImageUrl']),
+          );
+        }
+        if (data['coverImageUrl'] != null) {
+          unawaited(
+            personDao.updateCoverImageUrl(user.id, data['coverImageUrl']),
+          );
+        }
+      } else {
+        debugPrint('⚠️ [PersonBlock] app_sync status: ${response.statusCode}');
+      }
+    } catch (e) {
+      debugPrint('⚠️ [PersonBlock] app_sync failed: $e');
+    }
+  }
+
+  /// Fetch user profile and details together (Local-first with Supabase/Backend sync)
   Future<void> fetchFromDatabase(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") {
@@ -247,11 +295,45 @@ class PersonBlock {
     }
 
     try {
-      print(
-        "🔍 [PersonBlock] Syncing profile for ${user.id} (Local + Remote)...",
+      debugPrint(
+        "🔍 [PersonBlock] Syncing profile for ${user.id} (LOCAL FIRST)...",
       );
 
-      // Fetch from ALL sources (Separate remote and local to avoid type inference issues)
+      // 1. Fetch from LOCAL DAO first (INSTANT)
+      final localPerson = await personDao.getPersonById(user.id);
+      final localProfile = await personDao.getProfileForPerson(user.id);
+      final localDetails = await personDao.getCVAddressForPerson(user.id);
+
+      if (localPerson != null || localProfile != null || localDetails != null) {
+        debugPrint("   - Local data found. Updating UI immediately.");
+        _updateSignalFromData(
+          user: user,
+          localPerson: localPerson,
+          localProfile: localProfile,
+          localDetails: localDetails,
+        );
+      }
+
+      // 2. Trigger REMOTE Supabase fetch & Backend Sync in BACKGROUND
+      unawaited(_syncRemote(user, token));
+    } catch (e) {
+      debugPrint("❌ [PersonBlock] Failed to fetch user profile: $e");
+      if (information.value.profiles.firstName == 'Initial') {
+        _applyGuestFallback();
+      }
+    }
+  }
+
+  /// Combined Supabase + Backend sync
+  Future<void> _syncRemote(User user, String token) async {
+    await appSync(token);
+    await _fetchRemoteAndUpdate(user);
+  }
+
+  /// background remote fetch to keep UI non-blocking
+  Future<void> _fetchRemoteAndUpdate(User user) async {
+    try {
+      print("🌐 [PersonBlock] Fetching remote data in background...");
       final remotePerson = await Supabase.instance.client
           .from('persons')
           .select()
@@ -265,114 +347,147 @@ class PersonBlock {
       final remoteDetails = await Supabase.instance.client
           .from('detail_information')
           .select()
-          .eq('id', user.id)
+          .eq('person_id', user.id)
           .maybeSingle();
 
+      // Refresh local copy too
       final localPerson = await personDao.getPersonById(user.id);
       final localProfile = await personDao.getProfileForPerson(user.id);
       final localDetails = await personDao.getCVAddressForPerson(user.id);
 
-      // 1. Construct Details (Prioritize Local > Remote > Auth)
-      final details = UserDetails(
-        bio:
-            localDetails?.bio ??
-            localProfile?.bio ??
-            remoteProfile?['bio'] ??
-            remoteDetails?['bio'] ??
-            '',
-        occupation:
-            localDetails?.occupation ??
-            localProfile?.occupation ??
-            remoteProfile?['occupation'] ??
-            remoteDetails?['occupation'] ??
-            '',
-        location:
-            localDetails?.location ??
-            localProfile?.location ??
-            remoteProfile?['location'] ??
-            remoteDetails?['location'] ??
-            '',
-        company: localDetails?.company ?? remoteDetails?['company'] ?? '',
-        university:
-            localDetails?.university ?? remoteDetails?['university'] ?? '',
-        country: localDetails?.country ?? remoteDetails?['country'] ?? '',
-        githubUrl:
-            localDetails?.githubUrl ??
-            localProfile?.githubUrl ??
-            remoteProfile?['github_url'] ??
-            remoteDetails?['github_url'] ??
-            '',
-        linkedinUrl:
-            localDetails?.linkedinUrl ??
-            localProfile?.linkedinUrl ??
-            remoteProfile?['linkedin_url'] ??
-            remoteDetails?['linkedin_url'] ??
-            '',
-        educationLevel:
-            localDetails?.educationLevel ??
-            localProfile?.educationLevel ??
-            remoteProfile?['education_level'] ??
-            remoteDetails?['education_level'] ??
-            '',
-        websiteUrl:
-            localDetails?.websiteUrl ??
-            localProfile?.websiteUrl ??
-            remoteProfile?['website_url'] ??
-            remoteDetails?['website_url'] ??
-            '',
-        email: user.email ?? '',
+      _updateSignalFromData(
+        user: user,
+        localPerson: localPerson,
+        localProfile: localProfile,
+        localDetails: localDetails,
+        remotePerson: remotePerson,
+        remoteProfile: remoteProfile,
+        remoteDetails: remoteDetails,
       );
 
-      // 2. Construct Profile (Prioritize Local > Remote > Metadata)
-      final profile = UserProfile(
-        id: localPerson?.id ?? remotePerson?['id'] ?? user.id,
-        firstName:
-            localPerson?.firstName ??
-            remotePerson?['first_name'] ??
-            user.userMetadata?['first_name'] ??
-            'User',
-        lastName:
-            localPerson?.lastName ??
-            remotePerson?['last_name'] ??
-            user.userMetadata?['last_name'] ??
-            '',
-        username:
-            remotePerson?['username'] ??
-            user.userMetadata?['user_name'] ??
-            'user',
-        profileImageUrl:
-            localPerson?.profileImageUrl ??
-            remotePerson?['profile_image_url'] ??
-            user.userMetadata?['avatar_url'] ??
-            '',
-        coverImageUrl:
-            localPerson?.coverImageUrl ??
-            localProfile?.coverImageUrl ??
-            remotePerson?['cover_image_url'] ??
-            remoteProfile?['cover_image_url'] ??
-            '',
-        avatarLocalPath:
-            localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
-        coverLocalPath:
-            localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
-      );
-
-      batch(() {
-        information.value = UserInformation(
-          profiles: profile,
-          details: details,
+      // 4. Persist Remote URLs to LOCAL DB for future offline/instant access
+      if (remotePerson?['profile_image_url'] != null) {
+        unawaited(
+          personDao.updateAvatarImageUrl(
+            user.id,
+            remotePerson!['profile_image_url'],
+          ),
         );
-      });
-
-      print(
-        "✅ [PersonBlock] Profile synced from merged sources for ${profile.username}",
-      );
-    } catch (e) {
-      print("❌ [PersonBlock] Failed to fetch user profile: $e");
-      if (information.value.profiles.firstName == 'Initial') {
-        _applyGuestFallback();
       }
+      if (remoteDetails?['cover_image_url'] != null) {
+        unawaited(
+          personDao.updateCoverImageUrl(
+            user.id,
+            remoteDetails!['cover_image_url'],
+          ),
+        );
+      }
+
+      print("✅ [PersonBlock] Remote sync completed.");
+    } catch (e) {
+      print("⚠️ [PersonBlock] Remote background sync failed: $e");
     }
+  }
+
+  void _updateSignalFromData({
+    required User user,
+    PersonData? localPerson,
+    ProfileData? localProfile,
+    CVAddressData? localDetails,
+    Map<String, dynamic>? remotePerson,
+    Map<String, dynamic>? remoteProfile,
+    Map<String, dynamic>? remoteDetails,
+  }) {
+    // 1. Construct Details (Prioritize Local > Remote > Auth)
+    final details = UserDetails(
+      bio:
+          localDetails?.bio ??
+          localProfile?.bio ??
+          remoteProfile?['bio'] ??
+          remoteDetails?['bio'] ??
+          '',
+      occupation:
+          localDetails?.occupation ??
+          localProfile?.occupation ??
+          remoteProfile?['occupation'] ??
+          remoteDetails?['occupation'] ??
+          '',
+      location:
+          localDetails?.location ??
+          localProfile?.location ??
+          remoteProfile?['location'] ??
+          remoteDetails?['location'] ??
+          '',
+      company: localDetails?.company ?? remoteDetails?['company'] ?? '',
+      university:
+          localDetails?.university ?? remoteDetails?['university'] ?? '',
+      country: localDetails?.country ?? remoteDetails?['country'] ?? '',
+      githubUrl:
+          localDetails?.githubUrl ??
+          localProfile?.githubUrl ??
+          remoteProfile?['github_url'] ??
+          remoteDetails?['github_url'] ??
+          '',
+      linkedinUrl:
+          localDetails?.linkedinUrl ??
+          localProfile?.linkedinUrl ??
+          remoteProfile?['linkedin_url'] ??
+          remoteDetails?['linkedin_url'] ??
+          '',
+      educationLevel:
+          localDetails?.educationLevel ??
+          localProfile?.educationLevel ??
+          remoteProfile?['education_level'] ??
+          remoteDetails?['education_level'] ??
+          '',
+      websiteUrl:
+          localDetails?.websiteUrl ??
+          localProfile?.websiteUrl ??
+          remoteProfile?['website_url'] ??
+          remoteDetails?['website_url'] ??
+          '',
+      email: user.email ?? '',
+    );
+
+    // 2. Construct Profile (Prioritize Local > Remote > Metadata)
+    final profile = UserProfile(
+      id: localPerson?.id ?? remotePerson?['id'] ?? user.id,
+      firstName:
+          localPerson?.firstName ??
+          remotePerson?['first_name'] ??
+          user.userMetadata?['first_name'] ??
+          'User',
+      lastName:
+          localPerson?.lastName ??
+          remotePerson?['last_name'] ??
+          user.userMetadata?['last_name'] ??
+          '',
+      username:
+          remotePerson?['username'] ??
+          user.userMetadata?['user_name'] ??
+          'user',
+      profileImageUrl:
+          localPerson?.profileImageUrl ??
+          remotePerson?['profile_image_url'] ??
+          user.userMetadata?['avatar_url'] ??
+          '',
+      coverImageUrl:
+          localDetails?.coverImageUrl ??
+          localPerson?.coverImageUrl ??
+          localProfile?.coverImageUrl ??
+          remoteDetails?['cover_image_url'] ??
+          remotePerson?['cover_image_url'] ??
+          remoteProfile?['cover_image_url'] ??
+          '',
+      avatarLocalPath:
+          localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
+      coverLocalPath:
+          localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
+    );
+
+    batch(() {
+      information.value = UserInformation(profiles: profile, details: details);
+    });
   }
 
   void _applyGuestFallback() {
@@ -397,33 +512,45 @@ class PersonBlock {
     });
   }
 
-  // Update local profile image URL
-  void updateProfileImageUrl(String url) {
-    information.value = UserInformation(
-      details: information.value.details,
-      profiles: information.value.profiles.copyWith(profileImageUrl: url),
-    );
+  // Consolidated image updates
+  void setAvatarImage({required String remoteUrl, required String localPath}) {
+    // 1. Update In-Memory Signal
+    batch(() {
+      information.value = UserInformation(
+        details: information.value.details,
+        profiles: information.value.profiles.copyWith(
+          profileImageUrl: remoteUrl,
+          avatarLocalPath: localPath,
+        ),
+      );
+    });
+
+    // 2. Persist to Local Database
+    final String? userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      unawaited(personDao.updateAvatarLocalPath(userId, localPath));
+      unawaited(personDao.updateAvatarImageUrl(userId, remoteUrl));
+    }
   }
 
-  void updateCoverImageUrl(String url) {
-    information.value = UserInformation(
-      details: information.value.details,
-      profiles: information.value.profiles.copyWith(coverImageUrl: url),
-    );
-  }
+  void setCoverImage({required String remoteUrl, required String localPath}) {
+    // 1. Update In-Memory Signal
+    batch(() {
+      information.value = UserInformation(
+        details: information.value.details,
+        profiles: information.value.profiles.copyWith(
+          coverImageUrl: remoteUrl,
+          coverLocalPath: localPath,
+        ),
+      );
+    });
 
-  void updateAvatarLocalPath(String path) {
-    information.value = UserInformation(
-      details: information.value.details,
-      profiles: information.value.profiles.copyWith(avatarLocalPath: path),
-    );
-  }
-
-  void updateCoverLocalPath(String path) {
-    information.value = UserInformation(
-      details: information.value.details,
-      profiles: information.value.profiles.copyWith(coverLocalPath: path),
-    );
+    // 2. Persist to Local Database
+    final String? userId = Supabase.instance.client.auth.currentUser?.id;
+    if (userId != null) {
+      unawaited(personDao.updateCoverLocalPath(userId, localPath));
+      unawaited(personDao.updateCoverImageUrl(userId, remoteUrl));
+    }
   }
 
   // Optimistic update for edit

@@ -112,6 +112,12 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   }
 
   Future<void> _syncHealthData() async {
+    if (!_isInitialized || _hasError) {
+      debugPrint(
+        "DataLayer: Skipping health sync (not initialized or has error)",
+      );
+      return;
+    }
     try {
       debugPrint("DataLayer: Starting multi-day health sync...");
       final now = DateTime.now();
@@ -128,6 +134,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   }
 
   Future<void> _syncHealthDataForDay(DateTime date) async {
+    if (!_isInitialized || _hasError) return;
     final isToday =
         date.day == DateTime.now().day &&
         date.month == DateTime.now().month &&
@@ -209,7 +216,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       // 2. Initialize PowerSync and Database
       final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, 'powersync29.db');
+      final dbPath = p.join(dir.path, 'powersync30.db');
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
@@ -240,7 +247,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       }
 
       // 5. Initialize Services and Blocks
-      var authService = CustomAuthService(baseUrl: "http://localhost"); // Dummy
+      var authService = CustomAuthService(
+        baseUrl: "https://backend.duylong.art",
+      ); // Dummy
       var passkeyService = PasskeyAuthService();
 
       personBlock = PersonBlock(
@@ -305,6 +314,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         database.financeDAO,
         healthBlock,
         database.healthMealDAO,
+        database.metricsDAO,
         "", // Initial fallback
       );
       print("DUYLONG: personBlock: $personBlock");
@@ -341,6 +351,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 database.financeDAO,
                 healthBlock,
                 database.healthMealDAO,
+                database.metricsDAO,
                 personId,
               );
 
@@ -441,16 +452,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
             authBlock.username.value = session.user.email ?? "Google User";
 
             // --- NEW: Persist to local DB for auto-login on next start ---
-
-            print("PERSON ID : ${session.user.id}");
-            personBlock.information.value = personBlock.information.value
-                .copyWith(
-                  profiles: personBlock.information.value.profiles.copyWith(
-                    id: session.user.id,
-                    firstName:
-                        session.user.userMetadata?['full_name'] ?? 'User',
-                  ),
-                );
 
             authBlock.persistSession(
               session.accessToken,

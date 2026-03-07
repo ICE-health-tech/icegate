@@ -54,6 +54,8 @@ class AuthBlock {
 
   /// Synchronize Supabase Auth user with public profile table
   /// This ensures that the mandatory 'persons' row exists for PowerSync.
+  /// For RETURNING users, we do NOT overwrite first_name/last_name/profile_image
+  /// because the user may have edited them in the profile page.
   Future<void> syncUserWithSupabase(User user) async {
     print("🔄 [AuthBlock] Synchronizing user ${user.id} with Supabase...");
 
@@ -61,28 +63,44 @@ class AuthBlock {
       final client = Supabase.instance.client;
       final userId = user.id;
 
-      // 1. Ensure persons row exists
-      final fullName =
-          user.userMetadata?['full_name'] ??
-          user.userMetadata?['name'] ??
-          'IceUser';
-      final firstName =
-          user.userMetadata?['first_name'] ?? fullName.split(' ')[0];
-      final lastName =
-          user.userMetadata?['last_name'] ??
-          (fullName.contains(' ')
-              ? fullName.split(' ').sublist(1).join(' ')
-              : '');
+      // Check if user already exists in 'persons' table
+      final existingPerson = await client
+          .from('persons')
+          .select('id')
+          .eq('id', userId)
+          .maybeSingle();
 
-      print("   - Upserting into 'persons'...");
-      await client.from('persons').upsert({
-        'id': userId,
-        'first_name': firstName,
-        'last_name': lastName,
-        'profile_image_url': user.userMetadata?['avatar_url'],
-        'is_active': true, // Use boolean true
-        'updated_at': DateTime.now().toIso8601String(),
-      });
+      if (existingPerson != null) {
+        // RETURNING USER: DO NOT touch the 'persons' table!
+        // Touching it (even just updated_at) can cause PowerSync to sync down
+        // stale remote data and overwrite local user edits (name/images).
+        print(
+          "   - Existing user found. Skipping 'persons' sync to prevent rollback.",
+        );
+      } else {
+        // NEW USER: insert with Google OAuth metadata as defaults
+        final fullName =
+            user.userMetadata?['full_name'] ??
+            user.userMetadata?['name'] ??
+            'IceUser';
+        final firstName =
+            user.userMetadata?['first_name'] ?? fullName.split(' ')[0];
+        final lastName =
+            user.userMetadata?['last_name'] ??
+            (fullName.contains(' ')
+                ? fullName.split(' ').sublist(1).join(' ')
+                : '');
+
+        print("   - New user. Inserting into 'persons' with OAuth metadata...");
+        await client.from('persons').insert({
+          'id': userId,
+          'first_name': firstName,
+          'last_name': lastName,
+          'profile_image_url': user.userMetadata?['avatar_url'],
+          'is_active': true,
+          'updated_at': DateTime.now().toIso8601String(),
+        });
+      }
 
       await client.from('profiles').upsert({
         'id': userId, // Dùng ID của User làm PK
@@ -219,6 +237,7 @@ class AuthBlock {
         username.value = session.user.email ?? "SupabaseUser";
 
         status.value = AuthStatus.authenticated;
+        unawaited(_authService.appSync(session.accessToken));
         await fetchUser();
       } else {
         print("⚠️ [AuthBlock] No Supabase session found. Checking fallback...");
@@ -324,6 +343,7 @@ class AuthBlock {
           await persistSession(token, user);
         }
         await syncUserWithSupabase(session.user);
+        unawaited(_authService.appSync(session.accessToken));
 
         status.value = AuthStatus.authenticated;
         print("✅ [AuthBlock] Authentication successful.");
@@ -359,6 +379,10 @@ class AuthBlock {
           "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
         );
         await syncUserWithSupabase(user);
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          unawaited(_authService.appSync(session.accessToken));
+        }
       }
 
       print("✅ [AuthBlock] User account synced to database.");
@@ -398,6 +422,7 @@ class AuthBlock {
           username.value = payload.userName;
           await persistSession(jwt.value!, username.value!);
           await syncUserWithSupabase(response.user!);
+          unawaited(_authService.appSync(response.session!.accessToken));
           status.value = AuthStatus.authenticated;
           await fetchUser();
         } else {

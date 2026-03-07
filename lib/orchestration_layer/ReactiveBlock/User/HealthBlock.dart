@@ -30,6 +30,7 @@ class HealthBlock {
   final todayExerciseMinutes = signal<int>(0);
   final todayFocusMinutes = signal<int>(0);
   final todayCaloriesConsumed = signal<int>(0);
+  final todayWeight = signal<double>(0.0);
   final hasInitialSync = signal<bool>(false);
 
   late final totalSteps = computed(
@@ -85,6 +86,7 @@ class HealthBlock {
               foundTodaySleep = m.sleepHours ?? 0.0;
               foundTodayHeartRate = m.heartRate ?? 0;
               foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+              todayWeight.value = m.weightKg ?? 0.0;
               todayExerciseMinutes.value = m.exerciseMinutes ?? 0;
               todayFocusMinutes.value = m.focusMinutes ?? 0;
             } else {
@@ -213,6 +215,16 @@ class HealthBlock {
     }
   }
 
+  void updateWeight(double weight) {
+    debugPrint(
+      "HealthBlock: updateWeight called with $weight kg (current: ${todayWeight.value})",
+    );
+    if (weight > 0) {
+      todayWeight.value = weight;
+      _saveWeight(weight);
+    }
+  }
+
   void updateCalories(int calories) {
     debugPrint(
       "HealthBlock: updateCalories called with $calories kcal (current: ${todayCaloriesBurned.value})",
@@ -290,6 +302,23 @@ class HealthBlock {
         personID: Value(personId),
         date: Value(normalizedToday),
         waterGlasses: Value((ml / 250).round()), // Estimate glasses from ML
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> _saveWeight(double kg) async {
+    if (personId.isEmpty) return;
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day);
+
+    debugPrint("HealthBlock: Saving $kg kg weight to DB for $normalizedToday");
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion(
+        id: Value(IDGen.UUIDV7()),
+        personID: Value(personId),
+        date: Value(normalizedToday),
+        weightKg: Value(kg),
         updatedAt: Value(DateTime.now()),
       ),
     );

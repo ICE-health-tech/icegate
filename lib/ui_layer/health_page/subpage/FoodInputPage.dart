@@ -6,12 +6,12 @@ import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:provider/provider.dart';
-import 'package:path/path.dart' as path; // Add this alias to avoid conflicts
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class FoodInputPage extends StatefulWidget {
@@ -80,7 +80,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
   final ImagePicker _picker = ImagePicker();
   FlutterSignal<double> totalCalories = signal(0);
   late HealthMealDAO _healthMealDAO;
-  late Directory appDir;
 
   Future<void> _pickImage(ImageSource source) async {
     try {
@@ -96,21 +95,16 @@ class _FoodInputPageState extends State<FoodInputPage> {
         return;
       }
 
-      print("Path when I pick image: ${image.path}");
-      // Sử dụng path_provider
-
-      //  final Directory appDir=await
-      final String fileName = path.basename(image.path);
-      final File savedImage = await File(
-        image.path,
-      ).copy('${appDir.path}/$fileName');
-      // final String fileName = path.basename(image!.path);
-      //   final String permanentPath = '${appDir.path}/$fileName';
+      final objectBlock = context.read<ObjectDatabaseBlock>();
+      final String savedFileName = await objectBlock.saveAnyLocalImage(
+        image,
+        subFolder: 'meals',
+      );
 
       setState(() {
-        _pickedImage = File(savedImage.path);
-        _imagePath = fileName;
-        print("Path when I save image: ${savedImage.path}");
+        _pickedImage = File(image.path); // Keep absolute for temp preview
+        _imagePath = savedFileName;
+        print("Standardized save - filename: $savedFileName");
       });
       // Trigger AI analysis if food name is also present or just analysis from image
       _analyzeFood();
@@ -220,15 +214,8 @@ class _FoodInputPageState extends State<FoodInputPage> {
     // 1. Initialize the DAO immediately (Provider access is safe here if using context.read)
     _healthMealDAO = context.read<HealthMealDAO>();
 
-    // 2. Load the directory and THEN load calories
-    getApplicationDocumentsDirectory().then((dir) {
-      if (mounted) {
-        setState(() {
-          appDir = dir;
-        });
-        _getTotalCalories(); // Now safe to call
-      }
-    });
+    // 2. Load calories immediately
+    _getTotalCalories();
   }
 
   // Remove didChangeDependencies entirely unless you have other logic there
@@ -724,26 +711,18 @@ class _FoodInputPageState extends State<FoodInputPage> {
   }
 
   Widget _buildMealImage(String? imageName, double size) {
-    if (imageName == null || imageName.isEmpty) {
-      return Container(
+    return LocalFirstImage(
+      localPath: imageName ?? '',
+      remoteUrl: '', // No remote meals storage currently implemented
+      subFolder: 'meals',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      placeholder: Container(
         width: size,
         height: size,
         color: Colors.grey[100],
         child: const Icon(Icons.restaurant, color: Colors.grey, size: 30),
-      );
-    }
-
-    final file = File('${appDir.path}/$imageName');
-    return Image.file(
-      file,
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Container(
-        width: size,
-        height: size,
-        color: Colors.grey[100],
-        child: const Icon(Icons.broken_image, color: Colors.grey, size: 30),
       ),
     );
   }

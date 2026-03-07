@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -22,18 +23,51 @@ class ObjectDatabaseBlock {
 
   final _imagePicker = ImagePicker();
 
-  /// Save a picked image to the application's permanent document directory.
-  Future<String> _saveLocalImage(XFile pickedFile, String fileName) async {
-    final appDir = await getApplicationDocumentsDirectory();
-    final localFolder = Directory(p.join(appDir.path, 'profile_images'));
-    if (!await localFolder.exists()) {
-      await localFolder.create(recursive: true);
-    }
+  /// Save a picked image to a specific subfolder in the application's permanent document directory.
+  /// returns only the filename.
+  Future<String> saveAnyLocalImage(
+    XFile pickedFile, {
+    String? customFileName,
+    String subFolder = 'general_images',
+  }) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final localFolder = Directory(p.join(appDir.path, subFolder));
 
-    final localPath = p.join(localFolder.path, fileName);
-    final savedFile = await File(pickedFile.path).copy(localPath);
-    debugPrint('📂 [ObjectDB] Saved local image to: ${savedFile.path}');
-    return savedFile.path;
+      if (!await localFolder.exists()) {
+        await localFolder.create(recursive: true);
+      }
+
+      // If no custom name provided, keep original name but sanitize
+      final fileName = customFileName ?? p.basename(pickedFile.path);
+      final localPath = p.join(localFolder.path, fileName);
+
+      // Overwrite if exists
+      final oldFile = File(localPath);
+      if (await oldFile.exists()) {
+        await oldFile.delete();
+      }
+
+      final savedFile = await File(pickedFile.path).copy(localPath);
+      print('📂 [ObjectDB] Saved universal image to: ${savedFile.path}');
+
+      // Evict from Flutter image cache to ensure UI updates
+      await imageCache.evict(FileImage(File(localPath)));
+
+      return p.basename(savedFile.path);
+    } catch (e) {
+      print('❌ [ObjectDB] saveAnyLocalImage failed: $e');
+      rethrow;
+    }
+  }
+
+  /// Legacy wrapper for backward compatibility with avatar/cover logic
+  Future<String> _saveLocalImage(XFile pickedFile, String fileName) async {
+    return saveAnyLocalImage(
+      pickedFile,
+      customFileName: fileName,
+      subFolder: 'profile_images',
+    );
   }
 
   /// Upload an image file to MinIO via the backend.
@@ -42,11 +76,12 @@ class ObjectDatabaseBlock {
   /// [fileName] - The target filename (e.g. 'admin.png' or 'cover.png')
   /// [imageFile] - The local image file to upload
   /// [token] - JWT auth token for the backend
-  Future<bool> uploadImageToMinio({
-    required String userId,
-    required String fileName,
+  /// Upload an image file to the Java Backend.
+  /// Uses specific endpoints for avatar, cover, and general media.
+  Future<bool> uploadImageToBackend({
     required File imageFile,
     required String token,
+    String? type, // 'avatar', 'cover', or null for general
   }) async {
     try {
       final baseUrl = UserObjectResource.baseObjectUrl.endsWith('/')
@@ -56,51 +91,72 @@ class ObjectDatabaseBlock {
             )
           : UserObjectResource.baseObjectUrl;
 
-      final uploadUrl = Uri.parse(
-        '$baseUrl/object/duylongwebappobjectdatabase/$userId/$fileName',
-      );
-
-      debugPrint('📤 [ObjectDB] Uploading $fileName for userId: $userId');
-      debugPrint('📤 [ObjectDB] Upload URL: $uploadUrl');
-
-      // Detect content type
-      String contentType = 'application/octet-stream';
-      if (fileName.toLowerCase().endsWith('.png')) {
-        contentType = 'image/png';
-      } else if (fileName.toLowerCase().endsWith('.jpg') ||
-          fileName.toLowerCase().endsWith('.jpeg')) {
-        contentType = 'image/jpeg';
-      } else if (fileName.toLowerCase().endsWith('.gif')) {
-        contentType = 'image/gif';
+      String endpoint;
+      if (type == 'avatar') {
+        endpoint = '/backend/person/avatar/update';
+      } else if (type == 'cover') {
+        endpoint = '/backend/person/cover/update';
+      } else {
+        endpoint = '/backend/person/app/upload';
       }
 
-      // Send direct PUT request with raw bytes
-      final response = await http.put(
-        uploadUrl,
-        headers: {
-          'Authorization': 'Bearer $token',
-          'Content-Type': contentType,
-        },
-        body: await imageFile.readAsBytes(),
+      final uploadUrl = Uri.parse('$baseUrl$endpoint');
+      final fileName = p.basename(imageFile.path);
+
+      debugPrint('📤 [ObjectDB] Uploading $fileName to $uploadUrl');
+
+      final request = http.MultipartRequest('POST', uploadUrl);
+      request.headers.addAll({
+        'Authorization': 'Bearer $token',
+        'Accept': 'application/json',
+      });
+
+      // Add file
+      final multipartFile = await http.MultipartFile.fromPath(
+        'file',
+        imageFile.path,
+        filename: fileName,
       );
+      request.files.add(multipartFile);
+
+      final streamedResponse = await request.send().timeout(
+        const Duration(seconds: 60),
+      );
+      final response = await http.Response.fromStream(streamedResponse);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
-        debugPrint('✅ [ObjectDB] $fileName uploaded successfully');
+        debugPrint(
+          '✅ [ObjectDB] $fileName uploaded successfully: ${response.body}',
+        );
         return true;
       } else {
-        debugPrint(
-          '❌ [ObjectDB] Upload failed: ${response.statusCode} - ${response.body}',
-        );
-        return false;
+        debugPrint('❌ [ObjectDB] Upload failed status: ${response.statusCode}');
+        debugPrint('❌ [ObjectDB] Error Body: ${response.body}');
+        throw Exception('Upload Failed: HTTP ${response.statusCode}');
       }
     } catch (e) {
       debugPrint('❌ [ObjectDB] Upload error: $e');
-      return false;
+      rethrow;
     }
   }
 
+  // Legacy compatibility / Helper for existing calls
+  Future<bool> uploadImageToMinio({
+    required String userId,
+    required String fileName,
+    required File imageFile,
+    required String token,
+  }) async {
+    // Determine type from fileName for backward compatibility
+    String? type;
+    if (fileName == 'avatar.png' || fileName == 'admin.png') type = 'avatar';
+    if (fileName == 'cover.png') type = 'cover';
+
+    return uploadImageToBackend(imageFile: imageFile, token: token, type: type);
+  }
+
   /// Pick an image from gallery and upload it as avatar (admin.png)
-  /// Returns the local path if successful.
+  /// Returns the local path if successful (local save).
   Future<String?> pickAndUploadAvatar({
     required String userId,
     required String token,
@@ -118,29 +174,36 @@ class ObjectDatabaseBlock {
         return null;
       }
 
-      final localPath = await _saveLocalImage(pickedFile, 'admin.png');
-
+      // 1. Save locally FIRST (Ensures offline persistence)
+      final localPath = await _saveLocalImage(pickedFile, 'avatar.png');
       final file = File(localPath);
-      final success = await uploadImageToMinio(
-        userId: userId,
-        fileName: 'admin.png',
-        imageFile: file,
-        token: token,
-      );
 
-      if (success) {
-        _refreshUrls(userId);
+      // 2. Attempt upload in background/try-catch
+      try {
+        final success = await uploadImageToMinio(
+          userId: userId,
+          fileName: 'admin.png',
+          imageFile: file,
+          token: token,
+        );
+
+        if (success) {
+          _refreshUrls(userId);
+        }
+      } catch (e) {
+        print('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
+        // We continue because we have the local copy stored
       }
 
       return localPath;
     } catch (e) {
-      debugPrint('❌ [ObjectDB] pickAndUploadAvatar error: $e');
+      debugPrint('❌ [ObjectDB] pickAndUploadAvatar fatal error: $e');
       return null;
     }
   }
 
   /// Pick an image from gallery and upload it as cover (cover.png)
-  /// Returns the local path if successful.
+  /// Returns the local path if successful (local save).
   Future<String?> pickAndUploadCover({
     required String userId,
     required String token,
@@ -158,23 +221,29 @@ class ObjectDatabaseBlock {
         return null;
       }
 
+      // 1. Save locally FIRST
       final localPath = await _saveLocalImage(pickedFile, 'cover.png');
-
       final file = File(localPath);
-      final success = await uploadImageToMinio(
-        userId: userId,
-        fileName: 'cover.png',
-        imageFile: file,
-        token: token,
-      );
 
-      if (success) {
-        _refreshUrls(userId);
+      // 2. Attempt upload
+      try {
+        final success = await uploadImageToMinio(
+          userId: userId,
+          fileName: 'cover.png',
+          imageFile: file,
+          token: token,
+        );
+
+        if (success) {
+          _refreshUrls(userId);
+        }
+      } catch (e) {
+        print('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
       }
 
       return localPath;
     } catch (e) {
-      debugPrint('❌ [ObjectDB] pickAndUploadCover error: $e');
+      debugPrint('❌ [ObjectDB] pickAndUploadCover fatal error: $e');
       return null;
     }
   }
@@ -191,9 +260,9 @@ class ObjectDatabaseBlock {
     final cacheBuster = DateTime.now().millisecondsSinceEpoch;
     userObjectResource.value = UserObjectResource(
       avatarImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$userId/admin.png?v=$cacheBuster",
+          "$baseUrl/object/profiles/$userId/avatars/avatar.png?v=$cacheBuster",
       coverImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$userId/cover.png?v=$cacheBuster",
+          "$baseUrl/object/profiles/$userId/covers/cover.png?v=$cacheBuster",
     );
   }
 
@@ -233,10 +302,43 @@ class ObjectDatabaseBlock {
     }
 
     userObjectResource.value = UserObjectResource(
-      avatarImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$pathId/admin.png",
-      coverImage:
-          "$baseUrl/object/duylongwebappobjectdatabase/$pathId/cover.png",
+      avatarImage: "$baseUrl/object/profiles/$pathId/avatars/avatar.png",
+      coverImage: "$baseUrl/object/profiles/$pathId/covers/cover.png",
     );
+  }
+
+  /// Logs all files in a folder to a text file within that folder for debugging.
+  Future<void> logFolderContents(String subFolder) async {
+    try {
+      final appDir = await getApplicationDocumentsDirectory();
+      final folder = Directory(p.join(appDir.path, subFolder));
+
+      if (!await folder.exists()) {
+        debugPrint('❌ [ObjectDB] Folder does not exist: $subFolder');
+        return;
+      }
+
+      final List<FileSystemEntity> files = await folder.list().toList();
+      final StringBuffer logBuf = StringBuffer();
+      logBuf.writeln('📅 Folder Log: $subFolder at ${DateTime.now()}');
+      logBuf.writeln('------------------------------------------');
+
+      for (var file in files) {
+        if (file is File) {
+          final size = await file.length();
+          logBuf.writeln('${p.basename(file.path)} - $size bytes');
+        } else {
+          logBuf.writeln('${p.basename(file.path)} [DIR]');
+        }
+      }
+
+      final logFile = File(p.join(folder.path, 'manifest.txt'));
+      await logFile.writeAsString(logBuf.toString());
+      debugPrint(
+        '📝 [ObjectDB] Logged ${files.length} items to ${logFile.path}',
+      );
+    } catch (e) {
+      debugPrint('❌ [ObjectDB] logFolderContents failed: $e');
+    }
   }
 }

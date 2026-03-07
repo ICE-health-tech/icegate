@@ -111,6 +111,13 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
       'icon': Icons.note_alt_rounded,
       'desc': 'Keep track of ideas',
     },
+    {
+      'name': 'Block Reminder',
+      'url': '/health/block-reminder',
+      'alias': 'BlockReminder',
+      'icon': Icons.timer_rounded,
+      'desc': '5-minute focus block',
+    },
   ];
 
   @override

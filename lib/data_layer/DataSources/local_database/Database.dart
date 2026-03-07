@@ -1,9 +1,9 @@
 // 1. Core Drift and Platform Imports
 import 'package:drift/drift.dart';
-import 'package:flutter/foundation.dart';
 import 'package:drift/native.dart'; // For NativeDatabase on mobile/desktop
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_gate/initial_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
@@ -1020,6 +1020,148 @@ class HealthMetricsTable extends Table {
   IntColumn get caloriesBurned => integer()
       .withDefault(const Constant(0))
       .named('calories_burned')
+      .nullable()();
+  RealColumn get questPoints => real()
+      .withDefault(const Constant(0.0))
+      .named('quest_points')
+      .nullable()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {personID, date},
+  ];
+}
+
+@DataClassName('FinancialMetricsLocal')
+class FinancialMetricsTable extends Table {
+  @override
+  String get tableName => 'financial_metrics';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text()
+      .nullable()
+      .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
+      .named('tenant_id')();
+  TextColumn get metricID => text().nullable().named('metric_id')();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  DateTimeColumn get date =>
+      dateTime().map(const DateTimeUTCConverter()).named('date')();
+  RealColumn get totalBalance => real()
+      .withDefault(const Constant(0.0))
+      .named('total_balance')
+      .nullable()();
+  RealColumn get totalSavings => real()
+      .withDefault(const Constant(0.0))
+      .named('total_savings')
+      .nullable()();
+  RealColumn get totalInvestments => real()
+      .withDefault(const Constant(0.0))
+      .named('total_investments')
+      .nullable()();
+  RealColumn get dailyExpenses => real()
+      .withDefault(const Constant(0.0))
+      .named('daily_expenses')
+      .nullable()();
+  RealColumn get questPoints => real()
+      .withDefault(const Constant(0.0))
+      .named('quest_points')
+      .nullable()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {personID, date},
+  ];
+}
+
+@DataClassName('ProjectMetricsLocal')
+class ProjectMetricsTable extends Table {
+  @override
+  String get tableName => 'project_metrics';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text()
+      .nullable()
+      .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
+      .named('tenant_id')();
+  TextColumn get metricID => text().nullable().named('metric_id')();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  DateTimeColumn get date =>
+      dateTime().map(const DateTimeUTCConverter()).named('date')();
+  IntColumn get tasksCompleted => integer()
+      .withDefault(const Constant(0))
+      .named('tasks_completed')
+      .nullable()();
+  IntColumn get projectsCompleted => integer()
+      .withDefault(const Constant(0))
+      .named('projects_completed')
+      .nullable()();
+  IntColumn get focusMinutes => integer()
+      .withDefault(const Constant(0))
+      .named('focus_minutes')
+      .nullable()();
+  RealColumn get questPoints => real()
+      .withDefault(const Constant(0.0))
+      .named('quest_points')
+      .nullable()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {personID, date},
+  ];
+}
+
+@DataClassName('SocialMetricsLocal')
+class SocialMetricsTable extends Table {
+  @override
+  String get tableName => 'social_metrics';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text()
+      .nullable()
+      .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
+      .named('tenant_id')();
+  TextColumn get metricID => text().nullable().named('metric_id')();
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  DateTimeColumn get date =>
+      dateTime().map(const DateTimeUTCConverter()).named('date')();
+  IntColumn get contactsCount => integer()
+      .withDefault(const Constant(0))
+      .named('contacts_count')
+      .nullable()();
+  IntColumn get totalAffection => integer()
+      .withDefault(const Constant(0))
+      .named('total_affection')
+      .nullable()();
+  RealColumn get questPoints => real()
+      .withDefault(const Constant(0.0))
+      .named('quest_points')
       .nullable()();
   DateTimeColumn get updatedAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -2274,6 +2416,29 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   Future<void> updateProfile(ProfileData profile) =>
       update(profilesTable).replace(profile);
 
+  // --- Image Path Updates ---
+  Future<void> updateAvatarLocalPath(String personId, String filename) async {
+    await (update(personsTable)..where((t) => t.id.equals(personId))).write(
+      PersonsTableCompanion(avatarLocalPath: Value(filename)),
+    );
+  }
+
+  Future<void> updateCoverLocalPath(String personId, String filename) async {
+    await (update(cVAddressesTable)..where((t) => t.personID.equals(personId)))
+        .write(CVAddressesTableCompanion(coverLocalPath: Value(filename)));
+  }
+
+  Future<void> updateAvatarImageUrl(String personId, String url) async {
+    await (update(personsTable)..where((t) => t.id.equals(personId))).write(
+      PersonsTableCompanion(profileImageUrl: Value(url)),
+    );
+  }
+
+  Future<void> updateCoverImageUrl(String personId, String url) async {
+    await (update(cVAddressesTable)..where((t) => t.personID.equals(personId)))
+        .write(CVAddressesTableCompanion(coverImageUrl: Value(url)));
+  }
+
   // CV Addresses
   Future<int> createCVAddress(
     CVAddressProtocol cvAddress, {
@@ -2426,11 +2591,19 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
             firstName: firstName != null
                 ? Value(firstName)
                 : const Value.absent(),
-            lastName: Value(lastName),
-            profileImageUrl: Value(profileImageUrl),
-            coverImageUrl: Value(coverImageUrl),
-            avatarLocalPath: Value(avatarLocalPath),
-            coverLocalPath: Value(coverLocalPath),
+            lastName: lastName != null ? Value(lastName) : const Value.absent(),
+            profileImageUrl: profileImageUrl != null
+                ? Value(profileImageUrl)
+                : const Value.absent(),
+            coverImageUrl: coverImageUrl != null
+                ? Value(coverImageUrl)
+                : const Value.absent(),
+            avatarLocalPath: avatarLocalPath != null
+                ? Value(avatarLocalPath)
+                : const Value.absent(),
+            coverLocalPath: coverLocalPath != null
+                ? Value(coverLocalPath)
+                : const Value.absent(),
             updatedAt: Value(now),
           ),
         );
@@ -2459,16 +2632,32 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
         )..where((t) => t.id.equals(personId))).write(
           ProfilesTableCompanion(
             personID: Value(personId),
-            bio: Value(bio),
-            occupation: Value(occupation),
-            educationLevel: Value(educationLevel),
-            location: Value(location),
-            websiteUrl: Value(websiteUrl),
-            linkedinUrl: Value(linkedinUrl),
-            githubUrl: Value(githubUrl),
-            coverImageUrl: Value(coverImageUrl),
-            avatarLocalPath: Value(avatarLocalPath),
-            coverLocalPath: Value(coverLocalPath),
+            bio: bio != null ? Value(bio) : const Value.absent(),
+            occupation: occupation != null
+                ? Value(occupation)
+                : const Value.absent(),
+            educationLevel: educationLevel != null
+                ? Value(educationLevel)
+                : const Value.absent(),
+            location: location != null ? Value(location) : const Value.absent(),
+            websiteUrl: websiteUrl != null
+                ? Value(websiteUrl)
+                : const Value.absent(),
+            linkedinUrl: linkedinUrl != null
+                ? Value(linkedinUrl)
+                : const Value.absent(),
+            githubUrl: githubUrl != null
+                ? Value(githubUrl)
+                : const Value.absent(),
+            coverImageUrl: coverImageUrl != null
+                ? Value(coverImageUrl)
+                : const Value.absent(),
+            avatarLocalPath: avatarLocalPath != null
+                ? Value(avatarLocalPath)
+                : const Value.absent(),
+            coverLocalPath: coverLocalPath != null
+                ? Value(coverLocalPath)
+                : const Value.absent(),
             updatedAt: Value(now),
           ),
         );
@@ -2502,19 +2691,37 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
         )..where((t) => t.id.equals(personId))).write(
           CVAddressesTableCompanion(
             personID: Value(personId),
-            bio: Value(bio),
-            occupation: Value(occupation),
-            educationLevel: Value(educationLevel),
-            location: Value(location),
-            websiteUrl: Value(websiteUrl),
-            linkedinUrl: Value(linkedinUrl),
-            githubUrl: Value(githubUrl),
-            company: Value(company),
-            university: Value(university),
-            country: Value(country),
-            coverImageUrl: Value(coverImageUrl),
-            avatarLocalPath: Value(avatarLocalPath),
-            coverLocalPath: Value(coverLocalPath),
+            bio: bio != null ? Value(bio) : const Value.absent(),
+            occupation: occupation != null
+                ? Value(occupation)
+                : const Value.absent(),
+            educationLevel: educationLevel != null
+                ? Value(educationLevel)
+                : const Value.absent(),
+            location: location != null ? Value(location) : const Value.absent(),
+            websiteUrl: websiteUrl != null
+                ? Value(websiteUrl)
+                : const Value.absent(),
+            linkedinUrl: linkedinUrl != null
+                ? Value(linkedinUrl)
+                : const Value.absent(),
+            githubUrl: githubUrl != null
+                ? Value(githubUrl)
+                : const Value.absent(),
+            company: company != null ? Value(company) : const Value.absent(),
+            university: university != null
+                ? Value(university)
+                : const Value.absent(),
+            country: country != null ? Value(country) : const Value.absent(),
+            coverImageUrl: coverImageUrl != null
+                ? Value(coverImageUrl)
+                : const Value.absent(),
+            avatarLocalPath: avatarLocalPath != null
+                ? Value(avatarLocalPath)
+                : const Value.absent(),
+            coverLocalPath: coverLocalPath != null
+                ? Value(coverLocalPath)
+                : const Value.absent(),
             updatedAt: Value(now),
           ),
         );
@@ -3150,14 +3357,11 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> insertOrUpdateMetrics(HealthMetricsTableCompanion entry) async {
     final d = entry.date.value;
-    // Normalize to local noon to preserve the date across global UTC boundaries
-    // Supabase DATE extraction safely aligns 12:00 Local for almost all timezones.
     final normalized = DateTime(d.year, d.month, d.day, 12, 0, 0);
     final personId = entry.personID.value;
 
     if (personId == null || personId.isEmpty) return;
 
-    // Generate deterministic ID based on personId and normalized date
     final dateStr =
         "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
     final deterministicId = IDGen.generateDeterministicUuid(personId, dateStr);
@@ -3165,10 +3369,6 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
     final existing = await getMetricsForDate(personId, normalized);
 
     if (existing != null) {
-      debugPrint(
-        "HealthMetricsDAO: Found existing record for $normalized (ID: ${existing.id})",
-      );
-      // "Highest wins" for cumulative metrics
       final currentSteps = entry.steps.present ? entry.steps.value ?? 0 : 0;
       final savedSteps = existing.steps ?? 0;
       final updatedSteps = entry.steps.present
@@ -3176,16 +3376,6 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
                 ? entry.steps
                 : Value(savedSteps)
           : Value(savedSteps);
-
-      if (entry.steps.present && currentSteps < savedSteps) {
-        debugPrint(
-          "HealthMetricsDAO: 🛡️ Steps highest wins: keeping $savedSteps (received $currentSteps)",
-        );
-      } else if (entry.steps.present && currentSteps > savedSteps) {
-        debugPrint(
-          "HealthMetricsDAO: 📈 Steps highest wins: updating to $currentSteps (was $savedSteps)",
-        );
-      }
 
       final currentCalories = entry.caloriesBurned.present
           ? entry.caloriesBurned.value ?? 0
@@ -3202,18 +3392,13 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       )..where((t) => t.id.equals(existing.id))).write(
         entry.copyWith(
           id: Value(existing.id),
-          date: Value(
-            existing.date,
-          ), // Preserve exact existing date representation
+          date: Value(existing.date),
           steps: updatedSteps,
           caloriesBurned: updatedCaloriesBurned,
           updatedAt: Value(DateTime.now()),
         ),
       );
     } else {
-      debugPrint(
-        "HealthMetricsDAO: No existing record for $normalized. Inserting with ID: $deterministicId",
-      );
       await into(healthMetricsTable).insert(
         entry.copyWith(
           id: Value(deterministicId),
@@ -3249,7 +3434,6 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
     for (var entry in grouped.entries) {
       if (entry.value.length > 1) {
-        debugPrint("HealthMetricsDAO: 🧹 Merging duplicates for ${entry.key}");
         final targetId = IDGen.generateDeterministicUuid(personId, entry.key);
         HealthMetricsLocal? winner;
         for (var m in entry.value) {
@@ -3259,10 +3443,8 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
           }
         }
         winner ??= entry.value.first;
-
         for (var m in entry.value) {
           if (m.id != winner.id) {
-            debugPrint("HealthMetricsDAO:   - removing duplicate ID: ${m.id}");
             await (delete(
               healthMetricsTable,
             )..where((t) => t.id.equals(m.id))).go();
@@ -3270,6 +3452,358 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         }
       }
     }
+  }
+}
+
+@DriftAccessor(
+  tables: [
+    HealthMetricsTable,
+    FinancialMetricsTable,
+    ProjectMetricsTable,
+    SocialMetricsTable,
+  ],
+)
+class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
+  MetricsDAO(super.db);
+
+  String _getDateStr(DateTime date) {
+    return "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+  }
+
+  // --- Health Quests ---
+  Future<void> incrementHealthQuestPoints(
+    String personId,
+    double points,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateStr = _getDateStr(now);
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+
+    await transaction(() async {
+      // Find EITHER by deterministic ID OR by (person_id, date) to handle sync overlaps
+      final existingList =
+          await (select(healthMetricsTable)..where(
+                (t) =>
+                    t.id.equals(targetId) |
+                    (t.personID.equals(personId) & t.date.equals(today)),
+              ))
+              .get();
+
+      if (existingList.isNotEmpty) {
+        final existing = existingList.first;
+
+        // Cleanup local sync duplicates if they exist
+        if (existingList.length > 1) {
+          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
+          await (delete(
+            healthMetricsTable,
+          )..where((t) => t.id.isIn(idsToDelete))).go();
+        }
+
+        await (update(
+          healthMetricsTable,
+        )..where((t) => t.id.equals(existing.id))).write(
+          HealthMetricsTableCompanion(
+            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            updatedAt: Value(now),
+          ),
+        );
+      } else {
+        await into(healthMetricsTable).insert(
+          HealthMetricsTableCompanion(
+            id: Value(targetId),
+            personID: Value(personId),
+            date: Value(today),
+            questPoints: Value(points),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  // --- Social Quests ---
+  Future<void> incrementSocialQuestPoints(
+    String personId,
+    double points,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateStr = _getDateStr(now);
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+
+    await transaction(() async {
+      final existingList =
+          await (select(socialMetricsTable)..where(
+                (t) =>
+                    t.id.equals(targetId) |
+                    (t.personID.equals(personId) & t.date.equals(today)),
+              ))
+              .get();
+
+      if (existingList.isNotEmpty) {
+        final existing = existingList.first;
+
+        // Cleanup local sync duplicates if they exist
+        if (existingList.length > 1) {
+          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
+          await (delete(
+            socialMetricsTable,
+          )..where((t) => t.id.isIn(idsToDelete))).go();
+        }
+
+        await (update(
+          socialMetricsTable,
+        )..where((t) => t.id.equals(existing.id))).write(
+          SocialMetricsTableCompanion(
+            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            updatedAt: Value(now),
+          ),
+        );
+      } else {
+        await into(socialMetricsTable).insert(
+          SocialMetricsTableCompanion(
+            id: Value(targetId),
+            personID: Value(personId),
+            date: Value(today),
+            questPoints: Value(points),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  // --- Financial Quests ---
+  Future<void> incrementFinancialQuestPoints(
+    String personId,
+    double points,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateStr = _getDateStr(now);
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+
+    await transaction(() async {
+      final existingList =
+          await (select(financialMetricsTable)..where(
+                (t) =>
+                    t.id.equals(targetId) |
+                    (t.personID.equals(personId) & t.date.equals(today)),
+              ))
+              .get();
+
+      if (existingList.isNotEmpty) {
+        final existing = existingList.first;
+
+        // Cleanup local sync duplicates if they exist
+        if (existingList.length > 1) {
+          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
+          await (delete(
+            financialMetricsTable,
+          )..where((t) => t.id.isIn(idsToDelete))).go();
+        }
+
+        await (update(
+          financialMetricsTable,
+        )..where((t) => t.id.equals(existing.id))).write(
+          FinancialMetricsTableCompanion(
+            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            updatedAt: Value(now),
+          ),
+        );
+      } else {
+        await into(financialMetricsTable).insert(
+          FinancialMetricsTableCompanion(
+            id: Value(targetId),
+            personID: Value(personId),
+            date: Value(today),
+            questPoints: Value(points),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  // --- Project Quests ---
+  Future<void> incrementProjectQuestPoints(
+    String personId,
+    double points,
+  ) async {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final dateStr = _getDateStr(now);
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+
+    await transaction(() async {
+      final existingList =
+          await (select(projectMetricsTable)..where(
+                (t) =>
+                    t.id.equals(targetId) |
+                    (t.personID.equals(personId) & t.date.equals(today)),
+              ))
+              .get();
+
+      if (existingList.isNotEmpty) {
+        final existing = existingList.first;
+
+        // Cleanup local sync duplicates if they exist
+        if (existingList.length > 1) {
+          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
+          await (delete(
+            projectMetricsTable,
+          )..where((t) => t.id.isIn(idsToDelete))).go();
+        }
+
+        await (update(
+          projectMetricsTable,
+        )..where((t) => t.id.equals(existing.id))).write(
+          ProjectMetricsTableCompanion(
+            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            updatedAt: Value(now),
+          ),
+        );
+      } else {
+        await into(projectMetricsTable).insert(
+          ProjectMetricsTableCompanion(
+            id: Value(targetId),
+            personID: Value(personId),
+            date: Value(today),
+            questPoints: Value(points),
+            updatedAt: Value(now),
+          ),
+        );
+      }
+    });
+  }
+
+  // Watchers for today's metrics
+  Stream<HealthMetricsLocal?> watchTodayHealth(String personId) {
+    final dateStr = _getDateStr(DateTime.now());
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    return (select(
+      healthMetricsTable,
+    )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
+  }
+
+  Stream<SocialMetricsLocal?> watchTodaySocial(String personId) {
+    final dateStr = _getDateStr(DateTime.now());
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    return (select(
+      socialMetricsTable,
+    )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
+  }
+
+  Stream<ProjectMetricsLocal?> watchTodayProject(String personId) {
+    final dateStr = _getDateStr(DateTime.now());
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    return (select(
+      projectMetricsTable,
+    )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
+  }
+
+  Stream<FinancialMetricsLocal?> watchTodayFinancial(String personId) {
+    final dateStr = _getDateStr(DateTime.now());
+    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    return (select(
+      financialMetricsTable,
+    )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
+  }
+
+  // --- Total Quest Points Watchers (Sum of all time) ---
+
+  Stream<double> watchTotalHealthQuestPoints(String personId) {
+    return customSelect(
+      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM health_metrics WHERE person_id = ? GROUP BY date)',
+      variables: [Variable.withString(personId)],
+      readsFrom: {healthMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTotalSocialQuestPoints(String personId) {
+    return customSelect(
+      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM social_metrics WHERE person_id = ? GROUP BY date)',
+      variables: [Variable.withString(personId)],
+      readsFrom: {socialMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTotalProjectQuestPoints(String personId) {
+    return customSelect(
+      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM project_metrics WHERE person_id = ? GROUP BY date)',
+      variables: [Variable.withString(personId)],
+      readsFrom: {projectMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTotalFinancialQuestPoints(String personId) {
+    return customSelect(
+      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM financial_metrics WHERE person_id = ? GROUP BY date)',
+      variables: [Variable.withString(personId)],
+      readsFrom: {financialMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  // --- Historical Metric Points (Points derived from steps/etc on previous days) ---
+
+  Stream<double> watchHistoricalHealthMetricPoints(String personId) {
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+
+    return customSelect(
+      'SELECT SUM(max_s) as s, SUM(max_e) as e, SUM(max_sl) as sl FROM (SELECT MAX(steps) as max_s, MAX(exercise_minutes) as max_e, MAX(sleep_hours) as max_sl FROM health_metrics WHERE person_id = ? AND date < ? GROUP BY date)',
+      variables: [
+        Variable.withString(personId),
+        Variable.withDateTime(todayStart),
+      ],
+      readsFrom: {healthMetricsTable},
+    ).watchSingle().map((row) {
+      final s = (row.data['s'] as num?)?.toDouble() ?? 0.0;
+      final e = (row.data['e'] as num?)?.toDouble() ?? 0.0;
+      final sl = (row.data['sl'] as num?)?.toDouble() ?? 0.0;
+
+      // Use same constants as GameConst.dart
+      double points = 0;
+      if (STEPS_PER_POINT > 0) points += (s / STEPS_PER_POINT);
+      if (EXERCISE_PER_POINT > 0) points += (e / EXERCISE_PER_POINT);
+      points += (sl * SLEEP_POINTS_PER_HOUR);
+      return points;
+    });
+  }
+
+  /// Removes the old migration "Genesis" records to cleanup the DB.
+  Future<void> cleanupGenesisRecords(String personId) async {
+    final genesisDate = DateTime(1970, 1, 1).toUtc();
+    await (delete(healthMetricsTable)..where(
+          (t) => t.personID.equals(personId) & t.date.equals(genesisDate),
+        ))
+        .go();
+    await (delete(socialMetricsTable)..where(
+          (t) => t.personID.equals(personId) & t.date.equals(genesisDate),
+        ))
+        .go();
+    await (delete(projectMetricsTable)..where(
+          (t) => t.personID.equals(personId) & t.date.equals(genesisDate),
+        ))
+        .go();
+    await (delete(financialMetricsTable)..where(
+          (t) => t.personID.equals(personId) & t.date.equals(genesisDate),
+        ))
+        .go();
   }
 }
 
@@ -3798,6 +4332,9 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     CVAddressesTable,
     SessionTable,
     HealthMetricsTable,
+    FinancialMetricsTable,
+    ProjectMetricsTable,
+    SocialMetricsTable,
     MealsTable,
     DaysTable,
     ScoresTable,
@@ -3836,6 +4373,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     QuoteDAO,
     HealthLogsDAO,
     QuestDAO,
+    MetricsDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -3855,7 +4393,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 38;
+  int get schemaVersion => 39;
 
   Future<void> clearAllData() async {
     await transaction(() async {

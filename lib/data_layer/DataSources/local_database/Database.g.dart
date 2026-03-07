@@ -107,6 +107,19 @@ mixin _$HealthMetricsDAOMixin on DatabaseAccessor<AppDatabase> {
   $HealthMetricsTableTable get healthMetricsTable =>
       attachedDatabase.healthMetricsTable;
 }
+mixin _$MetricsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $OrganizationsTableTable get organizationsTable =>
+      attachedDatabase.organizationsTable;
+  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
+  $HealthMetricsTableTable get healthMetricsTable =>
+      attachedDatabase.healthMetricsTable;
+  $FinancialMetricsTableTable get financialMetricsTable =>
+      attachedDatabase.financialMetricsTable;
+  $ProjectMetricsTableTable get projectMetricsTable =>
+      attachedDatabase.projectMetricsTable;
+  $SocialMetricsTableTable get socialMetricsTable =>
+      attachedDatabase.socialMetricsTable;
+}
 mixin _$HealthMealDAOMixin on DatabaseAccessor<AppDatabase> {
   $OrganizationsTableTable get organizationsTable =>
       attachedDatabase.organizationsTable;
@@ -14508,6 +14521,18 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _questPointsMeta = const VerificationMeta(
+    'questPoints',
+  );
+  @override
+  late final GeneratedColumn<double> questPoints = GeneratedColumn<double>(
+    'quest_points',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
       GeneratedColumn<DateTime>(
@@ -14534,6 +14559,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     weightKg,
     caloriesConsumed,
     caloriesBurned,
+    questPoints,
     updatedAt,
   ];
   @override
@@ -14640,6 +14666,15 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         ),
       );
     }
+    if (data.containsKey('quest_points')) {
+      context.handle(
+        _questPointsMeta,
+        questPoints.isAcceptableOrUnknown(
+          data['quest_points']!,
+          _questPointsMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -14711,6 +14746,10 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         DriftSqlType.int,
         data['${effectivePrefix}calories_burned'],
       ),
+      questPoints: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quest_points'],
+      ),
       updatedAt: $HealthMetricsTableTable.$converterupdatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -14747,6 +14786,7 @@ class HealthMetricsLocal extends DataClass
   final double? weightKg;
   final int? caloriesConsumed;
   final int? caloriesBurned;
+  final double? questPoints;
   final DateTime updatedAt;
   const HealthMetricsLocal({
     required this.id,
@@ -14763,6 +14803,7 @@ class HealthMetricsLocal extends DataClass
     this.weightKg,
     this.caloriesConsumed,
     this.caloriesBurned,
+    this.questPoints,
     required this.updatedAt,
   });
   @override
@@ -14809,6 +14850,9 @@ class HealthMetricsLocal extends DataClass
     }
     if (!nullToAbsent || caloriesBurned != null) {
       map['calories_burned'] = Variable<int>(caloriesBurned);
+    }
+    if (!nullToAbsent || questPoints != null) {
+      map['quest_points'] = Variable<double>(questPoints);
     }
     {
       map['updated_at'] = Variable<DateTime>(
@@ -14858,6 +14902,9 @@ class HealthMetricsLocal extends DataClass
       caloriesBurned: caloriesBurned == null && nullToAbsent
           ? const Value.absent()
           : Value(caloriesBurned),
+      questPoints: questPoints == null && nullToAbsent
+          ? const Value.absent()
+          : Value(questPoints),
       updatedAt: Value(updatedAt),
     );
   }
@@ -14882,6 +14929,7 @@ class HealthMetricsLocal extends DataClass
       weightKg: serializer.fromJson<double?>(json['weightKg']),
       caloriesConsumed: serializer.fromJson<int?>(json['caloriesConsumed']),
       caloriesBurned: serializer.fromJson<int?>(json['caloriesBurned']),
+      questPoints: serializer.fromJson<double?>(json['questPoints']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -14903,6 +14951,7 @@ class HealthMetricsLocal extends DataClass
       'weightKg': serializer.toJson<double?>(weightKg),
       'caloriesConsumed': serializer.toJson<int?>(caloriesConsumed),
       'caloriesBurned': serializer.toJson<int?>(caloriesBurned),
+      'questPoints': serializer.toJson<double?>(questPoints),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -14922,6 +14971,7 @@ class HealthMetricsLocal extends DataClass
     Value<double?> weightKg = const Value.absent(),
     Value<int?> caloriesConsumed = const Value.absent(),
     Value<int?> caloriesBurned = const Value.absent(),
+    Value<double?> questPoints = const Value.absent(),
     DateTime? updatedAt,
   }) => HealthMetricsLocal(
     id: id ?? this.id,
@@ -14944,6 +14994,7 @@ class HealthMetricsLocal extends DataClass
     caloriesBurned: caloriesBurned.present
         ? caloriesBurned.value
         : this.caloriesBurned,
+    questPoints: questPoints.present ? questPoints.value : this.questPoints,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   HealthMetricsLocal copyWithCompanion(HealthMetricsTableCompanion data) {
@@ -14974,6 +15025,9 @@ class HealthMetricsLocal extends DataClass
       caloriesBurned: data.caloriesBurned.present
           ? data.caloriesBurned.value
           : this.caloriesBurned,
+      questPoints: data.questPoints.present
+          ? data.questPoints.value
+          : this.questPoints,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -14995,6 +15049,7 @@ class HealthMetricsLocal extends DataClass
           ..write('weightKg: $weightKg, ')
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
+          ..write('questPoints: $questPoints, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -15016,6 +15071,7 @@ class HealthMetricsLocal extends DataClass
     weightKg,
     caloriesConsumed,
     caloriesBurned,
+    questPoints,
     updatedAt,
   );
   @override
@@ -15036,6 +15092,7 @@ class HealthMetricsLocal extends DataClass
           other.weightKg == this.weightKg &&
           other.caloriesConsumed == this.caloriesConsumed &&
           other.caloriesBurned == this.caloriesBurned &&
+          other.questPoints == this.questPoints &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -15054,6 +15111,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   final Value<double?> weightKg;
   final Value<int?> caloriesConsumed;
   final Value<int?> caloriesBurned;
+  final Value<double?> questPoints;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const HealthMetricsTableCompanion({
@@ -15071,6 +15129,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.weightKg = const Value.absent(),
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
+    this.questPoints = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -15089,6 +15148,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.weightKg = const Value.absent(),
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
+    this.questPoints = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -15108,6 +15168,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Expression<double>? weightKg,
     Expression<int>? caloriesConsumed,
     Expression<int>? caloriesBurned,
+    Expression<double>? questPoints,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -15126,6 +15187,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       if (weightKg != null) 'weight_kg': weightKg,
       if (caloriesConsumed != null) 'calories_consumed': caloriesConsumed,
       if (caloriesBurned != null) 'calories_burned': caloriesBurned,
+      if (questPoints != null) 'quest_points': questPoints,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -15146,6 +15208,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Value<double?>? weightKg,
     Value<int?>? caloriesConsumed,
     Value<int?>? caloriesBurned,
+    Value<double?>? questPoints,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -15164,6 +15227,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       weightKg: weightKg ?? this.weightKg,
       caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
       caloriesBurned: caloriesBurned ?? this.caloriesBurned,
+      questPoints: questPoints ?? this.questPoints,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -15216,6 +15280,9 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     if (caloriesBurned.present) {
       map['calories_burned'] = Variable<int>(caloriesBurned.value);
     }
+    if (questPoints.present) {
+      map['quest_points'] = Variable<double>(questPoints.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(
         $HealthMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
@@ -15244,6 +15311,1976 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
           ..write('weightKg: $weightKg, ')
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $FinancialMetricsTableTable extends FinancialMetricsTable
+    with TableInfo<$FinancialMetricsTableTable, FinancialMetricsLocal> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FinancialMetricsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _metricIDMeta = const VerificationMeta(
+    'metricID',
+  );
+  @override
+  late final GeneratedColumn<String> metricID = GeneratedColumn<String>(
+    'metric_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> date =
+      GeneratedColumn<DateTime>(
+        'date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($FinancialMetricsTableTable.$converterdate);
+  static const VerificationMeta _totalBalanceMeta = const VerificationMeta(
+    'totalBalance',
+  );
+  @override
+  late final GeneratedColumn<double> totalBalance = GeneratedColumn<double>(
+    'total_balance',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _totalSavingsMeta = const VerificationMeta(
+    'totalSavings',
+  );
+  @override
+  late final GeneratedColumn<double> totalSavings = GeneratedColumn<double>(
+    'total_savings',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _totalInvestmentsMeta = const VerificationMeta(
+    'totalInvestments',
+  );
+  @override
+  late final GeneratedColumn<double> totalInvestments = GeneratedColumn<double>(
+    'total_investments',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _dailyExpensesMeta = const VerificationMeta(
+    'dailyExpenses',
+  );
+  @override
+  late final GeneratedColumn<double> dailyExpenses = GeneratedColumn<double>(
+    'daily_expenses',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _questPointsMeta = const VerificationMeta(
+    'questPoints',
+  );
+  @override
+  late final GeneratedColumn<double> questPoints = GeneratedColumn<double>(
+    'quest_points',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>(
+        $FinancialMetricsTableTable.$converterupdatedAt,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    totalBalance,
+    totalSavings,
+    totalInvestments,
+    dailyExpenses,
+    questPoints,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'financial_metrics';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FinancialMetricsLocal> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('metric_id')) {
+      context.handle(
+        _metricIDMeta,
+        metricID.isAcceptableOrUnknown(data['metric_id']!, _metricIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('total_balance')) {
+      context.handle(
+        _totalBalanceMeta,
+        totalBalance.isAcceptableOrUnknown(
+          data['total_balance']!,
+          _totalBalanceMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_savings')) {
+      context.handle(
+        _totalSavingsMeta,
+        totalSavings.isAcceptableOrUnknown(
+          data['total_savings']!,
+          _totalSavingsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_investments')) {
+      context.handle(
+        _totalInvestmentsMeta,
+        totalInvestments.isAcceptableOrUnknown(
+          data['total_investments']!,
+          _totalInvestmentsMeta,
+        ),
+      );
+    }
+    if (data.containsKey('daily_expenses')) {
+      context.handle(
+        _dailyExpensesMeta,
+        dailyExpenses.isAcceptableOrUnknown(
+          data['daily_expenses']!,
+          _dailyExpensesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quest_points')) {
+      context.handle(
+        _questPointsMeta,
+        questPoints.isAcceptableOrUnknown(
+          data['quest_points']!,
+          _questPointsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, date},
+  ];
+  @override
+  FinancialMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FinancialMetricsLocal(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      metricID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metric_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      date: $FinancialMetricsTableTable.$converterdate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date'],
+        )!,
+      ),
+      totalBalance: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_balance'],
+      ),
+      totalSavings: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_savings'],
+      ),
+      totalInvestments: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}total_investments'],
+      ),
+      dailyExpenses: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}daily_expenses'],
+      ),
+      questPoints: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quest_points'],
+      ),
+      updatedAt: $FinancialMetricsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $FinancialMetricsTableTable createAlias(String alias) {
+    return $FinancialMetricsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterdate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class FinancialMetricsLocal extends DataClass
+    implements Insertable<FinancialMetricsLocal> {
+  final String id;
+  final String? tenantID;
+  final String? metricID;
+  final String? personID;
+  final DateTime date;
+  final double? totalBalance;
+  final double? totalSavings;
+  final double? totalInvestments;
+  final double? dailyExpenses;
+  final double? questPoints;
+  final DateTime updatedAt;
+  const FinancialMetricsLocal({
+    required this.id,
+    this.tenantID,
+    this.metricID,
+    this.personID,
+    required this.date,
+    this.totalBalance,
+    this.totalSavings,
+    this.totalInvestments,
+    this.dailyExpenses,
+    this.questPoints,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || metricID != null) {
+      map['metric_id'] = Variable<String>(metricID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    {
+      map['date'] = Variable<DateTime>(
+        $FinancialMetricsTableTable.$converterdate.toSql(date),
+      );
+    }
+    if (!nullToAbsent || totalBalance != null) {
+      map['total_balance'] = Variable<double>(totalBalance);
+    }
+    if (!nullToAbsent || totalSavings != null) {
+      map['total_savings'] = Variable<double>(totalSavings);
+    }
+    if (!nullToAbsent || totalInvestments != null) {
+      map['total_investments'] = Variable<double>(totalInvestments);
+    }
+    if (!nullToAbsent || dailyExpenses != null) {
+      map['daily_expenses'] = Variable<double>(dailyExpenses);
+    }
+    if (!nullToAbsent || questPoints != null) {
+      map['quest_points'] = Variable<double>(questPoints);
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $FinancialMetricsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  FinancialMetricsTableCompanion toCompanion(bool nullToAbsent) {
+    return FinancialMetricsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      metricID: metricID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metricID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      date: Value(date),
+      totalBalance: totalBalance == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalBalance),
+      totalSavings: totalSavings == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalSavings),
+      totalInvestments: totalInvestments == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalInvestments),
+      dailyExpenses: dailyExpenses == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dailyExpenses),
+      questPoints: questPoints == null && nullToAbsent
+          ? const Value.absent()
+          : Value(questPoints),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory FinancialMetricsLocal.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FinancialMetricsLocal(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      metricID: serializer.fromJson<String?>(json['metricID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      totalBalance: serializer.fromJson<double?>(json['totalBalance']),
+      totalSavings: serializer.fromJson<double?>(json['totalSavings']),
+      totalInvestments: serializer.fromJson<double?>(json['totalInvestments']),
+      dailyExpenses: serializer.fromJson<double?>(json['dailyExpenses']),
+      questPoints: serializer.fromJson<double?>(json['questPoints']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'metricID': serializer.toJson<String?>(metricID),
+      'personID': serializer.toJson<String?>(personID),
+      'date': serializer.toJson<DateTime>(date),
+      'totalBalance': serializer.toJson<double?>(totalBalance),
+      'totalSavings': serializer.toJson<double?>(totalSavings),
+      'totalInvestments': serializer.toJson<double?>(totalInvestments),
+      'dailyExpenses': serializer.toJson<double?>(dailyExpenses),
+      'questPoints': serializer.toJson<double?>(questPoints),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  FinancialMetricsLocal copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> metricID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    DateTime? date,
+    Value<double?> totalBalance = const Value.absent(),
+    Value<double?> totalSavings = const Value.absent(),
+    Value<double?> totalInvestments = const Value.absent(),
+    Value<double?> dailyExpenses = const Value.absent(),
+    Value<double?> questPoints = const Value.absent(),
+    DateTime? updatedAt,
+  }) => FinancialMetricsLocal(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    metricID: metricID.present ? metricID.value : this.metricID,
+    personID: personID.present ? personID.value : this.personID,
+    date: date ?? this.date,
+    totalBalance: totalBalance.present ? totalBalance.value : this.totalBalance,
+    totalSavings: totalSavings.present ? totalSavings.value : this.totalSavings,
+    totalInvestments: totalInvestments.present
+        ? totalInvestments.value
+        : this.totalInvestments,
+    dailyExpenses: dailyExpenses.present
+        ? dailyExpenses.value
+        : this.dailyExpenses,
+    questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  FinancialMetricsLocal copyWithCompanion(FinancialMetricsTableCompanion data) {
+    return FinancialMetricsLocal(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      metricID: data.metricID.present ? data.metricID.value : this.metricID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      date: data.date.present ? data.date.value : this.date,
+      totalBalance: data.totalBalance.present
+          ? data.totalBalance.value
+          : this.totalBalance,
+      totalSavings: data.totalSavings.present
+          ? data.totalSavings.value
+          : this.totalSavings,
+      totalInvestments: data.totalInvestments.present
+          ? data.totalInvestments.value
+          : this.totalInvestments,
+      dailyExpenses: data.dailyExpenses.present
+          ? data.dailyExpenses.value
+          : this.dailyExpenses,
+      questPoints: data.questPoints.present
+          ? data.questPoints.value
+          : this.questPoints,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialMetricsLocal(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('totalBalance: $totalBalance, ')
+          ..write('totalSavings: $totalSavings, ')
+          ..write('totalInvestments: $totalInvestments, ')
+          ..write('dailyExpenses: $dailyExpenses, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    totalBalance,
+    totalSavings,
+    totalInvestments,
+    dailyExpenses,
+    questPoints,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FinancialMetricsLocal &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.metricID == this.metricID &&
+          other.personID == this.personID &&
+          other.date == this.date &&
+          other.totalBalance == this.totalBalance &&
+          other.totalSavings == this.totalSavings &&
+          other.totalInvestments == this.totalInvestments &&
+          other.dailyExpenses == this.dailyExpenses &&
+          other.questPoints == this.questPoints &&
+          other.updatedAt == this.updatedAt);
+}
+
+class FinancialMetricsTableCompanion
+    extends UpdateCompanion<FinancialMetricsLocal> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> metricID;
+  final Value<String?> personID;
+  final Value<DateTime> date;
+  final Value<double?> totalBalance;
+  final Value<double?> totalSavings;
+  final Value<double?> totalInvestments;
+  final Value<double?> dailyExpenses;
+  final Value<double?> questPoints;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const FinancialMetricsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.date = const Value.absent(),
+    this.totalBalance = const Value.absent(),
+    this.totalSavings = const Value.absent(),
+    this.totalInvestments = const Value.absent(),
+    this.dailyExpenses = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FinancialMetricsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required DateTime date,
+    this.totalBalance = const Value.absent(),
+    this.totalSavings = const Value.absent(),
+    this.totalInvestments = const Value.absent(),
+    this.dailyExpenses = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       date = Value(date);
+  static Insertable<FinancialMetricsLocal> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? metricID,
+    Expression<String>? personID,
+    Expression<DateTime>? date,
+    Expression<double>? totalBalance,
+    Expression<double>? totalSavings,
+    Expression<double>? totalInvestments,
+    Expression<double>? dailyExpenses,
+    Expression<double>? questPoints,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (metricID != null) 'metric_id': metricID,
+      if (personID != null) 'person_id': personID,
+      if (date != null) 'date': date,
+      if (totalBalance != null) 'total_balance': totalBalance,
+      if (totalSavings != null) 'total_savings': totalSavings,
+      if (totalInvestments != null) 'total_investments': totalInvestments,
+      if (dailyExpenses != null) 'daily_expenses': dailyExpenses,
+      if (questPoints != null) 'quest_points': questPoints,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FinancialMetricsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? metricID,
+    Value<String?>? personID,
+    Value<DateTime>? date,
+    Value<double?>? totalBalance,
+    Value<double?>? totalSavings,
+    Value<double?>? totalInvestments,
+    Value<double?>? dailyExpenses,
+    Value<double?>? questPoints,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return FinancialMetricsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      metricID: metricID ?? this.metricID,
+      personID: personID ?? this.personID,
+      date: date ?? this.date,
+      totalBalance: totalBalance ?? this.totalBalance,
+      totalSavings: totalSavings ?? this.totalSavings,
+      totalInvestments: totalInvestments ?? this.totalInvestments,
+      dailyExpenses: dailyExpenses ?? this.dailyExpenses,
+      questPoints: questPoints ?? this.questPoints,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (metricID.present) {
+      map['metric_id'] = Variable<String>(metricID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(
+        $FinancialMetricsTableTable.$converterdate.toSql(date.value),
+      );
+    }
+    if (totalBalance.present) {
+      map['total_balance'] = Variable<double>(totalBalance.value);
+    }
+    if (totalSavings.present) {
+      map['total_savings'] = Variable<double>(totalSavings.value);
+    }
+    if (totalInvestments.present) {
+      map['total_investments'] = Variable<double>(totalInvestments.value);
+    }
+    if (dailyExpenses.present) {
+      map['daily_expenses'] = Variable<double>(dailyExpenses.value);
+    }
+    if (questPoints.present) {
+      map['quest_points'] = Variable<double>(questPoints.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $FinancialMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FinancialMetricsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('totalBalance: $totalBalance, ')
+          ..write('totalSavings: $totalSavings, ')
+          ..write('totalInvestments: $totalInvestments, ')
+          ..write('dailyExpenses: $dailyExpenses, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ProjectMetricsTableTable extends ProjectMetricsTable
+    with TableInfo<$ProjectMetricsTableTable, ProjectMetricsLocal> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ProjectMetricsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _metricIDMeta = const VerificationMeta(
+    'metricID',
+  );
+  @override
+  late final GeneratedColumn<String> metricID = GeneratedColumn<String>(
+    'metric_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> date =
+      GeneratedColumn<DateTime>(
+        'date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($ProjectMetricsTableTable.$converterdate);
+  static const VerificationMeta _tasksCompletedMeta = const VerificationMeta(
+    'tasksCompleted',
+  );
+  @override
+  late final GeneratedColumn<int> tasksCompleted = GeneratedColumn<int>(
+    'tasks_completed',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _projectsCompletedMeta = const VerificationMeta(
+    'projectsCompleted',
+  );
+  @override
+  late final GeneratedColumn<int> projectsCompleted = GeneratedColumn<int>(
+    'projects_completed',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _focusMinutesMeta = const VerificationMeta(
+    'focusMinutes',
+  );
+  @override
+  late final GeneratedColumn<int> focusMinutes = GeneratedColumn<int>(
+    'focus_minutes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _questPointsMeta = const VerificationMeta(
+    'questPoints',
+  );
+  @override
+  late final GeneratedColumn<double> questPoints = GeneratedColumn<double>(
+    'quest_points',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ProjectMetricsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    tasksCompleted,
+    projectsCompleted,
+    focusMinutes,
+    questPoints,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'project_metrics';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ProjectMetricsLocal> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('metric_id')) {
+      context.handle(
+        _metricIDMeta,
+        metricID.isAcceptableOrUnknown(data['metric_id']!, _metricIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('tasks_completed')) {
+      context.handle(
+        _tasksCompletedMeta,
+        tasksCompleted.isAcceptableOrUnknown(
+          data['tasks_completed']!,
+          _tasksCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('projects_completed')) {
+      context.handle(
+        _projectsCompletedMeta,
+        projectsCompleted.isAcceptableOrUnknown(
+          data['projects_completed']!,
+          _projectsCompletedMeta,
+        ),
+      );
+    }
+    if (data.containsKey('focus_minutes')) {
+      context.handle(
+        _focusMinutesMeta,
+        focusMinutes.isAcceptableOrUnknown(
+          data['focus_minutes']!,
+          _focusMinutesMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quest_points')) {
+      context.handle(
+        _questPointsMeta,
+        questPoints.isAcceptableOrUnknown(
+          data['quest_points']!,
+          _questPointsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, date},
+  ];
+  @override
+  ProjectMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ProjectMetricsLocal(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      metricID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metric_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      date: $ProjectMetricsTableTable.$converterdate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date'],
+        )!,
+      ),
+      tasksCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}tasks_completed'],
+      ),
+      projectsCompleted: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}projects_completed'],
+      ),
+      focusMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}focus_minutes'],
+      ),
+      questPoints: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quest_points'],
+      ),
+      updatedAt: $ProjectMetricsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ProjectMetricsTableTable createAlias(String alias) {
+    return $ProjectMetricsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterdate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class ProjectMetricsLocal extends DataClass
+    implements Insertable<ProjectMetricsLocal> {
+  final String id;
+  final String? tenantID;
+  final String? metricID;
+  final String? personID;
+  final DateTime date;
+  final int? tasksCompleted;
+  final int? projectsCompleted;
+  final int? focusMinutes;
+  final double? questPoints;
+  final DateTime updatedAt;
+  const ProjectMetricsLocal({
+    required this.id,
+    this.tenantID,
+    this.metricID,
+    this.personID,
+    required this.date,
+    this.tasksCompleted,
+    this.projectsCompleted,
+    this.focusMinutes,
+    this.questPoints,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || metricID != null) {
+      map['metric_id'] = Variable<String>(metricID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    {
+      map['date'] = Variable<DateTime>(
+        $ProjectMetricsTableTable.$converterdate.toSql(date),
+      );
+    }
+    if (!nullToAbsent || tasksCompleted != null) {
+      map['tasks_completed'] = Variable<int>(tasksCompleted);
+    }
+    if (!nullToAbsent || projectsCompleted != null) {
+      map['projects_completed'] = Variable<int>(projectsCompleted);
+    }
+    if (!nullToAbsent || focusMinutes != null) {
+      map['focus_minutes'] = Variable<int>(focusMinutes);
+    }
+    if (!nullToAbsent || questPoints != null) {
+      map['quest_points'] = Variable<double>(questPoints);
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectMetricsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  ProjectMetricsTableCompanion toCompanion(bool nullToAbsent) {
+    return ProjectMetricsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      metricID: metricID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metricID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      date: Value(date),
+      tasksCompleted: tasksCompleted == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tasksCompleted),
+      projectsCompleted: projectsCompleted == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectsCompleted),
+      focusMinutes: focusMinutes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(focusMinutes),
+      questPoints: questPoints == null && nullToAbsent
+          ? const Value.absent()
+          : Value(questPoints),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ProjectMetricsLocal.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ProjectMetricsLocal(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      metricID: serializer.fromJson<String?>(json['metricID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      tasksCompleted: serializer.fromJson<int?>(json['tasksCompleted']),
+      projectsCompleted: serializer.fromJson<int?>(json['projectsCompleted']),
+      focusMinutes: serializer.fromJson<int?>(json['focusMinutes']),
+      questPoints: serializer.fromJson<double?>(json['questPoints']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'metricID': serializer.toJson<String?>(metricID),
+      'personID': serializer.toJson<String?>(personID),
+      'date': serializer.toJson<DateTime>(date),
+      'tasksCompleted': serializer.toJson<int?>(tasksCompleted),
+      'projectsCompleted': serializer.toJson<int?>(projectsCompleted),
+      'focusMinutes': serializer.toJson<int?>(focusMinutes),
+      'questPoints': serializer.toJson<double?>(questPoints),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ProjectMetricsLocal copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> metricID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    DateTime? date,
+    Value<int?> tasksCompleted = const Value.absent(),
+    Value<int?> projectsCompleted = const Value.absent(),
+    Value<int?> focusMinutes = const Value.absent(),
+    Value<double?> questPoints = const Value.absent(),
+    DateTime? updatedAt,
+  }) => ProjectMetricsLocal(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    metricID: metricID.present ? metricID.value : this.metricID,
+    personID: personID.present ? personID.value : this.personID,
+    date: date ?? this.date,
+    tasksCompleted: tasksCompleted.present
+        ? tasksCompleted.value
+        : this.tasksCompleted,
+    projectsCompleted: projectsCompleted.present
+        ? projectsCompleted.value
+        : this.projectsCompleted,
+    focusMinutes: focusMinutes.present ? focusMinutes.value : this.focusMinutes,
+    questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ProjectMetricsLocal copyWithCompanion(ProjectMetricsTableCompanion data) {
+    return ProjectMetricsLocal(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      metricID: data.metricID.present ? data.metricID.value : this.metricID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      date: data.date.present ? data.date.value : this.date,
+      tasksCompleted: data.tasksCompleted.present
+          ? data.tasksCompleted.value
+          : this.tasksCompleted,
+      projectsCompleted: data.projectsCompleted.present
+          ? data.projectsCompleted.value
+          : this.projectsCompleted,
+      focusMinutes: data.focusMinutes.present
+          ? data.focusMinutes.value
+          : this.focusMinutes,
+      questPoints: data.questPoints.present
+          ? data.questPoints.value
+          : this.questPoints,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectMetricsLocal(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('tasksCompleted: $tasksCompleted, ')
+          ..write('projectsCompleted: $projectsCompleted, ')
+          ..write('focusMinutes: $focusMinutes, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    tasksCompleted,
+    projectsCompleted,
+    focusMinutes,
+    questPoints,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ProjectMetricsLocal &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.metricID == this.metricID &&
+          other.personID == this.personID &&
+          other.date == this.date &&
+          other.tasksCompleted == this.tasksCompleted &&
+          other.projectsCompleted == this.projectsCompleted &&
+          other.focusMinutes == this.focusMinutes &&
+          other.questPoints == this.questPoints &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ProjectMetricsTableCompanion
+    extends UpdateCompanion<ProjectMetricsLocal> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> metricID;
+  final Value<String?> personID;
+  final Value<DateTime> date;
+  final Value<int?> tasksCompleted;
+  final Value<int?> projectsCompleted;
+  final Value<int?> focusMinutes;
+  final Value<double?> questPoints;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ProjectMetricsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.date = const Value.absent(),
+    this.tasksCompleted = const Value.absent(),
+    this.projectsCompleted = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ProjectMetricsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required DateTime date,
+    this.tasksCompleted = const Value.absent(),
+    this.projectsCompleted = const Value.absent(),
+    this.focusMinutes = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       date = Value(date);
+  static Insertable<ProjectMetricsLocal> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? metricID,
+    Expression<String>? personID,
+    Expression<DateTime>? date,
+    Expression<int>? tasksCompleted,
+    Expression<int>? projectsCompleted,
+    Expression<int>? focusMinutes,
+    Expression<double>? questPoints,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (metricID != null) 'metric_id': metricID,
+      if (personID != null) 'person_id': personID,
+      if (date != null) 'date': date,
+      if (tasksCompleted != null) 'tasks_completed': tasksCompleted,
+      if (projectsCompleted != null) 'projects_completed': projectsCompleted,
+      if (focusMinutes != null) 'focus_minutes': focusMinutes,
+      if (questPoints != null) 'quest_points': questPoints,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ProjectMetricsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? metricID,
+    Value<String?>? personID,
+    Value<DateTime>? date,
+    Value<int?>? tasksCompleted,
+    Value<int?>? projectsCompleted,
+    Value<int?>? focusMinutes,
+    Value<double?>? questPoints,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ProjectMetricsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      metricID: metricID ?? this.metricID,
+      personID: personID ?? this.personID,
+      date: date ?? this.date,
+      tasksCompleted: tasksCompleted ?? this.tasksCompleted,
+      projectsCompleted: projectsCompleted ?? this.projectsCompleted,
+      focusMinutes: focusMinutes ?? this.focusMinutes,
+      questPoints: questPoints ?? this.questPoints,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (metricID.present) {
+      map['metric_id'] = Variable<String>(metricID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(
+        $ProjectMetricsTableTable.$converterdate.toSql(date.value),
+      );
+    }
+    if (tasksCompleted.present) {
+      map['tasks_completed'] = Variable<int>(tasksCompleted.value);
+    }
+    if (projectsCompleted.present) {
+      map['projects_completed'] = Variable<int>(projectsCompleted.value);
+    }
+    if (focusMinutes.present) {
+      map['focus_minutes'] = Variable<int>(focusMinutes.value);
+    }
+    if (questPoints.present) {
+      map['quest_points'] = Variable<double>(questPoints.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $ProjectMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ProjectMetricsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('tasksCompleted: $tasksCompleted, ')
+          ..write('projectsCompleted: $projectsCompleted, ')
+          ..write('focusMinutes: $focusMinutes, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SocialMetricsTableTable extends SocialMetricsTable
+    with TableInfo<$SocialMetricsTableTable, SocialMetricsLocal> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SocialMetricsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _metricIDMeta = const VerificationMeta(
+    'metricID',
+  );
+  @override
+  late final GeneratedColumn<String> metricID = GeneratedColumn<String>(
+    'metric_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> date =
+      GeneratedColumn<DateTime>(
+        'date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($SocialMetricsTableTable.$converterdate);
+  static const VerificationMeta _contactsCountMeta = const VerificationMeta(
+    'contactsCount',
+  );
+  @override
+  late final GeneratedColumn<int> contactsCount = GeneratedColumn<int>(
+    'contacts_count',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _totalAffectionMeta = const VerificationMeta(
+    'totalAffection',
+  );
+  @override
+  late final GeneratedColumn<int> totalAffection = GeneratedColumn<int>(
+    'total_affection',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _questPointsMeta = const VerificationMeta(
+    'questPoints',
+  );
+  @override
+  late final GeneratedColumn<double> questPoints = GeneratedColumn<double>(
+    'quest_points',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SocialMetricsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    contactsCount,
+    totalAffection,
+    questPoints,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'social_metrics';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SocialMetricsLocal> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('metric_id')) {
+      context.handle(
+        _metricIDMeta,
+        metricID.isAcceptableOrUnknown(data['metric_id']!, _metricIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('contacts_count')) {
+      context.handle(
+        _contactsCountMeta,
+        contactsCount.isAcceptableOrUnknown(
+          data['contacts_count']!,
+          _contactsCountMeta,
+        ),
+      );
+    }
+    if (data.containsKey('total_affection')) {
+      context.handle(
+        _totalAffectionMeta,
+        totalAffection.isAcceptableOrUnknown(
+          data['total_affection']!,
+          _totalAffectionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('quest_points')) {
+      context.handle(
+        _questPointsMeta,
+        questPoints.isAcceptableOrUnknown(
+          data['quest_points']!,
+          _questPointsMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, date},
+  ];
+  @override
+  SocialMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SocialMetricsLocal(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      metricID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}metric_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      date: $SocialMetricsTableTable.$converterdate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date'],
+        )!,
+      ),
+      contactsCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}contacts_count'],
+      ),
+      totalAffection: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}total_affection'],
+      ),
+      questPoints: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}quest_points'],
+      ),
+      updatedAt: $SocialMetricsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $SocialMetricsTableTable createAlias(String alias) {
+    return $SocialMetricsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterdate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class SocialMetricsLocal extends DataClass
+    implements Insertable<SocialMetricsLocal> {
+  final String id;
+  final String? tenantID;
+  final String? metricID;
+  final String? personID;
+  final DateTime date;
+  final int? contactsCount;
+  final int? totalAffection;
+  final double? questPoints;
+  final DateTime updatedAt;
+  const SocialMetricsLocal({
+    required this.id,
+    this.tenantID,
+    this.metricID,
+    this.personID,
+    required this.date,
+    this.contactsCount,
+    this.totalAffection,
+    this.questPoints,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || metricID != null) {
+      map['metric_id'] = Variable<String>(metricID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    {
+      map['date'] = Variable<DateTime>(
+        $SocialMetricsTableTable.$converterdate.toSql(date),
+      );
+    }
+    if (!nullToAbsent || contactsCount != null) {
+      map['contacts_count'] = Variable<int>(contactsCount);
+    }
+    if (!nullToAbsent || totalAffection != null) {
+      map['total_affection'] = Variable<int>(totalAffection);
+    }
+    if (!nullToAbsent || questPoints != null) {
+      map['quest_points'] = Variable<double>(questPoints);
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $SocialMetricsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  SocialMetricsTableCompanion toCompanion(bool nullToAbsent) {
+    return SocialMetricsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      metricID: metricID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(metricID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      date: Value(date),
+      contactsCount: contactsCount == null && nullToAbsent
+          ? const Value.absent()
+          : Value(contactsCount),
+      totalAffection: totalAffection == null && nullToAbsent
+          ? const Value.absent()
+          : Value(totalAffection),
+      questPoints: questPoints == null && nullToAbsent
+          ? const Value.absent()
+          : Value(questPoints),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SocialMetricsLocal.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SocialMetricsLocal(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      metricID: serializer.fromJson<String?>(json['metricID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      contactsCount: serializer.fromJson<int?>(json['contactsCount']),
+      totalAffection: serializer.fromJson<int?>(json['totalAffection']),
+      questPoints: serializer.fromJson<double?>(json['questPoints']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'metricID': serializer.toJson<String?>(metricID),
+      'personID': serializer.toJson<String?>(personID),
+      'date': serializer.toJson<DateTime>(date),
+      'contactsCount': serializer.toJson<int?>(contactsCount),
+      'totalAffection': serializer.toJson<int?>(totalAffection),
+      'questPoints': serializer.toJson<double?>(questPoints),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SocialMetricsLocal copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> metricID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    DateTime? date,
+    Value<int?> contactsCount = const Value.absent(),
+    Value<int?> totalAffection = const Value.absent(),
+    Value<double?> questPoints = const Value.absent(),
+    DateTime? updatedAt,
+  }) => SocialMetricsLocal(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    metricID: metricID.present ? metricID.value : this.metricID,
+    personID: personID.present ? personID.value : this.personID,
+    date: date ?? this.date,
+    contactsCount: contactsCount.present
+        ? contactsCount.value
+        : this.contactsCount,
+    totalAffection: totalAffection.present
+        ? totalAffection.value
+        : this.totalAffection,
+    questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SocialMetricsLocal copyWithCompanion(SocialMetricsTableCompanion data) {
+    return SocialMetricsLocal(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      metricID: data.metricID.present ? data.metricID.value : this.metricID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      date: data.date.present ? data.date.value : this.date,
+      contactsCount: data.contactsCount.present
+          ? data.contactsCount.value
+          : this.contactsCount,
+      totalAffection: data.totalAffection.present
+          ? data.totalAffection.value
+          : this.totalAffection,
+      questPoints: data.questPoints.present
+          ? data.questPoints.value
+          : this.questPoints,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SocialMetricsLocal(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('contactsCount: $contactsCount, ')
+          ..write('totalAffection: $totalAffection, ')
+          ..write('questPoints: $questPoints, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    metricID,
+    personID,
+    date,
+    contactsCount,
+    totalAffection,
+    questPoints,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SocialMetricsLocal &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.metricID == this.metricID &&
+          other.personID == this.personID &&
+          other.date == this.date &&
+          other.contactsCount == this.contactsCount &&
+          other.totalAffection == this.totalAffection &&
+          other.questPoints == this.questPoints &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> metricID;
+  final Value<String?> personID;
+  final Value<DateTime> date;
+  final Value<int?> contactsCount;
+  final Value<int?> totalAffection;
+  final Value<double?> questPoints;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SocialMetricsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.date = const Value.absent(),
+    this.contactsCount = const Value.absent(),
+    this.totalAffection = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SocialMetricsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.metricID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required DateTime date,
+    this.contactsCount = const Value.absent(),
+    this.totalAffection = const Value.absent(),
+    this.questPoints = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       date = Value(date);
+  static Insertable<SocialMetricsLocal> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? metricID,
+    Expression<String>? personID,
+    Expression<DateTime>? date,
+    Expression<int>? contactsCount,
+    Expression<int>? totalAffection,
+    Expression<double>? questPoints,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (metricID != null) 'metric_id': metricID,
+      if (personID != null) 'person_id': personID,
+      if (date != null) 'date': date,
+      if (contactsCount != null) 'contacts_count': contactsCount,
+      if (totalAffection != null) 'total_affection': totalAffection,
+      if (questPoints != null) 'quest_points': questPoints,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SocialMetricsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? metricID,
+    Value<String?>? personID,
+    Value<DateTime>? date,
+    Value<int?>? contactsCount,
+    Value<int?>? totalAffection,
+    Value<double?>? questPoints,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SocialMetricsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      metricID: metricID ?? this.metricID,
+      personID: personID ?? this.personID,
+      date: date ?? this.date,
+      contactsCount: contactsCount ?? this.contactsCount,
+      totalAffection: totalAffection ?? this.totalAffection,
+      questPoints: questPoints ?? this.questPoints,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (metricID.present) {
+      map['metric_id'] = Variable<String>(metricID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(
+        $SocialMetricsTableTable.$converterdate.toSql(date.value),
+      );
+    }
+    if (contactsCount.present) {
+      map['contacts_count'] = Variable<int>(contactsCount.value);
+    }
+    if (totalAffection.present) {
+      map['total_affection'] = Variable<int>(totalAffection.value);
+    }
+    if (questPoints.present) {
+      map['quest_points'] = Variable<double>(questPoints.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $SocialMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SocialMetricsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('metricID: $metricID, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('contactsCount: $contactsCount, ')
+          ..write('totalAffection: $totalAffection, ')
+          ..write('questPoints: $questPoints, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -23015,6 +25052,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SessionTableTable sessionTable = $SessionTableTable(this);
   late final $HealthMetricsTableTable healthMetricsTable =
       $HealthMetricsTableTable(this);
+  late final $FinancialMetricsTableTable financialMetricsTable =
+      $FinancialMetricsTableTable(this);
+  late final $ProjectMetricsTableTable projectMetricsTable =
+      $ProjectMetricsTableTable(this);
+  late final $SocialMetricsTableTable socialMetricsTable =
+      $SocialMetricsTableTable(this);
   late final $MealsTableTable mealsTable = $MealsTableTable(this);
   late final $DaysTableTable daysTable = $DaysTableTable(this);
   late final $ScoresTableTable scoresTable = $ScoresTableTable(this);
@@ -23069,6 +25112,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final QuoteDAO quoteDAO = QuoteDAO(this as AppDatabase);
   late final HealthLogsDAO healthLogsDAO = HealthLogsDAO(this as AppDatabase);
   late final QuestDAO questDAO = QuestDAO(this as AppDatabase);
+  late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -23094,6 +25138,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cVAddressesTable,
     sessionTable,
     healthMetricsTable,
+    financialMetricsTable,
+    projectMetricsTable,
+    socialMetricsTable,
     mealsTable,
     daysTable,
     scoresTable,
@@ -23354,6 +25401,48 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('health_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('financial_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('financial_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('project_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('project_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('social_metrics', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('social_metrics', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -23949,6 +26038,85 @@ final class $$OrganizationsTableTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _healthMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $FinancialMetricsTableTable,
+    List<FinancialMetricsLocal>
+  >
+  _financialMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.financialMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.organizationsTable.id,
+          db.financialMetricsTable.tenantID,
+        ),
+      );
+
+  $$FinancialMetricsTableTableProcessedTableManager
+  get financialMetricsTableRefs {
+    final manager = $$FinancialMetricsTableTableTableManager(
+      $_db,
+      $_db.financialMetricsTable,
+    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _financialMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProjectMetricsTableTable,
+    List<ProjectMetricsLocal>
+  >
+  _projectMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.projectMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.organizationsTable.id,
+          db.projectMetricsTable.tenantID,
+        ),
+      );
+
+  $$ProjectMetricsTableTableProcessedTableManager get projectMetricsTableRefs {
+    final manager = $$ProjectMetricsTableTableTableManager(
+      $_db,
+      $_db.projectMetricsTable,
+    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _projectMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SocialMetricsTableTable, List<SocialMetricsLocal>>
+  _socialMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.socialMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.organizationsTable.id,
+          db.socialMetricsTable.tenantID,
+        ),
+      );
+
+  $$SocialMetricsTableTableProcessedTableManager get socialMetricsTableRefs {
+    final manager = $$SocialMetricsTableTableTableManager(
+      $_db,
+      $_db.socialMetricsTable,
+    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _socialMetricsTableRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -24656,6 +26824,82 @@ class $$OrganizationsTableTableFilterComposer
           }) => $$HealthMetricsTableTableFilterComposer(
             $db: $db,
             $table: $db.healthMetricsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> financialMetricsTableRefs(
+    Expression<bool> Function($$FinancialMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$FinancialMetricsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.financialMetricsTable,
+          getReferencedColumn: (t) => t.tenantID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$FinancialMetricsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.financialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> projectMetricsTableRefs(
+    Expression<bool> Function($$ProjectMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$ProjectMetricsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.projectMetricsTable,
+      getReferencedColumn: (t) => t.tenantID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectMetricsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.projectMetricsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> socialMetricsTableRefs(
+    Expression<bool> Function($$SocialMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$SocialMetricsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.socialMetricsTable,
+      getReferencedColumn: (t) => t.tenantID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SocialMetricsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.socialMetricsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -25435,6 +27679,84 @@ class $$OrganizationsTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> financialMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$FinancialMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$FinancialMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.financialMetricsTable,
+          getReferencedColumn: (t) => t.tenantID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$FinancialMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.financialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> projectMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$ProjectMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$ProjectMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectMetricsTable,
+          getReferencedColumn: (t) => t.tenantID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.projectMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> socialMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$SocialMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$SocialMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.socialMetricsTable,
+          getReferencedColumn: (t) => t.tenantID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SocialMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.socialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> mealsTableRefs<T extends Object>(
     Expression<T> Function($$MealsTableTableAnnotationComposer a) f,
   ) {
@@ -25747,6 +28069,9 @@ class $$OrganizationsTableTableTableManager
             bool cVAddressesTableRefs,
             bool sessionTableRefs,
             bool healthMetricsTableRefs,
+            bool financialMetricsTableRefs,
+            bool projectMetricsTableRefs,
+            bool socialMetricsTableRefs,
             bool mealsTableRefs,
             bool daysTableRefs,
             bool scoresTableRefs,
@@ -25835,6 +28160,9 @@ class $$OrganizationsTableTableTableManager
                 cVAddressesTableRefs = false,
                 sessionTableRefs = false,
                 healthMetricsTableRefs = false,
+                financialMetricsTableRefs = false,
+                projectMetricsTableRefs = false,
+                socialMetricsTableRefs = false,
                 mealsTableRefs = false,
                 daysTableRefs = false,
                 scoresTableRefs = false,
@@ -25867,6 +28195,9 @@ class $$OrganizationsTableTableTableManager
                     if (cVAddressesTableRefs) db.cVAddressesTable,
                     if (sessionTableRefs) db.sessionTable,
                     if (healthMetricsTableRefs) db.healthMetricsTable,
+                    if (financialMetricsTableRefs) db.financialMetricsTable,
+                    if (projectMetricsTableRefs) db.projectMetricsTable,
+                    if (socialMetricsTableRefs) db.socialMetricsTable,
                     if (mealsTableRefs) db.mealsTable,
                     if (daysTableRefs) db.daysTable,
                     if (scoresTableRefs) db.scoresTable,
@@ -26240,6 +28571,69 @@ class $$OrganizationsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (financialMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          OrganizationData,
+                          $OrganizationsTableTable,
+                          FinancialMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableTableReferences
+                              ._financialMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).financialMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tenantID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (projectMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          OrganizationData,
+                          $OrganizationsTableTable,
+                          ProjectMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableTableReferences
+                              ._projectMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).projectMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tenantID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (socialMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          OrganizationData,
+                          $OrganizationsTableTable,
+                          SocialMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableTableReferences
+                              ._socialMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).socialMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tenantID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (mealsTableRefs)
                         await $_getPrefetchedData<
                           OrganizationData,
@@ -26509,6 +28903,9 @@ typedef $$OrganizationsTableTableProcessedTableManager =
         bool cVAddressesTableRefs,
         bool sessionTableRefs,
         bool healthMetricsTableRefs,
+        bool financialMetricsTableRefs,
+        bool projectMetricsTableRefs,
+        bool socialMetricsTableRefs,
         bool mealsTableRefs,
         bool daysTableRefs,
         bool scoresTableRefs,
@@ -26956,6 +29353,85 @@ final class $$PersonsTableTableReferences
 
     final cache = $_typedResult.readTableOrNull(
       _healthMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $FinancialMetricsTableTable,
+    List<FinancialMetricsLocal>
+  >
+  _financialMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.financialMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.personsTable.id,
+          db.financialMetricsTable.personID,
+        ),
+      );
+
+  $$FinancialMetricsTableTableProcessedTableManager
+  get financialMetricsTableRefs {
+    final manager = $$FinancialMetricsTableTableTableManager(
+      $_db,
+      $_db.financialMetricsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _financialMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<
+    $ProjectMetricsTableTable,
+    List<ProjectMetricsLocal>
+  >
+  _projectMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.projectMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.personsTable.id,
+          db.projectMetricsTable.personID,
+        ),
+      );
+
+  $$ProjectMetricsTableTableProcessedTableManager get projectMetricsTableRefs {
+    final manager = $$ProjectMetricsTableTableTableManager(
+      $_db,
+      $_db.projectMetricsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _projectMetricsTableRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SocialMetricsTableTable, List<SocialMetricsLocal>>
+  _socialMetricsTableRefsTable(_$AppDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.socialMetricsTable,
+        aliasName: $_aliasNameGenerator(
+          db.personsTable.id,
+          db.socialMetricsTable.personID,
+        ),
+      );
+
+  $$SocialMetricsTableTableProcessedTableManager get socialMetricsTableRefs {
+    final manager = $$SocialMetricsTableTableTableManager(
+      $_db,
+      $_db.socialMetricsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _socialMetricsTableRefsTable($_db),
     );
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
@@ -27688,6 +30164,82 @@ class $$PersonsTableTableFilterComposer
           }) => $$HealthMetricsTableTableFilterComposer(
             $db: $db,
             $table: $db.healthMetricsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> financialMetricsTableRefs(
+    Expression<bool> Function($$FinancialMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$FinancialMetricsTableTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.financialMetricsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$FinancialMetricsTableTableFilterComposer(
+                $db: $db,
+                $table: $db.financialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> projectMetricsTableRefs(
+    Expression<bool> Function($$ProjectMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$ProjectMetricsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.projectMetricsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ProjectMetricsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.projectMetricsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> socialMetricsTableRefs(
+    Expression<bool> Function($$SocialMetricsTableTableFilterComposer f) f,
+  ) {
+    final $$SocialMetricsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.socialMetricsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SocialMetricsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.socialMetricsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -28559,6 +31111,84 @@ class $$PersonsTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> financialMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$FinancialMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$FinancialMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.financialMetricsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$FinancialMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.financialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> projectMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$ProjectMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$ProjectMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.projectMetricsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$ProjectMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.projectMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> socialMetricsTableRefs<T extends Object>(
+    Expression<T> Function($$SocialMetricsTableTableAnnotationComposer a) f,
+  ) {
+    final $$SocialMetricsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.socialMetricsTable,
+          getReferencedColumn: (t) => t.personID,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$SocialMetricsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.socialMetricsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
   Expression<T> mealsTableRefs<T extends Object>(
     Expression<T> Function($$MealsTableTableAnnotationComposer a) f,
   ) {
@@ -28846,6 +31476,9 @@ class $$PersonsTableTableTableManager
             bool personWidgetsTableRefs,
             bool cVAddressesTableRefs,
             bool healthMetricsTableRefs,
+            bool financialMetricsTableRefs,
+            bool projectMetricsTableRefs,
+            bool socialMetricsTableRefs,
             bool mealsTableRefs,
             bool scoresTableRefs,
             bool transactionsTableRefs,
@@ -28972,6 +31605,9 @@ class $$PersonsTableTableTableManager
                 personWidgetsTableRefs = false,
                 cVAddressesTableRefs = false,
                 healthMetricsTableRefs = false,
+                financialMetricsTableRefs = false,
+                projectMetricsTableRefs = false,
+                socialMetricsTableRefs = false,
                 mealsTableRefs = false,
                 scoresTableRefs = false,
                 transactionsTableRefs = false,
@@ -29002,6 +31638,9 @@ class $$PersonsTableTableTableManager
                     if (personWidgetsTableRefs) db.personWidgetsTable,
                     if (cVAddressesTableRefs) db.cVAddressesTable,
                     if (healthMetricsTableRefs) db.healthMetricsTable,
+                    if (financialMetricsTableRefs) db.financialMetricsTable,
+                    if (projectMetricsTableRefs) db.projectMetricsTable,
+                    if (socialMetricsTableRefs) db.socialMetricsTable,
                     if (mealsTableRefs) db.mealsTable,
                     if (scoresTableRefs) db.scoresTable,
                     if (transactionsTableRefs) db.transactionsTable,
@@ -29386,6 +32025,69 @@ class $$PersonsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (financialMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          FinancialMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._financialMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).financialMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (projectMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          ProjectMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._projectMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).projectMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (socialMetricsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          SocialMetricsLocal
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._socialMetricsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).socialMetricsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (mealsTableRefs)
                         await $_getPrefetchedData<
                           PersonData,
@@ -29634,6 +32336,9 @@ typedef $$PersonsTableTableProcessedTableManager =
         bool personWidgetsTableRefs,
         bool cVAddressesTableRefs,
         bool healthMetricsTableRefs,
+        bool financialMetricsTableRefs,
+        bool projectMetricsTableRefs,
+        bool socialMetricsTableRefs,
         bool mealsTableRefs,
         bool scoresTableRefs,
         bool transactionsTableRefs,
@@ -40093,6 +42798,7 @@ typedef $$HealthMetricsTableTableCreateCompanionBuilder =
       Value<double?> weightKg,
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
+      Value<double?> questPoints,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -40112,6 +42818,7 @@ typedef $$HealthMetricsTableTableUpdateCompanionBuilder =
       Value<double?> weightKg,
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
+      Value<double?> questPoints,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -40244,6 +42951,11 @@ class $$HealthMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
       $composableBuilder(
         column: $table.updatedAt,
@@ -40366,6 +43078,11 @@ class $$HealthMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -40475,6 +43192,11 @@ class $$HealthMetricsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => column,
+  );
+
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
@@ -40573,6 +43295,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<double?> weightKg = const Value.absent(),
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion(
@@ -40590,6 +43313,7 @@ class $$HealthMetricsTableTableTableManager
                 weightKg: weightKg,
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
+                questPoints: questPoints,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -40609,6 +43333,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<double?> weightKg = const Value.absent(),
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion.insert(
@@ -40626,6 +43351,7 @@ class $$HealthMetricsTableTableTableManager
                 weightKg: weightKg,
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
+                questPoints: questPoints,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -40711,6 +43437,1626 @@ typedef $$HealthMetricsTableTableProcessedTableManager =
       $$HealthMetricsTableTableUpdateCompanionBuilder,
       (HealthMetricsLocal, $$HealthMetricsTableTableReferences),
       HealthMetricsLocal,
+      PrefetchHooks Function({bool tenantID, bool personID})
+    >;
+typedef $$FinancialMetricsTableTableCreateCompanionBuilder =
+    FinancialMetricsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      required DateTime date,
+      Value<double?> totalBalance,
+      Value<double?> totalSavings,
+      Value<double?> totalInvestments,
+      Value<double?> dailyExpenses,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$FinancialMetricsTableTableUpdateCompanionBuilder =
+    FinancialMetricsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      Value<DateTime> date,
+      Value<double?> totalBalance,
+      Value<double?> totalSavings,
+      Value<double?> totalInvestments,
+      Value<double?> dailyExpenses,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$FinancialMetricsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $FinancialMetricsTableTable,
+          FinancialMetricsLocal
+        > {
+  $$FinancialMetricsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
+      db.organizationsTable.createAlias(
+        $_aliasNameGenerator(
+          db.financialMetricsTable.tenantID,
+          db.organizationsTable.id,
+        ),
+      );
+
+  $$OrganizationsTableTableProcessedTableManager? get tenantID {
+    final $_column = $_itemColumn<String>('tenant_id');
+    if ($_column == null) return null;
+    final manager = $$OrganizationsTableTableTableManager(
+      $_db,
+      $_db.organizationsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(
+          db.financialMetricsTable.personID,
+          db.personsTable.id,
+        ),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$FinancialMetricsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $FinancialMetricsTableTable> {
+  $$FinancialMetricsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get date =>
+      $composableBuilder(
+        column: $table.date,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<double> get totalBalance => $composableBuilder(
+    column: $table.totalBalance,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalSavings => $composableBuilder(
+    column: $table.totalSavings,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get totalInvestments => $composableBuilder(
+    column: $table.totalInvestments,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get dailyExpenses => $composableBuilder(
+    column: $table.dailyExpenses,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$OrganizationsTableTableFilterComposer get tenantID {
+    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinancialMetricsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $FinancialMetricsTableTable> {
+  $$FinancialMetricsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalBalance => $composableBuilder(
+    column: $table.totalBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalSavings => $composableBuilder(
+    column: $table.totalSavings,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get totalInvestments => $composableBuilder(
+    column: $table.totalInvestments,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get dailyExpenses => $composableBuilder(
+    column: $table.dailyExpenses,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableTableOrderingComposer get tenantID {
+    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinancialMetricsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FinancialMetricsTableTable> {
+  $$FinancialMetricsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get metricID =>
+      $composableBuilder(column: $table.metricID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<double> get totalBalance => $composableBuilder(
+    column: $table.totalBalance,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalSavings => $composableBuilder(
+    column: $table.totalSavings,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get totalInvestments => $composableBuilder(
+    column: $table.totalInvestments,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get dailyExpenses => $composableBuilder(
+    column: $table.dailyExpenses,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableTableAnnotationComposer get tenantID {
+    final $$OrganizationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.tenantID,
+          referencedTable: $db.organizationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OrganizationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.organizationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$FinancialMetricsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FinancialMetricsTableTable,
+          FinancialMetricsLocal,
+          $$FinancialMetricsTableTableFilterComposer,
+          $$FinancialMetricsTableTableOrderingComposer,
+          $$FinancialMetricsTableTableAnnotationComposer,
+          $$FinancialMetricsTableTableCreateCompanionBuilder,
+          $$FinancialMetricsTableTableUpdateCompanionBuilder,
+          (FinancialMetricsLocal, $$FinancialMetricsTableTableReferences),
+          FinancialMetricsLocal,
+          PrefetchHooks Function({bool tenantID, bool personID})
+        > {
+  $$FinancialMetricsTableTableTableManager(
+    _$AppDatabase db,
+    $FinancialMetricsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FinancialMetricsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$FinancialMetricsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$FinancialMetricsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<double?> totalBalance = const Value.absent(),
+                Value<double?> totalSavings = const Value.absent(),
+                Value<double?> totalInvestments = const Value.absent(),
+                Value<double?> dailyExpenses = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialMetricsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                totalBalance: totalBalance,
+                totalSavings: totalSavings,
+                totalInvestments: totalInvestments,
+                dailyExpenses: dailyExpenses,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required DateTime date,
+                Value<double?> totalBalance = const Value.absent(),
+                Value<double?> totalSavings = const Value.absent(),
+                Value<double?> totalInvestments = const Value.absent(),
+                Value<double?> dailyExpenses = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FinancialMetricsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                totalBalance: totalBalance,
+                totalSavings: totalSavings,
+                totalInvestments: totalInvestments,
+                dailyExpenses: dailyExpenses,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$FinancialMetricsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tenantID = false, personID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (tenantID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tenantID,
+                                referencedTable:
+                                    $$FinancialMetricsTableTableReferences
+                                        ._tenantIDTable(db),
+                                referencedColumn:
+                                    $$FinancialMetricsTableTableReferences
+                                        ._tenantIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable:
+                                    $$FinancialMetricsTableTableReferences
+                                        ._personIDTable(db),
+                                referencedColumn:
+                                    $$FinancialMetricsTableTableReferences
+                                        ._personIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$FinancialMetricsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FinancialMetricsTableTable,
+      FinancialMetricsLocal,
+      $$FinancialMetricsTableTableFilterComposer,
+      $$FinancialMetricsTableTableOrderingComposer,
+      $$FinancialMetricsTableTableAnnotationComposer,
+      $$FinancialMetricsTableTableCreateCompanionBuilder,
+      $$FinancialMetricsTableTableUpdateCompanionBuilder,
+      (FinancialMetricsLocal, $$FinancialMetricsTableTableReferences),
+      FinancialMetricsLocal,
+      PrefetchHooks Function({bool tenantID, bool personID})
+    >;
+typedef $$ProjectMetricsTableTableCreateCompanionBuilder =
+    ProjectMetricsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      required DateTime date,
+      Value<int?> tasksCompleted,
+      Value<int?> projectsCompleted,
+      Value<int?> focusMinutes,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ProjectMetricsTableTableUpdateCompanionBuilder =
+    ProjectMetricsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      Value<DateTime> date,
+      Value<int?> tasksCompleted,
+      Value<int?> projectsCompleted,
+      Value<int?> focusMinutes,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$ProjectMetricsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $ProjectMetricsTableTable,
+          ProjectMetricsLocal
+        > {
+  $$ProjectMetricsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
+      db.organizationsTable.createAlias(
+        $_aliasNameGenerator(
+          db.projectMetricsTable.tenantID,
+          db.organizationsTable.id,
+        ),
+      );
+
+  $$OrganizationsTableTableProcessedTableManager? get tenantID {
+    final $_column = $_itemColumn<String>('tenant_id');
+    if ($_column == null) return null;
+    final manager = $$OrganizationsTableTableTableManager(
+      $_db,
+      $_db.organizationsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(
+          db.projectMetricsTable.personID,
+          db.personsTable.id,
+        ),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ProjectMetricsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ProjectMetricsTableTable> {
+  $$ProjectMetricsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get date =>
+      $composableBuilder(
+        column: $table.date,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<int> get tasksCompleted => $composableBuilder(
+    column: $table.tasksCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get projectsCompleted => $composableBuilder(
+    column: $table.projectsCompleted,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$OrganizationsTableTableFilterComposer get tenantID {
+    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectMetricsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ProjectMetricsTableTable> {
+  $$ProjectMetricsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get tasksCompleted => $composableBuilder(
+    column: $table.tasksCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get projectsCompleted => $composableBuilder(
+    column: $table.projectsCompleted,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableTableOrderingComposer get tenantID {
+    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectMetricsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ProjectMetricsTableTable> {
+  $$ProjectMetricsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get metricID =>
+      $composableBuilder(column: $table.metricID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get tasksCompleted => $composableBuilder(
+    column: $table.tasksCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get projectsCompleted => $composableBuilder(
+    column: $table.projectsCompleted,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get focusMinutes => $composableBuilder(
+    column: $table.focusMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableTableAnnotationComposer get tenantID {
+    final $$OrganizationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.tenantID,
+          referencedTable: $db.organizationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OrganizationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.organizationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ProjectMetricsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ProjectMetricsTableTable,
+          ProjectMetricsLocal,
+          $$ProjectMetricsTableTableFilterComposer,
+          $$ProjectMetricsTableTableOrderingComposer,
+          $$ProjectMetricsTableTableAnnotationComposer,
+          $$ProjectMetricsTableTableCreateCompanionBuilder,
+          $$ProjectMetricsTableTableUpdateCompanionBuilder,
+          (ProjectMetricsLocal, $$ProjectMetricsTableTableReferences),
+          ProjectMetricsLocal,
+          PrefetchHooks Function({bool tenantID, bool personID})
+        > {
+  $$ProjectMetricsTableTableTableManager(
+    _$AppDatabase db,
+    $ProjectMetricsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ProjectMetricsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ProjectMetricsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$ProjectMetricsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<int?> tasksCompleted = const Value.absent(),
+                Value<int?> projectsCompleted = const Value.absent(),
+                Value<int?> focusMinutes = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectMetricsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                tasksCompleted: tasksCompleted,
+                projectsCompleted: projectsCompleted,
+                focusMinutes: focusMinutes,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required DateTime date,
+                Value<int?> tasksCompleted = const Value.absent(),
+                Value<int?> projectsCompleted = const Value.absent(),
+                Value<int?> focusMinutes = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ProjectMetricsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                tasksCompleted: tasksCompleted,
+                projectsCompleted: projectsCompleted,
+                focusMinutes: focusMinutes,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ProjectMetricsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tenantID = false, personID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (tenantID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tenantID,
+                                referencedTable:
+                                    $$ProjectMetricsTableTableReferences
+                                        ._tenantIDTable(db),
+                                referencedColumn:
+                                    $$ProjectMetricsTableTableReferences
+                                        ._tenantIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable:
+                                    $$ProjectMetricsTableTableReferences
+                                        ._personIDTable(db),
+                                referencedColumn:
+                                    $$ProjectMetricsTableTableReferences
+                                        ._personIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ProjectMetricsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ProjectMetricsTableTable,
+      ProjectMetricsLocal,
+      $$ProjectMetricsTableTableFilterComposer,
+      $$ProjectMetricsTableTableOrderingComposer,
+      $$ProjectMetricsTableTableAnnotationComposer,
+      $$ProjectMetricsTableTableCreateCompanionBuilder,
+      $$ProjectMetricsTableTableUpdateCompanionBuilder,
+      (ProjectMetricsLocal, $$ProjectMetricsTableTableReferences),
+      ProjectMetricsLocal,
+      PrefetchHooks Function({bool tenantID, bool personID})
+    >;
+typedef $$SocialMetricsTableTableCreateCompanionBuilder =
+    SocialMetricsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      required DateTime date,
+      Value<int?> contactsCount,
+      Value<int?> totalAffection,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SocialMetricsTableTableUpdateCompanionBuilder =
+    SocialMetricsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> metricID,
+      Value<String?> personID,
+      Value<DateTime> date,
+      Value<int?> contactsCount,
+      Value<int?> totalAffection,
+      Value<double?> questPoints,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$SocialMetricsTableTableReferences
+    extends
+        BaseReferences<
+          _$AppDatabase,
+          $SocialMetricsTableTable,
+          SocialMetricsLocal
+        > {
+  $$SocialMetricsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
+      db.organizationsTable.createAlias(
+        $_aliasNameGenerator(
+          db.socialMetricsTable.tenantID,
+          db.organizationsTable.id,
+        ),
+      );
+
+  $$OrganizationsTableTableProcessedTableManager? get tenantID {
+    final $_column = $_itemColumn<String>('tenant_id');
+    if ($_column == null) return null;
+    final manager = $$OrganizationsTableTableTableManager(
+      $_db,
+      $_db.organizationsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(
+          db.socialMetricsTable.personID,
+          db.personsTable.id,
+        ),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SocialMetricsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SocialMetricsTableTable> {
+  $$SocialMetricsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get date =>
+      $composableBuilder(
+        column: $table.date,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<int> get contactsCount => $composableBuilder(
+    column: $table.contactsCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get totalAffection => $composableBuilder(
+    column: $table.totalAffection,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$OrganizationsTableTableFilterComposer get tenantID {
+    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SocialMetricsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SocialMetricsTableTable> {
+  $$SocialMetricsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get metricID => $composableBuilder(
+    column: $table.metricID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get contactsCount => $composableBuilder(
+    column: $table.contactsCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get totalAffection => $composableBuilder(
+    column: $table.totalAffection,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableTableOrderingComposer get tenantID {
+    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SocialMetricsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SocialMetricsTableTable> {
+  $$SocialMetricsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get metricID =>
+      $composableBuilder(column: $table.metricID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<int> get contactsCount => $composableBuilder(
+    column: $table.contactsCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get totalAffection => $composableBuilder(
+    column: $table.totalAffection,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get questPoints => $composableBuilder(
+    column: $table.questPoints,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableTableAnnotationComposer get tenantID {
+    final $$OrganizationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.tenantID,
+          referencedTable: $db.organizationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OrganizationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.organizationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SocialMetricsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SocialMetricsTableTable,
+          SocialMetricsLocal,
+          $$SocialMetricsTableTableFilterComposer,
+          $$SocialMetricsTableTableOrderingComposer,
+          $$SocialMetricsTableTableAnnotationComposer,
+          $$SocialMetricsTableTableCreateCompanionBuilder,
+          $$SocialMetricsTableTableUpdateCompanionBuilder,
+          (SocialMetricsLocal, $$SocialMetricsTableTableReferences),
+          SocialMetricsLocal,
+          PrefetchHooks Function({bool tenantID, bool personID})
+        > {
+  $$SocialMetricsTableTableTableManager(
+    _$AppDatabase db,
+    $SocialMetricsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SocialMetricsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SocialMetricsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SocialMetricsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<int?> contactsCount = const Value.absent(),
+                Value<int?> totalAffection = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SocialMetricsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                contactsCount: contactsCount,
+                totalAffection: totalAffection,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> metricID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required DateTime date,
+                Value<int?> contactsCount = const Value.absent(),
+                Value<int?> totalAffection = const Value.absent(),
+                Value<double?> questPoints = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SocialMetricsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                metricID: metricID,
+                personID: personID,
+                date: date,
+                contactsCount: contactsCount,
+                totalAffection: totalAffection,
+                questPoints: questPoints,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SocialMetricsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tenantID = false, personID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (tenantID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tenantID,
+                                referencedTable:
+                                    $$SocialMetricsTableTableReferences
+                                        ._tenantIDTable(db),
+                                referencedColumn:
+                                    $$SocialMetricsTableTableReferences
+                                        ._tenantIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable:
+                                    $$SocialMetricsTableTableReferences
+                                        ._personIDTable(db),
+                                referencedColumn:
+                                    $$SocialMetricsTableTableReferences
+                                        ._personIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SocialMetricsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SocialMetricsTableTable,
+      SocialMetricsLocal,
+      $$SocialMetricsTableTableFilterComposer,
+      $$SocialMetricsTableTableOrderingComposer,
+      $$SocialMetricsTableTableAnnotationComposer,
+      $$SocialMetricsTableTableCreateCompanionBuilder,
+      $$SocialMetricsTableTableUpdateCompanionBuilder,
+      (SocialMetricsLocal, $$SocialMetricsTableTableReferences),
+      SocialMetricsLocal,
       PrefetchHooks Function({bool tenantID, bool personID})
     >;
 typedef $$MealsTableTableCreateCompanionBuilder =
@@ -47110,6 +51456,12 @@ class $AppDatabaseManager {
       $$SessionTableTableTableManager(_db, _db.sessionTable);
   $$HealthMetricsTableTableTableManager get healthMetricsTable =>
       $$HealthMetricsTableTableTableManager(_db, _db.healthMetricsTable);
+  $$FinancialMetricsTableTableTableManager get financialMetricsTable =>
+      $$FinancialMetricsTableTableTableManager(_db, _db.financialMetricsTable);
+  $$ProjectMetricsTableTableTableManager get projectMetricsTable =>
+      $$ProjectMetricsTableTableTableManager(_db, _db.projectMetricsTable);
+  $$SocialMetricsTableTableTableManager get socialMetricsTable =>
+      $$SocialMetricsTableTableTableManager(_db, _db.socialMetricsTable);
   $$MealsTableTableTableManager get mealsTable =>
       $$MealsTableTableTableManager(_db, _db.mealsTable);
   $$DaysTableTableTableManager get daysTable =>

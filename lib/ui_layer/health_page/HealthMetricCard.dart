@@ -155,11 +155,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                       ((widget.metrics.trendPositive ?? true)
                                               ? Colors.green
                                               : Colors.red)
-                                          .withValues(alpha: 0.25),
+                                          .withValues(alpha: 0.1),
                                       ((widget.metrics.trendPositive ?? true)
                                               ? Colors.green
                                               : Colors.red)
-                                          .withValues(alpha: 0.05),
+                                          .withValues(alpha: 0.1),
                                     ],
                                   ),
                                   borderRadius: BorderRadius.circular(20),
@@ -178,7 +178,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                                       true)
                                                   ? Colors.green
                                                   : Colors.red)
-                                              .withValues(alpha: 0.15),
+                                              .withValues(alpha: 0.1),
                                       blurRadius: 8,
                                       spreadRadius: -1,
                                     ),
@@ -195,8 +195,8 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                           10, // Slightly smaller for premium feel
                                       color:
                                           (widget.metrics.trendPositive ?? true)
-                                          ? Colors.greenAccent
-                                          : Colors.redAccent,
+                                          ? Colors.green.withValues(alpha: 0.9)
+                                          : Colors.red.withValues(alpha: 0.9),
                                     ),
                                     const SizedBox(width: 5),
                                     Flexible(
@@ -205,10 +205,10 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           color:
-                                              (widget.metrics.trendPositive ??
-                                                  true)
-                                              ? Colors.greenAccent
-                                              : Colors.redAccent,
+                                           ((widget.metrics.trendPositive ??
+                                                      true)
+                                                  ? Colors.green
+                                                  : Colors.red),
                                           fontWeight: FontWeight.w900,
                                           fontSize: 9,
                                           letterSpacing: 0.2,

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
@@ -70,6 +71,10 @@ class FocusBlock {
   // Exercise Mode Signals
   final isExerciseMode = signal<bool>(false);
   final exerciseType = signal<String>('');
+
+  // Elon Musk 5-Minute Block Mode Signals
+  final isMuskMode = signal<bool>(false);
+  final muskHapticIntensity = signal<int>(3); // 1-5
 
   // Stats
   final totalStudyTimeToday = signal<int>(0); // In seconds
@@ -508,7 +513,6 @@ class FocusBlock {
     // Trigger Summary UI - actual saving happens when user confirms in dialog
     showSummary.value = true;
 
-    // Notify User
     _notificationService?.showNotification(
       999,
       currentSessionType.value == 'Focus'
@@ -518,6 +522,23 @@ class FocusBlock {
           ? "Excellent work! Take a well-deserved break."
           : "Time to get back into the flow zone.",
     );
+
+    // Haptic Feedback for Musk Mode or if enabled
+    if (isMuskMode.value) {
+      _triggerMuskHaptics();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+  }
+
+  void _triggerMuskHaptics() async {
+    // Intense vibration pattern for 5-minute block completion
+    for (int i = 0; i < muskHapticIntensity.value; i++) {
+      await HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 150));
+      await HapticFeedback.vibrate();
+      await Future.delayed(const Duration(milliseconds: 150));
+    }
   }
 
   Future<void> finishAndSaveSession(
@@ -581,9 +602,19 @@ class FocusBlock {
 
   void setSessionType(String type) {
     currentSessionType.value = type;
-    isExerciseMode.value =
-        false; // Reset exercise mode when manually shifting types
+    isExerciseMode.value = false;
+    isMuskMode.value = false; // Reset musk mode when manually shifting types
     resetTimer();
+  }
+
+  void startMuskFocus() {
+    print("🚀 [FocusBlock] Starting Elon Musk 5-Minute Block");
+    currentSessionType.value = 'Focus';
+    isMuskMode.value = true;
+    isExerciseMode.value = false;
+    focusDuration.value = 5;
+    remainingTime.value = 5 * 60;
+    startTimer();
   }
 
   void startExercise(String type, int minutes) {

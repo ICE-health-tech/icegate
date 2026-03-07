@@ -3,16 +3,15 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-// import 'package:ice_gate/initial_layer/Services/Health/AIFoodCaloriesServices.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path/path.dart' as path;
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 
 class FoodDashboardPage extends StatefulWidget {
   const FoodDashboardPage({super.key});
@@ -103,15 +102,15 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
       if (image == null) return;
 
-      final dir = await getApplicationDocumentsDirectory();
-      final String fileName = path.basename(image.path);
-      final File savedImage = await File(
-        image.path,
-      ).copy('${dir.path}/$fileName');
+      final objectBlock = context.read<ObjectDatabaseBlock>();
+      final String savedFileName = await objectBlock.saveAnyLocalImage(
+        image,
+        subFolder: 'meals',
+      );
 
       setState(() {
-        _pickedImage = savedImage;
-        _imagePath = fileName;
+        _pickedImage = File(image.path); // Keep absolute for temp preview
+        _imagePath = savedFileName;
       });
       _analyzeFood();
     } catch (e) {
@@ -355,21 +354,10 @@ class _MealDialogContentState extends State<_MealDialogContent> {
 
 class _FoodDashboardPageState extends State<FoodDashboardPage> {
   late HealthMealDAO _healthMealDAO;
-  String? _appDirPath;
 
   @override
   void initState() {
     super.initState();
-    _initStorage();
-  }
-
-  Future<void> _initStorage() async {
-    final dir = await getApplicationDocumentsDirectory();
-    if (mounted) {
-      setState(() {
-        _appDirPath = dir.path;
-      });
-    }
   }
 
   @override
@@ -781,26 +769,18 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
   }
 
   Widget _buildMealImage(String? imageName, double size) {
-    if (_appDirPath == null || imageName == null || imageName.isEmpty) {
-      return Container(
+    return LocalFirstImage(
+      localPath: imageName ?? '',
+      remoteUrl: '',
+      subFolder: 'meals',
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      placeholder: Container(
         width: size,
         height: size,
         color: Colors.grey[100],
         child: const Icon(Icons.restaurant, color: Colors.grey, size: 30),
-      );
-    }
-
-    final file = File('$_appDirPath/$imageName');
-    return Image.file(
-      file,
-      width: size,
-      height: size,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) => Container(
-        width: size,
-        height: size,
-        color: Colors.grey[100],
-        child: const Icon(Icons.broken_image, color: Colors.grey, size: 30),
       ),
     );
   }

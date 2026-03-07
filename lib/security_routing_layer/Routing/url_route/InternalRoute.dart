@@ -28,6 +28,7 @@ import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/WaterPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/BlockReminderPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
 import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
@@ -271,6 +272,11 @@ final GoRouter router = GoRouter(
               path: 'focus',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const FocusPage(),
+            ),
+            GoRoute(
+              path: 'block-reminder',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const BlockReminderPage(),
             ),
             GoRoute(
               path: 'water',
