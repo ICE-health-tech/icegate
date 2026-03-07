@@ -4,6 +4,9 @@ class PersonProfile {
   final String name;
   final String email;
   final String? avatarUrl;
+  final String? coverUrl;
+  final String? avatarLocalPath;
+  final String? coverLocalPath;
   final HealthMetrics health;
   final FinanceMetrics finance;
   final SocialMetrics social;
@@ -15,6 +18,9 @@ class PersonProfile {
     required this.name,
     required this.email,
     this.avatarUrl,
+    this.coverUrl,
+    this.avatarLocalPath,
+    this.coverLocalPath,
     required this.health,
     required this.finance,
     required this.social,
@@ -27,6 +33,9 @@ class PersonProfile {
     String? name,
     String? email,
     String? avatarUrl,
+    String? coverUrl,
+    String? avatarLocalPath,
+    String? coverLocalPath,
     HealthMetrics? health,
     FinanceMetrics? finance,
     SocialMetrics? social,
@@ -38,6 +47,9 @@ class PersonProfile {
       name: name ?? this.name,
       email: email ?? this.email,
       avatarUrl: avatarUrl ?? this.avatarUrl,
+      coverUrl: coverUrl ?? this.coverUrl,
+      avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
+      coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       health: health ?? this.health,
       finance: finance ?? this.finance,
       social: social ?? this.social,
@@ -177,6 +189,9 @@ class PersonalInformation {
   final String? occupation;
   final String? company;
   final String? website;
+  final String? coverUrl;
+  final String? avatarLocalPath;
+  final String? coverLocalPath;
 
   const PersonalInformation({
     this.phoneNumber,
@@ -189,6 +204,9 @@ class PersonalInformation {
     this.occupation,
     this.company,
     this.website,
+    this.coverUrl,
+    this.avatarLocalPath,
+    this.coverLocalPath,
   });
 
   PersonalInformation copyWith({
@@ -202,6 +220,7 @@ class PersonalInformation {
     String? occupation,
     String? company,
     String? website,
+    String? coverUrl,
   }) {
     return PersonalInformation(
       phoneNumber: phoneNumber ?? this.phoneNumber,
@@ -214,6 +233,7 @@ class PersonalInformation {
       occupation: occupation ?? this.occupation,
       company: company ?? this.company,
       website: website ?? this.website,
+      coverUrl: coverUrl ?? this.coverUrl,
     );
   }
 

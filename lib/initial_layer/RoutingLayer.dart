@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 // NOTE: Please ensure these imports are correct for your project structure
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
-// import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
-import 'package:ice_shield/data_layer/Protocol/Theme/ThemeAdapter.dart';
-// import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+// import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
+// import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 
 import '../orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class Adapter extends StatefulWidget {
   final Widget childWidget;

@@ -1,16 +1,16 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
 
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -525,11 +525,32 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 fontWeight: FontWeight.bold,
               ),
             ),
-            TextButton.icon(
-              onPressed: () => _showAddNotificationDialog(context),
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text("Add New"),
-              style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
+            Row(
+              children: [
+                TextButton.icon(
+                  onPressed: () {
+                    final service = context.read<LocalNotificationService>();
+                    service.showNotification(
+                      9999,
+                      "Test Notification",
+                      "If you see this, custom notifications are working!",
+                    );
+                  },
+                  icon: const Icon(Icons.send_rounded, size: 20),
+                  label: const Text("Test"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.tealAccent,
+                  ),
+                ),
+                TextButton.icon(
+                  onPressed: () => _showAddNotificationDialog(context),
+                  icon: const Icon(Icons.add_rounded, size: 20),
+                  label: const Text("Add New"),
+                  style: TextButton.styleFrom(
+                    foregroundColor: Colors.blueAccent,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

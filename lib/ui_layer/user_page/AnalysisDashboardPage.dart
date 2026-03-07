@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 
 class AnalysisDashboardPage extends StatelessWidget {
   const AnalysisDashboardPage({super.key});
@@ -253,39 +253,51 @@ class AnalysisDashboardPage extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       mainAxisSpacing: 16,
       crossAxisSpacing: 16,
-      childAspectRatio: 1.1,
+      childAspectRatio: 0.85, // Adjusted for breakdown text
       children: [
-        _buildSectorCard(
-          context,
-          title: "HEALTH",
-          value: score.healthGlobalScore.toInt().toString(),
-          icon: Icons.favorite_rounded,
-          color: Colors.green,
-          onTap: () => context.push('/health/dashboard'),
+        Watch(
+          (context) => _buildSectorCard(
+            context,
+            title: "HEALTH",
+            value: score.healthGlobalScore.toInt().toString(),
+            icon: Icons.favorite_rounded,
+            color: Colors.green,
+            breakdown: scoreBlock.healthBreakdown.value,
+            onTap: () => context.push('/health/dashboard'),
+          ),
         ),
-        _buildSectorCard(
-          context,
-          title: "FINANCE",
-          value: score.financialGlobalScore.toInt().toString(),
-          icon: Icons.account_balance_wallet_rounded,
-          color: Colors.blue,
-          onTap: () => context.push('/finance/dashboard'),
+        Watch(
+          (context) => _buildSectorCard(
+            context,
+            title: "FINANCE",
+            value: score.financialGlobalScore.toInt().toString(),
+            icon: Icons.account_balance_wallet_rounded,
+            color: Colors.blue,
+            breakdown: scoreBlock.financeBreakdown.value,
+            onTap: () => context.push('/finance/dashboard'),
+          ),
         ),
-        _buildSectorCard(
-          context,
-          title: "SOCIAL",
-          value: score.socialGlobalScore.toInt().toString(),
-          icon: Icons.people_alt_rounded,
-          color: Colors.purple,
-          onTap: () => context.push('/social/contacts'),
+        Watch(
+          (context) => _buildSectorCard(
+            context,
+            title: "SOCIAL",
+            value: score.socialGlobalScore.toInt().toString(),
+            icon: Icons.people_alt_rounded,
+            color: Colors.purple,
+            breakdown: scoreBlock.socialBreakdown.value,
+            onTap: () => context.push('/social/dashboard'),
+          ),
         ),
-        _buildSectorCard(
-          context,
-          title: "PROJECTS",
-          value: score.careerGlobalScore.toInt().toString(),
-          icon: Icons.rocket_launch_rounded,
-          color: Colors.orange,
-          onTap: () => context.push('/projects/dashboard'),
+        Watch(
+          (context) => _buildSectorCard(
+            context,
+            title: "PROJECTS",
+            value: score.careerGlobalScore.toInt().toString(),
+            icon: Icons.rocket_launch_rounded,
+            color: Colors.orange,
+            breakdown: scoreBlock.projectsBreakdown.value,
+            onTap: () => context.push('/projects/dashboard'),
+          ),
         ),
       ],
     );
@@ -297,13 +309,56 @@ class AnalysisDashboardPage extends StatelessWidget {
     required String value,
     required IconData icon,
     required Color color,
+    required Map<String, double> breakdown,
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Fallback for non-zero scores with empty breakdowns (e.g. at startup)
+    final displayBreakdown = Map<String, double>.from(breakdown);
+    if (displayBreakdown.isEmpty && (double.tryParse(value) ?? 0) > 0) {
+      displayBreakdown['Base'] = double.tryParse(value) ?? 0;
+    }
+
+    IconData _getBreakdownIcon(String key) {
+      switch (key.toLowerCase()) {
+        case 'steps':
+          return Icons.directions_walk_rounded;
+        case 'diet':
+          return Icons.restaurant_rounded;
+        case 'exercise':
+          return Icons.fitness_center_rounded;
+        case 'focus':
+          return Icons.timer_rounded;
+        case 'water':
+          return Icons.water_drop_rounded;
+        case 'sleep':
+          return Icons.bedtime_rounded;
+        case 'contacts':
+          return Icons.person_rounded;
+        case 'affection':
+          return Icons.favorite_rounded;
+        case 'quests':
+          return Icons.auto_awesome_rounded;
+        case 'accounts':
+          return Icons.savings_rounded;
+        case 'assets':
+          return Icons.inventory_2_rounded;
+        case 'tasks':
+          return Icons.task_alt_rounded;
+        case 'projects':
+          return Icons.rocket_rounded;
+        case 'system':
+          return Icons.history_rounded;
+        default:
+          return Icons.adjust_rounded;
+      }
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainerHigh,
           borderRadius: BorderRadius.circular(24),
@@ -311,24 +366,30 @@ class AnalysisDashboardPage extends StatelessWidget {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(icon, color: color, size: 20),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 20),
+                ),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+              ],
             ),
-            const Spacer(),
-            Text(
-              value,
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.w900,
-                color: colorScheme.onSurface,
-              ),
-            ),
+            const SizedBox(height: 8),
             Text(
               title,
               style: TextStyle(
@@ -338,6 +399,48 @@ class AnalysisDashboardPage extends StatelessWidget {
                 color: colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
+            const Divider(height: 16, thickness: 0.5),
+            ...displayBreakdown.entries
+                .where((e) => e.value != 0)
+                .map(
+                  (e) => Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          _getBreakdownIcon(e.key),
+                          size: 10,
+                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            e.key.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 8,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.4,
+                              color: colorScheme.onSurfaceVariant.withOpacity(
+                                0.8,
+                              ),
+                            ),
+                          ),
+                        ),
+                        Text(
+                          e.value > 0
+                              ? "+${e.value.toInt()}"
+                              : e.value.toInt().toString(),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w900,
+                            color: e.value > 0 ? color : Colors.red,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+                .toList(),
           ],
         ),
       ),

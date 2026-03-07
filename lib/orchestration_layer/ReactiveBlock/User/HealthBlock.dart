@@ -2,14 +2,14 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     show
         HealthLogsDAO,
         HealthMealDAO,
         HealthMetricsDAO,
         HealthMetricsTableCompanion;
 import 'package:signals/signals.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class HealthBlock {
   String personId;

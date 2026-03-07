@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/ui_layer/finance_page/models/FinanceAsset.dart';
-import 'package:ice_shield/ui_layer/finance_page/services/FinanceService.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/ui_layer/finance_page/models/FinanceAsset.dart';
+import 'package:ice_gate/ui_layer/finance_page/services/FinanceService.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 
@@ -431,34 +431,46 @@ class _FinancePageState extends State<FinancePage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: colorScheme.onPrimary.withOpacity(0.12),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  (isPositive ? Colors.greenAccent : Colors.redAccent)
+                      .withValues(alpha: 0.25),
+                  (isPositive ? Colors.greenAccent : Colors.redAccent)
+                      .withValues(alpha: 0.05),
+                ],
+              ),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colorScheme.onPrimary.withOpacity(0.1)),
+              border: Border.all(
+                color: (isPositive ? Colors.greenAccent : Colors.redAccent)
+                    .withValues(alpha: 0.25),
+                width: 1,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: (isPositive ? Colors.greenAccent : Colors.redAccent)
+                      .withValues(alpha: 0.15),
+                  blurRadius: 8,
+                  spreadRadius: -1,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(2),
-                  decoration: BoxDecoration(
-                    color: isPositive ? Colors.greenAccent : Colors.redAccent,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    isPositive
-                        ? Icons.trending_up_rounded
-                        : Icons.trending_down_rounded,
-                    color: Colors.black,
-                    size: 10,
-                  ),
+                Icon(
+                  isPositive
+                      ? Icons.trending_up_rounded
+                      : Icons.trending_down_rounded,
+                  color: isPositive ? Colors.greenAccent : Colors.redAccent,
+                  size: 14,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   '${isPositive ? '+' : ''}${_currencyFormat.format(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
                   style: TextStyle(
-                    color: isPositive
-                        ? Colors.greenAccent[100]
-                        : Colors.redAccent[100],
+                    color: isPositive ? Colors.greenAccent : Colors.redAccent,
                     fontWeight: FontWeight.w900,
                     fontSize: 13,
                     letterSpacing: 0.3,

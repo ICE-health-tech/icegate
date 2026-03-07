@@ -1,18 +1,18 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:path/path.dart' as path; // Add this alias to avoid conflicts
 import 'package:intl/intl.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class FoodInputPage extends StatefulWidget {
   const FoodInputPage({super.key});

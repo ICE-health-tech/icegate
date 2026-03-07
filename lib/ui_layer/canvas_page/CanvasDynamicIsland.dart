@@ -4,10 +4,10 @@ import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 
-import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
-import 'package:ice_shield/ui_layer/canvas_page/GoalConfigurationWidget.dart';
+import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
+import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:provider/provider.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
@@ -38,6 +38,9 @@ class CanvasDynamicIsland extends StatelessWidget {
     }
     // Hide on canvas sub-pages too
     if (currentRoute.startsWith('/canvas/') && currentRoute != '/canvas') {
+      return const SizedBox.shrink();
+    }
+    if (currentRoute.startsWith('/projects/') && currentRoute != '/projects') {
       return const SizedBox.shrink();
     }
     final isCanvas = currentRoute == '/canvas';

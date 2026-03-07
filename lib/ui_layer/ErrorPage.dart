@@ -2,7 +2,7 @@
 import 'package:flutter_neumorphic_plus/flutter_neumorphic.dart';
 
 // --- DÒNG IMPORT TỪ DỰ ÁN CỦA BẠN ---
-// import 'package:ice_shield/data_layer/DomainData/Home/InternalWidget.dart';
+// import 'package:ice_gate/data_layer/DomainData/Home/InternalWidget.dart';
 
 import 'package:go_router/go_router.dart';
 

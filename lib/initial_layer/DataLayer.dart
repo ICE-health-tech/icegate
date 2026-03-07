@@ -3,40 +3,40 @@ import 'package:drift/drift.dart' show Value;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DatabaseAgent.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
-import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/data_layer/DataSources/cloud_database/PowerSyncConnector.dart'; // Add this back
-import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/cloud_database/PowerSyncConnector.dart'; // Add this back
+import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_service/audio_service.dart';
 import 'package:powersync/powersync.dart' hide Column;
-import 'package:ice_shield/data_layer/DataSources/cloud_database/powersync_schema.dart'
+import 'package:ice_gate/data_layer/DataSources/cloud_database/powersync_schema.dart'
     as ps_schema;
 import 'package:path_provider/path_provider.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
-import 'package:ice_shield/security_routing_layer/Routing/url_route/InternalRoute.dart';
-import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
+import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 

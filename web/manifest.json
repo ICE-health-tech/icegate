@@ -1,6 +1,6 @@
 {
-    "name": "ice_shield",
-    "short_name": "ice_shield",
+    "name": "ice_gate",
+    "short_name": "ice_gate",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#hex_code",

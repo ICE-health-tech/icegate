@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PasskeyAuthService.dart';
-import 'package:ice_shield/data_layer/Protocol/User/RegistrationProtocol.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
+import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';

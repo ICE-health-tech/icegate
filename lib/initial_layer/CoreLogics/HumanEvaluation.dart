@@ -1,5 +1,5 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:ice_shield/data_layer/Protocol/Health/TargetCaloriesProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/TargetCaloriesProtocol.dart';
 
 part 'HumanEvaluation.freezed.dart';
 part 'HumanEvaluation.g.dart';

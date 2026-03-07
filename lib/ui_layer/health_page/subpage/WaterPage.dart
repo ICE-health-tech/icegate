@@ -3,10 +3,10 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 class WaterPage extends StatefulWidget {
   const WaterPage({super.key});

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 
@@ -37,7 +37,6 @@ class ExerciseAnalysisPage extends StatelessWidget {
         centerTitle: true,
       ),
       body: StreamBuilder<List<ExerciseLogData>>(
-    
         stream: healthLogsDao.watchDailyExerciseLogs(
           Supabase.instance.client.auth.currentUser?.id ?? "",
           DateTime.now().subtract(const Duration(days: 30)),

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart';
 
 /// Widget for displaying a list of Bluetooth devices
 class BluetoothDeviceList extends StatelessWidget {

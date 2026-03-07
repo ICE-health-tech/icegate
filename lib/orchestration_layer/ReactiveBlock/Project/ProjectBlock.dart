@@ -1,14 +1,14 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class ProjectBlock {
   final projects = signal<List<ProjectProtocol>>([]);
@@ -39,7 +39,7 @@ class ProjectBlock {
                   (e) => ProjectProtocol(
                     id: e.id,
                     projectID: e.projectID ?? "",
-                    personID: e.personID??"",
+                    personID: e.personID ?? "",
                     name: e.name,
                     description: e.description,
                     color: e.color,
@@ -73,7 +73,7 @@ class ProjectBlock {
         description: Value(description),
         color: Value(color),
         createdAt: Value(DateTime.now().toUtc()),
-        updatedAt:Value(DateTime.now().toUtc()),
+        updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
     return uuid;

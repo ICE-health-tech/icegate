@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/ThemeManager.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class SettingsWidget extends StatelessWidget {
   final String title;
@@ -309,18 +309,10 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: 'Version',
-                  subtitle: '2.1.1',
+                  subtitle: '2.3.3',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),
-                ),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: 'Reset Database',
-                  subtitle: 'Clear all local data',
-                  icon: Icons.delete_forever_rounded,
-                  color: Colors.red,
-                  onTap: () => _showResetDatabaseDialog(context),
                 ),
               ],
             ),

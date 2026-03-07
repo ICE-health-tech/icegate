@@ -1,5 +1,5 @@
 import 'package:signals/signals.dart';
-import 'package:ice_shield/data_layer/Protocol/Health/TargetCaloriesProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/TargetCaloriesProtocol.dart';
 
 class TargetCaloriesBlock {
   final _state = signal<TargetCaloriesProtocol>(TargetCaloriesProtocol.empty());

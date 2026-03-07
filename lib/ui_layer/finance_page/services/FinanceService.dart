@@ -2,7 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:ice_shield/ui_layer/finance_page/models/FinanceAsset.dart';
+import 'package:ice_gate/ui_layer/finance_page/models/FinanceAsset.dart';
 
 class FinanceService {
   static const empty = FinanceAsset(

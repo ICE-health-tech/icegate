@@ -1,4 +1,4 @@
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 
 /// Protocol for managing social metrics data
 abstract class SocialMetricsProtocol {

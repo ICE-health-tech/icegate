@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 // Replace with your actual path
-import 'package:ice_shield/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
 void main() {
   group('InternalWidgetDragProtocol', () {

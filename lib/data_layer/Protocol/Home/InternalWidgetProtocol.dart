@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'PluginProtocol.dart';
 
 class InternalWidgetProtocol implements PluginProtocol {

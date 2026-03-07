@@ -3,8 +3,8 @@ import 'package:flutter_blue_plus/flutter_blue_plus.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:signals/signals.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart';
 
 /// Service for managing Bluetooth GPS device connection and location data
 class BluetoothGPSService {

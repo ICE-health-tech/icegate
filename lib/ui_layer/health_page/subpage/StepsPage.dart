@@ -2,8 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/health_page/services/HealthService.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class StepsPage extends StatefulWidget {

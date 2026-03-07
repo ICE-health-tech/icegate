@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 // For ImageFilter
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PersonalInformationPage extends StatefulWidget {
@@ -222,10 +223,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     setState(() => _isUploadingAvatar = true);
 
     try {
-      final success = await objectBlock.pickAndUploadAvatar(
+      final localPath = await objectBlock.pickAndUploadAvatar(
         userId: userId,
         token: token,
       );
+
+      final success = localPath != null && localPath.isNotEmpty;
+
+      if (success) {
+        final personBlock = context.read<PersonBlock>();
+        personBlock.updateAvatarLocalPath(localPath);
+        personBlock.updateProfileImageUrl(
+          objectBlock.userObjectResource.value.avatarImage,
+        );
+      }
 
       if (mounted) {
         if (!mounted) return;
@@ -272,10 +283,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     setState(() => _isUploadingCover = true);
 
     try {
-      final success = await objectBlock.pickAndUploadCover(
+      final localPath = await objectBlock.pickAndUploadCover(
         userId: userId,
         token: token,
       );
+
+      final success = localPath != null && localPath.isNotEmpty;
+
+      if (success) {
+        final personBlock = context.read<PersonBlock>();
+        personBlock.updateCoverLocalPath(localPath);
+        personBlock.updateCoverImageUrl(
+          objectBlock.userObjectResource.value.coverImage,
+        );
+      }
 
       if (mounted) {
         if (!mounted) return;
@@ -639,6 +660,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
             onTap: _isEditing ? _uploadCover : null,
             child: Container(
               height: 190,
+              clipBehavior: Clip.antiAlias,
               decoration: BoxDecoration(
                 gradient: objectResource.coverImage.isEmpty
                     ? LinearGradient(
@@ -651,18 +673,34 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         ],
                       )
                     : null,
-                image: objectResource.coverImage.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(objectResource.coverImage),
-                        fit: BoxFit.cover,
-                      )
-                    : null,
                 borderRadius: const BorderRadius.only(
                   bottomLeft: Radius.circular(60),
                 ),
               ),
               child: Stack(
+                fit: StackFit.expand,
                 children: [
+                  LocalFirstImage(
+                    localPath: info.profiles.coverLocalPath,
+                    remoteUrl: objectResource.coverImage,
+                    fit: BoxFit.cover,
+                    placeholder: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [colorScheme.primary, colorScheme.secondary],
+                        ),
+                      ),
+                      child: Center(
+                        child: Icon(
+                          Icons.broken_image_rounded,
+                          color: Colors.white.withValues(alpha: 0.3),
+                          size: 48,
+                        ),
+                      ),
+                    ),
+                  ),
                   if (objectResource.coverImage.isEmpty) ...[
                     Positioned(
                       top: -50,
@@ -764,19 +802,24 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                     onTap: _isEditing ? _uploadAvatar : null,
                     child: Stack(
                       children: [
-                        CircleAvatar(
-                          radius: 56,
-                          backgroundColor: colorScheme.primaryContainer,
-                          backgroundImage: objectResource.avatarImage.isNotEmpty
-                              ? NetworkImage(objectResource.avatarImage)
-                              : null,
-                          child: (objectResource.avatarImage.isEmpty)
-                              ? Icon(
-                                  Icons.person_rounded,
-                                  size: 56,
-                                  color: colorScheme.onPrimaryContainer,
-                                )
-                              : null,
+                        Container(
+                          width: 112,
+                          height: 112,
+                          clipBehavior: Clip.antiAlias,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: colorScheme.primaryContainer,
+                          ),
+                          child: LocalFirstImage(
+                            localPath: info.profiles.avatarLocalPath,
+                            remoteUrl: objectResource.avatarImage,
+                            fit: BoxFit.cover,
+                            placeholder: Icon(
+                              Icons.person_rounded,
+                              size: 56,
+                              color: colorScheme.onPrimaryContainer,
+                            ),
+                          ),
                         ),
                         if (_isEditing)
                           Positioned.fill(

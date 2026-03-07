@@ -4,15 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:drift/native.dart'; // For NativeDatabase on mobile/desktop
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
-import 'package:ice_shield/initial_layer/ThemeLayer/CurrentThemeData.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/PersonProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/PersonalInformationProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/UserAccountProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/ProfileProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
+import 'package:ice_gate/initial_layer/ThemeLayer/CurrentThemeData.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/PersonalInformationProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/UserAccountProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/ProfileProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:rxdart/rxdart.dart';
 import 'dart:io'; // For File
 import 'dart:math'; // For Random() used in DAOs
@@ -20,7 +20,7 @@ import 'dart:convert';
 import 'package:path_provider/path_provider.dart'; // For finding the database path
 import 'package:path/path.dart' as p; // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ice_shield/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
@@ -361,6 +361,11 @@ class PersonsTable extends Table {
       text().withLength(max: 20).nullable().named('phone_number')();
   TextColumn get profileImageUrl =>
       text().nullable().named('profile_image_url')();
+  TextColumn get coverImageUrl => text().nullable().named('cover_image_url')();
+  TextColumn get avatarLocalPath =>
+      text().nullable().named('avatar_local_path')();
+  TextColumn get coverLocalPath =>
+      text().nullable().named('cover_local_path')();
   TextColumn get relationship => text()
       .withDefault(const Constant('none'))
       .named('relationship')(); // 'friend', 'dating', 'family'
@@ -529,6 +534,11 @@ class ProfilesTable extends Table {
   TextColumn get websiteUrl => text().nullable().named('website_url')();
   TextColumn get linkedinUrl => text().nullable().named('linkedin_url')();
   TextColumn get githubUrl => text().nullable().named('github_url')();
+  TextColumn get coverImageUrl => text().nullable().named('cover_image_url')();
+  TextColumn get avatarLocalPath =>
+      text().nullable().named('avatar_local_path')();
+  TextColumn get coverLocalPath =>
+      text().nullable().named('cover_local_path')();
   TextColumn get timezone => text().nullable().named('timezone')();
   TextColumn get preferredLanguage =>
       text().nullable().named('preferred_language')();
@@ -570,6 +580,11 @@ class CVAddressesTable extends Table {
   TextColumn get occupation => text().nullable().named('occupation')();
   TextColumn get educationLevel => text().nullable().named('education_level')();
   TextColumn get linkedinUrl => text().nullable().named('linkedin_url')();
+  TextColumn get coverImageUrl => text().nullable().named('cover_image_url')();
+  TextColumn get avatarLocalPath =>
+      text().nullable().named('avatar_local_path')();
+  TextColumn get coverLocalPath =>
+      text().nullable().named('cover_local_path')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -2381,50 +2396,69 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> upsertPersonProfileData({
     required String personId,
-    required String firstName,
-    required String lastName,
-    required String profileImageUrl,
-    required String bio,
-    required String occupation,
-    required String educationLevel,
-    required String location,
-    required String websiteUrl,
-    required String linkedinUrl,
-    required String githubUrl,
-    required String company,
-    required String university,
-    required String country,
+    String? firstName,
+    String? lastName,
+    String? profileImageUrl,
+    String? coverImageUrl,
+    String? avatarLocalPath,
+    String? coverLocalPath,
+    String? bio,
+    String? occupation,
+    String? educationLevel,
+    String? location,
+    String? websiteUrl,
+    String? linkedinUrl,
+    String? githubUrl,
+    String? company,
+    String? university,
+    String? country,
   }) async {
+    final now = DateTime.now();
+
     await transaction(() async {
-      final now = Value(DateTime.now());
-      // Persons
-      final existingPerson = await getPersonById(personId);
+      // 1. Update/Insert Person info
+      final existingPerson = await (select(
+        personsTable,
+      )..where((t) => t.id.equals(personId))).getSingleOrNull();
       if (existingPerson != null) {
-        await update(personsTable).replace(
-          existingPerson.copyWith(
-            firstName: firstName,
+        await (update(personsTable)..where((t) => t.id.equals(personId))).write(
+          PersonsTableCompanion(
+            firstName: firstName != null
+                ? Value(firstName)
+                : const Value.absent(),
             lastName: Value(lastName),
             profileImageUrl: Value(profileImageUrl),
-            updatedAt: DateTime.now(),
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       } else {
         await into(personsTable).insert(
           PersonsTableCompanion.insert(
             id: personId,
-            firstName: firstName,
+            firstName: firstName ?? 'User',
             lastName: Value(lastName),
             profileImageUrl: Value(profileImageUrl),
-            updatedAt: now,
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       }
 
-      // Profiles
-      final existingProfile = await getProfileForPerson(personId);
+      // 2. Update/Insert Profile details
+      final existingProfile = await (select(
+        profilesTable,
+      )..where((t) => t.id.equals(personId))).getSingleOrNull();
       if (existingProfile != null) {
-        await update(profilesTable).replace(
-          existingProfile.copyWith(
+        await (update(
+          profilesTable,
+        )..where((t) => t.id.equals(personId))).write(
+          ProfilesTableCompanion(
+            personID: Value(personId),
             bio: Value(bio),
             occupation: Value(occupation),
             educationLevel: Value(educationLevel),
@@ -2432,7 +2466,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
             websiteUrl: Value(websiteUrl),
             linkedinUrl: Value(linkedinUrl),
             githubUrl: Value(githubUrl),
-            updatedAt: DateTime.now(),
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       } else {
@@ -2447,27 +2484,38 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
             websiteUrl: Value(websiteUrl),
             linkedinUrl: Value(linkedinUrl),
             githubUrl: Value(githubUrl),
-            updatedAt: now,
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       }
 
-      // CV Address (Detail Information)
-      final existingCV = await getCVAddressForPerson(personId);
+      // 3. Update/Insert Detail Information (CV Addresses)
+      final existingCV = await (select(
+        cVAddressesTable,
+      )..where((t) => t.id.equals(personId))).getSingleOrNull();
       if (existingCV != null) {
-        await update(cVAddressesTable).replace(
-          existingCV.copyWith(
+        await (update(
+          cVAddressesTable,
+        )..where((t) => t.id.equals(personId))).write(
+          CVAddressesTableCompanion(
+            personID: Value(personId),
+            bio: Value(bio),
+            occupation: Value(occupation),
+            educationLevel: Value(educationLevel),
+            location: Value(location),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            githubUrl: Value(githubUrl),
             company: Value(company),
             university: Value(university),
             country: Value(country),
-            bio: Value(bio),
-            occupation: Value(occupation),
-            location: Value(location),
-            githubUrl: Value(githubUrl),
-            websiteUrl: Value(websiteUrl),
-            linkedinUrl: Value(linkedinUrl),
-            educationLevel: Value(educationLevel),
-            updatedAt: DateTime.now(),
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       } else {
@@ -2475,17 +2523,20 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
           CVAddressesTableCompanion.insert(
             id: personId,
             personID: Value(personId),
+            bio: Value(bio),
+            occupation: Value(occupation),
+            educationLevel: Value(educationLevel),
+            location: Value(location),
+            websiteUrl: Value(websiteUrl),
+            linkedinUrl: Value(linkedinUrl),
+            githubUrl: Value(githubUrl),
             company: Value(company),
             university: Value(university),
             country: Value(country),
-            bio: Value(bio),
-            occupation: Value(occupation),
-            location: Value(location),
-            githubUrl: Value(githubUrl),
-            websiteUrl: Value(websiteUrl),
-            linkedinUrl: Value(linkedinUrl),
-            educationLevel: Value(educationLevel),
-            updatedAt: now,
+            coverImageUrl: Value(coverImageUrl),
+            avatarLocalPath: Value(avatarLocalPath),
+            coverLocalPath: Value(coverLocalPath),
+            updatedAt: Value(now),
           ),
         );
       }
@@ -3804,7 +3855,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 35;
+  int get schemaVersion => 38;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -4077,6 +4128,45 @@ class AppDatabase extends _$AppDatabase {
           } catch (e) {
             print('Drift: Error adding scope column to internal_widgets: $e');
           }
+        }
+
+        if (from < 37) {
+          // NOTE: persons, profiles, and cVAddressesTable are synced via PowerSync.
+          // They are views in SQLite, so m.addColumn will fail.
+          // These columns were added to powersync_schema.dart, and PowerSync
+          // will automatically handle the SQLite schema update.
+          /*
+          try {
+            await m.addColumn(personsTable, personsTable.coverImageUrl);
+            await m.addColumn(profilesTable, profilesTable.coverImageUrl);
+            await m.addColumn(cVAddressesTable, cVAddressesTable.coverImageUrl);
+          } catch (e) {
+            print('Drift: Error in version 37 migration: $e');
+          }
+          */
+        }
+
+        if (from < 38) {
+          // NOTE: avatar_local_path and cover_local_path were also added to
+          // powersync_schema.dart for secondary sync/schema consistency.
+          /*
+          try {
+            await m.addColumn(personsTable, personsTable.avatarLocalPath);
+            await m.addColumn(personsTable, personsTable.coverLocalPath);
+            await m.addColumn(profilesTable, profilesTable.avatarLocalPath);
+            await m.addColumn(profilesTable, profilesTable.coverLocalPath);
+            await m.addColumn(
+              cVAddressesTable,
+              cVAddressesTable.avatarLocalPath,
+            );
+            await m.addColumn(
+              cVAddressesTable,
+              cVAddressesTable.coverLocalPath,
+            );
+          } catch (e) {
+            print('Drift: Error in version 38 migration: $e');
+          }
+          */
         }
       },
       beforeOpen: (details) async {

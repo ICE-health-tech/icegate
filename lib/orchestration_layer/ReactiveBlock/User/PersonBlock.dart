@@ -1,6 +1,6 @@
-import 'package:ice_shield/initial_layer/CoreLogics/CustomAuthService.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -94,6 +94,9 @@ class UserProfile {
   final int friends;
   final int mutual;
   final String profileImageUrl;
+  final String coverImageUrl;
+  final String avatarLocalPath;
+  final String coverLocalPath;
   final String username;
 
   const UserProfile({
@@ -103,6 +106,9 @@ class UserProfile {
     this.friends = 0,
     this.mutual = 0,
     this.profileImageUrl = '',
+    this.coverImageUrl = '',
+    this.avatarLocalPath = '',
+    this.coverLocalPath = '',
     this.username = '',
   });
 
@@ -127,6 +133,10 @@ class UserProfile {
       mutual: json['mutual'] ?? 0,
       profileImageUrl:
           json['profileImageUrl'] ?? json['profile_image_url'] ?? '',
+      coverImageUrl: json['coverImageUrl'] ?? json['cover_image_url'] ?? '',
+      avatarLocalPath:
+          json['avatarLocalPath'] ?? json['avatar_local_path'] ?? '',
+      coverLocalPath: json['coverLocalPath'] ?? json['cover_local_path'] ?? '',
       username: json['username'] ?? '',
     );
   }
@@ -138,6 +148,9 @@ class UserProfile {
     int? friends,
     int? mutual,
     String? profileImageUrl,
+    String? coverImageUrl,
+    String? avatarLocalPath,
+    String? coverLocalPath,
     String? username,
   }) {
     return UserProfile(
@@ -147,6 +160,9 @@ class UserProfile {
       friends: friends ?? this.friends,
       mutual: mutual ?? this.mutual,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
+      coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       username: username ?? this.username,
     );
   }
@@ -329,6 +345,16 @@ class PersonBlock {
             remotePerson?['profile_image_url'] ??
             user.userMetadata?['avatar_url'] ??
             '',
+        coverImageUrl:
+            localPerson?.coverImageUrl ??
+            localProfile?.coverImageUrl ??
+            remotePerson?['cover_image_url'] ??
+            remoteProfile?['cover_image_url'] ??
+            '',
+        avatarLocalPath:
+            localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
+        coverLocalPath:
+            localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
       );
 
       batch(() {
@@ -376,6 +402,27 @@ class PersonBlock {
     information.value = UserInformation(
       details: information.value.details,
       profiles: information.value.profiles.copyWith(profileImageUrl: url),
+    );
+  }
+
+  void updateCoverImageUrl(String url) {
+    information.value = UserInformation(
+      details: information.value.details,
+      profiles: information.value.profiles.copyWith(coverImageUrl: url),
+    );
+  }
+
+  void updateAvatarLocalPath(String path) {
+    information.value = UserInformation(
+      details: information.value.details,
+      profiles: information.value.profiles.copyWith(avatarLocalPath: path),
+    );
+  }
+
+  void updateCoverLocalPath(String path) {
+    information.value = UserInformation(
+      details: information.value.details,
+      profiles: information.value.profiles.copyWith(coverLocalPath: path),
     );
   }
 
@@ -441,6 +488,9 @@ class PersonBlock {
         firstName: profile.firstName,
         lastName: profile.lastName,
         profileImageUrl: profile.profileImageUrl,
+        coverImageUrl: profile.coverImageUrl,
+        avatarLocalPath: profile.avatarLocalPath,
+        coverLocalPath: profile.coverLocalPath,
         bio: details.bio,
         occupation: details.occupation,
         educationLevel: details.educationLevel,

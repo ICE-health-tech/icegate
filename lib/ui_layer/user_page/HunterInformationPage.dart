@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/DepartmentCard.dart';
-import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/DepartmentCard.dart';
+import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 
 // --- MOCK DATA MODEL ---
 // --- DASHBOARD WIDGET ---
@@ -24,7 +25,6 @@ class _UserInformationPageState extends State<UserInformationPage> {
     //   _isInteractingWithCard = isInteracting;
     // });
   }
-  
 
   @override
   Widget build(BuildContext context) {
@@ -203,6 +203,41 @@ class _UserInformationPageState extends State<UserInformationPage> {
           borderRadius: BorderRadius.circular(24),
           child: Stack(
             children: [
+              // Cover Image Background
+              LocalFirstImage(
+                localPath: user.coverLocalPath,
+                remoteUrl: user.coverImageUrl,
+                fit: BoxFit.cover,
+                opacity: 0.3,
+                placeholder: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        const Color(0xFF00E5FF).withValues(alpha: 0.1),
+                        const Color(0xFF0F172A),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Gradient Overlay for better readability
+              if (user.coverImageUrl.isNotEmpty)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          const Color(0xFF1E293B).withOpacity(0.2),
+                          const Color(0xFF1E293B).withOpacity(0.8),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
               // Tech Accents
               Positioned(
                 top: 0,
@@ -247,19 +282,24 @@ class _UserInformationPageState extends State<UserInformationPage> {
                           ),
                         ],
                       ),
-                      child: CircleAvatar(
-                        radius: 40,
-                        backgroundColor: const Color(0xFF0F172A),
-                        backgroundImage: user.profileImageUrl.isNotEmpty
-                            ? NetworkImage(user.profileImageUrl)
-                            : null,
-                        child: user.profileImageUrl.isEmpty
-                            ? const Icon(
-                                Icons.person_rounded,
-                                size: 40,
-                                color: Color(0xFF00E5FF),
-                              )
-                            : null,
+                      child: Container(
+                        width: 80,
+                        height: 80,
+                        clipBehavior: Clip.antiAlias,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Color(0xFF0F172A),
+                        ),
+                        child: LocalFirstImage(
+                          localPath: user.avatarLocalPath,
+                          remoteUrl: user.profileImageUrl,
+                          fit: BoxFit.cover,
+                          placeholder: const Icon(
+                            Icons.person_rounded,
+                            size: 40,
+                            color: Color(0xFF00E5FF),
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(width: 20),

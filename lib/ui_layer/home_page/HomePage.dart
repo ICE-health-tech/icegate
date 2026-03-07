@@ -2,33 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import '../UIConstants.dart';
-import 'package:ice_shield/data_layer/Protocol/Health/HealthMetricsData.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart'
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/GamificationService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart'
     show InternalWidgetBlock;
-// import 'package:ice_shield/initial_layer/FireAPI/UrlNavigate.dart' as WidgetNavigatorAction;
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
+// import 'package:ice_gate/initial_layer/FireAPI/UrlNavigate.dart' as WidgetNavigatorAction;
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/ScoreAnimations.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
+import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/ScoreAnimations.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomePage extends StatefulWidget {
@@ -967,7 +967,10 @@ class _HomePageState extends State<HomePage> {
       return InkWell(
         onTap: () => _showAddPluginDialog(context),
         borderRadius: BorderRadius.circular(28),
-        customBorder: Border.all(color: colorScheme.outline.withAlpha(90),width: 3),
+        customBorder: Border.all(
+          color: colorScheme.outline.withAlpha(90),
+          width: 3,
+        ),
         child: Container(
           width: sizeOfWidget,
           height: sizeOfWidget,
@@ -977,7 +980,7 @@ class _HomePageState extends State<HomePage> {
 
             border: Border.all(
               color: colorScheme.outline.withAlpha(90),
-              width:3,
+              width: 3,
               style: BorderStyle
                   .none, // Can change to solid for dashed effect if custom painter
             ),
@@ -1373,7 +1376,10 @@ class _HomePageState extends State<HomePage> {
         decoration: BoxDecoration(
           color: colorScheme.primary.withOpacity(0.1),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: colorScheme.primary.withOpacity(0.2),width: 3),
+          border: Border.all(
+            color: colorScheme.primary.withOpacity(0.2),
+            width: 3,
+          ),
         ),
         child: Center(
           child: Column(

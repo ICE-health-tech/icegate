@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart';
 import 'package:provider/provider.dart';
 import '../../data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'PluginList/AvailablePlugins.dart';
 import '../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 

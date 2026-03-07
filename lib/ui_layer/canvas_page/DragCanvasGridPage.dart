@@ -2,10 +2,10 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
@@ -237,7 +237,10 @@ class _DragCanvasState extends State<DragCanvas> {
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.surfaceContainerHighest,
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Theme.of(context).colorScheme.primary.withOpacity(0.2), width: 2.5),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
+            width: 2.5,
+          ),
           boxShadow: [
             BoxShadow(
               color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
@@ -249,7 +252,7 @@ class _DragCanvasState extends State<DragCanvas> {
         child: Row(
           children: [
             Container(
-              padding:  EdgeInsets.all(16),
+              padding: EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.15),
                 shape: BoxShape.circle,
@@ -264,7 +267,7 @@ class _DragCanvasState extends State<DragCanvas> {
                 children: [
                   Text(
                     title,
-                    style:  TextStyle(
+                    style: TextStyle(
                       color: color,
                       fontSize: 18,
                       fontWeight: FontWeight.w900,

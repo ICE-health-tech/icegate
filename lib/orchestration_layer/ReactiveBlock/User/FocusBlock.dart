@@ -1,18 +1,18 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'; // Import generated code
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/initial_layer/FocusAudioHandler.dart';
-import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:audioplayers/audioplayers.dart';
-import 'package:ice_shield/data_layer/Services/YoutubeService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/data_layer/Services/YoutubeService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 enum FocusStatus { idle, running, paused, completed }
 

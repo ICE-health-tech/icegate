@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
-import 'package:ice_shield/initial_layer/FireAPI/GPSTracker/MapFetch.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
+import 'package:ice_gate/initial_layer/FireAPI/GPSTracker/MapFetch.dart';
 
 /// Compact OpenStreetMap widget for embedding in canvas widgets
 ///
@@ -85,7 +85,7 @@ class _CompactOSMMapWidgetState extends State<CompactOSMMapWidget> {
               TileLayer(
                 urlTemplate: OSMTileServer.standard,
                 subdomains: OSMTileServer.subdomains,
-                userAgentPackageName: 'com.example.ice_shield',
+                userAgentPackageName: 'com.example.ice_gate',
               ),
 
               // Marker

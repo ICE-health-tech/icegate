@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:ice_shield/data_layer/Protocol/Health/CaloriesProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
 
 class Aifoodcaloriesservices {
   final String _baseUrl = "https://lang.duylong.art/runs/stream";

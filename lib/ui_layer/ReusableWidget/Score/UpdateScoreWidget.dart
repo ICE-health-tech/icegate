@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 // import 'package:mysample/UpdateScoreGlobalState.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/UpdateScoreGlobalState.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/UpdateScoreGlobalState.dart';
 
 /// An example of [AnimationController] and [SlideTransition].
 

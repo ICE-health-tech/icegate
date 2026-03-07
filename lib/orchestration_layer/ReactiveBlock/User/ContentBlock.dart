@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/Protocol/User/ContentProtocols.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/User/ContentProtocols.dart';
 
 class ContentBlock {
   final analyses = listSignal<AiAnalysisProtocol>([]);

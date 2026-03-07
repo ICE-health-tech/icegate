@@ -9,10 +9,10 @@ import '../../../data_layer/DataSources/local_database/Database.dart';
 // import '../../../data_layer/Protocol/Widget/WidgetManagerBlock.dart';
 import '../../data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import '../../data_layer/Protocol/Home/InternalWidgetProtocol.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
 import '../../initial_layer/FireAPI/UrlNavigate.dart'; // Added for navigation
@@ -51,7 +51,7 @@ class StoreWidget extends StatelessWidget {
         widgetID: '102',
         score: 10,
       ),
-     
+
       InternalWidgetDragProtocol.item(
         name: "Mail",
         color: "0xFFEA4335",

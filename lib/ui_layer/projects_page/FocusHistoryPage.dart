@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 

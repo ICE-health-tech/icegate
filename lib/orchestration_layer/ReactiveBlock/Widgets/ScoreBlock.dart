@@ -1,15 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/GamificationService.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/GamificationService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 
 class ScoreBlock {
   final _score = signal<ScoreData>(ScoreData.empty());
+  final isReady = signal<bool>(false);
 
   // DAOs stored locally for access in update methods
   late ScoreDAO _dao;
@@ -39,6 +40,12 @@ class ScoreBlock {
   final globalLevel = signal<int>(1);
   final levelProgress = signal<double>(0);
   final rankTitle = signal<String>("Novice");
+
+  // Breakdown Signals
+  final healthBreakdown = signal<Map<String, double>>({});
+  final socialBreakdown = signal<Map<String, double>>({});
+  final financeBreakdown = signal<Map<String, double>>({});
+  final projectsBreakdown = signal<Map<String, double>>({});
 
   void updateScore(ScoreData scoreValue) {
     batch(() {
@@ -85,14 +92,14 @@ class ScoreBlock {
 
   String? _initializedPersonID;
 
-  void init(
+  Future<void> init(
     ScoreDAO dao,
     PersonManagementDAO personDAO,
     FinanceDAO financeDAO,
     HealthBlock healthBlock,
     HealthMealDAO mealDAO,
     String personID,
-  ) {
+  ) async {
     if (personID.isEmpty) {
       debugPrint("ScoreBlock: Skipping init, personID is empty.");
       return;
@@ -103,6 +110,7 @@ class ScoreBlock {
       return;
     }
 
+    isReady.value = false;
     debugPrint("ScoreBlock: 🚀 Initializing for personID: $personID");
     _initializedPersonID = personID;
 
@@ -116,12 +124,15 @@ class ScoreBlock {
     }
     _subscriptions.clear();
 
-    SharedPreferences.getInstance().then((prefs) {
-      _lastContactBasedScore =
-          prefs.getDouble('lastContactBasedScore_$personID') ?? 0.0;
-      _lastHealthBasedScore =
-          prefs.getDouble('lastHealthBasedScore_$personID') ?? 0.0;
-    });
+    final prefs = await SharedPreferences.getInstance();
+    _lastContactBasedScore =
+        prefs.getDouble('lastContactBasedScore_$personID') ?? 0.0;
+    _lastHealthBasedScore =
+        prefs.getDouble('lastHealthBasedScore_$personID') ?? 0.0;
+
+    debugPrint(
+      "ScoreBlock: 📦 Loaded SharedPreferences (Health: $_lastHealthBasedScore, Social: $_lastContactBasedScore)",
+    );
 
     _dao = dao;
     _financeDAO = financeDAO;
@@ -131,6 +142,7 @@ class ScoreBlock {
     // 1. Listen to Score changes (read)
     _subscriptions.add(
       dao.watchScoreByPersonID(personID).listen((data) {
+        if (!isReady.value) return;
         if (data != null) {
           updateScore(
             ScoreData(
@@ -149,12 +161,14 @@ class ScoreBlock {
     // Finance Watcher
     _subscriptions.add(
       financeDAO.watchAccounts(personID).listen((accounts) async {
+        if (!isReady.value) return;
         final assets = await _financeDAO.watchAssets(personID).first;
         _updateFinanceScore(accounts, assets);
       }, onError: (e) => debugPrint("ScoreBlock: Error watching accounts: $e")),
     );
     _subscriptions.add(
       financeDAO.watchAssets(personID).listen((assets) async {
+        if (!isReady.value) return;
         final accounts = await _financeDAO.watchAccounts(personID).first;
         _updateFinanceScore(accounts, assets);
       }, onError: (e) => debugPrint("ScoreBlock: Error watching assets: $e")),
@@ -162,15 +176,16 @@ class ScoreBlock {
 
     // Social Watcher
     _subscriptions.add(
-      personDAO.getAllContacts().listen(
-        (contacts) => _updateSocialScore(contacts),
-        onError: (e) => debugPrint("ScoreBlock: Error watching contacts: $e"),
-      ),
+      personDAO.getAllContacts().listen((contacts) {
+        if (!isReady.value) return;
+        _updateSocialScore(contacts);
+      }, onError: (e) => debugPrint("ScoreBlock: Error watching contacts: $e")),
     );
 
     // Meal Watcher (Update signal)
     _subscriptions.add(
       mealDAO.watchDaysWithMeals().listen((meals) {
+        if (!isReady.value) return;
         _latestMeals.value = meals;
       }, onError: (e) => debugPrint("ScoreBlock: Error watching meals: $e")),
     );
@@ -178,6 +193,7 @@ class ScoreBlock {
     // Health Watcher (Reactive to Signals)
     _subscriptions.add(
       effect(() {
+        if (!isReady.value) return;
         if (!_healthBlock.hasInitialSync.value) {
           debugPrint(
             "ScoreBlock: Skipping health update, initial sync pending.",
@@ -204,6 +220,35 @@ class ScoreBlock {
         );
       }),
     );
+
+    // 3. Initial Bootstrapping (Force calculation once)
+    Future.microtask(() async {
+      try {
+        final currentData = await _dao.getScoreByPersonID(_personID);
+
+        final accounts = await _financeDAO.watchAccounts(_personID).first;
+        final assets = await _financeDAO.watchAssets(_personID).first;
+        _updateFinanceScore(accounts, assets);
+
+        final contacts = await personDAO.getAllContacts().first;
+        _updateSocialScore(contacts);
+
+        // Bootstrap Projects breakdown with historical data
+        if (currentData != null && (currentData.careerGlobalScore ?? 0) > 0) {
+          projectsBreakdown.value = {
+            'System': (currentData.careerGlobalScore ?? 0.0),
+          };
+        }
+
+        // Now we are ready
+        isReady.value = true;
+        debugPrint(
+          "ScoreBlock: ✅ Initialization complete and isReady set to true.",
+        );
+      } catch (e) {
+        debugPrint("ScoreBlock: Error during initial bootstrap: $e");
+      }
+    });
   }
 
   void _triggerHealthUpdate(
@@ -244,24 +289,47 @@ class ScoreBlock {
       if (_personID.isEmpty) return;
       debugPrint("ScoreBlock: triggering _updateFinanceScore...");
       try {
-        double totalNetWorth = 0;
+        double accountWorth = 0;
         for (var acc in accounts) {
-          totalNetWorth += acc.balance;
+          accountWorth += acc.balance;
         }
+        double assetWorth = 0;
         for (var asset in assets) {
-          totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
+          assetWorth += (asset.currentEstimatedValue ?? 0.0);
         }
+        final totalNetWorth = accountWorth + assetWorth;
         debugPrint("ScoreBlock: Total net worth: $totalNetWorth");
 
         double financeScore = 0;
+        double accountScore = 0;
+        double assetScore = 0;
+
         if (FINANCE_SAVINGS_MILESTONE > 0) {
-          financeScore =
-              (totalNetWorth / FINANCE_SAVINGS_MILESTONE) *
+          accountScore =
+              (accountWorth / FINANCE_SAVINGS_MILESTONE) *
               FINANCE_SAVINGS_POINTS;
+          assetScore =
+              (assetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
+          financeScore = accountScore + assetScore;
         }
 
-        debugPrint("ScoreBlock: Final Finance Global Score: $financeScore");
-        await _dao.updateFinancialScore(_personID, financeScore);
+        final currentData = await _dao.getScoreByPersonID(_personID);
+        final currentTotal = currentData?.financialGlobalScore ?? 0.0;
+        final systemPoints = (currentTotal - financeScore).clamp(
+          0.0,
+          double.infinity,
+        );
+
+        financeBreakdown.value = {
+          'Accounts': accountScore,
+          'Assets': assetScore,
+          if (systemPoints > 0) 'System': systemPoints,
+        };
+
+        debugPrint(
+          "ScoreBlock: Final Finance Global Score: ${financeScore + systemPoints}",
+        );
+        await _dao.updateFinancialScore(_personID, financeScore + systemPoints);
       } catch (e) {
         debugPrint("Error updating finance score: $e");
       }
@@ -279,10 +347,11 @@ class ScoreBlock {
           totalAffection += contact.affection;
         }
 
-        final newContactScore =
-            ((contacts.length * CONTACT_POINTS) +
-                    ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS))
+        final contactPoints = (contacts.length * CONTACT_POINTS).toDouble();
+        final affectionPoints =
+            ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS)
                 .toDouble();
+        final newContactScore = contactPoints + affectionPoints;
 
         // Read current DB value to preserve quest XP
         final currentData = await _dao.getScoreByPersonID(_personID);
@@ -294,6 +363,12 @@ class ScoreBlock {
           double.infinity,
         );
         final finalScore = newContactScore + questXP;
+
+        socialBreakdown.value = {
+          'Contacts': contactPoints,
+          'Affection': affectionPoints,
+          'Quests': questXP,
+        };
 
         debugPrint(
           "ScoreBlock: Social Score — base: $newContactScore, questXP: $questXP, final: $finalScore",
@@ -398,6 +473,16 @@ class ScoreBlock {
       );
       final finalScore = newHealthScore + questXP;
 
+      healthBreakdown.value = {
+        'Steps': stepsPoints.toDouble(),
+        'Diet': dietPoints.toDouble(),
+        'Exercise': exercisePoints.toDouble(),
+        'Focus': focusPoints.toDouble(),
+        'Water': waterPoints.toDouble(),
+        'Sleep': sleepPoints.toDouble(),
+        'Quests': questXP,
+      };
+
       _lastHealthBasedScore = newHealthScore;
       SharedPreferences.getInstance().then(
         (prefs) =>
@@ -419,19 +504,30 @@ class ScoreBlock {
     await _dao.incrementSocialScore(_personID, points);
   }
 
-  Future<void> persistentCareerIncrement(double points) async {
+  Future<void> persistentCareerIncrement(double points, {String? label}) async {
     if (_personID.isEmpty) return;
+
+    final current = Map<String, double>.from(projectsBreakdown.value);
+    String finalLabel = label ?? (points >= 50.0 ? 'Projects' : 'Tasks');
+    current[finalLabel] = (current[finalLabel] ?? 0) + points;
+    projectsBreakdown.value = current;
+
     await _dao.incrementCareerScore(_personID, points);
   }
 
   Future<void> persistentHealthIncrement(double points) async {
     if (_personID.isEmpty) return;
+
+    final current = Map<String, double>.from(healthBreakdown.value);
+    current['Quests'] = (current['Quests'] ?? 0) + points;
+    healthBreakdown.value = current;
+
     await _dao.incrementHealthScore(_personID, points);
   }
 
   /// Generic method to add points (default to Career/Global)
-  void addPoints(double points) {
-    persistentCareerIncrement(points);
+  void addPoints(double points, {String? label}) {
+    persistentCareerIncrement(points, label: label);
   }
 
   void dispose() {

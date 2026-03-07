@@ -2,7 +2,7 @@
 import 'package:flutter/material.dart'; // Import standard Material
 import 'package:provider/provider.dart';
 
-import 'package:ice_shield/data_layer/Protocol/Theme/ThemeAdapter.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
 
 /// This widget asynchronously loads the initial Material theme data
 /// and makes the necessary providers (ThemeStore, etc.) available to the child widget.

@@ -15,7 +15,7 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleName</key>
-	<string>ice_shield</string>
+	<string>ice_gate</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -58,7 +58,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need location access to track your GPS position</string>
 	<key>NSMotionUsageDescription</key>
-	<string>We need to track your steps for the ICE_SHIELD dashboard.</string>
+	<string>We need to track your steps for the ice_gate dashboard.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need photo library access to let you select files and media for calorie tracking and background sounds</string>
 	<key>NSSupportsLiveActivities</key>

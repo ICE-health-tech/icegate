@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:signals/signals.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/Protocol/User/WidgetProtocols.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/User/WidgetProtocols.dart';
 
 class WidgetSettingsBlock {
   final widgets = listSignal<WidgetProtocol>([]);

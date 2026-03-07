@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 
@@ -117,7 +117,6 @@ class _ExercisePageState extends State<ExercisePage> {
                         fontWeight: FontWeight.w900,
                       ),
                     ),
-                
                   ],
                 ),
                 const SizedBox(height: 16),

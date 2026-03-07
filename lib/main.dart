@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart'; // Standard Flutter Material
-import 'package:ice_shield/initial_layer/DataLayer.dart';
-import 'package:ice_shield/data_layer/Protocol/Theme/ThemeAdapter.dart';
-import 'package:ice_shield/initial_layer/RoutingLayer.dart';
-import 'package:ice_shield/initial_layer/ThemeLayer/ThemeLayer.dart';
-import 'package:ice_shield/security_routing_layer/Routing/url_route/InternalRoute.dart';
+import 'package:ice_gate/initial_layer/DataLayer.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
+import 'package:ice_gate/initial_layer/RoutingLayer.dart';
+import 'package:ice_gate/initial_layer/ThemeLayer/ThemeLayer.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';

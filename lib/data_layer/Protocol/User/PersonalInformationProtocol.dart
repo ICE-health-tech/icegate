@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 // Ensure this import path is correct for your project structure
-// import 'package:ice_shield/data_layer/Protocol/User/PersonProtocols.dart';
+// import 'package:ice_gate/data_layer/Protocol/User/PersonProtocols.dart';
 
 part 'PersonalInformationProtocol.freezed.dart';
 // part 'PersonalInformationProtocol.g.dart';

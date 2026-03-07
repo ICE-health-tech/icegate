@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 class HealthMetricCard extends StatefulWidget {
@@ -144,14 +144,45 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                               child: Container(
                                 margin: const EdgeInsets.only(left: 8),
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
+                                  horizontal: 10,
                                   vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: (widget.metrics.trendPositive ?? true)
-                                      ? Colors.green.withValues(alpha: 0.1)
-                                      : Colors.red.withValues(alpha: 0.1),
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      ((widget.metrics.trendPositive ?? true)
+                                              ? Colors.green
+                                              : Colors.red)
+                                          .withValues(alpha: 0.25),
+                                      ((widget.metrics.trendPositive ?? true)
+                                              ? Colors.green
+                                              : Colors.red)
+                                          .withValues(alpha: 0.05),
+                                    ],
+                                  ),
                                   borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color:
+                                        ((widget.metrics.trendPositive ?? true)
+                                                ? Colors.green
+                                                : Colors.red)
+                                            .withValues(alpha: 0.25),
+                                    width: 1,
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color:
+                                          ((widget.metrics.trendPositive ??
+                                                      true)
+                                                  ? Colors.green
+                                                  : Colors.red)
+                                              .withValues(alpha: 0.15),
+                                      blurRadius: 8,
+                                      spreadRadius: -1,
+                                    ),
+                                  ],
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
@@ -160,13 +191,14 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                       (widget.metrics.trendPositive ?? true)
                                           ? Icons.trending_up_rounded
                                           : Icons.trending_down_rounded,
-                                      size: 12, // Reduced from 14
+                                      size:
+                                          10, // Slightly smaller for premium feel
                                       color:
                                           (widget.metrics.trendPositive ?? true)
-                                          ? Colors.green
-                                          : Colors.red,
+                                          ? Colors.greenAccent
+                                          : Colors.redAccent,
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: 5),
                                     Flexible(
                                       child: Text(
                                         widget.metrics.trend!,
@@ -175,10 +207,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                           color:
                                               (widget.metrics.trendPositive ??
                                                   true)
-                                              ? Colors.green
-                                              : Colors.red,
+                                              ? Colors.greenAccent
+                                              : Colors.redAccent,
                                           fontWeight: FontWeight.w900,
-                                          fontSize: 9, // Reduced from 10
+                                          fontSize: 9,
+                                          letterSpacing: 0.2,
                                         ),
                                       ),
                                     ),

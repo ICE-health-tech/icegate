@@ -1,10 +1,10 @@
-Analyzing ice_shield...                                         
+Analyzing ice_gate...                                         
 
    info • The file name 'DataSeeder.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/DataSources/local_database/DataSeeder.dart:1:1 • file_names
    info • Don't invoke 'print' in production code • lib/data_layer/DataSources/local_database/DataSeeder.dart:14:5 • avoid_print
    info • Don't invoke 'print' in production code • lib/data_layer/DataSources/local_database/DataSeeder.dart:139:5 • avoid_print
    info • The file name 'Database.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/DataSources/local_database/Database.dart:1:1 • file_names
-warning • Unused import: 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart' • lib/data_layer/DataSources/local_database/Database.dart:13:8 • unused_import
+warning • Unused import: 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart' • lib/data_layer/DataSources/local_database/Database.dart:13:8 • unused_import
    info • The imported package 'path' isn't a dependency of the importing package • lib/data_layer/DataSources/local_database/Database.dart:18:8 • depend_on_referenced_packages
    info • The constant name 'USD' isn't a lowerCamelCase identifier • lib/data_layer/DataSources/local_database/Database.dart:159:21 • constant_identifier_names
    info • The constant name 'EUR' isn't a lowerCamelCase identifier • lib/data_layer/DataSources/local_database/Database.dart:159:26 • constant_identifier_names
@@ -40,10 +40,10 @@ warning • The annotation 'JsonKey.new' can only be used on fields or getters �
    info • The file name 'FinanceMetricsProtocol.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Finance/FinanceMetricsProtocol.dart:1:1 • file_names
    info • The file name 'CaloriesProtocol.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Health/CaloriesProtocol.dart:1:1 • file_names
    info • The file name 'HealthMetricsData.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Health/HealthMetricsData.dart:1:1 • file_names
-warning • Unused import: 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:6:8 • unused_import
-warning • Unused import: 'package:ice_shield/ui_layer/health_page/subpage/HeartRatePage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:7:8 • unused_import
-warning • Unused import: 'package:ice_shield/ui_layer/health_page/subpage/SleepPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:8:8 • unused_import
-warning • Unused import: 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:9:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:6:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/health_page/subpage/HeartRatePage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:7:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/health_page/subpage/SleepPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:8:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart' • lib/data_layer/Protocol/Health/HealthMetricsData.dart:9:8 • unused_import
    info • The file name 'TargetCaloriesProtocol.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Health/TargetCaloriesProtocol.dart:1:1 • file_names
    info • The file name 'TargetCaloriesProtocol.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Health/TargetCaloriesProtocol.g.dart:1:1 • file_names
    info • The file name 'InternalWidgetProtocol.dart' isn't a lower_case_with_underscores identifier • lib/data_layer/Protocol/Home/InternalWidgetProtocol.dart:1:1 • file_names
@@ -187,7 +187,7 @@ warning • The value of the local variable 'userData' isn't used • lib/orches
    info • Don't invoke 'print' in production code • lib/orchestration_layer/ReactiveBlock/User/PersonBlock.dart:317:7 • avoid_print
    info • The file name 'WidgetSettingsBlock.dart' isn't a lower_case_with_underscores identifier • lib/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart:1:1 • file_names
    info • The file name 'ScoreBlock.dart' isn't a lower_case_with_underscores identifier • lib/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart:1:1 • file_names
-warning • The library 'package:ice_shield/data_layer/DataSources/local_database/Database.dart' doesn't export a member with the hidden name 'ScoreData' • lib/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart:2:10 • undefined_hidden_name
+warning • The library 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' doesn't export a member with the hidden name 'ScoreData' • lib/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart:2:10 • undefined_hidden_name
    info • The file name 'ScoreData.dart' isn't a lower_case_with_underscores identifier • lib/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart:1:1 • file_names
 warning • Unused import: 'package:flutter/material.dart' • lib/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart:1:8 • unused_import
    info • The file name 'UpdateScoreGlobalState.dart' isn't a lower_case_with_underscores identifier • lib/orchestration_layer/ReactiveBlock/Widgets/UpdateScoreGlobalState.dart:1:1 • file_names
@@ -214,7 +214,7 @@ warning • Duplicate import • lib/ui_layer/ReusableWidget/ThemeManager.dart:7
    info • Use a 'SizedBox' to add whitespace to a layout • lib/ui_layer/ReusableWidget/ThemeManager.dart:125:14 • sized_box_for_whitespace
    info • The file name 'WidgetCard.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/ReusableWidget/WidgetCard.dart:1:1 • file_names
    info • The file name 'DragCanvasGridPage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:1:1 • file_names
-warning • Unused import: 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart' • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:8:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart' • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:8:8 • unused_import
    info • Don't invoke 'print' in production code • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:118:7 • avoid_print
    info • Don't invoke 'print' in production code • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:119:7 • avoid_print
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/canvas_page/DragCanvasGridPage.dart:140:39 • deprecated_member_use
@@ -312,7 +312,7 @@ warning • This class (or a class that this class inherits from) is marked as '
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/health_page/HealthMetricCard.dart:81:42 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/health_page/HealthMetricCard.dart:155:52 • deprecated_member_use
    info • The file name 'HealthPage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/health_page/HealthPage.dart:1:1 • file_names
-warning • Unused import: 'package:ice_shield/ui_layer/health_page/CaloriesMetrics.dart' • lib/ui_layer/health_page/HealthPage.dart:8:8 • unused_import
+warning • Unused import: 'package:ice_gate/ui_layer/health_page/CaloriesMetrics.dart' • lib/ui_layer/health_page/HealthPage.dart:8:8 • unused_import
    info • Don't invoke 'print' in production code • lib/ui_layer/health_page/HealthPage.dart:85:9 • avoid_print
    info • Don't invoke 'print' in production code • lib/ui_layer/health_page/HealthPage.dart:94:13 • avoid_print
    info • Don't invoke 'print' in production code • lib/ui_layer/health_page/HealthPage.dart:113:13 • avoid_print
@@ -388,9 +388,9 @@ warning • The declaration '_resetSteps' isn't referenced • lib/ui_layer/heal
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/health_page/subpage/WaterPage.dart:48:52 • deprecated_member_use
    info • The file name 'QuickActionButton.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/health_page/widgets/QuickActionButton.dart:1:1 • file_names
    info • The file name 'HomePage.dart' isn't a lower_case_with_underscores identifier • lib/ui_layer/home_page/HomePage.dart:1:1 • file_names
-warning • Unused import: 'package:ice_shield/initial_layer/FireAPI/UrlNavigate.dart' • lib/ui_layer/home_page/HomePage.dart:3:8 • unused_import
-warning • Unused import: 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart' • lib/ui_layer/home_page/HomePage.dart:8:8 • unused_import
-warning • Unused import: 'package:ice_shield/security_routing_layer/Routing/navigate_route/WidgetNameMapping.dart' • lib/ui_layer/home_page/HomePage.dart:15:8 • unused_import
+warning • Unused import: 'package:ice_gate/initial_layer/FireAPI/UrlNavigate.dart' • lib/ui_layer/home_page/HomePage.dart:3:8 • unused_import
+warning • Unused import: 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart' • lib/ui_layer/home_page/HomePage.dart:8:8 • unused_import
+warning • Unused import: 'package:ice_gate/security_routing_layer/Routing/navigate_route/WidgetNameMapping.dart' • lib/ui_layer/home_page/HomePage.dart:15:8 • unused_import
    info • Don't use 'BuildContext's across async gaps • lib/ui_layer/home_page/HomePage.dart:82:57 • use_build_context_synchronously
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/home_page/HomePage.dart:137:61 • deprecated_member_use
    info • 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss • lib/ui_layer/home_page/HomePage.dart:291:55 • deprecated_member_use

@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
@@ -83,34 +83,62 @@ class LocalNotificationService {
     await _notificationsPlugin.initialize(
       settings: initializationSettings,
       onDidReceiveNotificationResponse: (details) {
+        debugPrint(
+          "🔔 Notification Tapped: ${details.id} | Payload: ${details.payload}",
+        );
         // Handle tap logic here
       },
     );
 
-    // Schedule daily briefing and custom notifications
-    // Removed automatic sync on init, as personId might not be available yet.
-    // syncAllNotifications should be called when personId is resolved.
+    // 4. Request Permissions for macOS/iOS
+    await requestPermissions();
+
+    debugPrint("🚀 LocalNotificationService Initialized Successfully");
+  }
+
+  /// Request permissions for macOS and iOS
+  Future<void> requestPermissions() async {
+    if (defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.iOS) {
+      debugPrint(
+        "🍎 Requesting Notification Permissions for Apple platform...",
+      );
+      final bool? granted = await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            MacOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+
+      // Also check iOS specifically if needed (though macOS uses the same often)
+      final bool? iosGranted = await _notificationsPlugin
+          .resolvePlatformSpecificImplementation<
+            IOSFlutterLocalNotificationsPlugin
+          >()
+          ?.requestPermissions(alert: true, badge: true, sound: true);
+
+      debugPrint("🍎 Permission Status - macOS: $granted | iOS: $iosGranted");
+    }
   }
 
   /// Toggle notifications on or off
   Future<void> setNotificationsEnabled(bool enabled) async {
     notificationsEnabled.value = enabled;
     if (enabled) {
-      // Note: syncAllNotifications now requires personId.
-      // Callers should handle re-syncing when enabled.
-      print('🔔 Notifications enabled');
+      debugPrint('🔔 Notifications manual toggle: ENABLED');
     } else {
       await cancelAllNotifications();
-      print('🔕 Notifications disabled');
+      debugPrint('🔕 Notifications manual toggle: DISABLED (All cancelled)');
     }
   }
 
   /// Cancel all pending notifications
   Future<void> cancelAllNotifications() async {
+    debugPrint("🧹 Cancelling all pending notifications...");
     await _notificationsPlugin.cancelAll();
   }
 
   Future<void> cancelNotification(int id) async {
+    debugPrint("🧹 Cancelling notification ID: $id");
     await _notificationsPlugin.cancel(id: id);
   }
 
@@ -173,14 +201,17 @@ class LocalNotificationService {
         data.repeatDays!.isNotEmpty) {
       final selectedDays = data.repeatDays!
           .split(',')
-          .map((e) => int.parse(e))
+          .map((e) => int.parse(e.trim()))
           .toList();
+
+      debugPrint(
+        "📅 Scheduling WEEKLY notification '${data.title}' for days: $selectedDays",
+      );
+
       for (final day in selectedDays) {
-        // We need a unique ID for each day of the weekly repeat
-        // Using notificationID + day offset to keep it unique but related
-        final dayId =
-            data.notificationID.hashCode * 100 +
-            day; // Using 100 to avoid overlap
+        // Unique ID per day: Combine hashCode with day index
+        final dayId = (data.notificationID.hashCode % 100000) * 10 + day;
+
         await _notificationsPlugin.zonedSchedule(
           id: dayId,
           title: data.title,
@@ -191,9 +222,15 @@ class LocalNotificationService {
           matchDateTimeComponents: DateTimeComponents.dayOfWeekAndTime,
         );
       }
+      debugPrint("✅ Weekly instances scheduled for '${data.title}'");
     } else {
+      final intId = data.notificationID.hashCode % 1000000;
+      debugPrint(
+        "📅 Scheduling notification '${data.title}' (ID: $intId) at ${matchComponents != null ? 'repeating time' : scheduledDate}",
+      );
+
       await _notificationsPlugin.zonedSchedule(
-        id: data.notificationID.hashCode,
+        id: intId,
         title: data.title,
         body: data.content,
         scheduledDate: matchComponents != null
@@ -203,6 +240,7 @@ class LocalNotificationService {
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         matchDateTimeComponents: matchComponents,
       );
+      debugPrint("✅ Notification Scheduled: '${data.title}'");
     }
   }
 

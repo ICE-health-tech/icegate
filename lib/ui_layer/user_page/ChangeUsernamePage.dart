@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 
 class ChangeUsernamePage extends StatefulWidget {
   const ChangeUsernamePage({super.key});

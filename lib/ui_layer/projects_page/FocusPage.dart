@@ -4,17 +4,17 @@ import 'dart:ui';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:flutter/material.dart';
-import 'package:ice_shield/ui_layer/UIConstants.dart';
+import 'package:ice_gate/ui_layer/UIConstants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 
 class TimerThemeInfo {
   final String name;

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/WidgetCard.dart';
-// import 'package:ice_shield/ui_layer/ReusableWidget/WidgetCard.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/WidgetCard.dart';
+// import 'package:ice_gate/ui_layer/ReusableWidget/WidgetCard.dart'
 // hide ExternalWidget, ExternalWidgetsDAO;
-import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:provider/provider.dart';
 
 class WidgetPage extends StatefulWidget {

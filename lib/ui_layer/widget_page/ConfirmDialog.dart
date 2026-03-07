@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // Assuming your DAO is here and provides deleteWidget
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:flutter/services.dart';
 
 class ConfirmDialog extends StatefulWidget {

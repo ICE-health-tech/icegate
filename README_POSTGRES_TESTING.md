@@ -26,11 +26,11 @@ sudo systemctl start postgresql
 psql postgres
 
 # In the PostgreSQL prompt, create a test database:
-CREATE DATABASE ice_shield_test;
+CREATE DATABASE ice_gate_test;
 
 # Create a test user (optional but recommended)
 CREATE USER test_user WITH PASSWORD 'test_password';
-GRANT ALL PRIVILEGES ON DATABASE ice_shield_test TO test_user;
+GRANT ALL PRIVILEGES ON DATABASE ice_gate_test TO test_user;
 
 # Exit
 \q
@@ -40,10 +40,10 @@ GRANT ALL PRIVILEGES ON DATABASE ice_shield_test TO test_user;
 
 ```bash
 # Load the schema into your test database
-psql -U test_user -d ice_shield_test -f test_database_schema.sql
+psql -U test_user -d ice_gate_test -f test_database_schema.sql
 
 # Or if using default user:
-psql -d ice_shield_test -f test_database_schema.sql
+psql -d ice_gate_test -f test_database_schema.sql
 ```
 
 ## Database Overview
@@ -99,7 +99,7 @@ The schema includes sample data for testing:
 
 ### Connect to the Database
 ```bash
-psql -U test_user -d ice_shield_test
+psql -U test_user -d ice_gate_test
 ```
 
 ### View All Tables
@@ -170,7 +170,7 @@ ORDER BY idx_scan DESC;
 VACUUM ANALYZE;
 
 -- Check database size
-SELECT pg_size_pretty(pg_database_size('ice_shield_test'));
+SELECT pg_size_pretty(pg_database_size('ice_gate_test'));
 
 -- Check table sizes
 SELECT 
@@ -238,7 +238,7 @@ RETURNING person_id, created_at, updated_at;
 
 ### Drop Database
 ```bash
-psql postgres -c "DROP DATABASE ice_shield_test;"
+psql postgres -c "DROP DATABASE ice_gate_test;"
 ```
 
 ### Reset Schema (keeps database but drops all tables)

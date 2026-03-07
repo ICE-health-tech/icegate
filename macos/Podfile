@@ -41,6 +41,7 @@ post_install do |installer|
     target.build_configurations.each do |config|
       # Force 10.15 to resolve the 10.11 mismatch warnings
       config.build_settings['MACOSX_DEPLOYMENT_TARGET'] = '10.15'
+      config.build_settings['DEBUG_INFORMATION_FORMAT'] = 'dwarf-with-dsym'
     end
     
     # Fix for PrivacyInfo.xcprivacy "no rule to process" error

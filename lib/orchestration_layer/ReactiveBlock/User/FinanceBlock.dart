@@ -2,9 +2,9 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/data_layer/Protocol/User/FinanceProtocols.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 
 class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
@@ -150,7 +150,7 @@ class FinanceBlock {
           .map(
             (e) => FinancialAccountProtocol(
               financialAccountID: e.accountID ?? "",
-              personID: e.personID??"",
+              personID: e.personID ?? "",
               accountName: e.accountName,
               accountType: e.accountType,
               balance: e.balance,
@@ -169,7 +169,7 @@ class FinanceBlock {
           .map(
             (e) => AssetProtocol(
               id: e.assetID ?? "",
-              personId: e.personID??"",
+              personId: e.personID ?? "",
               assetName: e.assetName,
               assetCategory: e.assetCategory,
               purchaseDate: e.purchaseDate,
@@ -206,7 +206,7 @@ class FinanceBlock {
     await _dao.insertTransaction(
       TransactionsTableCompanion.insert(
         id: IDGen.UUIDV7(),
-        personID:Value( _personId),
+        personID: Value(_personId),
         category: category,
         type: type,
         amount: amount,

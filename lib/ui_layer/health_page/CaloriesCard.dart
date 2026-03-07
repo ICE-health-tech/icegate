@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/ui_layer/health_page/Input/CameraFoodImport.dart';
+import 'package:ice_gate/ui_layer/health_page/Input/CameraFoodImport.dart';
 import 'package:image_picker/image_picker.dart';
 
 class CaloriesCard extends StatefulWidget {

@@ -90,12 +90,12 @@ BEGIN
         BLOCK "040904e4"
         BEGIN
             VALUE "CompanyName", "com.example" "\0"
-            VALUE "FileDescription", "ice_shield" "\0"
+            VALUE "FileDescription", "ice_gate" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "ice_shield" "\0"
+            VALUE "InternalName", "ice_gate" "\0"
             VALUE "LegalCopyright", "Copyright (C) 2025 com.example. All rights reserved." "\0"
-            VALUE "OriginalFilename", "ice_shield.exe" "\0"
-            VALUE "ProductName", "ice_shield" "\0"
+            VALUE "OriginalFilename", "ice_gate.exe" "\0"
+            VALUE "ProductName", "ice_gate" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END

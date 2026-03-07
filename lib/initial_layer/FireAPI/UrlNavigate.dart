@@ -1,5 +1,5 @@
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
-import 'package:ice_shield/orchestration_layer/Action/WebView/LiveMapPlugin.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
+import 'package:ice_gate/orchestration_layer/Action/WebView/LiveMapPlugin.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart'; // For debugPrint
 

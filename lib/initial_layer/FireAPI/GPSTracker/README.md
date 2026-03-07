@@ -10,7 +10,7 @@ Successfully implemented comprehensive GPS tracking features with OpenStreetMap 
 
 ### 1. GPS Location API (Retrofit + Dio)
 
-**File:** [`GpsLocationFetch.dart`](file:///Users/duylong/Code/Flutter/ice_shield/lib/data_layer/FireAPI/GPSTracker/GpsLocationFetch.dart)
+**File:** [`GpsLocationFetch.dart`](file:///Users/duylong/Code/Flutter/ice_gate/lib/data_layer/FireAPI/GPSTracker/GpsLocationFetch.dart)
 
 Retrofit-based API service for GPS location data with full CRUD operations:
 
@@ -33,7 +33,7 @@ Retrofit-based API service for GPS location data with full CRUD operations:
 
 ### 2. OpenStreetMap API (Nominatim Geocoding)
 
-**File:** [`MapFetch.dart`](file:///Users/duylong/Code/Flutter/ice_shield/lib/data_layer/FireAPI/GPSTracker/MapFetch.dart)
+**File:** [`MapFetch.dart`](file:///Users/duylong/Code/Flutter/ice_gate/lib/data_layer/FireAPI/GPSTracker/MapFetch.dart)
 
 Retrofit service for OpenStreetMap Nominatim API:
 
@@ -54,7 +54,7 @@ Retrofit service for OpenStreetMap Nominatim API:
 
 ### 3. Interactive Map Widget
 
-**File:** [`OSMMapWidget.dart`](file:///Users/duylong/Code/Flutter/ice_shield/lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart)
+**File:** [`OSMMapWidget.dart`](file:///Users/duylong/Code/Flutter/ice_gate/lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart)
 
 Full-featured Flutter map widget with:
 
@@ -212,7 +212,7 @@ To use in your GPS Tracking Page:
 
 1. **Import the map widget:**
 ```dart
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
 ```
 
 2. **Add to your GPS tracking UI:**

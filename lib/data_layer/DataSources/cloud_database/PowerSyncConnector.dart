@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:powersync/powersync.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 /// A connector that bridges the local PowerSync database with your cloud backend.

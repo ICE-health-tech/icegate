@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:ice_shield/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
+import 'package:ice_gate/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
 
 /// Example usage of the GPS Location API
 ///
@@ -53,13 +53,10 @@ Future<void> example2FetchCurrentLocation() async {
 
     // Fetch current location
     await apiClient.api.getCurrentLocation();
-
-    
   } on DioException catch (e) {
     print('Error fetching location: ${e.message}');
     if (e.response != null) {
       print('Status code: ${e.response?.statusCode}');
-    
     }
   }
 }
@@ -189,8 +186,6 @@ Future<void> example6WithAuthentication() async {
 class ErrorHandlingInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-   
-
     if (err.response != null) {
       switch (err.response?.statusCode) {
         case 401:

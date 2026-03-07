@@ -2,7 +2,9 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -19,6 +21,20 @@ class ObjectDatabaseBlock {
   );
 
   final _imagePicker = ImagePicker();
+
+  /// Save a picked image to the application's permanent document directory.
+  Future<String> _saveLocalImage(XFile pickedFile, String fileName) async {
+    final appDir = await getApplicationDocumentsDirectory();
+    final localFolder = Directory(p.join(appDir.path, 'profile_images'));
+    if (!await localFolder.exists()) {
+      await localFolder.create(recursive: true);
+    }
+
+    final localPath = p.join(localFolder.path, fileName);
+    final savedFile = await File(pickedFile.path).copy(localPath);
+    debugPrint('📂 [ObjectDB] Saved local image to: ${savedFile.path}');
+    return savedFile.path;
+  }
 
   /// Upload an image file to MinIO via the backend.
   ///
@@ -84,7 +100,8 @@ class ObjectDatabaseBlock {
   }
 
   /// Pick an image from gallery and upload it as avatar (admin.png)
-  Future<bool> pickAndUploadAvatar({
+  /// Returns the local path if successful.
+  Future<String?> pickAndUploadAvatar({
     required String userId,
     required String token,
   }) async {
@@ -98,10 +115,12 @@ class ObjectDatabaseBlock {
 
       if (pickedFile == null) {
         debugPrint('⚠️ [ObjectDB] Avatar pick cancelled');
-        return false;
+        return null;
       }
 
-      final file = File(pickedFile.path);
+      final localPath = await _saveLocalImage(pickedFile, 'admin.png');
+
+      final file = File(localPath);
       final success = await uploadImageToMinio(
         userId: userId,
         fileName: 'admin.png',
@@ -110,19 +129,19 @@ class ObjectDatabaseBlock {
       );
 
       if (success) {
-        // Refresh URL with cache-busting
         _refreshUrls(userId);
       }
 
-      return success;
+      return localPath;
     } catch (e) {
       debugPrint('❌ [ObjectDB] pickAndUploadAvatar error: $e');
-      return false;
+      return null;
     }
   }
 
   /// Pick an image from gallery and upload it as cover (cover.png)
-  Future<bool> pickAndUploadCover({
+  /// Returns the local path if successful.
+  Future<String?> pickAndUploadCover({
     required String userId,
     required String token,
   }) async {
@@ -136,10 +155,12 @@ class ObjectDatabaseBlock {
 
       if (pickedFile == null) {
         debugPrint('⚠️ [ObjectDB] Cover pick cancelled');
-        return false;
+        return null;
       }
 
-      final file = File(pickedFile.path);
+      final localPath = await _saveLocalImage(pickedFile, 'cover.png');
+
+      final file = File(localPath);
       final success = await uploadImageToMinio(
         userId: userId,
         fileName: 'cover.png',
@@ -148,14 +169,13 @@ class ObjectDatabaseBlock {
       );
 
       if (success) {
-        // Refresh URL with cache-busting
         _refreshUrls(userId);
       }
 
-      return success;
+      return localPath;
     } catch (e) {
       debugPrint('❌ [ObjectDB] pickAndUploadCover error: $e');
-      return false;
+      return null;
     }
   }
 

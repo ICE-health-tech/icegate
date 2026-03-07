@@ -1,11 +1,11 @@
 import 'package:drift/drift.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/CVAddressProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/EmailAddressProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/PersonProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/User/UserAccountProtocol.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/UserAccountProtocol.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class DataSeeder {
   static const String guestPersonId = '00000000-0000-0000-0000-000000000001';

@@ -2,8 +2,8 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ice_shield/ui_layer/health_page/subpage/LidarFoodScanner.dart';
-import 'package:ice_shield/ui_layer/health_page/widgets/AddFoodModal.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/LidarFoodScanner.dart';
+import 'package:ice_gate/ui_layer/health_page/widgets/AddFoodModal.dart';
 
 class CaloriesPage extends StatefulWidget {
   const CaloriesPage({super.key});

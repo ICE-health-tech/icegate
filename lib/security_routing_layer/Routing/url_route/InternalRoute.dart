@@ -1,59 +1,60 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
-import 'package:ice_shield/ui_layer/notification_page/NotificationManagerPage.dart';
-import 'package:ice_shield/ui_layer/notification_page/NotificationInboxPage.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_gate/ui_layer/notification_page/NotificationManagerPage.dart';
+import 'package:ice_gate/ui_layer/notification_page/NotificationInboxPage.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-import 'package:ice_shield/ui_layer/ReusableWidget/SettingWidget.dart';
-import 'package:ice_shield/ui_layer/health_page/CaloriesPage.dart';
-import 'package:ice_shield/ui_layer/health_page/ExercisePage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/HabitDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/StepsDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectNotesPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectDetailsPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectAnalysisPage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SettingWidget.dart';
+import 'package:ice_gate/ui_layer/health_page/CaloriesPage.dart';
+import 'package:ice_gate/ui_layer/health_page/ExercisePage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/HabitDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/StepsDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectNotesPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectDetailsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/ui_layer/widget_page/WidgetPage.dart';
-// import 'package:ice_shield/ui_layer/health_page/subpage/StepsPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/HeartRatePage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/SleepPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/FoodInputPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/WaterPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/TextEditorPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/FocusPage.dart';
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
-import 'package:ice_shield/orchestration_layer/Action/WebView/WebViewPage.dart';
-import 'package:ice_shield/ui_layer/info_page/ScoringRulesPage.dart';
-import 'package:ice_shield/ui_layer/animation_page/snowflake_assemble_screen.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/session_tracker.dart';
+import 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart';
+// import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/HeartRatePage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/SleepPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WaterPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/TextEditorPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
+import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
+import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
+import 'package:ice_gate/ui_layer/animation_page/snowflake_assemble_screen.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
 // // Import your pages
-// import 'package:ice_shield/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
-// import 'package:ice_shield/ui_layer/HomePage.dart'; // Your Home
+// import 'package:ice_gate/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
+// import 'package:ice_gate/ui_layer/HomePage.dart'; // Your Home
 // Import the shell we created in Step 1
-import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
-import 'package:ice_shield/ui_layer/canvas_page/GoalConfigurationWidget.dart';
-import 'package:ice_shield/ui_layer/home_page/MainShell.dart';
-import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
-import 'package:ice_shield/ui_layer/projects_page/FocusHistoryPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/WeightPage.dart';
-import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
-import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
-import 'package:ice_shield/ui_layer/finance_page/FinanceDashboardPage.dart';
-import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
-import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
-import 'package:ice_shield/ui_layer/user_page/LoginPage.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_shield/ui_layer/user_page/ChangePasswordPage.dart';
-import 'package:ice_shield/ui_layer/user_page/ChangeUsernamePage.dart';
+import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
+import 'package:ice_gate/ui_layer/home_page/MainShell.dart';
+import 'package:ice_gate/ui_layer/home_page/HomePage.dart';
+import 'package:ice_gate/ui_layer/projects_page/FocusHistoryPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
+import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
+import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
+import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
+import 'package:ice_gate/ui_layer/social_page/SocialDashboardPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
+import 'package:ice_gate/ui_layer/user_page/LoginPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/ui_layer/user_page/ChangePasswordPage.dart';
+import 'package:ice_gate/ui_layer/user_page/ChangeUsernamePage.dart';
 // import 'MainShell.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -306,6 +307,18 @@ final GoRouter router = GoRouter(
           path: '/social',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const SocialPage(),
+          routes: [
+            GoRoute(
+              path: 'dashboard',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const SocialDashboardPage(),
+            ),
+            GoRoute(
+              path: 'contacts',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const SocialPage(),
+            ),
+          ],
         ),
         // Route 8: Projects
         GoRoute(

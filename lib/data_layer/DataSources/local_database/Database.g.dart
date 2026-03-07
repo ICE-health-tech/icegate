@@ -613,6 +613,39 @@ class $PersonsTableTable extends PersonsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _coverImageUrlMeta = const VerificationMeta(
+    'coverImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> coverImageUrl = GeneratedColumn<String>(
+    'cover_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarLocalPathMeta = const VerificationMeta(
+    'avatarLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> avatarLocalPath = GeneratedColumn<String>(
+    'avatar_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverLocalPathMeta = const VerificationMeta(
+    'coverLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> coverLocalPath = GeneratedColumn<String>(
+    'cover_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _relationshipMeta = const VerificationMeta(
     'relationship',
   );
@@ -682,6 +715,9 @@ class $PersonsTableTable extends PersonsTable
     gender,
     phoneNumber,
     profileImageUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     relationship,
     affection,
     isActive,
@@ -749,6 +785,33 @@ class $PersonsTableTable extends PersonsTable
         ),
       );
     }
+    if (data.containsKey('cover_image_url')) {
+      context.handle(
+        _coverImageUrlMeta,
+        coverImageUrl.isAcceptableOrUnknown(
+          data['cover_image_url']!,
+          _coverImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('avatar_local_path')) {
+      context.handle(
+        _avatarLocalPathMeta,
+        avatarLocalPath.isAcceptableOrUnknown(
+          data['avatar_local_path']!,
+          _avatarLocalPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover_local_path')) {
+      context.handle(
+        _coverLocalPathMeta,
+        coverLocalPath.isAcceptableOrUnknown(
+          data['cover_local_path']!,
+          _coverLocalPathMeta,
+        ),
+      );
+    }
     if (data.containsKey('relationship')) {
       context.handle(
         _relationshipMeta,
@@ -813,6 +876,18 @@ class $PersonsTableTable extends PersonsTable
         DriftSqlType.string,
         data['${effectivePrefix}profile_image_url'],
       ),
+      coverImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_image_url'],
+      ),
+      avatarLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_local_path'],
+      ),
+      coverLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_local_path'],
+      ),
       relationship: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}relationship'],
@@ -864,6 +939,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
   final String? gender;
   final String? phoneNumber;
   final String? profileImageUrl;
+  final String? coverImageUrl;
+  final String? avatarLocalPath;
+  final String? coverLocalPath;
   final String relationship;
   final int affection;
   final bool isActive;
@@ -878,6 +956,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     this.gender,
     this.phoneNumber,
     this.profileImageUrl,
+    this.coverImageUrl,
+    this.avatarLocalPath,
+    this.coverLocalPath,
     required this.relationship,
     required this.affection,
     required this.isActive,
@@ -908,6 +989,15 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     }
     if (!nullToAbsent || profileImageUrl != null) {
       map['profile_image_url'] = Variable<String>(profileImageUrl);
+    }
+    if (!nullToAbsent || coverImageUrl != null) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl);
+    }
+    if (!nullToAbsent || avatarLocalPath != null) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath);
+    }
+    if (!nullToAbsent || coverLocalPath != null) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath);
     }
     map['relationship'] = Variable<String>(relationship);
     map['affection'] = Variable<int>(affection);
@@ -947,6 +1037,15 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       profileImageUrl: profileImageUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(profileImageUrl),
+      coverImageUrl: coverImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverImageUrl),
+      avatarLocalPath: avatarLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarLocalPath),
+      coverLocalPath: coverLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverLocalPath),
       relationship: Value(relationship),
       affection: Value(affection),
       isActive: Value(isActive),
@@ -969,6 +1068,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       gender: serializer.fromJson<String?>(json['gender']),
       phoneNumber: serializer.fromJson<String?>(json['phoneNumber']),
       profileImageUrl: serializer.fromJson<String?>(json['profileImageUrl']),
+      coverImageUrl: serializer.fromJson<String?>(json['coverImageUrl']),
+      avatarLocalPath: serializer.fromJson<String?>(json['avatarLocalPath']),
+      coverLocalPath: serializer.fromJson<String?>(json['coverLocalPath']),
       relationship: serializer.fromJson<String>(json['relationship']),
       affection: serializer.fromJson<int>(json['affection']),
       isActive: serializer.fromJson<bool>(json['isActive']),
@@ -988,6 +1090,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       'gender': serializer.toJson<String?>(gender),
       'phoneNumber': serializer.toJson<String?>(phoneNumber),
       'profileImageUrl': serializer.toJson<String?>(profileImageUrl),
+      'coverImageUrl': serializer.toJson<String?>(coverImageUrl),
+      'avatarLocalPath': serializer.toJson<String?>(avatarLocalPath),
+      'coverLocalPath': serializer.toJson<String?>(coverLocalPath),
       'relationship': serializer.toJson<String>(relationship),
       'affection': serializer.toJson<int>(affection),
       'isActive': serializer.toJson<bool>(isActive),
@@ -1005,6 +1110,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     Value<String?> gender = const Value.absent(),
     Value<String?> phoneNumber = const Value.absent(),
     Value<String?> profileImageUrl = const Value.absent(),
+    Value<String?> coverImageUrl = const Value.absent(),
+    Value<String?> avatarLocalPath = const Value.absent(),
+    Value<String?> coverLocalPath = const Value.absent(),
     String? relationship,
     int? affection,
     bool? isActive,
@@ -1021,6 +1129,15 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     profileImageUrl: profileImageUrl.present
         ? profileImageUrl.value
         : this.profileImageUrl,
+    coverImageUrl: coverImageUrl.present
+        ? coverImageUrl.value
+        : this.coverImageUrl,
+    avatarLocalPath: avatarLocalPath.present
+        ? avatarLocalPath.value
+        : this.avatarLocalPath,
+    coverLocalPath: coverLocalPath.present
+        ? coverLocalPath.value
+        : this.coverLocalPath,
     relationship: relationship ?? this.relationship,
     affection: affection ?? this.affection,
     isActive: isActive ?? this.isActive,
@@ -1043,6 +1160,15 @@ class PersonData extends DataClass implements Insertable<PersonData> {
       profileImageUrl: data.profileImageUrl.present
           ? data.profileImageUrl.value
           : this.profileImageUrl,
+      coverImageUrl: data.coverImageUrl.present
+          ? data.coverImageUrl.value
+          : this.coverImageUrl,
+      avatarLocalPath: data.avatarLocalPath.present
+          ? data.avatarLocalPath.value
+          : this.avatarLocalPath,
+      coverLocalPath: data.coverLocalPath.present
+          ? data.coverLocalPath.value
+          : this.coverLocalPath,
       relationship: data.relationship.present
           ? data.relationship.value
           : this.relationship,
@@ -1064,6 +1190,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
           ..write('gender: $gender, ')
           ..write('phoneNumber: $phoneNumber, ')
           ..write('profileImageUrl: $profileImageUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('relationship: $relationship, ')
           ..write('affection: $affection, ')
           ..write('isActive: $isActive, ')
@@ -1083,6 +1212,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
     gender,
     phoneNumber,
     profileImageUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     relationship,
     affection,
     isActive,
@@ -1101,6 +1233,9 @@ class PersonData extends DataClass implements Insertable<PersonData> {
           other.gender == this.gender &&
           other.phoneNumber == this.phoneNumber &&
           other.profileImageUrl == this.profileImageUrl &&
+          other.coverImageUrl == this.coverImageUrl &&
+          other.avatarLocalPath == this.avatarLocalPath &&
+          other.coverLocalPath == this.coverLocalPath &&
           other.relationship == this.relationship &&
           other.affection == this.affection &&
           other.isActive == this.isActive &&
@@ -1117,6 +1252,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
   final Value<String?> gender;
   final Value<String?> phoneNumber;
   final Value<String?> profileImageUrl;
+  final Value<String?> coverImageUrl;
+  final Value<String?> avatarLocalPath;
+  final Value<String?> coverLocalPath;
   final Value<String> relationship;
   final Value<int> affection;
   final Value<bool> isActive;
@@ -1132,6 +1270,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     this.gender = const Value.absent(),
     this.phoneNumber = const Value.absent(),
     this.profileImageUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.relationship = const Value.absent(),
     this.affection = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -1148,6 +1289,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     this.gender = const Value.absent(),
     this.phoneNumber = const Value.absent(),
     this.profileImageUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.relationship = const Value.absent(),
     this.affection = const Value.absent(),
     this.isActive = const Value.absent(),
@@ -1165,6 +1309,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     Expression<String>? gender,
     Expression<String>? phoneNumber,
     Expression<String>? profileImageUrl,
+    Expression<String>? coverImageUrl,
+    Expression<String>? avatarLocalPath,
+    Expression<String>? coverLocalPath,
     Expression<String>? relationship,
     Expression<int>? affection,
     Expression<bool>? isActive,
@@ -1181,6 +1328,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
       if (gender != null) 'gender': gender,
       if (phoneNumber != null) 'phone_number': phoneNumber,
       if (profileImageUrl != null) 'profile_image_url': profileImageUrl,
+      if (coverImageUrl != null) 'cover_image_url': coverImageUrl,
+      if (avatarLocalPath != null) 'avatar_local_path': avatarLocalPath,
+      if (coverLocalPath != null) 'cover_local_path': coverLocalPath,
       if (relationship != null) 'relationship': relationship,
       if (affection != null) 'affection': affection,
       if (isActive != null) 'is_active': isActive,
@@ -1199,6 +1349,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     Value<String?>? gender,
     Value<String?>? phoneNumber,
     Value<String?>? profileImageUrl,
+    Value<String?>? coverImageUrl,
+    Value<String?>? avatarLocalPath,
+    Value<String?>? coverLocalPath,
     Value<String>? relationship,
     Value<int>? affection,
     Value<bool>? isActive,
@@ -1215,6 +1368,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
       gender: gender ?? this.gender,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
+      coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       relationship: relationship ?? this.relationship,
       affection: affection ?? this.affection,
       isActive: isActive ?? this.isActive,
@@ -1253,6 +1409,15 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
     if (profileImageUrl.present) {
       map['profile_image_url'] = Variable<String>(profileImageUrl.value);
     }
+    if (coverImageUrl.present) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl.value);
+    }
+    if (avatarLocalPath.present) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath.value);
+    }
+    if (coverLocalPath.present) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath.value);
+    }
     if (relationship.present) {
       map['relationship'] = Variable<String>(relationship.value);
     }
@@ -1289,6 +1454,9 @@ class PersonsTableCompanion extends UpdateCompanion<PersonData> {
           ..write('gender: $gender, ')
           ..write('phoneNumber: $phoneNumber, ')
           ..write('profileImageUrl: $profileImageUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('relationship: $relationship, ')
           ..write('affection: $affection, ')
           ..write('isActive: $isActive, ')
@@ -6003,6 +6171,39 @@ class $ProfilesTableTable extends ProfilesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _coverImageUrlMeta = const VerificationMeta(
+    'coverImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> coverImageUrl = GeneratedColumn<String>(
+    'cover_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarLocalPathMeta = const VerificationMeta(
+    'avatarLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> avatarLocalPath = GeneratedColumn<String>(
+    'avatar_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverLocalPathMeta = const VerificationMeta(
+    'coverLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> coverLocalPath = GeneratedColumn<String>(
+    'cover_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _timezoneMeta = const VerificationMeta(
     'timezone',
   );
@@ -6058,6 +6259,9 @@ class $ProfilesTableTable extends ProfilesTable
     websiteUrl,
     linkedinUrl,
     githubUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     timezone,
     preferredLanguage,
     createdAt,
@@ -6140,6 +6344,33 @@ class $ProfilesTableTable extends ProfilesTable
         githubUrl.isAcceptableOrUnknown(data['github_url']!, _githubUrlMeta),
       );
     }
+    if (data.containsKey('cover_image_url')) {
+      context.handle(
+        _coverImageUrlMeta,
+        coverImageUrl.isAcceptableOrUnknown(
+          data['cover_image_url']!,
+          _coverImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('avatar_local_path')) {
+      context.handle(
+        _avatarLocalPathMeta,
+        avatarLocalPath.isAcceptableOrUnknown(
+          data['avatar_local_path']!,
+          _avatarLocalPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover_local_path')) {
+      context.handle(
+        _coverLocalPathMeta,
+        coverLocalPath.isAcceptableOrUnknown(
+          data['cover_local_path']!,
+          _coverLocalPathMeta,
+        ),
+      );
+    }
     if (data.containsKey('timezone')) {
       context.handle(
         _timezoneMeta,
@@ -6204,6 +6435,18 @@ class $ProfilesTableTable extends ProfilesTable
         DriftSqlType.string,
         data['${effectivePrefix}github_url'],
       ),
+      coverImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_image_url'],
+      ),
+      avatarLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_local_path'],
+      ),
+      coverLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_local_path'],
+      ),
       timezone: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}timezone'],
@@ -6249,6 +6492,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   final String? websiteUrl;
   final String? linkedinUrl;
   final String? githubUrl;
+  final String? coverImageUrl;
+  final String? avatarLocalPath;
+  final String? coverLocalPath;
   final String? timezone;
   final String? preferredLanguage;
   final DateTime createdAt;
@@ -6264,6 +6510,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     this.websiteUrl,
     this.linkedinUrl,
     this.githubUrl,
+    this.coverImageUrl,
+    this.avatarLocalPath,
+    this.coverLocalPath,
     this.timezone,
     this.preferredLanguage,
     required this.createdAt,
@@ -6299,6 +6548,15 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     }
     if (!nullToAbsent || githubUrl != null) {
       map['github_url'] = Variable<String>(githubUrl);
+    }
+    if (!nullToAbsent || coverImageUrl != null) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl);
+    }
+    if (!nullToAbsent || avatarLocalPath != null) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath);
+    }
+    if (!nullToAbsent || coverLocalPath != null) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath);
     }
     if (!nullToAbsent || timezone != null) {
       map['timezone'] = Variable<String>(timezone);
@@ -6347,6 +6605,15 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       githubUrl: githubUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(githubUrl),
+      coverImageUrl: coverImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverImageUrl),
+      avatarLocalPath: avatarLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarLocalPath),
+      coverLocalPath: coverLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverLocalPath),
       timezone: timezone == null && nullToAbsent
           ? const Value.absent()
           : Value(timezone),
@@ -6374,6 +6641,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       websiteUrl: serializer.fromJson<String?>(json['websiteUrl']),
       linkedinUrl: serializer.fromJson<String?>(json['linkedinUrl']),
       githubUrl: serializer.fromJson<String?>(json['githubUrl']),
+      coverImageUrl: serializer.fromJson<String?>(json['coverImageUrl']),
+      avatarLocalPath: serializer.fromJson<String?>(json['avatarLocalPath']),
+      coverLocalPath: serializer.fromJson<String?>(json['coverLocalPath']),
       timezone: serializer.fromJson<String?>(json['timezone']),
       preferredLanguage: serializer.fromJson<String?>(
         json['preferredLanguage'],
@@ -6396,6 +6666,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       'websiteUrl': serializer.toJson<String?>(websiteUrl),
       'linkedinUrl': serializer.toJson<String?>(linkedinUrl),
       'githubUrl': serializer.toJson<String?>(githubUrl),
+      'coverImageUrl': serializer.toJson<String?>(coverImageUrl),
+      'avatarLocalPath': serializer.toJson<String?>(avatarLocalPath),
+      'coverLocalPath': serializer.toJson<String?>(coverLocalPath),
       'timezone': serializer.toJson<String?>(timezone),
       'preferredLanguage': serializer.toJson<String?>(preferredLanguage),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -6414,6 +6687,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     Value<String?> websiteUrl = const Value.absent(),
     Value<String?> linkedinUrl = const Value.absent(),
     Value<String?> githubUrl = const Value.absent(),
+    Value<String?> coverImageUrl = const Value.absent(),
+    Value<String?> avatarLocalPath = const Value.absent(),
+    Value<String?> coverLocalPath = const Value.absent(),
     Value<String?> timezone = const Value.absent(),
     Value<String?> preferredLanguage = const Value.absent(),
     DateTime? createdAt,
@@ -6431,6 +6707,15 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     websiteUrl: websiteUrl.present ? websiteUrl.value : this.websiteUrl,
     linkedinUrl: linkedinUrl.present ? linkedinUrl.value : this.linkedinUrl,
     githubUrl: githubUrl.present ? githubUrl.value : this.githubUrl,
+    coverImageUrl: coverImageUrl.present
+        ? coverImageUrl.value
+        : this.coverImageUrl,
+    avatarLocalPath: avatarLocalPath.present
+        ? avatarLocalPath.value
+        : this.avatarLocalPath,
+    coverLocalPath: coverLocalPath.present
+        ? coverLocalPath.value
+        : this.coverLocalPath,
     timezone: timezone.present ? timezone.value : this.timezone,
     preferredLanguage: preferredLanguage.present
         ? preferredLanguage.value
@@ -6458,6 +6743,15 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           ? data.linkedinUrl.value
           : this.linkedinUrl,
       githubUrl: data.githubUrl.present ? data.githubUrl.value : this.githubUrl,
+      coverImageUrl: data.coverImageUrl.present
+          ? data.coverImageUrl.value
+          : this.coverImageUrl,
+      avatarLocalPath: data.avatarLocalPath.present
+          ? data.avatarLocalPath.value
+          : this.avatarLocalPath,
+      coverLocalPath: data.coverLocalPath.present
+          ? data.coverLocalPath.value
+          : this.coverLocalPath,
       timezone: data.timezone.present ? data.timezone.value : this.timezone,
       preferredLanguage: data.preferredLanguage.present
           ? data.preferredLanguage.value
@@ -6480,6 +6774,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           ..write('websiteUrl: $websiteUrl, ')
           ..write('linkedinUrl: $linkedinUrl, ')
           ..write('githubUrl: $githubUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('timezone: $timezone, ')
           ..write('preferredLanguage: $preferredLanguage, ')
           ..write('createdAt: $createdAt, ')
@@ -6500,6 +6797,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     websiteUrl,
     linkedinUrl,
     githubUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     timezone,
     preferredLanguage,
     createdAt,
@@ -6519,6 +6819,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           other.websiteUrl == this.websiteUrl &&
           other.linkedinUrl == this.linkedinUrl &&
           other.githubUrl == this.githubUrl &&
+          other.coverImageUrl == this.coverImageUrl &&
+          other.avatarLocalPath == this.avatarLocalPath &&
+          other.coverLocalPath == this.coverLocalPath &&
           other.timezone == this.timezone &&
           other.preferredLanguage == this.preferredLanguage &&
           other.createdAt == this.createdAt &&
@@ -6536,6 +6839,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
   final Value<String?> websiteUrl;
   final Value<String?> linkedinUrl;
   final Value<String?> githubUrl;
+  final Value<String?> coverImageUrl;
+  final Value<String?> avatarLocalPath;
+  final Value<String?> coverLocalPath;
   final Value<String?> timezone;
   final Value<String?> preferredLanguage;
   final Value<DateTime> createdAt;
@@ -6552,6 +6858,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     this.websiteUrl = const Value.absent(),
     this.linkedinUrl = const Value.absent(),
     this.githubUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.timezone = const Value.absent(),
     this.preferredLanguage = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6569,6 +6878,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     this.websiteUrl = const Value.absent(),
     this.linkedinUrl = const Value.absent(),
     this.githubUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.timezone = const Value.absent(),
     this.preferredLanguage = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -6586,6 +6898,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     Expression<String>? websiteUrl,
     Expression<String>? linkedinUrl,
     Expression<String>? githubUrl,
+    Expression<String>? coverImageUrl,
+    Expression<String>? avatarLocalPath,
+    Expression<String>? coverLocalPath,
     Expression<String>? timezone,
     Expression<String>? preferredLanguage,
     Expression<DateTime>? createdAt,
@@ -6603,6 +6918,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
       if (websiteUrl != null) 'website_url': websiteUrl,
       if (linkedinUrl != null) 'linkedin_url': linkedinUrl,
       if (githubUrl != null) 'github_url': githubUrl,
+      if (coverImageUrl != null) 'cover_image_url': coverImageUrl,
+      if (avatarLocalPath != null) 'avatar_local_path': avatarLocalPath,
+      if (coverLocalPath != null) 'cover_local_path': coverLocalPath,
       if (timezone != null) 'timezone': timezone,
       if (preferredLanguage != null) 'preferred_language': preferredLanguage,
       if (createdAt != null) 'created_at': createdAt,
@@ -6622,6 +6940,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     Value<String?>? websiteUrl,
     Value<String?>? linkedinUrl,
     Value<String?>? githubUrl,
+    Value<String?>? coverImageUrl,
+    Value<String?>? avatarLocalPath,
+    Value<String?>? coverLocalPath,
     Value<String?>? timezone,
     Value<String?>? preferredLanguage,
     Value<DateTime>? createdAt,
@@ -6639,6 +6960,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
       websiteUrl: websiteUrl ?? this.websiteUrl,
       linkedinUrl: linkedinUrl ?? this.linkedinUrl,
       githubUrl: githubUrl ?? this.githubUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
+      coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       timezone: timezone ?? this.timezone,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
       createdAt: createdAt ?? this.createdAt,
@@ -6680,6 +7004,15 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     if (githubUrl.present) {
       map['github_url'] = Variable<String>(githubUrl.value);
     }
+    if (coverImageUrl.present) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl.value);
+    }
+    if (avatarLocalPath.present) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath.value);
+    }
+    if (coverLocalPath.present) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath.value);
+    }
     if (timezone.present) {
       map['timezone'] = Variable<String>(timezone.value);
     }
@@ -6715,6 +7048,9 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
           ..write('websiteUrl: $websiteUrl, ')
           ..write('linkedinUrl: $linkedinUrl, ')
           ..write('githubUrl: $githubUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('timezone: $timezone, ')
           ..write('preferredLanguage: $preferredLanguage, ')
           ..write('createdAt: $createdAt, ')
@@ -12647,6 +12983,39 @@ class $CVAddressesTableTable extends CVAddressesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _coverImageUrlMeta = const VerificationMeta(
+    'coverImageUrl',
+  );
+  @override
+  late final GeneratedColumn<String> coverImageUrl = GeneratedColumn<String>(
+    'cover_image_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarLocalPathMeta = const VerificationMeta(
+    'avatarLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> avatarLocalPath = GeneratedColumn<String>(
+    'avatar_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _coverLocalPathMeta = const VerificationMeta(
+    'coverLocalPath',
+  );
+  @override
+  late final GeneratedColumn<String> coverLocalPath = GeneratedColumn<String>(
+    'cover_local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -12683,6 +13052,9 @@ class $CVAddressesTableTable extends CVAddressesTable
     occupation,
     educationLevel,
     linkedinUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     createdAt,
     updatedAt,
   ];
@@ -12790,6 +13162,33 @@ class $CVAddressesTableTable extends CVAddressesTable
         ),
       );
     }
+    if (data.containsKey('cover_image_url')) {
+      context.handle(
+        _coverImageUrlMeta,
+        coverImageUrl.isAcceptableOrUnknown(
+          data['cover_image_url']!,
+          _coverImageUrlMeta,
+        ),
+      );
+    }
+    if (data.containsKey('avatar_local_path')) {
+      context.handle(
+        _avatarLocalPathMeta,
+        avatarLocalPath.isAcceptableOrUnknown(
+          data['avatar_local_path']!,
+          _avatarLocalPathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('cover_local_path')) {
+      context.handle(
+        _coverLocalPathMeta,
+        coverLocalPath.isAcceptableOrUnknown(
+          data['cover_local_path']!,
+          _coverLocalPathMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -12855,6 +13254,18 @@ class $CVAddressesTableTable extends CVAddressesTable
         DriftSqlType.string,
         data['${effectivePrefix}linkedin_url'],
       ),
+      coverImageUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_image_url'],
+      ),
+      avatarLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_local_path'],
+      ),
+      coverLocalPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}cover_local_path'],
+      ),
       createdAt: $CVAddressesTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -12896,6 +13307,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
   final String? occupation;
   final String? educationLevel;
   final String? linkedinUrl;
+  final String? coverImageUrl;
+  final String? avatarLocalPath;
+  final String? coverLocalPath;
   final DateTime createdAt;
   final DateTime updatedAt;
   const CVAddressData({
@@ -12913,6 +13327,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     this.occupation,
     this.educationLevel,
     this.linkedinUrl,
+    this.coverImageUrl,
+    this.avatarLocalPath,
+    this.coverLocalPath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -12958,6 +13375,15 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     }
     if (!nullToAbsent || linkedinUrl != null) {
       map['linkedin_url'] = Variable<String>(linkedinUrl);
+    }
+    if (!nullToAbsent || coverImageUrl != null) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl);
+    }
+    if (!nullToAbsent || avatarLocalPath != null) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath);
+    }
+    if (!nullToAbsent || coverLocalPath != null) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath);
     }
     {
       map['created_at'] = Variable<DateTime>(
@@ -13012,6 +13438,15 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       linkedinUrl: linkedinUrl == null && nullToAbsent
           ? const Value.absent()
           : Value(linkedinUrl),
+      coverImageUrl: coverImageUrl == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverImageUrl),
+      avatarLocalPath: avatarLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(avatarLocalPath),
+      coverLocalPath: coverLocalPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(coverLocalPath),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -13037,6 +13472,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       occupation: serializer.fromJson<String?>(json['occupation']),
       educationLevel: serializer.fromJson<String?>(json['educationLevel']),
       linkedinUrl: serializer.fromJson<String?>(json['linkedinUrl']),
+      coverImageUrl: serializer.fromJson<String?>(json['coverImageUrl']),
+      avatarLocalPath: serializer.fromJson<String?>(json['avatarLocalPath']),
+      coverLocalPath: serializer.fromJson<String?>(json['coverLocalPath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -13059,6 +13497,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       'occupation': serializer.toJson<String?>(occupation),
       'educationLevel': serializer.toJson<String?>(educationLevel),
       'linkedinUrl': serializer.toJson<String?>(linkedinUrl),
+      'coverImageUrl': serializer.toJson<String?>(coverImageUrl),
+      'avatarLocalPath': serializer.toJson<String?>(avatarLocalPath),
+      'coverLocalPath': serializer.toJson<String?>(coverLocalPath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -13079,6 +13520,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     Value<String?> occupation = const Value.absent(),
     Value<String?> educationLevel = const Value.absent(),
     Value<String?> linkedinUrl = const Value.absent(),
+    Value<String?> coverImageUrl = const Value.absent(),
+    Value<String?> avatarLocalPath = const Value.absent(),
+    Value<String?> coverLocalPath = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => CVAddressData(
@@ -13098,6 +13542,15 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
         ? educationLevel.value
         : this.educationLevel,
     linkedinUrl: linkedinUrl.present ? linkedinUrl.value : this.linkedinUrl,
+    coverImageUrl: coverImageUrl.present
+        ? coverImageUrl.value
+        : this.coverImageUrl,
+    avatarLocalPath: avatarLocalPath.present
+        ? avatarLocalPath.value
+        : this.avatarLocalPath,
+    coverLocalPath: coverLocalPath.present
+        ? coverLocalPath.value
+        : this.coverLocalPath,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -13129,6 +13582,15 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
       linkedinUrl: data.linkedinUrl.present
           ? data.linkedinUrl.value
           : this.linkedinUrl,
+      coverImageUrl: data.coverImageUrl.present
+          ? data.coverImageUrl.value
+          : this.coverImageUrl,
+      avatarLocalPath: data.avatarLocalPath.present
+          ? data.avatarLocalPath.value
+          : this.avatarLocalPath,
+      coverLocalPath: data.coverLocalPath.present
+          ? data.coverLocalPath.value
+          : this.coverLocalPath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -13151,6 +13613,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
           ..write('occupation: $occupation, ')
           ..write('educationLevel: $educationLevel, ')
           ..write('linkedinUrl: $linkedinUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -13173,6 +13638,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
     occupation,
     educationLevel,
     linkedinUrl,
+    coverImageUrl,
+    avatarLocalPath,
+    coverLocalPath,
     createdAt,
     updatedAt,
   );
@@ -13194,6 +13662,9 @@ class CVAddressData extends DataClass implements Insertable<CVAddressData> {
           other.occupation == this.occupation &&
           other.educationLevel == this.educationLevel &&
           other.linkedinUrl == this.linkedinUrl &&
+          other.coverImageUrl == this.coverImageUrl &&
+          other.avatarLocalPath == this.avatarLocalPath &&
+          other.coverLocalPath == this.coverLocalPath &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -13213,6 +13684,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
   final Value<String?> occupation;
   final Value<String?> educationLevel;
   final Value<String?> linkedinUrl;
+  final Value<String?> coverImageUrl;
+  final Value<String?> avatarLocalPath;
+  final Value<String?> coverLocalPath;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -13231,6 +13705,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     this.occupation = const Value.absent(),
     this.educationLevel = const Value.absent(),
     this.linkedinUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -13250,6 +13727,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     this.occupation = const Value.absent(),
     this.educationLevel = const Value.absent(),
     this.linkedinUrl = const Value.absent(),
+    this.coverImageUrl = const Value.absent(),
+    this.avatarLocalPath = const Value.absent(),
+    this.coverLocalPath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -13269,6 +13749,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     Expression<String>? occupation,
     Expression<String>? educationLevel,
     Expression<String>? linkedinUrl,
+    Expression<String>? coverImageUrl,
+    Expression<String>? avatarLocalPath,
+    Expression<String>? coverLocalPath,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -13288,6 +13771,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
       if (occupation != null) 'occupation': occupation,
       if (educationLevel != null) 'education_level': educationLevel,
       if (linkedinUrl != null) 'linkedin_url': linkedinUrl,
+      if (coverImageUrl != null) 'cover_image_url': coverImageUrl,
+      if (avatarLocalPath != null) 'avatar_local_path': avatarLocalPath,
+      if (coverLocalPath != null) 'cover_local_path': coverLocalPath,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -13309,6 +13795,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     Value<String?>? occupation,
     Value<String?>? educationLevel,
     Value<String?>? linkedinUrl,
+    Value<String?>? coverImageUrl,
+    Value<String?>? avatarLocalPath,
+    Value<String?>? coverLocalPath,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -13328,6 +13817,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
       occupation: occupation ?? this.occupation,
       educationLevel: educationLevel ?? this.educationLevel,
       linkedinUrl: linkedinUrl ?? this.linkedinUrl,
+      coverImageUrl: coverImageUrl ?? this.coverImageUrl,
+      avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
+      coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -13379,6 +13871,15 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
     if (linkedinUrl.present) {
       map['linkedin_url'] = Variable<String>(linkedinUrl.value);
     }
+    if (coverImageUrl.present) {
+      map['cover_image_url'] = Variable<String>(coverImageUrl.value);
+    }
+    if (avatarLocalPath.present) {
+      map['avatar_local_path'] = Variable<String>(avatarLocalPath.value);
+    }
+    if (coverLocalPath.present) {
+      map['cover_local_path'] = Variable<String>(coverLocalPath.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $CVAddressesTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -13412,6 +13913,9 @@ class CVAddressesTableCompanion extends UpdateCompanion<CVAddressData> {
           ..write('occupation: $occupation, ')
           ..write('educationLevel: $educationLevel, ')
           ..write('linkedinUrl: $linkedinUrl, ')
+          ..write('coverImageUrl: $coverImageUrl, ')
+          ..write('avatarLocalPath: $avatarLocalPath, ')
+          ..write('coverLocalPath: $coverLocalPath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -26028,6 +26532,9 @@ typedef $$PersonsTableTableCreateCompanionBuilder =
       Value<String?> gender,
       Value<String?> phoneNumber,
       Value<String?> profileImageUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<String> relationship,
       Value<int> affection,
       Value<bool> isActive,
@@ -26045,6 +26552,9 @@ typedef $$PersonsTableTableUpdateCompanionBuilder =
       Value<String?> gender,
       Value<String?> phoneNumber,
       Value<String?> profileImageUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<String> relationship,
       Value<int> affection,
       Value<bool> isActive,
@@ -26718,6 +27228,21 @@ class $$PersonsTableTableFilterComposer
 
   ColumnFilters<String> get profileImageUrl => $composableBuilder(
     column: $table.profileImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -27469,6 +27994,21 @@ class $$PersonsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get relationship => $composableBuilder(
     column: $table.relationship,
     builder: (column) => ColumnOrderings(column),
@@ -27552,6 +28092,21 @@ class $$PersonsTableTableAnnotationComposer
 
   GeneratedColumn<String> get profileImageUrl => $composableBuilder(
     column: $table.profileImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
     builder: (column) => column,
   );
 
@@ -28324,6 +28879,9 @@ class $$PersonsTableTableTableManager
                 Value<String?> gender = const Value.absent(),
                 Value<String?> phoneNumber = const Value.absent(),
                 Value<String?> profileImageUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<String> relationship = const Value.absent(),
                 Value<int> affection = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -28339,6 +28897,9 @@ class $$PersonsTableTableTableManager
                 gender: gender,
                 phoneNumber: phoneNumber,
                 profileImageUrl: profileImageUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 relationship: relationship,
                 affection: affection,
                 isActive: isActive,
@@ -28356,6 +28917,9 @@ class $$PersonsTableTableTableManager
                 Value<String?> gender = const Value.absent(),
                 Value<String?> phoneNumber = const Value.absent(),
                 Value<String?> profileImageUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<String> relationship = const Value.absent(),
                 Value<int> affection = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
@@ -28371,6 +28935,9 @@ class $$PersonsTableTableTableManager
                 gender: gender,
                 phoneNumber: phoneNumber,
                 profileImageUrl: profileImageUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 relationship: relationship,
                 affection: affection,
                 isActive: isActive,
@@ -33347,6 +33914,9 @@ typedef $$ProfilesTableTableCreateCompanionBuilder =
       Value<String?> websiteUrl,
       Value<String?> linkedinUrl,
       Value<String?> githubUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<String?> timezone,
       Value<String?> preferredLanguage,
       Value<DateTime> createdAt,
@@ -33365,6 +33935,9 @@ typedef $$ProfilesTableTableUpdateCompanionBuilder =
       Value<String?> websiteUrl,
       Value<String?> linkedinUrl,
       Value<String?> githubUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<String?> timezone,
       Value<String?> preferredLanguage,
       Value<DateTime> createdAt,
@@ -33451,6 +34024,21 @@ class $$ProfilesTableTableFilterComposer
 
   ColumnFilters<String> get githubUrl => $composableBuilder(
     column: $table.githubUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -33554,6 +34142,21 @@ class $$ProfilesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get timezone => $composableBuilder(
     column: $table.timezone,
     builder: (column) => ColumnOrderings(column),
@@ -33642,6 +34245,21 @@ class $$ProfilesTableTableAnnotationComposer
   GeneratedColumn<String> get githubUrl =>
       $composableBuilder(column: $table.githubUrl, builder: (column) => column);
 
+  GeneratedColumn<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get timezone =>
       $composableBuilder(column: $table.timezone, builder: (column) => column);
 
@@ -33718,6 +34336,9 @@ class $$ProfilesTableTableTableManager
                 Value<String?> websiteUrl = const Value.absent(),
                 Value<String?> linkedinUrl = const Value.absent(),
                 Value<String?> githubUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<String?> timezone = const Value.absent(),
                 Value<String?> preferredLanguage = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -33734,6 +34355,9 @@ class $$ProfilesTableTableTableManager
                 websiteUrl: websiteUrl,
                 linkedinUrl: linkedinUrl,
                 githubUrl: githubUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 timezone: timezone,
                 preferredLanguage: preferredLanguage,
                 createdAt: createdAt,
@@ -33752,6 +34376,9 @@ class $$ProfilesTableTableTableManager
                 Value<String?> websiteUrl = const Value.absent(),
                 Value<String?> linkedinUrl = const Value.absent(),
                 Value<String?> githubUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<String?> timezone = const Value.absent(),
                 Value<String?> preferredLanguage = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -33768,6 +34395,9 @@ class $$ProfilesTableTableTableManager
                 websiteUrl: websiteUrl,
                 linkedinUrl: linkedinUrl,
                 githubUrl: githubUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 timezone: timezone,
                 preferredLanguage: preferredLanguage,
                 createdAt: createdAt,
@@ -38412,6 +39042,9 @@ typedef $$CVAddressesTableTableCreateCompanionBuilder =
       Value<String?> occupation,
       Value<String?> educationLevel,
       Value<String?> linkedinUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -38432,6 +39065,9 @@ typedef $$CVAddressesTableTableUpdateCompanionBuilder =
       Value<String?> occupation,
       Value<String?> educationLevel,
       Value<String?> linkedinUrl,
+      Value<String?> coverImageUrl,
+      Value<String?> avatarLocalPath,
+      Value<String?> coverLocalPath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -38554,6 +39190,21 @@ class $$CVAddressesTableTableFilterComposer
 
   ColumnFilters<String> get linkedinUrl => $composableBuilder(
     column: $table.linkedinUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -38685,6 +39336,21 @@ class $$CVAddressesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -38799,6 +39465,21 @@ class $$CVAddressesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get coverImageUrl => $composableBuilder(
+    column: $table.coverImageUrl,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get avatarLocalPath => $composableBuilder(
+    column: $table.avatarLocalPath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get coverLocalPath => $composableBuilder(
+    column: $table.coverLocalPath,
+    builder: (column) => column,
+  );
+
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -38897,6 +39578,9 @@ class $$CVAddressesTableTableTableManager
                 Value<String?> occupation = const Value.absent(),
                 Value<String?> educationLevel = const Value.absent(),
                 Value<String?> linkedinUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -38915,6 +39599,9 @@ class $$CVAddressesTableTableTableManager
                 occupation: occupation,
                 educationLevel: educationLevel,
                 linkedinUrl: linkedinUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -38935,6 +39622,9 @@ class $$CVAddressesTableTableTableManager
                 Value<String?> occupation = const Value.absent(),
                 Value<String?> educationLevel = const Value.absent(),
                 Value<String?> linkedinUrl = const Value.absent(),
+                Value<String?> coverImageUrl = const Value.absent(),
+                Value<String?> avatarLocalPath = const Value.absent(),
+                Value<String?> coverLocalPath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -38953,6 +39643,9 @@ class $$CVAddressesTableTableTableManager
                 occupation: occupation,
                 educationLevel: educationLevel,
                 linkedinUrl: linkedinUrl,
+                coverImageUrl: coverImageUrl,
+                avatarLocalPath: avatarLocalPath,
+                coverLocalPath: coverLocalPath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class ProjectAnalysisPage extends StatelessWidget {

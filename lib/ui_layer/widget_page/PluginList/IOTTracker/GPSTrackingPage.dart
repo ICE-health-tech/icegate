@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSService.dart';
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart';
-import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSService.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
 import 'dart:ui';
-// import 'package:ice_shield/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
+// import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
 
 /// Main GPS tracking page with Bluetooth device connection
 class GPSTrackingPage extends StatefulWidget {

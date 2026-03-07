@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 

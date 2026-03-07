@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:retrofit/retrofit.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart';
 
 part 'GpsLocationFetch.g.dart';
 

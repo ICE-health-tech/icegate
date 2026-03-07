@@ -1,20 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
-import 'package:ice_shield/ui_layer/health_page/subpage/FoodDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/subpage/FoodInputPage.dart';
-import 'package:ice_shield/ui_layer/home_page/HomePage.dart';
-import 'package:ice_shield/ui_layer/canvas_page/DragCanvasGridPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectAnalysisPage.dart';
-import 'package:ice_shield/ui_layer/user_page/PersonalInformationPage.dart';
-// import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
-import 'package:ice_shield/ui_layer/health_page/HealthPage.dart';
-import 'package:ice_shield/ui_layer/finance_page/FinancePage.dart';
-import 'package:ice_shield/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_shield/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
+import 'package:ice_gate/ui_layer/home_page/HomePage.dart';
+import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
+import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
+// import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
+import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
 
-import 'package:ice_shield/ui_layer/canvas_page/CanvasDynamicIsland.dart';
-import 'package:ice_shield/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_gate/ui_layer/canvas_page/CanvasDynamicIsland.dart';
+import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -79,8 +79,8 @@ class MainShell extends StatelessWidget {
         break;
 
       case '/projects/editor':
-         pageIcon = SizedBox.shrink();
-      break;
+        pageIcon = SizedBox.shrink();
+        break;
       case '/personal-info':
         pageIcon = PersonalInformationPage.icon(context, size: responsiveSize);
         break;

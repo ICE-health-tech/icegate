@@ -1,16 +1,16 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:ice_shield/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -59,6 +59,9 @@ class SocialPage extends StatefulWidget {
         },
         onSwipeRight: () {
           WidgetNavigatorAction.smartPop(context);
+        },
+        onLongPress: () {
+          context.go("/social/dashboard");
         },
         onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
         size: size,
@@ -1513,7 +1516,7 @@ class _SocialPageState extends State<SocialPage>
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.only(left: 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1526,8 +1529,8 @@ class _SocialPageState extends State<SocialPage>
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: TextStyle(
-                              color: colorScheme.primary,
-                              fontSize: 9,
+                              color: colorScheme.onPrimary,
+                              fontSize: 6,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 1,
                             ),

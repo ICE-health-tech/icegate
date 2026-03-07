@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_shield/ui_layer/widget_page/AddPluginForm.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_shield/ui_layer/home_page/MainButton.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'TaskItem.dart';
 import 'CreateProjectDialog.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_shield/data_layer/Protocol/Project/ProjectProtocol.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
-import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class ProjectsPage extends StatelessWidget {
@@ -175,7 +175,7 @@ class ProjectsPage extends StatelessWidget {
                             _buildSummaryItem(
                               context,
                               'Tasks',
-                              '${tasksActive}/${tasksDone + tasksActive}',
+                              '${tasksDone}/${tasksDone + tasksActive}',
                               Icons.task_alt_rounded,
                               Colors.orange,
                             ),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/orchestration_layer/IDGen.dart';
-import 'package:ice_shield/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
-import 'package:ice_shield/data_layer/Protocol/Home/PluginProtocol.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart';
 
 /// Base class for plugin definitions (templates)
 /// This represents a plugin template that can be instantiated multiple times

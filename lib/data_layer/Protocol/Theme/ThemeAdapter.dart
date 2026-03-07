@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/Protocol/Theme/JsonThemeAdapter.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/JsonThemeAdapter.dart';
 import 'package:signals/signals.dart';
 
 // --- ThemeAdapter (Utility remains static, but its usage moves into the store) ---

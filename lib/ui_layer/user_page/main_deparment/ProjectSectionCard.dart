@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
+import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 
 class ProjectSectionCard extends StatelessWidget {
   final ProjectMetrics metrics;
@@ -42,7 +42,7 @@ class ProjectSectionCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                 
+
                   Icon(
                     Icons.arrow_forward_ios,
                     size: 16,

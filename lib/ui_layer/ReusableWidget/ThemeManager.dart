@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
-import 'package:ice_shield/initial_layer/ThemeLayer/CurrentThemeData.dart';
+import 'package:ice_gate/initial_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_shield/data_layer/Protocol/Theme/ThemeAdapter.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
 
 class ThemeManager {
   static Widget icon(BuildContext context) {

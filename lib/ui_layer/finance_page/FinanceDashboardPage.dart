@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_shield/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/AnalysisCharts.dart';
-import 'package:ice_shield/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_shield/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_shield/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class FinanceDashboardPage extends StatelessWidget {
   const FinanceDashboardPage({super.key});
