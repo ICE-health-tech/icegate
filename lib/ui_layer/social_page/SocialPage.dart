@@ -216,6 +216,7 @@ class SocialPage extends StatefulWidget {
                         finalImageUrl = await objectBlock.saveAnyLocalImage(
                           pickedXFile!,
                           subFolder: 'quests',
+                          personId: personId,
                         );
                       }
 

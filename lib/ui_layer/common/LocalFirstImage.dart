@@ -46,9 +46,10 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
   void didUpdateWidget(LocalFirstImage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.localPath != widget.localPath ||
-        oldWidget.remoteUrl != widget.remoteUrl) {
+        oldWidget.remoteUrl != widget.remoteUrl ||
+        oldWidget.subFolder != widget.subFolder) {
       debugPrint(
-        '🔄 [LocalFirstImage] Widget Update: "${oldWidget.localPath}" -> "${widget.localPath}"',
+        '🔄 [LocalFirstImage] Widget Update: "${oldWidget.localPath}" -> "${widget.localPath}" (Sub: ${widget.subFolder})',
       );
       _resolvePath();
     }
@@ -121,14 +122,78 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
       for (var fname in filenames) {
         final isAlt = fname != filename;
 
-        // Try Path A: Primary Location (Specified subfolder)
+        // Try Path A: Person ID-based folder (NEW - preferred structure)
+        // Look for {personId}/{filename} pattern in localPath
+        final personIdMatch = RegExp(r'^([^/]+)/([^/]+)$').firstMatch(widget.localPath);
+        if (personIdMatch != null) {
+          final personId = personIdMatch.group(1);
+          final actualFilename = personIdMatch.group(2);
+          if (personId != null && actualFilename != null) {
+            final personPath = p.join(appDir.path, personId, widget.subFolder, actualFilename);
+            debugPrint('🔎 [LocalFirstImage] Checking A (Person ID): $personPath');
+            final personFile = File(personPath);
+            if (personFile.existsSync()) {
+              final size = await personFile.length();
+              debugPrint(
+                '✅ [LocalFirstImage] Found at A (Person ID) - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
+              );
+              if (mounted) {
+                setState(() {
+                  _resolvedAbsolutePath = personPath;
+                  _fileSize = size;
+                  _isLoading = false;
+                });
+                debugPrint('🎨 [LocalFirstImage] setState for $fname');
+              }
+              return;
+            }
+          }
+        }
+
+        // Try Path A2: Search for person ID in any folder (NEW - comprehensive search)
+        // This handles cases where we don't know the person ID from the localPath
+        try {
+          final appDirDir = Directory(appDir.path);
+          if (await appDirDir.exists()) {
+            final personFolders = await appDirDir.list().toList();
+            for (var personFolderEntity in personFolders) {
+              if (personFolderEntity is Directory) {
+                final personId = p.basename(personFolderEntity.path);
+                final subFolderDir = Directory(p.join(personFolderEntity.path, widget.subFolder));
+                if (await subFolderDir.exists()) {
+                  final personImagePath = p.join(subFolderDir.path, fname);
+                  final personImageFile = File(personImagePath);
+                  if (await personImageFile.exists()) {
+                    final size = await personImageFile.length();
+                    debugPrint(
+                      '✅ [LocalFirstImage] Found at A2 (Person ID Search) in $personId - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
+                    );
+                    if (mounted) {
+                      setState(() {
+                        _resolvedAbsolutePath = personImagePath;
+                        _fileSize = size;
+                        _isLoading = false;
+                      });
+                      debugPrint('🎨 [LocalFirstImage] setState for $fname');
+                    }
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        } catch (e) {
+          debugPrint('⚠️ [LocalFirstImage] Person ID search failed: $e');
+        }
+
+        // Try Path B: Primary Location (Specified subfolder)
         final primaryPath = p.join(appDir.path, widget.subFolder, fname);
-        debugPrint('🔎 [LocalFirstImage] Checking A: $primaryPath');
+        debugPrint('🔎 [LocalFirstImage] Checking B: $primaryPath');
         final primaryFile = File(primaryPath);
         if (primaryFile.existsSync()) {
           final size = await primaryFile.length();
           debugPrint(
-            '✅ [LocalFirstImage] Found at A - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
+            '✅ [LocalFirstImage] Found at B - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
           );
           if (mounted) {
             setState(() {
@@ -141,9 +206,9 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
           return;
         }
 
-        // Try Path B: Root Documents Directory (Legacy/Fallback)
+        // Try Path C: Root Documents Directory (Legacy/Fallback)
         final rootPath = p.join(appDir.path, fname);
-        debugPrint('🔎 [LocalFirstImage] Checking B: $rootPath');
+        debugPrint('🔎 [LocalFirstImage] Checking C: $rootPath');
         final rootFile = File(rootPath);
         if (rootFile.existsSync()) {
           final size = await rootFile.length();
@@ -159,10 +224,11 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
           }
           return;
         }
-        // Try Path C: profile_images folder (Specific legacy fallback)
+        
+        // Try Path D: profile_images folder (Specific legacy fallback)
         if (widget.subFolder != 'profile_images') {
           final profilePath = p.join(appDir.path, 'profile_images', fname);
-          debugPrint('🔎 [LocalFirstImage] Checking C: $profilePath');
+          debugPrint('🔎 [LocalFirstImage] Checking D: $profilePath');
           final profileFile = File(profilePath);
           if (profileFile.existsSync()) {
             final size = await profileFile.length();

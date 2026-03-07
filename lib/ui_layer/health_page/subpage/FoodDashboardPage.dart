@@ -106,6 +106,7 @@ class _MealDialogContentState extends State<_MealDialogContent> {
       final String savedFileName = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'meals',
+        personId: widget.personID,
       );
 
       setState(() {

@@ -24,23 +24,29 @@ class ObjectDatabaseBlock {
   final _imagePicker = ImagePicker();
 
   /// Save a picked image to a specific subfolder in the application's permanent document directory.
+  /// If personId is provided, creates nested folder structure: {subFolder}/{personId}/
   /// returns only the filename.
   Future<String> saveAnyLocalImage(
     XFile pickedFile, {
     String? customFileName,
     String subFolder = 'general_images',
+    String? personId,
   }) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final localFolder = Directory(p.join(appDir.path, subFolder));
+      
+      // Create nested folder structure if personId is provided
+      final targetFolder = personId != null 
+          ? Directory(p.join(appDir.path, personId, subFolder))
+          : Directory(p.join(appDir.path, subFolder));
 
-      if (!await localFolder.exists()) {
-        await localFolder.create(recursive: true);
+      if (!await targetFolder.exists()) {
+        await targetFolder.create(recursive: true);
       }
 
       // If no custom name provided, keep original name but sanitize
       final fileName = customFileName ?? p.basename(pickedFile.path);
-      final localPath = p.join(localFolder.path, fileName);
+      final localPath = p.join(targetFolder.path, fileName);
 
       // Overwrite if exists
       final oldFile = File(localPath);
@@ -63,10 +69,14 @@ class ObjectDatabaseBlock {
 
   /// Legacy wrapper for backward compatibility with avatar/cover logic
   Future<String> _saveLocalImage(XFile pickedFile, String fileName) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    final personId = user?.id;
+    
     return saveAnyLocalImage(
       pickedFile,
       customFileName: fileName,
       subFolder: 'profile_images',
+      personId: personId,
     );
   }
 

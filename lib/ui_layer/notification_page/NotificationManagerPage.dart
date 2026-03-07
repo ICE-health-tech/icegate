@@ -527,21 +527,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             ),
             Row(
               children: [
-                TextButton.icon(
-                  onPressed: () {
-                    final service = context.read<LocalNotificationService>();
-                    service.showNotification(
-                      9999,
-                      "Test Notification",
-                      "If you see this, custom notifications are working!",
-                    );
-                  },
-                  icon: const Icon(Icons.send_rounded, size: 20),
-                  label: const Text("Test"),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.tealAccent,
-                  ),
-                ),
+               
+                
                 TextButton.icon(
                   onPressed: () => _showAddNotificationDialog(context),
                   icon: const Icon(Icons.add_rounded, size: 20),

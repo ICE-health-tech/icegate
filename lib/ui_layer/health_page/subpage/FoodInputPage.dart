@@ -96,9 +96,17 @@ class _FoodInputPageState extends State<FoodInputPage> {
       }
 
       final objectBlock = context.read<ObjectDatabaseBlock>();
+      final authBlock = context.read<AuthBlock>();
+      final userData = authBlock.user.value;
+      final String personID =
+          userData?['person_id']?.toString() ??
+          userData?['id']?.toString() ??
+          '1';
+      
       final String savedFileName = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'meals',
+        personId: personID,
       );
 
       setState(() {
