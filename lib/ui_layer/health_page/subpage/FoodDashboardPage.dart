@@ -709,7 +709,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(16),
-                child: _buildMealImage(meal.mealImageUrl, 70),
+                child: _buildMealImage(meal.mealImageUrl, 70, meal.personID),
               ),
             ),
             const SizedBox(width: 16),
@@ -769,8 +769,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     );
   }
 
-  Widget _buildMealImage(String? imageName, double size) {
+  Widget _buildMealImage(String? imageName, double size, String? ownerId) {
     return LocalFirstImage(
+      ownerId: ownerId,
       localPath: imageName ?? '',
       remoteUrl: '',
       subFolder: 'meals',

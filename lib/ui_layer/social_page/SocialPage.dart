@@ -141,6 +141,10 @@ class SocialPage extends StatefulWidget {
                                 fit: BoxFit.cover,
                               )
                             : LocalFirstImage(
+                                ownerId: context
+                                    .read<PersonBlock>()
+                                    .currentPersonID
+                                    .value,
                                 localPath: imageController.text,
                                 remoteUrl: '', // Locally picked, no remote yet
                                 subFolder: 'quests',
@@ -713,126 +717,129 @@ class _SocialPageState extends State<SocialPage>
               rankColor = const Color(0xFFCD7F32); // Bronze
             }
 
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: isTopThree
-                      ? rankColor.withOpacity(0.5)
-                      : colorScheme.outlineVariant,
-                  width: isTopThree ? 1.5 : 1,
+            return GestureDetector(
+              onTap: () => context.push('/profile/${person.id}'),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: isTopThree
+                        ? rankColor.withOpacity(0.5)
+                        : colorScheme.outlineVariant,
+                    width: isTopThree ? 1.5 : 1,
+                  ),
+                  boxShadow: isTopThree
+                      ? [
+                          BoxShadow(
+                            color: rankColor.withOpacity(0.1),
+                            blurRadius: 15,
+                            spreadRadius: 2,
+                          ),
+                        ]
+                      : null,
                 ),
-                boxShadow: isTopThree
-                    ? [
-                        BoxShadow(
-                          color: rankColor.withOpacity(0.1),
-                          blurRadius: 15,
-                          spreadRadius: 2,
-                        ),
-                      ]
-                    : null,
-              ),
-              child: ListTile(
-                contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                leading: Stack(
-                  alignment: Alignment.bottomRight,
-                  children: [
-                    Container(
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: isTopThree
-                              ? rankColor
-                              : colorScheme.outlineVariant,
-                          width: 2,
-                        ),
-                      ),
-                      child: CircleAvatar(
-                        radius: 28,
-                        backgroundColor: colorScheme.surface,
-                        backgroundImage: person.profileImageUrl != null
-                            ? NetworkImage(person.profileImageUrl!)
-                            : null,
-                        child: person.profileImageUrl == null
-                            ? Text(
-                                person.firstName[0].toUpperCase(),
-                                style: TextStyle(
-                                  color: rankColor,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              )
-                            : null,
-                      ),
-                    ),
-                    if (isTopThree)
+                child: ListTile(
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 8,
+                  ),
+                  leading: Stack(
+                    alignment: Alignment.bottomRight,
+                    children: [
                       Container(
-                        padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: rankColor,
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: colorScheme.surfaceContainer,
+                            color: isTopThree
+                                ? rankColor
+                                : colorScheme.outlineVariant,
                             width: 2,
                           ),
                         ),
-                        child: Icon(
-                          index == 0
-                              ? Icons.workspace_premium_rounded
-                              : Icons.star_rounded,
-                          size: 14,
-                          color: Colors.black87,
+                        child: CircleAvatar(
+                          radius: 28,
+                          backgroundColor: colorScheme.surface,
+                          backgroundImage: person.profileImageUrl != null
+                              ? NetworkImage(person.profileImageUrl!)
+                              : null,
+                          child: person.profileImageUrl == null
+                              ? Text(
+                                  person.firstName[0].toUpperCase(),
+                                  style: TextStyle(
+                                    color: rankColor,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                )
+                              : null,
                         ),
                       ),
-                  ],
-                ),
-                title: Text(
-                  '${person.firstName} ${person.lastName ?? ''}',
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontWeight: FontWeight.bold,
-                    fontSize: 16,
+                      if (isTopThree)
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: rankColor,
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: colorScheme.surfaceContainer,
+                              width: 2,
+                            ),
+                          ),
+                          child: Icon(
+                            index == 0
+                                ? Icons.workspace_premium_rounded
+                                : Icons.star_rounded,
+                            size: 14,
+                            color: Colors.black87,
+                          ),
+                        ),
+                    ],
                   ),
-                ),
-                subtitle: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const SizedBox(height: 4),
-                    Text(
-                      'GLOBAL SCORE: ${entry.totalScore.toStringAsFixed(0)}',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontSize: 11,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1,
-                      ),
+                  title: Text(
+                    '${person.firstName} ${person.lastName ?? ''}',
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
                     ),
-                  ],
-                ),
-                trailing: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'RANK',
-                      style: TextStyle(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 8,
-                        fontWeight: FontWeight.bold,
+                  ),
+                  subtitle: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const SizedBox(height: 4),
+                      Text(
+                        'GLOBAL SCORE: ${entry.totalScore.toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: colorScheme.primary,
+                          fontSize: 11,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                        ),
                       ),
-                    ),
-                    Text(
-                      '#${index + 1}',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w900,
-                        color: rankColor,
+                    ],
+                  ),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        'RANK',
+                        style: TextStyle(
+                          color: colorScheme.onSurfaceVariant,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
-                    ),
-                  ],
+                      Text(
+                        '#${index + 1}',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                          color: rankColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
@@ -903,311 +910,322 @@ class _SocialPageState extends State<SocialPage>
     final relationshipIcon = _getRelationshipIcon(person.relationship);
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: relationshipColor.withOpacity(0.3),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: relationshipColor.withOpacity(0.05),
-            blurRadius: 20,
-            spreadRadius: -10,
+    return GestureDetector(
+      onTap: () => context.push('/profile/${person.id}'),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 20),
+        decoration: BoxDecoration(
+          color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: relationshipColor.withOpacity(0.3),
+            width: 1.5,
           ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Stack(
-          children: [
-            // Subtle relationship accent background
-            Positioned(
-              right: -24,
-              top: -24,
-              child: Icon(
-                relationshipIcon,
-                size: 110,
-                color: relationshipColor.withOpacity(0.04),
-              ),
+          boxShadow: [
+            BoxShadow(
+              color: relationshipColor.withOpacity(0.05),
+              blurRadius: 20,
+              spreadRadius: -10,
             ),
-            Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                children: [
-                  Row(
-                    children: [
-                      // Tactical Avatar
-                      Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: relationshipColor.withOpacity(0.5),
-                                width: 2,
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: relationshipColor.withOpacity(0.2),
-                                  blurRadius: 10,
-                                  spreadRadius: 2,
-                                ),
-                              ],
-                            ),
-                          ),
-                          CircleAvatar(
-                            radius: 32,
-                            backgroundColor:
-                                colorScheme.surfaceContainerHighest,
-                            backgroundImage: person.profileImageUrl != null
-                                ? NetworkImage(person.profileImageUrl!)
-                                : null,
-                            child: person.profileImageUrl == null
-                                ? Text(
-                                    person.firstName[0].toUpperCase(),
-                                    style: TextStyle(
-                                      color: relationshipColor,
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 22,
-                                    ),
-                                  )
-                                : null,
-                          ),
-                          // Status Indicator
-                          Positioned(
-                            bottom: 2,
-                            right: 2,
-                            child: Container(
-                              width: 14,
-                              height: 14,
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: Stack(
+            children: [
+              // Subtle relationship accent background
+              Positioned(
+                right: -24,
+                top: -24,
+                child: Icon(
+                  relationshipIcon,
+                  size: 110,
+                  color: relationshipColor.withOpacity(0.04),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        // Tactical Avatar
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            Container(
+                              width: 72,
+                              height: 72,
                               decoration: BoxDecoration(
-                                color: const Color(0xFF00FFA3),
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: colorScheme.surface,
+                                  color: relationshipColor.withOpacity(0.5),
                                   width: 2,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: const Color(
-                                      0xFF00FFA3,
-                                    ).withOpacity(0.5),
-                                    blurRadius: 5,
+                                    color: relationshipColor.withOpacity(0.2),
+                                    blurRadius: 10,
+                                    spreadRadius: 2,
                                   ),
                                 ],
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(width: 18),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    '${person.firstName} ${person.lastName ?? ''}',
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 18,
-                                      letterSpacing: 0.5,
-                                    ),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(
-                                  Icons.verified_rounded,
-                                  size: 16,
-                                  color: colorScheme.primary,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              person.relationship.toUpperCase(),
-                              style: TextStyle(
-                                color: relationshipColor.withOpacity(0.8),
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            // BOND / AFFECTION BAR
-                            Stack(
-                              children: [
-                                Container(
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(3),
-                                  ),
-                                ),
-                                FractionallySizedBox(
-                                  widthFactor: (person.affection % 100) / 100,
-                                  child: Container(
-                                    height: 6,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(3),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: relationshipColor.withOpacity(
-                                            0.4,
-                                          ),
-                                          blurRadius: 8,
-                                        ),
-                                      ],
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          relationshipColor,
-                                          relationshipColor.withOpacity(0.6),
-                                        ],
+                            CircleAvatar(
+                              radius: 32,
+                              backgroundColor:
+                                  colorScheme.surfaceContainerHighest,
+                              backgroundImage: person.profileImageUrl != null
+                                  ? NetworkImage(person.profileImageUrl!)
+                                  : null,
+                              child: person.profileImageUrl == null
+                                  ? Text(
+                                      person.firstName[0].toUpperCase(),
+                                      style: TextStyle(
+                                        color: relationshipColor,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 22,
                                       ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                    )
+                                  : null,
                             ),
-                            const SizedBox(height: 6),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Text(
-                                  'TRUST LEVEL',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurfaceVariant
-                                        .withOpacity(0.6),
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1,
+                            // Status Indicator
+                            Positioned(
+                              bottom: 2,
+                              right: 2,
+                              child: Container(
+                                width: 14,
+                                height: 14,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF00FFA3),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: colorScheme.surface,
+                                    width: 2,
                                   ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(
+                                        0xFF00FFA3,
+                                      ).withOpacity(0.5),
+                                      blurRadius: 5,
+                                    ),
+                                  ],
                                 ),
-                                Text(
-                                  'LVL ${(person.affection / 100).floor() + 1}',
-                                  style: TextStyle(
-                                    color: relationshipColor,
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  // ACTION BUTTONS
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextButton(
-                          onPressed: () async {
-                            final scoreBlock = context.read<ScoreBlock>();
-
-                            // 1. Increase affection in local DB
-                            await dao.increaseContactAffection(
-                              person.id,
-                              amount: DEFAULT_AFFECTION_INCREASE,
-                            );
-
-                            // 2. Add points to Social Score manually
-                            await scoreBlock.manualSocialIncrement(5.0);
-
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.auto_awesome,
-                                        color: relationshipColor,
-                                        size: 16,
+                        const SizedBox(width: 18),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '${person.firstName} ${person.lastName ?? ''}',
+                                      style: TextStyle(
+                                        color: colorScheme.onSurface,
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 18,
+                                        letterSpacing: 0.5,
                                       ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        'Bond Strengthened! Social Score +5.0',
-                                        style: TextStyle(
-                                          color: colorScheme.onPrimaryContainer,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(
+                                    Icons.verified_rounded,
+                                    size: 16,
+                                    color: colorScheme.primary,
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                person.relationship.toUpperCase(),
+                                style: TextStyle(
+                                  color: relationshipColor.withOpacity(0.8),
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w900,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              // BOND / AFFECTION BAR
+                              Stack(
+                                children: [
+                                  Container(
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary.withOpacity(
+                                        0.1,
+                                      ),
+                                      borderRadius: BorderRadius.circular(3),
+                                    ),
+                                  ),
+                                  FractionallySizedBox(
+                                    widthFactor: (person.affection % 100) / 100,
+                                    child: Container(
+                                      height: 6,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(3),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: relationshipColor
+                                                .withOpacity(0.4),
+                                            blurRadius: 8,
+                                          ),
+                                        ],
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            relationshipColor,
+                                            relationshipColor.withOpacity(0.6),
+                                          ],
                                         ),
                                       ),
-                                    ],
+                                    ),
                                   ),
-                                  backgroundColor: colorScheme.primaryContainer,
-                                  behavior: SnackBarBehavior.floating,
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
+                                ],
+                              ),
+                              const SizedBox(height: 6),
+                              Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'TRUST LEVEL',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurfaceVariant
+                                          .withOpacity(0.6),
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 1,
+                                    ),
                                   ),
-                                  duration: const Duration(seconds: 1),
-                                ),
-                              );
-                            }
-                          },
-                          style: TextButton.styleFrom(
-                            backgroundColor: relationshipColor.withOpacity(0.1),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              side: BorderSide(
-                                color: relationshipColor.withOpacity(0.3),
-                              ),
-                            ),
-                            padding: const EdgeInsets.symmetric(vertical: 12),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.favorite_rounded,
-                                size: 16,
-                                color: relationshipColor,
-                              ),
-                              const SizedBox(width: 8),
-                              const Text(
-                                'STRENGTHEN BOND',
-                                style: TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1,
-                                ),
+                                  Text(
+                                    'LVL ${(person.affection / 100).floor() + 1}',
+                                    style: TextStyle(
+                                      color: relationshipColor,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: colorScheme.surfaceContainerHighest
-                              .withOpacity(0.3),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: colorScheme.outlineVariant),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    // ACTION BUTTONS
+                    Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () async {
+                              final scoreBlock = context.read<ScoreBlock>();
+
+                              // 1. Increase affection in local DB
+                              await dao.increaseContactAffection(
+                                person.id,
+                                amount: DEFAULT_AFFECTION_INCREASE,
+                              );
+
+                              // 2. Add points to Social Score manually
+                              await scoreBlock.manualSocialIncrement(5.0);
+
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.auto_awesome,
+                                          color: relationshipColor,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'Bond Strengthened! Social Score +5.0',
+                                          style: TextStyle(
+                                            color:
+                                                colorScheme.onPrimaryContainer,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    backgroundColor:
+                                        colorScheme.primaryContainer,
+                                    behavior: SnackBarBehavior.floating,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    duration: const Duration(seconds: 1),
+                                  ),
+                                );
+                              }
+                            },
+                            style: TextButton.styleFrom(
+                              backgroundColor: relationshipColor.withOpacity(
+                                0.1,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: BorderSide(
+                                  color: relationshipColor.withOpacity(0.3),
+                                ),
+                              ),
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.favorite_rounded,
+                                  size: 16,
+                                  color: relationshipColor,
+                                ),
+                                const SizedBox(width: 8),
+                                const Text(
+                                  'STRENGTHEN BOND',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                         ),
-                        child: IconButton(
-                          onPressed: () =>
-                              _showRelationshipOptions(context, person, dao),
-                          icon: const Icon(Icons.settings_outlined, size: 20),
-                          tooltip: 'Options',
+                        const SizedBox(width: 12),
+                        Container(
+                          decoration: BoxDecoration(
+                            color: colorScheme.surfaceContainerHighest
+                                .withOpacity(0.3),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: colorScheme.outlineVariant,
+                            ),
+                          ),
+                          child: IconButton(
+                            onPressed: () =>
+                                _showRelationshipOptions(context, person, dao),
+                            icon: const Icon(Icons.settings_outlined, size: 20),
+                            tooltip: 'Options',
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1477,6 +1495,7 @@ class _SocialPageState extends State<SocialPage>
                   children: [
                     if (quest.imageUrl != null && quest.imageUrl!.isNotEmpty)
                       LocalFirstImage(
+                        ownerId: quest.personID,
                         localPath: quest.imageUrl!,
                         remoteUrl: quest.imageUrl!.startsWith('http')
                             ? quest.imageUrl!

@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
@@ -124,32 +127,48 @@ class SettingsWidget extends StatelessWidget {
 
   Widget _buildProfileHeader(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final authBlock = context.watch<AuthBlock>();
-    final username = authBlock.username.watch(context);
 
+    final objectResource = context.read<ObjectDatabaseBlock>();
+    final authBlock = context.read<AuthBlock>();
+    final userData = authBlock.user.value;
+    final personBlock = context.read<PersonBlock>();
+    final info = personBlock.information.watch(context);
+    final username = info.profiles.username;
+    final String? personID =
+        userData?['person_id']?.toString() ?? userData?['id']?.toString();
     return Container(
       padding: const EdgeInsets.all(24),
+
       child: Row(
         children: [
           Container(
-            width: 70,
-            height: 70,
+            width: 100, // Balanced size for settings header
+            height: 100,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [colorScheme.primary, colorScheme.tertiary],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              shape: BoxShape.circle,
+              shape: BoxShape.circle, 
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withValues(alpha: 0.3),
-                  blurRadius: 15,
-                  offset: const Offset(0, 5),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
+                  blurRadius: 20,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
-            child: const Icon(Icons.person, color: Colors.white, size: 35),
+            child: ClipOval(
+              child: LocalFirstImage(
+                ownerId: personID,
+                localPath: info.profiles.avatarLocalPath,
+                remoteUrl: info.profiles.profileImageUrl,
+                width: 100,
+                height: 100,
+                fit: BoxFit.cover,
+                placeholder: Icon(
+                  Icons.person_rounded,
+                  size: 40,
+                  color: colorScheme.onPrimaryContainer,
+                ),
+              ),
+            ),
           ),
           const SizedBox(width: 20),
           Expanded(

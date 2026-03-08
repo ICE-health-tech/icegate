@@ -230,6 +230,9 @@ class PersonBlock {
   final account = signal<UserAccount>(const UserAccount());
   final skills = signal<List<SkillType>>([]);
 
+  // Signal for the profile currently being viewed (if different from logged in user)
+  final viewedInformation = signal<UserInformation?>(null);
+
   // Computed currentPersonID avoids stale state during login transitions
   late final currentPersonID = computed(() => information.value.profiles.id);
 
@@ -706,5 +709,63 @@ class PersonBlock {
     // 2. Then fetch dependent data
     await Future.wait([getUserRole(token), getUserSkill(token)]);
     print("✅ [PersonBlock] Initial Data Fetch Completed");
+  }
+
+  /// Fetch a specific person's profile for viewing
+  Future<void> fetchPersonById(String personId) async {
+    try {
+      debugPrint("🔍 [PersonBlock] Fetching profile for viewing: $personId");
+
+      final localPerson = await personDao.getPersonById(personId);
+      final localProfile = await personDao.getProfileForPerson(personId);
+      final localDetails = await personDao.getCVAddressForPerson(personId);
+
+      if (localPerson == null && localProfile == null) {
+        debugPrint("⚠️ [PersonBlock] Person $personId not found locally.");
+        viewedInformation.value = null;
+        return;
+      }
+
+      final details = UserDetails(
+        bio: localDetails?.bio ?? localProfile?.bio ?? '',
+        occupation: localDetails?.occupation ?? localProfile?.occupation ?? '',
+        location: localDetails?.location ?? localProfile?.location ?? '',
+        company: localDetails?.company ?? '',
+        university: localDetails?.university ?? '',
+        country: localDetails?.country ?? '',
+        githubUrl: localDetails?.githubUrl ?? localProfile?.githubUrl ?? '',
+        linkedinUrl:
+            localDetails?.linkedinUrl ?? localProfile?.linkedinUrl ?? '',
+        educationLevel:
+            localDetails?.educationLevel ?? localProfile?.educationLevel ?? '',
+        websiteUrl: localDetails?.websiteUrl ?? localProfile?.websiteUrl ?? '',
+      );
+
+      final profile = UserProfile(
+        id: personId,
+        firstName: localPerson?.firstName ?? '',
+        lastName: localPerson?.lastName ?? '',
+        username:
+            '', // PersonData doesn't have username, it's in UserAccountsTable
+        profileImageUrl: localPerson?.profileImageUrl ?? '',
+        coverImageUrl:
+            localDetails?.coverImageUrl ??
+            localPerson?.coverImageUrl ??
+            localProfile?.coverImageUrl ??
+            '',
+        avatarLocalPath:
+            localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
+        coverLocalPath:
+            localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
+      );
+
+      viewedInformation.value = UserInformation(
+        profiles: profile,
+        details: details,
+      );
+    } catch (e) {
+      debugPrint("❌ [PersonBlock] Failed to fetch person $personId: $e");
+      viewedInformation.value = null;
+    }
   }
 }

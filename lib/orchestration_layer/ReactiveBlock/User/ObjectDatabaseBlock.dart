@@ -24,8 +24,8 @@ class ObjectDatabaseBlock {
   final _imagePicker = ImagePicker();
 
   /// Save a picked image to a specific subfolder in the application's permanent document directory.
-  /// If personId is provided, creates nested folder structure: {subFolder}/{personId}/
-  /// returns only the filename.
+  /// If personId is provided, creates nested folder structure: {personId}/{subFolder}/
+  /// returns a relative path from the app documents directory (e.g., "userId/subFolder/filename").
   Future<String> saveAnyLocalImage(
     XFile pickedFile, {
     String? customFileName,
@@ -34,9 +34,9 @@ class ObjectDatabaseBlock {
   }) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      
+
       // Create nested folder structure if personId is provided
-      final targetFolder = personId != null 
+      final targetFolder = personId != null
           ? Directory(p.join(appDir.path, personId, subFolder))
           : Directory(p.join(appDir.path, subFolder));
 
@@ -60,7 +60,11 @@ class ObjectDatabaseBlock {
       // Evict from Flutter image cache to ensure UI updates
       await imageCache.evict(FileImage(File(localPath)));
 
-      return p.basename(savedFile.path);
+      // Return structured relative path for better identification
+      if (personId != null) {
+        return p.join(personId, subFolder, p.basename(savedFile.path));
+      }
+      return p.join(subFolder, p.basename(savedFile.path));
     } catch (e) {
       print('❌ [ObjectDB] saveAnyLocalImage failed: $e');
       rethrow;
@@ -71,7 +75,8 @@ class ObjectDatabaseBlock {
   Future<String> _saveLocalImage(XFile pickedFile, String fileName) async {
     final user = Supabase.instance.client.auth.currentUser;
     final personId = user?.id;
-    
+
+    // Returns "personId/profile_images/fileName"
     return saveAnyLocalImage(
       pickedFile,
       customFileName: fileName,

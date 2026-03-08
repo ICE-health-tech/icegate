@@ -13,6 +13,7 @@ class LocalFirstImage extends StatefulWidget {
   final double opacity;
   final BorderRadius? borderRadius;
   final String subFolder;
+  final String? ownerId;
 
   const LocalFirstImage({
     super.key,
@@ -25,6 +26,7 @@ class LocalFirstImage extends StatefulWidget {
     this.opacity = 1.0,
     this.borderRadius,
     this.subFolder = 'profile_images',
+    this.ownerId,
   });
 
   @override
@@ -47,21 +49,22 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.localPath != widget.localPath ||
         oldWidget.remoteUrl != widget.remoteUrl ||
-        oldWidget.subFolder != widget.subFolder) {
+        oldWidget.subFolder != widget.subFolder ||
+        oldWidget.ownerId != widget.ownerId) {
       debugPrint(
-        '🔄 [LocalFirstImage] Widget Update: "${oldWidget.localPath}" -> "${widget.localPath}" (Sub: ${widget.subFolder})',
+        '🔄 [LocalFirstImage] Widget Update: "${oldWidget.localPath}" -> "${widget.localPath}" (Owner: ${widget.ownerId})',
       );
       _resolvePath();
     }
   }
 
   Future<void> _resolvePath() async {
+    final appDir = await getApplicationDocumentsDirectory();
     debugPrint(
-      '🔄 [LocalFirstImage] _resolvePath for: "${widget.localPath}" (Sub: ${widget.subFolder})',
+      '🔄 [LocalFirstImage] _resolvePath for: "${widget.localPath}" (Owner: ${widget.ownerId}, Sub: ${widget.subFolder})',
     );
 
     String filename = p.basename(widget.localPath);
-    bool isGuess = false;
 
     if (filename.isEmpty || filename == '.' || filename == '/') {
       // SMART FALLBACK: If localPath is empty, try to guess filename from remoteUrl
@@ -70,7 +73,6 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         if (uri != null && uri.path.isNotEmpty) {
           filename = p.basename(uri.path);
           if (filename.isNotEmpty && filename != '.' && filename != '/') {
-            isGuess = true;
             debugPrint(
               '💡 [LocalFirstImage] Guessed filename from URL: $filename',
             );
@@ -93,151 +95,76 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
     }
 
     try {
-      // 1. If it's already an absolute path and exists, use it (Backward compatibility)
-      if (widget.localPath.isNotEmpty && File(widget.localPath).existsSync()) {
-        final size = await File(widget.localPath).length();
-        debugPrint(
-          '✅ [LocalFirstImage] Found direct: ${widget.localPath} ($size bytes)',
-        );
-        if (mounted) {
-          setState(() {
-            _resolvedAbsolutePath = widget.localPath;
-            _fileSize = size;
-            _isLoading = false;
-          });
-        }
-        return;
-      }
-
-      // 2. Prepare candidate filenames (Support legacy names)
-      final List<String> filenames = [filename];
-      if (filename == 'avatar.png' || filename == 'admin.png') {
-        if (!filenames.contains('avatar.png')) filenames.add('avatar.png');
-        if (!filenames.contains('admin.png')) filenames.add('admin.png');
-      }
-
-      // 3. Resolve it against the CURRENT documents directory
-      final appDir = await getApplicationDocumentsDirectory();
-
-      for (var fname in filenames) {
-        final isAlt = fname != filename;
-
-        // Try Path A: Person ID-based folder (NEW - preferred structure)
-        // Look for {personId}/{filename} pattern in localPath
-        final personIdMatch = RegExp(r'^([^/]+)/([^/]+)$').firstMatch(widget.localPath);
-        if (personIdMatch != null) {
-          final personId = personIdMatch.group(1);
-          final actualFilename = personIdMatch.group(2);
-          if (personId != null && actualFilename != null) {
-            final personPath = p.join(appDir.path, personId, widget.subFolder, actualFilename);
-            debugPrint('🔎 [LocalFirstImage] Checking A (Person ID): $personPath');
-            final personFile = File(personPath);
-            if (personFile.existsSync()) {
-              final size = await personFile.length();
-              debugPrint(
-                '✅ [LocalFirstImage] Found at A (Person ID) - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
-              );
-              if (mounted) {
-                setState(() {
-                  _resolvedAbsolutePath = personPath;
-                  _fileSize = size;
-                  _isLoading = false;
-                });
-                debugPrint('🎨 [LocalFirstImage] setState for $fname');
-              }
-              return;
-            }
-          }
-        }
-
-        // Try Path A2: Search for person ID in any folder (NEW - comprehensive search)
-        // This handles cases where we don't know the person ID from the localPath
-        try {
-          final appDirDir = Directory(appDir.path);
-          if (await appDirDir.exists()) {
-            final personFolders = await appDirDir.list().toList();
-            for (var personFolderEntity in personFolders) {
-              if (personFolderEntity is Directory) {
-                final personId = p.basename(personFolderEntity.path);
-                final subFolderDir = Directory(p.join(personFolderEntity.path, widget.subFolder));
-                if (await subFolderDir.exists()) {
-                  final personImagePath = p.join(subFolderDir.path, fname);
-                  final personImageFile = File(personImagePath);
-                  if (await personImageFile.exists()) {
-                    final size = await personImageFile.length();
-                    debugPrint(
-                      '✅ [LocalFirstImage] Found at A2 (Person ID Search) in $personId - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
-                    );
-                    if (mounted) {
-                      setState(() {
-                        _resolvedAbsolutePath = personImagePath;
-                        _fileSize = size;
-                        _isLoading = false;
-                      });
-                      debugPrint('🎨 [LocalFirstImage] setState for $fname');
-                    }
-                    return;
-                  }
-                }
-              }
-            }
-          }
-        } catch (e) {
-          debugPrint('⚠️ [LocalFirstImage] Person ID search failed: $e');
-        }
-
-        // Try Path B: Primary Location (Specified subfolder)
-        final primaryPath = p.join(appDir.path, widget.subFolder, fname);
-        debugPrint('🔎 [LocalFirstImage] Checking B: $primaryPath');
-        final primaryFile = File(primaryPath);
-        if (primaryFile.existsSync()) {
-          final size = await primaryFile.length();
-          debugPrint(
-            '✅ [LocalFirstImage] Found at B - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
-          );
+      // 1. Check if it's already a DIRECT RELATIVE path (e.g., "userId/subFolder/filename")
+      if (widget.localPath.contains('/')) {
+        final fullPath = p.join(appDir.path, widget.localPath);
+        debugPrint('🔎 [LocalFirstImage] Checking Direct Relative: $fullPath');
+        if (File(fullPath).existsSync()) {
+          final size = await File(fullPath).length();
           if (mounted) {
             setState(() {
-              _resolvedAbsolutePath = primaryPath;
-              _fileSize = size;
-              _isLoading = false;
-            });
-            debugPrint('🎨 [LocalFirstImage] setState for $fname');
-          }
-          return;
-        }
-
-        // Try Path C: Root Documents Directory (Legacy/Fallback)
-        final rootPath = p.join(appDir.path, fname);
-        debugPrint('🔎 [LocalFirstImage] Checking C: $rootPath');
-        final rootFile = File(rootPath);
-        if (rootFile.existsSync()) {
-          final size = await rootFile.length();
-          debugPrint(
-            '💡 [LocalFirstImage] Found legacy in root - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
-          );
-          if (mounted) {
-            setState(() {
-              _resolvedAbsolutePath = rootPath;
+              _resolvedAbsolutePath = fullPath;
               _fileSize = size;
               _isLoading = false;
             });
           }
           return;
         }
-        
-        // Try Path D: profile_images folder (Specific legacy fallback)
-        if (widget.subFolder != 'profile_images') {
-          final profilePath = p.join(appDir.path, 'profile_images', fname);
-          debugPrint('🔎 [LocalFirstImage] Checking D: $profilePath');
-          final profileFile = File(profilePath);
-          if (profileFile.existsSync()) {
-            final size = await profileFile.length();
-            debugPrint(
-              '💡 [LocalFirstImage] Found in profile fallback - Size: $size bytes ${isAlt ? "(via ALT name)" : ""}',
-            );
+
+        if (File(widget.localPath).existsSync()) {
+          final size = await File(widget.localPath).length();
+          if (mounted) {
+            setState(() {
+              _resolvedAbsolutePath = widget.localPath;
+              _fileSize = size;
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+
+      // 2. SEARCH WITHIN OWNER DIRECTORY (STRICT ISOLATION)
+      if (widget.ownerId != null && widget.ownerId!.isNotEmpty) {
+        final List<String> filenames = [filename];
+        if (filename == 'avatar.png' || filename == 'admin.png') {
+          if (!filenames.contains('avatar.png')) filenames.add('avatar.png');
+          if (!filenames.contains('admin.png')) filenames.add('admin.png');
+        }
+
+        for (var fname in filenames) {
+          // Path: appDir/{ownerId}/{subFolder}/{fname}
+          final isolatedPath = p.join(
+            appDir.path,
+            widget.ownerId!,
+            widget.subFolder,
+            fname,
+          );
+          debugPrint('🔎 [LocalFirstImage] Checking Isolated: $isolatedPath');
+          if (File(isolatedPath).existsSync()) {
+            final size = await File(isolatedPath).length();
+            debugPrint('✅ [LocalFirstImage] Found in isolated folder');
             if (mounted) {
               setState(() {
-                _resolvedAbsolutePath = profilePath;
+                _resolvedAbsolutePath = isolatedPath;
+                _fileSize = size;
+                _isLoading = false;
+              });
+            }
+            return;
+          }
+
+          // Path: appDir/{ownerId}/{fname}
+          final isolatedRootPath = p.join(appDir.path, widget.ownerId!, fname);
+          debugPrint(
+            '🔎 [LocalFirstImage] Checking Isolated Root: $isolatedRootPath',
+          );
+          if (File(isolatedRootPath).existsSync()) {
+            final size = await File(isolatedRootPath).length();
+            debugPrint('✅ [LocalFirstImage] Found in isolated root');
+            if (mounted) {
+              setState(() {
+                _resolvedAbsolutePath = isolatedRootPath;
                 _fileSize = size;
                 _isLoading = false;
               });
@@ -247,10 +174,24 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         }
       }
 
-      // Not found locally in any searched path, fallback to remote
-      debugPrint(
-        '⚠️ [LocalFirstImage] Not found locally for: ${filenames.join(', ')}',
-      );
+      // 3. Fallback to general folders (Only if ownerId is NOT provided or not found in owner folder)
+      if (widget.ownerId == null) {
+        final generalPath = p.join(appDir.path, widget.subFolder, filename);
+        if (File(generalPath).existsSync()) {
+          final size = await File(generalPath).length();
+          debugPrint('💡 [LocalFirstImage] Found in general folder');
+          if (mounted) {
+            setState(() {
+              _resolvedAbsolutePath = generalPath;
+              _fileSize = size;
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+
+      // Not found locally, fallback to remote
       if (mounted) {
         setState(() {
           _resolvedAbsolutePath = null;
@@ -272,28 +213,22 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return _buildPlaceholder();
-  }
+    }
 
     Widget image;
 
     if (_resolvedAbsolutePath != null) {
-      debugPrint(
-        '🖼️ [LocalFirstImage] Rendering: ${_resolvedAbsolutePath!.split('/').last} ($_fileSize bytes)',
-      );
       image = Image.file(
         File(_resolvedAbsolutePath!),
         key: ValueKey(
-          '${_resolvedAbsolutePath}_$_fileSize',
-        ), // Path + Size ensures reload if file changes
+          '${widget.ownerId}_${widget.localPath}_${_resolvedAbsolutePath}_${_fileSize}',
+        ),
         fit: widget.fit,
         width: widget.width,
         height: widget.height,
         gaplessPlayback: true,
         opacity: AlwaysStoppedAnimation(widget.opacity),
         errorBuilder: (context, error, stackTrace) {
-          debugPrint(
-            '❌ [LocalFirstImage] DECODING FAILED for ${_resolvedAbsolutePath!.split('/').last}: $error',
-          );
           return _buildRemoteImage();
         },
       );
@@ -334,6 +269,7 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
 
     return Image.network(
       widget.remoteUrl,
+      key: ValueKey('${widget.ownerId}_${widget.remoteUrl}'),
       fit: widget.fit,
       width: widget.width,
       height: widget.height,
@@ -343,7 +279,6 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         return _buildPlaceholder();
       },
       errorBuilder: (context, error, stackTrace) {
-        debugPrint('❌ [LocalFirstImage] Remote image failed: $error');
         return _buildPlaceholder();
       },
     );

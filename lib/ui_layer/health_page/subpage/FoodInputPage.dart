@@ -102,7 +102,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
           userData?['person_id']?.toString() ??
           userData?['id']?.toString() ??
           '1';
-      
+
       final String savedFileName = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'meals',
@@ -719,7 +719,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
   }
 
   Widget _buildMealImage(String? imageName, double size) {
+    final authBlock = context.read<AuthBlock>();
+    final userData = authBlock.user.value;
+    final String? personID =
+        userData?['person_id']?.toString() ?? userData?['id']?.toString();
+
     return LocalFirstImage(
+      ownerId: personID,
       localPath: imageName ?? '',
       remoteUrl: '', // No remote meals storage currently implemented
       subFolder: 'meals',

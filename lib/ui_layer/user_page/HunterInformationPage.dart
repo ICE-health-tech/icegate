@@ -205,6 +205,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
             children: [
               // Cover Image Background
               LocalFirstImage(
+                ownerId: user.id,
                 localPath: user.coverLocalPath,
                 remoteUrl: user.coverImageUrl,
                 fit: BoxFit.cover,
@@ -291,9 +292,11 @@ class _UserInformationPageState extends State<UserInformationPage> {
                           color: Color(0xFF0F172A),
                         ),
                         child: LocalFirstImage(
+                          ownerId: user.id,
                           localPath: user.avatarLocalPath,
                           remoteUrl: user.profileImageUrl,
-                          fit: BoxFit.cover,
+                          width: 100,
+                          height: 100,
                           placeholder: const Icon(
                             Icons.person_rounded,
                             size: 40,

@@ -383,6 +383,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     // ... rest of build method
 
     return Scaffold(
+      key: ValueKey(info.profiles.id),
       backgroundColor: colorScheme.surface,
       extendBodyBehindAppBar: true,
       appBar: AppBar(
@@ -699,6 +700,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 fit: StackFit.expand,
                 children: [
                   LocalFirstImage(
+                    ownerId: info.profiles.id,
                     localPath: info.profiles.coverLocalPath,
                     remoteUrl: objectResource.coverImage,
                     fit: BoxFit.cover,
@@ -829,6 +831,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             color: colorScheme.primaryContainer,
                           ),
                           child: LocalFirstImage(
+                            ownerId: info.profiles.id,
                             localPath: info.profiles.avatarLocalPath,
                             remoteUrl: objectResource.avatarImage,
                             fit: BoxFit.cover,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -7,9 +8,13 @@ import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
-class AnalysisDashboardPage extends StatelessWidget {
-  const AnalysisDashboardPage({super.key});
+class AnalysisDashboardPage extends StatefulWidget {
+  final String? personId;
+  const AnalysisDashboardPage({super.key, this.personId});
 
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
@@ -27,17 +32,88 @@ class AnalysisDashboardPage extends StatelessWidget {
   }
 
   @override
+  State<AnalysisDashboardPage> createState() => _AnalysisDashboardPageState();
+}
+
+class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
+  ScoreBlock? _viewedScoreBlock;
+  bool _isOther = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _checkAndInitOther();
+  }
+
+  @override
+  void didUpdateWidget(AnalysisDashboardPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.personId != oldWidget.personId) {
+      _checkAndInitOther();
+    }
+  }
+
+  @override
+  void dispose() {
+    _viewedScoreBlock?.dispose();
+    super.dispose();
+  }
+
+  void _checkAndInitOther() {
+    final personBlock = context.read<PersonBlock>();
+    final currentId = personBlock.information.value.profiles.id;
+
+    if (widget.personId != null && widget.personId != currentId) {
+      _isOther = true;
+      personBlock.fetchPersonById(widget.personId!);
+
+      // Initialize a temporary ScoreBlock for the viewed user
+      _viewedScoreBlock?.dispose();
+      _viewedScoreBlock = ScoreBlock();
+
+      final db = context.read<AppDatabase>();
+      final healthBlock = context.read<HealthBlock>();
+
+      _viewedScoreBlock!.init(
+        db.scoreDAO,
+        db.personManagementDAO,
+        db.financeDAO,
+        healthBlock,
+        db.healthMealDAO,
+        db.metricsDAO,
+        widget.personId!,
+      );
+    } else {
+      _isOther = false;
+      _viewedScoreBlock?.dispose();
+      _viewedScoreBlock = null;
+      personBlock.viewedInformation.value = null;
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final personBlock = context.watch<PersonBlock>();
+    final mainScoreBlock = context.watch<ScoreBlock>();
+
+    // Use the viewed score block if it exists, otherwise use the global one
+    final activeScoreBlock = _viewedScoreBlock ?? mainScoreBlock;
+
+    // Use the viewed information if it exists, otherwise use the global one
+    final activeInfo = _isOther
+        ? personBlock.viewedInformation.watch(context) ??
+              personBlock.information.value
+        : personBlock.information.watch(context);
+
+    // If we're waiting for 'other' data to load (and it's not the guest fallback)
+    if (_isOther && personBlock.viewedInformation.value == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
 
     return Watch((context) {
-      final scoreBlock = context.watch<ScoreBlock>();
-      final totalXP = scoreBlock.totalXP.watch(context);
-      final level = scoreBlock.globalLevel.watch(context);
-      final progress = scoreBlock.levelProgress.watch(context);
-      final rank = scoreBlock.rankTitle.watch(context);
-
       return Scaffold(
+        key: ValueKey(widget.personId),
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
@@ -46,6 +122,15 @@ class AnalysisDashboardPage extends StatelessWidget {
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
             onPressed: () => WidgetNavigatorAction.smartPop(context),
           ),
+          title: _isOther
+              ? Text(
+                  "${activeInfo.profiles.firstName}'s Analysis",
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
+              : null,
           actions: [
             Padding(
               padding: const EdgeInsets.only(right: 16.0),
@@ -59,31 +144,70 @@ class AnalysisDashboardPage extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // --- GUEST BANNER ---
-              if (context.watch<AuthBlock>().username.value == 'Guest')
+              // --- GUEST BANNER (Only for self) ---
+              if (!_isOther &&
+                  context.watch<AuthBlock>().username.value == 'Guest')
                 _buildGuestBanner(colorScheme, context),
 
               // --- TITLE ---
               Text(
-                'Overview',
+                _isOther ? 'Performance' : 'Overview',
                 style: Theme.of(context).textTheme.displaySmall?.copyWith(
                   fontWeight: FontWeight.w900,
                   letterSpacing: -1,
                 ),
               ),
-              const SizedBox(height: 24),
+              const SizedBox(height: 12),
+
+              // --- MINI PROFILE (For others) ---
+              if (_isOther) ...[
+                _buildMiniProfile(activeInfo, colorScheme),
+                const SizedBox(height: 24),
+              ],
 
               // --- SECTOR GRID ---
-              _buildSectorGrid(context, scoreBlock),
+              _buildSectorGrid(context, activeScoreBlock),
               const SizedBox(height: 32),
 
               // --- BALANCE CHART ---
-              _buildBalanceSection(context, scoreBlock),
+              _buildBalanceSection(context, activeScoreBlock),
             ],
           ),
         ),
       );
     });
+  }
+
+  Widget _buildMiniProfile(UserInformation info, ColorScheme colorScheme) {
+    return Row(
+      children: [
+        LocalFirstImage(
+          ownerId: info.profiles.id,
+          localPath: info.profiles.avatarLocalPath,
+          remoteUrl: info.profiles.profileImageUrl,
+          width: 40,
+          height: 40,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        const SizedBox(width: 12),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              "${info.profiles.firstName} ${info.profiles.lastName}",
+              style: const TextStyle(fontWeight: FontWeight.bold),
+            ),
+            Text(
+              info.details.occupation,
+              style: TextStyle(
+                fontSize: 12,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
   }
 
   Widget _buildGuestBanner(ColorScheme colorScheme, BuildContext context) {

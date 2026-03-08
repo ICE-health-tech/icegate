@@ -195,6 +195,16 @@ final GoRouter router = GoRouter(
           path: '/profile',
           parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const AnalysisDashboardPage(),
+          routes: [
+            GoRoute(
+              path: ':personId',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) {
+                final personId = state.pathParameters['personId'];
+                return AnalysisDashboardPage(personId: personId);
+              },
+            ),
+          ],
         ),
         GoRoute(
           path: '/focus-history',
