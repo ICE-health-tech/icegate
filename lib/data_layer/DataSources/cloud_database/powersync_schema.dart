@@ -288,6 +288,7 @@ const Schema schema = Schema([
     Column.integer('calories_burned'),
     Column.integer('focus_minutes'),
     Column.real('quest_points'),
+    Column.text('category'),
     Column.text('updated_at'),
   ]),
   Table('financial_metrics', [
@@ -300,6 +301,7 @@ const Schema schema = Schema([
     Column.real('total_investments'),
     Column.real('daily_expenses'),
     Column.real('quest_points'),
+    Column.text('category'),
     Column.text('updated_at'),
   ]),
   Table('project_metrics', [
@@ -311,6 +313,7 @@ const Schema schema = Schema([
     Column.integer('projects_completed'),
     Column.integer('focus_minutes'),
     Column.real('quest_points'),
+    Column.text('category'),
     Column.text('updated_at'),
   ]),
   Table('social_metrics', [
@@ -321,6 +324,7 @@ const Schema schema = Schema([
     Column.integer('contacts_count'),
     Column.integer('total_affection'),
     Column.real('quest_points'),
+    Column.text('category'),
     Column.text('updated_at'),
   ]),
   Table('meals', [

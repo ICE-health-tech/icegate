@@ -405,6 +405,13 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         category: PluginCategory.other,
       ),
       _InternalPlugin(
+        name: 'Block Reminder',
+        url: '/health/block-reminder',
+        icon: Icons.timer_rounded,
+        description: 'Immersive focus block reminder.',
+        category: PluginCategory.productivity,
+      ),
+      _InternalPlugin(
         name: 'Settings',
         url: '/settings',
         icon: Icons.settings_rounded,

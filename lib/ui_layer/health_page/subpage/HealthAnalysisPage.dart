@@ -103,6 +103,7 @@ class HealthAnalysisPage extends StatelessWidget {
                 waterGlasses: 0,
                 exerciseMinutes: 0,
                 focusMinutes: 0,
+                category: 'General',
                 updatedAt: now,
               ),
             );

@@ -51,14 +51,33 @@ class HealthBlock {
   final HealthLogsDAO _healthLogsDao;
   StreamSubscription? _waterSubscription;
 
+  String? _initializedPersonId;
+
   void init() {
     _loadGoals();
     if (personId.isEmpty) {
       debugPrint("HealthBlock: Skipping init, personId is empty.");
       return;
     }
+
+    if (_initializedPersonId == personId) {
+      debugPrint("HealthBlock: ℹ️ Already initialized for $personId");
+      return;
+    }
+
+    debugPrint("HealthBlock: 🚀 Initializing for $personId");
+    _initializedPersonId = personId;
+
+    // Cleanup old subscriptions
+    _metricsSubscription?.cancel();
+    _waterSubscription?.cancel();
+    hasInitialSync.value = false;
+
     // 0. Cleanup duplicates before starting watch to prevent sync conflicts
     _healthDao.cleanupDuplicates(personId).then((_) {
+      if (_initializedPersonId != personId)
+        return; // Guard against race condition
+
       // Watch all metrics to calculate historical steps (excluding today)
       _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
         (metrics) {

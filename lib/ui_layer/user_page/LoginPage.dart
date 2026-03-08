@@ -12,9 +12,12 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  late final AnimationController _hudRotationController;
+  late final AnimationController _logoPulseController;
 
   late AuthBlock _authBlock;
   late final void Function() _disposeEffect;
@@ -23,6 +26,16 @@ class _LoginPageState extends State<LoginPage> {
   void initState() {
     super.initState();
     _authBlock = context.read<AuthBlock>();
+
+    _hudRotationController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    _logoPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat(reverse: true);
 
     // Redirect when authenticated
     _disposeEffect = effect(() {
@@ -37,6 +50,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void dispose() {
     _disposeEffect(); // Stop watching the signal
+    _hudRotationController.dispose();
+    _logoPulseController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -93,17 +108,23 @@ class _LoginPageState extends State<LoginPage> {
             Positioned(
               top: 100,
               left: -50,
-              child: _CircularHUD(
-                size: 200,
-                color: const Color(0xFF00E5FF).withOpacity(0.1),
+              child: RotationTransition(
+                turns: _hudRotationController,
+                child: _CircularHUD(
+                  size: 200,
+                  color: const Color(0xFF00E5FF).withOpacity(0.15),
+                ),
               ),
             ),
             Positioned(
               bottom: 100,
               right: -50,
-              child: _CircularHUD(
-                size: 250,
-                color: const Color(0xFFFF00E5).withOpacity(0.1),
+              child: RotationTransition(
+                turns: _hudRotationController,
+                child: _CircularHUD(
+                  size: 250,
+                  color: const Color(0xFFFF00E5).withOpacity(0.1),
+                ),
               ),
             ),
 
@@ -132,39 +153,49 @@ class _LoginPageState extends State<LoginPage> {
                           child: Column(
                             children: [
                               // App Icon / Logo with Neon Glow
-                              Container(
-                                padding: const EdgeInsets.all(20),
-                                decoration: BoxDecoration(
-                                  color: const Color(
-                                    0xFF00E5FF,
-                                  ).withOpacity(0.05),
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
+                              ScaleTransition(
+                                scale: Tween<double>(begin: 1.0, end: 1.05)
+                                    .animate(
+                                      CurvedAnimation(
+                                        parent: _logoPulseController,
+                                        curve: Curves.easeInOut,
+                                      ),
+                                    ),
+                                child: Container(
+                                  padding: const EdgeInsets.all(20),
+                                  decoration: BoxDecoration(
                                     color: const Color(
                                       0xFF00E5FF,
-                                    ).withOpacity(0.3),
-                                    width: 2,
-                                  ),
-                                  boxShadow: [
-                                    BoxShadow(
+                                    ).withOpacity(0.05),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
                                       color: const Color(
                                         0xFF00E5FF,
-                                      ).withOpacity(0.2),
-                                      blurRadius: 40,
-                                      spreadRadius: 2,
+                                      ).withOpacity(0.3),
+                                      width: 2,
                                     ),
-                                  ],
-                                ),
-                                child: Image.asset(
-                                  'assets/icon/appicon.png',
-                                  width: 70,
-                                  height: 70,
-                                  errorBuilder: (context, error, stackTrace) =>
-                                      const Icon(
-                                        Icons.ac_unit_rounded,
-                                        size: 70,
-                                        color: Color(0xFF00E5FF),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: const Color(
+                                          0xFF00E5FF,
+                                        ).withOpacity(0.2),
+                                        blurRadius: 40,
+                                        spreadRadius: 2,
                                       ),
+                                    ],
+                                  ),
+                                  child: Image.asset(
+                                    'assets/icon/appicon.png',
+                                    width: 70,
+                                    height: 70,
+                                    errorBuilder:
+                                        (context, error, stackTrace) =>
+                                            const Icon(
+                                              Icons.ac_unit_rounded,
+                                              size: 70,
+                                              color: Color(0xFF00E5FF),
+                                            ),
+                                  ),
                                 ),
                               ),
                               const SizedBox(height: 24),
@@ -339,15 +370,17 @@ class _LoginPageState extends State<LoginPage> {
                                   Expanded(
                                     child: _buildIconButton(
                                       icon: Icons.fingerprint_rounded,
+                                      label: 'SECURE LOGIN',
                                       onPressed: isLoading
                                           ? null
-                                          : _handlePasskeyLogin,
+                                          : _handleSecureLogin,
                                     ),
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: 12),
                                   Expanded(
                                     child: _buildIconButton(
                                       icon: Icons.g_mobiledata_rounded,
+                                      label: 'GOOGLE',
                                       onPressed: isLoading
                                           ? null
                                           : _handleGoogleSignIn,
@@ -414,22 +447,39 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildIconButton({
     required IconData icon,
+    required String label,
     required VoidCallback? onPressed,
     bool isGmail = false,
   }) {
     return Container(
-      height: 55,
+      height: 60,
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
-      child: IconButton(
-        onPressed: onPressed,
-        icon: Icon(
-          icon,
-          color: isGmail ? Colors.white : const Color(0xFF00E5FF),
-          size: isGmail ? 32 : 28,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(20),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              icon,
+              color: isGmail ? Colors.white : const Color(0xFF00E5FF),
+              size: isGmail ? 28 : 24,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.7),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -482,6 +532,28 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
+  Future<void> _handleSecureLogin() async {
+    try {
+      // First attempt biometric (FaceID/TouchID)
+      final success = await _authBlock.loginWithBiometrics(context);
+      if (!success && mounted) {
+        // If biometric fails or cancelled, we can offer Passkey as second attempt
+        // or just let the user try again. For "Gate" experience, we'll auto-trigger passkey
+        // if the device supports it but biometrics weren't the winning path.
+        await _authBlock.loginWithPasskey(context);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Secure Login failed: $e'),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
@@ -494,21 +566,6 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     await _authBlock.login(email, password, context);
-  }
-
-  Future<void> _handlePasskeyLogin() async {
-    try {
-      await _authBlock.checkSession(context);
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Passkey failed: $e'),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    }
   }
 
   Future<void> _handleGuestLogin() async {

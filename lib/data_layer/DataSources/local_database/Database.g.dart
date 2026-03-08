@@ -14533,6 +14533,18 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('General'),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
       GeneratedColumn<DateTime>(
@@ -14560,6 +14572,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     caloriesConsumed,
     caloriesBurned,
     questPoints,
+    category,
     updatedAt,
   ];
   @override
@@ -14675,6 +14688,12 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         ),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -14682,7 +14701,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
   @override
   HealthMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
@@ -14750,6 +14769,10 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         DriftSqlType.double,
         data['${effectivePrefix}quest_points'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
       updatedAt: $HealthMetricsTableTable.$converterupdatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -14787,6 +14810,7 @@ class HealthMetricsLocal extends DataClass
   final int? caloriesConsumed;
   final int? caloriesBurned;
   final double? questPoints;
+  final String? category;
   final DateTime updatedAt;
   const HealthMetricsLocal({
     required this.id,
@@ -14804,6 +14828,7 @@ class HealthMetricsLocal extends DataClass
     this.caloriesConsumed,
     this.caloriesBurned,
     this.questPoints,
+    this.category,
     required this.updatedAt,
   });
   @override
@@ -14853,6 +14878,9 @@ class HealthMetricsLocal extends DataClass
     }
     if (!nullToAbsent || questPoints != null) {
       map['quest_points'] = Variable<double>(questPoints);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
     }
     {
       map['updated_at'] = Variable<DateTime>(
@@ -14905,6 +14933,9 @@ class HealthMetricsLocal extends DataClass
       questPoints: questPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(questPoints),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       updatedAt: Value(updatedAt),
     );
   }
@@ -14930,6 +14961,7 @@ class HealthMetricsLocal extends DataClass
       caloriesConsumed: serializer.fromJson<int?>(json['caloriesConsumed']),
       caloriesBurned: serializer.fromJson<int?>(json['caloriesBurned']),
       questPoints: serializer.fromJson<double?>(json['questPoints']),
+      category: serializer.fromJson<String?>(json['category']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -14952,6 +14984,7 @@ class HealthMetricsLocal extends DataClass
       'caloriesConsumed': serializer.toJson<int?>(caloriesConsumed),
       'caloriesBurned': serializer.toJson<int?>(caloriesBurned),
       'questPoints': serializer.toJson<double?>(questPoints),
+      'category': serializer.toJson<String?>(category),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -14972,6 +15005,7 @@ class HealthMetricsLocal extends DataClass
     Value<int?> caloriesConsumed = const Value.absent(),
     Value<int?> caloriesBurned = const Value.absent(),
     Value<double?> questPoints = const Value.absent(),
+    Value<String?> category = const Value.absent(),
     DateTime? updatedAt,
   }) => HealthMetricsLocal(
     id: id ?? this.id,
@@ -14995,6 +15029,7 @@ class HealthMetricsLocal extends DataClass
         ? caloriesBurned.value
         : this.caloriesBurned,
     questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    category: category.present ? category.value : this.category,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   HealthMetricsLocal copyWithCompanion(HealthMetricsTableCompanion data) {
@@ -15028,6 +15063,7 @@ class HealthMetricsLocal extends DataClass
       questPoints: data.questPoints.present
           ? data.questPoints.value
           : this.questPoints,
+      category: data.category.present ? data.category.value : this.category,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -15050,6 +15086,7 @@ class HealthMetricsLocal extends DataClass
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -15072,6 +15109,7 @@ class HealthMetricsLocal extends DataClass
     caloriesConsumed,
     caloriesBurned,
     questPoints,
+    category,
     updatedAt,
   );
   @override
@@ -15093,6 +15131,7 @@ class HealthMetricsLocal extends DataClass
           other.caloriesConsumed == this.caloriesConsumed &&
           other.caloriesBurned == this.caloriesBurned &&
           other.questPoints == this.questPoints &&
+          other.category == this.category &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -15112,6 +15151,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   final Value<int?> caloriesConsumed;
   final Value<int?> caloriesBurned;
   final Value<double?> questPoints;
+  final Value<String?> category;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const HealthMetricsTableCompanion({
@@ -15130,6 +15170,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -15149,6 +15190,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -15169,6 +15211,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Expression<int>? caloriesConsumed,
     Expression<int>? caloriesBurned,
     Expression<double>? questPoints,
+    Expression<String>? category,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -15188,6 +15231,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       if (caloriesConsumed != null) 'calories_consumed': caloriesConsumed,
       if (caloriesBurned != null) 'calories_burned': caloriesBurned,
       if (questPoints != null) 'quest_points': questPoints,
+      if (category != null) 'category': category,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -15209,6 +15253,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Value<int?>? caloriesConsumed,
     Value<int?>? caloriesBurned,
     Value<double?>? questPoints,
+    Value<String?>? category,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -15228,6 +15273,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
       caloriesBurned: caloriesBurned ?? this.caloriesBurned,
       questPoints: questPoints ?? this.questPoints,
+      category: category ?? this.category,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -15283,6 +15329,9 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     if (questPoints.present) {
       map['quest_points'] = Variable<double>(questPoints.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(
         $HealthMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
@@ -15312,6 +15361,7 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -15442,6 +15492,18 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('General'),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
       GeneratedColumn<DateTime>(
@@ -15466,6 +15528,7 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
     totalInvestments,
     dailyExpenses,
     questPoints,
+    category,
     updatedAt,
   ];
   @override
@@ -15548,6 +15611,12 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
         ),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -15555,7 +15624,7 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
   @override
   FinancialMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
@@ -15603,6 +15672,10 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
         DriftSqlType.double,
         data['${effectivePrefix}quest_points'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
       updatedAt: $FinancialMetricsTableTable.$converterupdatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -15635,6 +15708,7 @@ class FinancialMetricsLocal extends DataClass
   final double? totalInvestments;
   final double? dailyExpenses;
   final double? questPoints;
+  final String? category;
   final DateTime updatedAt;
   const FinancialMetricsLocal({
     required this.id,
@@ -15647,6 +15721,7 @@ class FinancialMetricsLocal extends DataClass
     this.totalInvestments,
     this.dailyExpenses,
     this.questPoints,
+    this.category,
     required this.updatedAt,
   });
   @override
@@ -15681,6 +15756,9 @@ class FinancialMetricsLocal extends DataClass
     }
     if (!nullToAbsent || questPoints != null) {
       map['quest_points'] = Variable<double>(questPoints);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
     }
     {
       map['updated_at'] = Variable<DateTime>(
@@ -15718,6 +15796,9 @@ class FinancialMetricsLocal extends DataClass
       questPoints: questPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(questPoints),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       updatedAt: Value(updatedAt),
     );
   }
@@ -15738,6 +15819,7 @@ class FinancialMetricsLocal extends DataClass
       totalInvestments: serializer.fromJson<double?>(json['totalInvestments']),
       dailyExpenses: serializer.fromJson<double?>(json['dailyExpenses']),
       questPoints: serializer.fromJson<double?>(json['questPoints']),
+      category: serializer.fromJson<String?>(json['category']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -15755,6 +15837,7 @@ class FinancialMetricsLocal extends DataClass
       'totalInvestments': serializer.toJson<double?>(totalInvestments),
       'dailyExpenses': serializer.toJson<double?>(dailyExpenses),
       'questPoints': serializer.toJson<double?>(questPoints),
+      'category': serializer.toJson<String?>(category),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -15770,6 +15853,7 @@ class FinancialMetricsLocal extends DataClass
     Value<double?> totalInvestments = const Value.absent(),
     Value<double?> dailyExpenses = const Value.absent(),
     Value<double?> questPoints = const Value.absent(),
+    Value<String?> category = const Value.absent(),
     DateTime? updatedAt,
   }) => FinancialMetricsLocal(
     id: id ?? this.id,
@@ -15786,6 +15870,7 @@ class FinancialMetricsLocal extends DataClass
         ? dailyExpenses.value
         : this.dailyExpenses,
     questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    category: category.present ? category.value : this.category,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   FinancialMetricsLocal copyWithCompanion(FinancialMetricsTableCompanion data) {
@@ -15810,6 +15895,7 @@ class FinancialMetricsLocal extends DataClass
       questPoints: data.questPoints.present
           ? data.questPoints.value
           : this.questPoints,
+      category: data.category.present ? data.category.value : this.category,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -15827,6 +15913,7 @@ class FinancialMetricsLocal extends DataClass
           ..write('totalInvestments: $totalInvestments, ')
           ..write('dailyExpenses: $dailyExpenses, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -15844,6 +15931,7 @@ class FinancialMetricsLocal extends DataClass
     totalInvestments,
     dailyExpenses,
     questPoints,
+    category,
     updatedAt,
   );
   @override
@@ -15860,6 +15948,7 @@ class FinancialMetricsLocal extends DataClass
           other.totalInvestments == this.totalInvestments &&
           other.dailyExpenses == this.dailyExpenses &&
           other.questPoints == this.questPoints &&
+          other.category == this.category &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -15875,6 +15964,7 @@ class FinancialMetricsTableCompanion
   final Value<double?> totalInvestments;
   final Value<double?> dailyExpenses;
   final Value<double?> questPoints;
+  final Value<String?> category;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const FinancialMetricsTableCompanion({
@@ -15888,6 +15978,7 @@ class FinancialMetricsTableCompanion
     this.totalInvestments = const Value.absent(),
     this.dailyExpenses = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -15902,6 +15993,7 @@ class FinancialMetricsTableCompanion
     this.totalInvestments = const Value.absent(),
     this.dailyExpenses = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -15917,6 +16009,7 @@ class FinancialMetricsTableCompanion
     Expression<double>? totalInvestments,
     Expression<double>? dailyExpenses,
     Expression<double>? questPoints,
+    Expression<String>? category,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -15931,6 +16024,7 @@ class FinancialMetricsTableCompanion
       if (totalInvestments != null) 'total_investments': totalInvestments,
       if (dailyExpenses != null) 'daily_expenses': dailyExpenses,
       if (questPoints != null) 'quest_points': questPoints,
+      if (category != null) 'category': category,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -15947,6 +16041,7 @@ class FinancialMetricsTableCompanion
     Value<double?>? totalInvestments,
     Value<double?>? dailyExpenses,
     Value<double?>? questPoints,
+    Value<String?>? category,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -15961,6 +16056,7 @@ class FinancialMetricsTableCompanion
       totalInvestments: totalInvestments ?? this.totalInvestments,
       dailyExpenses: dailyExpenses ?? this.dailyExpenses,
       questPoints: questPoints ?? this.questPoints,
+      category: category ?? this.category,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -16001,6 +16097,9 @@ class FinancialMetricsTableCompanion
     if (questPoints.present) {
       map['quest_points'] = Variable<double>(questPoints.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(
         $FinancialMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
@@ -16025,6 +16124,7 @@ class FinancialMetricsTableCompanion
           ..write('totalInvestments: $totalInvestments, ')
           ..write('dailyExpenses: $dailyExpenses, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -16143,6 +16243,18 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('General'),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
       GeneratedColumn<DateTime>(
@@ -16164,6 +16276,7 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
     projectsCompleted,
     focusMinutes,
     questPoints,
+    category,
     updatedAt,
   ];
   @override
@@ -16237,6 +16350,12 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
         ),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -16244,7 +16363,7 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
   @override
   ProjectMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
@@ -16288,6 +16407,10 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
         DriftSqlType.double,
         data['${effectivePrefix}quest_points'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
       updatedAt: $ProjectMetricsTableTable.$converterupdatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -16319,6 +16442,7 @@ class ProjectMetricsLocal extends DataClass
   final int? projectsCompleted;
   final int? focusMinutes;
   final double? questPoints;
+  final String? category;
   final DateTime updatedAt;
   const ProjectMetricsLocal({
     required this.id,
@@ -16330,6 +16454,7 @@ class ProjectMetricsLocal extends DataClass
     this.projectsCompleted,
     this.focusMinutes,
     this.questPoints,
+    this.category,
     required this.updatedAt,
   });
   @override
@@ -16361,6 +16486,9 @@ class ProjectMetricsLocal extends DataClass
     }
     if (!nullToAbsent || questPoints != null) {
       map['quest_points'] = Variable<double>(questPoints);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
     }
     {
       map['updated_at'] = Variable<DateTime>(
@@ -16395,6 +16523,9 @@ class ProjectMetricsLocal extends DataClass
       questPoints: questPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(questPoints),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       updatedAt: Value(updatedAt),
     );
   }
@@ -16414,6 +16545,7 @@ class ProjectMetricsLocal extends DataClass
       projectsCompleted: serializer.fromJson<int?>(json['projectsCompleted']),
       focusMinutes: serializer.fromJson<int?>(json['focusMinutes']),
       questPoints: serializer.fromJson<double?>(json['questPoints']),
+      category: serializer.fromJson<String?>(json['category']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -16430,6 +16562,7 @@ class ProjectMetricsLocal extends DataClass
       'projectsCompleted': serializer.toJson<int?>(projectsCompleted),
       'focusMinutes': serializer.toJson<int?>(focusMinutes),
       'questPoints': serializer.toJson<double?>(questPoints),
+      'category': serializer.toJson<String?>(category),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -16444,6 +16577,7 @@ class ProjectMetricsLocal extends DataClass
     Value<int?> projectsCompleted = const Value.absent(),
     Value<int?> focusMinutes = const Value.absent(),
     Value<double?> questPoints = const Value.absent(),
+    Value<String?> category = const Value.absent(),
     DateTime? updatedAt,
   }) => ProjectMetricsLocal(
     id: id ?? this.id,
@@ -16459,6 +16593,7 @@ class ProjectMetricsLocal extends DataClass
         : this.projectsCompleted,
     focusMinutes: focusMinutes.present ? focusMinutes.value : this.focusMinutes,
     questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    category: category.present ? category.value : this.category,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   ProjectMetricsLocal copyWithCompanion(ProjectMetricsTableCompanion data) {
@@ -16480,6 +16615,7 @@ class ProjectMetricsLocal extends DataClass
       questPoints: data.questPoints.present
           ? data.questPoints.value
           : this.questPoints,
+      category: data.category.present ? data.category.value : this.category,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -16496,6 +16632,7 @@ class ProjectMetricsLocal extends DataClass
           ..write('projectsCompleted: $projectsCompleted, ')
           ..write('focusMinutes: $focusMinutes, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -16512,6 +16649,7 @@ class ProjectMetricsLocal extends DataClass
     projectsCompleted,
     focusMinutes,
     questPoints,
+    category,
     updatedAt,
   );
   @override
@@ -16527,6 +16665,7 @@ class ProjectMetricsLocal extends DataClass
           other.projectsCompleted == this.projectsCompleted &&
           other.focusMinutes == this.focusMinutes &&
           other.questPoints == this.questPoints &&
+          other.category == this.category &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -16541,6 +16680,7 @@ class ProjectMetricsTableCompanion
   final Value<int?> projectsCompleted;
   final Value<int?> focusMinutes;
   final Value<double?> questPoints;
+  final Value<String?> category;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const ProjectMetricsTableCompanion({
@@ -16553,6 +16693,7 @@ class ProjectMetricsTableCompanion
     this.projectsCompleted = const Value.absent(),
     this.focusMinutes = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -16566,6 +16707,7 @@ class ProjectMetricsTableCompanion
     this.projectsCompleted = const Value.absent(),
     this.focusMinutes = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -16580,6 +16722,7 @@ class ProjectMetricsTableCompanion
     Expression<int>? projectsCompleted,
     Expression<int>? focusMinutes,
     Expression<double>? questPoints,
+    Expression<String>? category,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -16593,6 +16736,7 @@ class ProjectMetricsTableCompanion
       if (projectsCompleted != null) 'projects_completed': projectsCompleted,
       if (focusMinutes != null) 'focus_minutes': focusMinutes,
       if (questPoints != null) 'quest_points': questPoints,
+      if (category != null) 'category': category,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -16608,6 +16752,7 @@ class ProjectMetricsTableCompanion
     Value<int?>? projectsCompleted,
     Value<int?>? focusMinutes,
     Value<double?>? questPoints,
+    Value<String?>? category,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -16621,6 +16766,7 @@ class ProjectMetricsTableCompanion
       projectsCompleted: projectsCompleted ?? this.projectsCompleted,
       focusMinutes: focusMinutes ?? this.focusMinutes,
       questPoints: questPoints ?? this.questPoints,
+      category: category ?? this.category,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -16658,6 +16804,9 @@ class ProjectMetricsTableCompanion
     if (questPoints.present) {
       map['quest_points'] = Variable<double>(questPoints.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(
         $ProjectMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
@@ -16681,6 +16830,7 @@ class ProjectMetricsTableCompanion
           ..write('projectsCompleted: $projectsCompleted, ')
           ..write('focusMinutes: $focusMinutes, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -16787,6 +16937,18 @@ class $SocialMetricsTableTable extends SocialMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('General'),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
       GeneratedColumn<DateTime>(
@@ -16807,6 +16969,7 @@ class $SocialMetricsTableTable extends SocialMetricsTable
     contactsCount,
     totalAffection,
     questPoints,
+    category,
     updatedAt,
   ];
   @override
@@ -16871,6 +17034,12 @@ class $SocialMetricsTableTable extends SocialMetricsTable
         ),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -16878,7 +17047,7 @@ class $SocialMetricsTableTable extends SocialMetricsTable
   Set<GeneratedColumn> get $primaryKey => {id};
   @override
   List<Set<GeneratedColumn>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
   @override
   SocialMetricsLocal map(Map<String, dynamic> data, {String? tablePrefix}) {
@@ -16918,6 +17087,10 @@ class $SocialMetricsTableTable extends SocialMetricsTable
         DriftSqlType.double,
         data['${effectivePrefix}quest_points'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      ),
       updatedAt: $SocialMetricsTableTable.$converterupdatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -16948,6 +17121,7 @@ class SocialMetricsLocal extends DataClass
   final int? contactsCount;
   final int? totalAffection;
   final double? questPoints;
+  final String? category;
   final DateTime updatedAt;
   const SocialMetricsLocal({
     required this.id,
@@ -16958,6 +17132,7 @@ class SocialMetricsLocal extends DataClass
     this.contactsCount,
     this.totalAffection,
     this.questPoints,
+    this.category,
     required this.updatedAt,
   });
   @override
@@ -16986,6 +17161,9 @@ class SocialMetricsLocal extends DataClass
     }
     if (!nullToAbsent || questPoints != null) {
       map['quest_points'] = Variable<double>(questPoints);
+    }
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
     }
     {
       map['updated_at'] = Variable<DateTime>(
@@ -17017,6 +17195,9 @@ class SocialMetricsLocal extends DataClass
       questPoints: questPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(questPoints),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       updatedAt: Value(updatedAt),
     );
   }
@@ -17035,6 +17216,7 @@ class SocialMetricsLocal extends DataClass
       contactsCount: serializer.fromJson<int?>(json['contactsCount']),
       totalAffection: serializer.fromJson<int?>(json['totalAffection']),
       questPoints: serializer.fromJson<double?>(json['questPoints']),
+      category: serializer.fromJson<String?>(json['category']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
   }
@@ -17050,6 +17232,7 @@ class SocialMetricsLocal extends DataClass
       'contactsCount': serializer.toJson<int?>(contactsCount),
       'totalAffection': serializer.toJson<int?>(totalAffection),
       'questPoints': serializer.toJson<double?>(questPoints),
+      'category': serializer.toJson<String?>(category),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
   }
@@ -17063,6 +17246,7 @@ class SocialMetricsLocal extends DataClass
     Value<int?> contactsCount = const Value.absent(),
     Value<int?> totalAffection = const Value.absent(),
     Value<double?> questPoints = const Value.absent(),
+    Value<String?> category = const Value.absent(),
     DateTime? updatedAt,
   }) => SocialMetricsLocal(
     id: id ?? this.id,
@@ -17077,6 +17261,7 @@ class SocialMetricsLocal extends DataClass
         ? totalAffection.value
         : this.totalAffection,
     questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    category: category.present ? category.value : this.category,
     updatedAt: updatedAt ?? this.updatedAt,
   );
   SocialMetricsLocal copyWithCompanion(SocialMetricsTableCompanion data) {
@@ -17095,6 +17280,7 @@ class SocialMetricsLocal extends DataClass
       questPoints: data.questPoints.present
           ? data.questPoints.value
           : this.questPoints,
+      category: data.category.present ? data.category.value : this.category,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
   }
@@ -17110,6 +17296,7 @@ class SocialMetricsLocal extends DataClass
           ..write('contactsCount: $contactsCount, ')
           ..write('totalAffection: $totalAffection, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
@@ -17125,6 +17312,7 @@ class SocialMetricsLocal extends DataClass
     contactsCount,
     totalAffection,
     questPoints,
+    category,
     updatedAt,
   );
   @override
@@ -17139,6 +17327,7 @@ class SocialMetricsLocal extends DataClass
           other.contactsCount == this.contactsCount &&
           other.totalAffection == this.totalAffection &&
           other.questPoints == this.questPoints &&
+          other.category == this.category &&
           other.updatedAt == this.updatedAt);
 }
 
@@ -17151,6 +17340,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
   final Value<int?> contactsCount;
   final Value<int?> totalAffection;
   final Value<double?> questPoints;
+  final Value<String?> category;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
   const SocialMetricsTableCompanion({
@@ -17162,6 +17352,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
     this.contactsCount = const Value.absent(),
     this.totalAffection = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -17174,6 +17365,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
     this.contactsCount = const Value.absent(),
     this.totalAffection = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.category = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -17187,6 +17379,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
     Expression<int>? contactsCount,
     Expression<int>? totalAffection,
     Expression<double>? questPoints,
+    Expression<String>? category,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
   }) {
@@ -17199,6 +17392,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
       if (contactsCount != null) 'contacts_count': contactsCount,
       if (totalAffection != null) 'total_affection': totalAffection,
       if (questPoints != null) 'quest_points': questPoints,
+      if (category != null) 'category': category,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -17213,6 +17407,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
     Value<int?>? contactsCount,
     Value<int?>? totalAffection,
     Value<double?>? questPoints,
+    Value<String?>? category,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
   }) {
@@ -17225,6 +17420,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
       contactsCount: contactsCount ?? this.contactsCount,
       totalAffection: totalAffection ?? this.totalAffection,
       questPoints: questPoints ?? this.questPoints,
+      category: category ?? this.category,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -17259,6 +17455,9 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
     if (questPoints.present) {
       map['quest_points'] = Variable<double>(questPoints.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (updatedAt.present) {
       map['updated_at'] = Variable<DateTime>(
         $SocialMetricsTableTable.$converterupdatedAt.toSql(updatedAt.value),
@@ -17281,6 +17480,7 @@ class SocialMetricsTableCompanion extends UpdateCompanion<SocialMetricsLocal> {
           ..write('contactsCount: $contactsCount, ')
           ..write('totalAffection: $totalAffection, ')
           ..write('questPoints: $questPoints, ')
+          ..write('category: $category, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -42799,6 +42999,7 @@ typedef $$HealthMetricsTableTableCreateCompanionBuilder =
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -42819,6 +43020,7 @@ typedef $$HealthMetricsTableTableUpdateCompanionBuilder =
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -42956,6 +43158,11 @@ class $$HealthMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
       $composableBuilder(
         column: $table.updatedAt,
@@ -43083,6 +43290,11 @@ class $$HealthMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -43197,6 +43409,9 @@ class $$HealthMetricsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
+
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 
@@ -43296,6 +43511,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion(
@@ -43314,6 +43530,7 @@ class $$HealthMetricsTableTableTableManager
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -43334,6 +43551,7 @@ class $$HealthMetricsTableTableTableManager
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HealthMetricsTableCompanion.insert(
@@ -43352,6 +43570,7 @@ class $$HealthMetricsTableTableTableManager
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -43451,6 +43670,7 @@ typedef $$FinancialMetricsTableTableCreateCompanionBuilder =
       Value<double?> totalInvestments,
       Value<double?> dailyExpenses,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -43466,6 +43686,7 @@ typedef $$FinancialMetricsTableTableUpdateCompanionBuilder =
       Value<double?> totalInvestments,
       Value<double?> dailyExpenses,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -43578,6 +43799,11 @@ class $$FinancialMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
       $composableBuilder(
         column: $table.updatedAt,
@@ -43680,6 +43906,11 @@ class $$FinancialMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -43774,6 +44005,9 @@ class $$FinancialMetricsTableTableAnnotationComposer
     column: $table.questPoints,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -43875,6 +44109,7 @@ class $$FinancialMetricsTableTableTableManager
                 Value<double?> totalInvestments = const Value.absent(),
                 Value<double?> dailyExpenses = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FinancialMetricsTableCompanion(
@@ -43888,6 +44123,7 @@ class $$FinancialMetricsTableTableTableManager
                 totalInvestments: totalInvestments,
                 dailyExpenses: dailyExpenses,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -43903,6 +44139,7 @@ class $$FinancialMetricsTableTableTableManager
                 Value<double?> totalInvestments = const Value.absent(),
                 Value<double?> dailyExpenses = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FinancialMetricsTableCompanion.insert(
@@ -43916,6 +44153,7 @@ class $$FinancialMetricsTableTableTableManager
                 totalInvestments: totalInvestments,
                 dailyExpenses: dailyExpenses,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -44014,6 +44252,7 @@ typedef $$ProjectMetricsTableTableCreateCompanionBuilder =
       Value<int?> projectsCompleted,
       Value<int?> focusMinutes,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -44028,6 +44267,7 @@ typedef $$ProjectMetricsTableTableUpdateCompanionBuilder =
       Value<int?> projectsCompleted,
       Value<int?> focusMinutes,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -44135,6 +44375,11 @@ class $$ProjectMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
       $composableBuilder(
         column: $table.updatedAt,
@@ -44232,6 +44477,11 @@ class $$ProjectMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -44321,6 +44571,9 @@ class $$ProjectMetricsTableTableAnnotationComposer
     column: $table.questPoints,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -44418,6 +44671,7 @@ class $$ProjectMetricsTableTableTableManager
                 Value<int?> projectsCompleted = const Value.absent(),
                 Value<int?> focusMinutes = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectMetricsTableCompanion(
@@ -44430,6 +44684,7 @@ class $$ProjectMetricsTableTableTableManager
                 projectsCompleted: projectsCompleted,
                 focusMinutes: focusMinutes,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -44444,6 +44699,7 @@ class $$ProjectMetricsTableTableTableManager
                 Value<int?> projectsCompleted = const Value.absent(),
                 Value<int?> focusMinutes = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectMetricsTableCompanion.insert(
@@ -44456,6 +44712,7 @@ class $$ProjectMetricsTableTableTableManager
                 projectsCompleted: projectsCompleted,
                 focusMinutes: focusMinutes,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -44553,6 +44810,7 @@ typedef $$SocialMetricsTableTableCreateCompanionBuilder =
       Value<int?> contactsCount,
       Value<int?> totalAffection,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -44566,6 +44824,7 @@ typedef $$SocialMetricsTableTableUpdateCompanionBuilder =
       Value<int?> contactsCount,
       Value<int?> totalAffection,
       Value<double?> questPoints,
+      Value<String?> category,
       Value<DateTime> updatedAt,
       Value<int> rowid,
     });
@@ -44668,6 +44927,11 @@ class $$SocialMetricsTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
       $composableBuilder(
         column: $table.updatedAt,
@@ -44760,6 +45024,11 @@ class $$SocialMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
@@ -44844,6 +45113,9 @@ class $$SocialMetricsTableTableAnnotationComposer
     column: $table.questPoints,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
@@ -44937,6 +45209,7 @@ class $$SocialMetricsTableTableTableManager
                 Value<int?> contactsCount = const Value.absent(),
                 Value<int?> totalAffection = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SocialMetricsTableCompanion(
@@ -44948,6 +45221,7 @@ class $$SocialMetricsTableTableTableManager
                 contactsCount: contactsCount,
                 totalAffection: totalAffection,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),
@@ -44961,6 +45235,7 @@ class $$SocialMetricsTableTableTableManager
                 Value<int?> contactsCount = const Value.absent(),
                 Value<int?> totalAffection = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SocialMetricsTableCompanion.insert(
@@ -44972,6 +45247,7 @@ class $$SocialMetricsTableTableTableManager
                 contactsCount: contactsCount,
                 totalAffection: totalAffection,
                 questPoints: questPoints,
+                category: category,
                 updatedAt: updatedAt,
                 rowid: rowid,
               ),

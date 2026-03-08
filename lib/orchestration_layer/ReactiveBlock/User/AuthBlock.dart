@@ -3,6 +3,8 @@ import 'package:drift/drift.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/BiometricAuthService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
@@ -24,6 +26,8 @@ class AuthBlock {
   final CustomAuthService _authService;
   final SessionDAO _sessionDao;
   final PasskeyAuthService _passkeyService;
+  final BiometricAuthService _biometricService;
+  final SecureStorageService _secureStorage;
   final PersonManagementDAO _personDao;
 
   // --- Signals (State) ---
@@ -38,10 +42,14 @@ class AuthBlock {
     required CustomAuthService authService,
     required SessionDAO sessionDao,
     required PasskeyAuthService passkeyService,
+    required BiometricAuthService biometricService,
+    required SecureStorageService secureStorage,
     required PersonManagementDAO personDao,
   }) : _authService = authService,
        _sessionDao = sessionDao,
        _passkeyService = passkeyService,
+       _biometricService = biometricService,
+       _secureStorage = secureStorage,
        _personDao = personDao;
 
   StreamSubscription? _accountSubscription;
@@ -174,8 +182,56 @@ class AuthBlock {
     }
   }
 
-  /// Passkey Login Flow
-  Future<void> loginWithPasskey(BuildContext context) async {
+  /// Biometric Login Flow (Returns true if successful)
+  Future<bool> loginWithBiometrics(BuildContext context) async {
+    status.value = AuthStatus.authenticating;
+    error.value = null;
+    print("🧬 [AuthBlock] Authenticating with biometrics...");
+
+    try {
+      final isSupported = await _biometricService.canAuthenticate();
+      if (!isSupported) {
+        throw Exception(
+          "Biometric authentication is not supported on this device.",
+        );
+      }
+
+      final isEnabled = await _secureStorage.isBiometricEnabled();
+      if (!isEnabled) {
+        throw Exception("Biometric login is not enabled for this account.");
+      }
+
+      final authenticated = await _biometricService.authenticate(
+        reason: "Please authenticate to log in to ICE Gate",
+      );
+
+      if (authenticated) {
+        final credentials = await _secureStorage.getCredentials();
+        final email = credentials['username'];
+        final password = credentials['password'];
+
+        if (email != null && password != null) {
+          print("✅ [AuthBlock] Biometrics authenticated. Attempting login...");
+          await login(email, password, context);
+          return status.value == AuthStatus.authenticated;
+        } else {
+          throw Exception(
+            "No stored credentials found. Please log in with password first.",
+          );
+        }
+      } else {
+        throw Exception("Biometric authentication failed or canceled.");
+      }
+    } catch (e) {
+      print("❌ [AuthBlock] Biometric Login failed: $e");
+      error.value = e.toString();
+      status.value = AuthStatus.unauthenticated;
+      return false;
+    }
+  }
+
+  /// Passkey Login Flow (Returns true if successful)
+  Future<bool> loginWithPasskey(BuildContext context) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
     print("🔑 Authenticating with Passkey...");
@@ -210,6 +266,7 @@ class AuthBlock {
         print("✅ Passkey Login successful.");
 
         await fetchUser();
+        return true;
       } else {
         throw Exception("Server returned no token for passkey");
       }
@@ -217,6 +274,7 @@ class AuthBlock {
       print("❌ Passkey Authentication failed: $e");
       error.value = "Passkey Error: ${e.toString()}";
       status.value = AuthStatus.unauthenticated;
+      return false;
     }
   }
   // --- Actions ---
@@ -347,6 +405,12 @@ class AuthBlock {
 
         status.value = AuthStatus.authenticated;
         print("✅ [AuthBlock] Authentication successful.");
+
+        // Securely store credentials if biometric login is not yet confirmed
+        // For production, you might want to ask the user before enabling this.
+        await _secureStorage.saveCredentials(email, password);
+        await _secureStorage.setBiometricEnabled(true);
+
         await fetchUser();
       } else {
         throw Exception("Supabase returned no session");

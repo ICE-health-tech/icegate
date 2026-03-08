@@ -18,13 +18,59 @@ class ScoreBlock {
   late MetricsDAO _metricsDAO;
 
   late String _personID;
+  String? _tenantID;
 
   final _latestMeals = signal<List<DayWithMeal>>([]);
+  final _latestContacts = signal<List<SocialContact>>([]);
 
   // Track subscriptions and effect cleanups to cancel them on dispose
   final List<dynamic> _subscriptions = [];
 
-  // Monotonic Correction Tracking
+  // Reactive Streams (Database totals)
+  final _totalHealthQuestPoints = signal<double>(
+    0.0,
+    debugLabel: 'totalHealthQuestPoints',
+  );
+  final _totalSocialQuestPoints = signal<double>(
+    0.0,
+    debugLabel: 'totalSocialQuestPoints',
+  );
+  final _totalFinanceQuestPoints = signal<double>(
+    0.0,
+    debugLabel: 'totalFinanceQuestPoints',
+  );
+  final _totalProjectQuestPoints = signal<double>(
+    0.0,
+    debugLabel: 'totalProjectQuestPoints',
+  );
+  final _historicalHealthMetricPoints = signal<double>(
+    0.0,
+    debugLabel: 'historicalHealthMetricPoints',
+  );
+
+  // Breakdown Signals (Synced from DB categorical metrics)
+  final projectsBreakdown = signal<Map<String, double>>(
+    {},
+    debugLabel: 'projectsBreakdown',
+  );
+  final healthBreakdown = signal<Map<String, double>>(
+    {},
+    debugLabel: 'healthBreakdown',
+  );
+  final socialBreakdown = signal<Map<String, double>>(
+    {},
+    debugLabel: 'socialBreakdown',
+  );
+  final financeBreakdown = signal<Map<String, double>>(
+    {},
+    debugLabel: 'financeBreakdown',
+  );
+
+  final averageScore = signal<double>(0);
+  final totalXP = signal<double>(0);
+  final globalLevel = signal<int>(1);
+  final levelProgress = signal<double>(0);
+  final rankTitle = signal<String>("Novice");
 
   ScoreBlock({ScoreData? initialScore}) {
     if (initialScore != null) {
@@ -35,31 +81,10 @@ class ScoreBlock {
   }
 
   ScoreData get score => _score.value;
-  set score(ScoreData value) => _score.value = value;
-
-  final averageScore = signal<double>(0);
-  final totalXP = signal<double>(0);
-  final globalLevel = signal<int>(1);
-  final levelProgress = signal<double>(0);
-  final rankTitle = signal<String>("Novice");
-
-  // Breakdown Signals
-  final healthBreakdown = signal<Map<String, double>>({});
-  final socialBreakdown = signal<Map<String, double>>({});
-  final financeBreakdown = signal<Map<String, double>>({});
-  final projectsBreakdown = signal<Map<String, double>>({});
 
   void updateScore(ScoreData scoreValue) {
     batch(() {
       _score.value = scoreValue;
-
-      final avg =
-          (scoreValue.healthGlobalScore +
-              scoreValue.socialGlobalScore +
-              scoreValue.financialGlobalScore +
-              scoreValue.careerGlobalScore) /
-          4;
-      averageScore.value = avg;
 
       final xp =
           scoreValue.healthGlobalScore +
@@ -67,6 +92,9 @@ class ScoreBlock {
           scoreValue.financialGlobalScore +
           scoreValue.careerGlobalScore;
       totalXP.value = xp;
+
+      final avg = xp / 4;
+      averageScore.value = avg;
 
       final level = GamificationService.getLevel(xp.toInt());
       globalLevel.value = level;
@@ -101,12 +129,10 @@ class ScoreBlock {
     HealthBlock healthBlock,
     HealthMealDAO mealDAO,
     MetricsDAO metricsDAO,
-    String personID,
-  ) async {
-    if (personID.isEmpty) {
-      debugPrint("ScoreBlock: Skipping init, personID is empty.");
-      return;
-    }
+    String personID, {
+    String? tenantID,
+  }) async {
+    if (personID.isEmpty) return;
 
     if (_initializedPersonID == personID) {
       debugPrint("ScoreBlock: ℹ️ Already initialized for $personID");
@@ -117,27 +143,74 @@ class ScoreBlock {
     debugPrint("ScoreBlock: 🚀 Initializing for personID: $personID");
     _initializedPersonID = personID;
 
-    // Clear old subscriptions safely
+    // Clear old subscriptions
     for (var s in _subscriptions) {
-      if (s is StreamSubscription) {
+      if (s is StreamSubscription)
         s.cancel();
-      } else if (s is void Function()) {
-        s(); // Effect cleanup
-      }
+      else if (s is void Function())
+        s();
     }
     _subscriptions.clear();
-
-    // 3. DAOs Initialization
 
     _dao = dao;
     _financeDAO = financeDAO;
     _personID = personID;
     _healthBlock = healthBlock;
     _metricsDAO = metricsDAO;
+    _tenantID = tenantID;
 
+    // 1. Total Point Watchers
     _subscriptions.add(
-      dao.watchScoreByPersonID(personID).listen((data) {
-        if (!isReady.value) return;
+      _metricsDAO
+          .watchTotalHealthQuestPoints(personID)
+          .listen((pts) => _totalHealthQuestPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTotalSocialQuestPoints(personID)
+          .listen((pts) => _totalSocialQuestPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTotalProjectQuestPoints(personID)
+          .listen((pts) => _totalProjectQuestPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTotalFinancialQuestPoints(personID)
+          .listen((pts) => _totalFinanceQuestPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchHistoricalHealthMetricPoints(personID)
+          .listen((pts) => _historicalHealthMetricPoints.value = pts),
+    );
+
+    // 2. Breakdown Watchers (Source of Truth)
+    _subscriptions.add(
+      _metricsDAO
+          .watchProjectBreakdown(personID)
+          .listen((data) => projectsBreakdown.value = data),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchHealthBreakdown(personID)
+          .listen((data) => healthBreakdown.value = data),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchSocialBreakdown(personID)
+          .listen((data) => socialBreakdown.value = data),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchFinancialBreakdown(personID)
+          .listen((data) => financeBreakdown.value = data),
+    );
+
+    // 3. Other Data Watchers
+    _subscriptions.add(
+      _dao.watchScoreByPersonID(personID).listen((data) {
         if (data != null) {
           updateScore(
             ScoreData(
@@ -148,238 +221,196 @@ class ScoreBlock {
             ),
           );
         }
-      }, onError: (e) => debugPrint("ScoreBlock: Error watching score: $e")),
-    );
-
-    _subscriptions.add(
-      _metricsDAO.watchTotalHealthQuestPoints(personID).listen((pts) {
-        if (!isReady.value) return;
-        _totalHealthQuestPoints.value = pts;
-      }),
-    );
-    _subscriptions.add(
-      _metricsDAO.watchTotalSocialQuestPoints(personID).listen((pts) {
-        if (!isReady.value) return;
-        _totalSocialQuestPoints.value = pts;
-      }),
-    );
-    _subscriptions.add(
-      _metricsDAO.watchTotalProjectQuestPoints(personID).listen((pts) {
-        if (!isReady.value) return;
-        _totalProjectQuestPoints.value = pts;
-      }),
-    );
-    _subscriptions.add(
-      _metricsDAO.watchTotalFinancialQuestPoints(personID).listen((pts) {
-        if (!isReady.value) return;
-        _totalFinancialQuestPoints.value = pts;
       }),
     );
 
-    _subscriptions.add(
-      _metricsDAO.watchHistoricalHealthMetricPoints(personID).listen((pts) {
-        if (!isReady.value) return;
-        _historicalHealthMetricPoints.value = pts;
-      }),
-    );
-
-    // 2. Auto-Update Logic (write)
-
-    // Finance Watcher
     _subscriptions.add(
       financeDAO.watchAccounts(personID).listen((accounts) async {
-        if (!isReady.value) return;
         final assets = await _financeDAO.watchAssets(personID).first;
-        _updateFinanceScore(accounts, assets);
-      }, onError: (e) => debugPrint("ScoreBlock: Error watching accounts: $e")),
+        _triggerFinanceUpdate(accounts, assets);
+      }),
     );
     _subscriptions.add(
       financeDAO.watchAssets(personID).listen((assets) async {
-        if (!isReady.value) return;
         final accounts = await _financeDAO.watchAccounts(personID).first;
-        _updateFinanceScore(accounts, assets);
-      }, onError: (e) => debugPrint("ScoreBlock: Error watching assets: $e")),
+        _triggerFinanceUpdate(accounts, assets);
+      }),
     );
-
-    // Social Watcher
     _subscriptions.add(
-      personDAO.getAllContacts().listen((contacts) {
-        if (!isReady.value) return;
-        _updateSocialScore(contacts);
-      }, onError: (e) => debugPrint("ScoreBlock: Error watching contacts: $e")),
+      personDAO.getAllContacts().listen(
+        (contacts) => _latestContacts.value = contacts,
+      ),
     );
-
-    // Meal Watcher (Update signal)
     _subscriptions.add(
-      mealDAO.watchDaysWithMeals().listen((meals) {
-        if (!isReady.value) return;
-        _latestMeals.value = meals;
-      }, onError: (e) => debugPrint("ScoreBlock: Error watching meals: $e")),
+      mealDAO.watchDaysWithMeals().listen(
+        (meals) => _latestMeals.value = meals,
+      ),
     );
 
-    // Health Watcher (Reactive to Signals)
+    // 4. Reactive Effects (Calculations)
     _subscriptions.add(
       effect(() {
         if (!isReady.value) return;
-        if (!_healthBlock.hasInitialSync.value) {
-          debugPrint(
-            "ScoreBlock: Skipping health update, initial sync pending.",
-          );
-          return;
-        }
-
-        final steps = _healthBlock.totalSteps.value;
-        final calories = _healthBlock.todayCaloriesBurned.value;
-        final water = _healthBlock.todayWater.value;
-        final exercise = _healthBlock.todayExerciseMinutes.value;
-        final focus = _healthBlock.todayFocusMinutes.value;
-        final sleep = _healthBlock.todaySleep.value;
-        final meals = _latestMeals.value;
-
+        if (!_healthBlock.hasInitialSync.value) return;
         _triggerHealthUpdate(
-          steps,
-          calories,
-          water,
-          exercise,
-          focus,
-          sleep,
-          meals,
+          _healthBlock.totalSteps.value,
+          _healthBlock.todayCaloriesBurned.value,
+          _healthBlock.todayWater.value,
+          _healthBlock.todayExerciseMinutes.value,
+          _healthBlock.todayFocusMinutes.value,
+          _healthBlock.todaySleep.value,
+          _latestMeals.value,
         );
       }),
     );
 
-    // 3. Initial Bootstrapping (Force calculation once)
+    _subscriptions.add(
+      effect(() {
+        if (!isReady.value) return;
+        _triggerCareerUpdate(_totalProjectQuestPoints.value);
+      }),
+    );
+
+    _subscriptions.add(
+      effect(() {
+        if (!isReady.value) return;
+        _triggerSocialUpdate(
+          _latestContacts.value,
+          _totalSocialQuestPoints.value,
+        );
+      }),
+    );
+
+    // 5. Initial Bootstrapping
     Future.microtask(() async {
       try {
-        final accounts = await _financeDAO.watchAccounts(_personID).first;
-        final assets = await _financeDAO.watchAssets(_personID).first;
-        _updateFinanceScore(accounts, assets);
+        final accounts = await _financeDAO
+            .watchAccounts(_personID)
+            .first
+            .timeout(const Duration(seconds: 2), onTimeout: () => []);
+        final assets = await _financeDAO
+            .watchAssets(_personID)
+            .first
+            .timeout(const Duration(seconds: 2), onTimeout: () => []);
+        _updateFinanceScore(accounts, assets, isBootstrap: true);
 
-        final contacts = await personDAO.getAllContacts().first;
-        _updateSocialScore(contacts);
-
-        // Cleanup any old migration artifacts
-        await _metricsDAO.cleanupGenesisRecords(_personID);
-
-        // Now we are ready
-        isReady.value = true;
-        debugPrint(
-          "ScoreBlock: ✅ Initialization complete. Scoring is now fully deterministic.",
+        final contacts = await personDAO.getAllContacts().first.timeout(
+          const Duration(seconds: 2),
+          onTimeout: () => [],
         );
+        _updateSocialScore(
+          contacts,
+          _totalSocialQuestPoints.value,
+          isBootstrap: true,
+        );
+
+        await _updateCareerScore(
+          _totalProjectQuestPoints.value,
+          isBootstrap: true,
+        );
+
+        await _metricsDAO.cleanupGenesisRecords(_personID);
+        isReady.value = true;
+        debugPrint("ScoreBlock: ✅ Initialization complete.");
       } catch (e) {
-        debugPrint("ScoreBlock: Error during initial bootstrap: $e");
+        debugPrint("ScoreBlock: Error during bootstrap: $e");
       }
     });
   }
 
   void _triggerHealthUpdate(
-    int totalSteps,
-    int caloriesBurned,
-    int waterIntake,
-    int exerciseMinutes,
-    int focusMinutes,
-    double sleepHours,
+    int steps,
+    int kcal,
+    int water,
+    int exercise,
+    int focus,
+    double sleep,
     List<DayWithMeal> meals,
   ) {
     _healthDebounce?.cancel();
-    _healthDebounce = Timer(const Duration(milliseconds: 500), () async {
-      _updateHealthScore(
-        totalSteps,
-        caloriesBurned,
-        waterIntake,
-        exerciseMinutes,
-        focusMinutes,
-        sleepHours,
-        meals,
-      );
-    });
+    _healthDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () =>
+          _updateHealthScore(steps, kcal, water, exercise, focus, sleep, meals),
+    );
   }
 
-  Timer? _healthDebounce;
-  Timer? _financeDebounce;
-  Timer? _socialDebounce;
+  void _triggerCareerUpdate(double questXP) {
+    _careerDebounce?.cancel();
+    _careerDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _updateCareerScore(questXP),
+    );
+  }
 
-  void _updateFinanceScore(
+  void _triggerFinanceUpdate(
     List<FinancialAccountData> accounts,
     List<AssetData> assets,
   ) {
+    if (!isReady.value) return;
     _financeDebounce?.cancel();
-    _financeDebounce = Timer(const Duration(milliseconds: 500), () async {
-      if (_personID.isEmpty) return;
-      try {
-        double accountWorth = 0;
-        for (var acc in accounts) {
-          accountWorth += acc.balance;
-        }
-        double assetWorth = 0;
-        for (var asset in assets) {
-          assetWorth += (asset.currentEstimatedValue ?? 0.0);
-        }
-
-        double accountScore = 0;
-        double assetScore = 0;
-
-        if (FINANCE_SAVINGS_MILESTONE > 0) {
-          accountScore =
-              (accountWorth / FINANCE_SAVINGS_MILESTONE) *
-              FINANCE_SAVINGS_POINTS;
-          assetScore =
-              (assetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
-        }
-
-        final questXP = _totalFinancialQuestPoints.value;
-        final finalScore = accountScore + assetScore + questXP;
-
-        financeBreakdown.value = {
-          'Accounts': accountScore,
-          'Assets': assetScore,
-          if (questXP > 0) 'Quests': questXP,
-        };
-
-        debugPrint(
-          "ScoreBlock: Finance Score — base: ${accountScore + assetScore}, totalQuestXP: $questXP, final: $finalScore",
-        );
-
-        await _dao.updateFinancialScore(_personID, finalScore);
-      } catch (e) {
-        debugPrint("Error updating finance score: $e");
-      }
-    });
+    _financeDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _updateFinanceScore(accounts, assets),
+    );
   }
 
-  void _updateSocialScore(List<SocialContact> contacts) {
+  void _triggerSocialUpdate(List<SocialContact> contacts, double questXP) {
+    if (!isReady.value) return;
     _socialDebounce?.cancel();
-    _socialDebounce = Timer(const Duration(milliseconds: 500), () async {
-      if (_personID.isEmpty) return;
-      try {
-        int totalAffection = 0;
-        for (var contact in contacts) {
-          totalAffection += contact.affection;
-        }
+    _socialDebounce = Timer(
+      const Duration(milliseconds: 500),
+      () => _updateSocialScore(contacts, questXP),
+    );
+  }
 
-        final contactPoints = (contacts.length * CONTACT_POINTS).toDouble();
-        final affectionPoints =
-            ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS)
-                .toDouble();
+  Timer? _healthDebounce, _financeDebounce, _socialDebounce, _careerDebounce;
 
-        final questXP = _totalSocialQuestPoints.value;
-        final finalScore = contactPoints + affectionPoints + questXP;
+  void _updateFinanceScore(
+    List<FinancialAccountData> accounts,
+    List<AssetData> assets, {
+    bool isBootstrap = false,
+  }) {
+    if (!isBootstrap && !isReady.value) return;
+    if (_personID.isEmpty) return;
 
-        socialBreakdown.value = {
-          'Contacts': contactPoints,
-          'Affection': affectionPoints,
-          if (questXP > 0) 'Quests': questXP,
-        };
+    double accountWorth = 0;
+    for (var acc in accounts) accountWorth += acc.balance;
+    double assetWorth = 0;
+    for (var asset in assets)
+      assetWorth += (asset.currentEstimatedValue ?? 0.0);
 
-        debugPrint(
-          "ScoreBlock: Social Score — base: ${contactPoints + affectionPoints}, totalQuestXP: $questXP, final: $finalScore",
-        );
+    double accountScore = 0, assetScore = 0;
+    if (FINANCE_SAVINGS_MILESTONE > 0) {
+      accountScore =
+          (accountWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
+      assetScore =
+          (assetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
+    }
 
-        await _dao.updateSocialScore(_personID, finalScore);
-      } catch (e) {
-        debugPrint("Error updating social score: $e");
-      }
-    });
+    final questXP = _totalFinanceQuestPoints.value;
+    final finalScore = accountScore + assetScore + questXP;
+
+    _dao.updateFinancialScore(_personID, finalScore);
+  }
+
+  Future<void> _updateSocialScore(
+    List<SocialContact> contacts,
+    double questXP, {
+    bool isBootstrap = false,
+  }) async {
+    if (!isBootstrap && !isReady.value) return;
+    if (_personID.isEmpty) return;
+
+    int totalAffection = 0;
+    for (var contact in contacts) totalAffection += contact.affection;
+
+    final contactPoints = (contacts.length * CONTACT_POINTS).toDouble();
+    final affectionPoints =
+        ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS).toDouble();
+    final finalScore = contactPoints + affectionPoints + questXP;
+
+    await _dao.updateSocialScore(_personID, finalScore);
   }
 
   Future<void> _updateHealthScore(
@@ -389,141 +420,112 @@ class ScoreBlock {
     int exerciseMinutes,
     int focusMinutes,
     double sleepHours,
-    List<DayWithMeal> allMealsWrapper,
-  ) async {
+    List<DayWithMeal> meals, {
+    bool isBootstrap = false,
+  }) async {
+    if (!isBootstrap && !isReady.value) return;
     if (_personID.isEmpty) return;
 
-    try {
-      // 1. Steps Points (500 steps = 1 point)
-      double stepsPoints = 0;
-      if (STEPS_PER_POINT > 0) {
-        stepsPoints = (totalSteps / STEPS_PER_POINT);
+    double stepsPoints = 0;
+    if (STEPS_PER_POINT > 0) stepsPoints = (totalSteps / STEPS_PER_POINT);
+
+    double dietPoints = 0;
+    final todayDate = DateTime.now();
+    double todayKcal = 0;
+    for (var item in meals) {
+      final d = item.meal.eatenAt;
+      if (d.year == todayDate.year &&
+          d.month == todayDate.month &&
+          d.day == todayDate.day) {
+        todayKcal += item.meal.calories;
       }
-
-      // 2. Diet Points (Bonus if < 1500 kcal)
-      double dietPoints = 0;
-      final Map<String, double> dailyCalories = {};
-      for (var item in allMealsWrapper) {
-        final d = item.meal.eatenAt;
-        final dateKey = "${d.year}-${d.month}-${d.day}";
-        dailyCalories[dateKey] =
-            (dailyCalories[dateKey] ?? 0) + item.meal.calories;
-      }
-
-      // Check TODAY's calories specifically for the manual rule
-      final todayDate = DateTime.now();
-      final todayKey = "${todayDate.year}-${todayDate.month}-${todayDate.day}";
-      final todayKcal = dailyCalories[todayKey] ?? 0.0;
-      if (todayKcal > 0 && todayKcal < CALORIE_LIMIT) {
-        dietPoints += CALORIE_LIMIT_BONUS;
-      }
-
-      // 3. Exercise Points (5 min = 1 point)
-      double exercisePoints = 0;
-      if (EXERCISE_PER_POINT > 0) {
-        exercisePoints = (exerciseMinutes / EXERCISE_PER_POINT);
-      }
-
-      // 4. Focus Points
-      double focusPoints = 0;
-      if (FOCUS_MINUTES_PER_POINT > 0) {
-        focusPoints = (focusMinutes / FOCUS_MINUTES_PER_POINT);
-      }
-
-      // 5. Water Points (Goal >= 2000ml = +10)
-      double waterPoints = 0;
-      if (waterIntake >= WATER_GOAL) {
-        waterPoints += WATER_BONUS_POINTS;
-      }
-
-      // 6. Sleep Points (2 points per hour)
-      double sleepPoints = (sleepHours * SLEEP_POINTS_PER_HOUR);
-
-      // 7. Weight Points (Placeholder for now, implementation depends on HealthBlock startWeight)
-      double weightPoints = 0;
-      // if (hasMetWeightGoalToday) weightPoints += (weightDelta * 100);
-
-      final baseHealthScore =
-          stepsPoints +
-          dietPoints +
-          exercisePoints +
-          focusPoints +
-          waterPoints +
-          sleepPoints +
-          weightPoints;
-
-      final questXP = _totalHealthQuestPoints.value;
-      final historicalXP = _historicalHealthMetricPoints.value;
-      final derivedScore = baseHealthScore + questXP + historicalXP;
-
-      final finalScore = derivedScore;
-
-      healthBreakdown.value = {
-        'Steps': stepsPoints,
-        if (dietPoints > 0) 'Diet': dietPoints,
-        'Exercise': exercisePoints,
-        if (focusPoints > 0) 'Focus': focusPoints,
-        if (waterPoints > 0) 'Water': waterPoints,
-        'Sleep': sleepPoints,
-        if (weightPoints > 0) 'Weight': weightPoints,
-        if (questXP > 0) 'Quests': questXP,
-        if (historicalXP > 0) 'Legacy': historicalXP,
-      };
-
-      debugPrint(
-        "ScoreBlock: Health Score — current_base: $baseHealthScore, totalQuestXP: $questXP, historicalMetricXP: $historicalXP, final: $finalScore",
-      );
-      await _dao.updateHealthScore(_personID, finalScore);
-    } catch (e, stack) {
-      debugPrint("Error updating health score: $e");
-      debugPrint("Stack trace: $stack");
     }
+    if (todayKcal > 0 && todayKcal < CALORIE_LIMIT)
+      dietPoints += CALORIE_LIMIT_BONUS;
+
+    double exercisePoints = 0;
+    if (EXERCISE_PER_POINT > 0)
+      exercisePoints = (exerciseMinutes / EXERCISE_PER_POINT);
+
+    double focusPoints = 0;
+    if (FOCUS_MINUTES_PER_POINT > 0)
+      focusPoints = (focusMinutes / FOCUS_MINUTES_PER_POINT);
+
+    double waterPoints = 0;
+    if (waterIntake >= WATER_GOAL) waterPoints += WATER_BONUS_POINTS;
+
+    double sleepPoints = (sleepHours * SLEEP_POINTS_PER_HOUR);
+
+    final baseHealthScore =
+        stepsPoints +
+        dietPoints +
+        exercisePoints +
+        focusPoints +
+        waterPoints +
+        sleepPoints;
+    final questXP = _totalHealthQuestPoints.value;
+    final historicalXP = _historicalHealthMetricPoints.value;
+    final finalScore = baseHealthScore + questXP + historicalXP;
+
+    await _dao.updateHealthScore(_personID, finalScore);
   }
 
-  Future<void> manualSocialIncrement(double points) async {
-    if (_personID.isEmpty) return;
-    await _metricsDAO.incrementSocialQuestPoints(_personID, points);
+  Future<void> manualSocialIncrement(double points, {String? label}) async {
+    if (!isReady.value || _personID.isEmpty) return;
+    await _metricsDAO.incrementSocialQuestPoints(
+      _personID,
+      points,
+      category: label ?? 'General',
+      tenantId: _tenantID,
+    );
   }
 
   Future<void> persistentCareerIncrement(double points, {String? label}) async {
-    if (_personID.isEmpty) return;
-
-    final current = Map<String, double>.from(projectsBreakdown.value);
-    String finalLabel = label ?? (points >= 50.0 ? 'Projects' : 'Tasks');
-    current[finalLabel] = (current[finalLabel] ?? 0) + points;
-    projectsBreakdown.value = current;
-
-    await _metricsDAO.incrementProjectQuestPoints(_personID, points);
+    if (!isReady.value || _personID.isEmpty) return;
+    await _metricsDAO.incrementProjectQuestPoints(
+      _personID,
+      points,
+      category: label ?? (points >= 50.0 ? 'Projects' : 'Tasks'),
+      tenantId: _tenantID,
+    );
   }
 
   Future<void> persistentHealthIncrement(double points, {String? label}) async {
-    if (_personID.isEmpty) return;
-
-    final current = Map<String, double>.from(healthBreakdown.value);
-    final key = label ?? 'Quests';
-    current[key] = (current[key] ?? 0) + points;
-    healthBreakdown.value = current;
-
-    await _metricsDAO.incrementHealthQuestPoints(_personID, points);
+    if (!isReady.value || _personID.isEmpty) return;
+    await _metricsDAO.incrementHealthQuestPoints(
+      _personID,
+      points,
+      category: label ?? 'Quests',
+      tenantId: _tenantID,
+    );
   }
 
-  /// Generic method to add points (default to Career/Global)
   void addPoints(double points, {String? label}) {
     persistentCareerIncrement(points, label: label);
   }
 
+  Future<void> _updateCareerScore(
+    double questXP, {
+    bool isBootstrap = false,
+  }) async {
+    if (!isBootstrap && !isReady.value) return;
+    if (_personID.isEmpty) return;
+    // FIX: questXP is already the sum of all categorized points in DB.
+    await _dao.updateCareerScore(_personID, questXP);
+  }
+
   void dispose() {
     for (var s in _subscriptions) {
-      if (s is StreamSubscription) {
+      if (s is StreamSubscription)
         s.cancel();
-      } else if (s is void Function()) {
-        s(); // Effect cleanup
-      }
+      else if (s is void Function())
+        s();
     }
     _subscriptions.clear();
     _healthDebounce?.cancel();
     _financeDebounce?.cancel();
     _socialDebounce?.cancel();
+    _careerDebounce?.cancel();
     _score.dispose();
     averageScore.dispose();
     totalXP.dispose();
@@ -531,17 +533,11 @@ class ScoreBlock {
     levelProgress.dispose();
     rankTitle.dispose();
     _latestMeals.dispose();
+    _latestContacts.dispose();
     _totalHealthQuestPoints.dispose();
     _totalSocialQuestPoints.dispose();
     _totalProjectQuestPoints.dispose();
-    _totalFinancialQuestPoints.dispose();
+    _totalFinanceQuestPoints.dispose();
     _historicalHealthMetricPoints.dispose();
   }
-
-  // Internal Quest XP signals (watching DB)
-  final _totalHealthQuestPoints = signal<double>(0);
-  final _totalSocialQuestPoints = signal<double>(0);
-  final _totalProjectQuestPoints = signal<double>(0);
-  final _totalFinancialQuestPoints = signal<double>(0);
-  final _historicalHealthMetricPoints = signal<double>(0);
 }

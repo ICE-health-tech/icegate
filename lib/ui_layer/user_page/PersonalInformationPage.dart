@@ -1,8 +1,8 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
@@ -16,14 +16,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({super.key});
 
-  static Widget icon(BuildContext context, {double? size}) {
+  static Widget icon(BuildContext context, {double size = 56.0}) {
     return MainButton(
       type: "profile",
-      destination: "/profile",
+      icon: Icons.home_outlined,
+      destination: "/personal-info",
       size: size,
-      icon: Icons.settings,
       mainFunction: () {
-        WidgetNavigatorAction.smartPop(context, "/settings");
+        context.push("/personal-info");
+      },
+      onSwipeRight: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeLeft: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
       },
     );
   }
@@ -389,7 +398,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       appBar: AppBar(
         toolbarHeight: 70,
         leadingWidth: 0,
-        leading: const SizedBox.shrink(),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => context.pop(),
+          style: IconButton.styleFrom(
+            backgroundColor: Theme.of(
+              context,
+            ).colorScheme.surface.withOpacity(0.1),
+          ),
+        ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -943,8 +960,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
   }
 
   Widget _buildSkillsSection(PersonBlock block, ColorScheme colorScheme) {
-    return Watch((context) {
-      final skillList = block.skills.value;
+    return Watch((signalsContext) {
+      final skillList = block.skills.watch(signalsContext);
       if (skillList.isEmpty) return const SizedBox.shrink();
 
       return Wrap(

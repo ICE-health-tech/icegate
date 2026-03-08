@@ -102,6 +102,7 @@ class UserProfile {
   final String avatarLocalPath;
   final String coverLocalPath;
   final String username;
+  final String? tenantId;
 
   const UserProfile({
     this.id,
@@ -114,6 +115,7 @@ class UserProfile {
     this.avatarLocalPath = '',
     this.coverLocalPath = '',
     this.username = '',
+    this.tenantId,
   });
 
   // UserProfile copyWith({
@@ -142,6 +144,7 @@ class UserProfile {
           json['avatarLocalPath'] ?? json['avatar_local_path'] ?? '',
       coverLocalPath: json['coverLocalPath'] ?? json['cover_local_path'] ?? '',
       username: json['username'] ?? '',
+      tenantId: json['tenantId'] ?? json['tenant_id'] ?? '',
     );
   }
 
@@ -156,6 +159,7 @@ class UserProfile {
     String? avatarLocalPath,
     String? coverLocalPath,
     String? username,
+    String? tenantId,
   }) {
     return UserProfile(
       id: id ?? this.id,
@@ -168,6 +172,7 @@ class UserProfile {
       avatarLocalPath: avatarLocalPath ?? this.avatarLocalPath,
       coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       username: username ?? this.username,
+      tenantId: tenantId ?? this.tenantId,
     );
   }
 }
@@ -315,6 +320,11 @@ class PersonBlock {
           localProfile: localProfile,
           localDetails: localDetails,
         );
+      } else {
+        debugPrint(
+          "   - No local data. Initializing signal with Auth ID to unblock dependent blocks.",
+        );
+        _updateSignalFromData(user: user);
       }
 
       // 2. Trigger REMOTE Supabase fetch & Backend Sync in BACKGROUND
@@ -486,6 +496,10 @@ class PersonBlock {
           localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
       coverLocalPath:
           localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
+      tenantId:
+          localPerson?.tenantID ??
+          remotePerson?['tenant_id'] ??
+          remoteProfile?['tenant_id'],
     );
 
     batch(() {

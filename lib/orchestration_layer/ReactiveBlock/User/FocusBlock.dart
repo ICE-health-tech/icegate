@@ -75,6 +75,9 @@ class FocusBlock {
   // Elon Musk 5-Minute Block Mode Signals
   final isMuskMode = signal<bool>(false);
   final muskHapticIntensity = signal<int>(3); // 1-5
+  final muskFocusDuration = signal<int>(5); // Default 5 mins
+  final muskRepeatReminder = signal<bool>(true);
+  final isMuskMusicEnabled = signal<bool>(true);
 
   // Stats
   final totalStudyTimeToday = signal<int>(0); // In seconds
@@ -101,6 +104,7 @@ class FocusBlock {
   Timer? _timer;
   DateTime? _actualStartTime; // Persists across pauses for logging
   DateTime? _targetEndTime;
+  String? _activeSessionId;
   bool _isStarting = false;
   bool _isLiveActivityInitialized = false;
 
@@ -188,6 +192,7 @@ class FocusBlock {
 
       // 1. START TIMER IMMEDIATELY
       _timer?.cancel();
+      final totalSeconds = remainingTime.value;
       _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
         if (_targetEndTime == null) return;
         final now = DateTime.now();
@@ -199,6 +204,19 @@ class FocusBlock {
           final newSeconds = remaining.inSeconds;
           if (newSeconds != remainingTime.value) {
             remainingTime.value = newSeconds;
+
+            // --- Periodic Haptics for Musk Mode ---
+            if (isMuskMode.value) {
+              final elapsedSeconds = totalSeconds - newSeconds;
+              if (elapsedSeconds > 0 && elapsedSeconds % 60 == 0) {
+                final elapsedMinutes = elapsedSeconds ~/ 60;
+                if (elapsedMinutes % 5 == 0) {
+                  _triggerIntervalHaptics(strong: true);
+                } else {
+                  _triggerIntervalHaptics(strong: false);
+                }
+              }
+            }
 
             // Only update Live Activity every 5 seconds to avoid iOS throttling
             if (newSeconds % 5 == 0) {
@@ -496,6 +514,7 @@ class FocusBlock {
     pauseTimer();
     _actualStartTime = null;
     _targetEndTime = null;
+    _activeSessionId = null;
     remainingTime.value = _getDurationForType(currentSessionType.value);
 
     // Ensure metadata is updated with reset time and paused state
@@ -510,34 +529,58 @@ class FocusBlock {
 
   Future<void> completeSession() async {
     pauseTimer();
-    // Trigger Summary UI - actual saving happens when user confirms in dialog
-    showSummary.value = true;
 
-    _notificationService?.showNotification(
-      999,
-      currentSessionType.value == 'Focus'
-          ? "Focus Session Complete"
-          : "Break Over",
-      currentSessionType.value == 'Focus'
-          ? "Excellent work! Take a well-deserved break."
-          : "Time to get back into the flow zone.",
-    );
-
-    // Haptic Feedback for Musk Mode or if enabled
     if (isMuskMode.value) {
       _triggerMuskHaptics();
+      _notificationService?.showNotification(
+        888,
+        "BLOCK COMPLETE",
+        "Musk Block Sequence Finalized.",
+      );
+
+      if (muskRepeatReminder.value) {
+        // Auto-restart for "Always" frequency
+        Future.delayed(const Duration(seconds: 1), () {
+          startMuskFocus();
+        });
+        return; // Don't show summary if auto-repeating
+      }
     } else {
       HapticFeedback.heavyImpact();
+      _notificationService?.showNotification(
+        999,
+        currentSessionType.value == 'Focus'
+            ? "Focus Session Complete"
+            : "Break Over",
+        currentSessionType.value == 'Focus'
+            ? "Excellent work! Take a well-deserved break."
+            : "Time to get back into the flow zone.",
+      );
     }
+
+    // Trigger Summary UI - actual saving happens when user confirms in dialog
+    _activeSessionId = await _saveSession(status: 'completed');
+    showSummary.value = true;
   }
 
   void _triggerMuskHaptics() async {
     // Intense vibration pattern for 5-minute block completion
-    for (int i = 0; i < muskHapticIntensity.value; i++) {
+    // User requested "strong enough" haptics
+    for (int i = 0; i < muskHapticIntensity.value * 2; i++) {
       await HapticFeedback.heavyImpact();
-      await Future.delayed(const Duration(milliseconds: 150));
+      await Future.delayed(const Duration(milliseconds: 100));
       await HapticFeedback.vibrate();
-      await Future.delayed(const Duration(milliseconds: 150));
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+  }
+
+  void _triggerIntervalHaptics({required bool strong}) async {
+    if (strong) {
+      await HapticFeedback.heavyImpact();
+      await Future.delayed(const Duration(milliseconds: 100));
+      await HapticFeedback.mediumImpact();
+    } else {
+      await HapticFeedback.lightImpact();
     }
   }
 
@@ -546,7 +589,17 @@ class FocusBlock {
     bool markTaskDone = false,
   }) async {
     sessionNotes.value = finalNotes;
-    await _saveSession(status: 'completed');
+
+    if (_activeSessionId != null) {
+      await _focusSessionDao.patchSession(
+        _activeSessionId!,
+        FocusSessionsTableCompanion(
+          notes: drift.Value(finalNotes.isNotEmpty ? finalNotes : null),
+        ),
+      );
+    } else {
+      await _saveSession(status: 'completed');
+    }
 
     // Update stats immediately
     if (currentSessionType.value == 'Focus') {
@@ -608,12 +661,21 @@ class FocusBlock {
   }
 
   void startMuskFocus() {
-    print("🚀 [FocusBlock] Starting Elon Musk 5-Minute Block");
+    print(
+      "🚀 [FocusBlock] Starting Elon Musk Block: ${muskFocusDuration.value}m",
+    );
     currentSessionType.value = 'Focus';
     isMuskMode.value = true;
     isExerciseMode.value = false;
-    focusDuration.value = 5;
-    remainingTime.value = 5 * 60;
+    focusDuration.value = muskFocusDuration.value;
+    remainingTime.value = muskFocusDuration.value * 60;
+
+    _notificationService?.showNotification(
+      888,
+      "BLOCK INITIATED",
+      "Sequence engaged for ${muskFocusDuration.value} minutes.",
+    );
+
     startTimer();
   }
 
@@ -688,17 +750,18 @@ class FocusBlock {
 
   // --- Database Actions ---
 
-  Future<void> _saveSession({required String status}) async {
-    if (_currentPersonId.isEmpty) return;
+  Future<String?> _saveSession({required String status}) async {
+    if (_currentPersonId.isEmpty) return null;
 
     final totalDuration = _getDurationForType(currentSessionType.value);
     final duration = totalDuration - remainingTime.value;
 
     // Only save significant sessions (e.g., > 1 minute)
-    if (duration < 60) return;
+    if (duration < 60) return null;
 
+    final sessionId = IDGen.UUIDV7();
     final session = FocusSessionsTableCompanion.insert(
-      id: IDGen.UUIDV7(),
+      id: sessionId,
       personID: drift.Value(_currentPersonId),
       projectID: drift.Value(selectedProjectId.value),
       taskID: drift.Value(selectedTaskId.value),
@@ -750,6 +813,7 @@ class FocusBlock {
     }
 
     await fetchDailyStats();
+    return sessionId;
   }
 
   Future<void> deleteSession(String id) async {

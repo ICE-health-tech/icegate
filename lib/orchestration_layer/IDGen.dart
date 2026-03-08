@@ -10,9 +10,18 @@ class IDGen {
   static String UUIDV7() => _uuid.v7();
 
   /// Generates a deterministic UUID v5 based on a namespace and name.
-  /// Useful for ensuring the same ID is generated for the same "business key" (e.g., personId + date).
+  /// Falls back to a default namespace if the provided one is not a valid UUID.
   static String generateDeterministicUuid(String namespace, String name) {
-    return _uuid.v5(namespace, name);
+    const String defaultNamespace =
+        '6ba7b810-9dad-11d1-80b4-00c04fd430c8'; // Namespace DNS
+    try {
+      // Validate that the namespace is a valid UUID
+      if (namespace.isEmpty) return _uuid.v5(defaultNamespace, name);
+      return _uuid.v5(namespace, name);
+    } catch (e) {
+      // If invalid UUID namespace, fallback to deterministic v5 with default namespace
+      return _uuid.v5(defaultNamespace, "$namespace-$name");
+    }
   }
 
   // Static random instance to avoid creating a new one every call

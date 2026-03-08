@@ -1025,6 +1025,10 @@ class HealthMetricsTable extends Table {
       .withDefault(const Constant(0.0))
       .named('quest_points')
       .nullable()();
+  TextColumn get category => text()
+      .withDefault(const Constant('General'))
+      .named('category')
+      .nullable()();
   DateTimeColumn get updatedAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1035,7 +1039,7 @@ class HealthMetricsTable extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
 }
 
@@ -1075,6 +1079,10 @@ class FinancialMetricsTable extends Table {
       .withDefault(const Constant(0.0))
       .named('quest_points')
       .nullable()();
+  TextColumn get category => text()
+      .withDefault(const Constant('General'))
+      .named('category')
+      .nullable()();
   DateTimeColumn get updatedAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1085,7 +1093,7 @@ class FinancialMetricsTable extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
 }
 
@@ -1121,6 +1129,10 @@ class ProjectMetricsTable extends Table {
       .withDefault(const Constant(0.0))
       .named('quest_points')
       .nullable()();
+  TextColumn get category => text()
+      .withDefault(const Constant('General'))
+      .named('category')
+      .nullable()();
   DateTimeColumn get updatedAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1131,7 +1143,7 @@ class ProjectMetricsTable extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
 }
 
@@ -1163,6 +1175,10 @@ class SocialMetricsTable extends Table {
       .withDefault(const Constant(0.0))
       .named('quest_points')
       .nullable()();
+  TextColumn get category => text()
+      .withDefault(const Constant('General'))
+      .named('category')
+      .nullable()();
   DateTimeColumn get updatedAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1173,7 +1189,7 @@ class SocialMetricsTable extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-    {personID, date},
+    {personID, date, category},
   ];
 }
 
@@ -1554,6 +1570,35 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
             id: deterministicId,
             personID: Value(personID),
             careerGlobalScore: Value(points),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> updateCareerScore(String personID, double score) async {
+    await transaction(() async {
+      final existing = await getScoreByPersonID(personID);
+      if (existing != null) {
+        await (update(
+          scoresTable,
+        )..where((t) => t.personID.equals(personID))).write(
+          ScoresTableCompanion(
+            careerGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
+      } else {
+        final deterministicId = IDGen.generateDeterministicUuid(
+          personID,
+          "score",
+        );
+        await into(scoresTable).insert(
+          ScoresTableCompanion.insert(
+            id: deterministicId,
+            personID: Value(personID),
+            careerGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
           ),
         );
@@ -3473,32 +3518,45 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   // --- Health Quests ---
   Future<void> incrementHealthQuestPoints(
     String personId,
-    double points,
-  ) async {
+    double points, {
+    String category = 'General',
+    String? tenantId,
+  }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateStr = _getDateStr(now);
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      dateStr + category,
+    );
 
     await transaction(() async {
-      // Find EITHER by deterministic ID OR by (person_id, date) to handle sync overlaps
       final existingList =
           await (select(healthMetricsTable)..where(
                 (t) =>
                     t.id.equals(targetId) |
-                    (t.personID.equals(personId) & t.date.equals(today)),
+                    (t.personID.equals(personId) &
+                        t.date.equals(today) &
+                        t.category.equals(category)),
               ))
               .get();
 
       if (existingList.isNotEmpty) {
-        final existing = existingList.first;
+        final existing = existingList.firstWhere(
+          (e) => e.id == targetId,
+          orElse: () => existingList.first,
+        );
 
-        // Cleanup local sync duplicates if they exist
         if (existingList.length > 1) {
-          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
-          await (delete(
-            healthMetricsTable,
-          )..where((t) => t.id.isIn(idsToDelete))).go();
+          final idsToDelete = existingList
+              .where((e) => e.id != existing.id)
+              .map((e) => e.id)
+              .toList();
+          if (idsToDelete.isNotEmpty) {
+            await (delete(
+              healthMetricsTable,
+            )..where((t) => t.id.isIn(idsToDelete))).go();
+          }
         }
 
         await (update(
@@ -3513,8 +3571,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
         await into(healthMetricsTable).insert(
           HealthMetricsTableCompanion(
             id: Value(targetId),
+            tenantID: Value(tenantId),
             personID: Value(personId),
             date: Value(today),
+            category: Value(category),
             questPoints: Value(points),
             updatedAt: Value(now),
           ),
@@ -3526,31 +3586,45 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   // --- Social Quests ---
   Future<void> incrementSocialQuestPoints(
     String personId,
-    double points,
-  ) async {
+    double points, {
+    String category = 'General',
+    String? tenantId,
+  }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateStr = _getDateStr(now);
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      dateStr + category,
+    );
 
     await transaction(() async {
       final existingList =
           await (select(socialMetricsTable)..where(
                 (t) =>
                     t.id.equals(targetId) |
-                    (t.personID.equals(personId) & t.date.equals(today)),
+                    (t.personID.equals(personId) &
+                        t.date.equals(today) &
+                        t.category.equals(category)),
               ))
               .get();
 
       if (existingList.isNotEmpty) {
-        final existing = existingList.first;
+        final existing = existingList.firstWhere(
+          (e) => e.id == targetId,
+          orElse: () => existingList.first,
+        );
 
-        // Cleanup local sync duplicates if they exist
         if (existingList.length > 1) {
-          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
-          await (delete(
-            socialMetricsTable,
-          )..where((t) => t.id.isIn(idsToDelete))).go();
+          final idsToDelete = existingList
+              .where((e) => e.id != existing.id)
+              .map((e) => e.id)
+              .toList();
+          if (idsToDelete.isNotEmpty) {
+            await (delete(
+              socialMetricsTable,
+            )..where((t) => t.id.isIn(idsToDelete))).go();
+          }
         }
 
         await (update(
@@ -3565,8 +3639,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
         await into(socialMetricsTable).insert(
           SocialMetricsTableCompanion(
             id: Value(targetId),
+            tenantID: Value(tenantId),
             personID: Value(personId),
             date: Value(today),
+            category: Value(category),
             questPoints: Value(points),
             updatedAt: Value(now),
           ),
@@ -3578,31 +3654,45 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   // --- Financial Quests ---
   Future<void> incrementFinancialQuestPoints(
     String personId,
-    double points,
-  ) async {
+    double points, {
+    String category = 'General',
+    String? tenantId,
+  }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateStr = _getDateStr(now);
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      dateStr + category,
+    );
 
     await transaction(() async {
       final existingList =
           await (select(financialMetricsTable)..where(
                 (t) =>
                     t.id.equals(targetId) |
-                    (t.personID.equals(personId) & t.date.equals(today)),
+                    (t.personID.equals(personId) &
+                        t.date.equals(today) &
+                        t.category.equals(category)),
               ))
               .get();
 
       if (existingList.isNotEmpty) {
-        final existing = existingList.first;
+        final existing = existingList.firstWhere(
+          (e) => e.id == targetId,
+          orElse: () => existingList.first,
+        );
 
-        // Cleanup local sync duplicates if they exist
         if (existingList.length > 1) {
-          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
-          await (delete(
-            financialMetricsTable,
-          )..where((t) => t.id.isIn(idsToDelete))).go();
+          final idsToDelete = existingList
+              .where((e) => e.id != existing.id)
+              .map((e) => e.id)
+              .toList();
+          if (idsToDelete.isNotEmpty) {
+            await (delete(
+              financialMetricsTable,
+            )..where((t) => t.id.isIn(idsToDelete))).go();
+          }
         }
 
         await (update(
@@ -3617,8 +3707,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
         await into(financialMetricsTable).insert(
           FinancialMetricsTableCompanion(
             id: Value(targetId),
+            tenantID: Value(tenantId),
             personID: Value(personId),
             date: Value(today),
+            category: Value(category),
             questPoints: Value(points),
             updatedAt: Value(now),
           ),
@@ -3630,31 +3722,45 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   // --- Project Quests ---
   Future<void> incrementProjectQuestPoints(
     String personId,
-    double points,
-  ) async {
+    double points, {
+    String category = 'General',
+    String? tenantId,
+  }) async {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final dateStr = _getDateStr(now);
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      dateStr + category,
+    );
 
     await transaction(() async {
       final existingList =
           await (select(projectMetricsTable)..where(
                 (t) =>
                     t.id.equals(targetId) |
-                    (t.personID.equals(personId) & t.date.equals(today)),
+                    (t.personID.equals(personId) &
+                        t.date.equals(today) &
+                        t.category.equals(category)),
               ))
               .get();
 
       if (existingList.isNotEmpty) {
-        final existing = existingList.first;
+        final existing = existingList.firstWhere(
+          (e) => e.id == targetId,
+          orElse: () => existingList.first,
+        );
 
-        // Cleanup local sync duplicates if they exist
         if (existingList.length > 1) {
-          final idsToDelete = existingList.skip(1).map((e) => e.id).toList();
-          await (delete(
-            projectMetricsTable,
-          )..where((t) => t.id.isIn(idsToDelete))).go();
+          final idsToDelete = existingList
+              .where((e) => e.id != existing.id)
+              .map((e) => e.id)
+              .toList();
+          if (idsToDelete.isNotEmpty) {
+            await (delete(
+              projectMetricsTable,
+            )..where((t) => t.id.isIn(idsToDelete))).go();
+          }
         }
 
         await (update(
@@ -3669,8 +3775,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
         await into(projectMetricsTable).insert(
           ProjectMetricsTableCompanion(
             id: Value(targetId),
+            tenantID: Value(tenantId),
             personID: Value(personId),
             date: Value(today),
+            category: Value(category),
             questPoints: Value(points),
             updatedAt: Value(now),
           ),
@@ -3716,7 +3824,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<double> watchTotalHealthQuestPoints(String personId) {
     return customSelect(
-      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM health_metrics WHERE person_id = ? GROUP BY date)',
+      'SELECT SUM(quest_points) as total FROM health_metrics WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {healthMetricsTable},
     ).watchSingle().map((row) {
@@ -3727,7 +3835,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<double> watchTotalSocialQuestPoints(String personId) {
     return customSelect(
-      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM social_metrics WHERE person_id = ? GROUP BY date)',
+      'SELECT SUM(quest_points) as total FROM social_metrics WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {socialMetricsTable},
     ).watchSingle().map((row) {
@@ -3738,7 +3846,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<double> watchTotalProjectQuestPoints(String personId) {
     return customSelect(
-      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM project_metrics WHERE person_id = ? GROUP BY date)',
+      'SELECT SUM(quest_points) as total FROM project_metrics WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {projectMetricsTable},
     ).watchSingle().map((row) {
@@ -3749,12 +3857,66 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<double> watchTotalFinancialQuestPoints(String personId) {
     return customSelect(
-      'SELECT SUM(val) as total FROM (SELECT MAX(quest_points) as val FROM financial_metrics WHERE person_id = ? GROUP BY date)',
+      'SELECT SUM(quest_points) as total FROM financial_metrics WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {financialMetricsTable},
     ).watchSingle().map((row) {
       final val = row.data['total'];
       return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  // --- Breakdown Watchers ---
+
+  Stream<Map<String, double>> watchProjectBreakdown(String personId) {
+    return (select(
+      projectMetricsTable,
+    )..where((t) => t.personID.equals(personId))).watch().map((rows) {
+      final breakdown = <String, double>{};
+      for (var row in rows) {
+        final cat = row.category ?? 'General';
+        breakdown[cat] = (breakdown[cat] ?? 0.0) + (row.questPoints ?? 0.0);
+      }
+      return breakdown;
+    });
+  }
+
+  Stream<Map<String, double>> watchHealthBreakdown(String personId) {
+    return (select(
+      healthMetricsTable,
+    )..where((t) => t.personID.equals(personId))).watch().map((rows) {
+      final breakdown = <String, double>{};
+      for (var row in rows) {
+        final cat = row.category ?? 'General';
+        breakdown[cat] = (breakdown[cat] ?? 0.0) + (row.questPoints ?? 0.0);
+      }
+      return breakdown;
+    });
+  }
+
+  Stream<Map<String, double>> watchSocialBreakdown(String personId) {
+    return (select(
+      socialMetricsTable,
+    )..where((t) => t.personID.equals(personId))).watch().map((rows) {
+      final breakdown = <String, double>{};
+      for (var row in rows) {
+        final cat = row.category ?? 'General';
+        breakdown[cat] = (breakdown[cat] ?? 0.0) + (row.questPoints ?? 0.0);
+      }
+      return breakdown;
+    });
+  }
+
+  Stream<Map<String, double>> watchFinancialBreakdown(String personId) {
+    return (select(
+      financialMetricsTable,
+    )..where((t) => t.personID.equals(personId))).watch().map((rows) {
+      final breakdown = <String, double>{};
+      for (var row in rows) {
+        final cat = row.category ?? 'General';
+        breakdown[cat] = (breakdown[cat] ?? 0.0) + (row.questPoints ?? 0.0);
+      }
+      return breakdown;
     });
   }
 
@@ -4013,6 +4175,15 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<int> deleteSession(String id) {
     return (delete(focusSessionsTable)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<void> patchSession(
+    String id,
+    FocusSessionsTableCompanion companion,
+  ) async {
+    await (update(
+      focusSessionsTable,
+    )..where((t) => t.id.equals(id))).write(companion);
   }
 }
 
@@ -4393,7 +4564,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 39;
+  int get schemaVersion => 41;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -4705,6 +4876,77 @@ class AppDatabase extends _$AppDatabase {
             print('Drift: Error in version 38 migration: $e');
           }
           */
+        }
+        if (from < 41) {
+          try {
+            await m.addColumn(healthMetricsTable, healthMetricsTable.category);
+            await m.addColumn(
+              financialMetricsTable,
+              financialMetricsTable.category,
+            );
+            await m.addColumn(
+              projectMetricsTable,
+              projectMetricsTable.category,
+            );
+            await m.addColumn(socialMetricsTable, socialMetricsTable.category);
+
+            // Fill NULL values for existing rows
+            await customStatement(
+              "UPDATE health_metrics SET category = 'General' WHERE category IS NULL",
+            );
+            await customStatement(
+              "UPDATE financial_metrics SET category = 'General' WHERE category IS NULL",
+            );
+            await customStatement(
+              "UPDATE project_metrics SET category = 'General' WHERE category IS NULL",
+            );
+            await customStatement(
+              "UPDATE social_metrics SET category = 'General' WHERE category IS NULL",
+            );
+
+            // Update unique indexes to include category.
+            // We drop standard Drift index names if they existed.
+            await customStatement(
+              'DROP INDEX IF EXISTS health_metrics_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS financial_metrics_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS project_metrics_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS social_metrics_person_id_date',
+            );
+
+            await customStatement(
+              'DROP INDEX IF EXISTS index_health_metrics_on_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS index_financial_metrics_on_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS index_project_metrics_on_person_id_date',
+            );
+            await customStatement(
+              'DROP INDEX IF EXISTS index_social_metrics_on_person_id_date',
+            );
+
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_health_metrics_category_unique ON health_metrics (person_id, date, category)',
+            );
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_financial_metrics_category_unique ON financial_metrics (person_id, date, category)',
+            );
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_project_metrics_category_unique ON project_metrics (person_id, date, category)',
+            );
+            await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_social_metrics_category_unique ON social_metrics (person_id, date, category)',
+            );
+          } catch (e) {
+            print('Drift: Error in version 41 migration: $e');
+          }
         }
       },
       beforeOpen: (details) async {

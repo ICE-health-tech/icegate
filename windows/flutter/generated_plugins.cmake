@@ -6,8 +6,10 @@ list(APPEND FLUTTER_PLUGIN_LIST
   app_links
   audioplayers_windows
   file_selector_windows
+  flutter_secure_storage_windows
   flutter_timezone
   geolocator_windows
+  local_auth_windows
   permission_handler_windows
   powersync_flutter_libs
   share_plus

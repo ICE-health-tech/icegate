@@ -16,16 +16,22 @@ class AnalysisDashboardPage extends StatefulWidget {
   final String? personId;
   const AnalysisDashboardPage({super.key, this.personId});
 
-  static Widget icon(BuildContext context, {double? size}) {
+  static Widget icon(BuildContext context, {double size = 56.0}) {
     return MainButton(
       type: "profile",
+      icon: Icons.insert_chart_outlined_rounded,
       destination: "/profile",
       size: size,
-      icon: Icons.home,
-      mainFunction: () async {
-        WidgetNavigatorAction.smartPop(context);
+      mainFunction: () {
+        // context.push("/profile");
       },
       onSwipeRight: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeLeft: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeUp: () {
         WidgetNavigatorAction.smartPop(context);
       },
     );
@@ -82,6 +88,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         db.healthMealDAO,
         db.metricsDAO,
         widget.personId!,
+        tenantID: personBlock.viewedInformation.value?.profiles.tenantId,
       );
     } else {
       _isOther = false;
@@ -111,71 +118,77 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
-    return Watch((context) {
-      return Scaffold(
-        key: ValueKey(widget.personId),
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => WidgetNavigatorAction.smartPop(context),
-          ),
-          title: _isOther
-              ? Text(
-                  "${activeInfo.profiles.firstName}'s Analysis",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                )
-              : null,
-          actions: [
-            Padding(
-              padding: const EdgeInsets.only(right: 16.0),
-              child: Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
+    return Scaffold(
+      key: ValueKey(widget.personId),
+      backgroundColor: colorScheme.surface,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => WidgetNavigatorAction.smartPop(context),
+        ),
+        title: _isOther
+            ? Text(
+                "${activeInfo.profiles.firstName}'s Analysis",
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              )
+            : null,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings_rounded, color: Colors.white70),
+            onPressed: () => context.push("/personal-info"),
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.05),
             ),
+          ),
+          const SizedBox(width: 12),
+          Padding(
+            padding: const EdgeInsets.only(right: 16.0),
+            child: Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // --- GUEST BANNER (Only for self) ---
+            if (!_isOther &&
+                context.watch<AuthBlock>().username.value == 'Guest')
+              _buildGuestBanner(colorScheme, context),
+
+            // --- TITLE ---
+            Text(
+              _isOther ? 'Performance' : 'Overview',
+              style: Theme.of(context).textTheme.displaySmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // --- MINI PROFILE (For others) ---
+            if (_isOther) ...[
+              _buildMiniProfile(activeInfo, colorScheme),
+              const SizedBox(height: 24),
+            ],
+
+            // --- SECTOR GRID ---
+            _buildSectorGrid(context, activeScoreBlock),
+            const SizedBox(height: 32),
+
+            // --- BALANCE CHART ---
+            _buildBalanceSection(context, activeScoreBlock),
           ],
         ),
-        body: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // --- GUEST BANNER (Only for self) ---
-              if (!_isOther &&
-                  context.watch<AuthBlock>().username.value == 'Guest')
-                _buildGuestBanner(colorScheme, context),
-
-              // --- TITLE ---
-              Text(
-                _isOther ? 'Performance' : 'Overview',
-                style: Theme.of(context).textTheme.displaySmall?.copyWith(
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: -1,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // --- MINI PROFILE (For others) ---
-              if (_isOther) ...[
-                _buildMiniProfile(activeInfo, colorScheme),
-                const SizedBox(height: 24),
-              ],
-
-              // --- SECTOR GRID ---
-              _buildSectorGrid(context, activeScoreBlock),
-              const SizedBox(height: 32),
-
-              // --- BALANCE CHART ---
-              _buildBalanceSection(context, activeScoreBlock),
-            ],
-          ),
-        ),
-      );
-    });
+      ),
+    );
   }
 
   Widget _buildMiniProfile(UserInformation info, ColorScheme colorScheme) {
@@ -380,46 +393,46 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       childAspectRatio: 0.85, // Adjusted for breakdown text
       children: [
         Watch(
-          (context) => _buildSectorCard(
+          (signalsContext) => _buildSectorCard(
             context,
             title: "HEALTH",
             value: score.healthGlobalScore.toInt().toString(),
             icon: Icons.favorite_rounded,
             color: Colors.green,
-            breakdown: scoreBlock.healthBreakdown.value,
+            breakdown: scoreBlock.healthBreakdown.watch(signalsContext),
             onTap: () => context.push('/health/dashboard'),
           ),
         ),
         Watch(
-          (context) => _buildSectorCard(
+          (signalsContext) => _buildSectorCard(
             context,
             title: "FINANCE",
             value: score.financialGlobalScore.toInt().toString(),
             icon: Icons.account_balance_wallet_rounded,
             color: Colors.blue,
-            breakdown: scoreBlock.financeBreakdown.value,
+            breakdown: scoreBlock.financeBreakdown.watch(signalsContext),
             onTap: () => context.push('/finance/dashboard'),
           ),
         ),
         Watch(
-          (context) => _buildSectorCard(
+          (signalsContext) => _buildSectorCard(
             context,
             title: "SOCIAL",
             value: score.socialGlobalScore.toInt().toString(),
             icon: Icons.people_alt_rounded,
             color: Colors.purple,
-            breakdown: scoreBlock.socialBreakdown.value,
+            breakdown: scoreBlock.socialBreakdown.watch(signalsContext),
             onTap: () => context.push('/social/dashboard'),
           ),
         ),
         Watch(
-          (context) => _buildSectorCard(
+          (signalsContext) => _buildSectorCard(
             context,
             title: "PROJECTS",
             value: score.careerGlobalScore.toInt().toString(),
             icon: Icons.rocket_launch_rounded,
             color: Colors.orange,
-            breakdown: scoreBlock.projectsBreakdown.value,
+            breakdown: scoreBlock.projectsBreakdown.watch(signalsContext),
             onTap: () => context.push('/projects/dashboard'),
           ),
         ),

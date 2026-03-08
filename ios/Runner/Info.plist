@@ -48,7 +48,7 @@
 	<key>NSContactsUsageDescription</key>
 	<string>We need access to your contacts to let you import friends into your social circle.</string>
 	<key>NSFaceIDUsageDescription</key>
-	<string></string>
+	<string>We use Face ID to allow you to securely log into your account.</string>
 	<key>NSHealthShareUsageDescription</key>
 	<string>We need access to your health data to track your daily steps and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>

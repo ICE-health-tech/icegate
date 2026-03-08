@@ -99,17 +99,22 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         );
 
         // 2. Perform the specific Supabase operation
+        final metricTables = [
+          'health_metrics',
+          'financial_metrics',
+          'project_metrics',
+          'social_metrics',
+        ];
+        final isMetricTable = metricTables.contains(table);
+
         switch (crud.op) {
           case UpdateType.put:
-            if (table == 'health_metrics') {
-              // health_metrics has a unique constraint on (person_id, date).
-              // Use onConflict to merge into existing rows regardless of ID.
+            if (isMetricTable) {
               await Supabase.instance.client.from(table).upsert({
                 'id': id,
                 ...opData,
-              }, onConflict: 'person_id,date');
+              }, onConflict: 'person_id,date,category');
             } else {
-              // Use upsert to handle both inserts and full updates
               await Supabase.instance.client.from(table).upsert({
                 'id': id,
                 ...opData,
@@ -117,14 +122,13 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
             }
             break;
           case UpdateType.patch:
-            if (table == 'health_metrics' &&
+            if (isMetricTable &&
                 opData.containsKey('person_id') &&
                 opData.containsKey('date')) {
-              // Only use onConflict upsert when both fields are present.
               await Supabase.instance.client.from(table).upsert({
                 'id': id,
                 ...opData,
-              }, onConflict: 'person_id,date');
+              }, onConflict: 'person_id,date,category');
             } else {
               await Supabase.instance.client
                   .from(table)
