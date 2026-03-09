@@ -54,7 +54,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         final name = _nameController.text.trim();
         final description = _descriptionController.text.trim();
         final spendingText = _spendingController.text.trim();
-        final url = _urlController.text.trim(); // e.g., /project/123
+        final url = _urlController.text.trim(); // e.g., /projects/123
         final taskTitle = _taskTitleController.text.trim();
         final noteTitle = _noteTitleController.text.trim();
 
@@ -75,7 +75,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         // 1. Create InternalWidgetProtocol
         final internalWidget = InternalWidgetProtocol(
           name: name,
-          url: url.isNotEmpty ? url : '/project/$projectId',
+          url: url.isNotEmpty ? url : '/projects/$projectId',
           alias: name.toLowerCase().replaceAll(' ', '_'),
           widgetID: widgetID,
           dateAdded: dateAdded,
@@ -246,7 +246,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   controller: _urlController,
                   decoration: const InputDecoration(
                     labelText: 'Internal Path (Optional)',
-                    hintText: '/project/custom-path',
+                    hintText: '/projects/custom-path',
                     border: OutlineInputBorder(),
                   ),
                 ),

@@ -122,14 +122,53 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
             }
             break;
           case UpdateType.patch:
-            if (isMetricTable &&
-                opData.containsKey('person_id') &&
-                opData.containsKey('date')) {
-              await Supabase.instance.client.from(table).upsert({
-                'id': id,
-                ...opData,
-              }, onConflict: 'person_id,date,category');
+            if (isMetricTable) {
+              // --- ROBUST METRIC SYNC ---
+              // For metric tables, we MUST ensure person_id, date, and category are present
+              // to use the composite unique constraint (person_id, date, category).
+              // Since Drift patches only contain changed columns, we fetch missing keys from local DB.
+              bool hasKeys =
+                  opData.containsKey('person_id') &&
+                  opData.containsKey('date') &&
+                  opData.containsKey('category');
+
+              Map<String, dynamic> fullData = {'id': id, ...opData};
+
+              if (!hasKeys) {
+                // Fetch identifying keys from the regional PowerSync database
+                final row = await database.get(
+                  'SELECT person_id, date, category, tenant_id FROM $table WHERE id = ?',
+                  [id],
+                );
+                fullData['person_id'] = row['person_id'];
+                fullData['date'] = row['date'];
+                fullData['category'] = row['category'];
+                // Also propagate tenant_id if it's missing from opData but present in DB
+                if (!opData.containsKey('tenant_id') &&
+                    row['tenant_id'] != null) {
+                  fullData['tenant_id'] = row['tenant_id'];
+                }
+              }
+
+              if (fullData.containsKey('person_id') &&
+                  fullData.containsKey('date')) {
+                print(
+                  "🔄 [PowerSync] Performing composite upsert for $table (id: $id)",
+                );
+                await Supabase.instance.client
+                    .from(table)
+                    .upsert(fullData, onConflict: 'person_id,date,category');
+              } else {
+                print(
+                  "⚠️ [PowerSync] Partial patch for $table missing keys and not found locally. Falling back to ID update.",
+                );
+                await Supabase.instance.client
+                    .from(table)
+                    .update(opData)
+                    .eq('id', id);
+              }
             } else {
+              // Standard non-metric tables
               await Supabase.instance.client
                   .from(table)
                   .update(opData)

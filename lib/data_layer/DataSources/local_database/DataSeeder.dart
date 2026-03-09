@@ -31,7 +31,7 @@ class DataSeeder {
       personProtocol,
       id: guestPersonId,
     );
-    print("DUYLONG>>>>>>$personId");
+
 
     // 2. Create Email using EmailAddressProtocol
     final emailProtocol = EmailAddressProtocol.create(

@@ -19,11 +19,11 @@ class PersonalInformationPage extends StatefulWidget {
   static Widget icon(BuildContext context, {double size = 56.0}) {
     return MainButton(
       type: "profile",
-      icon: Icons.home_outlined,
+      icon: Icons.settings,
       destination: "/personal-info",
       size: size,
       mainFunction: () {
-        context.push("/personal-info");
+        context.push("/settings");
       },
       onSwipeRight: () {
         WidgetNavigatorAction.smartPop(context);

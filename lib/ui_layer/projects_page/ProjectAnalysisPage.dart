@@ -14,7 +14,6 @@ class ProjectAnalysisPage extends StatelessWidget {
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
       type: "grid",
-      destination: "/project-analysis",
       size: size,
       icon: Icons.home,
       mainFunction: () {

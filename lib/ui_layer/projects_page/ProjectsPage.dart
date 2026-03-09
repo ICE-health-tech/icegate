@@ -41,7 +41,7 @@ class ProjectsPage extends StatelessWidget {
       onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
       icon: Icons.rocket_launch_rounded,
       onLongPress: () {
-        context.go("/project-analysis");
+        context.go("/projects/dashboard");
       },
       subButtons: [],
     );

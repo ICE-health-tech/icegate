@@ -4564,7 +4564,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 41;
+  int get schemaVersion => 42;
 
   Future<void> clearAllData() async {
     await transaction(() async {

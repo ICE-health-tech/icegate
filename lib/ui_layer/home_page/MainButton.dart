@@ -48,7 +48,7 @@ class MainButton extends StatefulWidget {
   const MainButton({
     super.key,
     required this.type,
-    required this.destination,
+    this.destination = "",
     this.onPressed,
     this.icon = Icons.add,
     this.iconWidget,

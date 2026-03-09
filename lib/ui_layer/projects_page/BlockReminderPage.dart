@@ -381,8 +381,8 @@ class _BlockReminderPageState extends State<BlockReminderPage>
           _buildGlassTile(
             title: "BG FOCUS MUSIC",
             value: isMusicEnabled
-                ? "CYBERPUNK 2077 ENGAGED"
-                : "SILENT PROTOCOL",
+                ? "CYBERPUNK"
+                : "SILENT",
             icon: isMusicEnabled
                 ? Icons.music_note_rounded
                 : Icons.music_off_rounded,

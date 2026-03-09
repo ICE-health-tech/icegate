@@ -58,7 +58,7 @@ class ProjectDetailsPage extends StatelessWidget {
                 padding: const EdgeInsets.only(right: 16),
                 icon: const Icon(Icons.analytics_outlined),
                 tooltip: 'Analysis',
-                onPressed: () => context.go('/project-analysis'),
+                onPressed: () => context.go('/projects/dashboard'),
               ),
               IconButton(
                 padding: const EdgeInsets.only(right: 16),

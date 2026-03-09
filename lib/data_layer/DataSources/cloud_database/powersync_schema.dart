@@ -432,6 +432,7 @@ const Schema schema = Schema([
     Column.text('end_time'),
     Column.integer('duration_seconds'),
     Column.text('status'),
+    Column.text('session_type'),
     Column.text('task_id'),
     Column.text('notes'),
   ]),

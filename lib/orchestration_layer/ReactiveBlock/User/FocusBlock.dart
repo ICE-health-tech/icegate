@@ -10,9 +10,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:live_activities/live_activities.dart';
-import 'package:audioplayers/audioplayers.dart';
-import 'package:ice_gate/data_layer/Services/YoutubeService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 enum FocusStatus { idle, running, paused, completed }
@@ -52,6 +51,15 @@ class FocusBlock {
   static const int _initialShortBreakMin = 5;
   static const int _initialLongBreakMin = 15;
 
+  void setProject(String? projectId) {
+    selectedProjectId.value = projectId;
+    selectedTaskId.value = null; // Reset task when project changes
+  }
+
+  void setTask(String? taskId) {
+    selectedTaskId.value = taskId;
+  }
+
   // Durations (in minutes) - Managed as signals for reactivity
   final focusDuration = signal<int>(_initialFocusMin);
   final shortBreakDuration = signal<int>(_initialShortBreakMin);
@@ -78,6 +86,7 @@ class FocusBlock {
   final muskFocusDuration = signal<int>(5); // Default 5 mins
   final muskRepeatReminder = signal<bool>(true);
   final isMuskMusicEnabled = signal<bool>(true);
+  final isSyncingWithClock = signal<bool>(false);
 
   // Stats
   final totalStudyTimeToday = signal<int>(0); // In seconds
@@ -85,17 +94,6 @@ class FocusBlock {
 
   // Theme
   // Theme
-  final timerTheme = signal<String>('Default');
-
-  // Audio Customization
-  final customSoundPath = signal<String?>(null);
-  final isCustomSoundLocal = signal<bool>(false);
-  final youtubeUrl = signal<String?>(null);
-  final isStreamingYoutube = signal<bool>(false);
-  final currentTrackTitle = signal<String?>(null);
-
-  final _youtubeService = YoutubeService();
-
   // External Blocks for Automation
   GrowthBlock? growthBlock;
   ScoreBlock? scoreBlock;
@@ -108,6 +106,7 @@ class FocusBlock {
   bool _isStarting = false;
   bool _isLiveActivityInitialized = false;
 
+  final MusicBlock? _musicBlock;
   final FocusAudioHandler? _audioHandler;
 
   // Live Activity
@@ -120,17 +119,17 @@ class FocusBlock {
     required HealthLogsDAO healthLogsDao,
     required HealthMetricsDAO healthMetricsDao,
     required String personId,
+    MusicBlock? musicBlock,
     FocusAudioHandler? audioHandler,
     LocalNotificationService? notificationService,
   }) : _focusSessionDao = focusSessionDao,
        _healthLogsDao = healthLogsDao,
        _healthMetricsDao = healthMetricsDao,
        _currentPersonId = personId,
+       _musicBlock = musicBlock,
        _audioHandler = audioHandler,
        _notificationService = notificationService {
-    print(
-      "FocusBlock Checking: AudioHandler injected: ${_audioHandler != null}",
-    );
+    print("FocusBlock Checking: MusicBlock injected: ${_musicBlock != null}");
   }
 
   // --- Initialization ---
@@ -199,7 +198,24 @@ class FocusBlock {
         final remaining = _targetEndTime!.difference(now);
         if (remaining.inMilliseconds <= 0) {
           remainingTime.value = 0;
-          completeSession();
+          if (isSyncingWithClock.value) {
+            // Wait period over, start the actual session
+            isSyncingWithClock.value = false;
+            _actualStartTime =
+                DateTime.now(); // Reset start time for the real block
+            remainingTime.value = muskFocusDuration.value * 60;
+            _targetEndTime = DateTime.now().add(
+              Duration(seconds: remainingTime.value),
+            );
+            _notificationService?.showNotification(
+              889,
+              "BLOCK INITIATED",
+              "Aligned. Sequence starting for ${muskFocusDuration.value} minutes.",
+            );
+            HapticFeedback.heavyImpact();
+          } else {
+            completeSession();
+          }
         } else {
           final newSeconds = remaining.inSeconds;
           if (newSeconds != remainingTime.value) {
@@ -232,9 +248,9 @@ class FocusBlock {
       Future.microtask(() async {
         if (!fromSystem) {
           try {
-            await _updateAudioSource();
+            await _musicBlock?.updateAudioSource(isRunning: true);
             if (isRunning.value) {
-              _audioHandler?.play();
+              _musicBlock?.play();
             }
           } catch (audioError) {
             print(
@@ -260,11 +276,12 @@ class FocusBlock {
       return;
     }
     try {
+      String? songPath = _musicBlock?.customSoundPath.value;
       String songName;
-      if (customSoundPath.value != null) {
-        songName = customSoundPath.value!.split('/').last;
+      if (songPath != null) {
+        songName = songPath.split('/').last;
       } else {
-        songName = _getThemeSoundAsset(timerTheme.value).split('/').last;
+        songName = "Focus Music";
       }
       if (songName.contains('.')) {
         songName = songName.substring(0, songName.lastIndexOf('.'));
@@ -297,11 +314,12 @@ class FocusBlock {
 
   void _updateLiveActivity() {
     if (_activityId != null) {
+      String? songPath = _musicBlock?.customSoundPath.value;
       String songName;
-      if (customSoundPath.value != null) {
-        songName = customSoundPath.value!.split('/').last;
+      if (songPath != null) {
+        songName = songPath.split('/').last;
       } else {
-        songName = _getThemeSoundAsset(timerTheme.value).split('/').last;
+        songName = "Focus Music";
       }
       if (songName.contains('.')) {
         songName = songName.substring(0, songName.lastIndexOf('.'));
@@ -325,12 +343,6 @@ class FocusBlock {
     }
   }
 
-  String _formatTime(int seconds) {
-    int minutes = seconds ~/ 60;
-    int remainingSecs = seconds % 60;
-    return '${minutes.toString().padLeft(2, '0')}:${remainingSecs.toString().padLeft(2, '0')}';
-  }
-
   void pauseTimer({bool fromSystem = false}) {
     print(
       "FocusBlock(${identityHashCode(this)}): pauseTimer called. isRunning: ${isRunning.value}, fromSystem: $fromSystem",
@@ -338,6 +350,7 @@ class FocusBlock {
     if (!isRunning.value) return;
 
     isRunning.value = false;
+    isSyncingWithClock.value = false;
     if (_targetEndTime != null) {
       remainingTime.value = _targetEndTime!
           .difference(DateTime.now())
@@ -351,7 +364,7 @@ class FocusBlock {
     _updateMediaMetadata();
 
     if (!fromSystem) {
-      _audioHandler?.pause();
+      _musicBlock?.pause();
     }
     // Cancel fallback notification
     _notificationService?.cancelNotification(888);
@@ -365,149 +378,12 @@ class FocusBlock {
   }
 
   void _updateMediaMetadata() {
-    if (_audioHandler == null) return;
-
-    String songDisplayName;
-    String rawSongName;
-    if (customSoundPath.value != null) {
-      rawSongName = customSoundPath.value!.split('/').last;
-    } else {
-      rawSongName = _getThemeSoundAsset(timerTheme.value).split('/').last;
-    }
-
-    if (rawSongName.contains('.')) {
-      rawSongName = rawSongName.substring(0, rawSongName.lastIndexOf('.'));
-    }
-    songDisplayName = rawSongName
-        .replaceAll('_', ' ')
-        .split(' ')
-        .map((s) {
-          if (s.isEmpty) return s;
-          return s[0].toUpperCase() + s.substring(1);
-        })
-        .join(' ');
-
-    String title = currentTrackTitle.value ?? songDisplayName;
-    String artist =
-        "${currentSessionType.value} | Time Left: ${_formatTime(remainingTime.value)}";
-
-    final totalSecs = _getDurationForType(currentSessionType.value);
-    // Add is playing
-    _audioHandler.updateMetadata(
-      title: title,
-      artist: artist,
-      playing: isRunning.value,
-      duration: Duration(seconds: totalSecs),
-      position: Duration(seconds: totalSecs - remainingTime.value),
+    _musicBlock?.updateMediaMetadata(
+      isRunning: isRunning.value,
+      sessionType: currentSessionType.value,
+      remainingTime: remainingTime.value,
+      totalDuration: _getDurationForType(currentSessionType.value),
     );
-  }
-
-  static const String SILENT_MODE = 'SILENT';
-
-  Future<bool> _updateAudioSource() async {
-    if (_audioHandler == null) {
-      print(
-        "FocusBlock: AudioHandler is null (Background Audio Service not ready).",
-      );
-      return false;
-    }
-
-    try {
-      // 0. Check for YouTube Streaming
-      if (youtubeUrl.value != null) {
-        final streamUrl = await _youtubeService.getAudioStreamUrl(
-          youtubeUrl.value!,
-        );
-        if (streamUrl != null) {
-          final targetSource = UrlSource(streamUrl);
-          await _audioHandler.setSource(targetSource);
-          isStreamingYoutube.value = true;
-          return true;
-        }
-      }
-      isStreamingYoutube.value = false;
-
-      // 1. Check for Silent Mode
-      if (customSoundPath.value == SILENT_MODE) {
-        await _audioHandler.setVolume(0.0);
-      } else {
-        await _audioHandler.setVolume(1.0);
-      }
-
-      Source targetSource;
-      if (customSoundPath.value != null &&
-          customSoundPath.value != SILENT_MODE) {
-        if (customSoundPath.value!.startsWith('http')) {
-          targetSource = UrlSource(customSoundPath.value!);
-        } else {
-          targetSource = isCustomSoundLocal.value
-              ? DeviceFileSource(customSoundPath.value!)
-              : AssetSource(customSoundPath.value!);
-        }
-      } else {
-        final soundAsset = _getThemeSoundAsset(timerTheme.value);
-        if (soundAsset.startsWith('http')) {
-          targetSource = UrlSource(soundAsset);
-        } else {
-          targetSource = AssetSource(soundAsset);
-        }
-      }
-
-      // 2. Attempt to check if asset exists (Pseudo-check)
-      // Since we can't easily check assets synchronously without context, we rely on try-catch
-
-      await _audioHandler.setSource(targetSource);
-      return true;
-    } catch (e) {
-      // Suppress full stack trace for known "empty asset" issue during development
-      print("FocusBlock: Audio playback skipped (Source Error: $e)");
-      // Optional: fallback to silent if audio fails?
-      return false;
-    }
-  }
-
-  String _getThemeSoundAsset(String themeName) {
-    // This should ideally be shared with FocusPage
-    switch (themeName) {
-      case 'Emerald Haven':
-        return 'sounds/forest_stream.mp3';
-      case 'Emerald Forest':
-        return 'sounds/birds.mp3';
-      case 'Sakura Zen':
-        return 'sounds/zen_garden.mp3';
-      case 'Deep Sea':
-        return 'sounds/ocean_waves.mp3';
-      case 'Frosty Morning':
-        return 'sounds/snow_wind.mp3';
-      case 'Sunset':
-        return 'sounds/crickets.mp3';
-      case 'Cyberpunk 2077':
-        return 'sounds/cyber_ambience.mp3';
-      case 'Cyberpunk Pink':
-        return 'sounds/synthwave.mp3';
-      case 'Volcano':
-        return 'sounds/lava_flow.mp3';
-      case 'Ocean Deep':
-        return 'sounds/deep_ocean.mp3';
-      case 'Enchanted Forest':
-        return 'sounds/magic_forest.mp3';
-      case 'Nordic Night':
-        return 'sounds/campfire.mp3';
-      case 'Royal Velvet':
-        return 'sounds/lofi.mp3';
-      case 'Midnight Gold':
-        return 'sounds/space_drone.mp3';
-      case 'Light Purple':
-        return 'sounds/bubbles.mp3';
-      case 'Nebula':
-        return 'sounds/nebula_hum.mp3';
-      case 'Cherry':
-        return 'sounds/fire_crackle.mp3';
-      case 'Default':
-      default:
-        // Use a remote URL because local assets are corrupted (0 bytes)
-        return 'sounds/default_theme.mp3';
-    }
   }
 
   void resetTimer() {
@@ -662,19 +538,46 @@ class FocusBlock {
 
   void startMuskFocus() {
     print(
-      "🚀 [FocusBlock] Starting Elon Musk Block: ${muskFocusDuration.value}m",
+      "🚀 [FocusBlock] Alignment Musk Focus for: ${muskFocusDuration.value}m",
     );
     currentSessionType.value = 'Focus';
     isMuskMode.value = true;
     isExerciseMode.value = false;
     focusDuration.value = muskFocusDuration.value;
-    remainingTime.value = muskFocusDuration.value * 60;
 
-    _notificationService?.showNotification(
-      888,
-      "BLOCK INITIATED",
-      "Sequence engaged for ${muskFocusDuration.value} minutes.",
-    );
+    // ALIGNMENT LOGIC: Always find the next 5-minute mark (divisible by 5)
+    final now = DateTime.now();
+    final secondsSinceHour = now.minute * 60 + now.second;
+    const intervalSeconds = 5 * 60;
+    final nextAlignedSeconds =
+        ((secondsSinceHour / intervalSeconds).ceil()) * intervalSeconds;
+
+    final nextAlignedTime = DateTime(
+      now.year,
+      now.month,
+      now.day,
+      now.hour,
+      0,
+    ).add(Duration(seconds: nextAlignedSeconds));
+    final waitDuration = nextAlignedTime.difference(now);
+
+    if (waitDuration.inSeconds > 0) {
+      isSyncingWithClock.value = true;
+      remainingTime.value = waitDuration.inSeconds;
+      _notificationService?.showNotification(
+        888,
+        "SYNCING WITH TIME",
+        "Waiting ${waitDuration.inMinutes}m ${waitDuration.inSeconds % 60}s for clock alignment. PLEASE PREPARE.",
+      );
+    } else {
+      isSyncingWithClock.value = false;
+      remainingTime.value = muskFocusDuration.value * 60;
+      _notificationService?.showNotification(
+        888,
+        "BLOCK FOCUS STARTED",
+        "Prepare for ${muskFocusDuration.value} minutes.",
+      );
+    }
 
     startTimer();
   }
@@ -686,66 +589,6 @@ class FocusBlock {
     exerciseType.value = type;
     remainingTime.value = minutes * 60;
     startTimer();
-  }
-
-  void setTimerTheme(String theme) {
-    timerTheme.value = theme;
-    // Clear other audio sources when a theme is explicitly selected
-    youtubeUrl.value = null;
-    currentTrackTitle.value = null;
-    isStreamingYoutube.value = false;
-    customSoundPath.value = null;
-    if (isRunning.value) {
-      _updateAudioSource();
-    }
-  }
-
-  void setCustomSound(String path, {bool isLocal = false}) {
-    customSoundPath.value = path;
-    isCustomSoundLocal.value = isLocal;
-    // Clear YouTube if custom sound is set
-    youtubeUrl.value = null;
-    currentTrackTitle.value = null;
-    isStreamingYoutube.value = false;
-    if (isRunning.value) {
-      _updateAudioSource();
-    }
-  }
-
-  void clearCustomSound() {
-    customSoundPath.value = null;
-    isCustomSoundLocal.value = false;
-  }
-
-  void setProject(String? projectId) {
-    selectedProjectId.value = projectId;
-    selectedTaskId.value = null; // Reset task when project changes
-  }
-
-  void setTask(String? taskId) {
-    selectedTaskId.value = taskId;
-  }
-
-  Future<void> playYoutube(String url) async {
-    youtubeUrl.value = url;
-    customSoundPath.value = null; // Clear custom sounds when playing YouTube
-    final metadata = await _youtubeService.getVideoMetadata(url);
-    if (metadata != null) {
-      currentTrackTitle.value = metadata.title;
-    }
-    if (isRunning.value) {
-      await _updateAudioSource();
-      _audioHandler?.play();
-    }
-  }
-
-  void clearYoutube() {
-    youtubeUrl.value = null;
-    currentTrackTitle.value = null;
-    isStreamingYoutube.value = false;
-    if (isRunning.value) {
-      _updateAudioSource();
-    }
   }
 
   // --- Database Actions ---

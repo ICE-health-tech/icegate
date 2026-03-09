@@ -11,6 +11,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -237,6 +238,7 @@ class _FocusPageState extends State<FocusPage> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final focusBlock = context.watch<FocusBlock>();
+    final musicBlock = context.watch<MusicBlock>();
     final projectBlock = context.watch<ProjectBlock>();
     final growthBlock = context.watch<GrowthBlock>();
 
@@ -252,7 +254,7 @@ class _FocusPageState extends State<FocusPage> {
     final sessionType = focusBlock.currentSessionType.watch(context);
     final totalStudyTime = focusBlock.totalStudyTimeToday.watch(context);
     final sessionsCount = focusBlock.sessionsCompletedToday.watch(context);
-    final themeName = focusBlock.timerTheme.watch(context);
+    final themeName = musicBlock.timerTheme.watch(context);
     final isExerciseMode = focusBlock.isExerciseMode.watch(context);
     final exerciseType = focusBlock.exerciseType.watch(context);
 
@@ -525,14 +527,13 @@ class _TimerControls extends StatelessWidget {
             padding: const EdgeInsets.all(12),
           ),
         ),
-    
-       
       ],
     );
   }
 
   void _showYoutubeDialog(BuildContext context) {
-    final controller = TextEditingController(text: focusBlock.youtubeUrl.value);
+    final musicBlock = context.read<MusicBlock>();
+    final controller = TextEditingController(text: musicBlock.youtubeUrl.value);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -558,7 +559,7 @@ class _TimerControls extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              focusBlock.clearYoutube();
+              musicBlock.clearYoutube();
               Navigator.pop(context);
             },
             child: const Text("Clear"),
@@ -570,7 +571,7 @@ class _TimerControls extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                focusBlock.playYoutube(controller.text);
+                musicBlock.playYoutube(controller.text);
               }
               Navigator.pop(context);
             },
@@ -586,7 +587,10 @@ class _TimerControls extends StatelessWidget {
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (context) => _TimerSettingsSheet(focusBlock: focusBlock),
+      builder: (context) => _TimerSettingsSheet(
+        focusBlock: focusBlock,
+        musicBlock: context.read<MusicBlock>(),
+      ),
     );
   }
 }
@@ -1004,6 +1008,7 @@ class _TimerCircle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final musicBlock = context.watch<MusicBlock>();
     final colorScheme = Theme.of(context).colorScheme;
     final trackSize = UIConstants.getTimerTrackSize(context);
     final containerSize = UIConstants.getTimerContainerSize(context);
@@ -1163,7 +1168,7 @@ class _TimerCircle extends StatelessWidget {
                   ),
                 ],
               ),
-              if (focusBlock.currentTrackTitle.watch(context) != null) ...[
+              if (musicBlock.currentTrackTitle.watch(context) != null) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -1185,7 +1190,7 @@ class _TimerCircle extends StatelessWidget {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          focusBlock.currentTrackTitle.value!.toUpperCase(),
+                          musicBlock.currentTrackTitle.value!.toUpperCase(),
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
@@ -2497,7 +2502,11 @@ class _BubblePainter extends CustomPainter {
 
 class _TimerSettingsSheet extends StatelessWidget {
   final FocusBlock focusBlock;
-  const _TimerSettingsSheet({required this.focusBlock});
+  final MusicBlock musicBlock;
+  const _TimerSettingsSheet({
+    required this.focusBlock,
+    required this.musicBlock,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -2589,7 +2598,7 @@ class _TimerSettingsSheet extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 12),
-              _SoundSelector(focusBlock: focusBlock),
+              _SoundSelector(musicBlock: musicBlock),
               const SizedBox(height: 24),
               Text(
                 "Timer Style",
@@ -2603,9 +2612,9 @@ class _TimerSettingsSheet extends StatelessWidget {
                 runSpacing: 12,
                 children: timerThemes.map((t) {
                   final isSelected =
-                      focusBlock.timerTheme.watch(context) == t.name;
+                      musicBlock.timerTheme.watch(context) == t.name;
                   return InkWell(
-                    onTap: () => focusBlock.setTimerTheme(t.name),
+                    onTap: () => musicBlock.setTimerTheme(t.name),
                     borderRadius: BorderRadius.circular(16),
                     child: Container(
                       padding: const EdgeInsets.symmetric(
@@ -2950,8 +2959,8 @@ class _BreathingCircleState extends State<_BreathingCircle>
 }
 
 class _SoundSelector extends StatefulWidget {
-  final FocusBlock focusBlock;
-  const _SoundSelector({required this.focusBlock});
+  final MusicBlock musicBlock;
+  const _SoundSelector({required this.musicBlock});
 
   @override
   State<_SoundSelector> createState() => _SoundSelectorState();
@@ -2962,8 +2971,8 @@ class _SoundSelectorState extends State<_SoundSelector> {
 
   @override
   Widget build(BuildContext context) {
-    final customPath = widget.focusBlock.customSoundPath.watch(context);
-    final isLocal = widget.focusBlock.isCustomSoundLocal.watch(context);
+    final customPath = widget.musicBlock.customSoundPath.watch(context);
+    final isLocal = widget.musicBlock.isCustomSoundLocal.watch(context);
 
     return Column(
       children: [
@@ -2972,7 +2981,7 @@ class _SoundSelectorState extends State<_SoundSelector> {
           label: "Theme Default",
           isSelected: customPath == null,
           icon: Icons.auto_awesome,
-          onTap: () => widget.focusBlock.clearCustomSound(),
+          onTap: () => widget.musicBlock.clearCustomSound(),
         ),
         const SizedBox(height: 8),
 
@@ -3042,14 +3051,14 @@ class _SoundSelectorState extends State<_SoundSelector> {
     String path,
     IconData icon,
   ) {
-    final customPath = widget.focusBlock.customSoundPath.watch(context);
+    final customPath = widget.musicBlock.customSoundPath.watch(context);
     final isSelected = customPath == path;
     final theme = Theme.of(context);
 
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: InkWell(
-        onTap: () => widget.focusBlock.setCustomSound(path),
+        onTap: () => widget.musicBlock.setCustomSound(path),
         borderRadius: BorderRadius.circular(12),
         child: Container(
           width: 80,
@@ -3106,7 +3115,7 @@ class _SoundSelectorState extends State<_SoundSelector> {
         allowedExtensions: ['mp3', 'wav', 'm4a', 'aac', 'flac'],
       );
       if (result != null && result.files.single.path != null) {
-        widget.focusBlock.setCustomSound(
+        widget.musicBlock.setCustomSound(
           result.files.single.path!,
           isLocal: true,
         );

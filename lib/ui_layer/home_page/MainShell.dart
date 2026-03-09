@@ -74,7 +74,7 @@ class MainShell extends StatelessWidget {
       case '/projects':
         pageIcon = ProjectsPage.icon(context, size: responsiveSize);
         break;
-      case '/project-analysis':
+      case '/projects/dashboard':
         pageIcon = ProjectAnalysisPage.icon(context, size: responsiveSize);
         break;
 

@@ -24,6 +24,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dar
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/cloud_database/PowerSyncConnector.dart';
@@ -63,6 +64,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late WidgetManagerBlock widgetManagerBlock;
   late GrowthBlock growthBlock;
   late FocusBlock focusBlock;
+  late MusicBlock musicBlock;
   late HealthBlock healthBlock;
   late ProjectBlock projectBlock;
   late FinanceBlock financeBlock;
@@ -249,12 +251,14 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
 
+      musicBlock = MusicBlock(audioHandler: audioHandler);
+
       focusBlock = FocusBlock(
         focusSessionDao: database.focusSessionsDAO,
         healthLogsDao: database.healthLogsDAO,
         healthMetricsDao: database.healthMetricsDAO,
         personId: "",
-        audioHandler: audioHandler,
+        musicBlock: musicBlock,
         notificationService: notificationService,
       );
 
@@ -518,6 +522,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<WidgetDAO>.value(value: database.widgetDAO),
         Provider<HealthMetricsDAO>.value(value: database.healthMetricsDAO),
         Provider<ProjectsDAO>.value(value: database.projectsDAO),
+        Provider<FocusSessionsDAO>.value(value: database.focusSessionsDAO),
         Provider<ScoreDAO>.value(value: database.scoreDAO),
         Provider<CustomNotificationDAO>.value(
           value: database.customNotificationDAO,
@@ -541,6 +546,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<QuoteBlock>.value(value: quoteBlock),
         Provider<QuestBlock>.value(value: questBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
+        Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
       ],

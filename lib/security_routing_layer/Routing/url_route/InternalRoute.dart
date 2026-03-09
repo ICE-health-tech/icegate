@@ -343,6 +343,11 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const ProjectsPage(),
           routes: [
             GoRoute(
+              path: 'dashboard',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const ProjectAnalysisPage(),
+            ),
+            GoRoute(
               path:
                   ':projectId', // Đường dẫn con của /projects nên URL sẽ là /projects/123
               parentNavigatorKey: _shellNavigatorKey,
@@ -377,46 +382,6 @@ final GoRouter router = GoRouter(
               },
             ),
           ],
-        ),
-
-        GoRoute(
-          path: '/project-analysis',
-          parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) => const ProjectAnalysisPage(),
-        ),
-        GoRoute(
-          path: '/project/:projectId',
-          parentNavigatorKey: _shellNavigatorKey,
-          builder: (context, state) {
-            final projectId = state.pathParameters['projectId'];
-            if (projectId == null) return const ProjectsPage();
-            return Watch((context) {
-              final projects = context.read<ProjectBlock>().projects.value;
-              //  final projectList = projectBlock.projects.value
-              //           .where((p) => p.status == 0)
-              //           .toList();
-
-              // Nếu danh sách đang tải (rỗng và đang fetch)
-              if (projects.isEmpty) {
-                return const Scaffold(
-                  body: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              // Tìm project theo ID
-              final project = projects.cast<ProjectProtocol?>().firstWhere(
-                (p) => p?.id == projectId,
-                orElse: () => null,
-              );
-
-              // Nếu tìm thấy thì vào Details, không thì quay lại List
-              if (project != null) {
-                return ProjectDetailsPage(project: project);
-              } else {
-                return const ProjectsPage();
-              }
-            });
-          },
         ),
         // Route 9: Widgets
         GoRoute(
