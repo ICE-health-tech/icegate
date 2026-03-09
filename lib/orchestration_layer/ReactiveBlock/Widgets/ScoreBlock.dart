@@ -242,7 +242,7 @@ class ScoreBlock {
       ),
     );
     _subscriptions.add(
-      mealDAO.watchDaysWithMeals().listen(
+      mealDAO.watchDaysWithMeals(personID).listen(
         (meals) => _latestMeals.value = meals,
       ),
     );

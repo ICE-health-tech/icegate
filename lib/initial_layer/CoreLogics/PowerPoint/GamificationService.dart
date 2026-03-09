@@ -19,7 +19,7 @@ class GamificationService {
 
     // 2. Points from Diet: Daily Calories < 1500 = 15 points
     int dietPoints = 0;
-    final allMealsWrapper = await _healthMealDAO.watchDaysWithMeals().first;
+    final allMealsWrapper = await _healthMealDAO.watchDaysWithMeals(personID).first;
 
     // Group by Day
     final Map<String, double> dailyCalories = {};

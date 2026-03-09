@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -152,6 +153,11 @@ class _MealDialogContentState extends State<_MealDialogContent> {
     final calories = double.tryParse(_kcalController.text) ?? 0.0;
 
     final now = DateTime.now();
+    final normalizedDate = DateTime(now.year, now.month, now.day);
+    final dayDeterministicId = IDGen.generateDeterministicUuid(
+      widget.personID,
+      DateFormat('yyyy-MM-dd').format(normalizedDate),
+    );
 
     await widget.healthMealDAO.insertMeal(
       MealsTableCompanion.insert(
@@ -167,10 +173,10 @@ class _MealDialogContentState extends State<_MealDialogContent> {
       ),
     );
 
-    await widget.healthMealDAO.insertDay(
+    await widget.healthMealDAO.upsertDay(
       DaysTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        dayID: now,
+        id: dayDeterministicId,
+        dayID: normalizedDate,
         caloriesOut: const Value(0),
         weight: const Value(0),
       ),
@@ -383,11 +389,12 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final personId = context.read<PersonBlock>().currentPersonID.value;
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: StreamBuilder<List<DayWithMeal>>(
-        stream: _healthMealDAO.watchDaysWithMeals(),
+        stream: _healthMealDAO.watchDaysWithMeals(personId ?? ""),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());

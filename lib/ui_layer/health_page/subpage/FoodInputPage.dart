@@ -2,6 +2,7 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
@@ -169,6 +170,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
           userData?['id']?.toString() ??
           '1';
 
+      final normalizedDate = DateTime(now.year, now.month, now.day);
+      final dayDeterministicId = IDGen.generateDeterministicUuid(
+        personID,
+        DateFormat('yyyy-MM-dd').format(normalizedDate),
+      );
+
       // 1. Insert Meal details
       await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
@@ -184,13 +191,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
         ),
       );
 
-      // 2. Insert Day log
-      await _healthMealDAO.insertDay(
+      // 2. Insert Day log (upsert)
+      await _healthMealDAO.upsertDay(
         DaysTableCompanion.insert(
-          id: IDGen.UUIDV7(),
-          dayID: now,
-          caloriesOut: Value(0),
-          weight: Value(0),
+          id: dayDeterministicId,
+          dayID: normalizedDate,
+          caloriesOut: const Value(0),
+          weight: const Value(0),
         ),
       );
 
@@ -232,6 +239,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
+    final personID = context.read<PersonBlock>().currentPersonID.value;
     return Scaffold(
       body: CustomScrollView(
         physics: const BouncingScrollPhysics(),
@@ -359,7 +367,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             sliver: SliverToBoxAdapter(
               child: StreamBuilder<List<DayWithMeal>>(
-                stream: _healthMealDAO.watchDaysWithMeals(),
+                stream: _healthMealDAO.watchDaysWithMeals(personID ?? ""),
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());

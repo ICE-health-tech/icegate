@@ -3983,6 +3983,8 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
 
   // Days (Meal Logs)
   Future<int> insertDay(DaysTableCompanion day) => into(daysTable).insert(day);
+  Future<int> upsertDay(DaysTableCompanion day) =>
+      into(daysTable).insertOnConflictUpdate(day);
   Future<double> getCaloriesByDate(DateTime date) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
@@ -4022,12 +4024,15 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
         ); // Giả sử dayID lưu mốc 00:00:00
 
     return query.get().then((rows) {
-      return rows.map((row) {
-        return DayWithMeal(
-          day: row.readTable(daysTable),
-          meal: row.readTable(mealsTable),
-        );
-      }).toList();
+      final seenMealIds = <String>{};
+      final results = <DayWithMeal>[];
+      for (var row in rows) {
+        final meal = row.readTable(mealsTable);
+        if (seenMealIds.add(meal.id)) {
+          results.add(DayWithMeal(day: row.readTable(daysTable), meal: meal));
+        }
+      }
+      return results;
     });
   }
 
@@ -4051,7 +4056,7 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
         });
   }
 
-  Stream<List<DayWithMeal>> watchDaysWithMeals() {
+  Stream<List<DayWithMeal>> watchDaysWithMeals(String personId) {
     // We join meals by their eaten_at DATE truncated to midnight
     // to match daysTable.dayID which is also truncated to midnight.
     final query = select(daysTable).join([
@@ -4061,16 +4066,20 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
             mealsTable.eatenAt.month.equalsExp(daysTable.dayID.month) &
             mealsTable.eatenAt.day.equalsExp(daysTable.dayID.day),
       ),
-    ]);
+    ])..where(mealsTable.personID.equals(personId));
+    // final query=select
     print("watchDaysWithMeals: executing query...");
     return query.watch().map((rows) {
-      // print("row is: "+rows.toString());
-      return rows.map((row) {
-        return DayWithMeal(
-          day: row.readTable(daysTable),
-          meal: row.readTable(mealsTable),
-        );
-      }).toList();
+      final seenMealIds = <String>{};
+      final results = <DayWithMeal>[];
+
+      for (var row in rows) {
+        final meal = row.readTable(mealsTable);
+        if (seenMealIds.add(meal.id)) {
+          results.add(DayWithMeal(day: row.readTable(daysTable), meal: meal));
+        }
+      }
+      return results;
     });
   }
 }
