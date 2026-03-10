@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -45,7 +46,7 @@ class HealthAnalysisPage extends StatelessWidget {
             onPressed: () => WidgetNavigatorAction.smartPop(context),
           ),
           title: Text(
-            'Health Analysis',
+            AppLocalizations.of(context)!.health_analysis_title,
             style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
@@ -78,7 +79,7 @@ class HealthAnalysisPage extends StatelessWidget {
             if (allMetrics.isEmpty) {
               return _buildEmptyState(
                 context,
-                "No health data found",
+                AppLocalizations.of(context)!.health_no_data,
                 Icons.health_and_safety_outlined,
               );
             }
@@ -152,13 +153,13 @@ class HealthAnalysisPage extends StatelessWidget {
                     efficiency: efficiency,
                     consistency: consistency,
                     metabolism: (latest.caloriesBurned ?? 0) > 2000
-                        ? "Active"
-                        : "Normal",
+                        ? AppLocalizations.of(context)!.health_metabolism_active
+                        : AppLocalizations.of(context)!.health_metabolism_normal,
                     intensity: (latest.exerciseMinutes ?? 0) > 45
-                        ? "High"
+                        ? AppLocalizations.of(context)!.health_intensity_high
                         : (latest.exerciseMinutes ?? 0) > 20
-                        ? "Optimal"
-                        : "Low",
+                        ? AppLocalizations.of(context)!.health_intensity_optimal
+                        : AppLocalizations.of(context)!.health_intensity_low,
                   ),
                   const SizedBox(height: 24),
 
@@ -231,7 +232,7 @@ class HealthAnalysisPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'PERFORMANCE ANALYSIS',
+                AppLocalizations.of(context)!.health_analysis_performance,
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w900,
@@ -263,32 +264,32 @@ class HealthAnalysisPage extends StatelessWidget {
             children: [
               _buildAnalysisGridItem(
                 context,
-                'Efficiency',
+                AppLocalizations.of(context)!.health_efficiency,
                 '${(efficiency * 100).toStringAsFixed(0)}%',
                 Icons.bolt_rounded,
                 Colors.amber,
               ),
               _buildAnalysisGridItem(
                 context,
-                'Consistency',
+                AppLocalizations.of(context)!.health_consistency,
                 consistency > 0.8
-                    ? 'High'
+                    ? AppLocalizations.of(context)!.health_consistency_high
                     : consistency > 0.5
-                    ? 'Medium'
-                    : 'Low',
+                    ? AppLocalizations.of(context)!.health_consistency_medium
+                    : AppLocalizations.of(context)!.health_consistency_low,
                 Icons.repeat_rounded,
                 Colors.green,
               ),
               _buildAnalysisGridItem(
                 context,
-                'Metabolism',
+                AppLocalizations.of(context)!.health_metabolism,
                 metabolism,
                 Icons.speed_rounded,
                 Colors.orange,
               ),
               _buildAnalysisGridItem(
                 context,
-                'Intensity',
+                AppLocalizations.of(context)!.health_intensity,
                 intensity,
                 Icons.fitness_center_rounded,
                 Colors.blue,
@@ -349,7 +350,7 @@ class HealthAnalysisPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'ACTIVITY BALANCE',
+            AppLocalizations.of(context)!.health_activity_balance,
             style: textTheme.labelSmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w900,
@@ -361,9 +362,9 @@ class HealthAnalysisPage extends StatelessWidget {
             children: [
               SimplePieChart(
                 data: {
-                  'Steps': stepsWeight.toDouble(),
-                  'Exercise': exerciseWeight.toDouble(),
-                  'Focus': focusWeight.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_steps: stepsWeight.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_exercise: exerciseWeight.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_focus: focusPoints.toDouble(),
                   'Other': otherWeight.toDouble(),
                 },
                 colors: [
@@ -379,7 +380,7 @@ class HealthAnalysisPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Activity Balance',
+                      AppLocalizations.of(context)!.health_activity_balance,
                       style: textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
@@ -388,8 +389,8 @@ class HealthAnalysisPage extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       stepsWeight > 60
-                          ? 'You are moving a lot! Great step count.'
-                          : 'Your workout distribution looks balanced today.',
+                          ? AppLocalizations.of(context)!.health_balance_moving_much
+                          : AppLocalizations.of(context)!.health_balance_optimal,
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
@@ -397,14 +398,14 @@ class HealthAnalysisPage extends StatelessWidget {
                     const SizedBox(height: 12),
                     _buildLegendRow(
                       colorScheme.primary,
-                      'Steps',
+                      AppLocalizations.of(context)!.health_metrics_steps,
                       '$stepsWeight%',
                       textTheme,
                     ),
                     const SizedBox(height: 4),
                     _buildLegendRow(
                       colorScheme.secondary,
-                      'Exercise',
+                      AppLocalizations.of(context)!.health_metrics_exercise,
                       '$exerciseWeight%',
                       textTheme,
                     ),
@@ -500,7 +501,7 @@ class HealthAnalysisPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'WEEKLY TRENDS',
+            AppLocalizations.of(context)!.health_weekly_trends,
             style: textTheme.labelSmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w900,
@@ -512,19 +513,19 @@ class HealthAnalysisPage extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               _buildTrendStat(
-                'Avg Steps',
+                AppLocalizations.of(context)!.health_avg_steps,
                 '${avgSteps.toInt()}',
                 colorScheme,
                 textTheme,
               ),
               _buildTrendStat(
-                'Avg Sleep',
+                AppLocalizations.of(context)!.health_avg_sleep,
                 '${avgSleep.toStringAsFixed(1)}h',
                 colorScheme,
                 textTheme,
               ),
               _buildTrendStat(
-                'Avg HR',
+                AppLocalizations.of(context)!.health_avg_hr,
                 '${avgHR.toInt()} bpm',
                 colorScheme,
                 textTheme,
@@ -611,7 +612,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Icon(Icons.lightbulb_rounded, color: Colors.amber, size: 18),
               const SizedBox(width: 8),
               Text(
-                'INSIGHTS',
+                AppLocalizations.of(context)!.health_insights_title,
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w900,
@@ -624,10 +625,12 @@ class HealthAnalysisPage extends StatelessWidget {
           _buildInsightItem(
             Icons.trending_up_rounded,
             Colors.green,
-            (latest.steps ?? 0) > avgSteps ? 'Above Average' : 'Keep Pushing',
             (latest.steps ?? 0) > avgSteps
-                ? 'Your activity levels are higher than your 7-day average.'
-                : 'Try to take a short walk to reach your daily average of ${avgSteps.toInt()} steps.',
+                ? AppLocalizations.of(context)!.health_insight_above_avg
+                : AppLocalizations.of(context)!.health_insight_keep_pushing,
+            (latest.steps ?? 0) > avgSteps
+                ? AppLocalizations.of(context)!.health_insight_activity_higher
+                : AppLocalizations.of(context)!.health_insight_activity_lower(avgSteps.toInt()),
             colorScheme,
             textTheme,
           ),
@@ -635,10 +638,11 @@ class HealthAnalysisPage extends StatelessWidget {
           _buildInsightItem(
             Icons.bolt_rounded,
             Colors.amber,
-            'Efficiency',
+            AppLocalizations.of(context)!.health_efficiency,
             (latest.steps ?? 0) >= STEP_GOAL
-                ? 'Goal reached! You are highly efficient today.'
-                : 'You are at ${((latest.steps ?? 0) / STEP_GOAL * 100).toStringAsFixed(0)}% of your daily goal.',
+                ? AppLocalizations.of(context)!.health_insight_goal_reached
+                : AppLocalizations.of(context)!.health_insight_goal_percent(
+                    ((latest.steps ?? 0) / STEP_GOAL * 100).toStringAsFixed(0)),
             colorScheme,
             textTheme,
           ),
@@ -646,8 +650,8 @@ class HealthAnalysisPage extends StatelessWidget {
           _buildInsightItem(
             Icons.water_drop_rounded,
             Colors.cyan,
-            'Hydration',
-            'You\'re on track with your daily water intake goal!',
+            AppLocalizations.of(context)!.health_hydration_title,
+            AppLocalizations.of(context)!.health_hydration_track_msg,
             colorScheme,
             textTheme,
           ),

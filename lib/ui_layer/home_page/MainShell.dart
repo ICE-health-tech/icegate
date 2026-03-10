@@ -128,34 +128,35 @@ class MainShell extends StatelessWidget {
         child: _getMainButtonForRoute(context, currentRoute),
       ),
 
-      body: Stack(
-        children: [
-          child,
-          if (!shouldHideAppBar)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: SafeArea(
-                child: SizedBox(
-                  height: 80, // Match AppBar toolbarHeight after user change
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                    child: Align(
-                      alignment: Alignment.centerLeft,
-                      child: Watch((context) {
-                        final socialBlock = context.read<SocialBlock>();
-                        final socialIndex = currentRoute.startsWith('/social')
-                            ? socialBlock.activeTab.value
-                            : null;
-                        return CanvasDynamicIsland(socialIndex: socialIndex);
-                      }),
-                    ),
+     
+    body: Stack(
+      children: [
+        child,
+        if (!shouldHideAppBar)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: SafeArea(
+              child: SizedBox(
+                height: 80,
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Watch((context) {
+                      final socialBlock = context.read<SocialBlock>();
+                      var socialIndex = currentRoute.startsWith('/social')
+                          ? socialBlock.activeTab.value
+                          : null;
+                      return CanvasDynamicIsland(socialIndex: socialIndex);
+                    }),
                   ),
                 ),
               ),
             ),
-        ],
+          ),
+      ],
       ),
     );
   }

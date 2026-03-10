@@ -7,6 +7,7 @@ import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -122,7 +123,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "NOTIFICATION CENTER",
+              AppLocalizations.of(context)!.notification_manager_title,
               style: TextStyle(
                 color: Colors.blueAccent.withOpacity(0.8),
                 fontSize: 12,
@@ -132,7 +133,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             ),
             const SizedBox(height: 4),
             Text(
-              "HUNTER HUB",
+              AppLocalizations.of(context)!.notification_hunter_hub,
               style: TextStyle(
                 color: colorScheme.onSurface,
                 fontSize: 22, // Reduced from 28 to prevent overflow
@@ -214,10 +215,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         dividerColor: Colors.transparent,
-        tabs: const [
-          Tab(text: "Active Hunter"),
-          Tab(text: "Reminders"),
-          Tab(text: "Wisdom Board"),
+        tabs: [
+          Tab(text: AppLocalizations.of(context)!.notification_tab_active),
+          Tab(text: AppLocalizations.of(context)!.notification_tab_reminders),
+          Tab(text: AppLocalizations.of(context)!.notification_tab_wisdom),
         ],
       ),
     );
@@ -254,10 +255,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     final displayText =
         latest?.summary ??
         latest?.detailedAnalysis ??
-        "No analysis available yet. The System will generate insights based on your recent metrics.";
+        AppLocalizations.of(context)!.notification_ai_no_data;
     final subtitle = latest != null
-        ? "Advice based on recent metrics"
-        : "Awaiting data synchronization";
+        ? AppLocalizations.of(context)!.notification_ai_advice
+        : AppLocalizations.of(context)!.notification_ai_waiting;
     final hasLiveData = latest != null;
 
     return _buildGlassCard(
@@ -284,8 +285,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  "SYSTEM ANALYSIS",
-                  style: TextStyle(
+                  AppLocalizations.of(context)!.notification_ai_analysis,
+                  style: const TextStyle(
                     color: Colors.blueAccent,
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
@@ -336,7 +337,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "DAILY QUEST: ",
+          AppLocalizations.of(context)!.notification_daily_quest + ": ",
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
             fontSize: 11,
@@ -399,7 +400,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        quest.title ?? "Unnamed Quest",
+                        quest.title ?? AppLocalizations.of(context)!.project_note_untitled,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
                           fontWeight: FontWeight.bold,
@@ -408,7 +409,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        quest.description ?? "Active System Quest",
+                        quest.description ?? AppLocalizations.of(context)!.notification_tab_active,
                         style: TextStyle(
                           color: Theme.of(
                             context,
@@ -498,7 +499,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            "[SYSTEM] Quest '${quest.title ?? "Unnamed"}' Completed! +${quest.rewardExp ?? 0} EXP",
+            AppLocalizations.of(context)!.notification_quest_completed_snack(
+              quest.title ?? AppLocalizations.of(context)!.project_note_untitled,
+              quest.rewardExp ?? 0,
+            ),
           ),
           backgroundColor: Colors.blueAccent.withOpacity(0.8),
           duration: const Duration(seconds: 2),
@@ -518,7 +522,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Personal Reminders",
+              AppLocalizations.of(context)!.notification_personal_reminders,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
@@ -532,7 +536,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 TextButton.icon(
                   onPressed: () => _showAddNotificationDialog(context),
                   icon: const Icon(Icons.add_rounded, size: 20),
-                  label: const Text("Add New"),
+                  label: Text(AppLocalizations.of(context)!.notification_add_new),
                   style: TextButton.styleFrom(
                     foregroundColor: Colors.blueAccent,
                   ),
@@ -564,7 +568,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             ),
                             const SizedBox(height: 16),
                             Text(
-                              "No active reminders.\nAdd one to keep track of your schedule.",
+                              AppLocalizations.of(context)!.notification_no_reminders,
                               textAlign: TextAlign.center,
                               style: TextStyle(
                                 color: Theme.of(context).colorScheme.onSurface,
@@ -602,7 +606,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Notifications are disabled.\nEnable them in settings to see your reminders.",
+                    AppLocalizations.of(context)!.notification_disabled_desc,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.3),
@@ -629,7 +633,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "Wisdom Board",
+              AppLocalizations.of(context)!.notification_wisdom_board,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontSize: 18,
@@ -639,7 +643,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             TextButton.icon(
               onPressed: () => _showAddQuoteDialog(context),
               icon: const Icon(Icons.add_rounded, size: 20),
-              label: const Text("Add Quote"),
+              label: Text(AppLocalizations.of(context)!.notification_add_quote),
               style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
             ),
           ],
@@ -661,7 +665,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        "Your board is empty.\nSave some wisdom to stay focused.",
+                        AppLocalizations.of(context)!.notification_quote_empty,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Theme.of(context).colorScheme.onSurface,
@@ -768,9 +772,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             borderRadius: BorderRadius.circular(24),
             side: BorderSide(color: Colors.white.withOpacity(0.1)),
           ),
-          title: const Text(
-            "Add New Wisdom",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+          title: Text(
+            AppLocalizations.of(context)!.notification_add_wisdom_title,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -780,7 +784,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 maxLines: 3,
                 style: const TextStyle(color: Colors.white),
                 decoration: _premiumInputDecoration(
-                  "Content",
+                  AppLocalizations.of(context)!.notification_wisdom_content,
                   Icons.format_quote_rounded,
                 ),
               ),
@@ -789,7 +793,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 controller: authorController,
                 style: const TextStyle(color: Colors.white),
                 decoration: _premiumInputDecoration(
-                  "Author",
+                  AppLocalizations.of(context)!.notification_wisdom_author,
                   Icons.person_outline,
                 ),
               ),
@@ -798,9 +802,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text(
-                "Cancel",
-                style: TextStyle(color: Colors.white54),
+              child: Text(
+                AppLocalizations.of(context)!.cancel,
+                style: const TextStyle(color: Colors.white54),
               ),
             ),
             ElevatedButton(
@@ -825,7 +829,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text("Save Wisdom"),
+              child: Text(AppLocalizations.of(context)!.notification_save_reminder),
             ),
           ],
         );
@@ -1093,7 +1097,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 side: BorderSide(color: Colors.white.withOpacity(0.1)),
               ),
               title: Text(
-                existing == null ? "New Reminder" : "Edit Reminder",
+                existing == null
+                    ? AppLocalizations.of(context)!.notification_reminder_new
+                    : AppLocalizations.of(context)!.notification_reminder_edit,
                 style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w900,
@@ -1110,7 +1116,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       controller: titleController,
                       style: const TextStyle(color: Colors.white),
                       decoration: _premiumInputDecoration(
-                        "Title",
+                        AppLocalizations.of(context)!.project_title_label,
                         Icons.title_rounded,
                       ),
                     ),
@@ -1119,27 +1125,35 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       controller: contentController,
                       style: const TextStyle(color: Colors.white),
                       decoration: _premiumInputDecoration(
-                        "Content",
+                        AppLocalizations.of(context)!.notification_wisdom_content,
                         Icons.subject_rounded,
                       ),
                     ),
                     const SizedBox(height: 24),
 
                     // Category Picker
-                    const Text(
-                      "Category",
-                      style: TextStyle(
+                    Text(
+                      AppLocalizations.of(context)!.notification_wisdom_author,
+                      style: const TextStyle(
                         color: Colors.white70,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    const SizedBox(height: 8),
                     Wrap(
                       spacing: 8,
                       runSpacing: 8,
                       children: categories.entries.map((e) {
                         final isSelected = selectedCategory == e.key;
+                        final localizedCategory = {
+                          'General': AppLocalizations.of(context)!.notification_category_general,
+                          'Daily': AppLocalizations.of(context)!.notification_category_daily,
+                          'Health': AppLocalizations.of(context)!.notification_category_health,
+                          'Finance': AppLocalizations.of(context)!.notification_category_finance,
+                          'Social': AppLocalizations.of(context)!.notification_category_social,
+                          'Projects': AppLocalizations.of(context)!.notification_category_projects,
+                        }[e.key] ?? e.key;
+                        
                         return InkWell(
                           onTap: () =>
                               setDialogState(() => selectedCategory = e.key),
@@ -1172,7 +1186,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  e.key,
+                                  localizedCategory,
                                   style: TextStyle(
                                     color: isSelected
                                         ? Colors.blueAccent
@@ -1206,6 +1220,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       children: priorities.map((p) {
                         final isSelected = selectedPriority == p;
                         final color = _getPriorityColor(p);
+                        final localizedPriority = {
+                          'Low': AppLocalizations.of(context)!.notification_priority_low,
+                          'Normal': AppLocalizations.of(context)!.notification_priority_normal,
+                          'High': AppLocalizations.of(context)!.notification_priority_high,
+                          'Urgent': AppLocalizations.of(context)!.notification_priority_urgent,
+                        }[p] ?? p;
+
                         return Expanded(
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 2),
@@ -1230,7 +1251,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                                 ),
                                 alignment: Alignment.center,
                                 child: Text(
-                                  p,
+                                  localizedPriority,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -1257,10 +1278,15 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             dropdownColor: const Color(0xFF161B33),
                             initialValue: repeatFrequency,
                             items: ['once', 'daily', 'weekly'].map((f) {
+                              final localizedFreq = {
+                                'once': AppLocalizations.of(context)!.notification_freq_once,
+                                'daily': AppLocalizations.of(context)!.notification_freq_daily,
+                                'weekly': AppLocalizations.of(context)!.notification_freq_weekly,
+                              }[f] ?? f;
                               return DropdownMenuItem(
                                 value: f,
                                 child: Text(
-                                  f.toUpperCase(),
+                                  localizedFreq.toUpperCase(),
                                   style: const TextStyle(
                                     color: Colors.white,
                                     fontSize: 12,
@@ -1271,7 +1297,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             onChanged: (val) =>
                                 setDialogState(() => repeatFrequency = val!),
                             decoration: _premiumInputDecoration(
-                              "Repeat",
+                              AppLocalizations.of(context)!.notification_repeat_label,
                               Icons.repeat_rounded,
                             ),
                           ),
@@ -1290,7 +1316,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             },
                             child: InputDecorator(
                               decoration: _premiumInputDecoration(
-                                "Time",
+                                AppLocalizations.of(context)!.notification_time_label,
                                 Icons.access_time_rounded,
                               ),
                               child: Text(
@@ -1320,7 +1346,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         },
                         child: InputDecorator(
                           decoration: _premiumInputDecoration(
-                            "Date",
+                            AppLocalizations.of(context)!.notification_date_label,
                             Icons.calendar_today_rounded,
                           ),
                           child: Text(
@@ -1343,16 +1369,16 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text(
-                    "Cancel",
-                    style: TextStyle(color: Colors.white54),
+                  child: Text(
+                    AppLocalizations.of(context)!.cancel,
+                    style: const TextStyle(color: Colors.white54),
                   ),
                 ),
                 ElevatedButton(
                   onPressed: () {
                     if (titleController.text.trim().isEmpty) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text("Please enter a title")),
+                        SnackBar(content: Text(AppLocalizations.of(context)!.notification_enter_title_snack)),
                       );
                       return;
                     }
@@ -1477,7 +1503,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: Text(existing == null ? "Save Reminder" : "Update"),
+                  child: Text(existing == null 
+                    ? AppLocalizations.of(context)!.notification_save_reminder 
+                    : AppLocalizations.of(context)!.notification_update_reminder),
                 ),
               ],
             );

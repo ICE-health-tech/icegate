@@ -6,6 +6,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class NotificationInboxPage extends StatelessWidget {
   const NotificationInboxPage({super.key});
@@ -86,7 +87,7 @@ class NotificationInboxPage extends StatelessWidget {
                               });
 
                               if (timelineItems.isEmpty) {
-                                return _buildEmptyState();
+                                return _buildEmptyState(context);
                               }
 
                               return ListView.builder(
@@ -155,17 +156,17 @@ class NotificationInboxPage extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "SYSTEM INBOX",
-                style: TextStyle(
+                AppLocalizations.of(context)!.notification_inbox_title,
+                style: const TextStyle(
                   color: Colors.blueAccent,
                   fontWeight: FontWeight.w900,
                   fontSize: 14,
                   letterSpacing: 2.0,
                 ),
               ),
-              const Text(
-                "Mission History",
-                style: TextStyle(
+              Text(
+                AppLocalizations.of(context)!.notification_mission_history,
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.bold,
                   fontSize: 24,
@@ -217,8 +218,8 @@ class NotificationInboxPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "[MISSION SUCCESS]",
-                      style: TextStyle(
+                      AppLocalizations.of(context)!.notification_mission_success,
+                      style: const TextStyle(
                         color: Colors.greenAccent,
                         fontWeight: FontWeight.w900,
                         fontSize: 10,
@@ -236,7 +237,7 @@ class NotificationInboxPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  quest.title ?? "Unnamed Quest",
+                  quest.title ?? AppLocalizations.of(context)!.project_note_untitled,
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -245,7 +246,7 @@ class NotificationInboxPage extends StatelessWidget {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  quest.description ?? "Mission completed successfully.",
+                  quest.description ?? AppLocalizations.of(context)!.notification_mission_success,
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.6),
                     fontSize: 13,
@@ -297,8 +298,8 @@ class NotificationInboxPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "[FOCUS COMPLETE]",
-                      style: TextStyle(
+                      AppLocalizations.of(context)!.notification_focus_complete,
+                      style: const TextStyle(
                         color: Colors.purpleAccent,
                         fontWeight: FontWeight.w900,
                         fontSize: 10,
@@ -380,7 +381,7 @@ class NotificationInboxPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "[REMINDER]",
+                      AppLocalizations.of(context)!.notification_reminder,
                       style: TextStyle(
                         color: Colors.blueAccent.withOpacity(0.8),
                         fontWeight: FontWeight.w900,
@@ -441,7 +442,7 @@ class NotificationInboxPage extends StatelessWidget {
     }
   }
 
-  Widget _buildEmptyState() {
+  Widget _buildEmptyState(BuildContext context) {
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -453,7 +454,7 @@ class NotificationInboxPage extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            "NO LOGS DETECTED",
+            AppLocalizations.of(context)!.notification_no_logs,
             style: TextStyle(
               color: Colors.white.withOpacity(0.3),
               fontWeight: FontWeight.w900,
@@ -463,7 +464,7 @@ class NotificationInboxPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Complete quests to populate your history.",
+            AppLocalizations.of(context)!.notification_empty_desc,
             style: TextStyle(
               color: Colors.white.withOpacity(0.2),
               fontSize: 14,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 // Assuming your DAO is here and provides deleteWidget
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:flutter/services.dart';
@@ -26,20 +27,15 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
 
     return AlertDialog(
       backgroundColor: colorScheme.surface,
-      title: Text(
-        'Delete Widget',
-        style: TextStyle(color: colorScheme.onSurface),
-      ),
+      title: Text(AppLocalizations.of(context)!.widget_delete_title),
       content: Text(
-        'Are you sure you want to delete "${widget.name}"?',
+        AppLocalizations.of(context)!.widget_delete_msg(widget.name),
         style: TextStyle(color: colorScheme.onSurfaceVariant),
       ),
       actions: [
         TextButton(
-          onPressed: () {
-            Navigator.of(context).pop(false);
-          },
-          child: Text('Cancel', style: TextStyle(color: colorScheme.primary)),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(AppLocalizations.of(context)!.cancel, style: TextStyle(color: colorScheme.primary)),
         ),
         ElevatedButton(
           style: ElevatedButton.styleFrom(
@@ -53,7 +49,10 @@ class _ConfirmDialogState extends State<ConfirmDialog> {
               Navigator.of(context).pop(true);
             }
           },
-          child: const Text('Delete'),
+          child: Text(
+            AppLocalizations.of(context)!.delete,
+            style: const TextStyle(color: Colors.red),
+          ),
         ),
       ],
     );

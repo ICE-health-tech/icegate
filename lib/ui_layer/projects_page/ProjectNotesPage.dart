@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class ProjectNotesPage extends StatelessWidget {
   const ProjectNotesPage({super.key});
@@ -42,7 +43,7 @@ class ProjectNotesPage extends StatelessWidget {
             elevation: 0,
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
-                'Notes',
+                AppLocalizations.of(context)!.project_notes_label,
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
@@ -67,7 +68,7 @@ class ProjectNotesPage extends StatelessWidget {
             builder: (context, snapshot) {
               if (snapshot.hasError) {
                 return SliverFillRemaining(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
+                  child: Center(child: Text(AppLocalizations.of(context)!.system_error(snapshot.error.toString()))),
                 );
               }
 
@@ -92,7 +93,7 @@ class ProjectNotesPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          'No notes yet',
+                          AppLocalizations.of(context)!.project_no_notes_list,
                           style: TextStyle(
                             color: colorScheme.onSurface.withOpacity(0.6),
                             fontSize: 16,
@@ -162,7 +163,7 @@ class _NoteCard extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: Text(
-                  note.title ?? 'Untitled',
+                  note.title ?? AppLocalizations.of(context)!.project_note_untitled,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -176,7 +177,7 @@ class _NoteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Expanded(
               child: Text(
-                _getPreviewText(note.content ?? ''),
+                _getPreviewText(context, note.content ?? ''),
                 style: TextStyle(
                   fontSize: 14,
                   color: colorScheme.onSurface.withOpacity(0.6),
@@ -193,7 +194,7 @@ class _NoteCard extends StatelessWidget {
                 Text(
                   note.updatedAt != null
                       ? DateFormat.MMMd().format(note.updatedAt!)
-                      : 'Unknown Date',
+                      : AppLocalizations.of(context)!.project_unknown_date,
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurface.withOpacity(0.4),
@@ -204,14 +205,14 @@ class _NoteCard extends StatelessWidget {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: const Text('Delete Note'),
-                        content: const Text(
-                          'Are you sure you want to delete this note?',
+                        title: Text(AppLocalizations.of(context)!.project_delete_note_title),
+                        content: Text(
+                          AppLocalizations.of(context)!.project_delete_note_msg,
                         ),
                         actions: [
                           TextButton(
                             onPressed: () => Navigator.pop(context),
-                            child: const Text('Cancel'),
+                            child: Text(AppLocalizations.of(context)!.cancel),
                           ),
                           TextButton(
                             onPressed: () {
@@ -220,7 +221,7 @@ class _NoteCard extends StatelessWidget {
                               );
                               Navigator.pop(context);
                             },
-                            child: const Text('Delete'),
+                            child: Text(AppLocalizations.of(context)!.delete),
                           ),
                         ],
                       ),
@@ -240,7 +241,7 @@ class _NoteCard extends StatelessWidget {
     );
   }
 
-  String _getPreviewText(String content) {
+  String _getPreviewText(BuildContext context, String content) {
     try {
       // Try to parse as Quill Delta JSON (legacy)
       final decoded = jsonDecode(content);
@@ -252,7 +253,7 @@ class _NoteCard extends StatelessWidget {
           }
         }
         final text = buffer.toString().trim();
-        return text.isEmpty ? 'No content' : text;
+        return text.isEmpty ? AppLocalizations.of(context)!.project_note_no_content : text;
       }
     } catch (_) {}
     // Plain markdown — strip common markdown syntax for preview
@@ -264,6 +265,6 @@ class _NoteCard extends StatelessWidget {
         .replaceAll(RegExp(r'>\s'), '')
         .replaceAll(RegExp(r'- '), '')
         .trim();
-    return stripped.isEmpty ? 'No content' : stripped;
+    return stripped.isEmpty ? AppLocalizations.of(context)!.project_note_no_content : stripped;
   }
 }

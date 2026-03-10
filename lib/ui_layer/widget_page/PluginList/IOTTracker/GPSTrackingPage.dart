@@ -5,6 +5,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSSe
 import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'dart:ui';
 // import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/BluetoothDeviceList.dart';
 
@@ -33,8 +34,8 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
     final hasPermissions = await _gpsService.checkPermissions();
     if (!hasPermissions && mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Bluetooth and Location permissions are required'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.gps_permissions_required),
           backgroundColor: Colors.red,
         ),
       );
@@ -68,7 +69,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "LOCATION TRACKER",
+                    AppLocalizations.of(context)!.gps_title,
                     style: TextStyle(
                       color: colorScheme.onSurface,
                       fontSize: 14,
@@ -84,7 +85,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
                       ? IconButton(
                           icon: const Icon(Icons.bluetooth_connected),
                           onPressed: () => _showDisconnectDialog(),
-                          tooltip: 'Disconnect',
+                          tooltip: AppLocalizations.of(context)!.gps_disconnect_tooltip,
                         )
                       : const SizedBox.shrink(),
                 ),
@@ -101,9 +102,9 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
                           labelColor: colorScheme.primary,
                           unselectedLabelColor: colorScheme.onSurface
                               .withOpacity(0.5),
-                          tabs: const [
-                            Tab(icon: Icon(Icons.map), text: 'Map'),
-                            Tab(icon: Icon(Icons.list), text: 'Data'),
+                          tabs: [
+                            Tab(icon: const Icon(Icons.map), text: AppLocalizations.of(context)!.gps_map_tab),
+                            Tab(icon: const Icon(Icons.list), text: AppLocalizations.of(context)!.gps_data_tab),
                           ],
                         )
                       : const SizedBox.shrink(),
@@ -185,7 +186,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
                         // Show device list if not connected
                         if (_gpsService.connectedDevice.value == null) ...[
                           Text(
-                            'SYSTEM SCAN',
+                            AppLocalizations.of(context)!.gps_system_scan,
                             style: TextStyle(
                               color: colorScheme.primary,
                               fontSize: 12,
@@ -195,7 +196,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'Connect to External Receiver',
+                            AppLocalizations.of(context)!.gps_connect_receiver,
                             style: TextStyle(
                               color: colorScheme.onSurface,
                               fontSize: 22,
@@ -300,7 +301,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  isConnected ? 'Connected' : 'Not Connected',
+                  isConnected ? AppLocalizations.of(context)!.gps_connected : AppLocalizations.of(context)!.gps_not_connected,
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: isConnected ? Colors.green : Colors.grey,
@@ -341,7 +342,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
           if (_gpsService.locationHistory.isNotEmpty) ...[
             const SizedBox(height: 32),
             Text(
-              'Location History',
+              AppLocalizations.of(context)!.gps_history,
               style: Theme.of(
                 context,
               ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
@@ -363,20 +364,20 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildDetailRow('Latitude', location.formattedLatitude),
-            _buildDetailRow('Longitude', location.formattedLongitude),
-            _buildDetailRow('Altitude', location.formattedAltitude),
-            _buildDetailRow('Speed', location.formattedSpeed),
+            _buildDetailRow(AppLocalizations.of(context)!.gps_label_latitude, location.formattedLatitude),
+            _buildDetailRow(AppLocalizations.of(context)!.gps_label_longitude, location.formattedLongitude),
+            _buildDetailRow(AppLocalizations.of(context)!.gps_label_altitude, location.formattedAltitude),
+            _buildDetailRow(AppLocalizations.of(context)!.gps_label_speed, location.formattedSpeed),
             _buildDetailRow(
-              'Heading',
+              AppLocalizations.of(context)!.gps_label_heading,
               '${location.formattedHeading} ${location.cardinalDirection}',
             ),
             _buildDetailRow(
-              'Accuracy',
+              AppLocalizations.of(context)!.gps_label_accuracy,
               '${location.accuracy.toStringAsFixed(1)} m',
             ),
             _buildDetailRow(
-              'Time',
+              AppLocalizations.of(context)!.gps_label_time,
               '${location.timestamp.hour}:${location.timestamp.minute.toString().padLeft(2, '0')}',
             ),
           ],
@@ -384,7 +385,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Close'),
+            child: Text(AppLocalizations.of(context)!.close),
           ),
         ],
       ),
@@ -420,14 +421,15 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
           ),
           const SizedBox(height: 16),
           Text(
-            'Waiting for GPS signal...',
+            AppLocalizations.of(context)!.gps_waiting_signal,
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
               color: colorScheme.onSurface.withOpacity(0.6),
             ),
           ),
           const SizedBox(height: 8),
           Text(
-            'Make sure you are in an open area with clear sky view',
+            AppLocalizations.of(context)!.gps_waiting_desc,
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: colorScheme.onSurface.withOpacity(0.5),
@@ -447,7 +449,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.my_location,
-                label: 'Latitude',
+                label: AppLocalizations.of(context)!.gps_label_latitude,
                 value: location.formattedLatitude,
                 color: Colors.blue,
               ),
@@ -456,7 +458,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.location_on,
-                label: 'Longitude',
+                label: AppLocalizations.of(context)!.gps_label_longitude,
                 value: location.formattedLongitude,
                 color: Colors.purple,
               ),
@@ -472,7 +474,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.terrain,
-                label: 'Altitude',
+                label: AppLocalizations.of(context)!.gps_label_altitude,
                 value: location.formattedAltitude,
                 color: Colors.green,
               ),
@@ -481,7 +483,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.speed,
-                label: 'Speed',
+                label: AppLocalizations.of(context)!.gps_label_speed,
                 value: location.formattedSpeed,
                 color: Colors.orange,
               ),
@@ -497,7 +499,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.explore,
-                label: 'Heading',
+                label: AppLocalizations.of(context)!.gps_label_heading,
                 value:
                     '${location.formattedHeading} ${location.cardinalDirection}',
                 color: Colors.red,
@@ -507,7 +509,7 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
             Expanded(
               child: LocationCard(
                 icon: Icons.gps_fixed,
-                label: 'Accuracy',
+                label: AppLocalizations.of(context)!.gps_label_accuracy,
                 value: '${location.accuracy.toStringAsFixed(1)} m',
                 color: Colors.teal,
               ),
@@ -592,9 +594,9 @@ class _GPSTrackingPageState extends State<GPSTrackingPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Disconnect Device'),
-        content: const Text(
-          'Are you sure you want to disconnect from the GPS device?',
+        title: Text(AppLocalizations.of(context)!.gps_disconnect_title),
+        content: Text(
+          AppLocalizations.of(context)!.gps_disconnect_msg,
         ),
         actions: [
           TextButton(

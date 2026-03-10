@@ -26,18 +26,18 @@ class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
 
   static Widget icon(BuildContext context, {double? size}) {
-    final socialBlock = context.read<SocialBlock>();
     return Watch((context) {
+      final socialBlock = context.read<SocialBlock>();
       final index = socialBlock.activeTab.value;
       IconData iconData;
       VoidCallback action;
-
+      print("social index: " + index.toString());
       switch (index) {
         case 0:
           iconData = Icons.share_rounded;
           action = () {
             Share.share(
-              'Check out my rank on ICE Shield! I am making progress!',
+              AppLocalizations.of(context)!.social_share_msg,
             );
           };
           break;
@@ -594,34 +594,52 @@ class _SocialPageState extends State<SocialPage>
   late TabController _tabController;
   final _liveActivities = LiveActivities();
   String? _activityId;
+  void Function()? _disposeEffect;
+  late SocialBlock _socialBlock;
 
   @override
   void initState() {
     super.initState();
-    final socialBlock = context.read<SocialBlock>();
+    _socialBlock = context.read<SocialBlock>();
     _tabController = TabController(
       length: 3,
       vsync: this,
-      initialIndex: socialBlock.activeTab.value,
+      initialIndex: _socialBlock.activeTab.peek(),
     );
 
     // Sync signal -> tab
     _tabController.addListener(() {
-      if (!mounted) return;
+      if (!mounted || _tabController.indexIsChanging) return;
       final newIndex = _tabController.index;
-      if (socialBlock.activeTab.peek() != newIndex) {
-        // Use untracked to prevent this update from being associated with any current effect
-        untracked(() {
-          socialBlock.activeTab.value = newIndex;
+      if (_socialBlock.activeTab.peek() != newIndex) {
+        print("🔄 [TAB -> SIGNAL] Syncing index: $newIndex");
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            untracked(() {
+              _socialBlock.activeTab.value = newIndex;
+            });
+          }
         });
       }
     });
 
     // Sync tab -> signal (for external updates like Dynamic Island)
-    effect(() {
-      final index = socialBlock.activeTab.value;
+    _disposeEffect = effect(() {
+      final index = _socialBlock.activeTab.value;
+      print("🔄 [SIGNAL -> TAB] Checking sync for index: $index");
+
+      // Update Live Activity / Dynamic Island
+      if (mounted) {
+        _updateLiveActivity(context, index);
+      }
+
       if (_tabController.index != index) {
-        _tabController.animateTo(index);
+        print("🔄 [SIGNAL -> TAB] Animating TabController to: $index");
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _tabController.index != index) {
+            _tabController.animateTo(index);
+          }
+        });
       }
     });
 
@@ -641,29 +659,66 @@ class _SocialPageState extends State<SocialPage>
 
   Future<void> _createLiveActivity() async {
     try {
-      _activityId = await _liveActivities
-          .createActivity('group.duylong.art.iceshield', {
-            'title': "Social Dashboard",
-            'songName': _getTabName(_tabController.index),
-            'artist': "ICE GATE",
-            'cover': "social_cover",
-            'progress': 0.0,
-          });
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      _activityId = await _liveActivities.createActivity(
+        'group.duylong.art.iceshield',
+        {
+          'title': l10n.social_dashboard,
+          'songName': _getTabName(context, _tabController.index),
+          'artist': "ICE GATE",
+          'cover': "social_cover",
+          'progress': 0.0,
+        },
+      );
     } catch (e) {
       debugPrint("Social Live Activity Creation Error: $e");
     }
   }
 
-  String _getTabName(int index) {
+  void _updateLiveActivity(BuildContext context, int index) {
+    if (_activityId != null) {
+      try {
+        final l10n = AppLocalizations.of(context)!;
+        _liveActivities.updateActivity(_activityId!, {
+          'title': l10n.social_dashboard,
+          'songName': _getTabName(context, index),
+          'artist': "ICE GATE",
+          'cover': "social_cover",
+          'progress': 0.0,
+        });
+        print("✅ [SOCIAL] Dynamic Island Updated to: ${_getTabName(context, index)}");
+      } catch (e) {
+        debugPrint("Social Live Activity Update Error: $e");
+      }
+    }
+  }
+
+  String _getTabName(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return "RANKING";
+        return l10n.ranking;
       case 1:
-        return "RELATIONSHIPS";
+        return l10n.relationships;
       case 2:
-        return "ACHIEVEMENTS";
+        return l10n.achievements;
       default:
-        return "SOCIAL";
+        return l10n.social;
+    }
+  }
+
+  String _getRankSuffix(BuildContext context, int rank) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (rank) {
+      case 1:
+        return l10n.social_rank_first;
+      case 2:
+        return l10n.social_rank_second;
+      case 3:
+        return l10n.social_rank_third;
+      default:
+        return rank.toString();
     }
   }
 
@@ -672,6 +727,7 @@ class _SocialPageState extends State<SocialPage>
     if (_activityId != null) {
       _liveActivities.endActivity(_activityId!);
     }
+    _disposeEffect?.call();
     _tabController.dispose();
     super.dispose();
   }
@@ -693,14 +749,18 @@ class _SocialPageState extends State<SocialPage>
             // const SizedBox(height: 16),
             // TabBar is now removed, navigation is handled by Dynamic Island
             Expanded(
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildGlobalRankingList(context),
-                  _buildMergedContactList(context),
-                  _buildAchievementsGrid(context),
-                ],
-              ),
+              child: Watch((context) {
+                // Accessing activeTab.value ensures this widget rebuilds when the signal changes
+                final _ = _socialBlock.activeTab.value;
+                return TabBarView(
+                  controller: _tabController,
+                  children: [
+                    _buildGlobalRankingList(context),
+                    _buildMergedContactList(context),
+                    _buildAchievementsGrid(context),
+                  ],
+                );
+              }),
             ),
           ],
         ),
@@ -724,7 +784,7 @@ class _SocialPageState extends State<SocialPage>
         if (rankings.isEmpty) {
           return _buildEmptyState(
             context,
-            'No data in the Global Supremacy Board.',
+            AppLocalizations.of(context)!.no_data_global_board,
             Icons.leaderboard_outlined,
           );
         }
@@ -745,7 +805,7 @@ class _SocialPageState extends State<SocialPage>
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Current Rankings',
+                      AppLocalizations.of(context)!.current_rankings,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -753,7 +813,7 @@ class _SocialPageState extends State<SocialPage>
                       ),
                     ),
                     Text(
-                      'UPDATED 2M AGO',
+                      AppLocalizations.of(context)!.updated_time_ago("2M"),
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -886,7 +946,7 @@ class _SocialPageState extends State<SocialPage>
                   border: Border.all(color: Colors.white, width: 2),
                 ),
                 child: Text(
-                  '${rank == 1 ? "1st" : (rank == 2 ? "2nd" : "3rd")}',
+                  _getRankSuffix(context, rank),
                   style: const TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -907,7 +967,7 @@ class _SocialPageState extends State<SocialPage>
           ),
         ),
         Text(
-          '${(entry.totalScore / 1000).toStringAsFixed(1)}k pts',
+          '${(entry.totalScore / 1000).toStringAsFixed(1)}${AppLocalizations.of(context)!.social_points_suffix}',
           style: TextStyle(
             fontWeight: FontWeight.w900,
             fontSize: isFirst ? 14 : 12,
@@ -982,7 +1042,7 @@ class _SocialPageState extends State<SocialPage>
                       ),
                     ),
                     Text(
-                      'SEASON VETERAN', // Dynamic tier can be added later
+                      AppLocalizations.of(context)!.social_tier_veteran,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -1054,7 +1114,7 @@ class _SocialPageState extends State<SocialPage>
           if (filtered.isEmpty) {
             return _buildEmptyState(
               context,
-              'No person registered in your network.',
+              AppLocalizations.of(context)!.social_empty_network,
               Icons.people_outline_rounded,
             );
           }
@@ -1277,7 +1337,7 @@ class _SocialPageState extends State<SocialPage>
                                     MainAxisAlignment.spaceBetween,
                                 children: [
                                   Text(
-                                    'TRUST LEVEL',
+                                    AppLocalizations.of(context)!.social_trust_level,
                                     style: TextStyle(
                                       color: colorScheme.onSurfaceVariant
                                           .withOpacity(0.6),
@@ -1287,7 +1347,7 @@ class _SocialPageState extends State<SocialPage>
                                     ),
                                   ),
                                   Text(
-                                    'LVL ${(person.affection / 100).floor() + 1}',
+                                    AppLocalizations.of(context)!.level((person.affection / 100).floor() + 1),
                                     style: TextStyle(
                                       color: relationshipColor,
                                       fontSize: 10,
@@ -1331,7 +1391,7 @@ class _SocialPageState extends State<SocialPage>
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
-                                          'Bond Strengthened! Social Score +5.0',
+                                          AppLocalizations.of(context)!.social_bond_strengthened,
                                           style: TextStyle(
                                             color:
                                                 colorScheme.onPrimaryContainer,
@@ -1397,7 +1457,7 @@ class _SocialPageState extends State<SocialPage>
                             onPressed: () =>
                                 _showRelationshipOptions(context, person, dao),
                             icon: const Icon(Icons.settings_outlined, size: 20),
-                            tooltip: 'Options',
+                            tooltip: AppLocalizations.of(context)!.social_options,
                           ),
                         ),
                       ],
@@ -1430,7 +1490,7 @@ class _SocialPageState extends State<SocialPage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'MANAGE RELATIONSHIP',
+              AppLocalizations.of(context)!.social_manage_title,
               style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
@@ -1442,7 +1502,7 @@ class _SocialPageState extends State<SocialPage>
             _buildOptionItem(
               context,
               icon: Icons.person_add_disabled_rounded,
-              title: 'Change to Friend',
+              title: AppLocalizations.of(context)!.social_change_friend,
               onTap: () {
                 dao.updateContactRelationship(person.id, 'friend');
                 Navigator.pop(context);
@@ -1451,7 +1511,7 @@ class _SocialPageState extends State<SocialPage>
             _buildOptionItem(
               context,
               icon: Icons.favorite_rounded,
-              title: 'Change to Dating',
+              title: AppLocalizations.of(context)!.social_change_dating,
               onTap: () {
                 dao.updateContactRelationship(person.id, 'dating');
                 Navigator.pop(context);
@@ -1460,7 +1520,7 @@ class _SocialPageState extends State<SocialPage>
             _buildOptionItem(
               context,
               icon: Icons.family_restroom_rounded,
-              title: 'Change to Family',
+              title: AppLocalizations.of(context)!.social_change_family,
               onTap: () {
                 dao.updateContactRelationship(person.id, 'family');
                 Navigator.pop(context);
@@ -1470,7 +1530,7 @@ class _SocialPageState extends State<SocialPage>
             _buildOptionItem(
               context,
               icon: Icons.delete_outline_rounded,
-              title: 'Delete Bond',
+              title: AppLocalizations.of(context)!.social_delete_bond,
               isDestructive: true,
               onTap: () {
                 dao.deleteContact(person.id);
@@ -1596,7 +1656,7 @@ class _SocialPageState extends State<SocialPage>
           if (quests.isEmpty) {
             return _buildEmptyState(
               context,
-              'No achievements recorded in the System.',
+              AppLocalizations.of(context)!.social_no_achievements,
               Icons.emoji_events_outlined,
             );
           }
@@ -1671,7 +1731,7 @@ class _SocialPageState extends State<SocialPage>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  quest.title?.toUpperCase() ?? "FEAT",
+                  quest.title?.toUpperCase() ?? AppLocalizations.of(context)!.social_feat,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
