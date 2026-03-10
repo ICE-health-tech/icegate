@@ -26,6 +26,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/cloud_database/PowerSyncConnector.dart';
 import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
@@ -75,6 +76,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ExternalWidgetBlock externalWidgetBlock;
   late QuoteBlock quoteBlock;
   late QuestBlock questBlock;
+  late SocialBlock socialBlock;
   late LocaleBlock localeBlock;
   DateTime? _lastPausedTime;
 
@@ -254,6 +256,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       financeBlock = FinanceBlock();
       quoteBlock = QuoteBlock();
       questBlock = QuestBlock();
+      socialBlock = SocialBlock();
       contentBlock = ContentBlock();
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
@@ -552,6 +555,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
         Provider<QuoteBlock>.value(value: quoteBlock),
         Provider<QuestBlock>.value(value: questBlock),
+        Provider<SocialBlock>.value(value: socialBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
         Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),

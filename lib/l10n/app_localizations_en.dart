@@ -974,4 +974,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String health_metrics_detail_coming_soon(String name) {
     return 'Detail page for $name coming soon!';
   }
+
+  @override
+  String get health_subtitle_todays_intake => 'Today\'s intake';
+
+  @override
+  String health_subtitle_goal_steps(int goal) {
+    return 'Goal: $goal';
+  }
+
+  @override
+  String get health_subtitle_current_weight => 'Current weight';
+
+  @override
+  String health_subtitle_goal_ml(int goal) {
+    return 'Goal: $goal ml';
+  }
+
+  @override
+  String health_subtitle_goal_min(int goal) {
+    return 'Goal: $goal min';
+  }
+
+  @override
+  String health_subtitle_goal_hours(String goal) {
+    return 'Goal: $goal hours';
+  }
+
+  @override
+  String get health_subtitle_study_time => 'Study Time';
+
+  @override
+  String get health_subtitle_health_first => 'Health first';
+
+  @override
+  String get health_heart_resting => 'Resting';
+
+  @override
+  String get health_heart_normal => 'Normal';
+
+  @override
+  String get health_heart_elevated => 'Elevated';
+
+  @override
+  String get health_heart_high => 'High';
 }

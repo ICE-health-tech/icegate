@@ -4,6 +4,7 @@ import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.d
 import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:provider/provider.dart' show ReadContext;
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 /// Protocol for managing health metrics data
 abstract class HealthMetricsProtocol {
@@ -155,93 +156,95 @@ class HealthMetricsService implements HealthMetricsProtocol {
 /// Utility class for health metrics data and default values
 class HealthMetricsData {
   /// Get default health metrics for display
-  static List<HealthMetric> getDefaultMetrics() {
+  static List<HealthMetric> getDefaultMetrics(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return [
-      const HealthMetric(
+      HealthMetric(
         id: 'steps',
-        name: 'Steps',
+        name: 'steps',
         value: '8,432',
         icon: Icons.directions_walk,
-        color: Color(0xFF4CAF50),
+        color: const Color(0xFF4CAF50),
         unit: 'steps',
-        progress:
-            0.84, // This should ideally be dynamic too, but keeping as placeholder for default
-        subtitle: 'Goal: $STEP_GOAL',
+        progress: 0.84,
+        subtitle: l10n.health_subtitle_goal_steps(STEP_GOAL),
         trend: '+12%',
         trendPositive: true,
         detailPage: '/health/steps',
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'heart_rate',
-        name: 'Heart Rate',
+        name: 'heart_rate',
         value: '72',
         icon: Icons.favorite,
-        color: Color(0xFFE91E63),
+        color: const Color(0xFFE91E63),
         unit: 'bpm',
-        subtitle: 'Resting',
+        subtitle: l10n.health_heart_resting,
         trend: '-3%',
         trendPositive: true,
         detailPage: '/health/heart_rate',
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'sleep',
-        name: 'Sleep',
+        name: 'sleep',
         value: '7.5',
         icon: Icons.bedtime,
-        color: Color(0xFF673AB7),
+        color: const Color(0xFF673AB7),
         unit: 'hours',
         progress: 0.94,
-        subtitle: 'Goal: $SLEEP_GOAL hours',
+        subtitle: l10n.health_subtitle_goal_hours(
+          SLEEP_GOAL.toStringAsFixed(0),
+        ),
         trend: '+0.5h',
         trendPositive: true,
         detailPage: '/health/sleep',
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'water',
-        name: 'Water',
+        name: 'water',
         value: '6',
         icon: Icons.water_drop,
-        color: Color(0xFF2196F3),
+        color: const Color(0xFF2196F3),
         unit: 'glasses',
-        progress: 0.75, // Placeholder
-        subtitle: 'Goal: $WATER_GOAL ml',
+        progress: 0.75,
+        subtitle: l10n.health_subtitle_goal_ml(WATER_GOAL),
         trend: '0%',
         trendPositive: null,
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'exercise',
-        name: 'Exercise',
+        name: 'exercise',
         value: '45',
         icon: Icons.fitness_center,
-        color: Color(0xFFFF5722),
+        color: const Color(0xFFFF5722),
         unit: 'min',
         progress: 0.75,
-        subtitle: 'Goal: $EXERCISE_GOAL min',
+        subtitle: l10n.health_subtitle_goal_min(EXERCISE_GOAL),
         trend: '+15min',
         trendPositive: true,
         detailPage: '/health/steps',
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'food',
-        name: 'Food',
+        name: 'food',
         value: '0',
         icon: Icons.fastfood,
-        color: Color(0xFF9C27B0),
+        color: const Color(0xFF9C27B0),
         unit: 'kg',
-        subtitle: 'Health first',
+        subtitle: l10n.health_subtitle_health_first,
         trend: '0kg',
         trendPositive: null,
         detailPage: '/health/food/dashboard',
       ),
-      const HealthMetric(
+      HealthMetric(
         id: 'focus',
-        name: 'Focus',
+        name: 'focus',
         value: '0',
         icon: Icons.timer,
-        color: Color(0xFF3F51B5),
+        color: const Color(0xFF3F51B5),
         unit: 'min',
         progress: 0.0,
-        subtitle: 'Study Time',
+        subtitle: l10n.health_subtitle_study_time,
         trend: 'New',
         trendPositive: true,
         detailPage: '/health/focus',
@@ -328,105 +331,107 @@ class HealthMetricsData {
     const exerciseGoal = EXERCISE_GOAL; // min
     const sleepGoal = SLEEP_GOAL; // hours
 
+    final l10n = AppLocalizations.of(context)!;
+
     // 7. Build metric map
     return {
       'food': HealthMetric(
         id: 'food',
-        name: 'Food',
+        name: 'food',
         value: calories.round().toString(),
         icon: Icons.fastfood,
         color: const Color.fromARGB(255, 95, 202, 19),
         unit: 'kcal',
-        subtitle: 'Today\'s intake',
+        subtitle: l10n.health_subtitle_todays_intake,
         trend: trendStr(calories, yesterdayCalories, '%'),
         trendPositive: null,
         detailPage: '/health/food/dashboard',
       ),
       'steps': HealthMetric(
         id: 'steps',
-        name: 'Steps',
+        name: 'steps',
         value: currentSteps.toString(),
         icon: Icons.run_circle,
         color: const Color(0xFF9C27B0),
         unit: 'steps',
         progress: (currentSteps / stepGoal).clamp(0.0, 1.0),
-        subtitle: 'Goal: $stepGoal',
+        subtitle: l10n.health_subtitle_goal_steps(stepGoal),
         trend: trendStr(currentSteps, ySteps, '%'),
         trendPositive: trendPositive(currentSteps, ySteps),
         detailPage: '/health/steps',
       ),
       'weight': HealthMetric(
         id: 'weight',
-        name: 'Weight',
+        name: 'weight',
         value: (metricsLocal?.weightKg ?? 0.0).toStringAsFixed(1),
         icon: Icons.monitor_weight_rounded,
         color: const Color(0xFF00BCD4),
         unit: 'kg',
-        subtitle: 'Current weight',
+        subtitle: l10n.health_subtitle_current_weight,
         trend: null,
         trendPositive: null,
         detailPage: '/health/weight',
       ),
       'water': HealthMetric(
         id: 'water',
-        name: 'Water',
+        name: 'water',
         value: waterMl.toString(),
         icon: Icons.water_drop,
         color: const Color(0xFF2196F3),
         unit: 'ml',
         progress: (waterMl / waterGoal).clamp(0.0, 1.0),
-        subtitle: 'Goal: $waterGoal ml',
+        subtitle: l10n.health_subtitle_goal_ml(waterGoal),
         trend: trendStr(waterMl, yWater, '%'),
         trendPositive: trendPositive(waterMl, yWater),
         detailPage: '/health/water',
       ),
       'exercise': HealthMetric(
         id: 'exercise',
-        name: 'Exercise',
+        name: 'exercise',
         value: exerciseMin.toString(),
         icon: Icons.fitness_center,
         color: const Color(0xFFFF5722),
         unit: 'min',
         progress: (exerciseMin / exerciseGoal).clamp(0.0, 1.0),
-        subtitle: 'Goal: $exerciseGoal min',
+        subtitle: l10n.health_subtitle_goal_min(exerciseGoal),
         trend: trendStr(exerciseMin, yExercise, ' min'),
         trendPositive: trendPositive(exerciseMin, yExercise),
         detailPage: '/health/exercise',
       ),
       'heart_rate': HealthMetric(
         id: 'heart_rate',
-        name: 'Heart Rate',
+        name: 'heart_rate',
         value: heartRate > 0 ? heartRate.toString() : '--',
         icon: Icons.favorite_rounded,
         color: const Color(0xFFE91E63),
         unit: 'bpm',
         subtitle: heartRate < 60
-            ? 'Resting'
+            ? l10n.health_heart_resting
             : heartRate < 100
-            ? 'Normal'
+            ? l10n.health_heart_normal
             : heartRate < 140
-            ? 'Elevated'
-            : 'High',
+            ? l10n.health_heart_elevated
+            : l10n.health_heart_high,
         trend: null,
         trendPositive: null,
         detailPage: '/health/heart_rate',
       ),
       'sleep': HealthMetric(
         id: 'sleep',
-        name: 'Sleep',
+        name: 'sleep',
         value: sleepHrs > 0 ? sleepHrs.toStringAsFixed(1) : '--',
         icon: Icons.bedtime_rounded,
         color: const Color(0xFF673AB7),
         unit: 'hours',
         progress: sleepHrs > 0 ? (sleepHrs / sleepGoal).clamp(0.0, 1.0) : null,
-        subtitle: 'Goal: ${sleepGoal.toStringAsFixed(0)} hours',
+        subtitle: l10n.health_subtitle_goal_hours(sleepGoal.toStringAsFixed(0)),
         trend: sleepHrs > 0 ? trendStr(sleepHrs, ySleep, 'h') : null,
         trendPositive: sleepHrs > 0 ? trendPositive(sleepHrs, ySleep) : null,
         detailPage: '/health/sleep',
       ),
       'focus': HealthMetric(
         id: 'focus',
-        name: 'Focus',
+        name: 'focus',
         value: focusMin.toString(),
         icon: Icons.timer_outlined,
         color: const Color(0xFF3F51B5),
@@ -435,7 +440,7 @@ class HealthMetricsData {
           0.0,
           1.0,
         ), // Placeholder goal of 2 hours
-        subtitle: 'Study Time',
+        subtitle: l10n.health_subtitle_study_time,
         trend: trendStr(focusMin, yFocus, 'min'),
         trendPositive: trendPositive(focusMin, yFocus),
         detailPage: '/health/focus',

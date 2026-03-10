@@ -975,4 +975,48 @@ class AppLocalizationsVi extends AppLocalizations {
   String health_metrics_detail_coming_soon(String name) {
     return 'Trang chi tiết cho $name sắp ra mắt!';
   }
+
+  @override
+  String get health_subtitle_todays_intake => 'Lượng nạp hôm nay';
+
+  @override
+  String health_subtitle_goal_steps(int goal) {
+    return 'Mục tiêu: $goal';
+  }
+
+  @override
+  String get health_subtitle_current_weight => 'Cân nặng hiện tại';
+
+  @override
+  String health_subtitle_goal_ml(int goal) {
+    return 'Mục tiêu: $goal ml';
+  }
+
+  @override
+  String health_subtitle_goal_min(int goal) {
+    return 'Mục tiêu: $goal phút';
+  }
+
+  @override
+  String health_subtitle_goal_hours(String goal) {
+    return 'Mục tiêu: $goal giờ';
+  }
+
+  @override
+  String get health_subtitle_study_time => 'Thời gian học tập';
+
+  @override
+  String get health_subtitle_health_first => 'Sức khỏe là trên hết';
+
+  @override
+  String get health_heart_resting => 'Lúc nghỉ ngơi';
+
+  @override
+  String get health_heart_normal => 'Bình thường';
+
+  @override
+  String get health_heart_elevated => 'Hơi cao';
+
+  @override
+  String get health_heart_high => 'Cao';
 }

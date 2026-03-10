@@ -1867,6 +1867,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Detail page for {name} coming soon!'**
   String health_metrics_detail_coming_soon(String name);
+
+  /// No description provided for @health_subtitle_todays_intake.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s intake'**
+  String get health_subtitle_todays_intake;
+
+  /// No description provided for @health_subtitle_goal_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal}'**
+  String health_subtitle_goal_steps(int goal);
+
+  /// No description provided for @health_subtitle_current_weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Current weight'**
+  String get health_subtitle_current_weight;
+
+  /// No description provided for @health_subtitle_goal_ml.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal} ml'**
+  String health_subtitle_goal_ml(int goal);
+
+  /// No description provided for @health_subtitle_goal_min.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal} min'**
+  String health_subtitle_goal_min(int goal);
+
+  /// No description provided for @health_subtitle_goal_hours.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: {goal} hours'**
+  String health_subtitle_goal_hours(String goal);
+
+  /// No description provided for @health_subtitle_study_time.
+  ///
+  /// In en, this message translates to:
+  /// **'Study Time'**
+  String get health_subtitle_study_time;
+
+  /// No description provided for @health_subtitle_health_first.
+  ///
+  /// In en, this message translates to:
+  /// **'Health first'**
+  String get health_subtitle_health_first;
+
+  /// No description provided for @health_heart_resting.
+  ///
+  /// In en, this message translates to:
+  /// **'Resting'**
+  String get health_heart_resting;
+
+  /// No description provided for @health_heart_normal.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal'**
+  String get health_heart_normal;
+
+  /// No description provided for @health_heart_elevated.
+  ///
+  /// In en, this message translates to:
+  /// **'Elevated'**
+  String get health_heart_elevated;
+
+  /// No description provided for @health_heart_high.
+  ///
+  /// In en, this message translates to:
+  /// **'High'**
+  String get health_heart_high;
 }
 
 class _AppLocalizationsDelegate

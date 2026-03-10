@@ -1,45 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
-import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:provider/provider.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
-  const CanvasDynamicIsland({super.key});
+  final int? socialIndex;
+  const CanvasDynamicIsland({super.key, this.socialIndex});
 
-  String _getTitle(String path) {
+  String _getTitle(
+    BuildContext context,
+    String path,
+    SocialBlock socialBlock,
+    int? socialIndex,
+  ) {
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return "ICE GATE";
+
     if (path == '/') return "ICE GATE";
     if (path.startsWith('/canvas')) return "CANVAS";
     if (path.startsWith('/profile')) return "ANALYSIS";
-    if (path.startsWith('/health')) return "HEALTH";
-    if (path.startsWith('/finance')) return "FINANCE";
+
     if (path.startsWith('/social')) {
-      final index = SocialPage.activeTab.value;
+      final index = socialIndex ?? 0;
+      print("Index of current social page: " + index.toString());
       switch (index) {
         case 0:
-          return "RANKING";
+          return l10n.ranking.toUpperCase();
         case 1:
-          return "PEOPLE";
+          return l10n.relationships.toUpperCase();
         case 2:
-          return "FEATS";
+          return l10n.achievements.toUpperCase();
         default:
           return "SOCIAL";
       }
     }
+
     if (path.startsWith('/health')) {
-      if (path.contains('food')) return "FOOD";
-      if (path.contains('exercise')) return "TRAINING";
-      if (path.contains('water')) return "HYDRATION";
-      if (path.contains('focus')) return "FOCUS";
+      if (path.contains('food')) return l10n.health_log_food.toUpperCase();
+      if (path.contains('exercise')) return l10n.health_exercise.toUpperCase();
+      if (path.contains('water')) return l10n.health_log_water.toUpperCase();
+      if (path.contains('focus')) return l10n.health_focus.toUpperCase();
+      if (path.contains('heart_rate') || path.contains('vitals')) {
+        return "VITALS";
+      }
       return "HEALTH";
     }
+
     if (path.startsWith('/finance')) return "FINANCE";
     if (path.startsWith('/projects')) return "PROJECTS";
     if (path.startsWith('/project_notes')) return "NOTES";
@@ -71,8 +86,10 @@ class CanvasDynamicIsland extends StatelessWidget {
 
     final focusBlock = context.watch<FocusBlock>();
     final questBlock = context.watch<QuestBlock>();
+    final socialBlock = context.watch<SocialBlock>();
 
     return Watch((context) {
+      final currentRoute = GoRouterState.of(context).uri.path;
       final activeTab = DragCanvasGrid.activeCanvasTab.value;
       final isAnyTabOpen = isCanvas && activeTab != 'none';
       final numberOfQuests = questBlock.numberOfQuests.value;
@@ -88,14 +105,9 @@ class CanvasDynamicIsland extends StatelessWidget {
       }
 
       // Calculate width based on screen size
-      final bool hasTacticalIcons =
-          currentRoute.startsWith('/social') ||
-          currentRoute.startsWith('/health') ||
-          currentRoute.startsWith('/finance');
-
       final double targetWidth = isAnyTabOpen
           ? 320
-          : (isFocusRunning ? 260 : (hasTacticalIcons ? 280 : 200));
+          : (isFocusRunning ? 260 : 200);
       final double width = (targetWidth * scalingFactor).clamp(
         0.0,
         screenWidth - 40, // More breathing room
@@ -171,20 +183,6 @@ class CanvasDynamicIsland extends StatelessWidget {
               ),
             ),
 
-            // Tactical Icons Area (if applicable)
-            if (currentRoute.startsWith('/social') ||
-                currentRoute.startsWith('/health') ||
-                currentRoute.startsWith('/finance'))
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: _buildTacticalIcons(
-                  context,
-                  currentRoute,
-                  scalingFactor,
-                  colorScheme,
-                ),
-              ),
-
             // Center Content (Title or Focus Timer)
             if (!isAnyTabOpen)
               Expanded(
@@ -237,15 +235,33 @@ class CanvasDynamicIsland extends StatelessWidget {
                               ),
                             ],
                           )
-                        : AutoSizeText(
-                            _getTitle(currentRoute),
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 11 * scalingFactor,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.2 * scalingFactor,
+                        : GestureDetector(
+                            onTap: () {
+                              if (currentRoute.startsWith('/social')) {
+                                HapticFeedback.mediumImpact();
+                                final currentIdx = socialBlock.activeTab.value;
+                                socialBlock.activeTab.value =
+                                    (currentIdx + 1) % 3;
+                              }
+                            },
+                            child: AutoSizeText(
+                              _getTitle(
+                                context,
+                                currentRoute,
+                                socialBlock,
+                                socialIndex ??
+                                    (currentRoute.startsWith('/social')
+                                        ? socialBlock.activeTab.value
+                                        : null),
+                              ),
+                              style: TextStyle(
+                                color: colorScheme.onSurface,
+                                fontSize: 11 * scalingFactor,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 1.2 * scalingFactor,
+                              ),
+                              maxLines: 1,
                             ),
-                            maxLines: 1,
                           ),
                   ),
                 ),
@@ -393,138 +409,5 @@ class CanvasDynamicIsland extends StatelessWidget {
         ),
       );
     });
-  }
-
-  List<Widget> _buildTacticalIcons(
-    BuildContext context,
-    String path,
-    double scale,
-    ColorScheme colorScheme,
-  ) {
-    if (path.startsWith('/social')) {
-      final activeTab = SocialPage.activeTab.value;
-      return [
-        _tacticalIcon(
-          icon: Icons.emoji_events_rounded,
-          isSelected: activeTab == 0,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            SocialPage.activeTab.value = 0;
-          },
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.people_alt_rounded,
-          isSelected: activeTab == 1,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            SocialPage.activeTab.value = 1;
-          },
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.military_tech_rounded,
-          isSelected: activeTab == 2,
-          onTap: () {
-            HapticFeedback.lightImpact();
-            SocialPage.activeTab.value = 2;
-          },
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-      ];
-    }
-
-    if (path.startsWith('/health')) {
-      return [
-        _tacticalIcon(
-          icon: Icons.restaurant_rounded,
-          isSelected: path == '/health/food/dashboard',
-          onTap: () => context.go('/health/food/dashboard'),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.fitness_center_rounded,
-          isSelected: path == '/health/exercise',
-          onTap: () => context.go('/health/exercise'),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.timer_rounded,
-          isSelected: path == '/health/focus',
-          onTap: () => context.go('/health/focus'),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.water_drop_rounded,
-          isSelected: path == '/health/water',
-          onTap: () => context.go('/health/water'),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-      ];
-    }
-
-    if (path.startsWith('/finance')) {
-      return [
-        _tacticalIcon(
-          icon: Icons.savings_rounded,
-          isSelected: false, // Could be linked to scroll or sub-tab
-          onTap: () => HapticFeedback.selectionClick(),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.shopping_cart_rounded,
-          isSelected: false,
-          onTap: () => HapticFeedback.selectionClick(),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-        _tacticalIcon(
-          icon: Icons.trending_up_rounded,
-          isSelected: false,
-          onTap: () => HapticFeedback.selectionClick(),
-          scale: scale,
-          colorScheme: colorScheme,
-        ),
-      ];
-    }
-
-    return [];
-  }
-
-  Widget _tacticalIcon({
-    required IconData icon,
-    required bool isSelected,
-    required VoidCallback onTap,
-    required double scale,
-    required ColorScheme colorScheme,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        margin: EdgeInsets.symmetric(horizontal: 4 * scale),
-        padding: EdgeInsets.all(4 * scale),
-        decoration: BoxDecoration(
-          color: isSelected
-              ? colorScheme.primary.withOpacity(0.15)
-              : Colors.transparent,
-          borderRadius: BorderRadius.circular(8 * scale),
-        ),
-        child: Icon(
-          icon,
-          color: isSelected
-              ? colorScheme.primary
-              : colorScheme.onSurfaceVariant.withOpacity(0.7),
-          size: 18 * scale,
-        ),
-      ),
-    );
   }
 }

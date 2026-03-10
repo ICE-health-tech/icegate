@@ -14,6 +14,9 @@ import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
 
 import 'package:ice_gate/ui_layer/canvas_page/CanvasDynamicIsland.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:provider/provider.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 
 class MainShell extends StatelessWidget {
@@ -140,7 +143,13 @@ class MainShell extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 12.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: const CanvasDynamicIsland(),
+                      child: Watch((context) {
+                        final socialBlock = context.read<SocialBlock>();
+                        final socialIndex = currentRoute.startsWith('/social')
+                            ? socialBlock.activeTab.value
+                            : null;
+                        return CanvasDynamicIsland(socialIndex: socialIndex);
+                      }),
                     ),
                   ),
                 ),

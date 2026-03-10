@@ -4974,6 +4974,17 @@ class AppDatabase extends _$AppDatabase {
             print('Drift: Error in version 41 migration: $e');
           }
         }
+        if (from < 42) {
+          try {
+            await m.addColumn(projectNotesTable, projectNotesTable.category);
+            // Fill NULL values for existing rows
+            await customStatement(
+              "UPDATE project_notes SET category = 'projects' WHERE category IS NULL",
+            );
+          } catch (e) {
+            print('Drift: Error in version 42 migration: $e');
+          }
+        }
       },
       beforeOpen: (details) async {
         print(
@@ -5005,6 +5016,19 @@ class AppDatabase extends _$AppDatabase {
           );
           await customStatement(
             "UPDATE custom_notifications SET content = '' WHERE content IS NULL;",
+          );
+        } catch (_) {}
+
+        // 3. project_notes cleanup
+        try {
+          await customStatement(
+            "UPDATE project_notes SET category = 'projects' WHERE category IS NULL;",
+          );
+          await customStatement(
+            "UPDATE project_notes SET title = 'Untitled' WHERE title IS NULL;",
+          );
+          await customStatement(
+            "UPDATE project_notes SET content = '' WHERE content IS NULL;",
           );
         } catch (_) {}
       },

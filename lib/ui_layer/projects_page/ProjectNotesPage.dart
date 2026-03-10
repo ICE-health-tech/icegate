@@ -162,7 +162,7 @@ class _NoteCard extends StatelessWidget {
               child: Material(
                 color: Colors.transparent,
                 child: Text(
-                  note.title,
+                  note.title ?? 'Untitled',
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -176,7 +176,7 @@ class _NoteCard extends StatelessWidget {
             const SizedBox(height: 8),
             Expanded(
               child: Text(
-                _getPreviewText(note.content),
+                _getPreviewText(note.content ?? ''),
                 style: TextStyle(
                   fontSize: 14,
                   color: colorScheme.onSurface.withOpacity(0.6),
@@ -191,7 +191,9 @@ class _NoteCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  DateFormat.MMMd().format(note.updatedAt),
+                  note.updatedAt != null
+                      ? DateFormat.MMMd().format(note.updatedAt!)
+                      : 'Unknown Date',
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurface.withOpacity(0.4),

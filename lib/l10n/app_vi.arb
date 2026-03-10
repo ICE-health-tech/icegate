@@ -409,5 +409,45 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "health_subtitle_todays_intake": "Lượng nạp hôm nay",
+    "health_subtitle_goal_steps": "Mục tiêu: {goal}",
+    "@health_subtitle_goal_steps": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_current_weight": "Cân nặng hiện tại",
+    "health_subtitle_goal_ml": "Mục tiêu: {goal} ml",
+    "@health_subtitle_goal_ml": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_goal_min": "Mục tiêu: {goal} phút",
+    "@health_subtitle_goal_min": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_goal_hours": "Mục tiêu: {goal} giờ",
+    "@health_subtitle_goal_hours": {
+        "placeholders": {
+            "goal": {
+                "type": "String"
+            }
+        }
+    },
+    "health_subtitle_study_time": "Thời gian học tập",
+    "health_subtitle_health_first": "Sức khỏe là trên hết",
+    "health_heart_resting": "Lúc nghỉ ngơi",
+    "health_heart_normal": "Bình thường",
+    "health_heart_elevated": "Hơi cao",
+    "health_heart_high": "Cao"
 }

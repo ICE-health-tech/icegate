@@ -1426,7 +1426,7 @@ class _HomePageState extends State<HomePage> {
               Icon(Icons.add_rounded, color: colorScheme.primary, size: 32),
               const SizedBox(height: 4),
               Text(
-                AppLocalizations.of(context)!.done,
+                AppLocalizations.of(context)!.add,
                 style: TextStyle(
                   color: colorScheme.primary,
                   fontSize: 12,

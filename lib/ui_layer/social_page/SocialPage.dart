@@ -14,6 +14,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.da
 import 'package:flutter_contacts/flutter_contacts.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:drift/drift.dart' show Value;
@@ -24,11 +25,10 @@ import 'package:flutter/foundation.dart';
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
 
-  static final activeTab = signal(0);
-
   static Widget icon(BuildContext context, {double? size}) {
+    final socialBlock = context.read<SocialBlock>();
     return Watch((context) {
-      final index = activeTab.value;
+      final index = socialBlock.activeTab.value;
       IconData iconData;
       VoidCallback action;
 
@@ -598,9 +598,31 @@ class _SocialPageState extends State<SocialPage>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    final socialBlock = context.read<SocialBlock>();
+    _tabController = TabController(
+      length: 3,
+      vsync: this,
+      initialIndex: socialBlock.activeTab.value,
+    );
+
+    // Sync signal -> tab
     _tabController.addListener(() {
-      SocialPage.activeTab.value = _tabController.index;
+      if (!mounted) return;
+      final newIndex = _tabController.index;
+      if (socialBlock.activeTab.peek() != newIndex) {
+        // Use untracked to prevent this update from being associated with any current effect
+        untracked(() {
+          socialBlock.activeTab.value = newIndex;
+        });
+      }
+    });
+
+    // Sync tab -> signal (for external updates like Dynamic Island)
+    effect(() {
+      final index = socialBlock.activeTab.value;
+      if (_tabController.index != index) {
+        _tabController.animateTo(index);
+      }
     });
 
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
@@ -669,7 +691,7 @@ class _SocialPageState extends State<SocialPage>
         body: Column(
           children: [
             // const SizedBox(height: 16),
-            _buildCustomTabBar(context),
+            // TabBar is now removed, navigation is handled by Dynamic Island
             Expanded(
               child: TabBarView(
                 controller: _tabController,
@@ -680,46 +702,6 @@ class _SocialPageState extends State<SocialPage>
                 ],
               ),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCustomTabBar(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          // border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
-        ),
-        child: TabBar(
-          controller: _tabController,
-          dividerColor: Colors.transparent,
-          indicatorSize: TabBarIndicatorSize.tab,
-          indicatorPadding: const EdgeInsets.all(4),
-          indicator: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            color: const Color(
-              0xFF648476,
-            ).withOpacity(0.15), // Matches muted green in mockup
-            border: Border.all(color: const Color(0xFF648476).withOpacity(0.3)),
-          ),
-          labelColor: const Color(0xFF648476),
-          unselectedLabelColor: colorScheme.onSurfaceVariant.withOpacity(0.6),
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: 12,
-            letterSpacing: 0.5,
-          ),
-          tabs: [
-            Tab(text: AppLocalizations.of(context)!.ranking),
-            Tab(text: AppLocalizations.of(context)!.relationships),
-            Tab(text: AppLocalizations.of(context)!.achievements),
           ],
         ),
       ),

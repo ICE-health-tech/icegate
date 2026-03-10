@@ -10,10 +10,10 @@ import 'package:ice_gate/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/components/NutritionRingChart.dart';
 
 class FoodInputPage extends StatefulWidget {
   const FoodInputPage({super.key});
@@ -71,7 +71,6 @@ class FoodInputPage extends StatefulWidget {
 
 class _FoodInputPageState extends State<FoodInputPage> {
   final _aiService = Aifoodcaloriesservices();
-  // final database = AppDatabase();
   bool _isAnalyzing = false;
 
   final _foodController = TextEditingController();
@@ -79,7 +78,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
   File? _pickedImage;
   String _imagePath = "";
   final ImagePicker _picker = ImagePicker();
-  FlutterSignal<double> totalCalories = signal(0);
   late HealthMealDAO _healthMealDAO;
 
   Future<void> _pickImage(ImageSource source) async {
@@ -215,22 +213,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
     }
   }
 
-  Future<void> _getTotalCalories() async {
-    final calories = await _healthMealDAO.getCaloriesByDate(DateTime.now());
-    if (mounted) {
-      totalCalories.value = calories;
-    }
-  }
-
   @override
   void initState() {
     super.initState();
 
     // 1. Initialize the DAO immediately (Provider access is safe here if using context.read)
     _healthMealDAO = context.read<HealthMealDAO>();
-
-    // 2. Load calories immediately
-    _getTotalCalories();
   }
 
   // Remove didChangeDependencies entirely unless you have other logic there
@@ -240,326 +228,431 @@ class _FoodInputPageState extends State<FoodInputPage> {
     final textTheme = Theme.of(context).textTheme;
 
     final personID = context.read<PersonBlock>().currentPersonID.value;
+
     return Scaffold(
-      body: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverAppBar(
-            expandedHeight: 0,
-            floating: true,
-            pinned: true,
-            elevation: 0,
-            centerTitle: true,
-            backgroundColor: colorScheme.surface,
-            title: Text(
-              'Food Tracker',
-              style: textTheme.titleLarge?.copyWith(
-                fontWeight: FontWeight.w900,
-                color: colorScheme.onSurface,
-              ),
-            ),
-            iconTheme: IconThemeData(color: colorScheme.onSurface),
+      backgroundColor: colorScheme.surface,
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => _showCaptureOptions(context),
+        label: Text(
+          'Log Meal',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: colorScheme.onPrimary,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-            sliver: SliverToBoxAdapter(
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      colorScheme.primary,
-                      colorScheme.primary.withOpacity(0.8),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(32),
-                  boxShadow: [
-                    BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.3),
-                      blurRadius: 20,
-                      offset: const Offset(0, 10),
-                    ),
+        ),
+        icon: Icon(Icons.add_a_photo_rounded, color: colorScheme.onPrimary),
+        backgroundColor: colorScheme.primary,
+        elevation: 4,
+      ),
+      body: StreamBuilder<List<DayWithMeal>>(
+        stream: _healthMealDAO.watchDaysWithMeals(personID ?? ""),
+        builder: (context, snapshot) {
+          final mealsList = snapshot.data ?? [];
+
+          // Calculate macros for today
+          double p = 0, c = 0, f = 0, kcal = 0;
+          final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+          for (var entry in mealsList) {
+            if (DateFormat('yyyy-MM-dd').format(entry.meal.eatenAt) ==
+                todayKey) {
+              p += entry.meal.protein;
+              c += entry.meal.carbs;
+              f += entry.meal.fat;
+              kcal += entry.meal.calories;
+            }
+          }
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverAppBar(
+                expandedHeight: 460,
+                collapsedHeight: 80,
+                floating: false,
+                pinned: true,
+                elevation: 0,
+                stretch: true,
+                backgroundColor: colorScheme.primary,
+                centerTitle: true,
+                flexibleSpace: FlexibleSpaceBar(
+                  stretchModes: const [
+                    StretchMode.zoomBackground,
+                    StretchMode.blurBackground,
                   ],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  centerTitle: true,
+                  title: Text(
+                    'Nutrition Analysis',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                    ),
+                  ),
+                  background: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      // Premium Gradient Background
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              colorScheme.primary,
+                              colorScheme.primary.withValues(alpha: 0.8),
+                              colorScheme.secondary.withValues(alpha: 0.9),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Decorative elements
+                      Positioned(
+                        top: -50,
+                        right: -50,
+                        child: Container(
+                          width: 200,
+                          height: 200,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.white.withValues(alpha: 0.05),
+                          ),
+                        ),
+                      ),
+                      SafeArea(
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text(
-                              "TODAY'S INTAKE",
-                              style: textTheme.labelSmall?.copyWith(
-                                color: colorScheme.onPrimary.withOpacity(0.7),
-                                letterSpacing: 1.5,
-                                fontWeight: FontWeight.w900,
+                            const SizedBox(height: 40),
+                            NutritionRingChart(
+                              calories: kcal,
+                              calorieGoal:
+                                  2000, // Hardcoded for now, can be signal based
+                              protein: p,
+                              carbs: c,
+                              fat: f,
+                            ),
+                            const SizedBox(height: 32),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 32,
+                              ),
+                              child: Row(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
+                                children: [
+                                  _buildMacroSummaryItem(
+                                    context,
+                                    'Protein',
+                                    p,
+                                    150,
+                                    Colors.orange,
+                                  ),
+                                  _buildMacroSummaryItem(
+                                    context,
+                                    'Carbs',
+                                    c,
+                                    250,
+                                    Colors.blue,
+                                  ),
+                                  _buildMacroSummaryItem(
+                                    context,
+                                    'Fat',
+                                    f,
+                                    70,
+                                    Colors.pink,
+                                  ),
+                                ],
                               ),
                             ),
-                            const SizedBox(height: 8),
-                            Watch((context) {
-                              return Text(
-                                '${totalCalories.value.toInt()} kcal',
-                                style: textTheme.displaySmall?.copyWith(
-                                  color: colorScheme.onPrimary,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: -1,
-                                ),
-                              );
-                            }),
                           ],
                         ),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.onPrimary.withOpacity(0.2),
-                            shape: BoxShape.circle,
+                      ),
+                    ],
+                  ),
+                ),
+                leading: IconButton(
+                  icon: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                  onPressed: () => Navigator.pop(context),
+                ),
+                actions: [
+                  IconButton(
+                    icon: const Icon(
+                      Icons.history_rounded,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => context.go('/health/food/dashboard'),
+                  ),
+                ],
+              ),
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 32, 24, 16),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Recent Logged',
+                        style: textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.go('/health/food/dashboard'),
+                        child: Text(
+                          'View All',
+                          style: TextStyle(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.bold,
                           ),
-                          child: Icon(
-                            Icons.local_fire_department_rounded,
-                            color: colorScheme.onPrimary,
-                            size: 32,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              if (mealsList.isEmpty)
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(vertical: 60),
+                    child: Column(
+                      children: [
+                        Icon(
+                          Icons.restaurant_rounded,
+                          size: 80,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.1,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          "Your plate is empty today",
+                          style: textTheme.bodyLarge?.copyWith(
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 24),
-                    // Simple progress indicator (Target e.g. 2000)
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: Watch((context) {
-                        return LinearProgressIndicator(
-                          value: (totalCalories.value / 2000).clamp(0, 1),
-                          backgroundColor: colorScheme.onPrimary.withOpacity(
-                            0.2,
-                          ),
-                          color: Colors.white,
-                          minHeight: 8,
-                        );
-                      }),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 16),
-                child: Text(
-                  'Recent Meals',
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: -0.5,
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  sliver: SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      final entry = mealsList[index];
+                      return _buildEnhancedMealCard(context, entry);
+                    }, childCount: mealsList.length > 5 ? 5 : mealsList.length),
                   ),
                 ),
-              ),
-            ),
+              const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildMacroSummaryItem(
+    BuildContext context,
+    String label,
+    double value,
+    double goal,
+    Color color,
+  ) {
+    return Column(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          '${value.toInt()}g',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
           ),
-          SliverPadding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            sliver: SliverToBoxAdapter(
-              child: StreamBuilder<List<DayWithMeal>>(
-                stream: _healthMealDAO.watchDaysWithMeals(personID ?? ""),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+            letterSpacing: 0.5,
+          ),
+        ),
+      ],
+    );
+  }
 
-                  if (snapshot.hasError) {
-                    return Text('Error: ${snapshot.error}');
-                  }
+  Widget _buildEnhancedMealCard(BuildContext context, DayWithMeal entry) {
+    final meal = entry.meal;
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    final mealType = _timeInDay(meal.eatenAt);
 
-                  final mealsList = snapshot.data ?? [];
-                  // print("meal list: " + mealsList.toList().toString());
-
-                  if (mealsList.isEmpty) {
-                    return Container(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 20),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+          width: 1,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Meal Image with subtle overlay
+              Stack(
+                children: [
+                  _buildMealImage(meal.mealImageUrl, 110),
+                  Positioned.fill(
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black.withValues(alpha: 0.2),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Icon(
-                            Icons.restaurant_menu_rounded,
-                            size: 64,
-                            color: colorScheme.onSurfaceVariant.withOpacity(
-                              0.1,
-                            ),
+                          _buildBadge(
+                            mealType['label']!,
+                            Color(mealType['color']!),
                           ),
-                          const SizedBox(height: 16),
                           Text(
-                            "No meals logged yet",
-                            style: TextStyle(
-                              color: colorScheme.onSurfaceVariant.withOpacity(
-                                0.4,
+                            DateFormat('h:mm a').format(meal.eatenAt),
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.6,
                               ),
                               fontWeight: FontWeight.bold,
                             ),
                           ),
                         ],
                       ),
-                    );
-                  }
-
-                  return ListView.builder(
-                    padding: EdgeInsets.zero,
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: mealsList.length,
-                    itemBuilder: (context, index) {
-                      final entry = mealsList[index];
-                      final meal = entry.meal;
-                      final mealType = _timeInDay(meal.eatenAt);
-
-                      return Container(
-                        margin: const EdgeInsets.only(bottom: 16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.surface,
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.04),
-                              blurRadius: 12,
-                              offset: const Offset(0, 4),
-                            ),
-                          ],
+                      const SizedBox(height: 8),
+                      Text(
+                        meal.mealName,
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -0.5,
                         ),
-                        child: ClipRRect(
-                          borderRadius: BorderRadius.circular(20),
-                          child: IntrinsicHeight(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                // Meal Image
-                                _buildMealImage(meal.mealImageUrl, 90),
-
-                                // Meal Details
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(16),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.center,
-                                      children: [
-                                        Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Flexible(
-                                              child: Text(
-                                                meal.mealName,
-                                                style: textTheme.titleMedium
-                                                    ?.copyWith(
-                                                      fontWeight:
-                                                          FontWeight.w900,
-                                                      letterSpacing: -0.5,
-                                                    ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            _buildBadge(
-                                              mealType['label']!,
-                                              Color(mealType['color']!),
-                                            ),
-                                          ],
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          DateFormat(
-                                            'h:mm a • MMM d',
-                                          ).format(meal.eatenAt),
-                                          style: textTheme.labelSmall?.copyWith(
-                                            color: colorScheme.onSurfaceVariant
-                                                .withOpacity(0.6),
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 8),
-                                        Row(
-                                          children: [
-                                            _buildMacroText(
-                                              'P',
-                                              meal.protein,
-                                              Colors.orange,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            _buildMacroText(
-                                              'C',
-                                              meal.carbs,
-                                              Colors.blue,
-                                            ),
-                                            const SizedBox(width: 8),
-                                            _buildMacroText(
-                                              'F',
-                                              meal.fat,
-                                              Colors.pink,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ),
-
-                                // Calorie Count
-                                Container(
-                                  width: 70,
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primaryContainer
-                                        .withOpacity(0.1),
-                                    border: Border(
-                                      left: BorderSide(
-                                        color: colorScheme.outlineVariant
-                                            .withOpacity(0.5),
-                                      ),
-                                    ),
-                                  ),
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text(
-                                        '${meal.calories.toInt()}',
-                                        style: textTheme.titleLarge?.copyWith(
-                                          fontWeight: FontWeight.w900,
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                      Text(
-                                        'kcal',
-                                        style: textTheme.labelSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                          color: colorScheme.primary
-                                              .withOpacity(0.7),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      );
-                    },
-                  );
-                },
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const Spacer(),
+                      Row(
+                        children: [
+                          _buildMacroPill('P', meal.protein, Colors.orange),
+                          const SizedBox(width: 8),
+                          _buildMacroPill('C', meal.carbs, Colors.blue),
+                          const SizedBox(width: 8),
+                          _buildMacroPill('F', meal.fat, Colors.pink),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
               ),
+              Container(
+                width: 70,
+                decoration: BoxDecoration(
+                  color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${meal.calories.toInt()}',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    Text(
+                      'kcal',
+                      style: textTheme.labelSmall?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.primary.withValues(alpha: 0.6),
+                        fontSize: 9,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMacroPill(String label, double value, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              color: color,
+              fontWeight: FontWeight.w900,
+              fontSize: 10,
             ),
           ),
-          const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          const SizedBox(width: 4),
+          Text(
+            '${value.toInt()}g',
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 10,
+              color: Colors.black54,
+            ),
+          ),
         ],
       ),
     );
@@ -765,41 +858,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
           letterSpacing: 0.5,
         ),
       ),
-    );
-  }
-
-  Widget _buildMacroText(String label, double value, Color color) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 14,
-          height: 14,
-          decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
-            shape: BoxShape.circle,
-          ),
-          child: Center(
-            child: Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 8,
-                fontWeight: FontWeight.w900,
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(
-          '${value.toInt()}g',
-          style: const TextStyle(
-            fontSize: 11,
-            fontWeight: FontWeight.w700,
-            color: Colors.black54,
-          ),
-        ),
-      ],
     );
   }
 }

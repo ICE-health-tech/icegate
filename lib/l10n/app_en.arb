@@ -535,7 +535,7 @@
     "health_metrics_calories_consumed": "Calories Consumed",
     "health_metrics_calories_burned": "Calories Burned",
     "health_metrics_net_calories": "Net Calories",
-    "health_metrics_weight":"Weight",
+    "health_metrics_weight": "Weight",
     "health_metrics_detail_coming_soon": "Detail page for {name} coming soon!",
     "@health_metrics_detail_coming_soon": {
         "placeholders": {
@@ -543,5 +543,45 @@
                 "type": "String"
             }
         }
-    }
+    },
+    "health_subtitle_todays_intake": "Today's intake",
+    "health_subtitle_goal_steps": "Goal: {goal}",
+    "@health_subtitle_goal_steps": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_current_weight": "Current weight",
+    "health_subtitle_goal_ml": "Goal: {goal} ml",
+    "@health_subtitle_goal_ml": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_goal_min": "Goal: {goal} min",
+    "@health_subtitle_goal_min": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_subtitle_goal_hours": "Goal: {goal} hours",
+    "@health_subtitle_goal_hours": {
+        "placeholders": {
+            "goal": {
+                "type": "String"
+            }
+        }
+    },
+    "health_subtitle_study_time": "Study Time",
+    "health_subtitle_health_first": "Health first",
+    "health_heart_resting": "Resting",
+    "health_heart_normal": "Normal",
+    "health_heart_elevated": "Elevated",
+    "health_heart_high": "High"
 }
