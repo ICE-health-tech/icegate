@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 class WaterPage extends StatefulWidget {
@@ -51,9 +52,12 @@ class _WaterPageState extends State<WaterPage>
         return Scaffold(
           extendBodyBehindAppBar: true,
           appBar: AppBar(
-            title: const Text(
-              'Water Log',
-              style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: -1),
+            title: Text(
+              AppLocalizations.of(context)!.health_water_log,
+              style: const TextStyle(
+                fontWeight: FontWeight.w900,
+                letterSpacing: -1,
+              ),
             ),
             centerTitle: true,
             backgroundColor: Colors.transparent,
@@ -137,7 +141,7 @@ class _WaterPageState extends State<WaterPage>
                           mainAxisAlignment: MainAxisAlignment.spaceAround,
                           children: [
                             _statItem(
-                              "GOAL",
+                              AppLocalizations.of(context)!.health_water_goal,
                               "$_goalWater ml",
                               Icons.flag_rounded,
                             ),
@@ -147,7 +151,7 @@ class _WaterPageState extends State<WaterPage>
                               color: Colors.white24,
                             ),
                             _statItem(
-                              "POINTS",
+                              AppLocalizations.of(context)!.health_water_points,
                               "+$WATER_BONUS_POINTS XP",
                               Icons.stars_rounded,
                             ),
@@ -157,7 +161,7 @@ class _WaterPageState extends State<WaterPage>
                               color: Colors.white24,
                             ),
                             _statItem(
-                              "LEFT",
+                              AppLocalizations.of(context)!.health_water_left,
                               "${math.max(0, _goalWater - totalWater)} ml",
                               Icons.opacity_rounded,
                             ),
@@ -202,9 +206,11 @@ class _WaterPageState extends State<WaterPage>
                         border: Border.all(color: Colors.white.withAlpha(30)),
                       ),
                       child: logs.isEmpty
-                          ? const Center(
+                          ? Center(
                               child: Text(
-                                "STAY HYDRATED",
+                                AppLocalizations.of(
+                                  context,
+                                )!.health_stay_hydrated,
                                 style: TextStyle(
                                   color: Colors.white38,
                                   letterSpacing: 2,
@@ -293,16 +299,18 @@ class _WaterPageState extends State<WaterPage>
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("CUSTOM INTAKE"),
+        title: Text(AppLocalizations.of(context)!.health_custom_intake),
         content: TextField(
           controller: controller,
           keyboardType: TextInputType.number,
-          decoration: const InputDecoration(suffixText: "ML"),
+          decoration: InputDecoration(
+            suffixText: AppLocalizations.of(context)!.health_unit_ml,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("CANCEL"),
+            child: Text(MaterialLocalizations.of(context).cancelButtonLabel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -321,7 +329,7 @@ class _WaterPageState extends State<WaterPage>
               }
               if (context.mounted) Navigator.pop(context);
             },
-            child: const Text("ADD"),
+            child: Text(MaterialLocalizations.of(context).okButtonLabel),
           ),
         ],
       ),

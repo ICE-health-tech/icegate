@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -130,7 +131,9 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         ),
         title: _isOther
             ? Text(
-                "${activeInfo.profiles.firstName}'s Analysis",
+                AppLocalizations.of(
+                  context,
+                )!.analysis_user_title(activeInfo.profiles.firstName),
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -165,7 +168,9 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
 
             // --- TITLE ---
             Text(
-              _isOther ? 'Performance' : 'Overview',
+              _isOther
+                  ? AppLocalizations.of(context)!.performance
+                  : AppLocalizations.of(context)!.overview,
               style: Theme.of(context).textTheme.displaySmall?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: -1,
@@ -247,14 +252,14 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Guest Mode",
+                    AppLocalizations.of(context)!.guest_mode,
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                       color: colorScheme.primary,
                     ),
                   ),
                   Text(
-                    "Synchronize to save your progress.",
+                    AppLocalizations.of(context)!.sync_desc,
                     style: TextStyle(
                       fontSize: 12,
                       color: colorScheme.onSurfaceVariant,
@@ -271,7 +276,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text("Sync"),
+              child: Text(AppLocalizations.of(context)!.sync),
             ),
           ],
         ),
@@ -360,7 +365,9 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                "${(progress * 100).toInt()}% to level ${level + 1}",
+                AppLocalizations.of(
+                  context,
+                )!.percent_to_level((progress * 100).toInt(), level + 1),
                 style: TextStyle(
                   color: colorScheme.onPrimary.withOpacity(0.8),
                   fontSize: 12,
@@ -368,7 +375,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                 ),
               ),
               Text(
-                "Total XP: ${totalXP.toInt()}",
+                AppLocalizations.of(context)!.total_xp(totalXP.toInt()),
                 style: TextStyle(
                   color: colorScheme.onPrimary.withOpacity(0.8),
                   fontSize: 12,
@@ -395,7 +402,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         Watch(
           (signalsContext) => _buildSectorCard(
             context,
-            title: "HEALTH",
+            title: AppLocalizations.of(context)!.scoring_health.toUpperCase(),
             value: score.healthGlobalScore.toInt().toString(),
             icon: Icons.favorite_rounded,
             color: Colors.green,
@@ -406,7 +413,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         Watch(
           (signalsContext) => _buildSectorCard(
             context,
-            title: "FINANCE",
+            title: AppLocalizations.of(context)!.scoring_finance.toUpperCase(),
             value: score.financialGlobalScore.toInt().toString(),
             icon: Icons.account_balance_wallet_rounded,
             color: Colors.blue,
@@ -417,7 +424,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         Watch(
           (signalsContext) => _buildSectorCard(
             context,
-            title: "SOCIAL",
+            title: AppLocalizations.of(context)!.scoring_social.toUpperCase(),
             value: score.socialGlobalScore.toInt().toString(),
             icon: Icons.people_alt_rounded,
             color: Colors.purple,
@@ -428,7 +435,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         Watch(
           (signalsContext) => _buildSectorCard(
             context,
-            title: "PROJECTS",
+            title: AppLocalizations.of(context)!.scoring_career.toUpperCase(),
             value: score.careerGlobalScore.toInt().toString(),
             icon: Icons.rocket_launch_rounded,
             color: Colors.orange,
@@ -492,6 +499,42 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       }
     }
 
+    String _getLocalizedBreakdownTitle(String key) {
+      final l10n = AppLocalizations.of(context)!;
+      switch (key.toLowerCase()) {
+        case 'steps':
+          return l10n.breakdown_steps;
+        case 'diet':
+          return l10n.breakdown_diet;
+        case 'exercise':
+          return l10n.breakdown_exercise;
+        case 'focus':
+          return l10n.breakdown_focus;
+        case 'water':
+          return l10n.breakdown_water;
+        case 'sleep':
+          return l10n.breakdown_sleep;
+        case 'contacts':
+          return l10n.breakdown_contacts;
+        case 'affection':
+          return l10n.breakdown_affection;
+        case 'quests':
+          return l10n.breakdown_quests;
+        case 'accounts':
+          return l10n.breakdown_accounts;
+        case 'assets':
+          return l10n.breakdown_assets;
+        case 'tasks':
+          return l10n.breakdown_tasks;
+        case 'projects':
+          return l10n.breakdown_projects;
+        case 'system':
+          return l10n.breakdown_system;
+        default:
+          return key.toUpperCase();
+      }
+    }
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -552,7 +595,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            e.key.toUpperCase(),
+                            _getLocalizedBreakdownTitle(e.key),
                             style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
@@ -605,9 +648,9 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "SCORE BALANCE",
-            style: TextStyle(
+          Text(
+            AppLocalizations.of(context)!.score_balance,
+            style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.5,
@@ -652,7 +695,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                           ),
                           const SizedBox(width: 12),
                           Text(
-                            e.key,
+                            _getLocalizedSectorTitle(context, e.key),
                             style: const TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.bold,
@@ -691,6 +734,22 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         return Colors.orange;
       default:
         return Colors.grey;
+    }
+  }
+
+  String _getLocalizedSectorTitle(BuildContext context, String sector) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (sector) {
+      case 'Health':
+        return l10n.scoring_health;
+      case 'Finance':
+        return l10n.scoring_finance;
+      case 'Social':
+        return l10n.scoring_social;
+      case 'Projects':
+        return l10n.scoring_career;
+      default:
+        return sector;
     }
   }
 }

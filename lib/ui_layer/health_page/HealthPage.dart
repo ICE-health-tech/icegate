@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
@@ -128,6 +129,8 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    // Get localized strings for this page
+    final l10n = AppLocalizations.of(context)!;
     compact = MediaQuery.of(context).size.width < 600;
 
     return SwipeablePage(
@@ -138,25 +141,25 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
         floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
-              label: 'Log Water',
+              label: l10n.health_log_water,
               icon: Icons.water_drop,
               color: Colors.cyan,
               onTap: () => context.push('/health/water'),
             ),
             QuickAction(
-              label: 'Log Food',
+              label: l10n.health_log_food,
               icon: Icons.restaurant,
               color: Colors.orange,
               onTap: () => context.push('/health/food/dashboard'),
             ),
             QuickAction(
-              label: 'Exercise',
+              label: l10n.health_exercise,
               icon: Icons.fitness_center,
               color: Colors.red,
               onTap: () => context.push('/health/exercise'),
             ),
             QuickAction(
-              label: 'Focus',
+              label: l10n.health_focus,
               icon: Icons.timer,
               color: Colors.indigo,
               onTap: () => context.push('/health/focus'),
@@ -209,7 +212,7 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        'Insights',
+                        l10n.health_insights,
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w900,
                           color: colorScheme.onSurface,

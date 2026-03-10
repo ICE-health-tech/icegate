@@ -276,17 +276,7 @@ class FocusBlock {
       return;
     }
     try {
-      String? songPath = _musicBlock?.customSoundPath.value;
-      String songName;
-      if (songPath != null) {
-        songName = songPath.split('/').last;
-      } else {
-        songName = "Focus Music";
-      }
-      if (songName.contains('.')) {
-        songName = songName.substring(0, songName.lastIndexOf('.'));
-      }
-      songName = songName.replaceAll('_', ' ').toUpperCase();
+      final songName = _musicBlock?.getDisplaySongName() ?? "Focus Music";
 
       _activityId = await _liveActivities
           .createActivity('group.duylong.art.iceshield', {
@@ -314,17 +304,7 @@ class FocusBlock {
 
   void _updateLiveActivity() {
     if (_activityId != null) {
-      String? songPath = _musicBlock?.customSoundPath.value;
-      String songName;
-      if (songPath != null) {
-        songName = songPath.split('/').last;
-      } else {
-        songName = "Focus Music";
-      }
-      if (songName.contains('.')) {
-        songName = songName.substring(0, songName.lastIndexOf('.'));
-      }
-      songName = songName.replaceAll('_', ' ').toUpperCase();
+      final songName = _musicBlock?.getDisplaySongName() ?? "Focus Music";
 
       try {
         _liveActivities.updateActivity(_activityId!, {
@@ -411,7 +391,7 @@ class FocusBlock {
       _notificationService?.showNotification(
         888,
         "BLOCK COMPLETE",
-        "Musk Block Sequence Finalized.",
+        "Block Sequence Completed.",
       );
 
       if (muskRepeatReminder.value) {

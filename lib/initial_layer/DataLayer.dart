@@ -42,6 +42,7 @@ import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.
 import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -74,6 +75,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ExternalWidgetBlock externalWidgetBlock;
   late QuoteBlock quoteBlock;
   late QuestBlock questBlock;
+  late LocaleBlock localeBlock;
   DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
@@ -169,6 +171,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
   Future<void> _initializeData() async {
     try {
+      debugPrint("🚀 [Boot] Step 0: Initialize Locale...");
+      // Khởi tạo LocaleBlock trước để ngôn ngữ sẵn sàng khi UI render
+      localeBlock = LocaleBlock();
+      await localeBlock.init();
+
       debugPrint("🚀 [Boot] Step 1: Initialize Supabase...");
       await Supabase.initialize(
         url: 'https://wthislkepfufkbgiqegs.supabase.co',
@@ -549,6 +556,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
+        Provider<LocaleBlock>.value(value: localeBlock),
       ],
       child: widget.childWidget,
     );

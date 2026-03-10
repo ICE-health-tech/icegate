@@ -6,6 +6,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.da
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'dart:convert';
 
 class SocialDashboardPage extends StatelessWidget {
   const SocialDashboardPage({super.key});
@@ -115,6 +117,8 @@ class SocialDashboardPage extends StatelessWidget {
                     networkSize: contacts.length,
                     avgAffection: avgAffection,
                   ),
+                  const SizedBox(height: 24),
+                  _buildSocialJournalCard(context, colorScheme, textTheme),
                   const SizedBox(height: 40),
                 ],
               ),
@@ -405,6 +409,128 @@ class SocialDashboardPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  Widget _buildSocialJournalCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    final personBlock = context.read<PersonBlock>();
+    final personId = personBlock.information.value.profiles.id ?? "";
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary.withOpacity(0.1),
+            colorScheme.primary.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(32.0),
+        border: Border.all(
+          color: colorScheme.primary.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(32.0),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            onTap: () => context.push('/social/journal'),
+            child: Padding(
+              padding: const EdgeInsets.all(24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.history_edu_rounded,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'SOCIAL JOURNAL',
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.1,
+                            ),
+                          ),
+                        ],
+                      ),
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        color: colorScheme.primary.withOpacity(0.5),
+                        size: 14,
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  StreamBuilder<List<ProjectNoteData>>(
+                    stream: context.read<ProjectNoteDAO>().watchRecentNotes(
+                      personId,
+                      1,
+                    ),
+                    builder: (context, snapshot) {
+                      final hasNotes =
+                          snapshot.hasData && snapshot.data!.isNotEmpty;
+                      final latestNote = hasNotes ? snapshot.data!.first : null;
+
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            latestNote?.title ?? 'Start Your Social Diary',
+                            style: textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              color: colorScheme.onSurface,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            latestNote != null
+                                ? _getPreviewText(latestNote.content)
+                                : 'Record memories, social strategies, and relationship milestones.',
+                            style: textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  String _getPreviewText(String content) {
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is List) {
+        final buffer = StringBuffer();
+        for (final op in decoded) {
+          if (op is Map && op.containsKey('insert')) {
+            buffer.write(op['insert']);
+          }
+        }
+        return buffer.toString().trim();
+      }
+    } catch (_) {}
+    return content.trim();
   }
 
   Widget _buildInsightItem(

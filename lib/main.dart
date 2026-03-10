@@ -9,8 +9,13 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_quill/flutter_quill.dart';
 
+import 'package:media_kit/media_kit.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
+
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  MediaKit.ensureInitialized();
 
   // Call runApp immediately to prevent iOS black screen/Xcode hang.
   // The actual initialization logic is handled inside DataLayer.
@@ -39,24 +44,31 @@ class MyApp extends StatelessWidget {
         final ThemeData currentTheme =
             themeStore.currentTheme.value ?? ThemeAdapter.lightTheme;
 
+        // Đọc locale hiện tại từ LocaleBlock (reactive)
+        Locale? appLocale;
+        try {
+          final localeBlock = context.read<LocaleBlock>();
+          appLocale = localeBlock.currentLocale.watch(context);
+        } catch (_) {
+          // LocaleBlock chưa sẵn sàng, dùng locale mặc định
+          appLocale = const Locale('vi', 'VN');
+        }
+
         // --- Use MaterialApp instead of NeumorphicApp ---
         return MaterialApp.router(
           // Apply the retrieved Material theme
           routerConfig: router,
           theme: currentTheme,
-          localizationsDelegates: const [
+          localizationsDelegates: [
+            AppLocalizations.delegate,
             GlobalMaterialLocalizations.delegate,
             GlobalWidgetsLocalizations.delegate,
             GlobalCupertinoLocalizations.delegate,
             FlutterQuillLocalizations.delegate,
           ],
-          supportedLocales: FlutterQuillLocalizations.supportedLocales,
-
-          // You might have a separate darkTheme and themeMode in the store
-          // darkTheme: themeStore.darkMaterialTheme,
-          // themeMode: themeStore.currentThemeMode,
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: appLocale, // Reactive locale từ LocaleBlock
           title: 'ICE Gate', // Standard MaterialApp title
-          // home: HomePage(title: 'Home Page'),
         );
       },
     );

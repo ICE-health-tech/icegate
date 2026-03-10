@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -227,13 +228,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                           0xFF00E5FF,
                                         ).withOpacity(0.5),
                                       ),
-                                      const Padding(
-                                        padding: EdgeInsets.symmetric(
+                                      Padding(
+                                        padding: const EdgeInsets.symmetric(
                                           horizontal: 10,
                                         ),
                                         child: Text(
-                                          'LIFE GATEWAY',
-                                          style: TextStyle(
+                                          AppLocalizations.of(context)!.tagline,
+                                          style: const TextStyle(
                                             fontSize: 10,
                                             fontWeight: FontWeight.bold,
                                             letterSpacing: 3.0,
@@ -294,14 +295,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               // Form
                               _buildModernField(
                                 controller: _emailController,
-                                hint: 'USERNAME / eMAIL',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.username_email_hint,
                                 icon: Icons.alternate_email_rounded,
                                 keyboardType: TextInputType.emailAddress,
                               ),
                               const SizedBox(height: 16),
                               _buildModernField(
                                 controller: _passwordController,
-                                hint: 'PASSWORD',
+                                hint: AppLocalizations.of(
+                                  context,
+                                )!.password_hint,
                                 icon: Icons.vpn_key_rounded,
                                 obscureText: true,
                               ),
@@ -352,9 +357,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                             strokeWidth: 3,
                                           ),
                                         )
-                                      : const Text(
-                                          'GO TO GATE',
-                                          style: TextStyle(
+                                      : Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          )!.go_to_gate,
+                                          style: const TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.w900,
                                             letterSpacing: 2.0,
@@ -370,7 +377,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   Expanded(
                                     child: _buildIconButton(
                                       icon: Icons.fingerprint_rounded,
-                                      label: 'SECURE LOGIN',
+                                      label: AppLocalizations.of(
+                                        context,
+                                      )!.secure_login,
                                       onPressed: isLoading
                                           ? null
                                           : _handleSecureLogin,
@@ -380,7 +389,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                                   Expanded(
                                     child: _buildIconButton(
                                       icon: Icons.g_mobiledata_rounded,
-                                      label: 'GOOGLE',
+                                      label: AppLocalizations.of(
+                                        context,
+                                      )!.google_login,
                                       onPressed: isLoading
                                           ? null
                                           : _handleGoogleSignIn,
@@ -404,7 +415,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         TextButton(
                           onPressed: isLoading ? null : _handleGuestLogin,
                           child: Text(
-                            'GUEST ACCESS',
+                            AppLocalizations.of(context)!.guest_access,
                             style: TextStyle(
                               color: Colors.white.withOpacity(0.4),
                               fontWeight: FontWeight.bold,
@@ -423,9 +434,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         ),
                         TextButton(
                           onPressed: () {},
-                          child: const Text(
-                            'ENROLL HUB',
-                            style: TextStyle(
+                          child: Text(
+                            AppLocalizations.of(context)!.enroll_hub,
+                            style: const TextStyle(
                               color: Color(0xFF00E5FF),
                               fontWeight: FontWeight.w900,
                               fontSize: 11,
@@ -546,7 +557,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Secure Login failed: $e'),
+            content: Text(
+              AppLocalizations.of(
+                context,
+              )!.msg_secure_login_failed(e.toString()),
+            ),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -560,7 +575,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please enter username and password')),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.msg_enter_credentials),
+        ),
       );
       return;
     }

@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 
 // --- IMPORTS ---
@@ -292,8 +293,8 @@ class StoreWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              "New",
+            Text(
+              AppLocalizations.of(context)!.add,
               style: TextStyle(
                 color: Colors.white70,
                 fontSize: 10,
@@ -496,8 +497,8 @@ void showAddWidgetDialog(BuildContext context) {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
       child: AddPluginForm(
         data: FormData(
-          title: "Add Custom Widget",
-          description: "Enter the name and URL of the website you want to add.",
+          title: AppLocalizations.of(context)!.canvas_add_custom_widget,
+          description: AppLocalizations.of(context)!.canvas_add_widget_desc,
         ),
       ),
     ),

@@ -1,18 +1,33 @@
 import 'package:audio_service/audio_service.dart';
-import 'package:audioplayers/audioplayers.dart';
+import 'package:media_kit/media_kit.dart';
 
 class FocusAudioHandler extends BaseAudioHandler
     with QueueHandler, SeekHandler {
-  // Internal player for actual sound playback
-  final AudioPlayer _player = AudioPlayer();
+  // Internal player for actual sound playback (KMPlayer-style engine)
+  final Player _player = Player();
 
   // Back-reference to the block to sync state
   dynamic _focusBlock;
   set focusBlock(dynamic block) => _focusBlock = block;
 
   FocusAudioHandler() {
-    _player.setReleaseMode(ReleaseMode.loop);
-    print("🎧 [AudioHandler-${identityHashCode(this)}] Initialized");
+    _player.setPlaylistMode(PlaylistMode.single);
+    print("🎧 [AudioHandler-MediaKit] Initialized");
+
+    // Listen to changes in the player state to update system notifications if needed
+    _player.stream.playing.listen((playing) {
+      if (playbackState.value.playing != playing) {
+        playbackState.add(
+          playbackState.value.copyWith(
+            playing: playing,
+            controls: playing
+                ? [MediaControl.pause, MediaControl.stop]
+                : [MediaControl.play, MediaControl.stop],
+          ),
+        );
+      }
+    });
+
     playbackState.add(
       playbackState.value.copyWith(
         controls: [MediaControl.pause, MediaControl.play, MediaControl.stop],
@@ -24,34 +39,41 @@ class FocusAudioHandler extends BaseAudioHandler
     );
   }
 
-  Future<void> setSource(Source source) async {
-    await _player.setSource(source);
+  Future<void> setSource(
+    String source, {
+    bool isAsset = false,
+    bool isFile = false,
+  }) async {
+    try {
+      if (isAsset) {
+        await _player.open(Media('asset:///$source'));
+      } else if (isFile) {
+        await _player.open(Media('file://$source'));
+      } else {
+        await _player.open(Media(source));
+      }
+    } catch (e) {
+      print("FocusAudioHandler: Failed to set source: $e");
+    }
   }
 
   @override
   Future<void> play() async {
-    print("🎧 [AudioHandler-${identityHashCode(this)}] play() received");
-    // 1. Update State FIRST to responsive UI
+    print("🎧 [AudioHandler] play() received");
     playbackState.add(
       playbackState.value.copyWith(
         playing: true,
         controls: [MediaControl.pause, MediaControl.stop],
         processingState: AudioProcessingState.ready,
-        speed: 1.0,
       ),
     );
 
-    // 2. Try to play actual audio (if source is valid)
     try {
-      await _player.resume();
+      await _player.play();
     } catch (e) {
-      print(
-        "FocusAudioHandler: Internal player resume failed (Source might be empty): $e",
-      );
-      // Don't revert state; we want "silent playback" to continue for lock screen controls
+      print("FocusAudioHandler: play failed: $e");
     }
 
-    // 3. Sync back to block
     try {
       _focusBlock?.startTimer(fromSystem: true);
     } catch (e) {
@@ -61,8 +83,7 @@ class FocusAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> pause() async {
-    print("⏸️ [AudioHandler-${identityHashCode(this)}] pause() received");
-    // 1. Update State FIRST
+    print("⏸️ [AudioHandler] pause() received");
     playbackState.add(
       playbackState.value.copyWith(
         playing: false,
@@ -70,14 +91,12 @@ class FocusAudioHandler extends BaseAudioHandler
       ),
     );
 
-    // 2. Try to pause actual audio
     try {
       await _player.pause();
     } catch (e) {
-      print("FocusAudioHandler: Internal player pause failed: $e");
+      print("FocusAudioHandler: pause failed: $e");
     }
 
-    // 3. Sync back to block
     try {
       _focusBlock?.pauseTimer(fromSystem: true);
     } catch (e) {
@@ -87,7 +106,7 @@ class FocusAudioHandler extends BaseAudioHandler
 
   @override
   Future<void> stop() async {
-    print("🛑 [AudioHandler-${identityHashCode(this)}] stop() received");
+    print("🛑 [AudioHandler] stop() received");
     await _player.stop();
     playbackState.add(
       playbackState.value.copyWith(
@@ -97,7 +116,6 @@ class FocusAudioHandler extends BaseAudioHandler
       ),
     );
 
-    // Sync back to block
     try {
       _focusBlock?.stopTimer();
     } catch (e) {
@@ -118,11 +136,6 @@ class FocusAudioHandler extends BaseAudioHandler
     Duration? duration,
     Duration? position,
   }) {
-    print(
-      "FocusAudioHandler: updateMetadata - $title, $artist, playing: $playing, dur: $duration, pos: $position",
-    );
-
-    // Update MediaItem (Static info)
     mediaItem.add(
       MediaItem(
         id: 'focus_session',
@@ -133,16 +146,9 @@ class FocusAudioHandler extends BaseAudioHandler
       ),
     );
 
-    // Update PlaybackState (Dynamic info)
     final isPlaying = playing ?? playbackState.value.playing;
 
-    // Check if we actually need to update the playback state.
-    // Constantly updating playbackState with new updatePosition causes "snapping"
-    // because the app's clock might be slightly behind the system's interpolated clock.
-    final bool stateChanged = isPlaying != playbackState.value.playing;
-
-    // Remove the 3-second guard to allow second-by-second updates for the timer
-    if (stateChanged || position != null) {
+    if (isPlaying != playbackState.value.playing || position != null) {
       playbackState.add(
         playbackState.value.copyWith(
           updatePosition: position ?? playbackState.value.updatePosition,
@@ -153,13 +159,13 @@ class FocusAudioHandler extends BaseAudioHandler
               ? [MediaControl.pause, MediaControl.stop]
               : [MediaControl.play, MediaControl.stop],
           speed: 1.0,
-          queueIndex: 0,
         ),
       );
     }
   }
 
   Future<void> setVolume(double volume) async {
-    await _player.setVolume(volume);
+    // MediaKit volume is 0.0 to 100.0, AudioPlayers was 0.0 to 1.0
+    await _player.setVolume(volume * 100.0);
   }
 }

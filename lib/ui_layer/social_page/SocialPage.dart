@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -17,6 +18,8 @@ import 'package:share_plus/share_plus.dart';
 
 import 'package:drift/drift.dart' show Value;
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:live_activities/live_activities.dart';
+import 'package:flutter/foundation.dart';
 
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
@@ -94,7 +97,9 @@ class SocialPage extends StatefulWidget {
               ),
             ),
             title: Text(
-              quest == null ? "RECORD ACHIEVEMENT" : "UPDATE ACHIEVEMENT",
+              quest == null
+                  ? AppLocalizations.of(context)!.record_achievement
+                  : AppLocalizations.of(context)!.update_achievement,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w900,
@@ -112,7 +117,7 @@ class SocialPage extends StatefulWidget {
                     ),
                     decoration: buildInputDecoration(
                       context,
-                      "Achievement Title (e.g. Swinging in 2h)",
+                      AppLocalizations.of(context)!.achievement_title_label,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -124,7 +129,7 @@ class SocialPage extends StatefulWidget {
                     ),
                     decoration: buildInputDecoration(
                       context,
-                      "System EXP Reward",
+                      AppLocalizations.of(context)!.system_exp_reward,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -164,7 +169,7 @@ class SocialPage extends StatefulWidget {
                           ),
                           decoration: buildInputDecoration(
                             context,
-                            "Image URL",
+                            AppLocalizations.of(context)!.image_url,
                           ),
                           onChanged: (v) => setModalState(() {}),
                         ),
@@ -198,7 +203,7 @@ class SocialPage extends StatefulWidget {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  "CANCEL",
+                  AppLocalizations.of(context)!.cancel,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -263,8 +268,12 @@ class SocialPage extends StatefulWidget {
                           SnackBar(
                             content: Text(
                               quest == null
-                                  ? "ACHIEVEMENT RECORDED IN SYSTEM"
-                                  : "ACHIEVEMENT UPDATED",
+                                  ? AppLocalizations.of(
+                                      context,
+                                    )!.achievement_recorded
+                                  : AppLocalizations.of(
+                                      context,
+                                    )!.achievement_updated,
                             ),
                             backgroundColor: Colors.green,
                           ),
@@ -275,7 +284,11 @@ class SocialPage extends StatefulWidget {
                       if (context.mounted) {
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
-                            content: Text("SYSTEM ERROR: $e"),
+                            content: Text(
+                              AppLocalizations.of(
+                                context,
+                              )!.system_error(e.toString()),
+                            ),
                             backgroundColor: Colors.red,
                           ),
                         );
@@ -291,7 +304,9 @@ class SocialPage extends StatefulWidget {
                   ),
                 ),
                 child: Text(
-                  quest == null ? "RECORD FEAT" : "UPDATE FEAT",
+                  quest == null
+                      ? AppLocalizations.of(context)!.record_feat
+                      : AppLocalizations.of(context)!.update_feat,
                   style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
@@ -337,7 +352,7 @@ class SocialPage extends StatefulWidget {
           children: [
             ListTile(
               leading: const Icon(Icons.contact_phone_rounded),
-              title: const Text('Import from Contacts'),
+              title: Text(AppLocalizations.of(context)!.import_from_contacts),
               onTap: () {
                 Navigator.pop(context);
                 importContacts(context);
@@ -345,7 +360,7 @@ class SocialPage extends StatefulWidget {
             ),
             ListTile(
               leading: const Icon(Icons.person_add_rounded),
-              title: const Text('Add Manually'),
+              title: Text(AppLocalizations.of(context)!.add_manually),
               onTap: () {
                 Navigator.pop(context);
                 showManualAddPersonDialog(context);
@@ -375,7 +390,7 @@ class SocialPage extends StatefulWidget {
               ),
             ),
             title: Text(
-              "REGISTER AGENT",
+              AppLocalizations.of(context)!.register_agent,
               style: TextStyle(
                 color: Theme.of(context).colorScheme.onSurface,
                 fontWeight: FontWeight.w900,
@@ -391,7 +406,10 @@ class SocialPage extends StatefulWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    decoration: buildInputDecoration(context, "First Name"),
+                    decoration: buildInputDecoration(
+                      context,
+                      AppLocalizations.of(context)!.first_name,
+                    ),
                   ),
                   const SizedBox(height: 16),
                   TextField(
@@ -399,13 +417,16 @@ class SocialPage extends StatefulWidget {
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurface,
                     ),
-                    decoration: buildInputDecoration(context, "Last Name"),
+                    decoration: buildInputDecoration(
+                      context,
+                      AppLocalizations.of(context)!.last_name,
+                    ),
                   ),
                   const SizedBox(height: 24),
                   Align(
                     alignment: Alignment.centerLeft,
                     child: Text(
-                      "RELATIONSHIP TYPE",
+                      AppLocalizations.of(context)!.relationship_type,
                       style: TextStyle(
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
@@ -447,7 +468,7 @@ class SocialPage extends StatefulWidget {
               TextButton(
                 onPressed: () => Navigator.pop(context),
                 child: Text(
-                  "CANCEL",
+                  AppLocalizations.of(context)!.cancel,
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
@@ -472,9 +493,9 @@ class SocialPage extends StatefulWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  "CREATE LINK",
-                  style: TextStyle(fontWeight: FontWeight.w900),
+                child: Text(
+                  AppLocalizations.of(context)!.create_link,
+                  style: const TextStyle(fontWeight: FontWeight.w900),
                 ),
               ),
             ],
@@ -571,6 +592,8 @@ class SocialPage extends StatefulWidget {
 class _SocialPageState extends State<SocialPage>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
+  final _liveActivities = LiveActivities();
+  String? _activityId;
 
   @override
   void initState() {
@@ -579,10 +602,54 @@ class _SocialPageState extends State<SocialPage>
     _tabController.addListener(() {
       SocialPage.activeTab.value = _tabController.index;
     });
+
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
+      _setupLiveActivity();
+    }
+  }
+
+  Future<void> _setupLiveActivity() async {
+    try {
+      await _liveActivities.init(appGroupId: 'group.duylong.art.iceshield');
+      await _createLiveActivity();
+    } catch (e) {
+      debugPrint("Social Live Activity Setup Error: $e");
+    }
+  }
+
+  Future<void> _createLiveActivity() async {
+    try {
+      _activityId = await _liveActivities
+          .createActivity('group.duylong.art.iceshield', {
+            'title': "Social Dashboard",
+            'songName': _getTabName(_tabController.index),
+            'artist': "ICE GATE",
+            'cover': "social_cover",
+            'progress': 0.0,
+          });
+    } catch (e) {
+      debugPrint("Social Live Activity Creation Error: $e");
+    }
+  }
+
+  String _getTabName(int index) {
+    switch (index) {
+      case 0:
+        return "RANKING";
+      case 1:
+        return "RELATIONSHIPS";
+      case 2:
+        return "ACHIEVEMENTS";
+      default:
+        return "SOCIAL";
+    }
   }
 
   @override
   void dispose() {
+    if (_activityId != null) {
+      _liveActivities.endActivity(_activityId!);
+    }
     _tabController.dispose();
     super.dispose();
   }
@@ -601,7 +668,6 @@ class _SocialPageState extends State<SocialPage>
         ),
         body: Column(
           children: [
-            _buildTacticalHeader(context),
             // const SizedBox(height: 16),
             _buildCustomTabBar(context),
             Expanded(
@@ -620,61 +686,42 @@ class _SocialPageState extends State<SocialPage>
     );
   }
 
-  Widget _buildTacticalHeader(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.only(top: 60, left: 24, right: 24, bottom: 20),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        border: Border(
-          bottom: BorderSide(
-            color: colorScheme.primary.withOpacity(0.3),
-            width: 1,
-          ),
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.05),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: const Column(
-        children: [
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: []),
-        ],
-      ),
-    );
-  }
-
   Widget _buildCustomTabBar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      height: 40,
-      // padding: EdgeInsets.all(2),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHigh,
-        borderRadius: BorderRadius.circular(5),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: TabBar(
-        controller: _tabController,
-        dividerColor: Colors.transparent,
-        indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          color: colorScheme.primary.withOpacity(0.15),
-          border: Border.all(color: colorScheme.primary.withOpacity(0.5)),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        height: 48,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          // border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
         ),
-        labelColor: colorScheme.primary,
-        unselectedLabelColor: colorScheme.onSurfaceVariant,
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-        padding: EdgeInsets.symmetric(horizontal: 10),
-        tabs: const [
-          Tab(text: 'RANKING'),
-          Tab(text: 'RELATIONSHIP'),
-          Tab(text: 'ACHIEVEMENTS'),
-        ],
+        child: TabBar(
+          controller: _tabController,
+          dividerColor: Colors.transparent,
+          indicatorSize: TabBarIndicatorSize.tab,
+          indicatorPadding: const EdgeInsets.all(4),
+          indicator: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            color: const Color(
+              0xFF648476,
+            ).withOpacity(0.15), // Matches muted green in mockup
+            border: Border.all(color: const Color(0xFF648476).withOpacity(0.3)),
+          ),
+          labelColor: const Color(0xFF648476),
+          unselectedLabelColor: colorScheme.onSurfaceVariant.withOpacity(0.6),
+          labelStyle: const TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: 12,
+            letterSpacing: 0.5,
+          ),
+          tabs: [
+            Tab(text: AppLocalizations.of(context)!.ranking),
+            Tab(text: AppLocalizations.of(context)!.relationships),
+            Tab(text: AppLocalizations.of(context)!.achievements),
+          ],
+        ),
       ),
     );
   }
@@ -700,152 +747,304 @@ class _SocialPageState extends State<SocialPage>
           );
         }
 
-        return ListView.builder(
-          padding: const EdgeInsets.all(24),
-          itemCount: rankings.length,
-          itemBuilder: (context, index) {
-            final entry = rankings[index];
-            final person = entry.person;
-            final isTopThree = index < 3;
-
-            Color rankColor = Colors.white38;
-            if (index == 0) {
-              rankColor = Colors.amber;
-            } else if (index == 1) {
-              rankColor = const Color(0xFFC0C0C0); // Silver
-            } else if (index == 2) {
-              rankColor = const Color(0xFFCD7F32); // Bronze
-            }
-
-            return GestureDetector(
-              onTap: () => context.push('/profile/${person.id}'),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 16),
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimaryContainer.withValues(alpha: 0.4),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isTopThree
-                        ? rankColor.withOpacity(0.5)
-                        : colorScheme.outlineVariant,
-                    width: isTopThree ? 1.5 : 1,
-                  ),
-                  boxShadow: isTopThree
-                      ? [
-                          BoxShadow(
-                            color: rankColor.withOpacity(0.1),
-                            blurRadius: 15,
-                            spreadRadius: 2,
-                          ),
-                        ]
-                      : null,
-                ),
-                child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  leading: Stack(
-                    alignment: Alignment.bottomRight,
-                    children: [
-                      Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: isTopThree
-                                ? rankColor
-                                : colorScheme.outlineVariant,
-                            width: 2,
-                          ),
-                        ),
-                        child: CircleAvatar(
-                          radius: 28,
-                          backgroundColor: colorScheme.surface,
-                          backgroundImage: person.profileImageUrl != null
-                              ? NetworkImage(person.profileImageUrl!)
-                              : null,
-                          child: person.profileImageUrl == null
-                              ? Text(
-                                  person.firstName[0].toUpperCase(),
-                                  style: TextStyle(
-                                    color: rankColor,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                )
-                              : null,
-                        ),
+        return CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.only(top: 24, bottom: 32),
+                child: _buildLeaderboard(context, rankings.take(3).toList()),
+              ),
+            ),
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Current Rankings',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.onSurface,
                       ),
-                      if (isTopThree)
-                        Container(
-                          padding: const EdgeInsets.all(4),
-                          decoration: BoxDecoration(
-                            color: rankColor,
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: colorScheme.surfaceContainer,
-                              width: 2,
-                            ),
-                          ),
-                          child: Icon(
-                            index == 0
-                                ? Icons.workspace_premium_rounded
-                                : Icons.star_rounded,
-                            size: 14,
-                            color: Colors.black87,
-                          ),
-                        ),
-                    ],
-                  ),
-                  title: Text(
-                    '${person.firstName} ${person.lastName ?? ''}',
-                    style: TextStyle(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
                     ),
-                  ),
-                  subtitle: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 4),
-                      Text(
-                        'GLOBAL SCORE: ${entry.totalScore.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontSize: 11,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 1,
-                        ),
+                    Text(
+                      'UPDATED 2M AGO',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        letterSpacing: 0.5,
                       ),
-                    ],
-                  ),
-                  trailing: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text(
-                        'RANK',
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 16)),
+            SliverList(
+              delegate: SliverChildBuilderDelegate((context, index) {
+                // Skip top 3 as they are in the leaderboard
+                if (index + 3 >= rankings.length) return null;
+                final entry = rankings[index + 3];
+                return _buildRankingItem(context, entry, index + 4);
+              }, childCount: rankings.length > 3 ? rankings.length - 3 : 0),
+            ),
+            const SliverToBoxAdapter(child: SizedBox(height: 100)),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _buildLeaderboard(
+    BuildContext context,
+    List<GlobalRankingEntry> topThree,
+  ) {
+    if (topThree.isEmpty) return const SizedBox();
+
+    // Sort to ensure 1st is middle: [2nd, 1st, 3rd]
+    List<GlobalRankingEntry?> displayList = List.filled(3, null);
+    if (topThree.isNotEmpty) displayList[1] = topThree[0]; // 1st
+    if (topThree.length > 1) displayList[0] = topThree[1]; // 2nd
+    if (topThree.length > 2) displayList[2] = topThree[2]; // 3rd
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // 2nd Place
+        if (displayList[0] != null)
+          GestureDetector(
+            onTap: () => context.push('/profile/${displayList[0]!.person.id}'),
+            child: _leaderboardAvatar(context, displayList[0]!, rank: 2),
+          ),
+        const SizedBox(width: 12),
+        // 1st Place
+        if (displayList[1] != null)
+          GestureDetector(
+            onTap: () => context.push('/profile/${displayList[1]!.person.id}'),
+            child: _leaderboardAvatar(context, displayList[1]!, rank: 1),
+          ),
+        const SizedBox(width: 12),
+        // 3rd Place
+        if (displayList[2] != null)
+          GestureDetector(
+            onTap: () => context.push('/profile/${displayList[2]!.person.id}'),
+            child: _leaderboardAvatar(context, displayList[2]!, rank: 3),
+          ),
+      ],
+    );
+  }
+
+  Widget _leaderboardAvatar(
+    BuildContext context,
+    GlobalRankingEntry entry, {
+    required int rank,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isFirst = rank == 1;
+    final size = isFirst ? 100.0 : 80.0;
+    final person = entry.person;
+
+    return Column(
+      children: [
+        if (isFirst)
+          const Icon(
+            Icons.workspace_premium_rounded,
+            color: Colors.amber,
+            size: 28,
+          ),
+        const SizedBox(height: 4),
+        Stack(
+          alignment: Alignment.bottomCenter,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: rank == 1
+                      ? Colors.amber
+                      : (rank == 2 ? Colors.grey : Colors.brown),
+                  width: 2,
+                ),
+              ),
+              child: CircleAvatar(
+                radius: size / 2,
+                backgroundColor: colorScheme.surfaceContainerHigh,
+                backgroundImage: person.profileImageUrl != null
+                    ? NetworkImage(person.profileImageUrl!)
+                    : null,
+                child: person.profileImageUrl == null
+                    ? Text(
+                        person.firstName[0].toUpperCase(),
                         style: TextStyle(
-                          color: colorScheme.onSurfaceVariant,
-                          fontSize: 8,
+                          fontSize: size * 0.4,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      Text(
-                        '#${index + 1}',
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                          color: rankColor,
-                        ),
-                      ),
-                    ],
+                      )
+                    : null,
+              ),
+            ),
+            Transform.translate(
+              offset: const Offset(0, 12),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  color: rank == 1
+                      ? Colors.amber
+                      : (rank == 2 ? Colors.grey : Colors.brown),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white, width: 2),
+                ),
+                child: Text(
+                  '${rank == 1 ? "1st" : (rank == 2 ? "2nd" : "3rd")}',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    color: Colors.white,
                   ),
                 ),
               ),
-            );
-          },
-        );
-      },
+            ),
+          ],
+        ),
+        const SizedBox(height: 20),
+        Text(
+          person.firstName,
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: isFirst ? 16 : 14,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        Text(
+          '${(entry.totalScore / 1000).toStringAsFixed(1)}k pts',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            fontSize: isFirst ? 14 : 12,
+            color: colorScheme.primary,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildRankingItem(
+    BuildContext context,
+    GlobalRankingEntry entry,
+    int rank,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final person = entry.person;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
+      child: GestureDetector(
+        onTap: () => context.push('/profile/${person.id}'),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withOpacity(0.3),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.02),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Row(
+            children: [
+              SizedBox(
+                width: 24,
+                child: Text(
+                  '$rank',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              CircleAvatar(
+                radius: 20,
+                backgroundColor: colorScheme.surfaceContainerHigh,
+                backgroundImage: person.profileImageUrl != null
+                    ? NetworkImage(person.profileImageUrl!)
+                    : null,
+                child: person.profileImageUrl == null
+                    ? Text(person.firstName[0].toUpperCase())
+                    : null,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${person.firstName} ${person.lastName ?? ""}',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    Text(
+                      'SEASON VETERAN', // Dynamic tier can be added later
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    '${entry.totalScore.toInt()}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(
+                        Icons.arrow_drop_up_rounded,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                      const Text(
+                        '2', // Placeholder delta
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.green,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
@@ -1420,16 +1619,13 @@ class _SocialPageState extends State<SocialPage>
             );
           }
 
-          final screenWidth = MediaQuery.of(context).size.width;
-          final crossAxisCount = screenWidth < 600 ? 2 : 3;
-
           return GridView.builder(
-            padding: const EdgeInsets.all(24),
-            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-              crossAxisCount: crossAxisCount,
+            padding: const EdgeInsets.all(20),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
-              childAspectRatio: 0.85,
+              childAspectRatio: 0.75, // Taller for progress bar
             ),
             itemCount: quests.length,
             itemBuilder: (context, index) {
@@ -1444,170 +1640,110 @@ class _SocialPageState extends State<SocialPage>
 
   Widget _buildFeatCard(BuildContext context, QuestData quest) {
     final colorScheme = Theme.of(context).colorScheme;
-    return GestureDetector(
-      onLongPress: () {
-        showDialog(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text("DELETE FEAT"),
-            content: const Text(
-              "Are you sure you want to remove this achievement from your system history?",
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context),
-                child: const Text("CANCEL"),
+    final isCompleted = quest.isCompleted ?? false;
+    // Percentage placeholder - in a real app this would come from the database
+    final double progress = isCompleted
+        ? 1.0
+        : ((quest.rewardExp ?? 0) % 100) / 100.0;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Icon Box
+          Expanded(
+            child: Container(
+              margin: const EdgeInsets.all(12),
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.blue.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(16),
               ),
-              TextButton(
-                onPressed: () async {
-                  final dao = context.read<QuestDAO>();
-                  await dao.deleteQuest(quest.id);
-                  if (context.mounted) Navigator.pop(context);
-                },
-                child: const Text(
-                  "DELETE",
-                  style: TextStyle(color: Colors.red),
+              child: Center(
+                child: Hero(
+                  tag: 'feat_${quest.id}',
+                  child: Icon(
+                    _getFeatIcon(quest.title ?? ""),
+                    size: 48,
+                    color: Colors.blue.withOpacity(0.7),
+                  ),
                 ),
               ),
-            ],
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: colorScheme.onPrimaryContainer.withOpacity(0.4),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colorScheme.outlineVariant, width: 1.5),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withOpacity(0.05),
-              blurRadius: 15,
-              spreadRadius: -5,
             ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Column(
-            children: [
-              Expanded(
-                child: Stack(
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  quest.title?.toUpperCase() ?? "FEAT",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                Text(
+                  '+${quest.rewardExp} EXP',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
                   children: [
-                    if (quest.imageUrl != null && quest.imageUrl!.isNotEmpty)
-                      LocalFirstImage(
-                        ownerId: quest.personID,
-                        localPath: quest.imageUrl!,
-                        remoteUrl: quest.imageUrl!.startsWith('http')
-                            ? quest.imageUrl!
-                            : '',
-                        subFolder: 'quests',
-                        width: double.infinity,
-                        height: double.infinity,
-                        fit: BoxFit.cover,
-                      )
-                    else
-                      Container(
-                        color: colorScheme.primary.withOpacity(0.05),
-                        child: Center(
-                          child: Icon(
-                            _getFeatIcon(quest.title ?? ""),
-                            size: 40,
-                            color: colorScheme.primary.withOpacity(0.3),
-                          ),
-                        ),
-                      ),
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.6),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.5),
-                          ),
-                        ),
-                        child: Text(
-                          '+${quest.rewardExp} EXP',
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                          ),
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: progress,
+                          backgroundColor: Colors.blue.withOpacity(0.1),
+                          color: Colors.blue,
+                          minHeight: 6,
                         ),
                       ),
                     ),
+                    if (isCompleted) ...[
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.check_circle_rounded,
+                        color: Colors.green,
+                        size: 16,
+                      ),
+                    ] else ...[
+                      const SizedBox(width: 8),
+                      Text(
+                        '${(progress * 100).toInt()}%',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          color: colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                    ],
                   ],
                 ),
-              ),
-              Padding(
-                padding: const EdgeInsets.only(left: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            quest.title?.toUpperCase() ?? "LEGENDARY FEAT",
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: colorScheme.onPrimary,
-                              fontSize: 6,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                        Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              icon: Icon(
-                                Icons.edit_rounded,
-                                size: 14,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              onPressed: () => SocialPage.showAddFeatDialog(
-                                context,
-                                quest: quest,
-                              ),
-                            ),
-                            const SizedBox(width: 4),
-                            IconButton(
-                              visualDensity: VisualDensity.compact,
-                              padding: EdgeInsets.zero,
-                              constraints: const BoxConstraints(),
-                              icon: Icon(
-                                Icons.ios_share_rounded,
-                                size: 14,
-                                color: colorScheme.onSurfaceVariant,
-                              ),
-                              onPressed: () {
-                                final String textToShare =
-                                    "I just unlocked the '${quest.title ?? "Unnamed"}' feat in ICE Gate! +${quest.rewardExp ?? 0} System EXP.";
-                                Share.share(textToShare);
-                              },
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

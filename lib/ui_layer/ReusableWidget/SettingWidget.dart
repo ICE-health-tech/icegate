@@ -10,11 +10,13 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 
 class SettingsWidget extends StatelessWidget {
-  final String title;
+  final String? title;
 
-  const SettingsWidget({super.key, this.title = 'App Settings'});
+  const SettingsWidget({super.key, this.title});
 
   static Widget icon(BuildContext context, {double size = 24.0}) {
     return IconButton(
@@ -145,7 +147,7 @@ class SettingsWidget extends StatelessWidget {
             width: 100, // Balanced size for settings header
             height: 100,
             decoration: BoxDecoration(
-              shape: BoxShape.circle, 
+              shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   color: colorScheme.primary.withValues(alpha: 0.2),
@@ -176,7 +178,7 @@ class SettingsWidget extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  username ?? 'Guest',
+                  username ?? AppLocalizations.of(context)!.guest_user,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -185,7 +187,9 @@ class SettingsWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  username == 'Guest' ? "Sign in to sync your data" : "Member",
+                  (username == null || username == 'Guest')
+                      ? AppLocalizations.of(context)!.msg_sign_in_to_sync
+                      : AppLocalizations.of(context)!.member_status,
                   style: TextStyle(
                     fontSize: 14,
                     color: colorScheme.onSurfaceVariant,
@@ -208,6 +212,7 @@ class SettingsWidget extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        title: Text(title ?? AppLocalizations.of(context)!.app_settings_title),
         toolbarHeight: 70,
         leadingWidth: 0,
         leading: const SizedBox.shrink(),
@@ -235,12 +240,12 @@ class SettingsWidget extends StatelessWidget {
             // 1. Account Settings
             _buildSettingSection(
               context: context,
-              title: "Account",
+              title: AppLocalizations.of(context)!.account_section,
               children: [
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Edit Profile',
-                  subtitle: 'Update your name and photo',
+                  title: AppLocalizations.of(context)!.edit_profile,
+                  subtitle: AppLocalizations.of(context)!.edit_profile_subtitle,
                   icon: Icons.person_rounded,
                   color: Colors.blue,
                   onTap: () {
@@ -249,7 +254,7 @@ class SettingsWidget extends StatelessWidget {
                 ),
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Change Password',
+                  title: AppLocalizations.of(context)!.change_password,
                   icon: Icons.lock_rounded,
                   color: Colors.purple,
                   onTap: () {
@@ -258,7 +263,7 @@ class SettingsWidget extends StatelessWidget {
                 ),
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Change Username',
+                  title: AppLocalizations.of(context)!.change_username,
                   icon: Icons.alternate_email_rounded,
                   color: Colors.orange,
                   onTap: () {
@@ -271,11 +276,11 @@ class SettingsWidget extends StatelessWidget {
             // 2. Preferences
             _buildSettingSection(
               context: context,
-              title: "Preferences",
+              title: AppLocalizations.of(context)!.preferences_section,
               children: [
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Change Theme',
+                  title: AppLocalizations.of(context)!.change_theme,
                   icon: Icons.palette_rounded,
                   color: Colors.pink,
                   onTap: () {
@@ -290,10 +295,10 @@ class SettingsWidget extends StatelessWidget {
 
                   return _buildPremiumSettingTile(
                     context: context,
-                    title: 'System Notifications',
+                    title: AppLocalizations.of(context)!.system_notifications,
                     subtitle: isEnabled
-                        ? 'Notifications are active'
-                        : 'Notifications are paused',
+                        ? AppLocalizations.of(context)!.notifications_active
+                        : AppLocalizations.of(context)!.notifications_paused,
                     icon: isEnabled
                         ? Icons.notifications_active_rounded
                         : Icons.notifications_off_rounded,
@@ -308,17 +313,37 @@ class SettingsWidget extends StatelessWidget {
                     ),
                   );
                 }),
+                // Tile cho đổi ngôn ngữ — hiển thị ngôn ngữ hiện tại
+                Watch((context) {
+                  final localeBlock = context.read<LocaleBlock>();
+                  final currentLocale = localeBlock.currentLocale.watch(
+                    context,
+                  );
+                  final currentName = localeBlock.getLocaleName(currentLocale);
+
+                  return _buildPremiumSettingTile(
+                    context: context,
+                    title: AppLocalizations.of(context)!.change_language,
+                    subtitle: currentName,
+                    icon: Icons.language_rounded,
+                    color: Colors.blue,
+                    onTap: () {
+                      // Hiển thị dialog chọn ngôn ngữ
+                      _showLanguageSelectionDialog(context, localeBlock);
+                    },
+                  );
+                }),
               ],
             ),
 
             // 3. Info & Support
             _buildSettingSection(
               context: context,
-              title: "About & Support",
+              title: AppLocalizations.of(context)!.about_support_section,
               children: [
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Manual',
+                  title: AppLocalizations.of(context)!.manual,
                   icon: Icons.description_rounded,
                   color: Colors.teal,
                   onTap: () {
@@ -327,7 +352,7 @@ class SettingsWidget extends StatelessWidget {
                 ),
                 _buildPremiumSettingTile(
                   context: context,
-                  title: 'Version',
+                  title: AppLocalizations.of(context)!.version,
                   subtitle: '2.3.3',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
@@ -348,14 +373,12 @@ class SettingsWidget extends StatelessWidget {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Reset Database?'),
-          content: const Text(
-            'This will permanently delete all your local data including focus sessions, health logs, and settings. This action cannot be undone.',
-          ),
+          title: Text(AppLocalizations.of(context)!.reset_database_title),
+          content: Text(AppLocalizations.of(context)!.reset_database_msg),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('CANCEL'),
+              child: Text(AppLocalizations.of(context)!.cancel),
             ),
             TextButton(
               onPressed: () async {
@@ -364,17 +387,87 @@ class SettingsWidget extends StatelessWidget {
                 if (context.mounted) {
                   Navigator.of(context).pop();
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Database reset successful.'),
+                    SnackBar(
+                      content: Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.msg_database_reset_success,
+                      ),
                       backgroundColor: Colors.green,
                     ),
                   );
                 }
               },
               style: TextButton.styleFrom(foregroundColor: Colors.red),
-              child: const Text('RESET ALL DATA'),
+              child: Text(AppLocalizations.of(context)!.btn_reset_all_data),
             ),
           ],
+        );
+      },
+    );
+  }
+
+  /// Hiển thị dialog chọn ngôn ngữ với danh sách các locale được hỗ trợ
+  void _showLanguageSelectionDialog(
+    BuildContext context,
+    LocaleBlock localeBlock,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext dialogContext) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.change_language),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: LocaleBlock.supportedLocales.map((locale) {
+              // Kiểm tra xem locale này có phải là locale hiện tại không
+              final isSelected =
+                  locale.languageCode ==
+                  localeBlock.currentLocale.value.languageCode;
+              final name = localeBlock.getLocaleName(locale);
+
+              return ListTile(
+                // Biểu tượng cờ hoặc chữ viết tắt ngôn ngữ
+                leading: CircleAvatar(
+                  backgroundColor: isSelected
+                      ? colorScheme.primary
+                      : colorScheme.surfaceContainerHigh,
+                  child: Text(
+                    locale.languageCode.toUpperCase(),
+                    style: TextStyle(
+                      color: isSelected
+                          ? colorScheme.onPrimary
+                          : colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+                title: Text(
+                  name,
+                  style: TextStyle(
+                    fontWeight: isSelected
+                        ? FontWeight.bold
+                        : FontWeight.normal,
+                    color: isSelected
+                        ? colorScheme.primary
+                        : colorScheme.onSurface,
+                  ),
+                ),
+                // Dấu tick cho ngôn ngữ đang chọn
+                trailing: isSelected
+                    ? Icon(Icons.check_circle, color: colorScheme.primary)
+                    : null,
+                onTap: () {
+                  // Đổi ngôn ngữ và đóng dialog
+                  localeBlock.setLocale(locale);
+                  Navigator.of(dialogContext).pop();
+                },
+              );
+            }).toList(),
+          ),
         );
       },
     );

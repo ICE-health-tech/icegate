@@ -50,6 +50,7 @@ const Schema schema = Schema([
     Column.text('created_at'),
     Column.text('updated_at'),
     Column.text('project_id'),
+    Column.text('category'),
   ]),
   Table('projects', [
     Column.text('project_id'),

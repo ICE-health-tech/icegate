@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class StepsPage extends StatefulWidget {
@@ -79,7 +80,7 @@ class _StepsPageState extends State<StepsPage> {
                         onPressed: () => Navigator.of(context).pop(),
                       ),
                       Text(
-                        'Activity Tracker',
+                        AppLocalizations.of(context)!.health_activity_tracker,
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -95,15 +96,21 @@ class _StepsPageState extends State<StepsPage> {
                             if (mounted) {
                               context.read<HealthBlock>().updateSteps(steps);
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Syncing health data...'),
-                                  duration: Duration(seconds: 1),
+                                SnackBar(
+                                  content: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.health_syncing_data,
+                                  ),
+                                  duration: const Duration(seconds: 1),
                                 ),
                               );
                             }
                           });
                         },
-                        tooltip: 'Refresh Steps',
+                        tooltip: AppLocalizations.of(
+                          context,
+                        )!.health_refresh_steps,
                       ),
                       IconButton(
                         icon: Icon(
@@ -112,7 +119,9 @@ class _StepsPageState extends State<StepsPage> {
                         ),
                         onPressed: () =>
                             context.push('/health/steps/dashboard'),
-                        tooltip: 'Steps Dashboard',
+                        tooltip: AppLocalizations.of(
+                          context,
+                        )!.health_steps_dashboard,
                       ),
                     ],
                   ),
@@ -141,7 +150,7 @@ class _StepsPageState extends State<StepsPage> {
                         child: Column(
                           children: [
                             Text(
-                              'Steps Taken',
+                              AppLocalizations.of(context)!.health_steps_taken,
                               style: textTheme.labelLarge?.copyWith(
                                 color: colorScheme.onSurface.withValues(
                                   alpha: 0.6,
@@ -247,7 +256,7 @@ class _StepsPageState extends State<StepsPage> {
 
                   const SizedBox(height: 30),
                   Text(
-                    'Daily Statistics',
+                    AppLocalizations.of(context)!.health_daily_statistics,
                     style: textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -274,7 +283,9 @@ class _StepsPageState extends State<StepsPage> {
                           children: [
                             _buildModernStatCard(
                               context,
-                              'Lifetime Total',
+                              AppLocalizations.of(
+                                context,
+                              )!.health_lifetime_total,
                               total.toString(),
                               'steps',
                               Icons.workspace_premium_rounded,
@@ -282,7 +293,7 @@ class _StepsPageState extends State<StepsPage> {
                             ),
                             _buildModernStatCard(
                               context,
-                              'Remaining',
+                              AppLocalizations.of(context)!.health_remaining,
                               remaining.toString(),
                               'steps',
                               Icons.flag_rounded,
@@ -290,7 +301,7 @@ class _StepsPageState extends State<StepsPage> {
                             ),
                             _buildModernStatCard(
                               context,
-                              'Distance',
+                              AppLocalizations.of(context)!.health_distance,
                               distance.toStringAsFixed(2),
                               'km',
                               Icons.route_rounded,
@@ -298,7 +309,7 @@ class _StepsPageState extends State<StepsPage> {
                             ),
                             _buildModernStatCard(
                               context,
-                              'Calories',
+                              AppLocalizations.of(context)!.health_calories,
                               calories.toString(),
                               'kcal',
                               Icons.local_fire_department_rounded,
@@ -306,7 +317,7 @@ class _StepsPageState extends State<StepsPage> {
                             ),
                             _buildModernStatCard(
                               context,
-                              'Active Time',
+                              AppLocalizations.of(context)!.health_active_time,
                               '${(steps / 100).round()}',
                               'min',
                               Icons.timer_rounded,

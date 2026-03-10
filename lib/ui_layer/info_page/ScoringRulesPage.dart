@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class ScoringRulesPage extends StatelessWidget {
   const ScoringRulesPage({super.key});
@@ -12,7 +13,7 @@ class ScoringRulesPage extends StatelessWidget {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Scoring Rules'),
+        title: Text(AppLocalizations.of(context)!.scoring_rules_title),
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
@@ -26,48 +27,76 @@ class ScoringRulesPage extends StatelessWidget {
             const SizedBox(height: 32),
             _buildCategorySection(
               context,
-              title: '🏃 Health',
+              title: AppLocalizations.of(context)!.scoring_health,
               color: Colors.green,
               rules: [
-                '1 Point per $STEPS_PER_POINT steps walked',
-                '$CALORIE_BONUS_POINTS Points for staying under $CALORIE_LIMIT kcal/day',
-                'Points automatically update when health metrics are recorded',
+                AppLocalizations.of(
+                  context,
+                )!.rule_health_steps(STEPS_PER_POINT.toInt()),
+                AppLocalizations.of(context)!.rule_health_calories(
+                  CALORIE_BONUS_POINTS.toInt(),
+                  CALORIE_LIMIT.toInt(),
+                ),
+                AppLocalizations.of(context)!.rule_health_auto,
               ],
             ),
             const SizedBox(height: 24),
             _buildCategorySection(
               context,
-              title: '💼 Career (Projects)',
+              title: AppLocalizations.of(context)!.scoring_career,
               color: Colors.orange,
               rules: [
-                '$PROJECT_SCORE_INCREMENT Base Points for completing a project',
-                '$TASK_SCORE_INCREMENT Points for each task completed',
-                '${ProjectPoint.projectManyTasksBonus} Bonus Points for projects with 5+ tasks',
-                '${ProjectPoint.projectLotsTasksBonus} Bonus Points for projects with 10+ tasks',
-                '${ProjectPoint.projectDocBonus} Bonus Points for having 3+ research notes',
-                '${ProjectPoint.projectWeekBonus} Bonus Points for projects active for 7+ days',
+                AppLocalizations.of(
+                  context,
+                )!.rule_career_project(PROJECT_SCORE_INCREMENT.toInt()),
+                AppLocalizations.of(
+                  context,
+                )!.rule_career_task(TASK_SCORE_INCREMENT.toInt()),
+                AppLocalizations.of(context)!.rule_career_bonus_5(
+                  ProjectPoint.projectManyTasksBonus.toInt(),
+                ),
+                AppLocalizations.of(context)!.rule_career_bonus_10(
+                  ProjectPoint.projectLotsTasksBonus.toInt(),
+                ),
+                AppLocalizations.of(
+                  context,
+                )!.rule_career_bonus_doc(ProjectPoint.projectDocBonus.toInt()),
+                AppLocalizations.of(context)!.rule_career_bonus_week(
+                  ProjectPoint.projectWeekBonus.toInt(),
+                ),
               ],
             ),
             const SizedBox(height: 24),
             _buildCategorySection(
               context,
-              title: '💰 Finance',
+              title: AppLocalizations.of(context)!.scoring_finance,
               color: Colors.blue,
               rules: [
-                '$FINANCE_SAVINGS_POINTS Points for every \$$FINANCE_SAVINGS_MILESTONE saved (Net Worth)',
-                '$FINANCE_INVESTMENT_POINTS Points for every $FINANCE_INVESTMENT_RETURN_THRESHOLD% investment return',
-                'Points update as account balances and asset values change',
+                AppLocalizations.of(context)!.rule_finance_savings(
+                  FINANCE_SAVINGS_POINTS.toInt(),
+                  FINANCE_SAVINGS_MILESTONE.toInt(),
+                ),
+                AppLocalizations.of(context)!.rule_finance_investment(
+                  FINANCE_INVESTMENT_POINTS.toInt(),
+                  FINANCE_INVESTMENT_RETURN_THRESHOLD.toInt(),
+                ),
+                AppLocalizations.of(context)!.rule_finance_auto,
               ],
             ),
             const SizedBox(height: 24),
             _buildCategorySection(
               context,
-              title: '❤️ Social',
+              title: AppLocalizations.of(context)!.scoring_social,
               color: Colors.purple,
               rules: [
-                '$CONTACT_POINTS Points for each unique contact added',
-                '$AFFECTION_POINTS Points for every $AFFECTION_PER_UNIT affection points earned',
-                'Maintain relationships to keep your social score high',
+                AppLocalizations.of(
+                  context,
+                )!.rule_social_contact(CONTACT_POINTS.toInt()),
+                AppLocalizations.of(context)!.rule_social_affection(
+                  AFFECTION_POINTS.toInt(),
+                  AFFECTION_PER_UNIT.toInt(),
+                ),
+                AppLocalizations.of(context)!.rule_social_maintain,
               ],
             ),
             const SizedBox(height: 40),
@@ -98,7 +127,7 @@ class ScoringRulesPage extends StatelessWidget {
               ),
               const SizedBox(width: 12),
               Text(
-                'How it works',
+                AppLocalizations.of(context)!.how_it_works,
                 style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: Theme.of(context).colorScheme.primary,
@@ -108,7 +137,7 @@ class ScoringRulesPage extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            'The Ice Gate scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores. Maintain a high score to unlock legendary status.',
+            AppLocalizations.of(context)!.scoring_intro,
             style: TextStyle(height: 1.5, color: colorScheme.onSurface),
           ),
         ],
@@ -176,7 +205,7 @@ class ScoringRulesPage extends StatelessWidget {
       child: Opacity(
         opacity: 0.5,
         child: Text(
-          'Balance your physical, social, financial, and workspace growth to become a Legend.',
+          AppLocalizations.of(context)!.scoring_footer,
           textAlign: TextAlign.center,
           style: Theme.of(context).textTheme.bodySmall,
         ),

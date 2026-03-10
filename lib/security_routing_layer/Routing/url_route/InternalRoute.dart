@@ -50,6 +50,7 @@ import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialDashboardPage.dart';
+import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/ui_layer/user_page/LoginPage.dart';
@@ -140,8 +141,16 @@ final GoRouter router = GoRouter(
       path: '/projects/editor',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
-        final note = state.extra as ProjectNoteData?;
-        return TextEditorPage(note: note);
+        if (state.extra is ProjectNoteData) {
+          return TextEditorPage(note: state.extra as ProjectNoteData);
+        } else if (state.extra is Map<String, dynamic>) {
+          final data = state.extra as Map<String, dynamic>;
+          return TextEditorPage(
+            note: data['note'] as ProjectNoteData?,
+            initialCategory: data['category'] as String?,
+          );
+        }
+        return const TextEditorPage();
       },
     ),
 
@@ -328,6 +337,11 @@ final GoRouter router = GoRouter(
               path: 'dashboard',
               parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const SocialDashboardPage(),
+            ),
+            GoRoute(
+              path: 'journal',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const SocialNotesDashboard(),
             ),
             GoRoute(
               path: 'contacts',

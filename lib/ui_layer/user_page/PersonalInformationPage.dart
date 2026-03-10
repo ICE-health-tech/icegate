@@ -11,6 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PersonalInformationPage extends StatefulWidget {
@@ -162,7 +163,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       if (token == null || token.isEmpty) {
         // Handle missing token case
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error: No authentication token found')),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.msg_err_not_authenticated,
+            ),
+          ),
         );
         setState(() {
           _isSaving = false;
@@ -206,7 +211,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: const Text('Personal information saved successfully'),
+            content: Text(
+              AppLocalizations.of(context)!.msg_personal_info_saved,
+            ),
             backgroundColor: Colors.green,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
@@ -222,7 +229,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       });
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Failed to save changes: $e'),
+          content: Text(
+            AppLocalizations.of(context)!.msg_err_save_failed(e.toString()),
+          ),
           backgroundColor: Colors.red,
           behavior: SnackBarBehavior.floating,
         ),
@@ -273,7 +282,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              success ? 'Avatar updated!' : 'Avatar upload cancelled',
+              success
+                  ? AppLocalizations.of(context)!.msg_avatar_updated
+                  : AppLocalizations.of(context)!.msg_avatar_cancelled,
             ),
             backgroundColor: success ? Colors.green : Colors.orange,
             behavior: SnackBarBehavior.floating,
@@ -289,7 +300,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         debugPrint('❌ [PersonalInformationPage] Avatar upload failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Upload failed: $e'),
+            content: Text(
+              AppLocalizations.of(context)!.msg_err_upload_failed(e.toString()),
+            ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -341,7 +354,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              success ? 'Cover updated!' : 'Cover upload cancelled',
+              success
+                  ? AppLocalizations.of(context)!.msg_cover_updated
+                  : AppLocalizations.of(context)!.msg_cover_cancelled,
             ),
             backgroundColor: success ? Colors.green : Colors.orange,
             behavior: SnackBarBehavior.floating,
@@ -357,7 +372,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         debugPrint('❌ [PersonalInformationPage] Cover upload failed: $e');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Upload failed: $e'),
+            content: Text(
+              AppLocalizations.of(context)!.msg_err_upload_failed(e.toString()),
+            ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.floating,
           ),
@@ -397,6 +414,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 70,
+        title: Text(AppLocalizations.of(context)!.personal_info_title),
         leadingWidth: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_ios_new_rounded),
@@ -496,7 +514,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           padding: const EdgeInsets.only(bottom: 12),
                           child: _buildModernTextField(
                             controller: _bioController,
-                            label: 'Bio',
+                            label: AppLocalizations.of(context)!.bio,
                             icon: Icons.notes_rounded,
                             enabled: true,
                             maxLines: 5,
@@ -506,31 +524,39 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
                       // Information Groups
                       _buildInfoGroup(
-                        title: 'Identification',
+                        title: AppLocalizations.of(
+                          context,
+                        )!.personal_info_identification,
                         icon: Icons.fingerprint_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _firstNameController,
-                            label: 'First Name',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.first_name_label,
                             icon: Icons.badge_outlined,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _lastNameController,
-                            label: 'Last Name',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.last_name_label,
                             icon: Icons.badge_outlined,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _emailController,
-                            label: 'eMail',
+                            label: AppLocalizations.of(context)!.email_label,
                             icon: Icons.alternate_email_rounded,
                             enabled: _isEditing,
                             keyboardType: TextInputType.emailAddress,
                           ),
                           _buildModernTextField(
                             controller: _phoneController,
-                            label: 'Phone Number',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.phone_number_label,
                             icon: Icons.sensors_rounded,
                             enabled: _isEditing,
                           ),
@@ -540,18 +566,22 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Professional Matrix',
+                        title: AppLocalizations.of(
+                          context,
+                        )!.personal_info_professional_matrix,
                         icon: Icons.lan_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _occupationController,
-                            label: 'Role',
+                            label: AppLocalizations.of(context)!.role_label,
                             icon: Icons.terminal_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _companyController,
-                            label: 'Organization',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.organization_label,
                             icon: Icons.corporate_fare_rounded,
                             enabled: _isEditing,
                           ),
@@ -561,18 +591,24 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Education Node',
+                        title: AppLocalizations.of(
+                          context,
+                        )!.personal_info_education_node,
                         icon: Icons.hub_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _universityController,
-                            label: 'Institution',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.institution_label,
                             icon: Icons.account_balance_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _educationController,
-                            label: 'Education Level',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.education_level_label,
                             icon: Icons.verified_user_rounded,
                             enabled: _isEditing,
                           ),
@@ -582,18 +618,20 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Location',
+                        title: AppLocalizations.of(
+                          context,
+                        )!.personal_info_location,
                         icon: Icons.public_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _countryController,
-                            label: 'Country',
+                            label: AppLocalizations.of(context)!.country_label,
                             icon: Icons.flag_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _cityController,
-                            label: 'City',
+                            label: AppLocalizations.of(context)!.city_label,
                             icon: Icons.map_rounded,
                             enabled: _isEditing,
                           ),
@@ -603,24 +641,28 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       const SizedBox(height: 24),
 
                       _buildInfoGroup(
-                        title: 'Digital',
+                        title: AppLocalizations.of(
+                          context,
+                        )!.personal_info_digital,
                         icon: Icons.alternate_email_rounded,
                         children: [
                           _buildModernTextField(
                             controller: _githubController,
-                            label: 'GitHub',
+                            label: AppLocalizations.of(context)!.github_label,
                             icon: Icons.code_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _linkedinController,
-                            label: 'LinkedIn',
+                            label: AppLocalizations.of(context)!.linkedin_label,
                             icon: Icons.link_rounded,
                             enabled: _isEditing,
                           ),
                           _buildModernTextField(
                             controller: _websiteController,
-                            label: 'Personal Web',
+                            label: AppLocalizations.of(
+                              context,
+                            )!.personal_web_label,
                             icon: Icons.language_rounded,
                             enabled: _isEditing,
                           ),
@@ -656,7 +698,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                               ),
                               const SizedBox(width: 12),
                               Text(
-                                'Logout',
+                                AppLocalizations.of(context)!.logout,
                                 style: TextStyle(
                                   color: colorScheme.error,
                                   fontWeight: FontWeight.bold,
@@ -788,18 +830,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                 color: Colors.black45,
                                 borderRadius: BorderRadius.circular(20),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
+                                  const Icon(
                                     Icons.camera_alt_rounded,
                                     color: Colors.white,
                                     size: 16,
                                   ),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    'Edit Cover',
-                                    style: TextStyle(
+                                    AppLocalizations.of(context)!.change_cover,
+                                    style: const TextStyle(
                                       color: Colors.white,
                                       fontSize: 12,
                                       fontWeight: FontWeight.bold,

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -38,7 +39,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    "TARGET EVOLUTION",
+                    AppLocalizations.of(context)!.goal_target_evolution,
                     style: TextStyle(
                       color: colorScheme.onSurface,
                       fontSize: 14,
@@ -116,7 +117,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "MISSION",
+                                  AppLocalizations.of(context)!.goal_mission,
                                   style: TextStyle(
                                     color: colorScheme.onSurface,
                                     fontSize: 22,
@@ -145,7 +146,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "Configure your physical parameters to ensure optimal AI synchronization and field performance.",
+                          AppLocalizations.of(context)!.goal_mission_desc,
                           style: TextStyle(
                             color: colorScheme.onSurface.withOpacity(0.6),
                             fontSize: 13,
@@ -158,7 +159,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                         // Goal Sliders
                         _buildGoalSlider(
                           context: context,
-                          label: "STEP TARGET",
+                          label: AppLocalizations.of(context)!.goal_step_target,
 
                           icon: Icons.directions_run_rounded,
                           color: colorScheme.primary,
@@ -172,70 +173,81 @@ class GoalConfigurationWidget extends StatelessWidget {
 
                         _buildGoalSlider(
                           context: context,
-                          label: "CALORIE LIMIT",
+                          label: AppLocalizations.of(
+                            context,
+                          )!.goal_calorie_limit,
                           icon: Icons.local_fire_department_rounded,
                           color: const Color(0xFFFF3D00),
                           valueSignal: healthBlock.dailyKcalGoal,
                           min: 1200,
                           max: 5000,
                           divisions: 38,
-                          suffix: " kcal",
+                          suffix: " ${AppLocalizations.of(context)!.unit_kcal}",
                         ),
 
                         const SizedBox(height: 48),
 
                         _buildGoalSlider(
                           context: context,
-                          label: "WATER TARGET",
+                          label: AppLocalizations.of(
+                            context,
+                          )!.goal_water_target,
                           icon: Icons.water_drop_rounded,
                           color: Colors.blueAccent,
                           valueSignal: healthBlock.dailyWaterGoal,
                           min: 500,
                           max: 5000,
                           divisions: 45,
-                          suffix: " ml",
+                          suffix: " ${AppLocalizations.of(context)!.unit_ml}",
                         ),
 
                         const SizedBox(height: 48),
 
                         _buildGoalSlider(
                           context: context,
-                          label: "FOCUS TARGET",
+                          label: AppLocalizations.of(
+                            context,
+                          )!.goal_focus_target,
                           icon: Icons.timer_rounded,
                           color: Colors.purpleAccent,
                           valueSignal: healthBlock.dailyFocusGoal,
                           min: 10,
                           max: 480,
                           divisions: 47,
-                          suffix: " min",
+                          suffix: " ${AppLocalizations.of(context)!.unit_min}",
                         ),
 
                         const SizedBox(height: 48),
 
                         _buildGoalSlider(
                           context: context,
-                          label: "EXERCISE TARGET",
+                          label: AppLocalizations.of(
+                            context,
+                          )!.goal_exercise_target,
                           icon: Icons.fitness_center_rounded,
                           color: Colors.orangeAccent,
                           valueSignal: healthBlock.dailyExerciseGoal,
                           min: 10,
                           max: 180,
                           divisions: 17,
-                          suffix: " min",
+                          suffix: " ${AppLocalizations.of(context)!.unit_min}",
                         ),
 
                         const SizedBox(height: 48),
 
                         _buildDoubleGoalSlider(
                           context: context,
-                          label: "SLEEP TARGET",
+                          label: AppLocalizations.of(
+                            context,
+                          )!.goal_sleep_target,
                           icon: Icons.bedtime_rounded,
                           color: Colors.indigoAccent,
                           valueSignal: healthBlock.dailySleepGoal,
                           min: 4.0,
                           max: 12.0,
                           divisions: 16,
-                          suffix: " hours",
+                          suffix:
+                              " ${AppLocalizations.of(context)!.unit_hours}",
                         ),
                       ],
                     ),

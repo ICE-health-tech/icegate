@@ -11,8 +11,9 @@ import 'package:intl/intl.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
+  final String? initialCategory;
 
-  const TextEditorPage({super.key, this.note});
+  const TextEditorPage({super.key, this.note, this.initialCategory});
 
   @override
   State<TextEditorPage> createState() => _TextEditorPageState();
@@ -153,6 +154,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           title: title,
           content: content,
           personID: personBlock.currentPersonID.value,
+          category: widget.initialCategory,
         );
       }
       if (mounted) {

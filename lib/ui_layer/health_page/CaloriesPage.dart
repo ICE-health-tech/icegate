@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ice_gate/ui_layer/health_page/subpage/LidarFoodScanner.dart';
@@ -43,9 +44,11 @@ class _CaloriesCardState extends State<CaloriesPage> {
   int get totalEnergyExpenditure => bmr + caloriesBurned;
 
   String get calorieStatus {
-    if (netCalories < dailyGoal * 0.8) return 'Under Goal';
-    if (netCalories <= dailyGoal * 1.1) return 'On Track';
-    return 'Over Goal';
+    if (netCalories < dailyGoal * 0.8)
+      return AppLocalizations.of(context)!.under_goal;
+    if (netCalories <= dailyGoal * 1.1)
+      return AppLocalizations.of(context)!.on_track;
+    return AppLocalizations.of(context)!.over_goal;
   }
 
   Color get statusColor {
@@ -72,7 +75,9 @@ class _CaloriesCardState extends State<CaloriesPage> {
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Added ${data['name']} ($cal kcal)'),
+          content: Text(
+            AppLocalizations.of(context)!.added_food_msg(data['name'], cal),
+          ),
           backgroundColor: Colors.green,
         ),
       );
@@ -107,8 +112,8 @@ class _CaloriesCardState extends State<CaloriesPage> {
   Future<void> _openLidarScanner() async {
     if (!Platform.isIOS) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('LiDAR scanning is only available on iOS devices.'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.lidar_ios_only),
           backgroundColor: Colors.orange,
         ),
       );
@@ -122,8 +127,8 @@ class _CaloriesCardState extends State<CaloriesPage> {
 
     if (result == true) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('LiDAR scan completed! Processing volume data...'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.lidar_completed),
           backgroundColor: Colors.green,
         ),
       );
@@ -139,7 +144,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
         title: Text(
-          'Calorie Tracker',
+          AppLocalizations.of(context)!.calorie_tracker,
           style: textTheme.titleLarge?.copyWith(
             color: colorScheme.onPrimary,
             fontWeight: FontWeight.bold,
@@ -152,7 +157,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
           IconButton(
             onPressed: () => context.push('/health/food/dashboard'),
             icon: const Icon(Icons.grid_view_rounded),
-            tooltip: 'Nutrition Dashboard',
+            tooltip: AppLocalizations.of(context)!.nutrition_dashboard,
           ),
         ],
       ),
@@ -172,7 +177,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                 child: Column(
                   children: [
                     Text(
-                      'Net Calories',
+                      AppLocalizations.of(context)!.net_calories,
                       style: textTheme.titleMedium?.copyWith(
                         color: colorScheme.secondary,
                       ),
@@ -201,7 +206,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Goal: $dailyGoal kcal',
+                      AppLocalizations.of(context)!.goal_kcal(dailyGoal),
                       style: textTheme.bodyLarge?.copyWith(
                         color: colorScheme.onSurface.withOpacity(0.6),
                       ),
@@ -238,7 +243,9 @@ class _CaloriesCardState extends State<CaloriesPage> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      '${progressPercentage.toStringAsFixed(0)}% of daily goal',
+                      AppLocalizations.of(context)!.percent_of_daily_goal(
+                        progressPercentage.toStringAsFixed(0),
+                      ),
                       style: textTheme.bodyMedium?.copyWith(
                         color: statusColor,
                         fontWeight: FontWeight.w600,
@@ -256,7 +263,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                 Expanded(
                   child: _buildBreakdownCard(
                     context,
-                    'Consumed',
+                    AppLocalizations.of(context)!.consumed,
                     caloriesConsumed,
                     Icons.restaurant,
                     Colors.blue,
@@ -266,7 +273,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                 Expanded(
                   child: _buildBreakdownCard(
                     context,
-                    'Burned',
+                    AppLocalizations.of(context)!.burned,
                     caloriesBurned,
                     Icons.local_fire_department,
                     Colors.orange,
@@ -280,7 +287,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                 Expanded(
                   child: _buildStatCard(
                     context,
-                    'Remaining',
+                    AppLocalizations.of(context)!.remaining,
                     remainingCalories.toString(),
                     'kcal',
                     Icons.trending_down,
@@ -290,7 +297,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                 Expanded(
                   child: _buildStatCard(
                     context,
-                    'Total Burn',
+                    AppLocalizations.of(context)!.total_burn,
                     totalEnergyExpenditure.toString(),
                     'kcal',
                     Icons.whatshot,
@@ -307,7 +314,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                   child: ElevatedButton.icon(
                     onPressed: _showAddFoodModal,
                     icon: const Icon(Icons.add),
-                    label: const Text('Add Food'),
+                    label: Text(AppLocalizations.of(context)!.add_food),
                     style: ElevatedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       backgroundColor: colorScheme.primary,
@@ -323,7 +330,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                   child: OutlinedButton.icon(
                     onPressed: _openLidarScanner,
                     icon: const Icon(Icons.qr_code_scanner),
-                    label: const Text('LiDAR Scan'),
+                    label: Text(AppLocalizations.of(context)!.lidar_scan),
                     style: OutlinedButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
@@ -350,7 +357,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Log Exercise',
+                      AppLocalizations.of(context)!.health_log_exercise,
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -363,7 +370,9 @@ class _CaloriesCardState extends State<CaloriesPage> {
                             controller: _caloriesController,
                             keyboardType: TextInputType.number,
                             decoration: InputDecoration(
-                              labelText: 'Calories burned',
+                              labelText: AppLocalizations.of(
+                                context,
+                              )!.health_calories_burned_label,
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(12),
                               ),
@@ -407,7 +416,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Quick Add Exercise',
+                      AppLocalizations.of(context)!.health_quick_add_exercise,
                       style: textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold,
                       ),
@@ -417,11 +426,26 @@ class _CaloriesCardState extends State<CaloriesPage> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildQuickExerciseChip('Walking 30min', 150),
-                        _buildQuickExerciseChip('Running 30min', 300),
-                        _buildQuickExerciseChip('Cycling 30min', 250),
-                        _buildQuickExerciseChip('Swimming 30min', 350),
-                        _buildQuickExerciseChip('Yoga 30min', 120),
+                        _buildQuickExerciseChip(
+                          AppLocalizations.of(context)!.health_walking_30min,
+                          150,
+                        ),
+                        _buildQuickExerciseChip(
+                          AppLocalizations.of(context)!.health_running_30min,
+                          300,
+                        ),
+                        _buildQuickExerciseChip(
+                          AppLocalizations.of(context)!.health_cycling_30min,
+                          250,
+                        ),
+                        _buildQuickExerciseChip(
+                          AppLocalizations.of(context)!.health_swimming_30min,
+                          350,
+                        ),
+                        _buildQuickExerciseChip(
+                          AppLocalizations.of(context)!.health_yoga_30min,
+                          120,
+                        ),
                       ],
                     ),
                   ],
@@ -527,7 +551,9 @@ class _CaloriesCardState extends State<CaloriesPage> {
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Added $calories kcal burned'),
+            content: Text(
+              AppLocalizations.of(context)!.added_calories_burned(calories),
+            ),
             duration: const Duration(seconds: 1),
           ),
         );

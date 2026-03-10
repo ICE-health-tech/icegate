@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class ChangeUsernamePage extends StatefulWidget {
   const ChangeUsernamePage({super.key});
@@ -34,8 +35,9 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Username updated successfully!'),
+          SnackBar(
+            // Thông báo cập nhật tên đăng nhập thành công
+            content: Text(AppLocalizations.of(context)!.msg_username_success),
             backgroundColor: Colors.green,
           ),
         );
@@ -45,7 +47,10 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Failed to update username: $e'),
+            // Thông báo lỗi cập nhật tên đăng nhập
+            content: Text(
+              AppLocalizations.of(context)!.err_username_failed(e.toString()),
+            ),
             backgroundColor: Colors.red,
           ),
         );
@@ -72,7 +77,8 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
       onSwipe: () => Navigator.of(context).pop(),
       child: Scaffold(
         appBar: AppBar(
-          title: const Text('Change Username'),
+          // Tiêu đề trang đổi tên đăng nhập
+          title: Text(AppLocalizations.of(context)!.change_username_title),
           backgroundColor: Colors.transparent,
           elevation: 0,
         ),
@@ -83,16 +89,18 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Tiêu đề phụ: tên đăng nhập duy nhất
                 Text(
-                  'Your Unique Username',
+                  AppLocalizations.of(context)!.unique_username_header,
                   style: textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.w900,
                     letterSpacing: -1,
                   ),
                 ),
                 const SizedBox(height: 8),
+                // Mô tả yêu cầu tên đăng nhập
                 Text(
-                  'Your username is used to log in and identify you within the application. It must be at least 3 characters long.',
+                  AppLocalizations.of(context)!.username_description,
                   style: textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                   ),
@@ -100,8 +108,9 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                 const SizedBox(height: 32),
 
                 // Username Field
+                // Nhãn trường tên đăng nhập
                 Text(
-                  'Username',
+                  AppLocalizations.of(context)!.username_label,
                   style: textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
@@ -111,7 +120,10 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                 TextFormField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    hintText: 'Enter new username',
+                    // Gợi ý nhập tên đăng nhập mới
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.enter_new_username_hint,
                     prefixIcon: const Icon(Icons.alternate_email_rounded),
                     filled: true,
                     fillColor: colorScheme.surfaceContainerLow,
@@ -120,15 +132,18 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  // Kiểm tra tên đăng nhập hợp lệ
                   validator: (value) {
                     if (value == null || value.trim().isEmpty) {
-                      return 'Please enter a username';
+                      return AppLocalizations.of(context)!.err_enter_username;
                     }
                     if (value.trim().length < 3) {
-                      return 'Username must be at least 3 characters';
+                      return AppLocalizations.of(context)!.err_username_length;
                     }
                     if (value.contains('@')) {
-                      return 'Username cannot contain "@"';
+                      return AppLocalizations.of(
+                        context,
+                      )!.err_username_invalid_char;
                     }
                     return null;
                   },
@@ -151,9 +166,10 @@ class _ChangeUsernamePageState extends State<ChangeUsernamePage> {
                     ),
                     child: _isLoading
                         ? const CircularProgressIndicator(color: Colors.white)
-                        : const Text(
-                            'UPDATE USERNAME',
-                            style: TextStyle(
+                        // Nút cập nhật tên đăng nhập
+                        : Text(
+                            AppLocalizations.of(context)!.btn_update_username,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),

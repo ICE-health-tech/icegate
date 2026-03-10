@@ -4077,6 +4077,18 @@ class $ProjectNotesTableTable extends ProjectNotesTable
       'REFERENCES projects (id) ON DELETE CASCADE',
     ),
   );
+  static const VerificationMeta _categoryMeta = const VerificationMeta(
+    'category',
+  );
+  @override
+  late final GeneratedColumn<String> category = GeneratedColumn<String>(
+    'category',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('projects'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -4088,6 +4100,7 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     createdAt,
     updatedAt,
     projectID,
+    category,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -4146,6 +4159,12 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         projectID.isAcceptableOrUnknown(data['project_id']!, _projectIDMeta),
       );
     }
+    if (data.containsKey('category')) {
+      context.handle(
+        _categoryMeta,
+        category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
+      );
+    }
     return context;
   }
 
@@ -4195,6 +4214,10 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
       ),
+      category: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category'],
+      )!,
     );
   }
 
@@ -4219,6 +4242,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
   final DateTime createdAt;
   final DateTime updatedAt;
   final String? projectID;
+  final String category;
   const ProjectNoteData({
     required this.id,
     this.tenantID,
@@ -4229,6 +4253,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     required this.createdAt,
     required this.updatedAt,
     this.projectID,
+    required this.category,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -4258,6 +4283,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
     }
+    map['category'] = Variable<String>(category);
     return map;
   }
 
@@ -4280,6 +4306,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       projectID: projectID == null && nullToAbsent
           ? const Value.absent()
           : Value(projectID),
+      category: Value(category),
     );
   }
 
@@ -4298,6 +4325,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       projectID: serializer.fromJson<String?>(json['projectID']),
+      category: serializer.fromJson<String>(json['category']),
     );
   }
   @override
@@ -4313,6 +4341,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'projectID': serializer.toJson<String?>(projectID),
+      'category': serializer.toJson<String>(category),
     };
   }
 
@@ -4326,6 +4355,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     DateTime? createdAt,
     DateTime? updatedAt,
     Value<String?> projectID = const Value.absent(),
+    String? category,
   }) => ProjectNoteData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -4336,6 +4366,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
     projectID: projectID.present ? projectID.value : this.projectID,
+    category: category ?? this.category,
   );
   ProjectNoteData copyWithCompanion(ProjectNotesTableCompanion data) {
     return ProjectNoteData(
@@ -4348,6 +4379,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       projectID: data.projectID.present ? data.projectID.value : this.projectID,
+      category: data.category.present ? data.category.value : this.category,
     );
   }
 
@@ -4362,7 +4394,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           ..write('content: $content, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
-          ..write('projectID: $projectID')
+          ..write('projectID: $projectID, ')
+          ..write('category: $category')
           ..write(')'))
         .toString();
   }
@@ -4378,6 +4411,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     createdAt,
     updatedAt,
     projectID,
+    category,
   );
   @override
   bool operator ==(Object other) =>
@@ -4391,7 +4425,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           other.content == this.content &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
-          other.projectID == this.projectID);
+          other.projectID == this.projectID &&
+          other.category == this.category);
 }
 
 class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
@@ -4404,6 +4439,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<String?> projectID;
+  final Value<String> category;
   final Value<int> rowid;
   const ProjectNotesTableCompanion({
     this.id = const Value.absent(),
@@ -4415,6 +4451,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.projectID = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNotesTableCompanion.insert({
@@ -4427,6 +4464,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.projectID = const Value.absent(),
+    this.category = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -4441,6 +4479,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<String>? projectID,
+    Expression<String>? category,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -4453,6 +4492,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (projectID != null) 'project_id': projectID,
+      if (category != null) 'category': category,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -4467,6 +4507,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<String?>? projectID,
+    Value<String>? category,
     Value<int>? rowid,
   }) {
     return ProjectNotesTableCompanion(
@@ -4479,6 +4520,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       projectID: projectID ?? this.projectID,
+      category: category ?? this.category,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -4517,6 +4559,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     if (projectID.present) {
       map['project_id'] = Variable<String>(projectID.value);
     }
+    if (category.present) {
+      map['category'] = Variable<String>(category.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -4535,6 +4580,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('projectID: $projectID, ')
+          ..write('category: $category, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -34846,6 +34892,7 @@ typedef $$ProjectNotesTableTableCreateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<String?> projectID,
+      Value<String> category,
       Value<int> rowid,
     });
 typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
@@ -34859,6 +34906,7 @@ typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<String?> projectID,
+      Value<String> category,
       Value<int> rowid,
     });
 
@@ -34980,6 +35028,11 @@ class $$ProjectNotesTableTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnFilters<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$OrganizationsTableTableFilterComposer get tenantID {
     final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -35089,6 +35142,11 @@ class $$ProjectNotesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get category => $composableBuilder(
+    column: $table.category,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$OrganizationsTableTableOrderingComposer get tenantID {
     final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -35185,6 +35243,9 @@ class $$ProjectNotesTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get category =>
+      $composableBuilder(column: $table.category, builder: (column) => column);
 
   $$OrganizationsTableTableAnnotationComposer get tenantID {
     final $$OrganizationsTableTableAnnotationComposer composer =
@@ -35299,6 +35360,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion(
                 id: id,
@@ -35310,6 +35372,7 @@ class $$ProjectNotesTableTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 projectID: projectID,
+                category: category,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -35323,6 +35386,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
+                Value<String> category = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion.insert(
                 id: id,
@@ -35334,6 +35398,7 @@ class $$ProjectNotesTableTableTableManager
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 projectID: projectID,
+                category: category,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

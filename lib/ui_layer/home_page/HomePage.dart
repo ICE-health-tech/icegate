@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import '../UIConstants.dart';
@@ -245,8 +246,8 @@ class _HomePageState extends State<HomePage> {
         insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
         child: AddPluginForm(
           data: FormData(
-            title: "Add App Plugin",
-            description: "Choose a plugin to extend your dashboard",
+            title: AppLocalizations.of(context)!.add_app_plugin,
+            description: AppLocalizations.of(context)!.plugin_desc,
           ),
           scope: 'home',
         ),
@@ -348,7 +349,11 @@ class _HomePageState extends State<HomePage> {
                   _buildQuotesSection(context),
                   const SizedBox(height: 16),
                   // --- SECTION: 4 life elements ---
-                  _buildSectionHeader(context, '4 life elements', '/profile'),
+                  _buildSectionHeader(
+                    context,
+                    AppLocalizations.of(context)!.homepage_four_life_elements,
+                    '/profile',
+                  ),
                   const SizedBox(height: 12),
                   SizedBox(
                     height: sizeOfDepartment,
@@ -363,18 +368,26 @@ class _HomePageState extends State<HomePage> {
                           final hr = healthBlock.todayHeartRate.value;
                           return _buildQuickAccessCard(
                             context,
-                            'Health',
+                            AppLocalizations.of(context)!.health,
                             Icons.favorite_rounded,
                             Colors.green,
                             metrics: [
-                              {'label': 'Steps', 'value': '$steps'},
-                              {'label': 'Kcal Consume', 'value': '$kcal'},
                               {
-                                'label': 'Sleep',
+                                'label': AppLocalizations.of(context)!.steps,
+                                'value': '$steps',
+                              },
+                              {
+                                'label': AppLocalizations.of(
+                                  context,
+                                )!.kcal_consume,
+                                'value': '$kcal',
+                              },
+                              {
+                                'label': AppLocalizations.of(context)!.sleep,
                                 'value': '${sleep.toStringAsFixed(1)}h',
                               },
                               {
-                                'label': 'HR',
+                                'label': AppLocalizations.of(context)!.hr,
                                 'value': hr > 0 ? '$hr bpm' : '--',
                               },
                             ],
@@ -389,24 +402,24 @@ class _HomePageState extends State<HomePage> {
                           final savings = financeBlock.totalSavings.value;
                           return _buildQuickAccessCard(
                             context,
-                            'Finance',
+                            AppLocalizations.of(context)!.finance,
                             Icons.account_balance_wallet_rounded,
                             Colors.blue,
                             metrics: [
                               {
-                                'label': 'Balance',
+                                'label': AppLocalizations.of(context)!.balance,
                                 'value': '\$${balance.toStringAsFixed(0)}',
                               },
                               {
-                                'label': 'Spent',
+                                'label': AppLocalizations.of(context)!.spent,
                                 'value': '\$${spending.toStringAsFixed(0)}',
                               },
                               {
-                                'label': 'Income',
+                                'label': AppLocalizations.of(context)!.income,
                                 'value': '\$${income.toStringAsFixed(0)}',
                               },
                               {
-                                'label': 'Savings',
+                                'label': AppLocalizations.of(context)!.savings,
                                 'value': '\$${savings.toStringAsFixed(0)}',
                               },
                             ],
@@ -422,21 +435,32 @@ class _HomePageState extends State<HomePage> {
                               final count = snapshot.data?.length ?? 0;
                               return _buildQuickAccessCard(
                                 context,
-                                'Social',
+                                AppLocalizations.of(context)!.social,
                                 Icons.people_alt_rounded,
                                 Colors.purple,
                                 metrics: [
-                                  {'label': 'Total Users', 'value': '$count'},
                                   {
-                                    'label': 'Friends',
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.total_users,
+                                    'value': '$count',
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.friends,
                                     'value': '${info.profiles.friends}',
                                   },
                                   {
-                                    'label': 'Mutual',
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.mutual,
                                     'value': '${info.profiles.mutual}',
                                   },
                                   {
-                                    'label': 'Username',
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.username,
                                     'value':
                                         authBlock.username.value ??
                                         info.profiles.username,
@@ -469,19 +493,29 @@ class _HomePageState extends State<HomePage> {
 
                           return _buildQuickAccessCard(
                             context,
-                            'Projects',
+                            AppLocalizations.of(context)!.projects,
                             Icons.rocket_launch_rounded,
                             Colors.orange,
                             metrics: [
-                              {'label': 'Done', 'value': '$projectsDone Projs'},
                               {
-                                'label': 'Active',
-                                'value': '$projectsRemaining Projs',
+                                'label': AppLocalizations.of(context)!.done,
+                                'value':
+                                    '$projectsDone ${AppLocalizations.of(context)!.projs}',
                               },
-                              {'label': 'Done', 'value': '$tasksDone Tasks'},
                               {
-                                'label': 'Active',
-                                'value': '$tasksRemaining Tasks',
+                                'label': AppLocalizations.of(context)!.active,
+                                'value':
+                                    '$projectsRemaining ${AppLocalizations.of(context)!.projs}',
+                              },
+                              {
+                                'label': AppLocalizations.of(context)!.done,
+                                'value':
+                                    '$tasksDone ${AppLocalizations.of(context)!.tasks}',
+                              },
+                              {
+                                'label': AppLocalizations.of(context)!.active,
+                                'value':
+                                    '$tasksRemaining ${AppLocalizations.of(context)!.tasks}',
                               },
                             ],
                             route: '/projects',
@@ -499,7 +533,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       AutoSizeText(
-                        'Plugin',
+                        AppLocalizations.of(context)!.homepage_plugin,
                         style: textTheme.titleLarge?.copyWith(
                           fontWeight: FontWeight.w800,
                           letterSpacing: -0.5,
@@ -512,7 +546,11 @@ class _HomePageState extends State<HomePage> {
                             _isEditMode = !_isEditMode;
                           });
                         },
-                        child: Text(_isEditMode ? 'Done' : 'Edit'),
+                        child: Text(
+                          _isEditMode
+                              ? AppLocalizations.of(context)!.done
+                              : AppLocalizations.of(context)!.edit,
+                        ),
                       ),
                     ],
                   ),
@@ -651,7 +689,7 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    'Level $level',
+                    AppLocalizations.of(context)!.level(level),
                     style: textTheme.titleLarge?.copyWith(
                       color: colorScheme.onPrimary,
                       fontWeight: FontWeight.w900,
@@ -683,7 +721,7 @@ class _HomePageState extends State<HomePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'Progress to Level ${level + 1}',
+                AppLocalizations.of(context)!.progress_to_level(level + 1),
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.onPrimary.withOpacity(0.85),
                   fontWeight: FontWeight.bold,
@@ -747,7 +785,7 @@ class _HomePageState extends State<HomePage> {
         TextButton.icon(
           onPressed: () => context.go(route),
           icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          label: const Text('Analysis'),
+          label: Text(AppLocalizations.of(context)!.analysis),
           style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
         ),
       ],
@@ -1104,7 +1142,7 @@ class _HomePageState extends State<HomePage> {
             top: 5,
             left: 20,
             child: Text(
-              "Rename",
+              AppLocalizations.of(context)!.edit,
               style: TextStyle(
                 color: Colors.redAccent,
                 fontSize: UIConstants.getResponsiveFontSize(context),
@@ -1240,7 +1278,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename Internal Widget'),
+        title: Text('${AppLocalizations.of(context)!.edit} Internal Widget'),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(labelText: 'Widget Name'),
@@ -1248,7 +1286,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -1261,7 +1299,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Rename'),
+            child: Text(AppLocalizations.of(context)!.edit),
           ),
         ],
       ),
@@ -1276,7 +1314,7 @@ class _HomePageState extends State<HomePage> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Rename External Widget'),
+        title: Text('${AppLocalizations.of(context)!.edit} External Widget'),
         content: TextField(
           controller: controller,
           decoration: const InputDecoration(labelText: 'Widget Name'),
@@ -1284,7 +1322,7 @@ class _HomePageState extends State<HomePage> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(AppLocalizations.of(context)!.cancel),
           ),
           TextButton(
             onPressed: () {
@@ -1297,7 +1335,7 @@ class _HomePageState extends State<HomePage> {
                 Navigator.pop(context);
               }
             },
-            child: const Text('Rename'),
+            child: Text(AppLocalizations.of(context)!.edit),
           ),
         ],
       ),
@@ -1388,7 +1426,7 @@ class _HomePageState extends State<HomePage> {
               Icon(Icons.add_rounded, color: colorScheme.primary, size: 32),
               const SizedBox(height: 4),
               Text(
-                'Add',
+                AppLocalizations.of(context)!.done,
                 style: TextStyle(
                   color: colorScheme.primary,
                   fontSize: 12,

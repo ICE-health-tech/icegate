@@ -1,0 +1,547 @@
+{
+    "@@locale": "en",
+    "helloWorld": "Hello World!",
+    "homepage_four_life_elements": "4 Life Elements",
+    "homepage_plugin": "Plugin",
+    "record_achievement": "RECORD ACHIEVEMENT",
+    "update_achievement": "UPDATE ACHIEVEMENT",
+    "achievement_title_label": "Achievement Title (e.g. Swinging in 2h)",
+    "system_exp_reward": "System EXP Reward",
+    "image_url": "Image URL",
+    "cancel": "CANCEL",
+    "achievement_recorded": "ACHIEVEMENT RECORDED IN SYSTEM",
+    "achievement_updated": "ACHIEVEMENT UPDATED",
+    "system_error": "SYSTEM ERROR: {error}",
+    "@system_error": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "record_feat": "RECORD FEAT",
+    "update_feat": "UPDATE FEAT",
+    "import_from_contacts": "Import from Contacts",
+    "add_manually": "Add Manually",
+    "register_agent": "REGISTER AGENT",
+    "first_name": "First Name",
+    "last_name": "Last Name",
+    "relationship_type": "RELATIONSHIP TYPE",
+    "create_link": "CREATE LINK",
+    "ranking": "RANKING",
+    "relationships": "RELATIONSHIPS",
+    "achievements": "ACHIEVEMENTS",
+    "current_rankings": "Current Rankings",
+    "updated_time_ago": "UPDATED {time} AGO",
+    "@updated_time_ago": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "no_data_global_board": "No data in the Global Supremacy Board.",
+    "calorie_tracker": "Calorie Tracker",
+    "nutrition_dashboard": "Nutrition Dashboard",
+    "net_calories": "Net Calories",
+    "goal_kcal": "Goal: {goal} kcal",
+    "@goal_kcal": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "under_goal": "Under Goal",
+    "on_track": "On Track",
+    "over_goal": "Over Goal",
+    "percent_of_daily_goal": "{percent}% of daily goal",
+    "@percent_of_daily_goal": {
+        "placeholders": {
+            "percent": {
+                "type": "String"
+            }
+        }
+    },
+    "consumed": "Consumed",
+    "burned": "Burned",
+    "remaining": "Remaining",
+    "total_burn": "Total Burn",
+    "add_food": "Add Food",
+    "lidar_scan": "LiDAR Scan",
+    "log_exercise": "Log Exercise",
+    "calories_burned_label": "Calories burned",
+    "quick_add_exercise": "Quick Add Exercise",
+    "added_food_msg": "Added {name} ({cal} kcal)",
+    "@added_food_msg": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            },
+            "cal": {
+                "type": "int"
+            }
+        }
+    },
+    "lidar_ios_only": "LiDAR scanning is only available on iOS devices.",
+    "lidar_completed": "LiDAR scan completed! Processing volume data...",
+    "level": "Level {level}",
+    "@level": {
+        "placeholders": {
+            "level": {
+                "type": "int"
+            }
+        }
+    },
+    "progress_to_level": "Progress to Level {level}",
+    "@progress_to_level": {
+        "placeholders": {
+            "level": {
+                "type": "int"
+            }
+        }
+    },
+    "analysis": "Analysis",
+    "health": "Health",
+    "finance": "Finance",
+    "social": "Social",
+    "projects": "Projects",
+    "steps": "Steps",
+    "kcal_consume": "Kcal Consume",
+    "sleep": "Sleep",
+    "hr": "HR",
+    "balance": "Balance",
+    "spent": "Spent",
+    "income": "Income",
+    "savings": "Savings",
+    "total_users": "Total Users",
+    "friends": "Friends",
+    "mutual": "Mutual",
+    "username": "Username",
+    "done": "Done",
+    "active": "Active",
+    "projs": "Projs",
+    "tasks": "Tasks",
+    "edit": "Edit",
+    "add_app_plugin": "Add App Plugin",
+    "plugin_desc": "Choose a plugin to extend your dashboard",
+    "add": "Add",
+    "canvas_add_custom_widget": "Add Custom Widget",
+    "canvas_add_widget_desc": "Enter the name and URL of the website you want to add.",
+    "canvas_notification_center": "Notification Center",
+    "canvas_notification_desc": "Manage your alerts and focus history",
+    "canvas_goal_center": "Goal Center",
+    "canvas_goal_desc": "Track your daily health evolution",
+    "goal_target_evolution": "TARGET EVOLUTION",
+    "goal_mission": "MISSION",
+    "goal_mission_desc": "Configure your physical parameters to ensure optimal AI synchronization and field performance.",
+    "goal_step_target": "STEP TARGET",
+    "goal_calorie_limit": "CALORIE LIMIT",
+    "goal_water_target": "WATER TARGET",
+    "goal_focus_target": "FOCUS TARGET",
+    "goal_exercise_target": "EXERCISE TARGET",
+    "goal_sleep_target": "SLEEP TARGET",
+    "unit_kcal": "kcal",
+    "unit_ml": "ml",
+    "unit_min": "min",
+    "unit_hours": "hours",
+    "scoring_rules_title": "Scoring Rules",
+    "scoring_health": "🏃 Health",
+    "scoring_career": "💼 Career (Projects)",
+    "scoring_finance": "💰 Finance",
+    "scoring_social": "❤️ Social",
+    "rule_health_steps": "1 Point per {steps} steps walked",
+    "@rule_health_steps": {
+        "placeholders": {
+            "steps": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_health_calories": "{points} Points for staying under {limit} kcal/day",
+    "@rule_health_calories": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            },
+            "limit": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_health_auto": "Points automatically update when health metrics are recorded",
+    "rule_career_project": "{points} Base Points for completing a project",
+    "@rule_career_project": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_career_task": "{points} Points for each task completed",
+    "@rule_career_task": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_career_bonus_5": "{points} Bonus Points for projects with 5+ tasks",
+    "@rule_career_bonus_5": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_career_bonus_10": "{points} Bonus Points for projects with 10+ tasks",
+    "@rule_career_bonus_10": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_career_bonus_doc": "{points} Bonus Points for having 3+ research notes",
+    "@rule_career_bonus_doc": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_career_bonus_week": "{points} Bonus Points for projects active for 7+ days",
+    "@rule_career_bonus_week": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_finance_savings": "{points} Points for every ${milestone} saved (Net Worth)",
+    "@rule_finance_savings": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            },
+            "milestone": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_finance_investment": "{points} Points for every {threshold}% investment return",
+    "@rule_finance_investment": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            },
+            "threshold": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_finance_auto": "Points update as account balances and asset values change",
+    "rule_social_contact": "{points} Points for each unique contact added",
+    "@rule_social_contact": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_social_affection": "{points} Points for every {unit} affection points earned",
+    "@rule_social_affection": {
+        "placeholders": {
+            "points": {
+                "type": "int"
+            },
+            "unit": {
+                "type": "int"
+            }
+        }
+    },
+    "rule_social_maintain": "Maintain relationships to keep your social score high",
+    "how_it_works": "How it works",
+    "scoring_intro": "The Ice Gate scoring system measures your growth across four key life elements. Your Global Level is calculated from the sum of these scores. Maintain a high score to unlock legendary status.",
+    "scoring_footer": "Balance your physical, social, financial, and workspace growth to become a Legend.",
+    "personal_info_title": "Personal Information",
+    "personal_info_identification": "Identification",
+    "personal_info_professional_matrix": "Professional Matrix",
+    "personal_info_education_node": "Education Node",
+    "personal_info_location": "Location",
+    "personal_info_digital": "Digital",
+    "logout": "Logout",
+    "save": "Save",
+    "bio": "Bio",
+    "first_name_label": "First Name",
+    "last_name_label": "Last Name",
+    "email_label": "eMail",
+    "phone_number_label": "Phone Number",
+    "role_label": "Role",
+    "organization_label": "Organization",
+    "institution_label": "Institution",
+    "education_level_label": "Education Level",
+    "country_label": "Country",
+    "city_label": "City",
+    "github_label": "GitHub",
+    "linkedin_label": "LinkedIn",
+    "personal_web_label": "Personal Web",
+    "msg_personal_info_saved": "Personal information saved successfully",
+    "msg_err_save_failed": "Failed to save changes: {error}",
+    "@msg_err_save_failed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "msg_avatar_updated": "Avatar updated!",
+    "msg_avatar_cancelled": "Avatar upload cancelled",
+    "msg_cover_updated": "Cover updated!",
+    "msg_cover_cancelled": "Cover upload cancelled",
+    "msg_err_upload_failed": "Upload failed: {error}",
+    "@msg_err_upload_failed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "msg_err_not_authenticated": "Error: Not authenticated",
+    "change_cover": "Change Cover",
+    "change_avatar": "Change Avatar",
+    "analysis_user_title": "{name}'s Analysis",
+    "@analysis_user_title": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "tagline": "LIFE GATEWAY",
+    "username_email_hint": "USERNAME / eMAIL",
+    "password_hint": "PASSWORD",
+    "go_to_gate": "GO TO GATE",
+    "secure_login": "SECURE LOGIN",
+    "google_login": "GOOGLE",
+    "guest_access": "GUEST ACCESS",
+    "enroll_hub": "ENROLL HUB",
+    "msg_enter_credentials": "Please enter username and password",
+    "msg_secure_login_failed": "Secure Login failed: {error}",
+    "@msg_secure_login_failed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "performance": "Performance",
+    "overview": "Overview",
+    "guest_mode": "Guest Mode",
+    "sync_desc": "Synchronize to save your progress.",
+    "sync": "Sync",
+    "score_balance": "SCORE BALANCE",
+    "percent_to_level": "{percent}% to level {level}",
+    "@percent_to_level": {
+        "placeholders": {
+            "percent": {
+                "type": "int"
+            },
+            "level": {
+                "type": "int"
+            }
+        }
+    },
+    "total_xp": "Total XP: {xp}",
+    "@total_xp": {
+        "placeholders": {
+            "xp": {
+                "type": "int"
+            }
+        }
+    },
+    "breakdown_steps": "STEPS",
+    "breakdown_diet": "DIET",
+    "breakdown_exercise": "EXERCISE",
+    "breakdown_focus": "FOCUS",
+    "breakdown_water": "WATER",
+    "breakdown_sleep": "SLEEP",
+    "breakdown_contacts": "CONTACTS",
+    "breakdown_affection": "AFFECTION",
+    "breakdown_quests": "QUESTS",
+    "breakdown_accounts": "ACCOUNTS",
+    "breakdown_assets": "ASSETS",
+    "breakdown_tasks": "TASKS",
+    "breakdown_projects": "PROJECTS",
+    "breakdown_system": "SYSTEM",
+    "app_settings_title": "App Settings",
+    "guest_user": "Guest",
+    "msg_sign_in_to_sync": "Sign in to sync your data",
+    "member_status": "Member",
+    "account_section": "Account",
+    "edit_profile": "Edit Profile",
+    "edit_profile_subtitle": "Update your name and photo",
+    "change_password": "Change Password",
+    "change_username": "Change Username",
+    "preferences_section": "Preferences",
+    "change_theme": "Change Theme",
+    "system_notifications": "System Notifications",
+    "notifications_active": "Notifications are active",
+    "notifications_paused": "Notifications are paused",
+    "about_support_section": "About & Support",
+    "manual": "Manual",
+    "version": "Version",
+    "reset_database_title": "Reset Database?",
+    "reset_database_msg": "This will permanently delete all your local data including focus sessions, health logs, and settings. This action cannot be undone.",
+    "msg_database_reset_success": "Database reset successful.",
+    "btn_reset_all_data": "RESET ALL DATA",
+    "security_title": "Security",
+    "set_password": "Set Password",
+    "msg_password_requirement": "Your new password must be at least 6 characters long and different from previous ones.",
+    "msg_no_local_password": "You haven't set a local password yet. Create one to enable email/password login.",
+    "current_password_label": "Current Password",
+    "enter_current_password_hint": "Enter current password",
+    "err_enter_current_password": "Please enter current password",
+    "new_password_label": "New Password",
+    "enter_new_password_hint": "Enter new password",
+    "err_enter_password": "Please enter a password",
+    "err_password_length": "Password must be at least 6 characters",
+    "confirm_password_label": "Confirm Password",
+    "confirm_new_password_hint": "Confirm new password",
+    "err_confirm_password": "Please confirm your password",
+    "err_passwords_not_match": "Passwords do not match",
+    "btn_update_password": "Update Password",
+    "msg_password_success": "Password set successfully!",
+    "err_unexpected": "An unexpected error occurred: {error}",
+    "@err_unexpected": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "err_verification_failed": "Current password verification failed. Please check your credentials.",
+    "change_username_title": "Change Username",
+    "unique_username_header": "Your Unique Username",
+    "username_description": "Your username is used to log in and identify you within the application. It must be at least 3 characters long.",
+    "username_label": "Username",
+    "enter_new_username_hint": "Enter new username",
+    "err_enter_username": "Please enter a username",
+    "err_username_length": "Username must be at least 3 characters",
+    "err_username_invalid_char": "Username cannot contain \"@\"",
+    "btn_update_username": "UPDATE USERNAME",
+    "msg_username_success": "Username updated successfully!",
+    "err_username_failed": "Failed to update username: {error}",
+    "@err_username_failed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "added_calories_burned": "Added {cal} kcal burned",
+    "@added_calories_burned": {
+        "placeholders": {
+            "cal": {
+                "type": "int"
+            }
+        }
+    },
+    "change_language": "Change Language",
+    "health_insights": "Insights",
+    "health_log_water": "Log Water",
+    "health_log_food": "Log Food",
+    "health_exercise": "Exercise",
+    "health_focus": "Focus",
+    "health_log_exercise": "Log Exercise",
+    "health_calories_burned_label": "Calories burned",
+    "health_quick_add_exercise": "Quick Add Exercise",
+    "health_walking_30min": "Walking 30min",
+    "health_running_30min": "Running 30min",
+    "health_cycling_30min": "Cycling 30min",
+    "health_swimming_30min": "Swimming 30min",
+    "health_yoga_30min": "Yoga 30min",
+    "health_water_log": "Water Log",
+    "health_water_goal": "GOAL",
+    "health_water_points": "POINTS",
+    "health_water_left": "LEFT",
+    "health_water_of_ml": "OF {goal} ML",
+    "@health_water_of_ml": {
+        "placeholders": {
+            "goal": {
+                "type": "int"
+            }
+        }
+    },
+    "health_stay_hydrated": "STAY HYDRATED",
+    "health_custom_intake": "CUSTOM INTAKE",
+    "health_unit_ml": "ML",
+    "health_sleep_tracker": "Sleep Tracker",
+    "health_healthkit_sleep": "HealthKit Sleep",
+    "health_last_24h_apple": "Last 24h from Apple Health",
+    "health_last_session": "Last Session",
+    "health_no_sleep_records": "No sleep sessions recorded yet.",
+    "health_log_sleep": "Log Sleep",
+    "health_bedtime": "Bedtime",
+    "health_wake_up": "Wake up",
+    "health_quality": "Quality",
+    "health_save_session": "Save Session",
+    "health_history": "History",
+    "health_sleep_saved": "Sleep session saved!",
+    "health_hrs": "{hours} hrs",
+    "@health_hrs": {
+        "placeholders": {
+            "hours": {
+                "type": "String"
+            }
+        }
+    },
+    "health_quality_stars": "Quality: {stars}",
+    "@health_quality_stars": {
+        "placeholders": {
+            "stars": {
+                "type": "String"
+            }
+        }
+    },
+    "health_activity_tracker": "Activity Tracker",
+    "health_syncing_data": "Syncing health data...",
+    "health_refresh_steps": "Refresh Steps",
+    "health_steps_dashboard": "Steps Dashboard",
+    "health_steps_taken": "Steps Taken",
+    "health_percent_completed": "{percent}% Completed",
+    "@health_percent_completed": {
+        "placeholders": {
+            "percent": {
+                "type": "String"
+            }
+        }
+    },
+    "health_daily_statistics": "Daily Statistics",
+    "health_lifetime_total": "Lifetime Total",
+    "health_remaining": "Remaining",
+    "health_distance": "Distance",
+    "health_calories": "Calories",
+    "health_active_time": "Active Time",
+    "health_metrics_water": "Water",
+    "health_metrics_exercise": "Exercise",
+    "health_metrics_focus": "Focus",
+    "health_metrics_distance": "Distance",
+    "health_metrics_calories": "Calories",
+    "health_metrics_active_time": "Active Time",
+    "health_metrics_steps": "Steps",
+    "health_metrics_heart_rate": "Heart Rate",
+    "health_metrics_sleep": "Sleep",
+    "health_metrics_calories_consumed": "Calories Consumed",
+    "health_metrics_calories_burned": "Calories Burned",
+    "health_metrics_net_calories": "Net Calories",
+    "health_metrics_weight":"Weight",
+    "health_metrics_detail_coming_soon": "Detail page for {name} coming soon!",
+    "@health_metrics_detail_coming_soon": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    }
+}

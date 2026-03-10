@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
@@ -60,10 +61,52 @@ class _HealthMetricCardState extends State<HealthMetricCard>
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Detail page for ${widget.metrics.name} coming soon!'),
+          content: Text(
+            AppLocalizations.of(
+              context,
+            )!.health_metrics_detail_coming_soon(widget.metrics.name),
+          ),
           behavior: SnackBarBehavior.floating,
         ),
       );
+    }
+  }
+
+  /// Maps health metric internal name (e.g. "steps") to the localized display name
+  String _localizedMetricName(BuildContext context, String metricName) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (metricName.toLowerCase()) {
+      case "steps":
+        return l10n.health_metrics_steps;
+      case "heart_rate":
+        return l10n.health_metrics_heart_rate;
+      case "sleep":
+        return l10n.health_metrics_sleep;
+      case "water":
+        return l10n.health_metrics_water;
+      case "exercise":
+        return l10n.health_metrics_exercise;
+      case "focus":
+        return l10n.health_metrics_focus;
+      case "distance":
+        return l10n.health_metrics_distance;
+      case "calories":
+        return l10n.health_metrics_calories;
+      case "active_time":
+        return l10n.health_metrics_active_time;
+      
+      case "calories_burned":
+        return l10n.health_metrics_calories_burned;
+
+          
+      case "weight":
+        return l10n.health_metrics_weight;
+      case "net_calories":
+        return l10n.health_metrics_net_calories;
+        case "food":
+          return l10n.health_metrics_calories_consumed;
+      default:
+        return metricName.toUpperCase();
     }
   }
 
@@ -205,10 +248,10 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
                                           color:
-                                           ((widget.metrics.trendPositive ??
-                                                      true)
-                                                  ? Colors.green
-                                                  : Colors.red),
+                                              ((widget.metrics.trendPositive ??
+                                                  true)
+                                              ? Colors.green
+                                              : Colors.red),
                                           fontWeight: FontWeight.w900,
                                           fontSize: 9,
                                           letterSpacing: 0.2,
@@ -228,7 +271,10 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              widget.metrics.name.toUpperCase(),
+                              _localizedMetricName(
+                                context,
+                                widget.metrics.name,
+                              ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: textTheme.labelSmall?.copyWith(

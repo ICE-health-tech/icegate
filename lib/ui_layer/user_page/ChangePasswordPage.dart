@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -75,9 +76,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             password: _currentPasswordController.text,
           );
         } catch (authErr) {
-          throw Exception(
-            "Current password verification failed. Please check your credentials.",
-          );
+          // Dùng key l10n err_verification_failed khi hiển thị cho người dùng
+          throw Exception('VERIFICATION_FAILED');
         }
       } else {
         print(
@@ -120,11 +120,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     } catch (e) {
       debugPrint("❌ Password update error: $e");
       if (mounted) {
+        // Hiển thị lỗi bất ngờ với localized text
+        final errMsg = e.toString().contains('VERIFICATION_FAILED')
+            ? AppLocalizations.of(context)!.err_verification_failed
+            : AppLocalizations.of(context)!.err_unexpected(e.toString());
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('An unexpected error occurred: $e'),
-            backgroundColor: Colors.red,
-          ),
+          SnackBar(content: Text(errMsg), backgroundColor: Colors.red),
         );
       }
     } finally {
@@ -183,8 +184,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Password set successfully!'),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.msg_password_success),
           backgroundColor: Colors.green,
         ),
       );
@@ -208,8 +209,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
+        // Tiêu đề trang bảo mật
         title: Text(
-          'Security',
+          AppLocalizations.of(context)!.security_title,
           style: textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
         ),
         backgroundColor: Colors.transparent,
@@ -241,20 +243,24 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       color: colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
+                    // Tiêu đề thay đổi hoặc thiết lập mật khẩu
                     Text(
                       _requiresCurrentPassword
-                          ? 'Change Password'
-                          : 'Set Password',
+                          ? AppLocalizations.of(context)!.change_password
+                          : AppLocalizations.of(context)!.set_password,
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 8),
+                    // Mô tả yêu cầu mật khẩu
                     Text(
                       _requiresCurrentPassword
-                          ? 'Your new password must be at least 6 characters long and different from previous ones.'
-                          : 'You haven\'t set a local password yet. Create one to enable email/password login.',
+                          ? AppLocalizations.of(
+                              context,
+                            )!.msg_password_requirement
+                          : AppLocalizations.of(context)!.msg_no_local_password,
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,
@@ -267,8 +273,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
               // Current Password
               if (_requiresCurrentPassword) ...[
+                // Nhãn mật khẩu hiện tại
                 Text(
-                  'Current Password',
+                  AppLocalizations.of(context)!.current_password_label,
                   style: textTheme.labelLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                     color: colorScheme.primary,
@@ -279,7 +286,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   controller: _currentPasswordController,
                   obscureText: _obscureCurrentPassword,
                   decoration: InputDecoration(
-                    hintText: 'Enter current password',
+                    hintText: AppLocalizations.of(
+                      context,
+                    )!.enter_current_password_hint,
                     prefixIcon: const Icon(Icons.lock_person_outlined),
                     suffixIcon: IconButton(
                       icon: Icon(
@@ -299,9 +308,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       borderSide: BorderSide.none,
                     ),
                   ),
+                  // Kiểm tra mật khẩu hiện tại không được trống
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter current password';
+                      return AppLocalizations.of(
+                        context,
+                      )!.err_enter_current_password;
                     }
                     return null;
                   },
@@ -310,8 +322,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               ],
 
               // New Password
+              // Nhãn mật khẩu mới
               Text(
-                'New Password',
+                AppLocalizations.of(context)!.new_password_label,
                 style: textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
@@ -322,7 +335,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 controller: _passwordController,
                 obscureText: _obscurePassword,
                 decoration: InputDecoration(
-                  hintText: 'Enter new password',
+                  hintText: AppLocalizations.of(
+                    context,
+                  )!.enter_new_password_hint,
                   prefixIcon: const Icon(Icons.lock_outline_rounded),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -340,12 +355,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     borderSide: BorderSide.none,
                   ),
                 ),
+                // Kiểm tra mật khẩu mới hợp lệ
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a password';
+                    return AppLocalizations.of(context)!.err_enter_password;
                   }
                   if (value.length < 6) {
-                    return 'Password must be at least 6 characters';
+                    return AppLocalizations.of(context)!.err_password_length;
                   }
                   return null;
                 },
@@ -353,8 +369,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               const SizedBox(height: 20),
 
               // Confirm Password
+              // Nhãn xác nhận mật khẩu
               Text(
-                'Confirm Password',
+                AppLocalizations.of(context)!.confirm_password_label,
                 style: textTheme.labelLarge?.copyWith(
                   fontWeight: FontWeight.bold,
                   color: colorScheme.primary,
@@ -365,7 +382,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 controller: _confirmPasswordController,
                 obscureText: _obscureConfirmPassword,
                 decoration: InputDecoration(
-                  hintText: 'Confirm new password',
+                  hintText: AppLocalizations.of(
+                    context,
+                  )!.confirm_new_password_hint,
                   prefixIcon: const Icon(Icons.lock_rounded),
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -384,12 +403,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     borderSide: BorderSide.none,
                   ),
                 ),
+                // Kiểm tra xác nhận mật khẩu
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please confirm your password';
+                    return AppLocalizations.of(context)!.err_confirm_password;
                   }
                   if (value != _passwordController.text) {
-                    return 'Passwords do not match';
+                    return AppLocalizations.of(
+                      context,
+                    )!.err_passwords_not_match;
                   }
                   return null;
                 },
@@ -416,10 +438,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           color: Colors.white,
                         ),
                       )
+                    // Nút cập nhật hoặc thiết lập mật khẩu
                     : Text(
                         _requiresCurrentPassword
-                            ? 'Update Password'
-                            : 'Set Password',
+                            ? AppLocalizations.of(context)!.btn_update_password
+                            : AppLocalizations.of(context)!.set_password,
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,

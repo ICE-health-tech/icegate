@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
@@ -21,8 +22,8 @@ void buildAddCell(BuildContext context) {
       insetPadding: const EdgeInsets.all(16),
       child: AddPluginForm(
         data: FormData(
-          title: "Add Custom Widget",
-          description: "Enter the name and URL of the website you want to add.",
+          title: AppLocalizations.of(context)!.canvas_add_custom_widget,
+          description: AppLocalizations.of(context)!.canvas_add_widget_desc,
         ),
       ),
     ),
@@ -166,8 +167,12 @@ class _DragCanvasState extends State<DragCanvas> {
                       children: [
                         _buildEntryCard(
                           context: context,
-                          title: "Notification Center",
-                          subtitle: "Manage your alerts and focus history",
+                          title: AppLocalizations.of(
+                            context,
+                          )!.canvas_notification_center,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.canvas_notification_desc,
                           icon: Icons.notifications_active_rounded,
                           color: Colors.blueAccent,
                           onTap: () {
@@ -178,8 +183,12 @@ class _DragCanvasState extends State<DragCanvas> {
                         const SizedBox(height: 20),
                         _buildEntryCard(
                           context: context,
-                          title: "Goal Center",
-                          subtitle: "Track your daily health evolution",
+                          title: AppLocalizations.of(
+                            context,
+                          )!.canvas_goal_center,
+                          subtitle: AppLocalizations.of(
+                            context,
+                          )!.canvas_goal_desc,
                           icon: Icons.track_changes_rounded,
                           color: Colors.orangeAccent,
                           onTap: () {

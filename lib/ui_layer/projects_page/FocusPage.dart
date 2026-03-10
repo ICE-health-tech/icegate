@@ -11,6 +11,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -533,6 +534,7 @@ class _TimerControls extends StatelessWidget {
 
   void _showYoutubeDialog(BuildContext context) {
     final musicBlock = context.read<MusicBlock>();
+    final personBlock = context.read<PersonBlock>();
     final controller = TextEditingController(text: musicBlock.youtubeUrl.value);
     showDialog(
       context: context,
@@ -571,11 +573,18 @@ class _TimerControls extends StatelessWidget {
           ElevatedButton(
             onPressed: () {
               if (controller.text.isNotEmpty) {
-                musicBlock.playYoutube(controller.text);
+                final alias = personBlock.information.value.profiles.username;
+                musicBlock.playYoutube(controller.text, alias: alias);
               }
               Navigator.pop(context);
             },
-            child: const Text("Play"),
+            child: musicBlock.isDownloading.watch(context)
+                ? const SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Text("Play"),
           ),
         ],
       ),
@@ -1168,7 +1177,34 @@ class _TimerCircle extends StatelessWidget {
                   ),
                 ],
               ),
-              if (musicBlock.currentTrackTitle.watch(context) != null) ...[
+              if (musicBlock.isDownloading.watch(context)) ...[
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: 120,
+                  child: Column(
+                    children: [
+                      LinearProgressIndicator(
+                        value: musicBlock.downloadProgress.watch(context),
+                        backgroundColor: modeColor.withOpacity(0.1),
+                        valueColor: AlwaysStoppedAnimation<Color>(modeColor),
+                        borderRadius: BorderRadius.circular(2),
+                        minHeight: 2,
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "FETCHING AUDIO...",
+                        style: TextStyle(
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                          color: modeColor.withOpacity(0.7),
+                          letterSpacing: 1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else if (musicBlock.currentTrackTitle.watch(context) !=
+                  null) ...[
                 const SizedBox(height: 12),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -2599,6 +2635,22 @@ class _TimerSettingsSheet extends StatelessWidget {
               ),
               const SizedBox(height: 12),
               _SoundSelector(musicBlock: musicBlock),
+              const SizedBox(height: 16),
+              SwitchListTile(
+                title: const Text(
+                  "Shuffle Themes",
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+                subtitle: const Text(
+                  "Randomize tracks within themes",
+                  style: TextStyle(fontSize: 12),
+                ),
+                value: musicBlock.isShuffleEnabled.watch(context),
+                onChanged: (val) => musicBlock.isShuffleEnabled.value = val,
+                secondary: const Icon(Icons.shuffle_rounded),
+                contentPadding: EdgeInsets.zero,
+                activeColor: theme.colorScheme.primary,
+              ),
               const SizedBox(height: 24),
               Text(
                 "Timer Style",

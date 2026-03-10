@@ -6,6 +6,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 
 class SleepPage extends StatefulWidget {
@@ -37,7 +38,7 @@ class _SleepPageState extends State<SleepPage> {
         return Scaffold(
           backgroundColor: colorScheme.surface,
           appBar: AppBar(
-            title: const Text('Sleep Tracker'),
+            title: Text(AppLocalizations.of(context)!.health_sleep_tracker),
             centerTitle: true,
             backgroundColor: colorScheme.surface,
             elevation: 0,
@@ -74,7 +75,9 @@ class _SleepPageState extends State<SleepPage> {
                                 ),
                               ),
                               Text(
-                                "Last 24h from Apple Health",
+                                AppLocalizations.of(
+                                  context,
+                                )!.health_last_24h_apple,
                                 style: textTheme.bodySmall,
                               ),
                             ],
@@ -116,32 +119,43 @@ class _SleepPageState extends State<SleepPage> {
                       const SizedBox(height: 16),
                       if (lastLog != null) ...[
                         Text(
-                          "Last Session",
+                          AppLocalizations.of(context)!.health_last_session,
                           style: textTheme.labelLarge?.copyWith(
                             color: colorScheme.onSurfaceVariant,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
-                          "${lastLog.endTime != null ? lastLog.endTime!.difference(lastLog.startTime).inHours : '0'} hrs",
+                          AppLocalizations.of(context)!.health_hrs(
+                            lastLog.endTime != null
+                                ? lastLog.endTime!
+                                      .difference(lastLog.startTime)
+                                      .inHours
+                                      .toString()
+                                : '0',
+                          ),
                           style: textTheme.displayMedium?.copyWith(
                             fontWeight: FontWeight.w900,
                             color: Colors.indigo,
                           ),
                         ),
                         Text(
-                          "Quality: ${'⭐' * lastLog.quality}",
+                          AppLocalizations.of(
+                            context,
+                          )!.health_quality_stars('⭐' * lastLog.quality),
                           style: const TextStyle(fontSize: 16),
                         ),
                       ] else
-                        const Text("No sleep sessions recorded yet."),
+                        Text(
+                          AppLocalizations.of(context)!.health_no_sleep_records,
+                        ),
                     ],
                   ),
                 ),
                 const SizedBox(height: 40),
 
                 Text(
-                  "Log Sleep",
+                  AppLocalizations.of(context)!.health_log_sleep,
                   style: textTheme.titleLarge?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
@@ -178,7 +192,10 @@ class _SleepPageState extends State<SleepPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text("Quality", style: textTheme.titleMedium),
+                    Text(
+                      AppLocalizations.of(context)!.health_quality,
+                      style: textTheme.titleMedium,
+                    ),
                     Row(
                       children: List.generate(5, (index) {
                         return IconButton(
@@ -209,9 +226,9 @@ class _SleepPageState extends State<SleepPage> {
                       backgroundColor: colorScheme.primary,
                       foregroundColor: colorScheme.onPrimary,
                     ),
-                    child: const Text(
-                      "Save Session",
-                      style: TextStyle(
+                    child: Text(
+                      AppLocalizations.of(context)!.health_save_session,
+                      style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -224,7 +241,7 @@ class _SleepPageState extends State<SleepPage> {
                 // History
                 if (logs.isNotEmpty) ...[
                   Text(
-                    "History",
+                    AppLocalizations.of(context)!.health_history,
                     style: textTheme.titleLarge?.copyWith(
                       fontWeight: FontWeight.bold,
                     ),
@@ -359,8 +376,8 @@ class _SleepPageState extends State<SleepPage> {
 
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Sleep session saved!"),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.health_sleep_saved),
           behavior: SnackBarBehavior.floating,
         ),
       );

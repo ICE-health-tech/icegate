@@ -267,6 +267,9 @@ class ProjectNotesTable extends Table {
       .references(ProjectsTable, #id, onDelete: KeyAction.cascade)
       .named('project_id')();
 
+  TextColumn get category =>
+      text().withDefault(const Constant('projects')).named('category')();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -1910,6 +1913,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     required String content,
     String? projectID,
     String? personID,
+    String? category,
   }) async {
     final uuid = IDGen.UUIDV7();
     into(projectNotesTable).insert(
@@ -1919,6 +1923,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
         content: content,
         projectID: Value(projectID),
         personID: Value(personID),
+        category: Value(category ?? 'projects'),
         createdAt: Value(DateTime.now()),
         updatedAt: Value(DateTime.now()),
       ),
@@ -1939,6 +1944,18 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
   Stream<List<ProjectNoteData>> watchAllNotes(String personID) {
     return (select(projectNotesTable)..where(
           (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+        ))
+        .watch();
+  }
+
+  Stream<List<ProjectNoteData>> watchNotesByCategory(
+    String personID,
+    String category,
+  ) {
+    return (select(projectNotesTable)..where(
+          (tbl) =>
+              (tbl.personID.equals(personID) | tbl.personID.isNull()) &
+              tbl.category.equals(category),
         ))
         .watch();
   }
