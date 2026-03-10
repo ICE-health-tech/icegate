@@ -1,394 +1,123 @@
 {
     "@@locale": "vi",
     "helloWorld": "Chào thế giới!",
-    "homepage_four_life_elements": "4 phía cạnh",
-    "homepage_plugin": "Plugin",
-    "record_achievement": "GHI LẠI THÀNH TỰU",
-    "update_achievement": "CẬP NHẬT THÀNH TỰU",
-    "achievement_title_label": "Tiêu đề thành tựu (VD: Đu dây trong 2h)",
-    "system_exp_reward": "Thưởng EXP hệ thống",
-    "image_url": "URL hình ảnh",
-    "cancel": "HỦY",
-    "achievement_recorded": "THÀNH TỰU ĐÃ ĐƯỢC GHI LẠI",
-    "achievement_updated": "THÀNH TỰU ĐÃ ĐƯỢC CẬP NHẬT",
-    "tagline": "CỔNG VÀO CUỘC SỐNG",
-    "username_email_hint": "TÊN ĐĂNG NHẬP / EMAIL",
-    "password_hint": "MẬT KHẨU",
-    "go_to_gate": "BẮT ĐẦU",
-    "secure_login": "BẢO MẬT",
-    "google_login": "GOOGLE",
-    "guest_access": "KHÁCH TÀI KHOẢN",
-    "enroll_hub": "ĐĂNG KÝ NGAY",
-    "msg_enter_credentials": "Vui lòng nhập tên đăng nhập và mật khẩu",
-    "msg_secure_login_failed": "Đăng nhập bảo mật thất bại: {error}",
-    "@msg_secure_login_failed": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "system_error": "LỖI HỆ THỐNG: {error}",
-    "@system_error": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "record_feat": "GHI LẠI CÔNG TRẠNG",
-    "update_feat": "CẬP NHẬT CÔNG TRẠNG",
-    "import_from_contacts": "Nhập từ danh bạ",
-    "add_manually": "Thêm thủ công",
-    "register_agent": "ĐĂNG KÝ THÀNH VIÊN",
-    "first_name": "Tên",
-    "last_name": "Họ",
-    "relationship_type": "LOẠI MỐI QUAN HỆ",
-    "create_link": "TẠO LIÊN KẾT",
-    "ranking": "XẾP HẠNG",
-    "relationships": "MỐI QUAN HỆ",
-    "achievements": "THÀNH TỰU",
-    "current_rankings": "Xếp hạng hiện tại",
-    "updated_time_ago": "CẬP NHẬT {time} TRƯỚC",
-    "@updated_time_ago": {
-        "placeholders": {
-            "time": {
-                "type": "String"
-            }
-        }
-    },
-    "no_data_global_board": "Không có dữ liệu trong Bảng xếp hạng thế giới.",
-    "calorie_tracker": "Bộ theo dõi calo",
-    "nutrition_dashboard": "Bảng điều khiển dinh dưỡng",
-    "net_calories": "Calo thực",
-    "goal_kcal": "Mục tiêu: {goal} kcal",
-    "@goal_kcal": {
-        "placeholders": {
-            "goal": {
-                "type": "int"
-            }
-        }
-    },
-    "under_goal": "Dưới mục tiêu",
-    "on_track": "Đúng mục tiêu",
-    "over_goal": "Vượt mục tiêu",
-    "percent_of_daily_goal": "{percent}% mục tiêu hàng ngày",
-    "@percent_of_daily_goal": {
-        "placeholders": {
-            "percent": {
-                "type": "String"
-            }
-        }
-    },
-    "consumed": "Đã nạp",
-    "burned": "Đã đốt",
-    "remaining": "Còn lại",
-    "total_burn": "Tổng đốt",
-    "add_food": "Thêm món ăn",
-    "lidar_scan": "Quét LiDAR",
-    "log_exercise": "Ghi lại bài tập",
-    "calories_burned_label": "Lượng calo đã đốt",
-    "quick_add_exercise": "Thêm nhanh bài tập",
-    "added_food_msg": "Đã thêm {name} ({cal} kcal)",
-    "@added_food_msg": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            },
-            "cal": {
-                "type": "int"
-            }
-        }
-    },
-    "lidar_ios_only": "Quét LiDAR chỉ có trên thiết bị iOS.",
-    "lidar_completed": "Quét LiDAR hoàn tất! Đang xử lý dữ liệu...",
-    "added_calories_burned": "Đã thêm {cal} kcal đã đốt",
-    "@added_calories_burned": {
-        "placeholders": {
-            "cal": {
-                "type": "int"
-            }
-        }
-    },
-    "level": "Cấp {level}",
-    "@level": {
-        "placeholders": {
-            "level": {
-                "type": "int"
-            }
-        }
-    },
-    "progress_to_level": "Tiến trình đến Cấp {level}",
-    "@progress_to_level": {
-        "placeholders": {
-            "level": {
-                "type": "int"
-            }
-        }
-    },
-    "analysis": "Phân tích",
-    "health": "Sức khỏe",
-    "finance": "Tài chính",
-    "social": "Xã hội",
-    "projects": "Dự án",
-    "steps": "Bước chân",
-    "kcal_consume": "Calo nạp",
-    "sleep": "Ngủ",
-    "hr": "Nhịp tim",
-    "balance": "Số dư",
-    "spent": "Đã chi",
-    "income": "Thu nhập",
-    "savings": "Tiết kiệm",
-    "total_users": "Tổng người dùng",
-    "friends": "Bạn bè",
-    "mutual": "Tương tác",
-    "username": "Tên người dùng",
-    "done": "Hoàn tất",
-    "active": "Hoạt động",
-    "projs": "Dự án",
-    "tasks": "Nhiệm vụ",
-    "edit": "Sửa",
-    "add_app_plugin": "Thêm bản mở rộng",
-    "plugin_desc": "Chọn một bản mở rộng để mở rộng bảng điều khiển của bạn",
-    "add": "Thêm",
-    "canvas_add_custom_widget": "Thêm Widget tùy chỉnh",
-    "canvas_add_widget_desc": "Nhập tên và URL của trang web bạn muốn thêm.",
-    "canvas_notification_center": "Trung tâm thông báo",
-    "canvas_notification_desc": "Quản lý thông báo và lịch sử tập trung",
-    "canvas_goal_center": "Trung tâm mục tiêu",
-    "canvas_goal_desc": "Theo dõi sự phát triển sức khỏe hàng ngày",
-    "goal_target_evolution": "MỤC TIÊU PHÁT TRIỂN",
-    "goal_mission": "NHIỆM VỤ",
-    "goal_mission_desc": "Cấu hình các thông số thể chất của bạn để đảm bảo đồng bộ hóa AI tối ưu và hiệu suất thực địa.",
-    "goal_step_target": "MỤC TIÊU BƯỚC CHÂN",
-    "goal_calorie_limit": "HẠN MỨC CALO",
-    "goal_water_target": "MỤC TIÊU NƯỚC",
-    "goal_focus_target": "MỤC TIÊU TẬP TRUNG",
-    "goal_exercise_target": "MỤC TIÊU TẬP LUYỆN",
-    "goal_sleep_target": "MỤC TIÊU NGỦ",
-    "unit_kcal": "kcal",
-    "unit_ml": "ml",
-    "unit_min": "phút",
-    "unit_hours": "giờ",
-    "scoring_rules_title": "Quy tắc tính điểm",
-    "scoring_health": "🏃 Sức khỏe",
-    "scoring_career": "💼 Sự nghiệp (Dự án)",
-    "scoring_finance": "💰 Tài chính",
-    "scoring_social": "❤️ Xã hội",
-    "rule_health_steps": "1 Điểm cho mỗi {steps} bước đi",
-    "rule_health_calories": "{points} Điểm cho việc duy trì dưới {limit} kcal/ngày",
-    "rule_health_auto": "Điểm tự động cập nhật khi các chỉ số sức khỏe được ghi lại",
-    "rule_career_project": "{points} Điểm cơ bản cho việc hoàn thành dự án",
-    "rule_career_task": "{points} Điểm cho mỗi nhiệm vụ hoàn thành",
-    "rule_career_bonus_5": "{points} Điểm thưởng cho dự án có 5+ nhiệm vụ",
-    "rule_career_bonus_10": "{points} Điểm thưởng cho dự án có 10+ nhiệm vụ",
-    "rule_career_bonus_doc": "{points} Điểm thưởng cho việc có 3+ ghi chú nghiên cứu",
-    "rule_career_bonus_week": "{points} Điểm thưởng cho dự án hoạt động trong 7+ ngày",
-    "rule_finance_savings": "{points} Điểm cho mỗi ${milestone} tiết kiệm được (Giá trị tài sản ròng)",
-    "rule_finance_investment": "{points} Điểm cho mỗi {threshold}% lợi nhuận đầu tư",
-    "rule_finance_auto": "Điểm cập nhật khi số dư tài khoản và giá trị tài sản thay đổi",
-    "rule_social_contact": "{points} Điểm cho mỗi liên lạc duy nhất được thêm",
-    "rule_social_affection": "{points} Điểm cho mỗi {unit} điểm thân thiết đạt được",
-    "rule_social_maintain": "Duy trì các mối quan hệ để giữ điểm xã hội của bạn cao",
-    "how_it_works": "Cách thức hoạt động",
-    "scoring_intro": "Hệ thống tính điểm Ice Gate đo lường sự phát triển của bạn qua bốn yếu tố cuộc sống then chốt. Cấp độ toàn cầu của bạn được tính từ tổng số điểm này. Duy trì điểm số cao để mở khóa trạng thái huyền thoại.",
-    "scoring_footer": "Cân bằng sự phát triển về thể chất, xã hội, tài chính và không gian làm việc để trở thành một Huyền thoại.",
-    "personal_info_title": "Thông tin cá nhân",
-    "personal_info_identification": "Định danh",
-    "personal_info_professional_matrix": "Ma trận nghề nghiệp",
-    "personal_info_education_node": "Điểm học vấn",
-    "personal_info_location": "Vị trí",
-    "personal_info_digital": "Kỹ thuật số",
-    "logout": "Đăng xuất",
-    "save": "Lưu",
-    "bio": "Tiểu sử",
-    "first_name_label": "Tên",
-    "last_name_label": "Họ",
-    "email_label": "eMail",
-    "phone_number_label": "Số điện thoại",
-    "role_label": "Vai trò",
-    "organization_label": "Tổ chức",
-    "institution_label": "Học viện",
-    "education_level_label": "Trình độ học vấn",
-    "country_label": "Quốc gia",
-    "city_label": "Thành phố",
-    "github_label": "GitHub",
-    "linkedin_label": "LinkedIn",
-    "personal_web_label": "Web cá nhân",
-    "msg_personal_info_saved": "Đã lưu thông tin cá nhân thành công",
-    "msg_err_save_failed": "Không thể lưu thay đổi: {error}",
-    "msg_avatar_updated": "Đã cập nhật ảnh đại diện!",
-    "msg_avatar_cancelled": "Đã hủy tải lên ảnh đại diện",
-    "msg_cover_updated": "Đã cập nhật ảnh bìa!",
-    "msg_cover_cancelled": "Đã hủy tải lên ảnh bìa",
-    "msg_err_upload_failed": "Tải lên thất bại: {error}",
-    "msg_err_not_authenticated": "Lỗi: Chưa xác thực",
-    "change_cover": "Thay đổi ảnh bìa",
-    "change_avatar": "Thay đổi ảnh đại diện",
-    "analysis_user_title": "Phân tích của {name}",
-    "performance": "Hiệu suất",
-    "overview": "Tổng quan",
-    "guest_mode": "Chế độ khách",
-    "sync_desc": "Đồng bộ hóa để lưu lại tiến trình của bạn.",
-    "sync": "Đồng bộ",
-    "score_balance": "CÂN BẰNG ĐIỂM SỐ",
-    "percent_to_level": "{percent}% đến cấp {level}",
-    "total_xp": "Tổng XP: {xp}",
-    "breakdown_steps": "BƯỚC CHÂN",
-    "breakdown_diet": "CHẾ ĐỘ ĂN",
-    "breakdown_exercise": "TẬP LUYỆN",
-    "breakdown_focus": "TẬP TRUNG",
-    "breakdown_water": "NƯỚC",
-    "breakdown_sleep": "NGỦ",
-    "breakdown_contacts": "LIÊN LẠC",
-    "breakdown_affection": "THÂN THIẾT",
-    "breakdown_quests": "NHIỆM VỤ",
-    "breakdown_accounts": "TÀI KHOẢN",
-    "breakdown_assets": "TÀI SẢN",
-    "breakdown_tasks": "NHIỆM VỤ",
-    "breakdown_projects": "DỰ ÁN",
-    "breakdown_system": "HỆ THỐNG",
-    "app_settings_title": "Cài đặt ứng dụng",
-    "guest_user": "Khách",
-    "msg_sign_in_to_sync": "Đăng nhập để đồng bộ dữ liệu",
-    "member_status": "Thành viên",
-    "account_section": "Tài khoản",
-    "edit_profile": "Chỉnh sửa hồ sơ",
-    "edit_profile_subtitle": "Cập nhật tên và ảnh của bạn",
-    "change_password": "Đổi mật khẩu",
-    "change_username": "Đổi tên đăng nhập",
-    "preferences_section": "Tùy chọn",
-    "change_theme": "Thay đổi giao diện",
-    "system_notifications": "Thông báo hệ thống",
-    "notifications_active": "Thông báo đang hoạt động",
-    "notifications_paused": "Thông báo đang tạm dừng",
-    "about_support_section": "Giới thiệu & Hỗ trợ",
-    "manual": "Hướng dẫn sử dụng",
-    "version": "Phiên bản",
-    "reset_database_title": "Đặt lại cơ sở dữ liệu?",
-    "reset_database_msg": "Hành động này sẽ xóa vĩnh viễn tất cả dữ liệu cục bộ của bạn bao gồm các phiên tập trung, nhật ký sức khỏe và cài đặt. Hành động này không thể hoàn tác.",
-    "msg_database_reset_success": "Đặt lại cơ sở dữ liệu thành công.",
-    "btn_reset_all_data": "XÓA TẤT CẢ DỮ LIỆU",
-    "security_title": "Bảo mật",
-    "set_password": "Thiết lập mật khẩu",
-    "msg_password_requirement": "Mật khẩu mới của bạn phải có ít nhất 6 ký tự và khác với các mật khẩu trước đó.",
-    "msg_no_local_password": "Bạn chưa thiết lập mật khẩu cục bộ. Hãy tạo một mật khẩu để bật đăng nhập bằng email/mật khẩu.",
-    "current_password_label": "Mật khẩu hiện tại",
-    "enter_current_password_hint": "Nhập mật khẩu hiện tại",
-    "err_enter_current_password": "Vui lòng nhập mật khẩu hiện tại",
-    "new_password_label": "Mật khẩu mới",
-    "enter_new_password_hint": "Nhập mật khẩu mới",
-    "err_enter_password": "Vui lòng nhập mật khẩu",
-    "err_password_length": "Mật khẩu phải có ít nhất 6 ký tự",
-    "confirm_password_label": "Xác nhận mật khẩu",
-    "confirm_new_password_hint": "Xác nhận mật khẩu mới",
-    "err_confirm_password": "Vui lòng xác nhận mật khẩu của bạn",
-    "err_passwords_not_match": "Mật khẩu không khớp",
-    "btn_update_password": "Cập nhật mật khẩu",
-    "msg_password_success": "Thiết lập mật khẩu thành công!",
-    "err_unexpected": "Đã xảy ra lỗi không mong muốn: {error}",
-    "@err_unexpected": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "err_verification_failed": "Xác minh mật khẩu hiện tại thất bại. Vui lòng kiểm tra lại thông tin.",
-    "change_username_title": "Đổi tên đăng nhập",
-    "unique_username_header": "Tên đăng nhập duy nhất của bạn",
-    "username_description": "Tên đăng nhập được sử dụng để đăng nhập và định danh bạn trong ứng dụng. Nó phải có ít nhất 3 ký tự.",
-    "username_label": "Tên đăng nhập",
-    "enter_new_username_hint": "Nhập tên đăng nhập mới",
-    "err_enter_username": "Vui lòng nhập tên đăng nhập",
-    "err_username_length": "Tên đăng nhập phải có ít nhất 3 ký tự",
-    "err_username_invalid_char": "Tên đăng nhập không được chứa ký tự \"@\"",
-    "btn_update_username": "CẬP NHẬT TÊN ĐĂNG NHẬP",
-    "msg_username_success": "Cập nhật tên đăng nhập thành công!",
-    "err_username_failed": "Cập nhật tên đăng nhập thất bại: {error}",
-    "@err_username_failed": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "change_language": "Đổi ngôn ngữ",
-    "health_insights": "Thống kê",
-    "health_log_water": "Ghi nước",
-    "health_log_food": "Ghi thức ăn",
-    "health_exercise": "Tập luyện",
-    "health_focus": "Tập trung",
-    "health_log_exercise": "Ghi bài tập",
-    "health_calories_burned_label": "Calo đã đốt",
-    "health_quick_add_exercise": "Thêm nhanh bài tập",
-    "health_walking_30min": "Đi bộ 30 phút",
-    "health_running_30min": "Chạy bộ 30 phút",
-    "health_cycling_30min": "Đạp xe 30 phút",
-    "health_swimming_30min": "Bơi lội 30 phút",
-    "health_yoga_30min": "Yoga 30 phút",
-    "health_water_log": "Nhật ký nước",
-    "health_water_goal": "MỤC TIÊU",
-    "health_water_points": "ĐIỂM",
-    "health_water_left": "CÒN LẠI",
-    "health_water_of_ml": "TRÊN {goal} ML",
-    "@health_water_of_ml": {
-        "placeholders": {
-            "goal": {
-                "type": "int"
-            }
-        }
-    },
-    "health_stay_hydrated": "GIỮ ĐỦ NƯỚC",
-    "health_custom_intake": "LƯỢNG TÙY CHỈNH",
-    "health_unit_ml": "ML",
-    "health_sleep_tracker": "Theo dõi giấc ngủ",
-    "health_healthkit_sleep": "Giấc ngủ HealthKit",
-    "health_last_24h_apple": "24 giờ qua từ Apple Health",
-    "health_last_session": "Phiên gần nhất",
-    "health_no_sleep_records": "Chưa có phiên giấc ngủ nào.",
-    "health_log_sleep": "Ghi giấc ngủ",
-    "health_bedtime": "Giờ ngủ",
-    "health_wake_up": "Giờ thức",
-    "health_quality": "Chất lượng",
-    "health_save_session": "Lưu phiên",
-    "health_history": "Lịch sử",
-    "health_sleep_saved": "Đã lưu phiên giấc ngủ!",
-    "health_hrs": "{hours} giờ",
-    "@health_hrs": {
-        "placeholders": {
-            "hours": {
-                "type": "String"
-            }
-        }
-    },
-    "health_quality_stars": "Chất lượng: {stars}",
-    "@health_quality_stars": {
-        "placeholders": {
-            "stars": {
-                "type": "String"
-            }
-        }
-    },
-    "health_activity_tracker": "Theo dõi hoạt động",
-    "health_syncing_data": "Đang đồng bộ dữ liệu sức khỏe...",
-    "health_refresh_steps": "Làm mới bước chân",
-    "health_steps_dashboard": "Bảng thống kê bước chân",
-    "health_steps_taken": "Bước đã đi",
-    "health_percent_completed": "{percent}% Hoàn thành",
-    "@health_percent_completed": {
-        "placeholders": {
-            "percent": {
-                "type": "String"
-            }
-        }
-    },
-    "health_daily_statistics": "Thống kê hàng ngày",
-    "health_lifetime_total": "Tổng tích lũy",
-    "health_remaining": "Còn lại",
-    "health_distance": "Khoảng cách",
+    "app_title": "Ice Gate",
+    "home_welcome": "Chào mừng trở lại",
+    "health_title": "Sức khỏe & Thể hình",
+    "health_steps": "Bước chân",
+    "health_sleep": "Giấc ngủ",
+    "health_heart_rate": "Nhịp tim",
+    "health_water": "Nước",
+    "health_weight": "Cân nặng",
     "health_calories": "Calo",
-    "health_active_time": "Thời gian hoạt động",
+    "health_activity": "Hoạt động",
+    "health_goal": "Mục tiêu",
+    "health_avg": "Trung bình",
+    "health_max": "Cao nhất",
+    "health_min": "Thấp nhất",
+    "health_last_7_days": "7 ngày qua",
+    "health_last_30_days": "30 ngày qua",
+    "health_sync_title": "Đồng bộ dữ liệu",
+    "health_sync_msg": "Đang đồng bộ dữ liệu sức khỏe...",
+    "health_sync_success": "Đồng bộ dữ liệu thành công!",
+    "health_sync_failed": "Đồng bộ thất bại. Vui lòng thử lại.",
+    "health_update_weight": "Cập nhật cân nặng",
+    "health_log_water": "Ghi nhận nước",
+    "health_daily_goal_reached": "Bạn đã đạt mục tiêu hàng ngày!",
+    "health_almost_there": "Gần đạt rồi! Một chút nữa thôi.",
+    "health_keep_moving": "Tiếp tục vận động để đạt mục tiêu.",
+    "health_good_morning": "Chào buổi sáng",
+    "health_good_afternoon": "Chào buổi chiều",
+    "health_good_evening": "Chào buổi tối",
+    "health_good_night": "Chúc ngủ ngon",
+    "health_bpm": "BPM",
+    "health_kcal": "kcal",
+    "health_meters": "m",
+    "health_kilometers": "km",
+    "health_steps_unit": "bước",
+    "health_hours": "giờ",
+    "health_minutes": "phút",
+    "health_ml": "ml",
+    "health_kg": "kg",
+    "health_lb": "lb",
+    "health_exercise": "Bài tập",
+    "health_intensity_low": "Thấp",
+    "health_intensity_moderate": "Vừa phải",
+    "health_intensity_high": "Cao",
+    "health_intensity_extreme": "Rất cao",
+    "health_activity_balance": "CÂN BẰNG HOẠT ĐỘNG",
+    "health_balance_moving_much": "Bạn vận động rất nhiều! Số bước chân thật tuyệt.",
+    "health_balance_optimal": "Phân bổ bài tập của bạn hôm nay nhìn rất cân bằng.",
+    "health_weekly_trends": "XU HƯỚNG TUẦN",
+    "health_avg_steps": "Bước TB",
+    "health_avg_sleep": "Ngủ TB",
+    "health_avg_hr": "HR TB",
+    "health_insights_title": "NHẬN ĐỊNH",
+    "health_insights": "Nhận định",
+    "health_insight_above_avg": "Trên trung bình",
+    "health_insight_keep_pushing": "Tiếp tục cố gắng",
+    "health_insight_activity_higher": "Mức độ hoạt động của bạn cao hơn trung bình 7 ngày qua.",
+    "health_insight_activity_lower": "Hãy thử đi dạo để đạt mức trung bình hàng ngày là {steps} bước.",
+    "@health_insight_activity_lower": {
+      "placeholders": {
+        "steps": {
+          "type": "int"
+        }
+      }
+    },
+    "health_insight_goal_reached": "Đã đạt mục tiêu! Bạn hoạt động rất hiệu quả hôm nay.",
+    "health_insight_goal_percent": "Bạn đã hoàn thành {percent}% mục tiêu hàng ngày.",
+    "@health_insight_goal_percent": {
+      "placeholders": {
+        "percent": {
+          "type": "String"
+        }
+      }
+    },
+    "health_hydration_title": "Bù nước",
+    "health_hydration_track_msg": "Bạn đang đi đúng hướng với mục tiêu uống nước hàng ngày!",
+    "health_bpm_label": "nhịp/phút",
+    "health_hours_label": "giờ",
+    "project_title_label": "Tiêu đề",
+    "notification_reminder_new": "Nhắc nhở mới",
+    "notification_reminder_edit": "Chỉnh sửa nhắc nhở",
+    "notification_repeat_label": "Lặp lại",
+    "notification_date_label": "Ngày",
+    "notification_time_label": "Giờ",
+    "notification_save_reminder": "Lưu nhắc nhở",
+    "notification_update_reminder": "Cập nhật",
+    "notification_category_general": "Chung",
+    "notification_category_daily": "Hàng ngày",
+    "notification_category_health": "Sức khỏe",
+    "notification_category_finance": "Tài chính",
+    "notification_category_social": "Xã hội",
+    "notification_category_projects": "Dự án",
+    "notification_priority_low": "Thấp",
+    "notification_priority_normal": "Bình thường",
+    "notification_priority_high": "Cao",
+    "notification_priority_urgent": "Khẩn cấp",
+    "notification_freq_once": "Một lần",
+    "notification_freq_daily": "Hàng ngày",
+    "notification_freq_weekly": "Hàng tuần",
+    "notification_enter_title_snack": "Vui lòng nhập tiêu đề",
+    "nutri_trends_title": "Xu hướng dinh dưỡng",
+    "nutri_weekly_avg": "Trung bình tuần",
+    "nutri_insights_title": "Nhận định dinh dưỡng",
+    "nutri_advice_low_protein": "Lượng protein của bạn hơi thấp trong tuần này. Hãy thử thêm trứng hoặc thịt nạc.",
+    "nutri_advice_high_cal": "Bạn đã vượt hạn mức calo gần đây. Hãy cân nhắc các bữa ăn nhẹ hơn vào ngày mai.",
+    "nutri_advice_good_job": "Tuyệt vời! Bạn đang duy trì sự cân bằng tốt và bám sát mục tiêu.",
+    "nutri_advice_more_water": "Đừng quên uống nước. Uống đủ nước giúp cải thiện trao đổi chất.",
+    "nutri_weekly_calories_chart": "Calo hàng tuần",
+    "nutri_macro_distribution": "Phân bổ dinh dưỡng",
+    "nutrition_dashboard": "Bảng điều khiển dinh dưỡng",
+    "nutri_total": "Tổng cộng",
+    "nutri_protein": "Đạm",
+    "nutri_carbs": "Tinh bột",
+    "nutri_fat": "Chất béo",
+    "nutri_today": "Hôm nay",
+    "nutri_no_meals": "Chưa có bữa ăn nào được ghi nhận",
+    "nutri_kcal": "kcal",
+    "nutri_cal": "cal",
     "health_metrics_steps": "Bước chân",
     "health_metrics_heart_rate": "Nhịp tim",
     "health_metrics_sleep": "Giấc ngủ",
@@ -398,56 +127,815 @@
     "health_metrics_distance": "Khoảng cách",
     "health_metrics_calories": "Calo",
     "health_metrics_active_time": "Thời gian hoạt động",
-    "health_metrics_calories_consumed": "Calo tiêu thụ",
     "health_metrics_calories_burned": "Calo đã đốt",
-    "health_metrics_net_calories": "Calo ròng",
     "health_metrics_weight": "Cân nặng",
+    "health_metrics_net_calories": "Calo thực",
+    "health_metrics_calories_consumed": "Calo nạp",
     "health_metrics_detail_coming_soon": "Trang chi tiết cho {name} sắp ra mắt!",
     "@health_metrics_detail_coming_soon": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
+      "placeholders": {
+        "name": {
+          "type": "String"
         }
+      }
     },
-    "health_subtitle_todays_intake": "Lượng nạp hôm nay",
-    "health_subtitle_goal_steps": "Mục tiêu: {goal}",
-    "@health_subtitle_goal_steps": {
-        "placeholders": {
-            "goal": {
-                "type": "int"
-            }
+    "widget_delete_title": "Xóa Widget",
+    "widget_delete_msg": "Bạn có chắc chắn muốn xóa \"{name}\"?",
+    "@widget_delete_msg": {
+      "placeholders": {
+        "name": {
+          "type": "String"
         }
+      }
     },
+    "cancel": "HỦY",
+    "delete": "XÓA",
     "health_subtitle_current_weight": "Cân nặng hiện tại",
+    "health_ml_label": "ml",
     "health_subtitle_goal_ml": "Mục tiêu: {goal} ml",
     "@health_subtitle_goal_ml": {
-        "placeholders": {
-            "goal": {
-                "type": "int"
-            }
+      "placeholders": {
+        "goal": {
+          "type": "int"
         }
+      }
     },
+    "health_min_label": "phút",
     "health_subtitle_goal_min": "Mục tiêu: {goal} phút",
     "@health_subtitle_goal_min": {
-        "placeholders": {
-            "goal": {
-                "type": "int"
-            }
+      "placeholders": {
+        "goal": {
+          "type": "int"
         }
+      }
     },
-    "health_subtitle_goal_hours": "Mục tiêu: {goal} giờ",
-    "@health_subtitle_goal_hours": {
-        "placeholders": {
-            "goal": {
-                "type": "String"
-            }
-        }
-    },
-    "health_subtitle_study_time": "Thời gian học tập",
-    "health_subtitle_health_first": "Sức khỏe là trên hết",
-    "health_heart_resting": "Lúc nghỉ ngơi",
+    "health_heart_resting": "Lúc nghỉ",
     "health_heart_normal": "Bình thường",
     "health_heart_elevated": "Hơi cao",
-    "health_heart_high": "Cao"
+    "health_heart_high": "Cao",
+    "health_subtitle_goal_hours": "Mục tiêu: {goal} giờ",
+    "@health_subtitle_goal_hours": {
+      "placeholders": {
+        "goal": {
+          "type": "String"
+        }
+      }
+    },
+    "health_subtitle_study_time": "Thời gian học tập",
+    "achievements": "THÀNH TỰU",
+    "health_log_food": "Ghi nhận món ăn",
+    "health_focus": "Tập trung",
+    "health_subtitle_goal_steps": "Mục tiêu: {goal} bước",
+    "@health_subtitle_goal_steps": {
+      "placeholders": {
+        "goal": {
+          "type": "int"
+        }
+      }
+    },
+    "health_subtitle_health_first": "Sức khỏe là trên hết",
+    "health_kcal_label": "kcal",
+    "health_subtitle_todays_intake": "Lượng nạp hôm nay",
+    "health_steps_label": "bước",
+    "health_kg_label": "kg",
+    "enter_new_username_hint": "Nhập tên người dùng mới",
+    "err_enter_username": "Vui lòng nhập tên người dùng",
+    "err_username_length": "Tên người dùng phải có ít nhất 3 ký tự",
+    "err_username_invalid_char": "Tên người dùng chứa ký tự không hợp lệ",
+    "btn_update_username": "Cập nhật tên người dùng",
+    "add": "Thêm",
+    "canvas_add_custom_widget": "Thêm Widget tùy chỉnh",
+    "canvas_add_widget_desc": "Tạo widget động của riêng bạn",
+    "ranking": "XẾP HẠNG",
+    "relationships": "MỐI QUAN HỆ",
+    "err_confirm_password": "Vui lòng xác nhận mật khẩu",
+    "err_passwords_not_match": "Mật khẩu không khớp",
+    "btn_update_password": "Cập nhật mật khẩu",
+    "set_password": "Đặt mật khẩu",
+    "msg_username_success": "Cập nhật tên người dùng thành công",
+    "err_username_failed": "Cập nhật tên người dùng thất bại: {error}",
+    "@err_username_failed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "change_username_title": "Thay đổi tên người dùng",
+    "unique_username_header": "Tên người dùng duy nhất",
+    "username_description": "Chọn một tên người dùng duy nhất để người khác có thể tìm thấy bạn.",
+    "username_label": "Tên người dùng",
+    "msg_no_local_password": "Chưa đặt mật khẩu cục bộ",
+    "current_password_label": "Mật khẩu hiện tại",
+    "enter_current_password_hint": "Nhập mật khẩu hiện tại",
+    "err_enter_current_password": "Vui lòng nhập mật khẩu hiện tại",
+    "new_password_label": "Mật khẩu mới",
+    "enter_new_password_hint": "Nhập mật khẩu mới",
+    "err_enter_password": "Vui lòng nhập mật khẩu mới",
+    "err_password_length": "Mật khẩu phải có ít nhất 6 ký tự",
+    "confirm_password_label": "Xác nhận mật khẩu",
+    "confirm_new_password_hint": "Xác nhận mật khẩu mới",
+    "tagline": "Cuộc sống của bạn, được phối hợp.",
+    "username_email_hint": "Tên người dùng hoặc Email",
+    "password_hint": "Mật khẩu",
+    "go_to_gate": "VÀO CỔNG",
+    "secure_login": "BẢO MẬT",
+    "google_login": "GMAIL",
+    "guest_access": "TRUY CẬP KHÁCH",
+    "enroll_hub": "ĐĂNG KÝ",
+    "msg_secure_login_failed": "Đăng nhập bảo mật thất bại: {error}",
+    "@msg_secure_login_failed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "msg_enter_credentials": "Vui lòng nhập thông tin đăng nhập",
+    "analysis_user_title": "Phân tích của {name}",
+    "@analysis_user_title": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "performance": "Hiệu suất",
+    "overview": "Tổng quan",
+    "guest_mode": "Chế độ Khách",
+    "sync_desc": "Dữ liệu của bạn chưa được đồng bộ.",
+    "sync": "ĐỒNG BỘ",
+    "percent_to_level": "{percent}% đến Cấp {level}",
+    "@percent_to_level": {
+      "placeholders": {
+        "percent": {
+          "type": "int"
+        },
+        "level": {
+          "type": "int"
+        }
+      }
+    },
+    "progress_to_level": "Tiến trình đến Cấp {level}",
+    "@progress_to_level": {
+      "placeholders": {
+        "level": {
+          "type": "int"
+        }
+      }
+    },
+    "total_xp": "Tổng XP: {xp}",
+    "@total_xp": {
+      "placeholders": {
+        "xp": {
+          "type": "int"
+        }
+      }
+    },
+    "scoring_health": "Sức khỏe",
+    "scoring_finance": "Tài chính",
+    "scoring_social": "Xã hội",
+    "scoring_career": "Sự nghiệp",
+    "breakdown_steps": "Bước chân",
+    "breakdown_diet": "Chế độ ăn",
+    "breakdown_exercise": "Bài tập",
+    "breakdown_focus": "Tập trung",
+    "breakdown_water": "Nước",
+    "breakdown_sleep": "Giấc ngủ",
+    "breakdown_contacts": "Liên lạc",
+    "breakdown_affection": "Tình cảm",
+    "breakdown_quests": "Nhiệm vụ",
+    "breakdown_accounts": "Tài khoản",
+    "breakdown_assets": "Tài sản",
+    "breakdown_tasks": "Công việc",
+    "breakdown_projects": "Dự án",
+    "breakdown_system": "HỆ THỐNG",
+    "score_balance": "CÂN BẰNG ĐIỂM SỐ",
+    "err_verification_failed": "Xác minh mật khẩu hiện tại thất bại",
+    "err_unexpected": "Đã xảy ra lỗi không mong muốn: {error}",
+    "@err_unexpected": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "msg_password_success": "Cập nhật mật khẩu thành công",
+    "msg_password_requirement": "Vui lòng nhập mật khẩu hiện tại để tiếp tục.",
+    "security_title": "Bảo mật",
+    "change_password": "Thay đổi mật khẩu",
+    "personal_info_title": "Thông tin cá nhân",
+    "bio": "Tiểu sử",
+    "personal_info_identification": "Định danh",
+    "first_name_label": "Tên",
+    "last_name_label": "Họ",
+    "email_label": "Email",
+    "phone_number_label": "Số điện thoại",
+    "personal_info_professional_matrix": "Mạng lưới chuyên nghiệp",
+    "role_label": "Vai trò",
+    "organization_label": "Tổ chức",
+    "personal_info_education_node": "Học vấn",
+    "institution_label": "Học viện",
+    "education_level_label": "Trình độ học vấn",
+    "personal_info_location": "Vị trí",
+    "country_label": "Quốc gia",
+    "city_label": "Thành phố",
+    "personal_info_digital": "Tài khoản số",
+    "github_label": "GitHub",
+    "linkedin_label": "LinkedIn",
+    "personal_web_label": "Website",
+    "logout": "Đăng xuất",
+    "msg_err_not_authenticated": "Chưa xác thực",
+    "msg_personal_info_saved": "Đã lưu thông tin cá nhân",
+    "msg_err_save_failed": "Lưu thay đổi thất bại: {error}",
+    "@msg_err_save_failed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "msg_avatar_updated": "Cập nhật ảnh đại diện thành công",
+    "msg_avatar_cancelled": "Đã hủy cập nhật ảnh đại diện",
+    "msg_err_upload_failed": "Tải lên thất bại: {error}",
+    "@msg_err_upload_failed": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "msg_cover_updated": "Cập nhật ảnh bìa thành công",
+    "msg_cover_cancelled": "Đã hủy cập nhật ảnh bìa",
+    "change_cover": "Thay đổi ảnh bìa",
+    "social_share_msg": "Xem tiến trình của tôi trên Ice Gate!",
+    "record_achievement": "Ghi nhận thành tích",
+    "update_achievement": "Cập nhật thành tích",
+    "achievement_title_label": "Tiêu đề thành tích",
+    "system_exp_reward": "Thưởng EXP",
+    "image_url": "URL hình ảnh",
+    "achievement_recorded": "THÀNH TỰU ĐÃ ĐƯỢC GHI LẠI",
+    "achievement_updated": "THÀNH TỰU ĐÃ ĐƯỢC CẬP NHẬT",
+    "system_error": "LỖI HỆ THỐNG: {error}",
+    "@system_error": {
+      "placeholders": {
+        "error": {
+          "type": "String"
+        }
+      }
+    },
+    "record_feat": "Thêm Thành Tựu",
+    "update_feat": "Cập Nhập",
+    "import_from_contacts": "Nhập từ danh bạ",
+    "add_manually": "Thêm thủ công",
+    "register_agent": "ĐĂNG KÝ THÀNH VIÊN",
+    "first_name": "Tên",
+    "last_name": "Họ",
+    "relationship_type": "LOẠI MỐI QUAN HỆ",
+    "create_link": "TẠO LIÊN KẾT",
+    "social_dashboard": "Bảng điều khiển xã hội",
+    "social": "Xã hội",
+    "social_rank_first": "HẠNG NHẤT",
+    "social_rank_second": "HẠNG NHÌ",
+    "social_rank_third": "HẠNG BA",
+    "no_data_global_board": "Không có dữ liệu trong Bảng xếp hạng thế giới.",
+    "current_rankings": "Xếp hạng hiện tại",
+    "updated_time_ago": "CẬP NHẬT {time} TRƯỚC",
+    "@updated_time_ago": {
+      "placeholders": {
+        "time": {
+          "type": "String"
+        }
+      }
+    },
+    "social_points_suffix": " điểm",
+    "social_tier_veteran": "Bậc Lão làng",
+    "social_empty_network": "Mạng lưới của bạn đang trống",
+    "social_trust_level": "Mức độ tin cậy",
+    "level": "Cấp {level}",
+    "@level": {
+      "placeholders": {
+        "level": {
+          "type": "int"
+        }
+      }
+    },
+    "social_bond_strengthened": "Mối liên kết được thắt chặt!",
+    "social_options": "Tùy chọn xã hội",
+    "social_manage_title": "Quản lý liên kết",
+    "social_change_friend": "Đặt là Bạn bè",
+    "social_change_dating": "Đặt là Hẹn hò",
+    "social_change_family": "Đặt là Người thân",
+    "social_delete_bond": "Xóa liên kết",
+    "social_no_achievements": "Chưa có thành tích nào",
+    "social_feat": "Chiến công",
+    "add_app_plugin": "Thêm Plugin ứng dụng",
+    "plugin_desc": "Thêm tính năng mới cho giao diện của bạn",
+    "homepage_four_life_elements": "4 khía cạnh",
+    "done": "Hoàn tất",
+    "edit": "Sửa",
+    "analysis": "Phân tích",
+    "total_users": "Tổng người dùng",
+    "mutual": "Chung",
+    "friends": "Bạn bè",
+    "projs": "Dự án",
+    "active": "Đang chạy",
+    "tasks": "Nhiệm vụ",
+    "homepage_plugin": "Plugin",
+    "health": "Sức khỏe",
+    "finance": "Tài chính",
+    "projects": "Dự án",
+    "kcal_consume": "Kcal tiêu thụ",
+    "hr": "Nhịp tim",
+    "spent": "Đã chi",
+    "income": "Thu nhập",
+    "savings": "Tiết kiệm",
+    "balance": "Số dư",
+    "steps": "Bước chân",
+    "sleep": "Ngủ",
+    "username": "Tên người dùng",
+    "goal_target_evolution": "Tiến hóa mục tiêu",
+    "goal_mission": "NHIỆM VỤ",
+    "goal_mission_desc": "Điều chỉnh các mục tiêu hàng ngày để tối ưu hóa hiệu suất cuộc sống.",
+    "goal_step_target": "Mục tiêu bước chân",
+    "goal_calorie_limit": "Hạn mức Calo",
+    "goal_water_target": "Mục tiêu nước",
+    "goal_focus_target": "Mục tiêu tập trung",
+    "goal_exercise_target": "Mục tiêu bài tập",
+    "goal_sleep_target": "Mục tiêu giấc ngủ",
+    "unit_kcal": "kcal",
+    "unit_ml": "ml",
+    "unit_min": "phút",
+    "unit_hours": "giờ",
+    "scoring_rules_title": "Quy tắc tính điểm",
+    "rule_health_steps": "Nhận điểm cho mỗi {steps} bước chân.",
+    "@rule_health_steps": {
+      "placeholders": {
+        "steps": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_health_calories": "Nhận {calories} điểm thưởng nếu bạn nạp ít hơn {limit} kcal.",
+    "@rule_health_calories": {
+      "placeholders": {
+        "calories": {
+          "type": "int"
+        },
+        "limit": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_health_auto": "Điểm sức khỏe được tính tự động dựa trên dữ liệu đồng bộ.",
+    "rule_career_project": "{points} điểm cho mỗi dự án hoàn thành.",
+    "@rule_career_project": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_career_task": "{points} điểm cho mỗi nhiệm vụ hoàn thành.",
+    "@rule_career_task": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_career_bonus_5": "Thưởng {bonus} điểm khi hoàn thành 5 nhiệm vụ trong một dự án.",
+    "@rule_career_bonus_5": {
+      "placeholders": {
+        "bonus": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_career_bonus_10": "Thưởng {bonus} điểm khi hoàn thành trên 10 nhiệm vụ trong một dự án.",
+    "@rule_career_bonus_10": {
+      "placeholders": {
+        "bonus": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_career_bonus_doc": "Thưởng {bonus} điểm cho dự án có tài liệu chi tiết.",
+    "@rule_career_bonus_doc": {
+      "placeholders": {
+        "bonus": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_career_bonus_week": "Thưởng {bonus} điểm cho dự án hoàn thành trong vòng một tuần.",
+    "@rule_career_bonus_week": {
+      "placeholders": {
+        "bonus": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_finance_savings": "Nhận {points} điểm cho mỗi ${milestone} tiết kiệm được.",
+    "@rule_finance_savings": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        },
+        "milestone": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_finance_investment": "Nhận {points} điểm cho các khoản đầu tư có lợi nhuận trên {threshold}%.",
+    "@rule_finance_investment": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        },
+        "threshold": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_finance_auto": "Điểm tài chính cập nhật mỗi 24 giờ dựa trên thay đổi số dư.",
+    "rule_social_contact": "{points} điểm cho mỗi liên lạc ý nghĩa mới được thêm.",
+    "@rule_social_contact": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_social_affection": "{points} điểm cho mỗi {unit} mức độ tình cảm đạt được.",
+    "@rule_social_affection": {
+      "placeholders": {
+        "points": {
+          "type": "int"
+        },
+        "unit": {
+          "type": "int"
+        }
+      }
+    },
+    "rule_social_maintain": "Duy trì các mối liên kết để ngăn chặn việc giảm điểm theo thời gian.",
+    "how_it_works": "Cách thức hoạt động",
+    "scoring_intro": "Hệ thống điểm số của chúng tôi đánh giá hiệu suất hàng ngày của bạn qua bốn trụ cột chính. Điểm được thưởng dựa trên tính nhất quán, các mốc quan trọng và hiệu quả.",
+    "scoring_footer": "Điểm số được xử lý bởi Life Orchestration Engine (LOE) vào mỗi nửa đêm giờ UTC.",
+    "canvas_notification_center": "Trung tâm thông báo",
+    "canvas_notification_desc": "Điều khiển và kiểm soát mọi thông báo hệ thống",
+    "canvas_goal_center": "Tiến hóa mục tiêu",
+    "canvas_goal_desc": "Điều chỉnh các tham số mục tiêu chiến thuật",
+    "gps_permissions_required": "Yêu cầu quyền GPS để theo dõi.",
+    "gps_title": "THEO DÕI GPS",
+    "gps_disconnect_tooltip": "Ngắt kết nối thiết bị",
+    "gps_map_tab": "Bản đồ",
+    "gps_data_tab": "Dữ liệu",
+    "gps_system_scan": "QUÉT HỆ THỐNG",
+    "gps_connect_receiver": "Kết nối bộ thu GPS",
+    "gps_connected": "Đã kết nối",
+    "gps_not_connected": "Chưa kết nối",
+    "gps_history": "Lịch sử vị trí",
+    "gps_label_latitude": "Vĩ độ",
+    "gps_label_longitude": "Kinh độ",
+    "gps_label_altitude": "Độ cao",
+    "gps_label_speed": "Tốc độ",
+    "gps_label_heading": "Hướng",
+    "gps_label_accuracy": "Độ chính xác",
+    "gps_label_time": "Thời gian",
+    "gps_waiting_signal": "Đang chờ tín hiệu GPS",
+    "gps_waiting_desc": "Đảm bảo bộ thu có hướng nhìn thẳng lên bầu trời.",
+    "gps_disconnect_title": "Ngắt kết nối GPS?",
+    "gps_disconnect_msg": "Bạn có chắc chắn muốn ngắt kết nối với bộ thu GPS?",
+    "gps_permissions_denied": "Quyền truy cập GPS bị từ chối.",
+    "gps_status_tracking": "Đang theo dõi",
+    "gps_status_paused": "Tam dừng",
+    "gps_btn_start": "Bắt đầu",
+    "gps_btn_pause": "Tạm dừng",
+    "gps_btn_stop": "Dừng",
+    "close": "Đóng",
+    "health_analysis_title": "Phân tích sức khỏe",
+    "health_no_data": "Không có dữ liệu sức khỏe",
+    "health_metabolism_active": "Năng động",
+    "health_metabolism_normal": "Bình thường",
+    "health_intensity_optimal": "Tối ưu",
+    "health_analysis_performance": "PHÂN TÍCH HIỆU SUẤT",
+    "health_efficiency": "Hiệu suất",
+    "health_consistency": "Tính nhất quán",
+    "health_consistency_high": "Cao",
+    "health_consistency_medium": "Trung bình",
+    "health_consistency_low": "Thấp",
+    "health_metabolism": "Trao đổi chất",
+    "health_intensity": "Cường độ",
+    "health_water_log": "Ghi nhận nước",
+    "health_water_goal": "Mục tiêu ngày",
+    "health_water_points": "Điểm tích lũy",
+    "health_water_left": "Cần nạp thêm",
+    "health_stay_hydrated": "Hãy uống đủ nước hôm nay!",
+    "health_custom_intake": "Lượng nước tùy chỉnh",
+    "health_unit_ml": "ml",
+    "health_sleep_tracker": "Theo dõi giấc ngủ",
+    "health_last_24h_apple": "24 giờ qua qua Apple Health",
+    "health_last_session": "PHIÊN GẦN NHẤT",
+    "health_hrs": "{hours} giờ",
+    "@health_hrs": {
+      "placeholders": {
+        "hours": {
+          "type": "String"
+        }
+      }
+    },
+    "health_quality_stars": "Chất lượng: {stars}",
+    "@health_quality_stars": {
+      "placeholders": {
+        "stars": {
+          "type": "String"
+        }
+      }
+    },
+    "health_no_sleep_records": "Chưa có bản ghi giấc ngủ nào",
+    "health_log_sleep": "Ghi nhận giấc ngủ",
+    "health_quality": "Chất lượng giấc ngủ",
+    "health_save_session": "Lưu phiên",
+    "health_history": "Lịch sử",
+    "health_sleep_saved": "Đã lưu bản ghi giấc ngủ",
+    "health_activity_tracker": "Theo dõi hoạt động",
+    "health_syncing_data": "Đang đồng bộ dữ liệu Sức khỏe...",
+    "health_refresh_steps": "Làm mới bước chân từ HealthKit",
+    "health_steps_dashboard": "Bảng điều khiển bước chân",
+    "health_steps_taken": "TỔNG SỐ BƯỚC CHÂN",
+    "health_daily_statistics": "Thống kê hàng ngày",
+    "health_lifetime_total": "Tổng cộng",
+    "health_remaining": "Mục tiêu còn lại",
+    "health_distance": "Khoảng cách",
+    "health_active_time": "Thời gian hoạt động",
+    "health_latest_apple": "MỚI NHẤT TỪ HEALTH",
+    "health_realtime_sync": "Đồng bộ thời gian thực từ Watch",
+    "health_zone_resting": "Lúc nghỉ",
+    "health_zone_normal": "Bình thường",
+    "health_zone_elevated": "Hơi cao",
+    "health_zone_high": "Cao",
+    "health_zone_very_high": "Rất cao",
+    "health_add_reading_desc": "Thêm một bản ghi bên dưới để bắt đầu",
+    "health_average": "Trung bình",
+    "health_peak": "Đỉnh",
+    "health_samples": "Mẫu",
+    "health_manual_entry": "Nhập thủ công",
+    "health_enter_bpm": "Nhập BPM",
+    "health_quick_entry": "Nhập nhanh",
+    "health_exercise_analysis": "Phân tích bài tập",
+    "health_no_exercise_history": "Không tìm thấy lịch sử bài tập",
+    "health_weekly_minutes": "SỐ PHÚT HÀNG TUẦN",
+    "health_intensity_distribution": "Phân bổ cường độ",
+    "health_type_distribution": "Phân bổ loại hình",
+    "health_exercise_history": "Lịch sử bài tập",
+    "project_mark_done_tooltip": "Đánh dấu đã hoàn thành",
+    "project_completed_msg": "Dự án đã hoàn thành! +{score} EXP",
+    "@project_completed_msg": {
+      "placeholders": {
+        "score": {
+          "type": "int"
+        }
+      }
+    },
+    "project_delete_tooltip": "Xóa dự án",
+    "project_delete_confirm_title": "Xóa Dự Án",
+    "project_delete_confirm_msg": "Bạn có chắc chắn muốn xóa \"{name}\"? Không thể hoàn tác hành động này.",
+    "@project_delete_confirm_msg": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        }
+      }
+    },
+    "project_deleted_msg": "Đã xóa dự án",
+    "project_complete_label": "HOÀN THÀNH",
+    "project_no_tasks": "Chưa có nhiệm vụ nào. Nhấn + để thêm.",
+    "project_notes_label": "Ghi chú",
+    "project_no_notes": "Chưa có ghi chú nào. Nhấn + để tạo.",
+    "project_no_notes_list": "Không tìm thấy ghi chú nào",
+    "project_finance_label": "Tài chính",
+    "project_no_finance": "Chưa có bản ghi tài chính nào cho dự án này.",
+    "project_add_task_title": "Nhiệm vụ mới",
+    "project_task_title_hint": "Tiêu đề nhiệm vụ",
+    "project_add_investment_title": "Thêm khoản đầu tư",
+    "project_add_investment_desc": "Ghi nhận chi phí hoặc khoản đầu tư cho dự án này.",
+    "amount": "Số tiền",
+    "description_optional": "Mô tả (tùy chọn)",
+    "project_investment_default_desc": "Đầu tư dự án",
+    "project_add_investment_btn": "Thêm khoản đầu tư",
+    "project_new_note_title": "Ghi chú mới",
+    "project_last_edited_msg": "Chỉnh sửa lần cuối {date}",
+    "@project_last_edited_msg": {
+      "placeholders": {
+        "date": {
+          "type": "String"
+        }
+      }
+    },
+    "project_note_untitled": "Chưa đặt tên",
+    "project_unknown_date": "Không rõ ngày",
+    "project_delete_note_title": "Xóa ghi chú",
+    "project_delete_note_msg": "Bạn có chắc chắn muốn xóa ghi chú này không?",
+    "project_note_no_content": "Không có nội dung",
+    "calorie_tracker": "Theo dõi Calo",
+    "net_calories": "CALO THỰC",
+    "under_goal": "Dưới mục tiêu",
+    "on_track": "Đúng hướng",
+    "over_goal": "Vượt mục tiêu",
+    "goal_kcal": "Mục tiêu: {goal} kcal",
+    "@goal_kcal": {
+      "placeholders": {
+        "goal": {
+          "type": "int"
+        }
+      }
+    },
+    "percent_of_daily_goal": "{percent}% mục tiêu hàng ngày",
+    "@percent_of_daily_goal": {
+      "placeholders": {
+        "percent": {
+          "type": "String"
+        }
+      }
+    },
+    "consumed": "Đã nạp",
+    "burned": "Đã đốt",
+    "total_burn": "Tổng đốt",
+    "add_food": "Thêm món ăn",
+    "lidar_scan": "Quét LiDAR",
+    "health_log_exercise": "Ghi nhận bài tập",
+    "health_calories_burned_label": "Lượng calo đã đốt",
+    "added_food_msg": "Đã thêm {name} ({calories} kcal)",
+    "@added_food_msg": {
+      "placeholders": {
+        "name": {
+          "type": "String"
+        },
+        "calories": {
+          "type": "int"
+        }
+      }
+    },
+    "lidar_ios_only": "Quét LiDAR chỉ hỗ trợ trên các thiết bị iOS Pro.",
+    "lidar_completed": "Quét LiDAR hoàn tất!",
+    "health_quick_add_exercise": "Thêm nhanh bài tập",
+    "health_walking_30min": "Đi bộ (30 phút)",
+    "health_running_30min": "Chạy bộ (30 phút)",
+    "health_cycling_30min": "Đạp xe (30 phút)",
+    "health_swimming_30min": "Bơi lội (30 phút)",
+    "health_yoga_30min": "Yoga (30 phút)",
+    "added_calories_burned": "Đã thêm {calories} kcal đã đốt",
+    "@added_calories_burned": {
+      "placeholders": {
+        "calories": {
+          "type": "int"
+        }
+      }
+    },
+    "exercise_tracker": "Theo dõi bài tập",
+    "daily_routines": "Thói quen hàng ngày",
+    "activity_history": "Lịch sử hoạt động",
+    "no_activities_recorded": "Chưa có hoạt động nào được ghi nhận.",
+    "custom_activity_title": "HOẠT ĐỘNG TÙY CHỈNH",
+    "activity_type_label": "Loại hoạt động (vd: Gym)",
+    "duration_min_label": "Thời gian (phút)",
+    "intensity_label": "Cường độ",
+    "log_activity_btn": "GHI NHẬN HOẠT ĐỘNG",
+    "app_settings_title": "Cài đặt",
+    "account_section": "Tài khoản",
+    "preferences_section": "Tùy chọn",
+    "about_support_section": "Thông tin & Hỗ trợ",
+    "edit_profile": "Chỉnh sửa hồ sơ",
+    "edit_profile_subtitle": "Chi tiết hồ sơ & định danh",
+    "change_theme": "Thay đổi giao diện",
+    "system_notifications": "Thông báo hệ thống",
+    "notifications_active": "Đang bật",
+    "notifications_paused": "Đang tạm dừng",
+    "change_language": "Thay đổi ngôn ngữ",
+    "manual": "Hướng dẫn sử dụng",
+    "version": "Phiên bản",
+    "reset_database_title": "Đặt lại cơ sở dữ liệu",
+    "reset_database_msg": "Cảnh báo: Hành động này sẽ xóa toàn bộ dữ liệu cục bộ của bạn. Hành động này không thể hoàn tác.",
+    "btn_reset_all_data": "ĐẶT LẠI TOÀN BỘ DỮ LIỆU",
+    "msg_database_reset_success": "Đã đặt lại cơ sở dữ liệu thành công",
+    "guest_user": "Khách",
+    "msg_sign_in_to_sync": "Đăng nhập để đồng bộ dữ liệu",
+    "member_status": "Thành viên",
+    "change_username": "Thay đổi tên người dùng",
+    "remaining": "Còn lại",
+    "notification_manager_title": "TRUNG TÂM THÔNG BÁO",
+    "notification_hunter_hub": "Trung tâm Thợ săn",
+    "notification_tab_active": "ĐANG CHẠY",
+    "notification_tab_reminders": "NHẮC NHỞ",
+    "notification_tab_wisdom": "TRÍ TUỆ",
+    "notification_ai_no_data": "Không có dữ liệu chiến thuật.",
+    "notification_ai_advice": "LỜI KHUYÊN CHIẾN THUẬT",
+    "notification_ai_waiting": "Đang thu thập tình báo...",
+    "notification_ai_analysis": "PHÂN TÍCH AI",
+    "notification_daily_quest": "NHIỆM VỤ HÀNG NGÀY",
+    "notification_quest_completed_snack": "Đã hoàn thành: {title} (+{exp} EXP)",
+    "@notification_quest_completed_snack": {
+      "placeholders": {
+        "title": {
+          "type": "String"
+        },
+        "exp": {
+          "type": "int"
+        }
+      }
+    },
+    "notification_personal_reminders": "Nhắc nhở cá nhân",
+    "notification_add_new": "THÊM MỚI",
+    "notification_no_reminders": "Chưa có nhắc nhở nào.",
+    "notification_disabled_desc": "Thông báo hệ thống đang bị tắt.",
+    "notification_wisdom_board": "Bảng trí tuệ",
+    "notification_add_quote": "THÊM TRÍ TUỆ",
+    "notification_quote_empty": "Bảng trí tuệ đang trống.",
+    "notification_add_wisdom_title": "Thêm Trí Tuệ",
+    "notification_wisdom_content": "Nội dung Trí Tuệ",
+    "notification_wisdom_author": "Tác giả",
+    "notification_inbox_title": "TRUNG TÂM THÔNG BÁO",
+    "notification_mission_history": "Lịch sử nhiệm vụ",
+    "notification_mission_success": "NHIỆM VỤ THÀNH CÔNG",
+    "notification_focus_complete": "TẬP TRUNG HOÀN TẤT",
+    "notification_reminder": "NHẮC NHỞ",
+    "notification_no_logs": "LỊCH SỬ TRỐNG",
+    "notification_empty_desc": "Tất cả các sự kiện hệ thống sẽ được lưu trữ tại đây.",
+    "finance_add_transaction": "Ghi nhận giao dịch",
+    "finance_add_type": "Thêm {type}",
+    "@finance_add_type": {
+      "placeholders": {
+        "type": {
+          "type": "String"
+        }
+      }
+    },
+    "finance_label_save": "Tiết kiệm",
+    "finance_label_spend": "Chi tiêu",
+    "finance_label_income": "Thu nhập",
+    "finance_tooltip_add_savings": "Thêm khoản tiết kiệm",
+    "finance_tooltip_add_expense": "Thêm khoản chi tiêu",
+    "finance_tooltip_add_income": "Thêm khoản thu nhập",
+    "finance_type_expense": "Chi tiêu",
+    "finance_type_income": "Thu nhập",
+    "finance_type_savings": "Tiết kiệm",
+    "finance_label_amount": "Số tiền",
+    "finance_label_category": "Hạng mục",
+    "finance_label_description_optional": "Mô tả (tùy chọn)",
+    "finance_btn_add": "Thêm",
+    "finance_total_net_worth": "TỔNG TÀI SẢN RÒNG",
+    "finance_monthly_breakdown": "Phân bổ {month}",
+    "@finance_monthly_breakdown": {
+      "placeholders": {
+        "month": {
+          "type": "String"
+        }
+      }
+    },
+    "finance_recent_transactions": "Giao dịch gần đây",
+    "finance_no_transactions": "Chưa có giao dịch nào",
+    "finance_tap_to_add": "Nhấn + để thêm giao dịch đầu tiên",
+    "finance_total_savings": "Tổng tiết kiệm",
+    "finance_month_spending": "Chi tiêu {month}",
+    "@finance_month_spending": {
+      "placeholders": {
+        "month": {
+          "type": "String"
+        }
+      }
+    },
+    "finance_month_income": "Thu nhập {month}",
+    "@finance_month_income": {
+      "placeholders": {
+        "month": {
+          "type": "String"
+        }
+      }
+    },
+    "finance_see_all": "XEM TẤT CẢ",
+    "finance_cat_food": "Ăn uống",
+    "finance_cat_coffee": "Cà phê",
+    "finance_cat_transport": "Di chuyển",
+    "finance_cat_software": "Phần mềm",
+    "finance_cat_shopping": "Mua sắm",
+    "finance_cat_bills": "Hóa đơn",
+    "finance_cat_rent": "Tiền thuê",
+    "finance_cat_subscriptions": "Đăng ký dịch vụ",
+    "finance_cat_entertainment": "Giải trí",
+    "finance_cat_health": "Sức khỏe",
+    "finance_cat_education": "Giáo dục",
+    "finance_cat_investing": "Đầu tư",
+    "finance_cat_general": "Chung",
+    "finance_cat_salary": "Lương",
+    "finance_cat_freelance": "Làm tự do",
+    "finance_cat_investment": "Đầu tư",
+    "finance_cat_gift": "Quà tặng",
+    "finance_cat_bonus": "Thưởng",
+    "finance_cat_emergency": "Khẩn cấp",
+    "finance_cat_goal": "Mục tiêu",
+    "finance_cat_retirement": "Hưu trí",
+    "finance_cat_crypto": "Tiền điện tử",
+    "finance_cat_stock": "Chứng khoán",
+    "finance_cat_real_estate": "Bất động sản"
 }

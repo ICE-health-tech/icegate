@@ -12,6 +12,8 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'TaskItem.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
@@ -37,16 +39,16 @@ class ProjectDetailsPage extends StatelessWidget {
                 IconButton(
                   padding: const EdgeInsets.only(right: 16),
                   icon: const Icon(Icons.check_circle_outline),
-                  tooltip: 'Mark as Done',
+                  tooltip: AppLocalizations.of(context)!.project_mark_done_tooltip,
                   onPressed: () async {
                     final projectBlock = context.read<ProjectBlock>();
                     await projectBlock.completeProject(context, project);
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
+                        SnackBar(
                           content: Text(
-                            'Project completed! $PROJECT_SCORE_INCREMENT points awarded.',
+                            AppLocalizations.of(context)!.project_completed_msg(PROJECT_SCORE_INCREMENT.toInt()),
                           ),
                           duration: Duration(seconds: 1),
                         ),
@@ -57,31 +59,31 @@ class ProjectDetailsPage extends StatelessWidget {
               IconButton(
                 padding: const EdgeInsets.only(right: 16),
                 icon: const Icon(Icons.analytics_outlined),
-                tooltip: 'Analysis',
+                tooltip: AppLocalizations.of(context)!.analysis,
                 onPressed: () => context.go('/projects/dashboard'),
               ),
               IconButton(
                 padding: const EdgeInsets.only(right: 16),
                 icon: const Icon(Icons.delete_outline, color: Colors.redAccent),
-                tooltip: 'Delete Project',
+                tooltip: AppLocalizations.of(context)!.project_delete_tooltip,
                 onPressed: () async {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: const Text('Delete Project?'),
+                      title: Text(AppLocalizations.of(context)!.project_delete_confirm_title),
                       content: Text(
-                        'Are you sure you want to delete "${project.name}"? This will also remove all associated tasks and notes.',
+                        AppLocalizations.of(context)!.project_delete_confirm_msg(project.name),
                       ),
                       actions: [
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, false),
-                          child: const Text('Cancel'),
+                          child: Text(AppLocalizations.of(context)!.cancel),
                         ),
                         TextButton(
                           onPressed: () => Navigator.pop(ctx, true),
-                          child: const Text(
-                            'Delete',
-                            style: TextStyle(color: Colors.red),
+                          child: Text(
+                            AppLocalizations.of(context)!.delete,
+                            style: const TextStyle(color: Colors.red),
                           ),
                         ),
                       ],
@@ -93,9 +95,9 @@ class ProjectDetailsPage extends StatelessWidget {
                     if (context.mounted) {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text('Project deleted.'),
-                          duration: Duration(seconds: 1),
+                        SnackBar(
+                          content: Text(AppLocalizations.of(context)!.project_deleted_msg),
+                          duration: const Duration(seconds: 1),
                         ),
                       );
                     }
@@ -167,7 +169,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    'COMPLETE',
+                                    AppLocalizations.of(context)!.project_complete_label,
                                     style: TextStyle(
                                       color: colorScheme.onSurface.withOpacity(
                                         0.5,
@@ -211,7 +213,7 @@ class ProjectDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader(context, 'Tasks', () {
+                  _buildSectionHeader(context, AppLocalizations.of(context)!.tasks, () {
                     _showAddTaskDialog(context, growthBlock, project.projectID);
                   }),
                   const SizedBox(height: 16),
@@ -223,7 +225,7 @@ class ProjectDetailsPage extends StatelessWidget {
                     if (tasks.isEmpty) {
                       return _buildEmptyState(
                         context,
-                        'No tasks for this project yet.',
+                        AppLocalizations.of(context)!.project_no_tasks,
                       );
                     }
 
@@ -248,7 +250,7 @@ class ProjectDetailsPage extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(context, 'Notes', () {
+                  _buildSectionHeader(context, AppLocalizations.of(context)!.project_notes_label, () {
                     _createNewNote(
                       context,
                       database.projectNoteDAO,
@@ -265,7 +267,7 @@ class ProjectDetailsPage extends StatelessWidget {
                       if (notes.isEmpty) {
                         return _buildEmptyState(
                           context,
-                          'No notes for this project yet.',
+                          AppLocalizations.of(context)!.project_no_notes,
                         );
                       }
                       return Column(
@@ -276,7 +278,7 @@ class ProjectDetailsPage extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(context, 'Financial Activity', () {
+                  _buildSectionHeader(context, AppLocalizations.of(context)!.project_finance_label, () {
                     _showAddProjectTransactionDialog(
                       context,
                       context.read<FinanceBlock>(),
@@ -293,10 +295,11 @@ class ProjectDetailsPage extends StatelessWidget {
                         .where((t) => t.projectID == project.projectID)
                         .toList();
 
+                    final l10n = AppLocalizations.of(context)!;
                     if (txs.isEmpty) {
                       return _buildEmptyState(
                         context,
-                        'No financial activity for this project yet.',
+                        l10n.project_no_finance,
                       );
                     }
                     return Column(
@@ -320,7 +323,7 @@ class ProjectDetailsPage extends StatelessWidget {
                             ),
                           ),
                           title: Text(
-                            tx.category.toUpperCase(),
+                            FinancePage._getCategoryName(l10n, tx.category),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -403,10 +406,10 @@ class ProjectDetailsPage extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Task to Project'),
+        title: Text(AppLocalizations.of(context)!.project_add_task_title),
         content: TextField(
           controller: titleController,
-          decoration: const InputDecoration(hintText: 'Task Title'),
+          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.project_task_title_hint),
           autofocus: true,
         ),
         actions: [
@@ -425,7 +428,7 @@ class ProjectDetailsPage extends StatelessWidget {
                 if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text('Add'),
+            child: Text(AppLocalizations.of(context)!.add),
           ),
         ],
       ),
@@ -439,24 +442,25 @@ class ProjectDetailsPage extends StatelessWidget {
   ) {
     final amountController = TextEditingController();
     final descriptionController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Add Investment'),
+        title: Text(l10n.project_add_investment_title),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Text(
-              'This will be recorded as an investment for this project.',
-              style: TextStyle(fontSize: 12, color: Colors.grey),
+            Text(
+              l10n.project_add_investment_desc,
+              style: const TextStyle(fontSize: 12, color: Colors.grey),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: amountController,
-              decoration: const InputDecoration(
-                labelText: 'Amount',
+              decoration: InputDecoration(
+                labelText: l10n.amount,
                 prefixText: '\$',
-                border: OutlineInputBorder(),
+                border: const OutlineInputBorder(),
               ),
               keyboardType: TextInputType.number,
               autofocus: true,
@@ -464,9 +468,9 @@ class ProjectDetailsPage extends StatelessWidget {
             const SizedBox(height: 16),
             TextField(
               controller: descriptionController,
-              decoration: const InputDecoration(
-                labelText: 'Description (Optional)',
-                border: OutlineInputBorder(),
+              decoration: InputDecoration(
+                labelText: l10n.description_optional,
+                border: const OutlineInputBorder(),
               ),
             ),
           ],
@@ -474,7 +478,7 @@ class ProjectDetailsPage extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           ElevatedButton(
             onPressed: () async {
@@ -485,14 +489,14 @@ class ProjectDetailsPage extends StatelessWidget {
                   type: 'investment',
                   amount: amount,
                   description: descriptionController.text.isEmpty
-                      ? "Project investment"
+                      ? l10n.project_investment_default_desc
                       : descriptionController.text,
                   projectID: projectID,
                 );
                 if (context.mounted) Navigator.pop(context);
               }
             },
-            child: const Text('Add Investment'),
+            child: Text(l10n.project_add_investment_btn),
           ),
         ],
       ),
@@ -506,7 +510,7 @@ class ProjectDetailsPage extends StatelessWidget {
   ) async {
     final personBlock = context.read<PersonBlock>();
     final noteID = await dao.insertNote(
-      title: 'New Project Note',
+      title: AppLocalizations.of(context)!.project_new_note_title,
       content: '',
       projectID: projectID,
       personID: personBlock.currentPersonID.value,
@@ -555,7 +559,7 @@ class _NoteItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      'Last edited ${DateFormat.MMMd().format(note.updatedAt)}',
+                      AppLocalizations.of(context)!.project_last_edited_msg(DateFormat.MMMd().format(note.updatedAt)),
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onSurface.withOpacity(0.6),

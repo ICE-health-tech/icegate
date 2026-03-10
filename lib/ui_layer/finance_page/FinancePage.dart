@@ -15,6 +15,7 @@ class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
 
   static Widget icon(BuildContext context, {double? size}) {
+    final l10n = AppLocalizations.of(context)!;
     return MainButton(
       type: "finance",
       destination: "/finance",
@@ -34,22 +35,22 @@ class FinancePage extends StatefulWidget {
         SubButton(
           icon: Icons.savings_rounded,
           backgroundColor: Colors.green,
-          label: 'Save',
-          tooltip: 'Add Savings',
+          label: l10n.finance_label_save,
+          tooltip: l10n.finance_tooltip_add_savings,
           onPressed: () => _showAddTransactionDialog(context, type: 'savings'),
         ),
         SubButton(
           icon: Icons.shopping_cart_rounded,
           backgroundColor: Colors.red,
-          label: 'Spend',
-          tooltip: 'Add Expense',
+          label: l10n.finance_label_spend,
+          tooltip: l10n.finance_tooltip_add_expense,
           onPressed: () => _showAddTransactionDialog(context, type: 'expense'),
         ),
         SubButton(
           icon: Icons.attach_money_rounded,
           backgroundColor: Colors.blue,
-          label: 'Income',
-          tooltip: 'Add Income',
+          label: l10n.finance_label_income,
+          tooltip: l10n.finance_tooltip_add_income,
           onPressed: () => _showAddTransactionDialog(context, type: 'income'),
         ),
       ],
@@ -60,6 +61,7 @@ class FinancePage extends StatefulWidget {
     final financeBlock = context.read<FinanceBlock>();
     final amountController = TextEditingController();
     final descController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
     String selectedType = type ?? 'expense';
     String selectedCategory = 'general';
 
@@ -94,12 +96,18 @@ class FinancePage extends StatefulWidget {
       context: context,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setDialogState) {
+          String dialogTitle = l10n.finance_add_transaction;
+          if (type != null) {
+            String typeName = type == 'expense'
+                ? l10n.finance_type_expense
+                : type == 'income'
+                    ? l10n.finance_type_income
+                    : l10n.finance_type_savings;
+            dialogTitle = l10n.finance_add_type(typeName);
+          }
+
           return AlertDialog(
-            title: Text(
-              type != null
-                  ? 'Add ${type[0].toUpperCase()}${type.substring(1)}'
-                  : 'Add Transaction',
-            ),
+            title: Text(dialogTitle),
             content: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -108,15 +116,18 @@ class FinancePage extends StatefulWidget {
                     FittedBox(
                       child: SegmentedButton<String>(
                         showSelectedIcon: false,
-                        segments: const [
+                        segments: [
                           ButtonSegment(
                             value: 'expense',
-                            label: Text('Expense'),
+                            label: Text(l10n.finance_type_expense),
                           ),
-                          ButtonSegment(value: 'income', label: Text('Income')),
+                          ButtonSegment(
+                            value: 'income',
+                            label: Text(l10n.finance_type_income),
+                          ),
                           ButtonSegment(
                             value: 'savings',
-                            label: Text('Savings'),
+                            label: Text(l10n.finance_type_savings),
                           ),
                         ],
                         selected: {selectedType},
@@ -134,24 +145,24 @@ class FinancePage extends StatefulWidget {
                     keyboardType: const TextInputType.numberWithOptions(
                       decimal: true,
                     ),
-                    decoration: const InputDecoration(
-                      labelText: 'Amount',
+                    decoration: InputDecoration(
+                      labelText: l10n.finance_label_amount,
                       prefixText: '\$ ',
-                      border: OutlineInputBorder(),
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    initialValue: selectedCategory,
-                    decoration: const InputDecoration(
-                      labelText: 'Category',
-                      border: OutlineInputBorder(),
+                    value: selectedCategory,
+                    decoration: InputDecoration(
+                      labelText: l10n.finance_label_category,
+                      border: const OutlineInputBorder(),
                     ),
                     items: (categories[selectedType] ?? ['general'])
                         .map(
                           (c) => DropdownMenuItem(
                             value: c,
-                            child: Text(c[0].toUpperCase() + c.substring(1)),
+                            child: Text(_getCategoryName(l10n, c)),
                           ),
                         )
                         .toList(),
@@ -162,9 +173,9 @@ class FinancePage extends StatefulWidget {
                   const SizedBox(height: 12),
                   TextField(
                     controller: descController,
-                    decoration: const InputDecoration(
-                      labelText: 'Description (optional)',
-                      border: OutlineInputBorder(),
+                    decoration: InputDecoration(
+                      labelText: l10n.finance_label_description_optional,
+                      border: const OutlineInputBorder(),
                     ),
                   ),
                 ],
@@ -173,7 +184,7 @@ class FinancePage extends StatefulWidget {
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               FilledButton(
                 onPressed: () async {
@@ -189,13 +200,68 @@ class FinancePage extends StatefulWidget {
                   );
                   if (ctx.mounted) Navigator.pop(ctx);
                 },
-                child: const Text('Add'),
+                child: Text(l10n.finance_btn_add),
               ),
             ],
           );
         },
       ),
     );
+  }
+
+  static String _getCategoryName(AppLocalizations l10n, String category) {
+    switch (category) {
+      case 'food':
+        return l10n.finance_cat_food;
+      case 'coffee':
+        return l10n.finance_cat_coffee;
+      case 'transport':
+        return l10n.finance_cat_transport;
+      case 'software':
+        return l10n.finance_cat_software;
+      case 'shopping':
+        return l10n.finance_cat_shopping;
+      case 'bills':
+        return l10n.finance_cat_bills;
+      case 'rent':
+        return l10n.finance_cat_rent;
+      case 'subscriptions':
+        return l10n.finance_cat_subscriptions;
+      case 'entertainment':
+        return l10n.finance_cat_entertainment;
+      case 'health':
+        return l10n.finance_cat_health;
+      case 'education':
+        return l10n.finance_cat_education;
+      case 'investing':
+        return l10n.finance_cat_investing;
+      case 'general':
+        return l10n.finance_cat_general;
+      case 'salary':
+        return l10n.finance_cat_salary;
+      case 'freelance':
+        return l10n.finance_cat_freelance;
+      case 'investment':
+        return l10n.finance_cat_investment;
+      case 'gift':
+        return l10n.finance_cat_gift;
+      case 'bonus':
+        return l10n.finance_cat_bonus;
+      case 'emergency':
+        return l10n.finance_cat_emergency;
+      case 'goal':
+        return l10n.finance_cat_goal;
+      case 'retirement':
+        return l10n.finance_cat_retirement;
+      case 'crypto':
+        return l10n.finance_cat_crypto;
+      case 'stock':
+        return l10n.finance_cat_stock;
+      case 'real_estate':
+        return l10n.finance_cat_real_estate;
+      default:
+        return category[0].toUpperCase() + category.substring(1);
+    }
   }
 
   @override
@@ -294,7 +360,7 @@ class _FinancePageState extends State<FinancePage> {
             // Recent Transactions
             _buildSectionHeader(
               context,
-              'Recent Transactions',
+              l10n.finance_recent_transactions,
               Icons.receipt_long_rounded,
             ),
             Watch((context) {
@@ -320,14 +386,14 @@ class _FinancePageState extends State<FinancePage> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            'No transactions yet',
+                            l10n.finance_no_transactions,
                             style: TextStyle(
                               color: colorScheme.onSurface.withOpacity(0.5),
                             ),
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            'Tap + to add your first transaction',
+                            l10n.finance_tap_to_add,
                             style: TextStyle(
                               color: colorScheme.onSurface.withOpacity(0.3),
                               fontSize: 12,
@@ -364,6 +430,7 @@ class _FinancePageState extends State<FinancePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final totalBalance = block.totalBalance.value;
+    final l10n = AppLocalizations.of(context)!;
 
     // Dynamic values for trend
     final totalChange = block.monthlyNetChange.watch(context);
@@ -403,7 +470,7 @@ class _FinancePageState extends State<FinancePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'TOTAL NET WORTH',
+                l10n.finance_total_net_worth,
                 style: textTheme.labelSmall?.copyWith(
                   color: colorScheme.onPrimary.withOpacity(0.7),
                   letterSpacing: 2.0,
@@ -492,6 +559,7 @@ class _FinancePageState extends State<FinancePage> {
     final spending = financeBlock.monthlySpending.value;
     final income = financeBlock.monthlyIncome.value;
     final monthName = DateFormat.MMMM().format(DateTime.now());
+    final l10n = AppLocalizations.of(context)!;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -502,7 +570,7 @@ class _FinancePageState extends State<FinancePage> {
               Expanded(
                 child: _buildMiniCard(
                   context,
-                  title: 'Total Savings',
+                  title: l10n.finance_total_savings,
                   amount: savings,
                   icon: Icons.savings_rounded,
                   color: Colors.green,
@@ -513,7 +581,7 @@ class _FinancePageState extends State<FinancePage> {
               Expanded(
                 child: _buildMiniCard(
                   context,
-                  title: '$monthName Spending',
+                  title: l10n.finance_month_spending(monthName),
                   amount: spending,
                   icon: Icons.shopping_cart_rounded,
                   color: Colors.redAccent,
@@ -525,7 +593,7 @@ class _FinancePageState extends State<FinancePage> {
           const SizedBox(height: 12),
           _buildMiniCard(
             context,
-            title: '$monthName Income',
+            title: l10n.finance_month_income(monthName),
             amount: income,
             icon: Icons.trending_up_rounded,
             color: Colors.blue,
@@ -691,7 +759,7 @@ class _FinancePageState extends State<FinancePage> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  '$monthName Breakdown',
+                  l10n.finance_monthly_breakdown(monthName),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 18,
@@ -738,8 +806,7 @@ class _FinancePageState extends State<FinancePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                entry.key[0].toUpperCase() +
-                                    entry.key.substring(1),
+                                FinancePage._getCategoryName(l10n, entry.key),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -881,8 +948,7 @@ class _FinancePageState extends State<FinancePage> {
                 children: [
                   Text(
                     txn.description ??
-                        (txn.category[0].toUpperCase() +
-                            txn.category.substring(1)),
+                        FinancePage._getCategoryName(l10n, txn.category),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
@@ -902,7 +968,7 @@ class _FinancePageState extends State<FinancePage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${txn.category[0].toUpperCase()}${txn.category.substring(1)} • ${DateFormat.MMMd().format(txn.transactionDate)}',
+                        '${FinancePage._getCategoryName(l10n, txn.category)} • ${DateFormat.MMMd().format(txn.transactionDate)}',
                         style: TextStyle(
                           color: colorScheme.onSurface.withOpacity(0.4),
                           fontSize: 11,
@@ -976,6 +1042,7 @@ class _FinancePageState extends State<FinancePage> {
     IconData icon,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(28, 40, 20, 16),
@@ -1007,7 +1074,7 @@ class _FinancePageState extends State<FinancePage> {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                'SEE ALL',
+                l10n.finance_see_all,
                 style: TextStyle(
                   fontWeight: FontWeight.w900,
                   fontSize: 11,

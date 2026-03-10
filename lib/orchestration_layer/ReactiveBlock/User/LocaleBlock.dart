@@ -10,11 +10,11 @@ class LocaleBlock {
   static const String _localeKey = 'app_locale';
 
   // Ngôn ngữ mặc định là tiếng Việt
-  static const Locale _defaultLocale = Locale('vi', 'VN');
+  static const Locale _defaultLocale = Locale('vi');
 
   // Danh sách ngôn ngữ hỗ trợ
   static const List<Locale> supportedLocales = [
-    Locale('vi', 'VN'),
+    Locale('vi'),
     Locale('en'),
   ];
 

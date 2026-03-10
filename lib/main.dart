@@ -51,7 +51,7 @@ class MyApp extends StatelessWidget {
           appLocale = localeBlock.currentLocale.watch(context);
         } catch (_) {
           // LocaleBlock chưa sẵn sàng, dùng locale mặc định
-          appLocale = const Locale('vi', 'VN');
+          appLocale = const Locale('vi');
         }
 
         // --- Use MaterialApp instead of NeumorphicApp ---
