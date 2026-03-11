@@ -9,6 +9,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
@@ -41,7 +42,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
   final _fatController = TextEditingController();
   final _kcalController = TextEditingController();
   
-  File? _pickedImage;
+  XFile? _pickedImage;
   String _imagePath = "";
   bool _isAnalyzing = false;
   late HealthMealDAO _healthMealDAO;
@@ -85,7 +86,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
       );
 
       setState(() {
-        _pickedImage = File(image.path);
+        _pickedImage = image;
         _imagePath = savedFileName;
       });
       _analyzeFood();
@@ -204,7 +205,9 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
-                    child: Image.file(_pickedImage!, fit: BoxFit.cover),
+                    child: kIsWeb 
+                        ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
+                        : Image.file(File(_pickedImage!.path), fit: BoxFit.cover),
                   ),
                 )
               else
@@ -238,7 +241,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   prefixIcon: const Icon(Icons.restaurant_rounded),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
                   filled: true,
-                  fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                 ),
                 onEditingComplete: _analyzeFood,
               ),
@@ -267,7 +270,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
                 keyboardType: TextInputType.number,
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
                 decoration: InputDecoration(
-                  labelText: l10n.nutri_total + " (kcal)",
+                  labelText: "${l10n.nutri_total} (kcal)",
                   prefixIcon: const Icon(Icons.local_fire_department_rounded),
                   suffixIcon: _isAnalyzing 
                     ? const Padding(

@@ -15,7 +15,6 @@ import 'package:ice_gate/ui_layer/health_page/widgets/QuickActionButton.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 
 class HealthPage extends StatefulWidget {
   const HealthPage({super.key});

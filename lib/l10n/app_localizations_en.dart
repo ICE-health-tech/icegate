@@ -1913,4 +1913,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_cat_real_estate => 'Real Estate';
+
+  @override
+  String get ssh_new_session => 'New SSH Session';
+
+  @override
+  String get ssh_host_label => 'Host IP or Domain';
+
+  @override
+  String get ssh_port_label => 'Port';
+
+  @override
+  String get ssh_user_label => 'Username';
+
+  @override
+  String get ssh_pass_label => 'Password or Key';
+
+  @override
+  String get ssh_connect => 'Connect';
+
+  @override
+  String get ssh_ask_ai => 'Ask AI';
+
+  @override
+  String get ssh_ask_ai_desc => 'Describe what you want to achieve...';
+
+  @override
+  String get ssh_generate => 'Generate';
+
+  @override
+  String get ssh_type_command => 'Type a command...';
+
+  @override
+  String get ssh_disconnect => 'Disconnect';
+
+  @override
+  String get ssh_search_hint => 'Search...';
 }

@@ -337,7 +337,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          AppLocalizations.of(context)!.notification_daily_quest + ": ",
+          "${AppLocalizations.of(context)!.notification_daily_quest}: ",
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
             fontSize: 11,

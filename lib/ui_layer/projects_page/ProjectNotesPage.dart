@@ -192,9 +192,7 @@ class _NoteCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text(
-                  note.updatedAt != null
-                      ? DateFormat.MMMd().format(note.updatedAt!)
-                      : AppLocalizations.of(context)!.project_unknown_date,
+                  DateFormat.MMMd().format(note.updatedAt!),
                   style: TextStyle(
                     fontSize: 12,
                     color: colorScheme.onSurface.withOpacity(0.4),

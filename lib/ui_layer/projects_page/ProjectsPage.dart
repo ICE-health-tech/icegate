@@ -168,14 +168,14 @@ class ProjectsPage extends StatelessWidget {
                             _buildSummaryItem(
                               context,
                               'Projects',
-                              '${projectsDone}/${projectsActive + projectsDone}',
+                              '$projectsDone/${projectsActive + projectsDone}',
                               Icons.folder_copy_rounded,
                               Colors.blue,
                             ),
                             _buildSummaryItem(
                               context,
                               'Tasks',
-                              '${tasksDone}/${tasksDone + tasksActive}',
+                              '$tasksDone/${tasksDone + tasksActive}',
                               Icons.task_alt_rounded,
                               Colors.orange,
                             ),
@@ -312,8 +312,9 @@ class ProjectsPage extends StatelessWidget {
                   .where((p) => p.status == 1)
                   .toList();
 
-              if (completedList.isEmpty)
+              if (completedList.isEmpty) {
                 return const SliverToBoxAdapter(child: SizedBox.shrink());
+              }
 
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),

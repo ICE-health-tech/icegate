@@ -58,7 +58,7 @@ class ObjectDatabaseBlock {
       print('📂 [ObjectDB] Saved universal image to: ${savedFile.path}');
 
       // Evict from Flutter image cache to ensure UI updates
-      await imageCache.evict(FileImage(File(localPath)));
+      imageCache.evict(FileImage(File(localPath)));
 
       // Return structured relative path for better identification
       if (personId != null) {

@@ -464,7 +464,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       displayBreakdown['Base'] = double.tryParse(value) ?? 0;
     }
 
-    IconData _getBreakdownIcon(String key) {
+    IconData getBreakdownIcon(String key) {
       switch (key.toLowerCase()) {
         case 'steps':
           return Icons.directions_walk_rounded;
@@ -499,7 +499,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       }
     }
 
-    String _getLocalizedBreakdownTitle(String key) {
+    String getLocalizedBreakdownTitle(String key) {
       final l10n = AppLocalizations.of(context)!;
       switch (key.toLowerCase()) {
         case 'steps':
@@ -588,14 +588,14 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                     child: Row(
                       children: [
                         Icon(
-                          _getBreakdownIcon(e.key),
+                          getBreakdownIcon(e.key),
                           size: 10,
                           color: colorScheme.onSurfaceVariant.withOpacity(0.5),
                         ),
                         const SizedBox(width: 6),
                         Expanded(
                           child: Text(
-                            _getLocalizedBreakdownTitle(e.key),
+                            getLocalizedBreakdownTitle(e.key),
                             style: TextStyle(
                               fontSize: 8,
                               fontWeight: FontWeight.bold,
@@ -620,7 +620,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                     ),
                   ),
                 )
-                .toList(),
+                ,
           ],
         ),
       ),

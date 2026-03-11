@@ -18,6 +18,10 @@ class LocalNotificationService {
   AppDatabase? _database;
 
   Future<void> init([AppDatabase? database]) async {
+    if (kIsWeb) {
+      debugPrint("🌐 Notifications not supported on web. Skipping init.");
+      return;
+    }
     _database = database;
     // Initialize Timezones
     try {

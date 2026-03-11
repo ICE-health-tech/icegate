@@ -1913,4 +1913,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_cat_real_estate => 'Bất động sản';
+
+  @override
+  String get ssh_new_session => 'Phiên SSH Mới';
+
+  @override
+  String get ssh_host_label => 'IP Máy Chủ hoặc Tên Miền';
+
+  @override
+  String get ssh_port_label => 'Cổng';
+
+  @override
+  String get ssh_user_label => 'Tên Người Dùng';
+
+  @override
+  String get ssh_pass_label => 'Mật Khẩu hoặc Khoá';
+
+  @override
+  String get ssh_connect => 'Kết Nối';
+
+  @override
+  String get ssh_ask_ai => 'Hỏi AI';
+
+  @override
+  String get ssh_ask_ai_desc => 'Mô tả điều bạn muốn thực hiện...';
+
+  @override
+  String get ssh_generate => 'Tạo Lệnh';
+
+  @override
+  String get ssh_type_command => 'Nhập lệnh...';
+
+  @override
+  String get ssh_disconnect => 'Ngắt Kết Nối';
+
+  @override
+  String get ssh_search_hint => 'Tìm kiếm...';
 }

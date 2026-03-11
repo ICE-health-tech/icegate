@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <!-- method: app-store = TestFlight + App Store distribution -->
+    <key>method</key>
+    <string>app-store</string>
+
+    <!-- Your Apple Developer Team ID -->
+    <key>teamID</key>
+    <string>JJ5CR7B87P</string>
+
+    <!-- Upload symbols for crash reporting -->
+    <key>uploadSymbols</key>
+    <true/>
+
+    <!-- Upload bitcode (set false for Flutter apps) -->
+    <key>uploadBitcode</key>
+    <false/>
+
+    <!-- Signing style: automatic lets Xcode handle provisioning -->
+    <key>signingStyle</key>
+    <string>automatic</string>
+
+    <!-- Provisioning profiles mapping (optional with automatic signing) -->
+    <!-- Uncomment and fill in if using manual signing -->
+    <!--
+    <key>provisioningProfiles</key>
+    <dict>
+        <key>duylong.art.icegate</key>
+        <string>YOUR_PROVISIONING_PROFILE_NAME</string>
+    </dict>
+    -->
+</dict>
+</plist>

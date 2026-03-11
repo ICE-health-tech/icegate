@@ -34,6 +34,7 @@ import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
 import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
 import 'package:ice_gate/ui_layer/animation_page/snowflake_assemble_screen.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 // // Import your pages
 // import 'package:ice_gate/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
 // import 'package:ice_gate/ui_layer/HomePage.dart'; // Your Home
@@ -415,6 +416,11 @@ final GoRouter router = GoRouter(
                 url: 'https://google.com',
                 title: 'External Widget',
               ),
+            ),
+            GoRoute(
+              path: 'ssh',
+              parentNavigatorKey: _shellNavigatorKey,
+              builder: (context, state) => const TalkSSHPage(),
             ),
           ],
         ),

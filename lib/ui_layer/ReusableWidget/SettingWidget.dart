@@ -187,7 +187,7 @@ class SettingsWidget extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  (username == null || username == 'Guest')
+                  (username == 'Guest')
                       ? AppLocalizations.of(context)!.msg_sign_in_to_sync
                       : AppLocalizations.of(context)!.member_status,
                   style: TextStyle(

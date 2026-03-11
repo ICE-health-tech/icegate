@@ -221,7 +221,7 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
       image = Image.file(
         File(_resolvedAbsolutePath!),
         key: ValueKey(
-          '${widget.ownerId}_${widget.localPath}_${_resolvedAbsolutePath}_${_fileSize}',
+          '${widget.ownerId}_${widget.localPath}_${_resolvedAbsolutePath}_$_fileSize',
         ),
         fit: widget.fit,
         width: widget.width,

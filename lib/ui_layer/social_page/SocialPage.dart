@@ -31,7 +31,7 @@ class SocialPage extends StatefulWidget {
       final index = socialBlock.activeTab.value;
       IconData iconData;
       VoidCallback action;
-      print("social index: " + index.toString());
+      print("social index: $index");
       switch (index) {
         case 0:
           iconData = Icons.share_rounded;
@@ -437,7 +437,7 @@ class SocialPage extends StatefulWidget {
                   ),
                   const SizedBox(height: 8),
                   DropdownButtonFormField<String>(
-                    value: selectedRelationship,
+                    initialValue: selectedRelationship,
                     dropdownColor: Theme.of(
                       context,
                     ).colorScheme.surfaceContainerHigh,

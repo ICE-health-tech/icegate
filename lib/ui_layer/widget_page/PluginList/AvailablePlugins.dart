@@ -11,6 +11,7 @@ import 'WebPlugin/Spotify.dart';
 import 'WebPlugin/GitHub.dart';
 import 'WebPlugin/Weather.dart';
 import 'WebPlugin/CryptoTracker.dart';
+import 'TalkSSH/TalkSSH.dart';
 
 /// Registry of all available plugins
 class AvailablePlugins {
@@ -27,6 +28,7 @@ class AvailablePlugins {
     GitHubPlugin(),
     WeatherPlugin(),
     CryptoTrackerPlugin(),
+    TalkSSHPlugin(),
     // MapPlugin(),
   ];
 

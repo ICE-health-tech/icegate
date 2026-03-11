@@ -1,6 +1,6 @@
 // 1. Core Drift and Platform Imports
 import 'package:drift/drift.dart';
-import 'package:drift/native.dart'; // For NativeDatabase on mobile/desktop
+import 'package:drift_flutter/drift_flutter.dart';
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
@@ -14,11 +14,11 @@ import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:rxdart/rxdart.dart';
-import 'dart:io'; // For File
+// For File
 import 'dart:math'; // For Random() used in DAOs
 import 'dart:convert';
-import 'package:path_provider/path_provider.dart'; // For finding the database path
-import 'package:path/path.dart' as p; // For path joining
+// For finding the database path
+// For path joining
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
@@ -4117,29 +4117,8 @@ class SocialContact {
   SocialContact({required this.person, required this.affection});
 }
 
-LazyDatabase _openConnection() {
-  return LazyDatabase(() async {
-    final dbFolder = await getApplicationDocumentsDirectory();
-    // print("Database directory: ${dbFolder.path}");
-    final file = File(p.join(dbFolder.path, 'db9.sqlite'));
-
-    try {
-      if (await file.exists()) {
-        // print("Database file exists at: ${file.path}");
-      } else {
-        // print(
-        //   "Database file does not exist. It will be created at: ${file.path}",
-        // );
-      }
-
-      // print("Finalizing database connection...");
-      // Using NativeDatabase directly instead of inBackground for testing iOS stability
-      return NativeDatabase(file, logStatements: true);
-    } catch (e) {
-      print("❌ Error opening database: $e");
-      rethrow;
-    }
-  });
+QueryExecutor _openConnection() {
+  return driftDatabase(name: 'db9');
 }
 
 // --- Focus Session ---

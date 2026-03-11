@@ -2649,7 +2649,7 @@ class _TimerSettingsSheet extends StatelessWidget {
                 onChanged: (val) => musicBlock.isShuffleEnabled.value = val,
                 secondary: const Icon(Icons.shuffle_rounded),
                 contentPadding: EdgeInsets.zero,
-                activeColor: theme.colorScheme.primary,
+                activeThumbColor: theme.colorScheme.primary,
               ),
               const SizedBox(height: 24),
               Text(

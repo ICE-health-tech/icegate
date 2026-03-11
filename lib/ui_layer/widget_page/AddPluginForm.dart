@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart';
@@ -416,6 +415,13 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         url: '/settings',
         icon: Icons.settings_rounded,
         description: 'Customize application.',
+        category: PluginCategory.other,
+      ),
+      _InternalPlugin(
+        name: 'ICE GATE SSH',
+        url: '/widgets/ssh',
+        icon: Icons.terminal_rounded,
+        description: 'Secure remote terminal.',
         category: PluginCategory.other,
       ),
     ];

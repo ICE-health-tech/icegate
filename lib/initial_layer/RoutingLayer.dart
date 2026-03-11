@@ -70,6 +70,15 @@ class _adapterState extends State<Adapter> {
         alias: "BlockReminder",
         scope: 'home',
       );
+
+      await dao.insertInternalWidget(
+        name: "ICE GATE SSH",
+        personID: personId,
+        imageUrl: "assets/internalwidget/defaul.png",
+        url: "/widgets/ssh",
+        alias: "SSHTerminal",
+        scope: 'home',
+      );
     }
 
     internalWidgetBlock.refreshBlock(dao, personId, 'home');

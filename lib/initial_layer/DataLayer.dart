@@ -189,8 +189,14 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       );
 
       debugPrint("🚀 [Boot] Step 2: Initialize PowerSync...");
-      final dir = await getApplicationDocumentsDirectory();
-      final dbPath = p.join(dir.path, 'powersync30.db');
+      String dbPath;
+      if (kIsWeb) {
+        debugPrint("🌐 [Boot] Web platform detected. Initializing PowerSync with IndexedDB.");
+        dbPath = 'powersync30.db';
+      } else {
+        final dir = await getApplicationDocumentsDirectory();
+        dbPath = p.join(dir.path, 'powersync30.db');
+      }
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
@@ -204,7 +210,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       debugPrint("🚀 [Boot] Step 4: Initialize Audio...");
       try {
-        if (!_isAudioInitialized) {
+        if (kIsWeb) {
+          debugPrint("🌐 [Boot] Web platform detected. Initializing raw FocusAudioHandler.");
+          audioHandler = FocusAudioHandler();
+        } else if (!_isAudioInitialized) {
           audioHandler = await AudioService.init(
             builder: () => FocusAudioHandler(),
             config: const AudioServiceConfig(

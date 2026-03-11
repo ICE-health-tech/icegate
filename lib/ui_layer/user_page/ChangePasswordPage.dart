@@ -88,8 +88,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       // 2. Update password
       print("🔐 [ChangePassword] Updating to new password...");
       final currentUser = client.auth.currentUser;
-      if (currentUser == null)
+      if (currentUser == null) {
         throw Exception("User session lost during update");
+      }
 
       await client.auth.updateUser(
         UserAttributes(password: _passwordController.text),

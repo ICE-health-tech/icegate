@@ -154,7 +154,7 @@ class FinancePage extends StatefulWidget {
                   ),
                   const SizedBox(height: 12),
                   DropdownButtonFormField<String>(
-                    value: selectedCategory,
+                    initialValue: selectedCategory,
                     decoration: InputDecoration(
                       labelText: l10n.finance_label_category,
                       border: const OutlineInputBorder(),

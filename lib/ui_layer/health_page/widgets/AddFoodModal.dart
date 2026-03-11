@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 
@@ -164,7 +165,9 @@ class _AddFoodModalState extends State<AddFoodModal> {
                 borderRadius: BorderRadius.circular(20),
                 image: _imageFile != null
                     ? DecorationImage(
-                        image: FileImage(File(_imageFile!.path)),
+                        image: kIsWeb 
+                            ? NetworkImage(_imageFile!.path) 
+                            : FileImage(File(_imageFile!.path)) as ImageProvider,
                         fit: BoxFit.cover,
                       )
                     : null,

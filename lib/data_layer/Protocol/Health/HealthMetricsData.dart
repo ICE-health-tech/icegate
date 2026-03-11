@@ -394,7 +394,7 @@ class HealthMetricsData {
         unit: l10n.health_min_label,
         progress: (exerciseMin / exerciseGoal).clamp(0.0, 1.0),
         subtitle: l10n.health_subtitle_goal_min(exerciseGoal),
-        trend: trendStr(exerciseMin, yExercise, ' ' + l10n.health_min_label),
+        trend: trendStr(exerciseMin, yExercise, ' ${l10n.health_min_label}'),
         trendPositive: trendPositive(exerciseMin, yExercise),
         detailPage: '/health/exercise',
       ),

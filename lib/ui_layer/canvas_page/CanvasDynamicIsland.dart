@@ -31,7 +31,7 @@ class CanvasDynamicIsland extends StatelessWidget {
 
     if (path.startsWith('/social')) {
       final index = socialIndex ?? 0;
-      print("Index of current social page: " + index.toString());
+      print("Index of current social page: $index");
       switch (index) {
         case 0:
           return l10n.ranking.toUpperCase();
@@ -158,7 +158,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             GestureDetector(
               onTap: () {
                 HapticFeedback.mediumImpact();
-                print("Current location: " + location);
+                print("Current location: $location");
                 if (location.startsWith('/projects/editor')) {
                   context.go("/projects");
                 }

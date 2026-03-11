@@ -75,8 +75,9 @@ class HealthBlock {
 
     // 0. Cleanup duplicates before starting watch to prevent sync conflicts
     _healthDao.cleanupDuplicates(personId).then((_) {
-      if (_initializedPersonId != personId)
+      if (_initializedPersonId != personId) {
         return; // Guard against race condition
+      }
 
       // Watch all metrics to calculate historical steps (excluding today)
       _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(

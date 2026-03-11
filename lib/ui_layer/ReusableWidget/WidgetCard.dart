@@ -5,24 +5,14 @@ import 'package:url_launcher/url_launcher.dart';
 import '../widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
 import '../../orchestration_layer/Action/WebView/LiveMapPlugin.dart';
 
+import 'package:go_router/go_router.dart';
+
 // ------------------------------------------
 // MOCK CLASSES & METHODS (Required for runnability)
-// In a real application, you would import these from other files.
 // ------------------------------------------
 
-// Mock for the data model
-// class ExternalWidget {
-//   final String name;
-//   final String? imageUrl;
-//   final String widgetId;
+// ... (existing code)
 
-//   ExternalWidget({required this.name, this.imageUrl, required this.widgetId});
-// }
-
-// Mock for the database access object
-// class ExternalWidgetsDAO {}
-
-// Mock function for navigation
 // Mock function for navigation
 void _navigateExternalUrl(BuildContext context, String url) async {
   // Check for special widget protocol
@@ -37,6 +27,12 @@ void _navigateExternalUrl(BuildContext context, String url) async {
       return;
     }
     debugPrint("Widget protocol detected: $url - Drag this to canvas to use");
+    return;
+  }
+
+  // Handle SSH protocol
+  if (url.startsWith('ssh://')) {
+    context.push('/widgets/ssh');
     return;
   }
 

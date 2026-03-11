@@ -103,9 +103,9 @@ class ScoreBlock {
         xp.toInt(),
       );
 
-      if (level < 10)
+      if (level < 10) {
         rankTitle.value = "Novice";
-      else if (level < 20)
+      } else if (level < 20)
         rankTitle.value = "Protector";
       else if (level < 30)
         rankTitle.value = "Guardian";
@@ -145,9 +145,9 @@ class ScoreBlock {
 
     // Clear old subscriptions
     for (var s in _subscriptions) {
-      if (s is StreamSubscription)
+      if (s is StreamSubscription) {
         s.cancel();
-      else if (s is void Function())
+      } else if (s is void Function())
         s();
     }
     _subscriptions.clear();
@@ -375,10 +375,13 @@ class ScoreBlock {
     if (_personID.isEmpty) return;
 
     double accountWorth = 0;
-    for (var acc in accounts) accountWorth += acc.balance;
+    for (var acc in accounts) {
+      accountWorth += acc.balance;
+    }
     double assetWorth = 0;
-    for (var asset in assets)
+    for (var asset in assets) {
       assetWorth += (asset.currentEstimatedValue ?? 0.0);
+    }
 
     double accountScore = 0, assetScore = 0;
     if (FINANCE_SAVINGS_MILESTONE > 0) {
@@ -403,7 +406,9 @@ class ScoreBlock {
     if (_personID.isEmpty) return;
 
     int totalAffection = 0;
-    for (var contact in contacts) totalAffection += contact.affection;
+    for (var contact in contacts) {
+      totalAffection += contact.affection;
+    }
 
     final contactPoints = (contacts.length * CONTACT_POINTS).toDouble();
     final affectionPoints =
@@ -440,16 +445,19 @@ class ScoreBlock {
         todayKcal += item.meal.calories;
       }
     }
-    if (todayKcal > 0 && todayKcal < CALORIE_LIMIT)
+    if (todayKcal > 0 && todayKcal < CALORIE_LIMIT) {
       dietPoints += CALORIE_LIMIT_BONUS;
+    }
 
     double exercisePoints = 0;
-    if (EXERCISE_PER_POINT > 0)
+    if (EXERCISE_PER_POINT > 0) {
       exercisePoints = (exerciseMinutes / EXERCISE_PER_POINT);
+    }
 
     double focusPoints = 0;
-    if (FOCUS_MINUTES_PER_POINT > 0)
+    if (FOCUS_MINUTES_PER_POINT > 0) {
       focusPoints = (focusMinutes / FOCUS_MINUTES_PER_POINT);
+    }
 
     double waterPoints = 0;
     if (waterIntake >= WATER_GOAL) waterPoints += WATER_BONUS_POINTS;
@@ -516,9 +524,9 @@ class ScoreBlock {
 
   void dispose() {
     for (var s in _subscriptions) {
-      if (s is StreamSubscription)
+      if (s is StreamSubscription) {
         s.cancel();
-      else if (s is void Function())
+      } else if (s is void Function())
         s();
     }
     _subscriptions.clear();

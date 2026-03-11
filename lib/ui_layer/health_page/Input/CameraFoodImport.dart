@@ -350,7 +350,9 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(16),
-              child: Image.file(File(_imageFile!.path), fit: BoxFit.contain),
+              child: kIsWeb 
+                  ? Image.network(_imageFile!.path, fit: BoxFit.contain)
+                  : Image.file(File(_imageFile!.path), fit: BoxFit.contain),
             ),
           ),
         ),

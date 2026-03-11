@@ -1,4 +1,5 @@
-import 'dart:io';
+import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -44,10 +45,12 @@ class _CaloriesCardState extends State<CaloriesPage> {
   int get totalEnergyExpenditure => bmr + caloriesBurned;
 
   String get calorieStatus {
-    if (netCalories < dailyGoal * 0.8)
+    if (netCalories < dailyGoal * 0.8) {
       return AppLocalizations.of(context)!.under_goal;
-    if (netCalories <= dailyGoal * 1.1)
+    }
+    if (netCalories <= dailyGoal * 1.1) {
       return AppLocalizations.of(context)!.on_track;
+    }
     return AppLocalizations.of(context)!.over_goal;
   }
 
@@ -110,7 +113,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
 
   /// Open LiDAR scanner for food volume estimation
   Future<void> _openLidarScanner() async {
-    if (!Platform.isIOS) {
+    if (kIsWeb || !Platform.isIOS) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.lidar_ios_only),

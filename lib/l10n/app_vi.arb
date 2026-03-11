@@ -937,5 +937,17 @@
     "finance_cat_retirement": "Hưu trí",
     "finance_cat_crypto": "Tiền điện tử",
     "finance_cat_stock": "Chứng khoán",
-    "finance_cat_real_estate": "Bất động sản"
+    "finance_cat_real_estate": "Bất động sản",
+    "ssh_new_session": "Phiên SSH Mới",
+    "ssh_host_label": "IP Máy Chủ hoặc Tên Miền",
+    "ssh_port_label": "Cổng",
+    "ssh_user_label": "Tên Người Dùng",
+    "ssh_pass_label": "Mật Khẩu hoặc Khoá",
+    "ssh_connect": "Kết Nối",
+    "ssh_ask_ai": "Hỏi AI",
+    "ssh_ask_ai_desc": "Mô tả điều bạn muốn thực hiện...",
+    "ssh_generate": "Tạo Lệnh",
+    "ssh_type_command": "Nhập lệnh...",
+    "ssh_disconnect": "Ngắt Kết Nối",
+    "ssh_search_hint": "Tìm kiếm..."
 }

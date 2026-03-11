@@ -237,7 +237,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(

@@ -3667,6 +3667,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Real Estate'**
   String get finance_cat_real_estate;
+
+  /// No description provided for @ssh_new_session.
+  ///
+  /// In en, this message translates to:
+  /// **'New SSH Session'**
+  String get ssh_new_session;
+
+  /// No description provided for @ssh_host_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Host IP or Domain'**
+  String get ssh_host_label;
+
+  /// No description provided for @ssh_port_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Port'**
+  String get ssh_port_label;
+
+  /// No description provided for @ssh_user_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get ssh_user_label;
+
+  /// No description provided for @ssh_pass_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Password or Key'**
+  String get ssh_pass_label;
+
+  /// No description provided for @ssh_connect.
+  ///
+  /// In en, this message translates to:
+  /// **'Connect'**
+  String get ssh_connect;
+
+  /// No description provided for @ssh_ask_ai.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask AI'**
+  String get ssh_ask_ai;
+
+  /// No description provided for @ssh_ask_ai_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Describe what you want to achieve...'**
+  String get ssh_ask_ai_desc;
+
+  /// No description provided for @ssh_generate.
+  ///
+  /// In en, this message translates to:
+  /// **'Generate'**
+  String get ssh_generate;
+
+  /// No description provided for @ssh_type_command.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a command...'**
+  String get ssh_type_command;
+
+  /// No description provided for @ssh_disconnect.
+  ///
+  /// In en, this message translates to:
+  /// **'Disconnect'**
+  String get ssh_disconnect;
+
+  /// No description provided for @ssh_search_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Search...'**
+  String get ssh_search_hint;
 }
 
 class _AppLocalizationsDelegate
