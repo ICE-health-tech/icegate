@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -162,7 +163,7 @@ class FinancePage extends StatefulWidget {
                         .map(
                           (c) => DropdownMenuItem(
                             value: c,
-                            child: Text(_getCategoryName(l10n, c)),
+                            child: Text(getCategoryName(l10n, c)),
                           ),
                         )
                         .toList(),
@@ -209,7 +210,7 @@ class FinancePage extends StatefulWidget {
     );
   }
 
-  static String _getCategoryName(AppLocalizations l10n, String category) {
+  static String getCategoryName(AppLocalizations l10n, String category) {
     switch (category) {
       case 'food':
         return l10n.finance_cat_food;
@@ -299,6 +300,7 @@ class _FinancePageState extends State<FinancePage> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final financeBlock = context.read<FinanceBlock>();
+    final l10n = AppLocalizations.of(context)!;
 
     return SwipeablePage(
       onSwipe: () => Navigator.maybePop(context),
@@ -684,6 +686,7 @@ class _FinancePageState extends State<FinancePage> {
     final categories = financeBlock.spendingByCategory.value;
     final totalSpending = financeBlock.monthlySpending.value;
     final monthName = DateFormat.MMMM().format(DateTime.now());
+    final l10n = AppLocalizations.of(context)!;
 
     if (categories.isEmpty) return const SizedBox.shrink();
 
@@ -806,7 +809,7 @@ class _FinancePageState extends State<FinancePage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                FinancePage._getCategoryName(l10n, entry.key),
+                                FinancePage.getCategoryName(l10n, entry.key),
                                 style: const TextStyle(
                                   fontWeight: FontWeight.w700,
                                   fontSize: 14,
@@ -876,6 +879,7 @@ class _FinancePageState extends State<FinancePage> {
     FinanceBlock financeBlock,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     final isExpense = txn.type == 'expense' || txn.type == 'investment';
     final isSavings = txn.type == 'savings';
     final color = isExpense
@@ -948,7 +952,7 @@ class _FinancePageState extends State<FinancePage> {
                 children: [
                   Text(
                     txn.description ??
-                        FinancePage._getCategoryName(l10n, txn.category),
+                        FinancePage.getCategoryName(l10n, txn.category),
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 15,
@@ -968,7 +972,7 @@ class _FinancePageState extends State<FinancePage> {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        '${FinancePage._getCategoryName(l10n, txn.category)} • ${DateFormat.MMMd().format(txn.transactionDate)}',
+                        '${FinancePage.getCategoryName(l10n, txn.category)} • ${DateFormat.MMMd().format(txn.transactionDate)}',
                         style: TextStyle(
                           color: colorScheme.onSurface.withOpacity(0.4),
                           fontSize: 11,

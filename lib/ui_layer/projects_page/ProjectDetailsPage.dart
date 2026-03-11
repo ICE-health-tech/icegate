@@ -323,7 +323,7 @@ class ProjectDetailsPage extends StatelessWidget {
                             ),
                           ),
                           title: Text(
-                            FinancePage._getCategoryName(l10n, tx.category),
+                            FinancePage.getCategoryName(l10n, tx.category),
                             style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
