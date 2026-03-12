@@ -141,10 +141,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   void _sendCommand() {
     final cmd = _commandController.text;
-    if (cmd.isEmpty) return;
     
     if (_isConnected) {
-      _sshService.write('$cmd\n');
+      _sshService.write('$cmd\r');
     } else {
       _sshService.terminal.write('\x1b[38;5;196m>>> OFFLINE. ESTABLISH UPLINK FIRST.\x1b[0m\r\n');
     }
