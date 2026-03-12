@@ -10,6 +10,7 @@ import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
 import 'package:provider/provider.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
@@ -59,6 +60,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     if (path.startsWith('/projects')) return "PROJECTS";
     if (path.startsWith('/project_notes')) return "NOTES";
     if (path.startsWith('/settings')) return "SETTINGS";
+    if (path.startsWith('/widgets/ssh')) return "SSH TERMINAL";
     return "ICE SHIELD";
   }
 
@@ -107,7 +109,9 @@ class CanvasDynamicIsland extends StatelessWidget {
       // Calculate width based on screen size
       final double targetWidth = isAnyTabOpen
           ? 320
-          : (isFocusRunning ? 260 : 200);
+          : (currentRoute.startsWith('/widgets/ssh')
+              ? 300
+              : (isFocusRunning ? 260 : 200));
       final double width = (targetWidth * scalingFactor).clamp(
         0.0,
         screenWidth - 40, // More breathing room
@@ -194,75 +198,77 @@ class CanvasDynamicIsland extends StatelessWidget {
                         }
                       : null,
                   child: Center(
-                    child: isFocusRunning
-                        ? Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 8),
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: BoxDecoration(
-                                  color: focusColor,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: focusColor.withOpacity(0.5),
-                                      blurRadius: 4,
-                                      spreadRadius: 1,
+                    child: currentRoute.startsWith('/widgets/ssh')
+                        ? _buildSSHMetrics(context, colorScheme, scalingFactor)
+                        : isFocusRunning
+                            ? Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const SizedBox(width: 8),
+                                  Container(
+                                    width: 6,
+                                    height: 6,
+                                    decoration: BoxDecoration(
+                                      color: focusColor,
+                                      shape: BoxShape.circle,
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: focusColor.withOpacity(0.5),
+                                          blurRadius: 4,
+                                          spreadRadius: 1,
+                                        ),
+                                      ],
                                     ),
-                                  ],
+                                  ),
+                                  const SizedBox(width: 10),
+                                  Text(
+                                    "${sessionType.toUpperCase()} ",
+                                    style: TextStyle(
+                                      color: focusColor,
+                                      fontSize: 10 * scalingFactor,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 1.0,
+                                    ),
+                                  ),
+                                  Text(
+                                    formatTime(remainingSecs),
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface,
+                                      fontSize: 14 * scalingFactor,
+                                      fontWeight: FontWeight.bold,
+                                      fontFamily: 'Monospace',
+                                    ),
+                                  ),
+                                ],
+                              )
+                            : GestureDetector(
+                                onTap: () {
+                                  if (currentRoute.startsWith('/social')) {
+                                    HapticFeedback.mediumImpact();
+                                    final currentIdx = socialBlock.activeTab.value;
+                                    socialBlock.activeTab.value =
+                                        (currentIdx + 1) % 3;
+                                  }
+                                },
+                                child: AutoSizeText(
+                                  _getTitle(
+                                    context,
+                                    currentRoute,
+                                    socialBlock,
+                                    socialIndex ??
+                                        (currentRoute.startsWith('/social')
+                                            ? socialBlock.activeTab.value
+                                            : null),
+                                  ),
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface,
+                                    fontSize: 11 * scalingFactor,
+                                    fontWeight: FontWeight.w900,
+                                    letterSpacing: 1.2 * scalingFactor,
+                                  ),
+                                  maxLines: 1,
                                 ),
                               ),
-                              const SizedBox(width: 10),
-                              Text(
-                                "${sessionType.toUpperCase()} ",
-                                style: TextStyle(
-                                  color: focusColor,
-                                  fontSize: 10 * scalingFactor,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.0,
-                                ),
-                              ),
-                              Text(
-                                formatTime(remainingSecs),
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontSize: 14 * scalingFactor,
-                                  fontWeight: FontWeight.bold,
-                                  fontFamily: 'Monospace',
-                                ),
-                              ),
-                            ],
-                          )
-                        : GestureDetector(
-                            onTap: () {
-                              if (currentRoute.startsWith('/social')) {
-                                HapticFeedback.mediumImpact();
-                                final currentIdx = socialBlock.activeTab.value;
-                                socialBlock.activeTab.value =
-                                    (currentIdx + 1) % 3;
-                              }
-                            },
-                            child: AutoSizeText(
-                              _getTitle(
-                                context,
-                                currentRoute,
-                                socialBlock,
-                                socialIndex ??
-                                    (currentRoute.startsWith('/social')
-                                        ? socialBlock.activeTab.value
-                                        : null),
-                              ),
-                              style: TextStyle(
-                                color: colorScheme.onSurface,
-                                fontSize: 11 * scalingFactor,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 1.2 * scalingFactor,
-                              ),
-                              maxLines: 1,
-                            ),
-                          ),
                   ),
                 ),
               )
@@ -409,5 +415,84 @@ class CanvasDynamicIsland extends StatelessWidget {
         ),
       );
     });
+  }
+
+  Widget _buildSSHMetrics(BuildContext context, ColorScheme colorScheme, double scalingFactor) {
+    final sshService = SSHService();
+    
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: sshService.statsStream,
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? {};
+        final isConnected = sshService.isConnected;
+        final latency = stats['latencyMs'] as double? ?? 0.0;
+        final bytesIn = stats['bytesIn'] as int? ?? 0;
+        final bytesOut = stats['bytesOut'] as int? ?? 0;
+        
+        String formatBytes(int bytes) {
+          if (bytes >= 1024 * 1024) return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
+          if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
+          return '${bytes}B';
+        }
+
+        return Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 6,
+              height: 6,
+              decoration: BoxDecoration(
+                color: isConnected ? colorScheme.primary : Colors.grey,
+                shape: BoxShape.circle,
+                boxShadow: isConnected ? [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.5),
+                    blurRadius: 4,
+                    spreadRadius: 1,
+                  ),
+                ] : null,
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              isConnected ? (sshService.currentHost?.toUpperCase() ?? "SSH") : "OFFLINE",
+              style: TextStyle(
+                color: isConnected ? colorScheme.primary : colorScheme.onSurfaceVariant,
+                fontSize: 10 * scalingFactor,
+                fontWeight: FontWeight.w900,
+                fontFamily: 'Courier',
+              ),
+            ),
+            if (isConnected) ...[
+              const SizedBox(width: 12),
+              _metricItem(Icons.sensors, '${latency.toInt()}ms', colorScheme, scalingFactor),
+              const SizedBox(width: 8),
+              _metricItem(Icons.download, formatBytes(bytesIn), colorScheme, scalingFactor),
+              const SizedBox(width: 8),
+              _metricItem(Icons.upload, formatBytes(bytesOut), colorScheme, scalingFactor),
+            ],
+          ],
+        );
+      }
+    );
+  }
+
+  Widget _metricItem(IconData icon, String value, ColorScheme colorScheme, double scalingFactor) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 10 * scalingFactor, color: colorScheme.onSurface.withOpacity(0.5)),
+        const SizedBox(width: 2),
+        Text(
+          value,
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 9 * scalingFactor,
+            fontWeight: FontWeight.bold,
+            fontFamily: 'Courier',
+          ),
+        ),
+      ],
+    );
   }
 }

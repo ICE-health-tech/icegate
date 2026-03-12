@@ -128,7 +128,19 @@ class _CaloriesCardState extends State<CaloriesPage> {
       MaterialPageRoute(builder: (context) => const LidarFoodScanner()),
     );
 
-    if (result == true) {
+    if (result != null && result is int) {
+      setState(() {
+        caloriesConsumed += result;
+      });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(AppLocalizations.of(context)!.lidar_completed),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } else if (result == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.lidar_completed),
