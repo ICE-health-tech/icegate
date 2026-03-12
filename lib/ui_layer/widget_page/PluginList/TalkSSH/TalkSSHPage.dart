@@ -555,7 +555,6 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   @override
   void dispose() {
-    _uptimeTimer?.cancel();
     // Keep SSHService alive for continuous session
     _terminalController.dispose();
     super.dispose();

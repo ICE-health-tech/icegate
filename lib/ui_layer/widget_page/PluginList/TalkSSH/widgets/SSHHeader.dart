@@ -209,7 +209,7 @@ class SSHHeader extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(
+          side: BorderSide(
             color: isConnected ? Colors.redAccent.withOpacity(0.3) : colorScheme.primary.withOpacity(0.3)
           ),
         ),
