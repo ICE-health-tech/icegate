@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
+import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:xterm/xterm.dart';
 
@@ -151,7 +152,7 @@ class SSHServiceNative {
         try {
           final stopwatch = Stopwatch()..start();
           // Use a simple SSH ping/keep-alive if available or send a null byte
-          _shell?.stdin.add([0]);
+          _shell?.stdin.add(Uint8List.fromList([0]));
           _latencyMs = stopwatch.elapsedMicroseconds / 1000.0;
           _emitStats();
         } catch (e) {
