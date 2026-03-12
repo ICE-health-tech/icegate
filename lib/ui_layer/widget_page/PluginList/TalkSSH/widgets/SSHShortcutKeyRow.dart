@@ -12,6 +12,7 @@ class SSHShortcutKeyRow extends StatelessWidget {
     final List<Map<String, dynamic>> keys = [
       {'label': 'ESC', 'value': 'ESC', 'color': Colors.orangeAccent},
       {'label': 'TAB', 'value': 'TAB', 'color': colorScheme.primary},
+      {'label': 'S-TAB', 'value': 'S-TAB', 'color': colorScheme.primary},
       {'label': 'CTRL', 'value': 'CTRL', 'color': Colors.blueAccent},
       {'label': 'ALT', 'value': 'ALT', 'color': Colors.purpleAccent},
       {'label': '↑', 'value': '\x1b[A'},

@@ -134,6 +134,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     switch (key) {
       case 'ESC': _sshService.write('\x1b'); break;
       case 'TAB': _sshService.write('\t'); break;
+      case 'S-TAB': _sshService.write('\x1b[Z'); break;
       default: _sshService.write(key);
     }
   }
