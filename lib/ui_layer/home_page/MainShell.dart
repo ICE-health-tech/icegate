@@ -18,6 +18,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -66,6 +67,9 @@ class MainShell extends StatelessWidget {
         break;
       case '/health/food/dashboard':
         pageIcon = FoodDashboardPage.icon(context, size: responsiveSize);
+        break;
+      case '/widgets/ssh':
+        pageIcon = TalkSSHPage.icon(context, size: responsiveSize);
         break;
       case '/finance':
         pageIcon = FinancePage.icon(context, size: responsiveSize);

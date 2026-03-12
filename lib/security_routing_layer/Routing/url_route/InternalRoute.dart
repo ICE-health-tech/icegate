@@ -430,7 +430,7 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'ssh',
               parentNavigatorKey: _shellNavigatorKey,
-              builder: (context, state) => const TalkSSHPage(),
+              builder: (context, state) => TalkSSHPage(key: TalkSSHPage.talkSSHKey),
             ),
           ],
         ),

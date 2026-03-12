@@ -2,18 +2,51 @@ import 'package:flutter/material.dart';
 import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import '../../../../initial_layer/CoreLogics/SSHService.dart';
+import '../../../home_page/MainButton.dart';
 import 'widgets/SSHShortcutKeyRow.dart';
 import 'widgets/SSHCommandInput.dart';
-import 'widgets/SSHHostDrawer.dart';
 import 'widgets/SSHConnectionSheet.dart';
 import 'SSHHostModel.dart';
 import 'SSHStorageService.dart';
 
 class TalkSSHPage extends StatefulWidget {
+  static final GlobalKey<_TalkSSHPageState> talkSSHKey = GlobalKey<_TalkSSHPageState>();
   const TalkSSHPage({super.key});
 
   @override
   State<TalkSSHPage> createState() => _TalkSSHPageState();
+
+  static Widget icon(BuildContext context, {double? size}) {
+    final storageService = SSHStorageService();
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return FutureBuilder<List<SSHHostModel>>(
+      future: storageService.loadHosts(),
+      builder: (context, snapshot) {
+        final hosts = snapshot.data ?? [];
+        final subButtons = hosts.take(5).map((host) => SubButton(
+          icon: Icons.computer,
+          label: host.name,
+          backgroundColor: colorScheme.secondaryContainer,
+          iconColor: colorScheme.onSecondaryContainer,
+          onPressed: () {
+            talkSSHKey.currentState?._applyHostAndConnect(host);
+          },
+        )).toList();
+
+        return MainButton(
+          type: 'ssh_uplink',
+          size: size,
+          icon: Icons.lan,
+          backgroundColor: colorScheme.primary,
+          iconColor: colorScheme.onPrimary,
+          mainFunction: () => talkSSHKey.currentState?._showConnectDialog(context),
+          subButtons: subButtons,
+        );
+      }
+    );
+  }
 }
 
 class _TalkSSHPageState extends State<TalkSSHPage> {
@@ -27,6 +60,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
 
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isConnected = false;
 
   @override
@@ -50,6 +84,14 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     if (!_isConnected) {
       _sshService.terminal.write('\x1b[38;5;240mICE GATE SSH v1.5.0-PRO\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n');
     }
+  }
+
+  void _applyHostAndConnect(SSHHostModel host) {
+    _hostController.text = host.host;
+    _portController.text = host.port.toString();
+    _userController.text = host.user;
+    _passController.text = host.password ?? '';
+    _connect();
   }
 
   void _connect() async {
@@ -130,17 +172,8 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     final colorScheme = theme.colorScheme;
     
     return Scaffold(
+      key: _scaffoldKey,
       backgroundColor: Colors.black,
-      drawer: SSHHostDrawer(
-        storageService: _storageService,
-        onHostSelected: (host) {
-          _hostController.text = host.host;
-          _portController.text = host.port.toString();
-          _userController.text = host.user;
-          _passController.text = host.password ?? '';
-          _showConnectDialog(context);
-        },
-      ),
       body: Column(
         children: [
           // Spacer for Dynamic Island height - kept minimal
