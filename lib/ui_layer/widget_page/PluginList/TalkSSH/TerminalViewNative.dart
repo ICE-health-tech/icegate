@@ -19,6 +19,7 @@ class TerminalViewNative extends StatelessWidget {
       terminal,
       controller: controller,
       autofocus: autofocus,
+      padding: const EdgeInsets.all(12),
     );
   }
 }

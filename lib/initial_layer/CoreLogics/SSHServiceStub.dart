@@ -3,8 +3,18 @@ import 'dart:async';
 class SSHServiceNative {
   final dynamic terminal = null;
   
+  String? currentHost;
+  DateTime? connectedAt;
+  
+  int get bytesIn => 0;
+  int get bytesOut => 0;
+  double get latencyMs => 0.0;
+  
   final _connectionStateController = StreamController<bool>.broadcast();
   Stream<bool> get connectionState => _connectionStateController.stream;
+
+  final _statsController = StreamController<Map<String, dynamic>>.broadcast();
+  Stream<Map<String, dynamic>> get statsStream => _statsController.stream;
 
   bool get isConnected => false;
 
