@@ -5,6 +5,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -42,7 +43,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _disposeEffect = effect(() {
       if (_authBlock.status.value == AuthStatus.authenticated) {
         if (mounted) {
-          context.go('/');
+          final intendedPath = intendedPathNotifier.value;
+          if (intendedPath != null && intendedPath.isNotEmpty) {
+            debugPrint("📌 [LoginPage] Redirecting to intended path: $intendedPath");
+            intendedPathNotifier.value = null; // Clear it
+            context.go(intendedPath);
+          } else {
+            context.go('/');
+          }
         }
       }
     });

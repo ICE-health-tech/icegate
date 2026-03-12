@@ -70,6 +70,9 @@ final ValueNotifier<AuthStatus?> authStatusNotifier = ValueNotifier(
 
 final ValueNotifier<bool?> showIntroNotifier = ValueNotifier(null);
 
+// Store the intended path to redirect after login
+final ValueNotifier<String?> intendedPathNotifier = ValueNotifier(null);
+
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
@@ -97,6 +100,11 @@ final GoRouter router = GoRouter(
     if (status == null ||
         status == AuthStatus.checkingSession ||
         status == AuthStatus.init) {
+      // Capture the initial deep link if not logged in yet
+      if (state.uri.path != '/' && state.uri.path != '/login' && state.uri.path != '/intro') {
+         debugPrint("📌 [GoRouter] Capturing intended path: ${state.uri.toString()}");
+         intendedPathNotifier.value = state.uri.toString();
+      }
       return null;
     }
 
@@ -110,6 +118,8 @@ final GoRouter router = GoRouter(
     } else {
       if (!isLoggingIn) {
         debugPrint("🛣️ [GoRouter] Unauthenticated, redirecting to /login");
+        // Capture intended path before redirecting to login
+        intendedPathNotifier.value = state.uri.toString();
         return '/login';
       }
     }
