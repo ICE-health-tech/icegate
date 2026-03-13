@@ -432,6 +432,7 @@ class _FinancePageState extends State<FinancePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final totalBalance = block.totalBalance.value;
+    final financePoints = block.financePoints.value;
     final l10n = AppLocalizations.of(context)!;
 
     // Dynamic values for trend
@@ -497,59 +498,168 @@ class _FinancePageState extends State<FinancePage> {
             ),
           ),
           const SizedBox(height: 20),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  (isPositive ? Colors.greenAccent : Colors.redAccent)
-                      .withValues(alpha: 0.25),
-                  (isPositive ? Colors.greenAccent : Colors.redAccent)
-                      .withValues(alpha: 0.05),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: (isPositive ? Colors.greenAccent : Colors.redAccent)
-                    .withValues(alpha: 0.25),
-                width: 1,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isPositive ? Colors.greenAccent : Colors.redAccent)
-                      .withValues(alpha: 0.15),
-                  blurRadius: 8,
-                  spreadRadius: -1,
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      (isPositive ? Colors.greenAccent : Colors.redAccent)
+                          .withValues(alpha: 0.25),
+                      (isPositive ? Colors.greenAccent : Colors.redAccent)
+                          .withValues(alpha: 0.05),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: (isPositive ? Colors.greenAccent : Colors.redAccent)
+                        .withValues(alpha: 0.25),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: (isPositive ? Colors.greenAccent : Colors.redAccent)
+                          .withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      spreadRadius: -1,
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  isPositive
-                      ? Icons.trending_up_rounded
-                      : Icons.trending_down_rounded,
-                  color: isPositive ? Colors.greenAccent : Colors.redAccent,
-                  size: 14,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isPositive
+                          ? Icons.trending_up_rounded
+                          : Icons.trending_down_rounded,
+                      color: isPositive ? Colors.greenAccent : Colors.redAccent,
+                      size: 14,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${isPositive ? '+' : ''}${_currencyFormat.format(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
+                      style: TextStyle(
+                        color: isPositive ? Colors.greenAccent : Colors.redAccent,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                        letterSpacing: 0.3,
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                Text(
-                  '${isPositive ? '+' : ''}${_currencyFormat.format(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
-                  style: TextStyle(
-                    color: isPositive ? Colors.greenAccent : Colors.redAccent,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 13,
-                    letterSpacing: 0.3,
+              ),
+
+              // Points display
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.15),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.2),
+                    width: 1,
                   ),
                 ),
-              ],
-            ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.bolt_rounded,
+                      color: Colors.amberAccent,
+                      size: 16,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      '${financePoints.toInt()} ${l10n.social_points_suffix}',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 16),
+          // Progress to next milestone (visual improvement)
+          _buildPointsProgress(context, totalBalance),
         ],
       ),
+    );
+  }
+
+  Widget _buildPointsProgress(BuildContext context, double totalBalance) {
+    // Current milestone logic: Points = (balance / milestone) * points_per_milestone
+    // Let's visualize the progress to the next $1000 or next milestone unit
+    final double milestoneUnit = 1000.0;
+    final double currentMilestoneProgress = totalBalance % milestoneUnit;
+    final double percentage = currentMilestoneProgress / milestoneUnit;
+    final l10n = AppLocalizations.of(context)!;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              l10n.finance_power_points,
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.6),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+                letterSpacing: 1.0,
+              ),
+            ),
+            Text(
+              '${(percentage * 100).toInt()}%',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.8),
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Stack(
+          children: [
+            Container(
+              height: 4,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            FractionallySizedBox(
+              widthFactor: percentage,
+              child: Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Colors.amberAccent, Colors.orangeAccent],
+                  ),
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.amberAccent.withOpacity(0.3),
+                      blurRadius: 4,
+                      offset: const Offset(0, 1),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

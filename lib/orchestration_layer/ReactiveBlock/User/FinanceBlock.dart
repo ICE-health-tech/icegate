@@ -5,6 +5,7 @@ import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 
 class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
@@ -50,6 +51,13 @@ class FinanceBlock {
         .fold(0.0, (sum, t) => sum + t.amount);
 
     return accSum + assetSum + (income + savings - expense - investment);
+  });
+
+  /// Calculate points based on total balance
+  late final financePoints = computed(() {
+    if (FINANCE_SAVINGS_MILESTONE <= 0) return 0.0;
+    return (totalBalance.value / FINANCE_SAVINGS_MILESTONE) *
+        FINANCE_SAVINGS_POINTS;
   });
 
   /// Total savings amount
