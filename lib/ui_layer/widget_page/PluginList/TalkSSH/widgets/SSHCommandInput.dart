@@ -4,11 +4,13 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 class SSHCommandInput extends StatelessWidget {
   final TextEditingController controller;
   final VoidCallback onSend;
+  final VoidCallback? onNoteImportPressed;
 
   const SSHCommandInput({
     super.key,
     required this.controller,
     required this.onSend,
+    this.onNoteImportPressed,
   });
 
   @override
@@ -50,11 +52,21 @@ class SSHCommandInput extends StatelessWidget {
                   letterSpacing: 0.5,
                 ),
                 decoration: InputDecoration(
-                  prefixIcon: Icon(
-                    Icons.terminal_rounded,
-                    color: colorScheme.primary.withOpacity(0.6),
-                    size: 18,
-                  ),
+                  prefixIcon: onNoteImportPressed != null 
+                    ? IconButton(
+                        icon: Icon(
+                          Icons.note_add_rounded,
+                          color: colorScheme.primary.withOpacity(0.8),
+                          size: 20,
+                        ),
+                        onPressed: onNoteImportPressed,
+                        tooltip: 'Import Plan',
+                      )
+                    : Icon(
+                        Icons.terminal_rounded,
+                        color: colorScheme.primary.withOpacity(0.6),
+                        size: 18,
+                      ),
                   hintText: l10n.ssh_type_command.toUpperCase(),
                   hintStyle: TextStyle(
                     color: colorScheme.onSurface.withOpacity(0.2), 

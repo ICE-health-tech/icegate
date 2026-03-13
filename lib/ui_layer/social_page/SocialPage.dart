@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
@@ -48,6 +49,12 @@ class SocialPage extends StatefulWidget {
         case 2:
           iconData = Icons.add_task_rounded;
           action = () => showAddFeatDialog(context);
+          break;
+        case 3:
+          iconData = Icons.edit_note_rounded;
+          action = () => context.push('/projects/editor', extra: {
+                'category': 'social',
+              });
           break;
         default:
           iconData = Icons.account_circle_outlined;
@@ -602,7 +609,7 @@ class _SocialPageState extends State<SocialPage>
     super.initState();
     _socialBlock = context.read<SocialBlock>();
     _tabController = TabController(
-      length: 3,
+      length: 4,
       vsync: this,
       initialIndex: _socialBlock.activeTab.peek(),
     );
@@ -703,6 +710,8 @@ class _SocialPageState extends State<SocialPage>
         return l10n.relationships;
       case 2:
         return l10n.achievements;
+      case 3:
+        return l10n.journal;
       default:
         return l10n.social;
     }
@@ -758,6 +767,7 @@ class _SocialPageState extends State<SocialPage>
                     _buildGlobalRankingList(context),
                     _buildMergedContactList(context),
                     _buildAchievementsGrid(context),
+                     SocialNotesDashboard(),
                   ],
                 );
               }),

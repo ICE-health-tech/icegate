@@ -1915,6 +1915,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_cat_real_estate => 'Real Estate';
 
   @override
+  String get finance_power_points => 'FINANCE POWER';
+
+  @override
+  String get finance_points_desc => 'Points earned from net worth';
+
+  @override
   String get ssh_new_session => 'New SSH Session';
 
   @override
@@ -1949,4 +1955,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ssh_search_hint => 'Search...';
+
+  @override
+  String get journal => 'Journal';
+
+  @override
+  String get social_notes => 'Social Notes';
 }

@@ -265,6 +265,10 @@ class AuthBlock {
         status.value = AuthStatus.authenticated;
         print("✅ Passkey Login successful.");
 
+        // Save username for possible biometric/re-auth if passkey is tied to user
+        await _secureStorage.saveCredentials(username.value!, "PASSKEY_AUTH");
+        await _secureStorage.setBiometricEnabled(true);
+
         await fetchUser();
         return true;
       } else {
@@ -447,6 +451,11 @@ class AuthBlock {
         if (session != null) {
           unawaited(_authService.appSync(session.accessToken));
         }
+
+        // Save metadata for credential persistence
+        final email = user.email ?? "GoogleUser";
+        await _secureStorage.saveCredentials(email, "GOOGLE_AUTH");
+        await _secureStorage.setBiometricEnabled(true);
       }
 
       print("✅ [AuthBlock] User account synced to database.");
@@ -488,6 +497,11 @@ class AuthBlock {
           await syncUserWithSupabase(response.user!);
           unawaited(_authService.appSync(response.session!.accessToken));
           status.value = AuthStatus.authenticated;
+
+          // Save credentials after registration
+          await _secureStorage.saveCredentials(payload.email, payload.password);
+          await _secureStorage.setBiometricEnabled(true);
+
           await fetchUser();
         } else {
           status.value = AuthStatus.unauthenticated;

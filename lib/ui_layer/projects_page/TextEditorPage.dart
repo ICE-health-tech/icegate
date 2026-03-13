@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:provider/provider.dart';
@@ -402,6 +403,17 @@ class _TextEditorPageState extends State<TextEditorPage>
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
+                },
+              ),
+              _optionTile(
+                ctx,
+                icon: Icons.lan_rounded,
+                label: 'Send to AI Hub',
+                color: Colors.indigo,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  final plainText = _contentController.text;
+                  context.go('/widgets/ssh', extra: plainText);
                 },
               ),
               if (widget.note != null)
@@ -977,41 +989,69 @@ class _TextEditorPageState extends State<TextEditorPage>
             const Spacer(),
 
             // Preview / Edit toggle chip
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: _isPreview
-                    ? colorScheme.primary.withOpacity(0.15)
-                    : colorScheme.surfaceContainerHighest.withOpacity(0.5),
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: InkWell(
-                onTap: () => setState(() => _isPreview = !_isPreview),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isPreview ? Icons.edit_rounded : Icons.preview_rounded,
-                      size: 16,
-                      color: _isPreview
-                          ? colorScheme.primary
-                          : colorScheme.onSurface.withOpacity(0.6),
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _isPreview ? 'EDIT' : 'PREVIEW',
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: _isPreview
-                            ? colorScheme.primary
-                            : colorScheme.onSurface.withOpacity(0.6),
-                      ),
-                    ),
-                  ],
+            Flexible(
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: _isPreview
+                      ? colorScheme.primary.withOpacity(0.15)
+                      : colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
                 ),
+                child: InkWell(
+                  onTap: () => setState(() => _isPreview = !_isPreview),
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _isPreview ? Icons.edit_rounded : Icons.preview_rounded,
+                          size: 16,
+                          color: _isPreview
+                              ? colorScheme.primary
+                              : colorScheme.onSurface.withOpacity(0.6),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          _isPreview ? 'EDIT' : 'PREVIEW',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.8,
+                            color: _isPreview
+                                ? colorScheme.primary
+                                : colorScheme.onSurface.withOpacity(0.6),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(width: 8),
+
+            // Send to AI Hub button
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+              ),
+              child: IconButton(
+                icon: Icon(
+                  Icons.lan_rounded,
+                  size: 20,
+                  color: colorScheme.primary,
+                ),
+                onPressed: () {
+                  final plainText = _contentController.text;
+                  context.go('/widgets/ssh', extra: plainText);
+                },
+                tooltip: 'Send to AI Hub',
               ),
             ),
 
