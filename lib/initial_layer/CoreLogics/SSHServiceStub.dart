@@ -23,6 +23,7 @@ class SSHServiceNative {
     required int port,
     required String username,
     required String password,
+    bool useTmux = false,
   }) async {
     throw Exception('SSH is not supported on this platform');
   }
