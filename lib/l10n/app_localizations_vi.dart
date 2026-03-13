@@ -1915,7 +1915,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_cat_real_estate => 'Bất động sản';
 
   @override
-  String get ssh_new_session => 'Phiên SSH Mới';
+  String get finance_power_points => 'SỨC MẠNH TÀI CHÍNH';
+
+  @override
+  String get finance_points_desc => 'Điểm tích lũy từ tài sản ròng';
+
+  @override
+  String get ssh_new_session => 'Phiên SSH mới';
 
   @override
   String get ssh_host_label => 'IP Máy Chủ hoặc Tên Miền';
@@ -1949,4 +1955,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get ssh_search_hint => 'Tìm kiếm...';
+
+  @override
+  String get journal => 'Nhật ký';
+
+  @override
+  String get social_notes => 'Ghi chú xã hội';
 }

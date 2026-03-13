@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import '../../../../initial_layer/CoreLogics/SSHService.dart';
@@ -6,12 +8,13 @@ import '../../../home_page/MainButton.dart';
 import 'widgets/SSHShortcutKeyRow.dart';
 import 'widgets/SSHCommandInput.dart';
 import 'widgets/SSHConnectionSheet.dart';
+import 'widgets/SSHNoteSelectorSheet.dart';
 import 'SSHHostModel.dart';
 import 'SSHStorageService.dart';
 
 class TalkSSHPage extends StatefulWidget {
-  static final GlobalKey<_TalkSSHPageState> talkSSHKey = GlobalKey<_TalkSSHPageState>();
-  const TalkSSHPage({super.key});
+  final String? initialPrompt;
+  const TalkSSHPage({super.key, this.initialPrompt});
 
   @override
   State<TalkSSHPage> createState() => _TalkSSHPageState();
@@ -31,7 +34,7 @@ class TalkSSHPage extends StatefulWidget {
           backgroundColor: colorScheme.secondaryContainer,
           iconColor: colorScheme.onSecondaryContainer,
           onPressed: () {
-            talkSSHKey.currentState?._applyHostAndConnect(host);
+            _TalkSSHPageState._activeState?._applyHostAndConnect(host);
           },
         )).toList();
 
@@ -41,7 +44,7 @@ class TalkSSHPage extends StatefulWidget {
           icon: Icons.lan,
           backgroundColor: colorScheme.primary,
           iconColor: colorScheme.onPrimary,
-          mainFunction: () => talkSSHKey.currentState?._showConnectDialog(context),
+          mainFunction: () => _TalkSSHPageState._activeState?._showConnectDialog(context),
           subButtons: subButtons,
         );
       }
@@ -50,6 +53,7 @@ class TalkSSHPage extends StatefulWidget {
 }
 
 class _TalkSSHPageState extends State<TalkSSHPage> {
+  static _TalkSSHPageState? _activeState;
   final SSHService _sshService = SSHService();
   final SSHStorageService _storageService = SSHStorageService();
   late final TerminalController _terminalController;
@@ -59,6 +63,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   final TextEditingController _portController = TextEditingController(text: '22');
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  bool _useTmux = true;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isConnected = false;
@@ -66,6 +71,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   @override
   void initState() {
     super.initState();
+    _activeState = this;
     _terminalController = TerminalController();
     
     // Initialize from existing connection if any
@@ -82,8 +88,44 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
     // Initial terminal message if not connected
     if (!_isConnected) {
-      _sshService.terminal.write('\x1b[38;5;240mICE GATE SSH v1.5.0-PRO\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n');
+      _sshService.terminal.write('\x1b[38;5;240mICE GATE SSH v1.6.0-BACKGROUND-READY\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n');
     }
+
+    // Handle initial prompt from router
+    if (widget.initialPrompt != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _handleInitialPrompt(widget.initialPrompt!);
+      });
+    }
+  }
+
+  void _handleInitialPrompt(String prompt) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('AI Connection Active'),
+        content: const Text(
+          'A plan has been received. How would you like to proceed?',
+          style: TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() => _commandController.text = prompt);
+            },
+            child: const Text('Paste to Input'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _sshService.write('gemini prompt "${prompt.replaceAll('"', '\\"')}"\r');
+            },
+            child: const Text('Send to AI'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _applyHostAndConnect(SSHHostModel host) {
@@ -105,6 +147,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         port: int.parse(_portController.text),
         username: _userController.text,
         password: _passController.text,
+        useTmux: _useTmux,
       );
       
       // Save host info if successful
@@ -151,17 +194,90 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     _commandController.clear();
   }
 
+  void _showNoteSelector() {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => SSHNoteSelectorSheet(
+        onNoteSelected: _handleNoteImport,
+      ),
+    );
+  }
+
+  void _handleNoteImport(ProjectNoteData note) {
+    final plainText = _extractPlainText(note.content);
+    
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Importing Plan'),
+        content: Text(
+          'How would you like to process "${note.title}"?',
+          style: const TextStyle(fontSize: 14),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                _commandController.text = plainText;
+              });
+            },
+            child: const Text('Paste to Input'),
+          ),
+          FilledButton(
+            onPressed: () {
+              Navigator.pop(context);
+              _sshService.write('gemini prompt "${plainText.replaceAll('"', '\\"')}"\r');
+            },
+            child: const Text('Send as Gemini'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _extractPlainText(String content) {
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is List) {
+        return decoded
+            .where((op) => op is Map && op.containsKey('insert'))
+            .map((op) => op['insert'])
+            .join('')
+            .trim();
+      }
+    } catch (_) {}
+    // Strip markdown formatting for shell compatibility
+    return content
+        .replaceAll(RegExp(r'#{1,6}\s'), '')
+        .replaceAll(RegExp(r'\*{1,2}'), '')
+        .replaceAll(RegExp(r'~~'), '')
+        .replaceAll(RegExp(r'`'), '')
+        .replaceAll(RegExp(r'>\s'), '')
+        .replaceAll(RegExp(r'- '), '')
+        .trim();
+  }
+
   void _showConnectDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SSHConnectionSheet(
-        hostController: _hostController,
-        portController: _portController,
-        userController: _userController,
-        passController: _passController,
-        onConnect: _connect,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => SSHConnectionSheet(
+          hostController: _hostController,
+          portController: _portController,
+          userController: _userController,
+          passController: _passController,
+          useTmux: _useTmux,
+          onUseTmuxChanged: (val) {
+            setModalState(() => _useTmux = val);
+            setState(() {});
+          },
+          onConnect: _connect,
+        ),
       ),
     );
   }
@@ -225,6 +341,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           SSHCommandInput(
             controller: _commandController,
             onSend: _sendCommand,
+            onNoteImportPressed: _showNoteSelector,
           ),
           const SizedBox(height: 10),
         ],
@@ -234,6 +351,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   @override
   void dispose() {
+    if (_activeState == this) _activeState = null;
     _terminalController.dispose();
     super.dispose();
   }

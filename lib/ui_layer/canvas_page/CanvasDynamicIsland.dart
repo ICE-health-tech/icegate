@@ -279,75 +279,77 @@ class CanvasDynamicIsland extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // Focus Shortcut
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    context.push('/health/focus');
-                  },
-                  child: Container(
-                    padding: EdgeInsets.all(4 * scalingFactor),
-                    decoration: const BoxDecoration(
-                      color: Colors.transparent,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      Icons.timer_outlined,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.8),
-                      size: 22 * scalingFactor,
+                if (currentRoute != '/widgets/ssh') ...[
+                  // Focus Shortcut
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      context.push('/health/focus');
+                    },
+                    child: Container(
+                      padding: EdgeInsets.all(4 * scalingFactor),
+                      decoration: const BoxDecoration(
+                        color: Colors.transparent,
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.timer_outlined,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        size: 22 * scalingFactor,
+                      ),
                     ),
                   ),
-                ),
-                SizedBox(width: 4 * scalingFactor),
-                // Notifications
-                GestureDetector(
-                  onTap: () {
-                    HapticFeedback.selectionClick();
-                    context.push('/notifications');
-                  },
-                  child: Stack(
-                    clipBehavior: Clip.none,
-                    children: [
-                      Container(
-                        padding: EdgeInsets.all(4 * scalingFactor),
-                        decoration: const BoxDecoration(
-                          color: Colors.transparent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.notifications_none_rounded,
-                          color: colorScheme.onSurfaceVariant,
-                          size: 22 * scalingFactor, // Increased from 20
-                        ),
-                      ),
-                      if (numberOfQuests > 0)
-                        Positioned(
-                          right: -2,
-                          top: -2,
-                          child: Container(
-                            padding: EdgeInsets.all(3 * scalingFactor),
-                            decoration: BoxDecoration(
-                              color: colorScheme.error,
-                              shape: BoxShape.circle,
-                            ),
-                            constraints: BoxConstraints(
-                              minWidth: 14 * scalingFactor,
-                              minHeight: 14 * scalingFactor,
-                            ),
-                            child: Text(
-                              '$numberOfQuests',
-                              style: TextStyle(
-                                color: colorScheme.onError,
-                                fontSize: 8 * scalingFactor,
-                                fontWeight: FontWeight.bold,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
+                  SizedBox(width: 4 * scalingFactor),
+                  // Notifications
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      context.push('/notifications');
+                    },
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          padding: EdgeInsets.all(4 * scalingFactor),
+                          decoration: const BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.notifications_none_rounded,
+                            color: colorScheme.onSurfaceVariant,
+                            size: 22 * scalingFactor, // Increased from 20
                           ),
                         ),
-                    ],
+                        if (numberOfQuests > 0)
+                          Positioned(
+                            right: -2,
+                            top: -2,
+                            child: Container(
+                              padding: EdgeInsets.all(3 * scalingFactor),
+                              decoration: BoxDecoration(
+                                color: colorScheme.error,
+                                shape: BoxShape.circle,
+                              ),
+                              constraints: BoxConstraints(
+                                minWidth: 14 * scalingFactor,
+                                minHeight: 14 * scalingFactor,
+                              ),
+                              child: Text(
+                                '$numberOfQuests',
+                                style: TextStyle(
+                                  color: colorScheme.onError,
+                                  fontSize: 8 * scalingFactor,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
-                ),
+                ],
 
                 if (isAnyTabOpen) ...[
                   SizedBox(width: 8 * scalingFactor),

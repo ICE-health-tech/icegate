@@ -3,9 +3,10 @@ import 'dart:convert';
 import 'dart:math';
 import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
+import 'package:flutter/widgets.dart';
 import 'package:xterm/xterm.dart';
 
-class SSHServiceNative {
+class SSHServiceNative with WidgetsBindingObserver {
   SSHClient? _client;
   SSHSession? _shell;
   final Terminal terminal = Terminal();
@@ -15,6 +16,7 @@ class SSHServiceNative {
   String? currentUsername;
   String? currentPassword;
   DateTime? connectedAt;
+  bool useTmux = false;
   
   // Stats
   int _bytesIn = 0;
@@ -27,7 +29,7 @@ class SSHServiceNative {
   
   bool _isManuallyDisconnected = false;
   int _reconnectAttempts = 0;
-  static const int maxReconnectAttempts = 10;
+  static const int maxReconnectAttempts = 20; // Increased for better background recovery
 
   final _connectionStateController = StreamController<bool>.broadcast();
   Stream<bool> get connectionState => _connectionStateController.stream;
@@ -38,6 +40,7 @@ class SSHServiceNative {
   bool get isConnected => _client != null;
 
   SSHServiceNative() {
+    WidgetsBinding.instance.addObserver(this);
     terminal.onOutput = (data) {
       if (isConnected) {
         final encoded = utf8.encode(data);
@@ -46,6 +49,25 @@ class SSHServiceNative {
         _emitStats();
       }
     };
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      // App moved to background - ensure heartbeat is robust
+      _startHeartbeat(isBackground: true);
+    } else if (state == AppLifecycleState.resumed) {
+      // App returned to foreground
+      _startHeartbeat(isBackground: false);
+      if (!isConnected && !_isManuallyDisconnected && currentHost != null) {
+        _handleReconnect();
+      }
+    }
+  }
+
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _cleanupSession();
   }
 
   void _emitStats() {
@@ -62,12 +84,14 @@ class SSHServiceNative {
     required int port,
     required String username,
     required String password,
+    bool useTmux = false,
   }) async {
     _isManuallyDisconnected = false;
     currentHost = host;
     currentPort = port;
     currentUsername = username;
     currentPassword = password;
+    this.useTmux = useTmux;
     _bytesIn = 0;
     _bytesOut = 0;
     _reconnectAttempts = 0;
@@ -84,14 +108,22 @@ class SSHServiceNative {
     try {
       terminal.write('\r\n\x1b[38;5;39m>>> ESTABLISHING UPLINK TO $currentHost:$currentPort...\x1b[0m\r\n');
       
-      final socket = await SSHSocket.connect(currentHost!, currentPort!, timeout: const Duration(seconds: 10));
+      final socket = await SSHSocket.connect(currentHost!, currentPort!, timeout: const Duration(seconds: 15));
       _client = SSHClient(
         socket,
         username: currentUsername!,
         onPasswordRequest: () => currentPassword!,
+        keepAliveInterval: const Duration(seconds: 30),
       );
 
       _shell = await _client!.shell();
+      
+      if (useTmux) {
+        terminal.write('\x1b[38;5;208m>>> INITIALIZING PERSISTENT TMUX SESSION...\x1b[0m\r\n');
+        // Attach to existing session 'ice_gate' or create a new one
+        _shell?.stdin.add(utf8.encode('tmux attach -t ice_gate || tmux new-session -s ice_gate\n'));
+      }
+
       connectedAt = DateTime.now();
       _reconnectAttempts = 0;
       _connectionStateController.add(true);
@@ -145,9 +177,10 @@ class SSHServiceNative {
     _stopStatsTimer();
   }
 
-  void _startHeartbeat() {
+  void _startHeartbeat({bool isBackground = false}) {
     _heartbeatTimer?.cancel();
-    _heartbeatTimer = Timer.periodic(const Duration(seconds: 15), (timer) async {
+    final interval = isBackground ? const Duration(seconds: 20) : const Duration(seconds: 15);
+    _heartbeatTimer = Timer.periodic(interval, (timer) async {
       if (isConnected && _client != null) {
         try {
           final stopwatch = Stopwatch()..start();
@@ -187,7 +220,7 @@ class SSHServiceNative {
     if (_reconnectAttempts < maxReconnectAttempts) {
       _reconnectAttempts++;
       
-      final backoff = pow(2, _reconnectAttempts).toInt();
+      final backoff = pow(2, min(_reconnectAttempts, 6)).toInt(); // Cap backoff at 64s
       final jitter = Random().nextInt(1000);
       final delay = Duration(milliseconds: backoff * 1000 + jitter);
       

@@ -3668,6 +3668,18 @@ abstract class AppLocalizations {
   /// **'Real Estate'**
   String get finance_cat_real_estate;
 
+  /// No description provided for @finance_power_points.
+  ///
+  /// In en, this message translates to:
+  /// **'FINANCE POWER'**
+  String get finance_power_points;
+
+  /// No description provided for @finance_points_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Points earned from net worth'**
+  String get finance_points_desc;
+
   /// No description provided for @ssh_new_session.
   ///
   /// In en, this message translates to:
@@ -3739,6 +3751,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search...'**
   String get ssh_search_hint;
+
+  /// No description provided for @journal.
+  ///
+  /// In en, this message translates to:
+  /// **'Journal'**
+  String get journal;
+
+  /// No description provided for @social_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Notes'**
+  String get social_notes;
 }
 
 class _AppLocalizationsDelegate

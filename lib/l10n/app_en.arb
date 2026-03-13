@@ -937,7 +937,7 @@
   "finance_cat_retirement": "Retirement",
   "finance_cat_crypto": "Crypto",
   "finance_cat_stock": "Stock",
-  "finance_real_estate": "Real Estate",
+  "finance_cat_real_estate": "Real Estate",
   "finance_power_points": "FINANCE POWER",
   "finance_points_desc": "Points earned from net worth",
   "ssh_new_session": "New SSH Session",
@@ -951,5 +951,7 @@
   "ssh_generate": "Generate",
   "ssh_type_command": "Type a command...",
   "ssh_disconnect": "Disconnect",
-  "ssh_search_hint": "Search..."
+  "ssh_search_hint": "Search...",
+  "journal": "Journal",
+  "social_notes": "Social Notes"
 }

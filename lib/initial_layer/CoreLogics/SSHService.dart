@@ -27,8 +27,15 @@ class SSHService {
     required int port,
     required String username,
     required String password,
+    bool useTmux = false,
   }) async {
-    return _impl.connect(host: host, port: port, username: username, password: password);
+    return _impl.connect(
+      host: host,
+      port: port,
+      username: username,
+      password: password,
+      useTmux: useTmux,
+    );
   }
 
   void write(String data) => _impl.write(data);

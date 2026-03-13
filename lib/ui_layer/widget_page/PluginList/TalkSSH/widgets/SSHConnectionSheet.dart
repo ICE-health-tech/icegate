@@ -6,6 +6,8 @@ class SSHConnectionSheet extends StatefulWidget {
   final TextEditingController portController;
   final TextEditingController userController;
   final TextEditingController passController;
+  final bool useTmux;
+  final ValueChanged<bool> onUseTmuxChanged;
   final VoidCallback onConnect;
 
   const SSHConnectionSheet({
@@ -14,6 +16,8 @@ class SSHConnectionSheet extends StatefulWidget {
     required this.portController,
     required this.userController,
     required this.passController,
+    required this.useTmux,
+    required this.onUseTmuxChanged,
     required this.onConnect,
   });
 
@@ -79,7 +83,36 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
             ),
             const SizedBox(height: 12),
             _buildTextField(context, widget.passController, l10n.ssh_pass_label, Icons.lock, obscureText: true),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+            Container(
+              decoration: BoxDecoration(
+                color: colorScheme.surfaceVariant.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+              ),
+              child: SwitchListTile(
+                title: Text(
+                  'PERSISTENT SESSION (TMUX)',
+                  style: TextStyle(
+                    color: colorScheme.onSurface,
+                    fontFamily: 'Courier',
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                subtitle: Text(
+                  'Keeps shell alive on server if app closes',
+                  style: TextStyle(
+                    color: colorScheme.onSurface.withOpacity(0.5),
+                    fontSize: 10,
+                  ),
+                ),
+                value: widget.useTmux,
+                onChanged: widget.onUseTmuxChanged,
+                activeColor: colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               height: 56,

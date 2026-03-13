@@ -951,5 +951,7 @@
     "ssh_generate": "Tạo Lệnh",
     "ssh_type_command": "Nhập lệnh...",
     "ssh_disconnect": "Ngắt Kết Nối",
-    "ssh_search_hint": "Tìm kiếm..."
+    "ssh_search_hint": "Tìm kiếm...",
+    "journal": "Nhật ký",
+    "social_notes": "Ghi chú xã hội"
 }

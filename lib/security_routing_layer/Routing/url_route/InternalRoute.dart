@@ -176,18 +176,15 @@ final GoRouter router = GoRouter(
         // Route 1: Home
         GoRoute(
           path: '/',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const HomePage(),
         ),
         // Route 2: The Grid Canvas
         GoRoute(
           path: '/canvas',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => DragCanvasGrid(),
           routes: [
             GoRoute(
               path: 'goals',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const GoalConfigurationWidget(),
             ),
           ],
@@ -195,17 +192,14 @@ final GoRouter router = GoRouter(
         // Route 3: Settings placeholder
         GoRoute(
           path: '/settings',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const SettingsWidget(),
           routes: [
             GoRoute(
               path: 'change-password',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ChangePasswordPage(),
             ),
             GoRoute(
               path: 'change-username',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ChangeUsernamePage(),
             ),
           ],
@@ -213,12 +207,10 @@ final GoRouter router = GoRouter(
         // Route 4: Profile Dashboard
         GoRoute(
           path: '/profile',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const AnalysisDashboardPage(),
           routes: [
             GoRoute(
               path: ':personId',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) {
                 final personId = state.pathParameters['personId'];
                 return AnalysisDashboardPage(personId: personId);
@@ -228,99 +220,81 @@ final GoRouter router = GoRouter(
         ),
         GoRoute(
           path: '/focus-history',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const FocusHistoryPage(),
         ),
         // Route 5: Health
         GoRoute(
           path: '/health',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const HealthPage(),
           routes: [
             GoRoute(
-              path: '/dashboard',
-              parentNavigatorKey: _shellNavigatorKey,
+              path: 'dashboard',
               builder: (context, state) => const HealthAnalysisPage(),
             ),
             GoRoute(
               path: 'steps',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const StepsPage(),
               routes: [
                 GoRoute(
                   path: 'dashboard',
-                  parentNavigatorKey: _shellNavigatorKey,
                   builder: (context, state) => const StepsDashboardPage(),
                 ),
               ],
             ),
             GoRoute(
               path: 'heart_rate',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HeartRatePage(),
             ),
             GoRoute(
               path: 'sleep',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const SleepPage(),
             ),
             GoRoute(
               path: 'calories',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const CaloriesPage(),
             ),
             GoRoute(
               path: 'weight',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const WeightPage(),
             ),
             GoRoute(
               path: 'food',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const FoodInputPage(),
               routes: [
                 GoRoute(
                   path: 'dashboard',
-                  parentNavigatorKey: _shellNavigatorKey,
                   builder: (context, state) => const FoodDashboardPage(),
                 ),
               ],
             ),
             GoRoute(
               path: 'exercise',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ExercisePage(),
               routes: [
                 GoRoute(
                   path: 'dashboard',
-                  parentNavigatorKey: _shellNavigatorKey,
                   builder: (context, state) => const ExerciseAnalysisPage(),
                 ),
               ],
             ),
             GoRoute(
               path: 'focus',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const FocusPage(),
             ),
             GoRoute(
               path: 'block-reminder',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const BlockReminderPage(),
             ),
             GoRoute(
               path: 'water',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const WaterPage(),
             ),
             GoRoute(
               path: 'habits',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HabitDashboardPage(),
             ),
             GoRoute(
               path: 'analysis',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const HealthAnalysisPage(),
             ),
           ],
@@ -328,12 +302,10 @@ final GoRouter router = GoRouter(
         // Route 6: Finance
         GoRoute(
           path: '/finance',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const FinancePage(),
           routes: [
             GoRoute(
               path: 'dashboard',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const FinanceDashboardPage(),
             ),
           ],
@@ -341,22 +313,18 @@ final GoRouter router = GoRouter(
         // Route 7: Social
         GoRoute(
           path: '/social',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const SocialPage(),
           routes: [
             GoRoute(
               path: 'dashboard',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const SocialDashboardPage(),
             ),
             GoRoute(
               path: 'journal',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const SocialNotesDashboard(),
             ),
             GoRoute(
               path: 'contacts',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const SocialPage(),
             ),
           ],
@@ -364,18 +332,15 @@ final GoRouter router = GoRouter(
         // Route 8: Projects
         GoRoute(
           path: '/projects',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const ProjectsPage(),
           routes: [
             GoRoute(
               path: 'dashboard',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const ProjectAnalysisPage(),
             ),
             GoRoute(
               path:
                   ':projectId', // Đường dẫn con của /projects nên URL sẽ là /projects/123
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) {
                 final projectId = state.pathParameters['projectId'];
 
@@ -411,17 +376,14 @@ final GoRouter router = GoRouter(
         // Route 9: Widgets
         GoRoute(
           path: '/widgets',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const WidgetPage(),
           routes: [
             GoRoute(
               path: 'gps',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const GPSTrackingPage(),
             ),
             GoRoute(
               path: 'webview',
-              parentNavigatorKey: _shellNavigatorKey,
               builder: (context, state) => const WebViewPage(
                 url: 'https://google.com',
                 title: 'External Widget',
@@ -429,25 +391,23 @@ final GoRouter router = GoRouter(
             ),
             GoRoute(
               path: 'ssh',
-              parentNavigatorKey: _shellNavigatorKey,
-              builder: (context, state) => TalkSSHPage(key: TalkSSHPage.talkSSHKey),
+              builder: (context, state) => TalkSSHPage(
+                initialPrompt: state.extra as String?,
+              ),
             ),
           ],
         ),
         // Route 10: Personal Information
         GoRoute(
           path: '/personal-info',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const PersonalInformationPage(),
         ),
         GoRoute(
           path: "/project_notes",
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const ProjectNotesPage(),
         ),
         GoRoute(
           path: '/manual',
-          parentNavigatorKey: _shellNavigatorKey,
           builder: (context, state) => const ScoringRulesPage(),
         ),
       ],
