@@ -928,6 +928,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plugin_desc => 'Add new features to your dashboard';
 
   @override
+  String get plugin_ssh_gemini => 'Gemini AI SSH';
+
+  @override
+  String get plugin_ssh_opencode => 'OpenCode AI SSH';
+
+  @override
+  String get plugin_ssh_desc => 'AI-powered terminal for remote orchestration';
+
+  @override
+  String get config_ai_prompt => 'Configure AI Prompt';
+
+  @override
   String get homepage_four_life_elements => 'LIFE ELEMENTS';
 
   @override

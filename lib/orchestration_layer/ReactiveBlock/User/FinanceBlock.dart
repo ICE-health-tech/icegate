@@ -1,13 +1,13 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
-import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
 class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
@@ -191,19 +191,18 @@ class FinanceBlock {
   });
 
   /// Currency toggle (true for VND, false for USD)
-  final useVnd = signal(false);
+  late final useVnd = computed(() => _configBlock?.currency.value == 'VND');
 
-  void init(FinanceDAO dao, String personId) async {
+  ConfigBlock? _configBlock;
+
+  void init(FinanceDAO dao, String personId, {ConfigBlock? configBlock}) async {
     if (personId.isEmpty) {
       debugPrint("FinanceBlock: Skipping init, personId is empty.");
       return;
     }
     _dao = dao;
     _personId = personId;
-
-    // Load currency preference
-    final prefs = await SharedPreferences.getInstance();
-    useVnd.value = prefs.getBool('finance_use_vnd') ?? false;
+    _configBlock = configBlock;
 
     _accountsSubscription?.cancel();
     _accountsSubscription = dao.watchAccounts(personId).listen((data) {
@@ -283,9 +282,7 @@ class FinanceBlock {
   }
 
   Future<void> toggleCurrency() async {
-    useVnd.value = !useVnd.value;
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setBool('finance_use_vnd', useVnd.value);
+    await _configBlock?.toggleCurrency();
   }
 
   static final NumberFormat _usdFormat = NumberFormat.currency(

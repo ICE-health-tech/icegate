@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:drift/drift.dart' show Value;
+import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
@@ -44,6 +44,7 @@ import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -78,6 +79,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late QuestBlock questBlock;
   late SocialBlock socialBlock;
   late LocaleBlock localeBlock;
+  late ConfigBlock configBlock;
   DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
@@ -269,6 +271,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       contentBlock = ContentBlock();
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
+      configBlock = ConfigBlock();
 
       musicBlock = MusicBlock(audioHandler: audioHandler);
 
@@ -296,9 +299,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 Future.microtask(() => healthBlock.init());
                 _syncHealthData();
 
-                growthBlock.init(database.growthDAO, personId);
                 projectBlock.init(database.projectsDAO, personId);
-                financeBlock.init(database.financeDAO, personId);
+                financeBlock.init(database.financeDAO, personId, configBlock: configBlock);
+                configBlock.init(database.configsDAO, personId);
                 questBlock.init(database, personId);
                 contentBlock.init(database.aiAnalysisDAO, personId);
                 widgetSettingsBlock.init(database.widgetDAO, personId);
@@ -570,6 +573,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
         Provider<LocaleBlock>.value(value: localeBlock),
+        Provider<ConfigBlock>.value(value: configBlock),
       ],
       child: widget.childWidget,
     );

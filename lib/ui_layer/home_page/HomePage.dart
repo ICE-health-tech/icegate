@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -191,6 +193,7 @@ class _HomePageState extends State<HomePage> {
         personIdToUse,
         'home',
       );
+      _seedPlugins(personIdToUse);
       externalWidgetBlock.refreshBlock(
         database.externalWidgetsDAO,
         personIdToUse,
@@ -209,6 +212,35 @@ class _HomePageState extends State<HomePage> {
         },
       );
     });
+  }
+
+  Future<void> _seedPlugins(String personId) async {
+    final dao = database.internalWidgetsDAO;
+
+    // Cleanup legacy separate plugins
+    await dao.deleteInternalWidget('Gemini AI SSH');
+    await dao.deleteInternalWidget('OpenCode AI SSH');
+    await dao.deleteInternalWidget('ICE GATE SSH'); // Cleanup old name
+    
+    // Also cleanup by alias if they exist
+    final oldSsh = await dao.getInternalWidgetByAlias('ice_gate_ssh');
+    if (oldSsh != null && oldSsh.name != null) await dao.deleteInternalWidget(oldSsh.name!);
+    
+    final oldAiController = await dao.getInternalWidgetByAlias('ssh_ai_controller');
+    if (oldAiController != null && oldAiController.name != null) await dao.deleteInternalWidget(oldAiController.name!);
+
+    // UPLINK (The single unified terminal)
+    final uplinkExists = await dao.getInternalWidgetByAlias('ssh_uplink');
+    if (uplinkExists == null) {
+      await dao.insertInternalWidget(
+        personID: personId,
+        name: 'UPLINK',
+        alias: 'ssh_uplink',
+        url: '/widgets/ssh', // Default to standard SSH, mode selectable inside
+        imageUrl: 'assets/internalwidget/ssh_uplink.png',
+        scope: 'home',
+      );
+    }
   }
 
   @override

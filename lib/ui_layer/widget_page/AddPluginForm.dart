@@ -418,10 +418,10 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         category: PluginCategory.other,
       ),
       _InternalPlugin(
-        name: 'ICE GATE SSH',
+        name: 'UPLINK',
         url: '/ssh',
         icon: Icons.terminal_rounded,
-        description: 'Secure remote terminal.',
+        description: 'Secure terminal with AI capabilities.',
         category: PluginCategory.other,
       ),
     ];

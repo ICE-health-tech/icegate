@@ -12,6 +12,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
 class SettingsWidget extends StatelessWidget {
   final String? title;
@@ -336,7 +337,70 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
 
-            // 3. Info & Support
+            // 3. Modality Settings: Finance
+            _buildSettingSection(
+              context: context,
+              title: "Finance Settings",
+              children: [
+                Watch((context) {
+                  final configBlock = context.read<ConfigBlock>();
+                  final currency = configBlock.currency.watch(context);
+                  return _buildPremiumSettingTile(
+                    context: context,
+                    title: "Currency Unit",
+                    subtitle: "Current: $currency",
+                    icon: Icons.monetization_on_rounded,
+                    color: Colors.green,
+                    trailingWidget: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(currency, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        Switch.adaptive(
+                          value: currency == 'VND',
+                          onChanged: (_) => configBlock.toggleCurrency(),
+                        ),
+                      ],
+                    ),
+                    onTap: () => configBlock.toggleCurrency(),
+                  );
+                }),
+              ],
+            ),
+
+            // 4. Modality Settings: Health, Social, Projects
+            _buildSettingSection(
+              context: context,
+              title: "Modality Preferences",
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: "Health Modality",
+                  subtitle: "Custom goals and tracking",
+                  icon: Icons.favorite_rounded,
+                  color: Colors.redAccent,
+                  onTap: () {},
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: "Social Modality",
+                  subtitle: "Privacy and connections",
+                  icon: Icons.people_rounded,
+                  color: Colors.blueAccent,
+                  onTap: () {},
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: "Projects Modality",
+                  subtitle: "Default folders and AI flow",
+                  icon: Icons.code_rounded,
+                  color: Colors.deepOrange,
+                  onTap: () {},
+                ),
+              ],
+            ),
+
+            // 5. Info & Support
             _buildSettingSection(
               context: context,
               title: AppLocalizations.of(context)!.about_support_section,
@@ -367,6 +431,21 @@ class SettingsWidget extends StatelessWidget {
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),
+                ),
+              ],
+            ),
+
+            _buildSettingSection(
+              context: context,
+              title: "Developer Tools",
+              children: [
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: "Reset Database",
+                  subtitle: "Wipe all local data",
+                  icon: Icons.delete_forever_rounded,
+                  color: Colors.red,
+                  onTap: () => _showResetDatabaseDialog(context),
                 ),
               ],
             ),

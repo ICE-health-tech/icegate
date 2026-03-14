@@ -264,6 +264,18 @@ class InternalWidgetProtocol implements PluginProtocol {
       return Icons.photo_library_rounded;
     }
 
+    if (lower.contains('ssh') ||
+        lower.contains('terminal') ||
+        lower.contains('uplink')) {
+      return Icons.terminal_rounded;
+    }
+    if (lower.contains('gemini') || lower.contains('ai ')) {
+      return Icons.auto_awesome;
+    }
+    if (lower.contains('opencode')) {
+      return Icons.code_rounded;
+    }
+
     return Icons.grid_view_rounded; // Default fallback — clean grid icon
   }
 }

@@ -374,8 +374,10 @@ final GoRouter router = GoRouter(
           ],
         ),
         GoRoute(
-          path: '/ssh',
+          path: '/widgets/ssh',
           builder: (context, state) {
+            final aiMode = state.uri.queryParameters['aiMode'];
+            
             if (state.extra is Map<String, dynamic>) {
               final data = state.extra as Map<String, dynamic>;
               return TalkSSHPage(
@@ -383,10 +385,12 @@ final GoRouter router = GoRouter(
                 hostId: data['hostId'] as String?,
                 remotePath: data['remotePath'] as String?,
                 initialContent: data['content'] as String?,
+                aiMode: aiMode ?? data['aiMode'] as String?,
               );
             }
             return TalkSSHPage(
               initialPrompt: state.extra as String?,
+              aiMode: aiMode,
             );
           },
         ),

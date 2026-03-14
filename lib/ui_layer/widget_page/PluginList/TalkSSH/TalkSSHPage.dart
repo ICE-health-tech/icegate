@@ -1,9 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import '../../../../initial_layer/CoreLogics/SSHService.dart';
@@ -20,6 +23,7 @@ class TalkSSHPage extends StatefulWidget {
   final String? hostId;
   final String? remotePath;
   final String? initialContent;
+  final String? aiMode; // gemini or opencode
 
   const TalkSSHPage({
     super.key,
@@ -27,6 +31,7 @@ class TalkSSHPage extends StatefulWidget {
     this.hostId,
     this.remotePath,
     this.initialContent,
+    this.aiMode,
   });
 
   @override
@@ -105,12 +110,14 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isConnected = false;
+  String? _aiPromptPrefix;
 
   @override
   void initState() {
     super.initState();
     _activeState = this;
     _terminalController = TerminalController();
+    _loadAiPrompt();
 
     // Initialize from existing connection if any
     _isConnected = _sshService.isConnected;
@@ -127,7 +134,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     // Initial terminal message if not connected
     if (!_isConnected) {
       _sshService.terminal.write(
-        '\x1b[38;5;240mICE GATE SSH v1.6.0-BACKGROUND-READY\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n',
+        '\x1b[1m\x1b[38;5;39mUPLINK TERMINAL v2.0 - SECURE ACCESS LAYER\x1b[0m\r\n\x1b[38;5;240m>>> COGNITIVE ENGINE READY. STANDBY FOR LINK.\x1b[0m\r\n\r\n',
       );
     }
 
@@ -172,11 +179,61 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       if (connected) {
         // Send AI prompt after a short delay for auto-cd to complete
         Future.delayed(const Duration(seconds: 2), () {
-          _sendGeminiPrompt(plainText);
+          _sendAiPrompt(plainText);
           sub?.cancel();
         });
       }
     });
+  }
+
+  Future<void> _loadAiPrompt() async {
+    final personID = context.read<PersonBlock>().information.value.profiles.id;
+    if (personID == null) return;
+
+    final mode = _currentAiMode;
+    final dao = context.read<AppDatabase>().aiPromptsDAO;
+    final data = await dao.getPrompt(personID, mode);
+    
+    setState(() {
+      _aiPromptPrefix = data?.prompt ?? '';
+    });
+  }
+
+  Future<void> _saveAiPrompt(String prompt) async {
+    final personID = context.read<PersonBlock>().information.value.profiles.id;
+    if (personID == null) return;
+
+    final mode = _currentAiMode;
+    final dao = context.read<AppDatabase>().aiPromptsDAO;
+    await dao.savePrompt(personID, mode, prompt);
+    
+    setState(() {
+      _aiPromptPrefix = prompt;
+    });
+  }
+
+  String get _currentAiMode => _localAiMode ?? widget.aiMode ?? 'standard';
+  String? _localAiMode;
+
+  void _toggleAiMode() async {
+    final modes = ['standard', 'gemini', 'opencode'];
+    final currentIndex = modes.indexOf(_currentAiMode);
+    final nextMode = modes[(currentIndex + 1) % modes.length];
+    
+    setState(() {
+      _localAiMode = nextMode;
+    });
+    
+    // Persist choice to database
+    await context.read<AppDatabase>().internalWidgetsDAO.updateInternalWidgetUrl(
+      'ssh_uplink',
+      '/widgets/ssh?aiMode=$nextMode',
+    );
+    
+    // Reload prompt for new mode (if applicable)
+    if (nextMode != 'standard') {
+      _loadAiPrompt();
+    }
   }
 
   void _handleInitialPrompt(String prompt) {
@@ -199,7 +256,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _sendGeminiPrompt(prompt, includeContext: false);
+              _sendAiPrompt(prompt, includeContext: false);
             },
             child: const Text('Send to AI'),
           ),
@@ -287,9 +344,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     final cmd = _commandController.text;
 
     if (_isConnected) {
-      if (cmd.startsWith('/') || cmd.contains('gemini')) {
+      if (cmd.startsWith('/') || cmd.contains('gemini') || cmd.contains('opencode')) {
         // AI Command - Provide context if path is set
-        _sendGeminiPrompt(cmd);
+        _sendAiPrompt(cmd);
       } else {
         _sshService.write('$cmd\r');
       }
@@ -336,9 +393,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _sendGeminiPrompt(plainText);
+              _sendAiPrompt(plainText);
             },
-            child: const Text('Send as Gemini'),
+            child: const Text('Send as AI'),
           ),
         ],
       ),
@@ -367,8 +424,12 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         .trim();
   }
 
-  void _sendGeminiPrompt(String text, {bool includeContext = true}) {
+  void _sendAiPrompt(String text, {bool includeContext = true}) {
     if (!_isConnected) return;
+    if (_currentAiMode == 'standard') {
+      _sshService.write('$text\r');
+      return;
+    }
 
     String promptText = text.trim();
     if (promptText.isEmpty) return;
@@ -381,6 +442,11 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       if (promptText.startsWith('prompt ')) {
         promptText = promptText.substring(7).trim();
       }
+    } else if (promptText.startsWith('opencode ')) {
+      promptText = promptText.substring(9).trim();
+      if (promptText.startsWith('prompt ')) {
+        promptText = promptText.substring(7).trim();
+      }
     }
 
     String aiContext = '';
@@ -389,14 +455,50 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           '\n\n[System Context: The user is currently focusing on this remote path/file: ${_remotePathController.text}]';
     }
 
-    final fullPrompt = '$promptText$aiContext';
+    final mode = _currentAiMode;
+    final customPrefix = _aiPromptPrefix ?? '';
+    final fullPrompt = '$customPrefix$promptText$aiContext';
 
     // Robust Bash Escaping: wrap in single quotes, escape inner single quotes
     final escapedPrompt = "'${fullPrompt.replaceAll("'", "'\\''")}'";
 
     // Use Ctrl+U (\x15) to clear current line in bash before sending command
-    // to prevent mixing with user's half-typed commands
-    _sshService.write('\x15gemini prompt $escapedPrompt\r');
+    if (mode == 'gemini') {
+      _sshService.write('\x15gemini prompt $escapedPrompt\r');
+    } else if (mode == 'opencode') {
+      _sshService.write('\x15opencode run $escapedPrompt\r');
+    }
+  }
+
+  void _showConfigDialog() {
+    final controller = TextEditingController(text: _aiPromptPrefix);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Config ${_currentAiMode.toUpperCase()} Prompt'),
+        content: TextField(
+          controller: controller,
+          maxLines: 5,
+          decoration: const InputDecoration(
+            hintText: 'Enter systemic prefix for AI commands...',
+            border: OutlineInputBorder(),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cancel'),
+          ),
+          FilledButton(
+            onPressed: () {
+              _saveAiPrompt(controller.text);
+              Navigator.pop(context);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
   }
 
   void _showConnectDialog(BuildContext context) {
@@ -429,12 +531,89 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
     return Scaffold(
       key: _scaffoldKey,
-      backgroundColor: Colors.black,
+      backgroundColor: const Color(0xFF0A0C10),
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        flexibleSpace: ClipRect(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Container(color: Colors.black.withOpacity(0.5)),
+          ),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'UPLINK Terminal',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            Text(
+              _isConnected ? 'Connected to ${_hostController.text}' : 'Ready for Uplink',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.5),
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _currentAiMode == 'standard'
+                    ? Colors.white12
+                    : (_currentAiMode == 'gemini' ? Colors.orange.withOpacity(0.2) : Colors.blue.withOpacity(0.2)),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                elevation: 0,
+              ),
+              onPressed: _toggleAiMode,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    _currentAiMode == 'standard'
+                        ? Icons.terminal_rounded
+                        : (_currentAiMode == 'gemini' ? Icons.auto_awesome : Icons.code_rounded),
+                    size: 16,
+                    color: _currentAiMode == 'standard'
+                        ? Colors.white
+                        : (_currentAiMode == 'gemini' ? Colors.orangeAccent : Colors.blueAccent),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    _currentAiMode.toUpperCase(),
+                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(Icons.lan_outlined, size: 20),
+            onPressed: () => _showConnectDialog(context),
+            tooltip: 'Connection Settings',
+          ),
+          IconButton(
+            icon: const Icon(Icons.settings_outlined, size: 20),
+            onPressed: _showConfigDialog,
+            tooltip: 'AI Prompt Settings',
+          ),
+          const SizedBox(width: 4),
+        ],
+      ),
       body: Column(
         children: [
-          // Spacer for Dynamic Island height - kept minimal
-          const SizedBox(height: 60),
-
           // Terminal Area - Maximized estate
           Expanded(
             child: Container(
@@ -457,11 +636,8 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                 borderRadius: BorderRadius.circular(16),
                 child: LayoutBuilder(
                   builder: (context, constraints) {
-                    const charWidth = 9.0;
-                    const charHeight = 18.0;
-
-                    final cols = (constraints.maxWidth / charWidth).floor();
-                    final rows = (constraints.maxHeight / charHeight).floor();
+                    final cols = (constraints.maxWidth / 9.0).floor();
+                    final rows = (constraints.maxHeight / 18.0).floor();
 
                     _sshService.resize(cols, rows);
 

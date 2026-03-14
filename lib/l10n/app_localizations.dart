@@ -1832,6 +1832,30 @@ abstract class AppLocalizations {
   /// **'Add new features to your dashboard'**
   String get plugin_desc;
 
+  /// No description provided for @plugin_ssh_gemini.
+  ///
+  /// In en, this message translates to:
+  /// **'Gemini AI SSH'**
+  String get plugin_ssh_gemini;
+
+  /// No description provided for @plugin_ssh_opencode.
+  ///
+  /// In en, this message translates to:
+  /// **'OpenCode AI SSH'**
+  String get plugin_ssh_opencode;
+
+  /// No description provided for @plugin_ssh_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'AI-powered terminal for remote orchestration'**
+  String get plugin_ssh_desc;
+
+  /// No description provided for @config_ai_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Configure AI Prompt'**
+  String get config_ai_prompt;
+
   /// No description provided for @homepage_four_life_elements.
   ///
   /// In en, this message translates to:

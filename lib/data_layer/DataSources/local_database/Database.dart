@@ -184,6 +184,17 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     return (update(internalWidgetsTable)..where((t) => t.name.equals(oldName)))
         .write(InternalWidgetsTableCompanion(name: Value(newName)));
   }
+
+  Future<int> updateInternalWidgetUrl(String alias, String newUrl) {
+    return (update(internalWidgetsTable)..where((t) => t.alias.equals(alias)))
+        .write(InternalWidgetsTableCompanion(url: Value(newUrl)));
+  }
+
+  Future<InternalWidgetData?> getInternalWidgetByAlias(String alias) {
+    return (select(internalWidgetsTable)
+          ..where((table) => table.alias.equals(alias)))
+        .getSingleOrNull();
+  }
 }
 
 @DataClassName('ExternalWidgetData') // The generated data class name
@@ -4635,6 +4646,116 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
+@DataClassName('AiPromptData')
+class AiPromptsTable extends Table {
+  @override
+  String get tableName => 'ai_prompts';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  TextColumn get aiModel => text().named('ai_model')(); // gemini, opencode, etc.
+  TextColumn get prompt => text().named('prompt')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftAccessor(tables: [AiPromptsTable])
+class AiPromptsDAO extends DatabaseAccessor<AppDatabase>
+    with _$AiPromptsDAOMixin {
+  AiPromptsDAO(super.db);
+
+  Future<AiPromptData?> getPrompt(String personID, String model) {
+    return (select(aiPromptsTable)
+          ..where((t) => t.personID.equals(personID) & t.aiModel.equals(model)))
+        .getSingleOrNull();
+  }
+
+  Future<int> savePrompt(String personID, String model, String prompt) async {
+    final existing = await getPrompt(personID, model);
+    if (existing != null) {
+      return (update(aiPromptsTable)
+            ..where(
+              (t) => t.personID.equals(personID) & t.aiModel.equals(model),
+            ))
+          .write(AiPromptsTableCompanion(
+        prompt: Value(prompt),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } else {
+      return into(aiPromptsTable).insert(AiPromptsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: Value(personID),
+        aiModel: model,
+        prompt: prompt,
+        updatedAt: Value(DateTime.now()),
+      ));
+    }
+  }
+}
+
+@DataClassName('ConfigData')
+class ConfigsTable extends Table {
+  @override
+  String get tableName => 'configs';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get personID => text()
+      .nullable()
+      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
+      .named('person_id')();
+  TextColumn get key => text()(); // e.g., 'finance_currency'
+  TextColumn get value => text()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personID, key},
+      ];
+}
+
+@DriftAccessor(tables: [ConfigsTable])
+class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
+  ConfigsDAO(super.db);
+
+  Future<ConfigData?> getConfig(String personID, String key) {
+    return (select(configsTable)
+          ..where((t) => t.personID.equals(personID) & t.key.equals(key)))
+        .getSingleOrNull();
+  }
+
+  Future<int> setConfig(String personID, String key, String value) async {
+    final existing = await getConfig(personID, key);
+    if (existing != null) {
+      return (update(configsTable)
+            ..where((t) => t.personID.equals(personID) & t.key.equals(key)))
+          .write(ConfigsTableCompanion(
+        value: Value(value),
+        updatedAt: Value(DateTime.now()),
+      ));
+    } else {
+      return into(configsTable).insert(ConfigsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: Value(personID),
+        key: key,
+        value: value,
+        updatedAt: Value(DateTime.now()),
+      ));
+    }
+  }
+}
+
 // --- 6. Main Database Class ---
 
 @DriftDatabase(
@@ -4676,6 +4797,8 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     ExerciseLogsTable,
     QuestsTable,
     PersonContactsTable,
+    AiPromptsTable,
+    ConfigsTable,
   ],
   daos: [
     ThemesTableDAO,
@@ -4699,6 +4822,8 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     CustomNotificationDAO,
     QuoteDAO,
     HealthLogsDAO,
+    AiPromptsDAO,
+    ConfigsDAO,
     QuestDAO,
     SSHHostsDAO,
     MetricsDAO,
@@ -4718,6 +4843,7 @@ class AppDatabase extends _$AppDatabase {
 
   QuestDAO get questDAO => QuestDAO(this);
   SSHHostsDAO get sshHostsDAO => SSHHostsDAO(this);
+  ConfigsDAO get configsDAO => ConfigsDAO(this);
 
   @override
   DriftDatabaseOptions get options => const DriftDatabaseOptions(

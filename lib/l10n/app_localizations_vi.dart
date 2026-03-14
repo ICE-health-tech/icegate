@@ -929,7 +929,20 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plugin_desc => 'Thêm tính năng mới cho giao diện của bạn';
 
   @override
-  String get homepage_four_life_elements => '4 khía cạnh';
+  String get plugin_ssh_gemini => 'Điều khiển Gemini SSH';
+
+  @override
+  String get plugin_ssh_opencode => 'Điều khiển OpenCode SSH';
+
+  @override
+  String get plugin_ssh_desc =>
+      'Terminal hỗ trợ AI để điều phối hệ thống từ xa';
+
+  @override
+  String get config_ai_prompt => 'Cấu hình Prompt AI';
+
+  @override
+  String get homepage_four_life_elements => '4 phía cạnh';
 
   @override
   String get done => 'Hoàn tất';

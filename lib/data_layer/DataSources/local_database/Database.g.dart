@@ -170,6 +170,18 @@ mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
   $ExerciseLogsTableTable get exerciseLogsTable =>
       attachedDatabase.exerciseLogsTable;
 }
+mixin _$AiPromptsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $OrganizationsTableTable get organizationsTable =>
+      attachedDatabase.organizationsTable;
+  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
+  $AiPromptsTableTable get aiPromptsTable => attachedDatabase.aiPromptsTable;
+}
+mixin _$ConfigsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $OrganizationsTableTable get organizationsTable =>
+      attachedDatabase.organizationsTable;
+  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
+  $ConfigsTableTable get configsTable => attachedDatabase.configsTable;
+}
 
 class $OrganizationsTableTable extends OrganizationsTable
     with TableInfo<$OrganizationsTableTable, OrganizationData> {
@@ -26047,6 +26059,732 @@ class PersonContactsTableCompanion extends UpdateCompanion<PersonContactData> {
   }
 }
 
+class $AiPromptsTableTable extends AiPromptsTable
+    with TableInfo<$AiPromptsTableTable, AiPromptData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AiPromptsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _aiModelMeta = const VerificationMeta(
+    'aiModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiModel = GeneratedColumn<String>(
+    'ai_model',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _promptMeta = const VerificationMeta('prompt');
+  @override
+  late final GeneratedColumn<String> prompt = GeneratedColumn<String>(
+    'prompt',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($AiPromptsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    aiModel,
+    prompt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ai_prompts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AiPromptData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('ai_model')) {
+      context.handle(
+        _aiModelMeta,
+        aiModel.isAcceptableOrUnknown(data['ai_model']!, _aiModelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_aiModelMeta);
+    }
+    if (data.containsKey('prompt')) {
+      context.handle(
+        _promptMeta,
+        prompt.isAcceptableOrUnknown(data['prompt']!, _promptMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_promptMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AiPromptData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AiPromptData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      aiModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_model'],
+      )!,
+      prompt: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}prompt'],
+      )!,
+      updatedAt: $AiPromptsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $AiPromptsTableTable createAlias(String alias) {
+    return $AiPromptsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class AiPromptData extends DataClass implements Insertable<AiPromptData> {
+  final String id;
+  final String? personID;
+  final String aiModel;
+  final String prompt;
+  final DateTime updatedAt;
+  const AiPromptData({
+    required this.id,
+    this.personID,
+    required this.aiModel,
+    required this.prompt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['ai_model'] = Variable<String>(aiModel);
+    map['prompt'] = Variable<String>(prompt);
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $AiPromptsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  AiPromptsTableCompanion toCompanion(bool nullToAbsent) {
+    return AiPromptsTableCompanion(
+      id: Value(id),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      aiModel: Value(aiModel),
+      prompt: Value(prompt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AiPromptData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AiPromptData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      aiModel: serializer.fromJson<String>(json['aiModel']),
+      prompt: serializer.fromJson<String>(json['prompt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String?>(personID),
+      'aiModel': serializer.toJson<String>(aiModel),
+      'prompt': serializer.toJson<String>(prompt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AiPromptData copyWith({
+    String? id,
+    Value<String?> personID = const Value.absent(),
+    String? aiModel,
+    String? prompt,
+    DateTime? updatedAt,
+  }) => AiPromptData(
+    id: id ?? this.id,
+    personID: personID.present ? personID.value : this.personID,
+    aiModel: aiModel ?? this.aiModel,
+    prompt: prompt ?? this.prompt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  AiPromptData copyWithCompanion(AiPromptsTableCompanion data) {
+    return AiPromptData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      aiModel: data.aiModel.present ? data.aiModel.value : this.aiModel,
+      prompt: data.prompt.present ? data.prompt.value : this.prompt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiPromptData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('prompt: $prompt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, personID, aiModel, prompt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AiPromptData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.aiModel == this.aiModel &&
+          other.prompt == this.prompt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AiPromptsTableCompanion extends UpdateCompanion<AiPromptData> {
+  final Value<String> id;
+  final Value<String?> personID;
+  final Value<String> aiModel;
+  final Value<String> prompt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AiPromptsTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.aiModel = const Value.absent(),
+    this.prompt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AiPromptsTableCompanion.insert({
+    required String id,
+    this.personID = const Value.absent(),
+    required String aiModel,
+    required String prompt,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       aiModel = Value(aiModel),
+       prompt = Value(prompt);
+  static Insertable<AiPromptData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<String>? aiModel,
+    Expression<String>? prompt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (aiModel != null) 'ai_model': aiModel,
+      if (prompt != null) 'prompt': prompt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AiPromptsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? personID,
+    Value<String>? aiModel,
+    Value<String>? prompt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return AiPromptsTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      aiModel: aiModel ?? this.aiModel,
+      prompt: prompt ?? this.prompt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (aiModel.present) {
+      map['ai_model'] = Variable<String>(aiModel.value);
+    }
+    if (prompt.present) {
+      map['prompt'] = Variable<String>(prompt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $AiPromptsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AiPromptsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('prompt: $prompt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $ConfigsTableTable extends ConfigsTable
+    with TableInfo<$ConfigsTableTable, ConfigData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ConfigsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES persons (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _keyMeta = const VerificationMeta('key');
+  @override
+  late final GeneratedColumn<String> key = GeneratedColumn<String>(
+    'key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _valueMeta = const VerificationMeta('value');
+  @override
+  late final GeneratedColumn<String> value = GeneratedColumn<String>(
+    'value',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($ConfigsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [id, personID, key, value, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'configs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ConfigData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('key')) {
+      context.handle(
+        _keyMeta,
+        key.isAcceptableOrUnknown(data['key']!, _keyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_keyMeta);
+    }
+    if (data.containsKey('value')) {
+      context.handle(
+        _valueMeta,
+        value.isAcceptableOrUnknown(data['value']!, _valueMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_valueMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, key},
+  ];
+  @override
+  ConfigData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ConfigData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      key: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}key'],
+      )!,
+      value: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}value'],
+      )!,
+      updatedAt: $ConfigsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $ConfigsTableTable createAlias(String alias) {
+    return $ConfigsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class ConfigData extends DataClass implements Insertable<ConfigData> {
+  final String id;
+  final String? personID;
+  final String key;
+  final String value;
+  final DateTime updatedAt;
+  const ConfigData({
+    required this.id,
+    this.personID,
+    required this.key,
+    required this.value,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['key'] = Variable<String>(key);
+    map['value'] = Variable<String>(value);
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $ConfigsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  ConfigsTableCompanion toCompanion(bool nullToAbsent) {
+    return ConfigsTableCompanion(
+      id: Value(id),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      key: Value(key),
+      value: Value(value),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory ConfigData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ConfigData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      key: serializer.fromJson<String>(json['key']),
+      value: serializer.fromJson<String>(json['value']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String?>(personID),
+      'key': serializer.toJson<String>(key),
+      'value': serializer.toJson<String>(value),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  ConfigData copyWith({
+    String? id,
+    Value<String?> personID = const Value.absent(),
+    String? key,
+    String? value,
+    DateTime? updatedAt,
+  }) => ConfigData(
+    id: id ?? this.id,
+    personID: personID.present ? personID.value : this.personID,
+    key: key ?? this.key,
+    value: value ?? this.value,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  ConfigData copyWithCompanion(ConfigsTableCompanion data) {
+    return ConfigData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      key: data.key.present ? data.key.value : this.key,
+      value: data.value.present ? data.value.value : this.value,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfigData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, personID, key, value, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ConfigData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.key == this.key &&
+          other.value == this.value &&
+          other.updatedAt == this.updatedAt);
+}
+
+class ConfigsTableCompanion extends UpdateCompanion<ConfigData> {
+  final Value<String> id;
+  final Value<String?> personID;
+  final Value<String> key;
+  final Value<String> value;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const ConfigsTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.key = const Value.absent(),
+    this.value = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ConfigsTableCompanion.insert({
+    required String id,
+    this.personID = const Value.absent(),
+    required String key,
+    required String value,
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       key = Value(key),
+       value = Value(value);
+  static Insertable<ConfigData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<String>? key,
+    Expression<String>? value,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (key != null) 'key': key,
+      if (value != null) 'value': value,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ConfigsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? personID,
+    Value<String>? key,
+    Value<String>? value,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return ConfigsTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      key: key ?? this.key,
+      value: value ?? this.value,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (key.present) {
+      map['key'] = Variable<String>(key.value);
+    }
+    if (value.present) {
+      map['value'] = Variable<String>(value.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $ConfigsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ConfigsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('key: $key, ')
+          ..write('value: $value, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -26108,6 +26846,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $QuestsTableTable questsTable = $QuestsTableTable(this);
   late final $PersonContactsTableTable personContactsTable =
       $PersonContactsTableTable(this);
+  late final $AiPromptsTableTable aiPromptsTable = $AiPromptsTableTable(this);
+  late final $ConfigsTableTable configsTable = $ConfigsTableTable(this);
   late final ThemesTableDAO themesTableDAO = ThemesTableDAO(
     this as AppDatabase,
   );
@@ -26143,6 +26883,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       CustomNotificationDAO(this as AppDatabase);
   late final QuoteDAO quoteDAO = QuoteDAO(this as AppDatabase);
   late final HealthLogsDAO healthLogsDAO = HealthLogsDAO(this as AppDatabase);
+  late final AiPromptsDAO aiPromptsDAO = AiPromptsDAO(this as AppDatabase);
+  late final ConfigsDAO configsDAO = ConfigsDAO(this as AppDatabase);
   late final QuestDAO questDAO = QuestDAO(this as AppDatabase);
   late final SSHHostsDAO sSHHostsDAO = SSHHostsDAO(this as AppDatabase);
   late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
@@ -26188,6 +26930,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     exerciseLogsTable,
     questsTable,
     personContactsTable,
+    aiPromptsTable,
+    configsTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -26652,6 +27396,20 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('quests', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ai_prompts', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'persons',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('configs', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -30797,6 +31555,48 @@ final class $$PersonsTableTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
+
+  static MultiTypedResultKey<$AiPromptsTableTable, List<AiPromptData>>
+  _aiPromptsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.aiPromptsTable,
+    aliasName: $_aliasNameGenerator(
+      db.personsTable.id,
+      db.aiPromptsTable.personID,
+    ),
+  );
+
+  $$AiPromptsTableTableProcessedTableManager get aiPromptsTableRefs {
+    final manager = $$AiPromptsTableTableTableManager(
+      $_db,
+      $_db.aiPromptsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_aiPromptsTableRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$ConfigsTableTable, List<ConfigData>>
+  _configsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.configsTable,
+    aliasName: $_aliasNameGenerator(
+      db.personsTable.id,
+      db.configsTable.personID,
+    ),
+  );
+
+  $$ConfigsTableTableProcessedTableManager get configsTableRefs {
+    final manager = $$ConfigsTableTableTableManager(
+      $_db,
+      $_db.configsTable,
+    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_configsTableRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
 }
 
 class $$PersonsTableTableFilterComposer
@@ -31629,6 +32429,56 @@ class $$PersonsTableTableFilterComposer
           }) => $$QuestsTableTableFilterComposer(
             $db: $db,
             $table: $db.questsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> aiPromptsTableRefs(
+    Expression<bool> Function($$AiPromptsTableTableFilterComposer f) f,
+  ) {
+    final $$AiPromptsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.aiPromptsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AiPromptsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.aiPromptsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> configsTableRefs(
+    Expression<bool> Function($$ConfigsTableTableFilterComposer f) f,
+  ) {
+    final $$ConfigsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.configsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ConfigsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.configsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -32580,6 +33430,56 @@ class $$PersonsTableTableAnnotationComposer
     );
     return f(composer);
   }
+
+  Expression<T> aiPromptsTableRefs<T extends Object>(
+    Expression<T> Function($$AiPromptsTableTableAnnotationComposer a) f,
+  ) {
+    final $$AiPromptsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.aiPromptsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$AiPromptsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.aiPromptsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<T> configsTableRefs<T extends Object>(
+    Expression<T> Function($$ConfigsTableTableAnnotationComposer a) f,
+  ) {
+    final $$ConfigsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.configsTable,
+      getReferencedColumn: (t) => t.personID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$ConfigsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.configsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$PersonsTableTableTableManager
@@ -32626,6 +33526,8 @@ class $$PersonsTableTableTableManager
             bool sleepLogsTableRefs,
             bool exerciseLogsTableRefs,
             bool questsTableRefs,
+            bool aiPromptsTableRefs,
+            bool configsTableRefs,
           })
         > {
   $$PersonsTableTableTableManager(_$AppDatabase db, $PersonsTableTable table)
@@ -32755,6 +33657,8 @@ class $$PersonsTableTableTableManager
                 sleepLogsTableRefs = false,
                 exerciseLogsTableRefs = false,
                 questsTableRefs = false,
+                aiPromptsTableRefs = false,
+                configsTableRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -32789,6 +33693,8 @@ class $$PersonsTableTableTableManager
                     if (sleepLogsTableRefs) db.sleepLogsTable,
                     if (exerciseLogsTableRefs) db.exerciseLogsTable,
                     if (questsTableRefs) db.questsTable,
+                    if (aiPromptsTableRefs) db.aiPromptsTable,
+                    if (configsTableRefs) db.configsTable,
                   ],
                   addJoins:
                       <
@@ -33435,6 +34341,48 @@ class $$PersonsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (aiPromptsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          AiPromptData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._aiPromptsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).aiPromptsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (configsTableRefs)
+                        await $_getPrefetchedData<
+                          PersonData,
+                          $PersonsTableTable,
+                          ConfigData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$PersonsTableTableReferences
+                              ._configsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$PersonsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).configsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.personID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                     ];
                   },
                 );
@@ -33486,6 +34434,8 @@ typedef $$PersonsTableTableProcessedTableManager =
         bool sleepLogsTableRefs,
         bool exerciseLogsTableRefs,
         bool questsTableRefs,
+        bool aiPromptsTableRefs,
+        bool configsTableRefs,
       })
     >;
 typedef $$ExternalWidgetsTableTableCreateCompanionBuilder =
@@ -53130,6 +54080,653 @@ typedef $$PersonContactsTableTableProcessedTableManager =
       PersonContactData,
       PrefetchHooks Function()
     >;
+typedef $$AiPromptsTableTableCreateCompanionBuilder =
+    AiPromptsTableCompanion Function({
+      required String id,
+      Value<String?> personID,
+      required String aiModel,
+      required String prompt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$AiPromptsTableTableUpdateCompanionBuilder =
+    AiPromptsTableCompanion Function({
+      Value<String> id,
+      Value<String?> personID,
+      Value<String> aiModel,
+      Value<String> prompt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$AiPromptsTableTableReferences
+    extends BaseReferences<_$AppDatabase, $AiPromptsTableTable, AiPromptData> {
+  $$AiPromptsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(db.aiPromptsTable.personID, db.personsTable.id),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$AiPromptsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AiPromptsTableTable> {
+  $$AiPromptsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AiPromptsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AiPromptsTableTable> {
+  $$AiPromptsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get prompt => $composableBuilder(
+    column: $table.prompt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AiPromptsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AiPromptsTableTable> {
+  $$AiPromptsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get aiModel =>
+      $composableBuilder(column: $table.aiModel, builder: (column) => column);
+
+  GeneratedColumn<String> get prompt =>
+      $composableBuilder(column: $table.prompt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$AiPromptsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AiPromptsTableTable,
+          AiPromptData,
+          $$AiPromptsTableTableFilterComposer,
+          $$AiPromptsTableTableOrderingComposer,
+          $$AiPromptsTableTableAnnotationComposer,
+          $$AiPromptsTableTableCreateCompanionBuilder,
+          $$AiPromptsTableTableUpdateCompanionBuilder,
+          (AiPromptData, $$AiPromptsTableTableReferences),
+          AiPromptData,
+          PrefetchHooks Function({bool personID})
+        > {
+  $$AiPromptsTableTableTableManager(
+    _$AppDatabase db,
+    $AiPromptsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AiPromptsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AiPromptsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$AiPromptsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String> aiModel = const Value.absent(),
+                Value<String> prompt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiPromptsTableCompanion(
+                id: id,
+                personID: personID,
+                aiModel: aiModel,
+                prompt: prompt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> personID = const Value.absent(),
+                required String aiModel,
+                required String prompt,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AiPromptsTableCompanion.insert(
+                id: id,
+                personID: personID,
+                aiModel: aiModel,
+                prompt: prompt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$AiPromptsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({personID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable: $$AiPromptsTableTableReferences
+                                    ._personIDTable(db),
+                                referencedColumn:
+                                    $$AiPromptsTableTableReferences
+                                        ._personIDTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$AiPromptsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AiPromptsTableTable,
+      AiPromptData,
+      $$AiPromptsTableTableFilterComposer,
+      $$AiPromptsTableTableOrderingComposer,
+      $$AiPromptsTableTableAnnotationComposer,
+      $$AiPromptsTableTableCreateCompanionBuilder,
+      $$AiPromptsTableTableUpdateCompanionBuilder,
+      (AiPromptData, $$AiPromptsTableTableReferences),
+      AiPromptData,
+      PrefetchHooks Function({bool personID})
+    >;
+typedef $$ConfigsTableTableCreateCompanionBuilder =
+    ConfigsTableCompanion Function({
+      required String id,
+      Value<String?> personID,
+      required String key,
+      required String value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$ConfigsTableTableUpdateCompanionBuilder =
+    ConfigsTableCompanion Function({
+      Value<String> id,
+      Value<String?> personID,
+      Value<String> key,
+      Value<String> value,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$ConfigsTableTableReferences
+    extends BaseReferences<_$AppDatabase, $ConfigsTableTable, ConfigData> {
+  $$ConfigsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
+      db.personsTable.createAlias(
+        $_aliasNameGenerator(db.configsTable.personID, db.personsTable.id),
+      );
+
+  $$PersonsTableTableProcessedTableManager? get personID {
+    final $_column = $_itemColumn<String>('person_id');
+    if ($_column == null) return null;
+    final manager = $$PersonsTableTableTableManager(
+      $_db,
+      $_db.personsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$ConfigsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ConfigsTableTable> {
+  $$ConfigsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$PersonsTableTableFilterComposer get personID {
+    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ConfigsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ConfigsTableTable> {
+  $$ConfigsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get key => $composableBuilder(
+    column: $table.key,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get value => $composableBuilder(
+    column: $table.value,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$PersonsTableTableOrderingComposer get personID {
+    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ConfigsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ConfigsTableTable> {
+  $$ConfigsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get key =>
+      $composableBuilder(column: $table.key, builder: (column) => column);
+
+  GeneratedColumn<String> get value =>
+      $composableBuilder(column: $table.value, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$PersonsTableTableAnnotationComposer get personID {
+    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.personID,
+      referencedTable: $db.personsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$PersonsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.personsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$ConfigsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ConfigsTableTable,
+          ConfigData,
+          $$ConfigsTableTableFilterComposer,
+          $$ConfigsTableTableOrderingComposer,
+          $$ConfigsTableTableAnnotationComposer,
+          $$ConfigsTableTableCreateCompanionBuilder,
+          $$ConfigsTableTableUpdateCompanionBuilder,
+          (ConfigData, $$ConfigsTableTableReferences),
+          ConfigData,
+          PrefetchHooks Function({bool personID})
+        > {
+  $$ConfigsTableTableTableManager(_$AppDatabase db, $ConfigsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ConfigsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ConfigsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ConfigsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String> key = const Value.absent(),
+                Value<String> value = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ConfigsTableCompanion(
+                id: id,
+                personID: personID,
+                key: key,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> personID = const Value.absent(),
+                required String key,
+                required String value,
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ConfigsTableCompanion.insert(
+                id: id,
+                personID: personID,
+                key: key,
+                value: value,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$ConfigsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({personID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (personID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.personID,
+                                referencedTable: $$ConfigsTableTableReferences
+                                    ._personIDTable(db),
+                                referencedColumn: $$ConfigsTableTableReferences
+                                    ._personIDTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$ConfigsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ConfigsTableTable,
+      ConfigData,
+      $$ConfigsTableTableFilterComposer,
+      $$ConfigsTableTableOrderingComposer,
+      $$ConfigsTableTableAnnotationComposer,
+      $$ConfigsTableTableCreateCompanionBuilder,
+      $$ConfigsTableTableUpdateCompanionBuilder,
+      (ConfigData, $$ConfigsTableTableReferences),
+      ConfigData,
+      PrefetchHooks Function({bool personID})
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -53214,4 +54811,8 @@ class $AppDatabaseManager {
       $$QuestsTableTableTableManager(_db, _db.questsTable);
   $$PersonContactsTableTableTableManager get personContactsTable =>
       $$PersonContactsTableTableTableManager(_db, _db.personContactsTable);
+  $$AiPromptsTableTableTableManager get aiPromptsTable =>
+      $$AiPromptsTableTableTableManager(_db, _db.aiPromptsTable);
+  $$ConfigsTableTableTableManager get configsTable =>
+      $$ConfigsTableTableTableManager(_db, _db.configsTable);
 }

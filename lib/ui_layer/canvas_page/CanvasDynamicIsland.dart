@@ -60,7 +60,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     if (path.startsWith('/projects')) return "PROJECTS";
     if (path.startsWith('/project_notes')) return "NOTES";
     if (path.startsWith('/settings')) return "SETTINGS";
-    if (path.startsWith('/ssh')) return "SSH TERMINAL";
+    if (path.startsWith('/widgets/ssh')) return "SSH TERMINAL";
     return "ICE SHIELD";
   }
 
@@ -109,7 +109,7 @@ class CanvasDynamicIsland extends StatelessWidget {
       // Calculate width based on screen size
       final double targetWidth = isAnyTabOpen
           ? 320
-          : (currentRoute.startsWith('/ssh')
+          : (currentRoute.startsWith('/widgets/ssh')
               ? 300
               : (isFocusRunning ? 260 : 200));
       final double width = (targetWidth * scalingFactor).clamp(
@@ -198,7 +198,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                         }
                       : null,
                   child: Center(
-                    child: currentRoute.startsWith('/ssh')
+                    child: currentRoute.startsWith('/widgets/ssh')
                         ? _buildSSHMetrics(context, colorScheme, scalingFactor)
                         : isFocusRunning
                             ? Row(
@@ -279,7 +279,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (currentRoute != '/ssh') ...[
+                if (currentRoute != '/widgets/ssh') ...[
                   // Focus Shortcut
                   GestureDetector(
                     onTap: () {
