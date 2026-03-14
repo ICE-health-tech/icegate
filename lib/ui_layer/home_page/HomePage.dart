@@ -632,138 +632,234 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildGamifiedHeader(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    return Watch((context) {
+      final colorScheme = Theme.of(context).colorScheme;
+      final textTheme = Theme.of(context).textTheme;
 
-    final level = scoreBlock.globalLevel.value;
-    final progress = scoreBlock.levelProgress.value;
-    final rank = scoreBlock.rankTitle.value;
+      final level = scoreBlock.globalLevel.value;
+      final progress = scoreBlock.levelProgress.value;
+      final rank = scoreBlock.rankTitle.value;
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withOpacity(0.8),
-            colorScheme.primary.withOpacity(0.6),
-          ],
-          stops: const [0.0, 0.6, 1.0],
-        ),
+      final healthToday = scoreBlock.todayHealthPoints.value;
+      final socialToday = scoreBlock.todaySocialPoints.value;
+      final financeToday = scoreBlock.todayFinancePoints.value;
+      final projectToday = scoreBlock.todayProjectPoints.value;
+
+      return ClipRRect(
         borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.25),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-          BoxShadow(
-            color: Colors.black.withOpacity(0.1),
-            blurRadius: 2,
-            offset: const Offset(0, 2),
-          ),
-        ],
-        border: Border.all(
-          color: colorScheme.onPrimary.withOpacity(0.1),
-          width: 1,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    rank.toUpperCase(),
-                    style: textTheme.labelMedium?.copyWith(
-                      color: colorScheme.onPrimary.withOpacity(0.9),
-                      letterSpacing: 1.5,
-                      fontWeight: FontWeight.w900,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.15), // Crisp glass edge
+                width: 1,
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          rank.toUpperCase(),
+                          style: textTheme.labelMedium?.copyWith(
+                            color: colorScheme.onPrimary.withOpacity(0.9),
+                            letterSpacing: 1.5,
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!.level(level),
+                              style: textTheme.titleLarge?.copyWith(
+                                color: colorScheme.onPrimary,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                            const SizedBox(width: 12),
+                            _buildTodayGainsRow(
+                              context,
+                              health: healthToday,
+                              social: socialToday,
+                              finance: financeToday,
+                              projects: projectToday,
+                              showLabel: false,
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    AppLocalizations.of(context)!.level(level),
-                    style: textTheme.titleLarge?.copyWith(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: colorScheme.onPrimary.withOpacity(0.2),
-                    width: 1,
-                  ),
+                  ],
                 ),
-                child: Icon(
-                  Icons.shield_rounded,
-                  color: colorScheme.onPrimary,
-                  size: 26,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 18),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.progress_to_level(level + 1),
-                style: textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onPrimary.withOpacity(0.85),
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                '${(progress * 100).toInt()}%',
-                style: textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onPrimary,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Stack(
-            children: [
-              Container(
-                height: 6,
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              FractionallySizedBox(
-                widthFactor: progress.clamp(0.0, 1.0),
-                child: Container(
-                  height: 6,
-                  decoration: BoxDecoration(
-                    color: colorScheme.onPrimary,
-                    borderRadius: BorderRadius.circular(10),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.white.withOpacity(0.3),
-                        blurRadius: 4,
-                        offset: const Offset(0, 0),
+                const SizedBox(height: 18),
+
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      AppLocalizations.of(
+                        context,
+                      )!.progress_to_level(level + 1),
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurface.withOpacity(0.6),
+                        fontWeight: FontWeight.bold,
                       ),
-                    ],
-                  ),
+                    ),
+                    Text(
+                      '${(progress * 100).toInt()}%',
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurface,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+                const SizedBox(height: 8),
+                Stack(
+                  children: [
+                    Container(
+                      height: 6,
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.surface
+                            .withOpacity(0.2), // Correct scoping
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                    ),
+                    FractionallySizedBox(
+                      widthFactor: progress.clamp(0.0, 1.0),
+                      child: Container(
+                        height: 6,
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              Theme.of(context).colorScheme.primary,
+                              Theme.of(context).colorScheme.secondary,
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(10),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.primary.withOpacity(0.4),
+                              blurRadius: 6,
+                              offset: const Offset(0, 0),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
+                // const SizedBox(height: 18),
+              ],
+            ),
+          ),
+        ),
+      );
+    });
+  }
+
+  Widget _buildTodayGainsRow(
+    BuildContext context, {
+    required double health,
+    required double social,
+    required double finance,
+    required double projects,
+    bool showLabel = true,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (showLabel) ...[
+          Text(
+            AppLocalizations.of(context)!.todays_gains.toUpperCase(),
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+              letterSpacing: 1.2,
+            ),
+          ),
+          const SizedBox(height: 10),
+        ],
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildGainItem(
+              context,
+              Icons.favorite_rounded,
+              health,
+              Colors.greenAccent,
+            ),
+            const SizedBox(width: 8),
+            _buildGainItem(
+              context,
+              Icons.people_rounded,
+              social,
+              Colors.purpleAccent,
+            ),
+            const SizedBox(width: 8),
+            _buildGainItem(
+              context,
+              Icons.rocket_launch_rounded,
+              projects,
+              Colors.orangeAccent,
+            ),
+            const SizedBox(width: 8),
+            _buildGainItem(
+              context,
+              Icons.account_balance_wallet_rounded,
+              finance,
+              Colors.blueAccent,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildGainItem(
+    BuildContext context,
+    IconData icon,
+    double pts,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            "+${pts.toInt()}",
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: colorScheme.onSurface.withValues(alpha: 0.9),
+            ),
           ),
         ],
       ),
