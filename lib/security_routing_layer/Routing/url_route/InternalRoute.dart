@@ -20,7 +20,7 @@ import 'package:ice_gate/ui_layer/projects_page/ProjectDetailsPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart';
+// import 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart';
 // import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HeartRatePage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/SleepPage.dart';
@@ -373,29 +373,33 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // Route 9: Widgets
         GoRoute(
-          path: '/widgets',
-          builder: (context, state) => const WidgetPage(),
-          routes: [
-            GoRoute(
-              path: 'gps',
-              builder: (context, state) => const GPSTrackingPage(),
-            ),
-            GoRoute(
-              path: 'webview',
-              builder: (context, state) => const WebViewPage(
-                url: 'https://google.com',
-                title: 'External Widget',
-              ),
-            ),
-            GoRoute(
-              path: 'ssh',
-              builder: (context, state) => TalkSSHPage(
-                initialPrompt: state.extra as String?,
-              ),
-            ),
-          ],
+          path: '/ssh',
+          builder: (context, state) {
+            if (state.extra is Map<String, dynamic>) {
+              final data = state.extra as Map<String, dynamic>;
+              return TalkSSHPage(
+                initialPrompt: data['prompt'] as String?,
+                hostId: data['hostId'] as String?,
+                remotePath: data['remotePath'] as String?,
+                initialContent: data['content'] as String?,
+              );
+            }
+            return TalkSSHPage(
+              initialPrompt: state.extra as String?,
+            );
+          },
+        ),
+        GoRoute(
+          path: '/gps',
+          builder: (context, state) => const GPSTrackingPage(),
+        ),
+        GoRoute(
+          path: '/webview',
+          builder: (context, state) => const WebViewPage(
+            url: 'https://google.com',
+            title: 'External Widget',
+          ),
         ),
         // Route 10: Personal Information
         GoRoute(

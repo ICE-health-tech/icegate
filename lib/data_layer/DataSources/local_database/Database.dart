@@ -295,6 +295,36 @@ class ProjectsTable extends Table {
   TextColumn get color => text().nullable().named('color')();
   IntColumn get status =>
       integer().withDefault(const Constant(0)).named('status')();
+  TextColumn get sshHostId => text().nullable().named('ssh_host_id')();
+  TextColumn get remotePath => text().nullable().named('remote_path')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('SSHHostData')
+class SSHHostsTable extends Table {
+  @override
+  String get tableName => 'ssh_hosts';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text()
+      .nullable()
+      .references(OrganizationsTable, #id, onDelete: KeyAction.cascade)
+      .named('tenant_id')();
+  TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
+  TextColumn get host => text().named('host')();
+  IntColumn get port =>
+      integer().withDefault(const Constant(22)).named('port')();
+  TextColumn get user => text().named('username')();
+  TextColumn get remotePath => text().nullable().named('remote_path')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -545,6 +575,10 @@ class ProfilesTable extends Table {
   TextColumn get timezone => text().nullable().named('timezone')();
   TextColumn get preferredLanguage =>
       text().nullable().named('preferred_language')();
+  DateTimeColumn get lastQuestGeneratedAt => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('last_quest_generated_at')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1423,7 +1457,10 @@ class QuestsTable extends Table {
   TextColumn get type => text()
       .nullable()
       .withDefault(const Constant('daily'))
-      .named('type')(); // daily, weekly, permanent
+      .named('type')(); // daily, weekly, secret, system
+  TextColumn get questType => text().nullable().named(
+    'quest_type',
+  )(); // walking, running, swimming, pushups, etc.
   RealColumn get targetValue => real()
       .nullable()
       .withDefault(const Constant(0.0))
@@ -2019,6 +2056,8 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
               description: row.data['description'] as String?,
               category: row.data['category'] as String?,
               color: row.data['color'] as String?,
+              sshHostId: row.data['ssh_host_id'] as String?,
+              remotePath: row.data['remote_path'] as String?,
               status: (row.data['status'] as int?) ?? 0,
               createdAt: row.data['created_at'] != null
                   ? DateTime.tryParse(row.data['created_at'].toString()) ??
@@ -2036,6 +2075,9 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<bool> updateProject(ProjectData project) =>
       update(projectsTable).replace(project);
+
+  Future<int> updateProjectManual(String id, ProjectsTableCompanion project) =>
+      (update(projectsTable)..where((t) => t.id.equals(id))).write(project);
 
   Future<int> deleteProjectByUuid(String id) =>
       (delete(projectsTable)..where((t) => t.id.equals(id))).go();
@@ -2060,6 +2102,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     ProfilesTable,
     CVAddressesTable,
     PersonContactsTable,
+    QuestsTable,
   ],
 )
 class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
@@ -2811,6 +2854,17 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       }
     });
   }
+
+  Future<void> updateLastQuestGeneratedAt(String personID, DateTime timestamp) {
+    return (update(profilesTable)..where((t) => t.personID.equals(personID)))
+        .write(ProfilesTableCompanion(lastQuestGeneratedAt: Value(timestamp)));
+  }
+
+  Future<void> deleteAllQuestsByPerson(String personID) {
+    return (delete(
+      questsTable,
+    )..where((t) => t.personID.equals(personID))).go();
+  }
 }
 
 // 4.5 FinanceDAO
@@ -3381,9 +3435,13 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       return null;
     }
 
-    final targetDateStr =
+    // Use 'General' as default category if not specified for health metrics
+    final dateStr =
         "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-    final targetId = IDGen.generateDeterministicUuid(personID, targetDateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personID,
+      "$dateStr:General",
+    );
 
     // 1. Fast path: check exact deterministic ID
     final existingById = await (select(
@@ -3426,7 +3484,13 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
     final dateStr =
         "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
-    final deterministicId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final category = entry.category.present
+        ? entry.category.value ?? 'General'
+        : 'General';
+    final deterministicId = IDGen.generateDeterministicUuid(
+      personId,
+      "$dateStr:$category",
+    );
 
     final existing = await getMetricsForDate(personId, normalized);
 
@@ -3544,7 +3608,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     final dateStr = _getDateStr(now);
     final targetId = IDGen.generateDeterministicUuid(
       personId,
-      dateStr + category,
+      "$dateStr:$category",
     );
 
     await transaction(() async {
@@ -3612,7 +3676,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     final dateStr = _getDateStr(now);
     final targetId = IDGen.generateDeterministicUuid(
       personId,
-      dateStr + category,
+      "$dateStr:$category",
     );
 
     await transaction(() async {
@@ -3680,7 +3744,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     final dateStr = _getDateStr(now);
     final targetId = IDGen.generateDeterministicUuid(
       personId,
-      dateStr + category,
+      "$dateStr:$category",
     );
 
     await transaction(() async {
@@ -3748,7 +3812,7 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     final dateStr = _getDateStr(now);
     final targetId = IDGen.generateDeterministicUuid(
       personId,
-      dateStr + category,
+      "$dateStr:$category",
     );
 
     await transaction(() async {
@@ -3807,7 +3871,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   // Watchers for today's metrics
   Stream<HealthMetricsLocal?> watchTodayHealth(String personId) {
     final dateStr = _getDateStr(DateTime.now());
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      "$dateStr:General",
+    );
     return (select(
       healthMetricsTable,
     )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
@@ -3815,7 +3882,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<SocialMetricsLocal?> watchTodaySocial(String personId) {
     final dateStr = _getDateStr(DateTime.now());
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      "$dateStr:General",
+    );
     return (select(
       socialMetricsTable,
     )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
@@ -3823,7 +3893,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<ProjectMetricsLocal?> watchTodayProject(String personId) {
     final dateStr = _getDateStr(DateTime.now());
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      "$dateStr:General",
+    );
     return (select(
       projectMetricsTable,
     )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
@@ -3831,7 +3904,10 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
 
   Stream<FinancialMetricsLocal?> watchTodayFinancial(String personId) {
     final dateStr = _getDateStr(DateTime.now());
-    final targetId = IDGen.generateDeterministicUuid(personId, dateStr);
+    final targetId = IDGen.generateDeterministicUuid(
+      personId,
+      "$dateStr:General",
+    );
     return (select(
       financialMetricsTable,
     )..where((t) => t.id.equals(targetId))).watchSingleOrNull();
@@ -3876,6 +3952,60 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     return customSelect(
       'SELECT SUM(quest_points) as total FROM financial_metrics WHERE person_id = ?',
       variables: [Variable.withString(personId)],
+      readsFrom: {financialMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  // --- Today's Quest Points Watchers ---
+
+  Stream<double> watchTodayHealthQuestPoints(String personId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return customSelect(
+      'SELECT SUM(quest_points) as total FROM health_metrics WHERE person_id = ? AND date = ?',
+      variables: [Variable.withString(personId), Variable.withDateTime(today)],
+      readsFrom: {healthMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTodaySocialQuestPoints(String personId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return customSelect(
+      'SELECT SUM(quest_points) as total FROM social_metrics WHERE person_id = ? AND date = ?',
+      variables: [Variable.withString(personId), Variable.withDateTime(today)],
+      readsFrom: {socialMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTodayProjectQuestPoints(String personId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return customSelect(
+      'SELECT SUM(quest_points) as total FROM project_metrics WHERE person_id = ? AND date = ?',
+      variables: [Variable.withString(personId), Variable.withDateTime(today)],
+      readsFrom: {projectMetricsTable},
+    ).watchSingle().map((row) {
+      final val = row.data['total'];
+      return (val as num?)?.toDouble() ?? 0.0;
+    });
+  }
+
+  Stream<double> watchTodayFinancialQuestPoints(String personId) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return customSelect(
+      'SELECT SUM(quest_points) as total FROM financial_metrics WHERE person_id = ? AND date = ?',
+      variables: [Variable.withString(personId), Variable.withDateTime(today)],
       readsFrom: {financialMetricsTable},
     ).watchSingle().map((row) {
       final val = row.data['total'];
@@ -4361,6 +4491,26 @@ class GlobalRankingEntry {
       (score.careerGlobalScore ?? 0.0);
 }
 
+@DriftAccessor(tables: [SSHHostsTable])
+class SSHHostsDAO extends DatabaseAccessor<AppDatabase>
+    with _$SSHHostsDAOMixin {
+  SSHHostsDAO(super.db);
+
+  Future<int> insertSSHHost(SSHHostsTableCompanion entry) =>
+      into(sSHHostsTable).insert(entry);
+
+  Future<bool> updateSSHHost(SSHHostData entry) =>
+      update(sSHHostsTable).replace(entry);
+
+  Future<int> deleteSSHHost(String id) =>
+      (delete(sSHHostsTable)..where((t) => t.id.equals(id))).go();
+
+  Stream<List<SSHHostData>> watchAllSSHHosts() => select(sSHHostsTable).watch();
+
+  Future<SSHHostData?> getSSHHostById(String id) =>
+      (select(sSHHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+}
+
 @DriftAccessor(tables: [QuestsTable])
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   QuestDAO(super.db);
@@ -4513,6 +4663,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     SocialMetricsTable,
     MealsTable,
     DaysTable,
+    SSHHostsTable,
     ScoresTable,
     ThemeTable,
     ProjectsTable,
@@ -4549,6 +4700,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     QuoteDAO,
     HealthLogsDAO,
     QuestDAO,
+    SSHHostsDAO,
     MetricsDAO,
   ],
 )
@@ -4563,13 +4715,17 @@ class AppDatabase extends _$AppDatabase {
   factory AppDatabase.powersync(PowerSyncDatabase db) {
     return AppDatabase(SqliteAsyncDriftConnection(db), db);
   }
+
+  QuestDAO get questDAO => QuestDAO(this);
+  SSHHostsDAO get sshHostsDAO => SSHHostsDAO(this);
+
   @override
   DriftDatabaseOptions get options => const DriftDatabaseOptions(
     // Ép Drift lưu DateTime dưới dạng chuỗi ISO8601 thay vì số nguyên
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 42;
+  int get schemaVersion => 45;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -4579,7 +4735,6 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  // Migration strategy would be needed here for a real app update
   @override
   MigrationStrategy get migration {
     return MigrationStrategy(
@@ -4587,19 +4742,28 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 45) {
+          // Schema version 45 adds quest_type column.
+          // Since it's a PowerSync table, we do not use m.addColumn
+          // as PowerSync manages the local SQLite table as a view.
+        }
+        if (from < 44) {
+          // Schema version 44 adds the ssh_hosts table.
+          // Since it's a PowerSync table, we don't call m.createTable(sshHostsTable) here
+          // as Drift uses CREATE TABLE but PowerSync expects to manage its own views.
+        }
+        if (from < 43) {
+          // Schema version 43 adds ssh_host_id, remote_path, and category to the 'projects' table.
+          // Since 'projects' is a PowerSync-managed table, its local representation is a view.
+          // We must NOT use m.addColumn here as ALTER TABLE on a view is illegal in SQLite.
+        }
         if (from < 33) {
-          // The image_url column was added to quests. However, since quests is
-          // synced via PowerSync, it is a VIEW in SQLite, not a base table.
-          // PowerSync automatically handles recreating this view based on the
-          // new schema, so we DO NOT use `m.addColumn` here.
+          // The image_url column was added to quests
         }
         if (from < 31) {
-          // PowerSync tables (like custom_notifications) are views in SQLite.
-          // They should be updated via the PowerSync schema, NOT via ALTER TABLE.
-          // This block is now empty or contains only local-only table alterations.
+          // PowerSync tables are views
         }
         if (from < 2) {
-          // Create new tables
           await m.createTable(personsTable);
           await m.createTable(emailAddressesTable);
           await m.createTable(userAccountsTable);
@@ -4611,6 +4775,7 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(habitsTable);
           await m.createTable(aiAnalysisTable);
           await m.createTable(personWidgetsTable);
+          await m.createTable(projectNotesTable);
         }
         if (from < 3) {
           await m.createTable(cVAddressesTable);
@@ -4619,7 +4784,7 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(sessionTable);
         }
         if (from < 15) {
-          await m.createTable(focusSessionsTable);
+          await m.createTable(organizationsTable);
         }
         if (from < 16) {
           try {
@@ -4627,7 +4792,7 @@ class AppDatabase extends _$AppDatabase {
               "ALTER TABLE focus_sessions ADD COLUMN taskID TEXT REFERENCES goals(goalID) ON DELETE CASCADE;",
             );
           } catch (e) {
-            print('Error adding taskID column to focus_sessions: $e');
+            print('Error adding taskID: $e');
           }
         }
         if (from < 5) {
@@ -4641,18 +4806,13 @@ class AppDatabase extends _$AppDatabase {
           await m.createTable(projectsTable);
         }
         if (from < 8) {
-          // Safely add columns - catch errors if they already exist
           try {
             await customStatement(
               'ALTER TABLE project_notes ADD COLUMN personID TEXT REFERENCES persons(personID) ON DELETE CASCADE',
             );
-          } catch (_) {}
-          try {
             await customStatement(
               'ALTER TABLE project_notes ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE',
             );
-          } catch (_) {}
-          try {
             await customStatement(
               'ALTER TABLE goals ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE',
             );
@@ -4661,97 +4821,60 @@ class AppDatabase extends _$AppDatabase {
         if (from < 9) {
           await m.createTable(transactionsTable);
         }
-
         if (from < 10) {
-          // Attempt to clean duplicates (exact matches only for safety)
           try {
             await customStatement(
               'DELETE FROM health_metrics WHERE metricID NOT IN (SELECT MIN(metricID) FROM health_metrics GROUP BY personID, date)',
             );
-          } catch (e) {
-            print('Error deleting duplicates: $e');
-          }
-
-          // Add unique index (this mimics uniqueKeys logic for the DB engine)
-          try {
             await customStatement(
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_health_metrics_unique ON health_metrics (personID, date)',
             );
           } catch (e) {
-            print('Error creating unique index: $e');
+            print('Error in version 10: $e');
           }
         }
-
         if (from < 20) {
-          // Duplicate cleanup for scores
           try {
-            print('Drift: Cleaning up duplicate scores for version 20');
             await customStatement(
               'DELETE FROM scores WHERE scoreID NOT IN (SELECT MIN(scoreID) FROM scores GROUP BY personID)',
             );
-
-            // Create the unique index if needed (SQLite table constraints are hard to add via ALTER)
-            // But with .unique() in the table definition and a version bump, Drift's build_runner might handle it
-            // or we manually ensure it here.
             await customStatement(
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_person_unique ON scores (personID)',
             );
           } catch (e) {
-            print('Drift: Error in version 20 migration: $e');
+            print('Error in version 20: $e');
           }
         }
-
         if (from < 11) {
           try {
             await customStatement(
               "ALTER TABLE persons ADD COLUMN relationship TEXT DEFAULT 'none';",
             );
-          } catch (e) {
-            print('Error adding relationship column: $e');
-          }
+          } catch (_) {}
         }
         if (from < 12) {
           try {
             await customStatement(
               "ALTER TABLE persons ADD COLUMN affection INTEGER DEFAULT 0;",
             );
-          } catch (e) {
-            print('Error adding affection column: $e');
-          }
+          } catch (_) {}
         }
         if (from < 13) {
-          try {
-            await customStatement(
-              "ALTER TABLE projects ADD COLUMN category TEXT;",
-            );
-          } catch (e) {
-            print('Error adding category column to projects: $e');
-          }
+          // ALTER TABLE projects ADD COLUMN category TEXT;
+          // Skipped for PowerSync view safety.
         }
         if (from < 14) {
           try {
             await customStatement(
               "ALTER TABLE transactions ADD COLUMN projectID TEXT REFERENCES projects(projectID) ON DELETE CASCADE;",
             );
-          } catch (e) {
-            print('Error adding projectID column to transactions: $e');
-          }
+          } catch (_) {}
         }
         if (from < 17) {
           await m.createTable(customNotificationsTable);
         }
         if (from < 18) {
           await m.createTable(quotesTable);
-          try {
-            await customStatement(
-              "ALTER TABLE custom_notifications_table ADD COLUMN repeat_frequency TEXT DEFAULT 'none';",
-            );
-          } catch (_) {}
-          try {
-            await customStatement(
-              "ALTER TABLE custom_notifications_table ADD COLUMN repeat_days TEXT;",
-            );
-          } catch (_) {}
         }
         if (from < 19) {
           await m.createTable(waterLogsTable);
@@ -4763,16 +4886,13 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               "ALTER TABLE health_metrics ADD COLUMN focus_minutes INTEGER DEFAULT 0;",
             );
-          } catch (e) {
-            print('Error adding focus_minutes column to health_metrics: $e');
-          }
+          } catch (_) {}
         }
         if (from < 22) {
           await m.createTable(questsTable);
         }
         if (from < 23) {
-          // Comprehensive migration to add 'id' column to all tables if it's missing.
-          // This is critical for existing users after we made 'id' non-nullable.
+          // Add ID to all tables if missing
           final tableNames = [
             'internal_widgets',
             'external_widgets',
@@ -4803,84 +4923,41 @@ class AppDatabase extends _$AppDatabase {
             'exercise_logs',
             'quests',
           ];
-
           for (final tableName in tableNames) {
             try {
-              await customStatement(
-                'ALTER TABLE $tableName ADD COLUMN id TEXT;',
-              );
-            } catch (e) {
-              print('Drift: Error adding id column to $tableName: $e');
-            }
+              // Only attempt ALTER on tables, not views.
+              // We check if it's a view by querying sqlite_master.
+              final isView = await customSelect(
+                "SELECT type FROM sqlite_master WHERE name = ?",
+                variables: [Variable.withString(tableName)],
+              ).getSingleOrNull();
+
+              if (isView?.read<String>('type') == 'table') {
+                await customStatement(
+                  'ALTER TABLE $tableName ADD COLUMN id TEXT;',
+                );
+              }
+            } catch (_) {}
           }
         }
-
         if (from < 26) {
           try {
             await customStatement(
               "ALTER TABLE meals ADD COLUMN person_id TEXT REFERENCES persons(id) ON DELETE CASCADE;",
             );
-          } catch (e) {
-            print('Drift: Error adding person_id column to meals: $e');
-          }
+          } catch (_) {}
         }
         if (from < 32) {
           try {
             await customStatement(
               "ALTER TABLE custom_notifications ADD COLUMN person_id TEXT REFERENCES persons(id) ON DELETE CASCADE;",
             );
-          } catch (e) {
-            print(
-              'Drift: Error adding person_id column to custom_notifications: $e',
-            );
-          }
+          } catch (_) {}
         }
-
         if (from < 35) {
           try {
             await m.addColumn(internalWidgetsTable, internalWidgetsTable.scope);
-          } catch (e) {
-            print('Drift: Error adding scope column to internal_widgets: $e');
-          }
-        }
-
-        if (from < 37) {
-          // NOTE: persons, profiles, and cVAddressesTable are synced via PowerSync.
-          // They are views in SQLite, so m.addColumn will fail.
-          // These columns were added to powersync_schema.dart, and PowerSync
-          // will automatically handle the SQLite schema update.
-          /*
-          try {
-            await m.addColumn(personsTable, personsTable.coverImageUrl);
-            await m.addColumn(profilesTable, profilesTable.coverImageUrl);
-            await m.addColumn(cVAddressesTable, cVAddressesTable.coverImageUrl);
-          } catch (e) {
-            print('Drift: Error in version 37 migration: $e');
-          }
-          */
-        }
-
-        if (from < 38) {
-          // NOTE: avatar_local_path and cover_local_path were also added to
-          // powersync_schema.dart for secondary sync/schema consistency.
-          /*
-          try {
-            await m.addColumn(personsTable, personsTable.avatarLocalPath);
-            await m.addColumn(personsTable, personsTable.coverLocalPath);
-            await m.addColumn(profilesTable, profilesTable.avatarLocalPath);
-            await m.addColumn(profilesTable, profilesTable.coverLocalPath);
-            await m.addColumn(
-              cVAddressesTable,
-              cVAddressesTable.avatarLocalPath,
-            );
-            await m.addColumn(
-              cVAddressesTable,
-              cVAddressesTable.coverLocalPath,
-            );
-          } catch (e) {
-            print('Drift: Error in version 38 migration: $e');
-          }
-          */
+          } catch (_) {}
         }
         if (from < 41) {
           try {
@@ -4894,8 +4971,6 @@ class AppDatabase extends _$AppDatabase {
               projectMetricsTable.category,
             );
             await m.addColumn(socialMetricsTable, socialMetricsTable.category);
-
-            // Fill NULL values for existing rows
             await customStatement(
               "UPDATE health_metrics SET category = 'General' WHERE category IS NULL",
             );
@@ -4908,35 +4983,7 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               "UPDATE social_metrics SET category = 'General' WHERE category IS NULL",
             );
-
-            // Update unique indexes to include category.
-            // We drop standard Drift index names if they existed.
-            await customStatement(
-              'DROP INDEX IF EXISTS health_metrics_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS financial_metrics_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS project_metrics_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS social_metrics_person_id_date',
-            );
-
-            await customStatement(
-              'DROP INDEX IF EXISTS index_health_metrics_on_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS index_financial_metrics_on_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS index_project_metrics_on_person_id_date',
-            );
-            await customStatement(
-              'DROP INDEX IF EXISTS index_social_metrics_on_person_id_date',
-            );
-
+            // Indexes
             await customStatement(
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_health_metrics_category_unique ON health_metrics (person_id, date, category)',
             );
@@ -4949,40 +4996,22 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_social_metrics_category_unique ON social_metrics (person_id, date, category)',
             );
-          } catch (e) {
-            print('Drift: Error in version 41 migration: $e');
-          }
+          } catch (_) {}
         }
         if (from < 42) {
           try {
             await m.addColumn(projectNotesTable, projectNotesTable.category);
-            // Fill NULL values for existing rows
             await customStatement(
               "UPDATE project_notes SET category = 'projects' WHERE category IS NULL",
             );
-          } catch (e) {
-            print('Drift: Error in version 42 migration: $e');
-          }
+          } catch (_) {}
         }
       },
       beforeOpen: (details) async {
         print(
           "Drift: beforeOpen triggered. Version: ${details.versionBefore} -> ${details.versionNow}",
         );
-
-        // 1. persons cleanup
-        try {
-          await customStatement(
-            "ALTER TABLE persons ADD COLUMN affection INTEGER DEFAULT 0;",
-          );
-        } catch (_) {}
-        try {
-          await customStatement(
-            "UPDATE persons SET affection = 0 WHERE affection IS NULL;",
-          );
-        } catch (_) {}
-
-        // 2. custom_notifications cleanup (Fixes NULL check operator error)
+        // Consolidated cleanups
         try {
           await customStatement(
             "UPDATE custom_notifications SET repeat_frequency = 'none' WHERE repeat_frequency IS NULL;",
@@ -4991,23 +5020,7 @@ class AppDatabase extends _$AppDatabase {
             "UPDATE custom_notifications SET is_enabled = 1 WHERE is_enabled IS NULL;",
           );
           await customStatement(
-            "UPDATE custom_notifications SET title = 'Reminder' WHERE title IS NULL;",
-          );
-          await customStatement(
-            "UPDATE custom_notifications SET content = '' WHERE content IS NULL;",
-          );
-        } catch (_) {}
-
-        // 3. project_notes cleanup
-        try {
-          await customStatement(
             "UPDATE project_notes SET category = 'projects' WHERE category IS NULL;",
-          );
-          await customStatement(
-            "UPDATE project_notes SET title = 'Untitled' WHERE title IS NULL;",
-          );
-          await customStatement(
-            "UPDATE project_notes SET content = '' WHERE content IS NULL;",
           );
         } catch (_) {}
       },

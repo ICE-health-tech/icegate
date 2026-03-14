@@ -1,11 +1,13 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:intl/intl.dart';
 
 class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
@@ -53,11 +55,12 @@ class FinanceBlock {
     return accSum + assetSum + (income + savings - expense - investment);
   });
 
-  /// Calculate points based on total balance
+  /// Calculate points based on total net worth
+  /// Rule: +2 points for every $10 = +0.2 points per $1
   late final financePoints = computed(() {
-    if (FINANCE_SAVINGS_MILESTONE <= 0) return 0.0;
-    return (totalBalance.value / FINANCE_SAVINGS_MILESTONE) *
-        FINANCE_SAVINGS_POINTS;
+    if (FINANCE_NET_WORTH_PER_POINT <= 0) return 0.0;
+    // Points = Total Net Worth / 5 (since 10/2 = 5)
+    return totalBalance.value / FINANCE_NET_WORTH_PER_POINT;
   });
 
   /// Total savings amount
@@ -144,13 +147,63 @@ class FinanceBlock {
     return map;
   });
 
-  void init(FinanceDAO dao, String personId) {
+  /// Savings rate (Savings / Income)
+  late final savingsRate = computed(() {
+    final inc = monthlyIncome.value;
+    if (inc <= 0) return 0.0;
+    return (totalSavings.value / inc) * 100;
+  });
+
+  /// Spending Efficiency (1 - Expense / Income)
+  late final spendingEfficiency = computed(() {
+    final inc = monthlyIncome.value;
+    if (inc <= 0) return 0.0;
+    final exp = monthlySpending.value;
+    return (1 - (exp / inc)).clamp(0.0, 1.0) * 100;
+  });
+
+  /// Next major milestone (next $5000 or $10000 depending on current balance)
+  late final nextMilestone = computed(() {
+    final balance = totalBalance.value;
+    if (balance < 1000) return 1000.0;
+    if (balance < 5000) return 5000.0;
+    if (balance < 10000) return 10000.0;
+    // Round up to nearest $10k
+    return ((balance / 10000).floor() + 1) * 10000.0;
+  });
+
+  /// Progress to next milestone (0.0 to 1.0)
+  late final milestoneProgress = computed(() {
+    final total = totalBalance.value;
+    final target = nextMilestone.value;
+    if (target <= 0) return 0.0;
+
+    // We calculate progress relative to the previous "step"
+    double start = 0;
+    if (target == 1000) start = 0;
+    else if (target == 5000) start = 1000;
+    else if (target == 10000) start = 5000;
+    else start = target - 10000;
+
+    final range = target - start;
+    if (range <= 0) return 1.0;
+    return ((total - start) / range).clamp(0.0, 1.0);
+  });
+
+  /// Currency toggle (true for VND, false for USD)
+  final useVnd = signal(false);
+
+  void init(FinanceDAO dao, String personId) async {
     if (personId.isEmpty) {
       debugPrint("FinanceBlock: Skipping init, personId is empty.");
       return;
     }
     _dao = dao;
     _personId = personId;
+
+    // Load currency preference
+    final prefs = await SharedPreferences.getInstance();
+    useVnd.value = prefs.getBool('finance_use_vnd') ?? false;
 
     _accountsSubscription?.cancel();
     _accountsSubscription = dao.watchAccounts(personId).listen((data) {
@@ -227,6 +280,29 @@ class FinanceBlock {
 
   Future<void> deleteTransaction(String id) async {
     await _dao.deleteTransaction(id);
+  }
+
+  Future<void> toggleCurrency() async {
+    useVnd.value = !useVnd.value;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('finance_use_vnd', useVnd.value);
+  }
+
+  static final NumberFormat _usdFormat = NumberFormat.currency(
+    symbol: '\$',
+    decimalDigits: 1,
+  );
+  static final NumberFormat _vndFormat = NumberFormat.currency(
+    symbol: '₫',
+    decimalDigits: 0,
+    locale: 'vi_VN',
+  );
+
+  String formatCurrency(double amount) {
+    if (useVnd.value) {
+      return _vndFormat.format(amount * USD_TO_VND_RATE);
+    }
+    return _usdFormat.format(amount);
   }
 
   void dispose() {

@@ -5,7 +5,9 @@ import 'SSHHostModel.dart';
 
 class SSHStorageService {
   static const String _hostsKey = 'ssh_hosts_list';
+  static const String _ipPrefix = 'ssh_ip_';
   static const String _passwordPrefix = 'ssh_pass_';
+  static const String _pathPrefix = 'ssh_path_';
   
   final _secureStorage = const FlutterSecureStorage();
 
@@ -24,15 +26,27 @@ class SSHStorageService {
       hosts.add(host);
     }
 
-    // 3. Save hosts list to SharedPreferences (without passwords)
-    final hostsJson = hosts.map((h) => h.toJson(includePassword: false)).toList();
+    // 3. Save hosts list to SharedPreferences (without sensitive info)
+    final hostsJson = hosts.map((h) => h.toJson(includePassword: false, includeHost: false)).toList();
     await prefs.setString(_hostsKey, jsonEncode(hostsJson));
 
-    // 4. Save password to SecureStorage if it exists
+    // 4. Save sensitive info to SecureStorage
+    await _secureStorage.write(
+      key: '$_ipPrefix${host.id}',
+      value: host.host,
+    );
+    
     if (host.password != null) {
       await _secureStorage.write(
         key: '$_passwordPrefix${host.id}',
         value: host.password,
+      );
+    }
+
+    if (host.remoteFilePath != null) {
+      await _secureStorage.write(
+        key: '$_pathPrefix${host.id}',
+        value: host.remoteFilePath,
       );
     }
   }
@@ -47,12 +61,26 @@ class SSHStorageService {
     final List<dynamic> decoded = jsonDecode(hostsString);
     List<SSHHostModel> hosts = decoded.map((item) => SSHHostModel.fromJson(item)).toList();
     
-    // Fetch passwords from SecureStorage
+    // RE-IMPLEMENTING loadHosts to handle final fields correctly
+    List<SSHHostModel> populatedHosts = [];
     for (var host in hosts) {
-      host.password = await _secureStorage.read(key: '$_passwordPrefix${host.id}');
+      final hostIp = await _secureStorage.read(key: '$_ipPrefix${host.id}') ?? '';
+      final password = await _secureStorage.read(key: '$_passwordPrefix${host.id}');
+      final path = await _secureStorage.read(key: '$_pathPrefix${host.id}');
+      
+      populatedHosts.add(SSHHostModel(
+        id: host.id,
+        name: host.name,
+        host: hostIp,
+        port: host.port,
+        user: host.user,
+        password: password,
+        remoteFilePath: path,
+        lastUsed: host.lastUsed,
+      ));
     }
     
-    return hosts;
+    return populatedHosts;
   }
 
   /// Delete a host and its password
@@ -62,9 +90,11 @@ class SSHStorageService {
     
     hosts.removeWhere((h) => h.id == hostId);
     
-    final hostsJson = hosts.map((h) => h.toJson(includePassword: false)).toList();
+    final hostsJson = hosts.map((h) => h.toJson(includePassword: false, includeHost: false)).toList();
     await prefs.setString(_hostsKey, jsonEncode(hostsJson));
     
+    await _secureStorage.delete(key: '$_ipPrefix$hostId');
     await _secureStorage.delete(key: '$_passwordPrefix$hostId');
+    await _secureStorage.delete(key: '$_pathPrefix$hostId');
   }
 }

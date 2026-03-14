@@ -102,8 +102,8 @@ class FinancePage extends StatefulWidget {
             String typeName = type == 'expense'
                 ? l10n.finance_type_expense
                 : type == 'income'
-                    ? l10n.finance_type_income
-                    : l10n.finance_type_savings;
+                ? l10n.finance_type_income
+                : l10n.finance_type_savings;
             dialogTitle = l10n.finance_add_type(typeName);
           }
 
@@ -270,10 +270,6 @@ class FinancePage extends StatefulWidget {
 }
 
 class _FinancePageState extends State<FinancePage> {
-  final NumberFormat _currencyFormat = NumberFormat.currency(
-    symbol: '\$',
-    decimalDigits: 1,
-  );
   late final List<FinanceAsset> _stocks = [];
   final Map<String, String> _projectNamesCache = {};
 
@@ -320,6 +316,19 @@ class _FinancePageState extends State<FinancePage> {
               leadingWidth: 0,
               leading: const SizedBox.shrink(),
               actions: [
+                IconButton(
+                  icon: Watch((context) {
+                    return Text(
+                      financeBlock.useVnd.value ? 'VND' : 'USD',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        color: Colors.amberAccent,
+                      ),
+                    );
+                  }),
+                  onPressed: () => financeBlock.toggleCurrency(),
+                ),
                 IconButton(
                   icon: const Icon(Icons.home_rounded, size: 30),
                   onPressed: () {
@@ -489,7 +498,7 @@ class _FinancePageState extends State<FinancePage> {
           ),
           const SizedBox(height: 12),
           Text(
-            _currencyFormat.format(totalBalance),
+            block.formatCurrency(totalBalance),
             style: textTheme.displaySmall?.copyWith(
               color: colorScheme.onPrimary,
               fontWeight: FontWeight.w900,
@@ -502,7 +511,10 @@ class _FinancePageState extends State<FinancePage> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
@@ -522,8 +534,9 @@ class _FinancePageState extends State<FinancePage> {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (isPositive ? Colors.greenAccent : Colors.redAccent)
-                          .withValues(alpha: 0.15),
+                      color:
+                          (isPositive ? Colors.greenAccent : Colors.redAccent)
+                              .withValues(alpha: 0.15),
                       blurRadius: 8,
                       spreadRadius: -1,
                     ),
@@ -541,9 +554,11 @@ class _FinancePageState extends State<FinancePage> {
                     ),
                     const SizedBox(width: 8),
                     Text(
-                      '${isPositive ? '+' : ''}${_currencyFormat.format(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
+                      '${isPositive ? '+' : ''}${block.formatCurrency(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
                       style: TextStyle(
-                        color: isPositive ? Colors.greenAccent : Colors.redAccent,
+                        color: isPositive
+                            ? Colors.greenAccent
+                            : Colors.redAccent,
                         fontWeight: FontWeight.w900,
                         fontSize: 13,
                         letterSpacing: 0.3,
@@ -553,37 +568,37 @@ class _FinancePageState extends State<FinancePage> {
                 ),
               ),
 
-              // Points display
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: Colors.white.withOpacity(0.2),
-                    width: 1,
-                  ),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    const Icon(
-                      Icons.bolt_rounded,
-                      color: Colors.amberAccent,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${financePoints.toInt()} ${l10n.social_points_suffix}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              // Points display - REMOVED
+              // Container(
+              //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+              //   decoration: BoxDecoration(
+              //     color: Colors.white.withOpacity(0.15),
+              //     borderRadius: BorderRadius.circular(20),
+              //     border: Border.all(
+              //       color: Colors.white.withOpacity(0.2),
+              //       width: 1,
+              //     ),
+              //   ),
+              //   child: Row(
+              //     mainAxisSize: MainAxisSize.min,
+              //     children: [
+              //       const Icon(
+              //         Icons.bolt_rounded,
+              //         color: Colors.amberAccent,
+              //         size: 16,
+              //       ),
+              //       const SizedBox(width: 6),
+              //       Text(
+              //         '${financePoints.toInt()} ${l10n.social_points_suffix}',
+              //         style: const TextStyle(
+              //           color: Colors.white,
+              //           fontWeight: FontWeight.w900,
+              //           fontSize: 13,
+              //         ),
+              //       ),
+              //     ],
+              //   ),
+              // ),
             ],
           ),
           const SizedBox(height: 16),
@@ -595,71 +610,196 @@ class _FinancePageState extends State<FinancePage> {
   }
 
   Widget _buildPointsProgress(BuildContext context, double totalBalance) {
-    // Current milestone logic: Points = (balance / milestone) * points_per_milestone
-    // Let's visualize the progress to the next $1000 or next milestone unit
-    final double milestoneUnit = 1000.0;
-    final double currentMilestoneProgress = totalBalance % milestoneUnit;
-    final double percentage = currentMilestoneProgress / milestoneUnit;
+    final block = context.read<FinanceBlock>();
     final l10n = AppLocalizations.of(context)!;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.finance_power_points,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.6),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.0,
+    // Use Watch for all dynamic signals
+    return Watch((context) {
+      final percentage = block.milestoneProgress.value;
+      final nextVal = block.nextMilestone.value;
+      final efficiency = block.spendingEfficiency.value;
+      final savRate = block.savingsRate.value;
+
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.finance_power_points,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.9),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  Text(
+                    '${l10n.finance_goal}: ${block.formatCurrency(nextVal)}',
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              '${(percentage * 100).toInt()}%',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.8),
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  '${(percentage * 100).toInt()}%',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Stack(
-          children: [
-            Container(
-              height: 4,
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(2),
+            ],
+          ),
+          const SizedBox(height: 10),
+          // Gradient Progress Bar
+          Stack(
+            children: [
+              Container(
+                height: 8,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.black.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(4),
+                ),
               ),
-            ),
-            FractionallySizedBox(
-              widthFactor: percentage,
-              child: Container(
-                height: 4,
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 1000),
+                curve: Curves.easeOutCubic,
+                height: 8,
+                width: MediaQuery.of(context).size.width *
+                    0.8 *
+                    percentage.clamp(0.01, 1.0),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [Colors.amberAccent, Colors.orangeAccent],
+                    colors: [Colors.amberAccent, Colors.orangeAccent, Colors.yellowAccent],
                   ),
-                  borderRadius: BorderRadius.circular(2),
+                  borderRadius: BorderRadius.circular(4),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.amberAccent.withOpacity(0.3),
+                      color: Colors.amberAccent.withOpacity(0.5),
+                      blurRadius: 10,
+                      spreadRadius: 1,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          // Efficiency Dashboard
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildPowerMetric(
+                context,
+                label: l10n.finance_efficiency ?? "Efficiency",
+                percent: efficiency,
+                icon: Icons.bolt_rounded,
+                color: Colors.cyanAccent,
+              ),
+              _buildPowerMetric(
+                context,
+                label: l10n.finance_savings_rate ?? "Savings Rate",
+                percent: savRate,
+                icon: Icons.auto_graph_rounded,
+                color: Colors.lightGreenAccent,
+              ),
+            ],
+          ),
+        ],
+      );
+    });
+  }
+
+  Widget _buildPowerMetric(
+    BuildContext context, {
+    required String label,
+    required double percent,
+    required IconData icon,
+    required Color color,
+  }) {
+    return Container(
+      width: (MediaQuery.of(context).size.width - 100) / 2,
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: Colors.white.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, color: color, size: 14),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  label.toUpperCase(),
+                  style: TextStyle(
+                    color: Colors.white.withOpacity(0.5),
+                    fontSize: 8,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '${percent.toStringAsFixed(1)}%',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 16,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+          const SizedBox(height: 4),
+          // Mini progress bar for metric
+          Container(
+            height: 3,
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white.withOpacity(0.05),
+              borderRadius: BorderRadius.circular(1.5),
+            ),
+            child: FractionallySizedBox(
+              alignment: Alignment.centerLeft,
+              widthFactor: (percent / 100).clamp(0.0, 1.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: color,
+                  borderRadius: BorderRadius.circular(1.5),
+                  boxShadow: [
+                    BoxShadow(
+                      color: color.withOpacity(0.5),
                       blurRadius: 4,
-                      offset: const Offset(0, 1),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
-        ),
-      ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -772,7 +912,7 @@ class _FinancePageState extends State<FinancePage> {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  _currencyFormat.format(amount),
+                  context.read<FinanceBlock>().formatCurrency(amount),
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 20,
@@ -926,8 +1066,8 @@ class _FinancePageState extends State<FinancePage> {
                                   letterSpacing: 0.2,
                                 ),
                               ),
-                              Text(
-                                _currencyFormat.format(entry.value),
+                               Text(
+                                financeBlock.formatCurrency(entry.value),
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: 14,
@@ -1095,7 +1235,7 @@ class _FinancePageState extends State<FinancePage> {
               ),
             ),
             Text(
-              '$prefix${_currencyFormat.format(txn.amount)}',
+              '$prefix${financeBlock.formatCurrency(txn.amount)}',
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.w900,

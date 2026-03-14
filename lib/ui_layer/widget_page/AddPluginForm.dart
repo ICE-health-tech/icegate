@@ -398,7 +398,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       ),
       _InternalPlugin(
         name: 'Location Tracker',
-        url: '/widgets/gps',
+        url: '/gps',
         icon: Icons.location_on_rounded,
         description: 'Live location tracking.',
         category: PluginCategory.other,
@@ -419,7 +419,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       ),
       _InternalPlugin(
         name: 'ICE GATE SSH',
-        url: '/widgets/ssh',
+        url: '/ssh',
         icon: Icons.terminal_rounded,
         description: 'Secure remote terminal.',
         category: PluginCategory.other,

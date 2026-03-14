@@ -334,6 +334,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nutri_cal => 'cal';
 
   @override
+  String get todays_gains => 'Điểm Hôm Nay';
+
+  @override
   String get health_metrics_steps => 'Bước chân';
 
   @override
@@ -1918,6 +1921,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_power_points => 'SỨC MẠNH TÀI CHÍNH';
 
   @override
+  String get finance_goal => 'Mục tiêu';
+
+  @override
+  String get finance_efficiency => 'Hiệu suất';
+
+  @override
+  String get finance_savings_rate => 'Tỷ lệ tiết kiệm';
+
+  @override
   String get finance_points_desc => 'Điểm tích lũy từ tài sản ròng';
 
   @override
@@ -1961,4 +1973,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get social_notes => 'Ghi chú xã hội';
+
+  @override
+  String get btn_send_feedback => 'Gửi phản hồi';
+
+  @override
+  String get feedback_subtitle => 'Báo lỗi hoặc đề xuất tính năng mới';
 }

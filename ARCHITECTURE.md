@@ -1,70 +1,154 @@
-# ICE Gate Architecture
+# System prompts
 
-ICE Gate is a high-performance, offline-first personal management system built with Flutter. It utilizes a multi-layered architecture designed for reactivity, scalability, and robust data synchronization.
-
-## 🏗 Architectural Layers
-
-The project is organized into five primary layers:
-
-### 1. Data Layer (`lib/data_layer`)
-The foundation of the application, responsible for data persistence, external communication, and domain models.
-- **DataSources**: Contains local database definitions (Drift/SQLite) and cloud connectors (PowerSync + Supabase).
-- **DomainData**: Core business models and entities.
-- **Protocol**: Interfaces and adapters for standardized communication between services.
-- **Services**: Low-level services for specialized tasks (e.g., Auth, Storage).
-
-### 2. Orchestration Layer (`lib/orchestration_layer`)
-Handles the application's "brain" logic and reactive state management.
-- **ReactiveBlocks**: The primary state containers. They use the **Signals** pattern (`signals_flutter`) for fine-grained reactivity and are distributed via **Provider**.
-- **Action**: Encapsulates complex, multi-step business processes that span multiple blocks or services.
-
-### 3. Initial Layer (`lib/initial_layer`)
-Manages the application's lifecycle and bootstrapping.
-- **DataLayer.dart**: A "God Widget" that initializes all core services (Database, Supabase, Notifications, Audio) and provides them to the widget tree.
-- **ThemeLayer / ThemeAdapter**: Manages dynamic theme switching and Material Design mapping.
-- **CoreLogics**: Essential startup logic like Biometric Auth, Passkey support, and Secure Storage initialization.
-
-### 4. Security & Routing Layer (`lib/security_routing_layer`)
-Manages access control and navigation flow.
-- **Routing**: Implementation of **GoRouter** with centralized route definitions (`InternalRoute.dart`).
-- **Auth Guards**: Logic for redirecting users based on authentication status and handling deep links.
+# Workspace prompts
 
 
 
-MainButton refer to 
- page-level to the global 
-MainShell
- to ensure consistent UI across the application.
+# ICE Gate: Architecture, Design, and Maintenance Plan
 
-### 5. UI Layer (`lib/ui_layer`)
-The presentation layer, organized by feature/domain.
-- **Feature Folders**: (e.g., `health_page`, `finance_page`, `social_page`) contains pages and widgets specific to that domain.
-- **ReusableWidget**: Atomic and molecular UI components used across the app.
-- **Canvas Page**: Specialized UI for the dynamic, grid-based widget system.
+  
 
-## 🔄 Core Technologies & Patterns
+## 1. App Function & Purpose
 
-- **State Management**: **Signals + Provider**. Signals provide fine-grained reactivity (minimizing rebuilds), while Provider is used for Dependency Injection.
-- **Database**: **Drift (SQLite)** for local persistence with a **DAO (Data Access Object)** pattern.
-- **Synchronization**: **PowerSync** for seamless, offline-first synchronization with **Supabase**.
-- **Navigation**: **GoRouter** with ShellRoute for persistent navigation elements (MainShell).
-- **Reactivity**: Heavy use of the `Watch` and `effect` patterns to keep the UI and data layers in sync automatically.
+**ICE Gate** is designed as a **Life Orchestration Engine (LOE)** and a **"Gateway to Hubs."**
 
-## 🚀 Initialization Flow
+Rather than being a traditional, siloed application, it acts as a central hub that aggregates, visualizes, and gamifies data from various aspects of a user's life.
 
-1. `main()` calls `runApp` with `DataLayer`.
-2. `DataLayer` initializes async services (Supabase, PowerSync, Notifications).
-3. `DataLayer` instantiates all `ReactiveBlock`s.
-4. `DataLayer` provides services and blocks to the tree via `MultiProvider`.
-5. `ThemeLayer` and `Adapter` handle final UI-related setups (Theme loading, default widget checks).
-6. `MaterialApp.router` is built, using `GoRouter` for navigation.
+The app as gate and can connect to hub. like social hub like tiktok and facebook
+health hub to sensor, project hub to ssh and AI agent and finance hub for planing the finance
 
-## 🛠 Design Principles
+  
 
-- **Offline-First**: All user data is stored locally first and synced in the background.
-- **Reactive Integrity**: The UI always reflects the current state of the `ReactiveBlocks`.
-- **Surgical Updates**: Using Signals ensures that only the specific widgets needing an update are rebuilt.
-- **Layered Decoupling**: UI components do not talk directly to the database; they interact via `ReactiveBlock`s or `Action`s.
+It connects to:
+
+* **Health Hubs:** (e.g., Apple Health) for step tracking, sleep, and heart rate.
+
+* **Social Hubs:** (e.g., Facebook, Instagram, TikTok) for managing relationships, contacts, and social "quests."
+
+* **Finance Hubs:** For tracking net worth, savings, and investments.
+
+* **Career/Project Hubs:** For task management and project completion.
+
+  
+
+The core gamification loop translates real-world metrics (steps walked, tasks completed, money saved) into **Quest Points (XP)** across these four pillars, providing users with a holistic "Score Balance" to motivate self-improvement..
+
+The score must represent and contain information for easy using. Like show today point.
+
+The meaning: Help people and users know the progress
+
+  
+
+---
+## UI syle
++ Using flat design with apple dynamic glass for UI
++ Make every convenient for user using it without touch many thing screen
++ 
+  
+
+## 2. Design Plan & Architecture
+
+  
+
+The application follows a strict, domain-driven **Layered Architecture** to ensure scalability and separation of concerns.
+
+  
+
+### Layered Structure
+
+1. **Data Layer (`data_layer/`)**:
+
+* **Local-First:** Uses `drift` (SQLite) for offline-first data storage, ensuring privacy and speed.
+
+* **Cloud Sync:** Uses `powersync` and `supabase` to selectively sync data only when the user "enrolls" in a hub.
+
+* **Protocols:** Defines strict data models (e.g., `HealthMetricsData`, `ProjectProtocol`).
+
+2. **Initial Layer (`initial_layer/`)**:
+
+* Handles app bootstrap, routing configuration (`go_router`), theme setup, and core services (e.g., `CustomAuthService`, `SecureStorageService`).
+
+3. **Orchestration Layer (`orchestration_layer/`)**:
+
+* **Reactive State:** Utilizes the `signals` package to manage state reactively. `ReactiveBlocks` (e.g., `HealthBlock`, `AuthBlock`) listen to database streams and expose simple properties for the UI to consume.
+
+* **Business Logic:** Contains the "Life Orchestration Engine" (`ScoreBlock`) that calculates gamification points.
+
+4. **UI Layer (`ui_layer/`)**:
+
+* **Stateless by Default:** UI components are mostly stateless, heavily relying on `Watch` from `signals_flutter` to automatically rebuild when the Orchestration Layer updates.
+
+* **Plugin/Widget System:** The Canvas dashboard is dynamic, allowing users to drag and drop "Internal Widgets" (e.g., Health Department) and "External Widgets" (WebViews).
+
+  
+
+### Aesthetic Strategy
+
+* **Theme:** The app utilizes a highly stylized, futuristic/cyberpunk aesthetic (e.g., "SeedBlue," "Neon," "Dark Mode" JSON themes) to reinforce the "Gateway" concept.
+
+  
+
+---
+
+  
+
+## 3. Maintenance Strategy & Future-Proofing
+
+  
+
+To prevent "AI Drift" and keep the codebase manageable over time, the following rules must be adhered to during maintenance and expansion:
+
+  
+
+### A. The Plugin Protocol (Adding New Features)
+
+Do not build monolithic new features into the core UI. Instead, treat new features as **Plugins** or **Hub Adapters**.
+
+1. **Define:** Create a new Protocol in `data_layer/`.
+
+2. **Orchestrate:** Create a dedicated `ReactiveBlock` in `orchestration_layer/`.
+
+3. **UI Integration:** Build the UI in `ui_layer/widget_page/PluginList/` and register it so it can be added to the user's Canvas or specific Department page (like the Social "Journal" tab).
+
+  
+
+### B. State Management Discipline (Signals)
+
+* **Never mix UI and Business Logic.** The UI (`build` methods) should only read from `Signals` and trigger actions in `ReactiveBlocks`.
+
+* Avoid `setState` where possible; rely on `signals` for granular, efficient rebuilds.
+
+  
+
+### C. Data Synchronization (Local vs. Cloud)
+
+* Assume the user is offline by default. Always write to the local Drift database (`DAO`s).
+
+* Let `PowerSync` handle the background synchronization to Supabase. Do not write direct API calls to Supabase for standard CRUD operations unless bypassing sync is explicitly required (e.g., Authentication).
+
+  
+
+### D. The AI-Driven Cycle & Manual Review
+
+As outlined in the development workflow:
+
+1. **AI Generation:** Use Gemini to quickly generate boilerplate, logic blocks, and UI structures.
+
+2. **Deployment:** Rely on automated GitHub Actions to push to Docker (Web) and TestFlight (iOS).
+
+3. **The 1-Week Buffer:** Implement a strict 1-week cooling-off period where new AI-generated code is manually reviewed, tested on device, and refactored by a human developer before the next major AI-driven sprint. This ensures architectural integrity remains high.
+
+
+
+
+
+
+
+
+
+
+
+# Entry
 
 
 

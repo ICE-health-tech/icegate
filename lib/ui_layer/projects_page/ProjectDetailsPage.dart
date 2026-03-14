@@ -15,6 +15,8 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'TaskItem.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
   final ProjectProtocol project;
@@ -122,7 +124,7 @@ class ProjectDetailsPage extends StatelessWidget {
                       (project.color != null
                               ? Color(int.parse(project.color!))
                               : Colors.blue)
-                          .withOpacity(0.4),
+                          .withValues(alpha: 0.4),
                       colorScheme.surface,
                     ],
                   ),
@@ -137,7 +139,7 @@ class ProjectDetailsPage extends StatelessWidget {
                         Text(
                           project.description!,
                           style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.7),
+                            color: colorScheme.onSurface.withValues(alpha: 0.7),
                             fontSize: 14,
                           ),
                         ),
@@ -171,7 +173,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                   Text(
                                     AppLocalizations.of(context)!.project_complete_label,
                                     style: TextStyle(
-                                      color: colorScheme.onSurface.withOpacity(
+                                      color: colorScheme.onSurface.withValues(alpha: 
                                         0.5,
                                       ),
                                       fontWeight: FontWeight.bold,
@@ -188,7 +190,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                   value: progress,
                                   minHeight: 8,
                                   backgroundColor: colorScheme.primary
-                                      .withOpacity(0.1),
+                                      .withValues(alpha: 0.1),
                                   valueColor: AlwaysStoppedAnimation(
                                     colorScheme.primary,
                                   ),
@@ -258,6 +260,10 @@ class ProjectDetailsPage extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 16),
+                  _buildRemoteSettings(context),
+                  const SizedBox(height: 32),
+                  _buildSectionTitle(context, 'Recent Notes'), // Added title for notes
+                  const SizedBox(height: 16),
                   StreamBuilder<List<ProjectNoteData>>(
                     stream: database.projectNoteDAO.watchNotesByProject(
                       project.projectID,
@@ -272,7 +278,7 @@ class ProjectDetailsPage extends StatelessWidget {
                       }
                       return Column(
                         children: notes
-                            .map((note) => _NoteItem(note: note))
+                            .map((note) => _NoteItem(note: note, project: project))
                             .toList(),
                       );
                     },
@@ -313,7 +319,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                 (isExpense
                                         ? Colors.redAccent
                                         : Colors.greenAccent)
-                                    .withOpacity(0.1),
+                                    .withValues(alpha: 0.1),
                             child: Icon(
                               isExpense ? Icons.remove : Icons.add,
                               color: isExpense
@@ -356,6 +362,141 @@ class ProjectDetailsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildSectionTitle(BuildContext context, String title) {
+    return Text(
+      title,
+      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+    );
+  }
+
+  Widget _buildRemoteSettings(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isLinked = project.sshHostId != null;
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.primaryContainer.withValues(alpha: 0.2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.terminal, color: colorScheme.primary, size: 20),
+              const SizedBox(width: 12),
+              Text(
+                'REMOTE DEVELOPMENT',
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: const Icon(Icons.edit_note, size: 20),
+                onPressed: () => _showRemoteConfigDialog(context),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          if (isLinked) ...[
+            Text(
+              'Linked to Remote Path:',
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                fontSize: 12,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              project.remotePath ?? 'Project Root',
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ] else
+            Text(
+              'No remote environment linked. Link to enable AI-powered terminal features.',
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
+                fontSize: 12,
+                fontStyle: FontStyle.italic,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  void _showRemoteConfigDialog(BuildContext context) {
+    final pathController = TextEditingController(text: project.remotePath);
+    final storage = SSHStorageService();
+    String? selectedHostId = project.sshHostId;
+
+    showDialog(
+      context: context,
+      builder: (context) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: const Text('Configure Remote Link'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              FutureBuilder<List<SSHHostModel>>(
+                future: storage.loadHosts(),
+                builder: (context, snapshot) {
+                  final hosts = snapshot.data ?? [];
+                  return DropdownButtonFormField<String>(
+                    value: selectedHostId,
+                    decoration: const InputDecoration(labelText: 'Select SSH Host'),
+                    items: hosts.map((h) => DropdownMenuItem(
+                      value: h.id,
+                      child: Text(h.name),
+                    )).toList(),
+                    onChanged: (val) => setState(() => selectedHostId = val),
+                  );
+                },
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: pathController,
+                decoration: const InputDecoration(
+                  labelText: 'Remote Project Path',
+                  hintText: '/home/user/my_project',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cancel'),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final projectBlock = context.read<ProjectBlock>();
+                await projectBlock.updateProjectRemoteSettings(
+                  project.id,
+                  selectedHostId,
+                  pathController.text,
+                );
+                if (context.mounted) Navigator.pop(context);
+              },
+              child: const Text('Save Settings'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildSectionHeader(
     BuildContext context,
     String title,
@@ -384,13 +525,13 @@ class ProjectDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Text(
         message,
         style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+          color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
         ),
         textAlign: TextAlign.center,
       ),
@@ -525,8 +666,9 @@ class ProjectDetailsPage extends StatelessWidget {
 
 class _NoteItem extends StatelessWidget {
   final ProjectNoteData note;
+  final ProjectProtocol project;
 
-  const _NoteItem({required this.note});
+  const _NoteItem({required this.note, required this.project});
 
   @override
   Widget build(BuildContext context) {
@@ -541,7 +683,7 @@ class _NoteItem extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Row(
@@ -562,11 +704,22 @@ class _NoteItem extends StatelessWidget {
                       AppLocalizations.of(context)!.project_last_edited_msg(DateFormat.MMMd().format(note.updatedAt)),
                       style: TextStyle(
                         fontSize: 12,
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                   ],
                 ),
+              ),
+              IconButton(
+                icon: Icon(Icons.psychology, color: colorScheme.primary),
+                tooltip: 'Analyze with AI',
+                onPressed: () {
+                  context.push('/widgets/ssh', extra: {
+                    'hostId': project.sshHostId,
+                    'remotePath': project.remotePath,
+                    'content': note.content,
+                  });
+                },
               ),
               const Icon(Icons.chevron_right),
             ],

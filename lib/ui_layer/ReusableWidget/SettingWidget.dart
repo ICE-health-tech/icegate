@@ -352,8 +352,18 @@ class SettingsWidget extends StatelessWidget {
                 ),
                 _buildPremiumSettingTile(
                   context: context,
+                  title: AppLocalizations.of(context)!.btn_send_feedback,
+                  subtitle: AppLocalizations.of(context)!.feedback_subtitle,
+                  icon: Icons.feedback_rounded,
+                  color: Colors.orange,
+                  onTap: () {
+                    _showFeedbackDialog(context);
+                  },
+                ),
+                _buildPremiumSettingTile(
+                  context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '2.3.3',
+                  subtitle: '2.6.0',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),
@@ -468,6 +478,67 @@ class SettingsWidget extends StatelessWidget {
               );
             }).toList(),
           ),
+        );
+      },
+    );
+  }
+
+  void _showFeedbackDialog(BuildContext context) {
+    final textController = TextEditingController();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text(AppLocalizations.of(context)!.btn_send_feedback),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                AppLocalizations.of(context)!.feedback_subtitle,
+                style: TextStyle(
+                  fontSize: 14,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: textController,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: "...",
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  filled: true,
+                  fillColor: colorScheme.surfaceContainerHighest,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(AppLocalizations.of(context)!.cancel),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                final feedback = textController.text;
+                if (feedback.isNotEmpty) {
+                  // TODO: Send feedback to backend or email
+                  Navigator.of(context).pop();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text("Cảm ơn phản hồi của bạn! / Thank you for your feedback!"),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              },
+              child: const Text("Gửi / Send"),
+            ),
+          ],
         );
       },
     );

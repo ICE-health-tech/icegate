@@ -334,6 +334,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nutri_cal => 'cal';
 
   @override
+  String get todays_gains => 'Today\'s Gains';
+
+  @override
   String get health_metrics_steps => 'Steps';
 
   @override
@@ -1918,6 +1921,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_power_points => 'FINANCE POWER';
 
   @override
+  String get finance_goal => 'Goal';
+
+  @override
+  String get finance_efficiency => 'Efficiency';
+
+  @override
+  String get finance_savings_rate => 'Savings Rate';
+
+  @override
   String get finance_points_desc => 'Points earned from net worth';
 
   @override
@@ -1961,4 +1973,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get social_notes => 'Social Notes';
+
+  @override
+  String get btn_send_feedback => 'Send Feedback';
+
+  @override
+  String get feedback_subtitle => 'Report issues or suggest features';
 }

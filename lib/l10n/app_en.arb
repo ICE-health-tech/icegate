@@ -118,6 +118,7 @@
   "nutri_no_meals": "No meals logged yet",
   "nutri_kcal": "kcal",
   "nutri_cal": "cal",
+  "todays_gains": "Today's Gains",
   "health_metrics_steps": "Steps",
   "health_metrics_heart_rate": "Heart Rate",
   "health_metrics_sleep": "Sleep",
@@ -939,6 +940,9 @@
   "finance_cat_stock": "Stock",
   "finance_cat_real_estate": "Real Estate",
   "finance_power_points": "FINANCE POWER",
+  "finance_goal": "Goal",
+  "finance_efficiency": "Efficiency",
+  "finance_savings_rate": "Savings Rate",
   "finance_points_desc": "Points earned from net worth",
   "ssh_new_session": "New SSH Session",
   "ssh_host_label": "Host IP or Domain",
@@ -953,5 +957,7 @@
   "ssh_disconnect": "Disconnect",
   "ssh_search_hint": "Search...",
   "journal": "Journal",
-  "social_notes": "Social Notes"
+  "social_notes": "Social Notes",
+  "btn_send_feedback": "Send Feedback",
+  "feedback_subtitle": "Report issues or suggest features"
 }

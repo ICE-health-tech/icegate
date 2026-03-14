@@ -299,7 +299,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 growthBlock.init(database.growthDAO, personId);
                 projectBlock.init(database.projectsDAO, personId);
                 financeBlock.init(database.financeDAO, personId);
-                questBlock.init(database.questDAO, personId);
+                questBlock.init(database, personId);
                 contentBlock.init(database.aiAnalysisDAO, personId);
                 widgetSettingsBlock.init(database.widgetDAO, personId);
 

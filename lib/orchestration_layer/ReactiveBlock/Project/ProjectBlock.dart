@@ -43,6 +43,8 @@ class ProjectBlock {
                     name: e.name,
                     description: e.description,
                     color: e.color,
+                    sshHostId: e.sshHostId,
+                    remotePath: e.remotePath,
                     createdAt: e.createdAt,
                     updatedAt: e.updatedAt,
                     status: e.status,
@@ -100,6 +102,8 @@ class ProjectBlock {
         name: project.name,
         description: project.description,
         color: project.color,
+        sshHostId: project.sshHostId,
+        remotePath: project.remotePath,
         createdAt: project.createdAt,
         updatedAt: DateTime.now(),
         status: 1, // 1 for completed
@@ -112,6 +116,21 @@ class ProjectBlock {
 
     // Award points
     await scoreBlock.persistentCareerIncrement(bonus);
+  }
+
+  Future<void> updateProjectRemoteSettings(
+    String id,
+    String? sshHostId,
+    String? remotePath,
+  ) async {
+    await _dao.updateProjectManual(
+      id,
+      ProjectsTableCompanion(
+        sshHostId: Value(sshHostId),
+        remotePath: Value(remotePath),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
   }
 
   void dispose() {

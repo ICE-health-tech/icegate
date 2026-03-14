@@ -1,6 +1,9 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import '../../../../initial_layer/CoreLogics/SSHService.dart';
@@ -14,7 +17,17 @@ import 'SSHStorageService.dart';
 
 class TalkSSHPage extends StatefulWidget {
   final String? initialPrompt;
-  const TalkSSHPage({super.key, this.initialPrompt});
+  final String? hostId;
+  final String? remotePath;
+  final String? initialContent;
+
+  const TalkSSHPage({
+    super.key,
+    this.initialPrompt,
+    this.hostId,
+    this.remotePath,
+    this.initialContent,
+  });
 
   @override
   State<TalkSSHPage> createState() => _TalkSSHPageState();
@@ -28,15 +41,24 @@ class TalkSSHPage extends StatefulWidget {
       future: storageService.loadHosts(),
       builder: (context, snapshot) {
         final hosts = snapshot.data ?? [];
-        final subButtons = hosts.take(5).map((host) => SubButton(
-          icon: Icons.computer,
-          label: host.name,
-          backgroundColor: colorScheme.secondaryContainer,
-          iconColor: colorScheme.onSecondaryContainer,
-          onPressed: () {
-            _TalkSSHPageState._activeState?._applyHostAndConnect(host);
-          },
-        )).toList();
+        final subButtons = hosts
+            .take(5)
+            .map(
+              (host) => SubButton(
+                icon: Icons.computer,
+                label: '${host.name}\n${host.user}@${host.host}',
+                backgroundColor: colorScheme.secondaryContainer,
+                iconColor: colorScheme.onSecondaryContainer,
+                onPressed: () {
+                  if (_TalkSSHPageState._activeState != null) {
+                    _TalkSSHPageState._activeState?._applyHostAndConnect(host);
+                  } else {
+                    context.push('/widgets/ssh', extra: {'hostId': host.id});
+                  }
+                },
+              ),
+            )
+            .toList();
 
         return MainButton(
           type: 'ssh_uplink',
@@ -44,10 +66,21 @@ class TalkSSHPage extends StatefulWidget {
           icon: Icons.lan,
           backgroundColor: colorScheme.primary,
           iconColor: colorScheme.onPrimary,
-          mainFunction: () => _TalkSSHPageState._activeState?._showConnectDialog(context),
+          mainFunction: () =>
+              _TalkSSHPageState._activeState?._showConnectDialog(context),
+          onSwipeUp: () {
+            WidgetNavigatorAction.smartPop(context);
+          },
+          onSwipeRight: () {
+            WidgetNavigatorAction.smartPop(context);
+          },
+          onSwipeLeft: () {
+            WidgetNavigatorAction.smartPop(context);
+          },
+
           subButtons: subButtons,
         );
-      }
+      },
     );
   }
 }
@@ -58,11 +91,16 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   final SSHStorageService _storageService = SSHStorageService();
   late final TerminalController _terminalController;
   final TextEditingController _commandController = TextEditingController();
-  
-  final TextEditingController _hostController = TextEditingController(text: 'localhost');
-  final TextEditingController _portController = TextEditingController(text: '22');
+
+  final TextEditingController _hostController = TextEditingController(
+    text: 'localhost',
+  );
+  final TextEditingController _portController = TextEditingController(
+    text: '22',
+  );
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
+  final TextEditingController _remotePathController = TextEditingController();
   bool _useTmux = true;
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
@@ -73,7 +111,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     super.initState();
     _activeState = this;
     _terminalController = TerminalController();
-    
+
     // Initialize from existing connection if any
     _isConnected = _sshService.isConnected;
 
@@ -88,7 +126,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
     // Initial terminal message if not connected
     if (!_isConnected) {
-      _sshService.terminal.write('\x1b[38;5;240mICE GATE SSH v1.6.0-BACKGROUND-READY\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n');
+      _sshService.terminal.write(
+        '\x1b[38;5;240mICE GATE SSH v1.6.0-BACKGROUND-READY\x1b[0m\r\n\x1b[38;5;39m>>> READY FOR UPLINK. TYPE /connect OR USE THE HUB.\x1b[0m\r\n\r\n',
+      );
     }
 
     // Handle initial prompt from router
@@ -97,6 +137,46 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         _handleInitialPrompt(widget.initialPrompt!);
       });
     }
+
+    if (widget.remotePath != null) {
+      _remotePathController.text = widget.remotePath!;
+    }
+
+    // Auto-connect if hostId is provided
+    if (widget.hostId != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        final hosts = await _storageService.loadHosts();
+        final host = hosts.cast<SSHHostModel?>().firstWhere(
+          (h) => h?.id == widget.hostId,
+          orElse: () => null,
+        );
+        if (host != null) {
+          _applyHostAndConnect(host);
+
+          // If we have initial content (e.g. a note), send it as an AI prompt after connecting
+          if (widget.initialContent != null) {
+            _handleInitialContent(widget.initialContent!);
+          }
+        }
+      });
+    }
+  }
+
+  void _handleInitialContent(String content) {
+    // Convert to plain text if it's JSON content
+    final plainText = _extractPlainText(content);
+
+    // Wait for connection to be active before sending AI prompt
+    StreamSubscription? sub;
+    sub = _sshService.connectionState.listen((connected) {
+      if (connected) {
+        // Send AI prompt after a short delay for auto-cd to complete
+        Future.delayed(const Duration(seconds: 2), () {
+          _sendGeminiPrompt(plainText);
+          sub?.cancel();
+        });
+      }
+    });
   }
 
   void _handleInitialPrompt(String prompt) {
@@ -119,7 +199,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _sshService.write('gemini prompt "${prompt.replaceAll('"', '\\"')}"\r');
+              _sendGeminiPrompt(prompt, includeContext: false);
             },
             child: const Text('Send to AI'),
           ),
@@ -133,6 +213,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     _portController.text = host.port.toString();
     _userController.text = host.user;
     _passController.text = host.password ?? '';
+    _remotePathController.text = host.remoteFilePath ?? '';
     _connect();
   }
 
@@ -140,31 +221,44 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     if (_isConnected) {
       _sshService.disconnect();
     }
-    
+
     try {
+      final autoCmd = _remotePathController.text.isNotEmpty
+          ? 'cd "${_remotePathController.text}" && clear'
+          : null;
+
       await _sshService.connect(
         host: _hostController.text,
         port: int.parse(_portController.text),
         username: _userController.text,
         password: _passController.text,
         useTmux: _useTmux,
+        autoStartCommand: autoCmd,
       );
-      
-      // Save host info if successful
-      await _storageService.saveHost(SSHHostModel(
-        name: _hostController.text,
-        host: _hostController.text,
-        port: int.parse(_portController.text),
-        user: _userController.text,
-        password: _passController.text,
-      ));
 
+      // Save host info if successful
+      await _storageService.saveHost(
+        SSHHostModel(
+          name: _hostController.text,
+          host: _hostController.text,
+          port: int.parse(_portController.text),
+          user: _userController.text,
+          password: _passController.text,
+          remoteFilePath: _remotePathController.text,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             backgroundColor: Colors.redAccent,
-            content: Text('UPLINK FAILURE: $e', style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold)),
+            content: Text(
+              'UPLINK FAILURE: $e',
+              style: const TextStyle(
+                fontFamily: 'Courier',
+                fontWeight: FontWeight.bold,
+              ),
+            ),
           ),
         );
       }
@@ -173,24 +267,38 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   void _onShortcutPressed(String key) {
     if (!_isConnected) return;
-    
+
     switch (key) {
-      case 'ESC': _sshService.write('\x1b'); break;
-      case 'TAB': _sshService.write('\t'); break;
-      case 'S-TAB': _sshService.write('\x1b[Z'); break;
-      default: _sshService.write(key);
+      case 'ESC':
+        _sshService.write('\x1b');
+        break;
+      case 'TAB':
+        _sshService.write('\t');
+        break;
+      case 'S-TAB':
+        _sshService.write('\x1b[Z');
+        break;
+      default:
+        _sshService.write(key);
     }
   }
 
   void _sendCommand() {
     final cmd = _commandController.text;
-    
+
     if (_isConnected) {
-      _sshService.write('$cmd\r');
+      if (cmd.startsWith('/') || cmd.contains('gemini')) {
+        // AI Command - Provide context if path is set
+        _sendGeminiPrompt(cmd);
+      } else {
+        _sshService.write('$cmd\r');
+      }
     } else {
-      _sshService.terminal.write('\x1b[38;5;196m>>> OFFLINE. ESTABLISH UPLINK FIRST.\x1b[0m\r\n');
+      _sshService.terminal.write(
+        '\x1b[38;5;196m>>> OFFLINE. ESTABLISH UPLINK FIRST.\x1b[0m\r\n',
+      );
     }
-    
+
     _commandController.clear();
   }
 
@@ -199,15 +307,14 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => SSHNoteSelectorSheet(
-        onNoteSelected: _handleNoteImport,
-      ),
+      builder: (context) =>
+          SSHNoteSelectorSheet(onNoteSelected: _handleNoteImport),
     );
   }
 
   void _handleNoteImport(ProjectNoteData note) {
     final plainText = _extractPlainText(note.content);
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -229,7 +336,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           FilledButton(
             onPressed: () {
               Navigator.pop(context);
-              _sshService.write('gemini prompt "${plainText.replaceAll('"', '\\"')}"\r');
+              _sendGeminiPrompt(plainText);
             },
             child: const Text('Send as Gemini'),
           ),
@@ -260,6 +367,38 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         .trim();
   }
 
+  void _sendGeminiPrompt(String text, {bool includeContext = true}) {
+    if (!_isConnected) return;
+
+    String promptText = text.trim();
+    if (promptText.isEmpty) return;
+
+    // Clean up if user already included command prefixes
+    if (promptText.startsWith('/')) {
+      promptText = promptText.substring(1).trim();
+    } else if (promptText.startsWith('gemini ')) {
+      promptText = promptText.substring(7).trim();
+      if (promptText.startsWith('prompt ')) {
+        promptText = promptText.substring(7).trim();
+      }
+    }
+
+    String aiContext = '';
+    if (includeContext && _remotePathController.text.isNotEmpty) {
+      aiContext =
+          '\n\n[System Context: The user is currently focusing on this remote path/file: ${_remotePathController.text}]';
+    }
+
+    final fullPrompt = '$promptText$aiContext';
+
+    // Robust Bash Escaping: wrap in single quotes, escape inner single quotes
+    final escapedPrompt = "'${fullPrompt.replaceAll("'", "'\\''")}'";
+
+    // Use Ctrl+U (\x15) to clear current line in bash before sending command
+    // to prevent mixing with user's half-typed commands
+    _sshService.write('\x15gemini prompt $escapedPrompt\r');
+  }
+
   void _showConnectDialog(BuildContext context) {
     showModalBottomSheet(
       context: context,
@@ -271,6 +410,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           portController: _portController,
           userController: _userController,
           passController: _passController,
+          remotePathController: _remotePathController,
           useTmux: _useTmux,
           onUseTmuxChanged: (val) {
             setModalState(() => _useTmux = val);
@@ -286,7 +426,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: Colors.black,
@@ -294,7 +434,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         children: [
           // Spacer for Dynamic Island height - kept minimal
           const SizedBox(height: 60),
-          
+
           // Terminal Area - Maximized estate
           Expanded(
             child: Container(
@@ -302,7 +442,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               decoration: BoxDecoration(
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.primary.withOpacity(0.15)),
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(0.15),
+                ),
                 boxShadow: [
                   BoxShadow(
                     color: colorScheme.primary.withOpacity(0.05),
@@ -317,26 +459,26 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                   builder: (context, constraints) {
                     const charWidth = 9.0;
                     const charHeight = 18.0;
-                    
+
                     final cols = (constraints.maxWidth / charWidth).floor();
                     final rows = (constraints.maxHeight / charHeight).floor();
-                    
+
                     _sshService.resize(cols, rows);
-                    
+
                     return TerminalViewNative(
                       _sshService.terminal,
                       controller: _terminalController,
                       autofocus: true,
                     );
-                  }
+                  },
                 ),
               ),
             ),
           ),
-          
+
           // Shortcut Keys
           SSHShortcutKeyRow(onKeyPressed: _onShortcutPressed),
-          
+
           // Command Input
           SSHCommandInput(
             controller: _commandController,

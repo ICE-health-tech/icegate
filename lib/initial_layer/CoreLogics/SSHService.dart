@@ -28,6 +28,7 @@ class SSHService {
     required String username,
     required String password,
     bool useTmux = false,
+    String? autoStartCommand,
   }) async {
     return _impl.connect(
       host: host,
@@ -35,6 +36,7 @@ class SSHService {
       username: username,
       password: password,
       useTmux: useTmux,
+      autoStartCommand: autoStartCommand,
     );
   }
 

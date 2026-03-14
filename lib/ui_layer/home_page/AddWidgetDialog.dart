@@ -84,13 +84,6 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
       'desc': 'User dashboard',
     },
     {
-      'name': 'Widgets',
-      'url': '/widgets',
-      'alias': 'WidgetPage',
-      'icon': Icons.extension_rounded,
-      'desc': 'Explore more widgets',
-    },
-    {
       'name': 'Settings',
       'url': '/settings',
       'alias': 'SettingsWidget',

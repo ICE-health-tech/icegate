@@ -68,7 +68,7 @@ class MainShell extends StatelessWidget {
       case '/health/food/dashboard':
         pageIcon = FoodDashboardPage.icon(context, size: responsiveSize);
         break;
-      case '/widgets/ssh':
+      case '/ssh':
         pageIcon = TalkSSHPage.icon(context, size: responsiveSize);
         break;
       case '/finance':
@@ -123,7 +123,7 @@ class MainShell extends StatelessWidget {
         currentRoute == '/settings' ||
         currentRoute == '/manual' ||
         currentRoute == '/projects/editor' ||
-        currentRoute.startsWith('/widgets/webview');
+        currentRoute.startsWith('/webview');
 
     return Scaffold(
       // --- DYNAMIC BODY (Changes based on route) ---

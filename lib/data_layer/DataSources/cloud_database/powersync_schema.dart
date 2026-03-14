@@ -61,6 +61,8 @@ const Schema schema = Schema([
     Column.text('category'),
     Column.text('color'),
     Column.integer('status'),
+    Column.text('ssh_host_id'),
+    Column.text('remote_path'),
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),
@@ -124,6 +126,7 @@ const Schema schema = Schema([
     Column.text('cover_local_path'),
     Column.text('timezone'),
     Column.text('preferred_language'),
+    Column.text('last_quest_generated_at'), // Added
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),
@@ -409,6 +412,7 @@ const Schema schema = Schema([
     Column.text('title'),
     Column.text('description'),
     Column.text('type'),
+    Column.text('quest_type'), // Added
     Column.real('target_value'),
     Column.real('current_value'),
     Column.text('category'),
@@ -436,5 +440,15 @@ const Schema schema = Schema([
     Column.text('session_type'),
     Column.text('task_id'),
     Column.text('notes'),
+  ]),
+  Table('ssh_hosts', [
+    Column.text('tenant_id'),
+    Column.text('name'),
+    Column.text('host'),
+    Column.integer('port'),
+    Column.text('username'),
+    Column.text('remote_path'),
+    Column.text('created_at'),
+    Column.text('updated_at'),
   ]),
 ]);

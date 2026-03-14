@@ -202,35 +202,41 @@ class _MainButtonState extends State<MainButton>
                               ),
                             );
                           },
-                          child: GestureDetector(
-                            onTap: () {
-                              final action = data.onPressed;
-                              _removeOverlayImmediate();
-                              if (action != null) {
-                                Future.microtask(action);
-                              }
-                            },
-                            behavior: HitTestBehavior.opaque,
-                            child: Container(
-                              width: data.size ?? subSize,
-                              height: data.size ?? subSize,
-                              // padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color:
-                                    data.backgroundColor ?? Colors.blueAccent,
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Colors.black26,
-                                    blurRadius: 8,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                data.icon,
-                                color: data.iconColor ?? Colors.white,
-                                size: (data.size ?? subSize) * 0.5,
+                          child: Tooltip(
+                            message: data.label ?? data.tooltip ?? '',
+                            triggerMode: TooltipTriggerMode.tap,
+                            preferBelow: false,
+                            verticalOffset: (data.size ?? subSize) / 2 + 10,
+                            child: GestureDetector(
+                              onTap: () {
+                                final action = data.onPressed;
+                                _removeOverlayImmediate();
+                                if (action != null) {
+                                  Future.microtask(action);
+                                }
+                              },
+                              behavior: HitTestBehavior.opaque,
+                              child: Container(
+                                width: data.size ?? subSize,
+                                height: data.size ?? subSize,
+                                // padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  shape: BoxShape.circle,
+                                  color:
+                                      data.backgroundColor ?? Colors.blueAccent,
+                                  boxShadow: const [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      blurRadius: 8,
+                                      offset: Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  data.icon,
+                                  color: data.iconColor ?? Colors.white,
+                                  size: (data.size ?? subSize) * 0.5,
+                                ),
                               ),
                             ),
                           ),

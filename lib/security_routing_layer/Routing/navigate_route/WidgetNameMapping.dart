@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_gate/ui_layer/user_page/HunterInformationPage.dart';
-import 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
@@ -16,7 +15,6 @@ typedef WidgetFactory = Widget Function({String? identifier});
 
 class WidgetNameMapping {
   static final Map<String, WidgetFactory> _widgetMap = {
-    'WidgetPage': ({identifier}) => const WidgetPage(),
     "UserInformationPage": ({identifier}) => const UserInformationPage(),
     "HealthPage": ({identifier}) => const HealthPage(),
     "FocusPage": ({identifier}) => const FocusPage(),

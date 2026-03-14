@@ -17,6 +17,7 @@ class SSHServiceNative with WidgetsBindingObserver {
   String? currentPassword;
   DateTime? connectedAt;
   bool useTmux = false;
+  String? autoStartCommand;
   
   // Stats
   int _bytesIn = 0;
@@ -85,6 +86,7 @@ class SSHServiceNative with WidgetsBindingObserver {
     required String username,
     required String password,
     bool useTmux = false,
+    String? autoStartCommand,
   }) async {
     _isManuallyDisconnected = false;
     currentHost = host;
@@ -92,6 +94,7 @@ class SSHServiceNative with WidgetsBindingObserver {
     currentUsername = username;
     currentPassword = password;
     this.useTmux = useTmux;
+    this.autoStartCommand = autoStartCommand;
     _bytesIn = 0;
     _bytesOut = 0;
     _reconnectAttempts = 0;
@@ -133,15 +136,36 @@ class SSHServiceNative with WidgetsBindingObserver {
       
       terminal.write('\x1b[38;5;46m>>> UPLINK ESTABLISHED. ENCRYPTION ACTIVE.\x1b[0m\r\n\r\n');
 
+      if (autoStartCommand != null) {
+        // Wait slightly for the shell to be ready
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (isConnected) {
+            _shell?.stdin.add(utf8.encode('$autoStartCommand\n'));
+          }
+        });
+      }
+
+      
       _shell!.stdout.listen((data) {
         _bytesIn += data.length;
-        terminal.write(utf8.decode(data));
+        try {
+          // Use chunked conversion or simple decode with allowMalformed if needed, 
+          // but better to decode with a stateful decoder if possible.
+          // For simplicity and robustness in a terminal context:
+          terminal.write(utf8.decode(data, allowMalformed: true));
+        } catch (e) {
+          debugPrint('SSH STDOUT Decode Error: $e');
+        }
         _emitStats();
       }, onError: (e) => _handleError('STDOUT', e));
 
       _shell!.stderr.listen((data) {
         _bytesIn += data.length;
-        terminal.write('\x1b[38;5;196m[ERR] ${utf8.decode(data)}\x1b[0m');
+        try {
+          terminal.write('\x1b[38;5;196m[ERR] ${utf8.decode(data, allowMalformed: true)}\x1b[0m');
+        } catch (e) {
+          debugPrint('SSH STDERR Decode Error: $e');
+        }
         _emitStats();
       }, onError: (e) => _handleError('STDERR', e));
 

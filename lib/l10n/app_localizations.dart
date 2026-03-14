@@ -722,6 +722,12 @@ abstract class AppLocalizations {
   /// **'cal'**
   String get nutri_cal;
 
+  /// No description provided for @todays_gains.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Gains'**
+  String get todays_gains;
+
   /// No description provided for @health_metrics_steps.
   ///
   /// In en, this message translates to:
@@ -3674,6 +3680,24 @@ abstract class AppLocalizations {
   /// **'FINANCE POWER'**
   String get finance_power_points;
 
+  /// No description provided for @finance_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal'**
+  String get finance_goal;
+
+  /// No description provided for @finance_efficiency.
+  ///
+  /// In en, this message translates to:
+  /// **'Efficiency'**
+  String get finance_efficiency;
+
+  /// No description provided for @finance_savings_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings Rate'**
+  String get finance_savings_rate;
+
   /// No description provided for @finance_points_desc.
   ///
   /// In en, this message translates to:
@@ -3763,6 +3787,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Social Notes'**
   String get social_notes;
+
+  /// No description provided for @btn_send_feedback.
+  ///
+  /// In en, this message translates to:
+  /// **'Send Feedback'**
+  String get btn_send_feedback;
+
+  /// No description provided for @feedback_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Report issues or suggest features'**
+  String get feedback_subtitle;
 }
 
 class _AppLocalizationsDelegate

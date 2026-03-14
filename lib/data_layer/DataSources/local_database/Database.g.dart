@@ -61,6 +61,7 @@ mixin _$PersonManagementDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.cVAddressesTable;
   $PersonContactsTableTable get personContactsTable =>
       attachedDatabase.personContactsTable;
+  $QuestsTableTable get questsTable => attachedDatabase.questsTable;
 }
 mixin _$FinanceDAOMixin on DatabaseAccessor<AppDatabase> {
   $OrganizationsTableTable get organizationsTable =>
@@ -148,6 +149,11 @@ mixin _$CustomNotificationDAOMixin on DatabaseAccessor<AppDatabase> {
   $PersonsTableTable get personsTable => attachedDatabase.personsTable;
   $CustomNotificationsTableTable get customNotificationsTable =>
       attachedDatabase.customNotificationsTable;
+}
+mixin _$SSHHostsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $OrganizationsTableTable get organizationsTable =>
+      attachedDatabase.organizationsTable;
+  $SSHHostsTableTable get sSHHostsTable => attachedDatabase.sSHHostsTable;
 }
 mixin _$QuestDAOMixin on DatabaseAccessor<AppDatabase> {
   $OrganizationsTableTable get organizationsTable =>
@@ -3405,6 +3411,28 @@ class $ProjectsTableTable extends ProjectsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0),
   );
+  static const VerificationMeta _sshHostIdMeta = const VerificationMeta(
+    'sshHostId',
+  );
+  @override
+  late final GeneratedColumn<String> sshHostId = GeneratedColumn<String>(
+    'ssh_host_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -3436,6 +3464,8 @@ class $ProjectsTableTable extends ProjectsTable
     category,
     color,
     status,
+    sshHostId,
+    remotePath,
     createdAt,
     updatedAt,
   ];
@@ -3509,6 +3539,18 @@ class $ProjectsTableTable extends ProjectsTable
         status.isAcceptableOrUnknown(data['status']!, _statusMeta),
       );
     }
+    if (data.containsKey('ssh_host_id')) {
+      context.handle(
+        _sshHostIdMeta,
+        sshHostId.isAcceptableOrUnknown(data['ssh_host_id']!, _sshHostIdMeta),
+      );
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
     return context;
   }
 
@@ -3554,6 +3596,14 @@ class $ProjectsTableTable extends ProjectsTable
         DriftSqlType.int,
         data['${effectivePrefix}status'],
       )!,
+      sshHostId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ssh_host_id'],
+      ),
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      ),
       createdAt: $ProjectsTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -3590,6 +3640,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
   final String? category;
   final String? color;
   final int status;
+  final String? sshHostId;
+  final String? remotePath;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProjectData({
@@ -3602,6 +3654,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     this.category,
     this.color,
     required this.status,
+    this.sshHostId,
+    this.remotePath,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3629,6 +3683,12 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       map['color'] = Variable<String>(color);
     }
     map['status'] = Variable<int>(status);
+    if (!nullToAbsent || sshHostId != null) {
+      map['ssh_host_id'] = Variable<String>(sshHostId);
+    }
+    if (!nullToAbsent || remotePath != null) {
+      map['remote_path'] = Variable<String>(remotePath);
+    }
     {
       map['created_at'] = Variable<DateTime>(
         $ProjectsTableTable.$convertercreatedAt.toSql(createdAt),
@@ -3665,6 +3725,12 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           ? const Value.absent()
           : Value(color),
       status: Value(status),
+      sshHostId: sshHostId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(sshHostId),
+      remotePath: remotePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePath),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3685,6 +3751,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       category: serializer.fromJson<String?>(json['category']),
       color: serializer.fromJson<String?>(json['color']),
       status: serializer.fromJson<int>(json['status']),
+      sshHostId: serializer.fromJson<String?>(json['sshHostId']),
+      remotePath: serializer.fromJson<String?>(json['remotePath']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -3702,6 +3770,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       'category': serializer.toJson<String?>(category),
       'color': serializer.toJson<String?>(color),
       'status': serializer.toJson<int>(status),
+      'sshHostId': serializer.toJson<String?>(sshHostId),
+      'remotePath': serializer.toJson<String?>(remotePath),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -3717,6 +3787,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     Value<String?> category = const Value.absent(),
     Value<String?> color = const Value.absent(),
     int? status,
+    Value<String?> sshHostId = const Value.absent(),
+    Value<String?> remotePath = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProjectData(
@@ -3729,6 +3801,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     category: category.present ? category.value : this.category,
     color: color.present ? color.value : this.color,
     status: status ?? this.status,
+    sshHostId: sshHostId.present ? sshHostId.value : this.sshHostId,
+    remotePath: remotePath.present ? remotePath.value : this.remotePath,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -3745,6 +3819,10 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       category: data.category.present ? data.category.value : this.category,
       color: data.color.present ? data.color.value : this.color,
       status: data.status.present ? data.status.value : this.status,
+      sshHostId: data.sshHostId.present ? data.sshHostId.value : this.sshHostId,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3762,6 +3840,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           ..write('category: $category, ')
           ..write('color: $color, ')
           ..write('status: $status, ')
+          ..write('sshHostId: $sshHostId, ')
+          ..write('remotePath: $remotePath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3779,6 +3859,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     category,
     color,
     status,
+    sshHostId,
+    remotePath,
     createdAt,
     updatedAt,
   );
@@ -3795,6 +3877,8 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           other.category == this.category &&
           other.color == this.color &&
           other.status == this.status &&
+          other.sshHostId == this.sshHostId &&
+          other.remotePath == this.remotePath &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3809,6 +3893,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
   final Value<String?> category;
   final Value<String?> color;
   final Value<int> status;
+  final Value<String?> sshHostId;
+  final Value<String?> remotePath;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -3822,6 +3908,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.category = const Value.absent(),
     this.color = const Value.absent(),
     this.status = const Value.absent(),
+    this.sshHostId = const Value.absent(),
+    this.remotePath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3836,6 +3924,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.category = const Value.absent(),
     this.color = const Value.absent(),
     this.status = const Value.absent(),
+    this.sshHostId = const Value.absent(),
+    this.remotePath = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3851,6 +3941,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Expression<String>? category,
     Expression<String>? color,
     Expression<int>? status,
+    Expression<String>? sshHostId,
+    Expression<String>? remotePath,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -3865,6 +3957,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       if (category != null) 'category': category,
       if (color != null) 'color': color,
       if (status != null) 'status': status,
+      if (sshHostId != null) 'ssh_host_id': sshHostId,
+      if (remotePath != null) 'remote_path': remotePath,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3881,6 +3975,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Value<String?>? category,
     Value<String?>? color,
     Value<int>? status,
+    Value<String?>? sshHostId,
+    Value<String?>? remotePath,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -3895,6 +3991,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       category: category ?? this.category,
       color: color ?? this.color,
       status: status ?? this.status,
+      sshHostId: sshHostId ?? this.sshHostId,
+      remotePath: remotePath ?? this.remotePath,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -3931,6 +4029,12 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     if (status.present) {
       map['status'] = Variable<int>(status.value);
     }
+    if (sshHostId.present) {
+      map['ssh_host_id'] = Variable<String>(sshHostId.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $ProjectsTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -3959,6 +4063,8 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
           ..write('category: $category, ')
           ..write('color: $color, ')
           ..write('status: $status, ')
+          ..write('sshHostId: $sshHostId, ')
+          ..write('remotePath: $remotePath, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -6287,6 +6393,18 @@ class $ProfilesTableTable extends ProfilesTable
         requiredDuringInsert: false,
       );
   @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  lastQuestGeneratedAt =
+      GeneratedColumn<DateTime>(
+        'last_quest_generated_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>(
+        $ProfilesTableTable.$converterlastQuestGeneratedAtn,
+      );
+  @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
         'created_at',
@@ -6323,6 +6441,7 @@ class $ProfilesTableTable extends ProfilesTable
     coverLocalPath,
     timezone,
     preferredLanguage,
+    lastQuestGeneratedAt,
     createdAt,
     updatedAt,
   ];
@@ -6514,6 +6633,13 @@ class $ProfilesTableTable extends ProfilesTable
         DriftSqlType.string,
         data['${effectivePrefix}preferred_language'],
       ),
+      lastQuestGeneratedAt: $ProfilesTableTable.$converterlastQuestGeneratedAtn
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.dateTime,
+              data['${effectivePrefix}last_quest_generated_at'],
+            ),
+          ),
       createdAt: $ProfilesTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -6534,6 +6660,10 @@ class $ProfilesTableTable extends ProfilesTable
     return $ProfilesTableTable(attachedDatabase, alias);
   }
 
+  static TypeConverter<DateTime, DateTime> $converterlastQuestGeneratedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterlastQuestGeneratedAtn =
+      NullAwareTypeConverter.wrap($converterlastQuestGeneratedAt);
   static TypeConverter<DateTime, DateTime> $convertercreatedAt =
       const DateTimeUTCConverter();
   static TypeConverter<DateTime, DateTime> $converterupdatedAt =
@@ -6556,6 +6686,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
   final String? coverLocalPath;
   final String? timezone;
   final String? preferredLanguage;
+  final DateTime? lastQuestGeneratedAt;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProfileData({
@@ -6574,6 +6705,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     this.coverLocalPath,
     this.timezone,
     this.preferredLanguage,
+    this.lastQuestGeneratedAt,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -6622,6 +6754,13 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     }
     if (!nullToAbsent || preferredLanguage != null) {
       map['preferred_language'] = Variable<String>(preferredLanguage);
+    }
+    if (!nullToAbsent || lastQuestGeneratedAt != null) {
+      map['last_quest_generated_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$converterlastQuestGeneratedAtn.toSql(
+          lastQuestGeneratedAt,
+        ),
+      );
     }
     {
       map['created_at'] = Variable<DateTime>(
@@ -6679,6 +6818,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       preferredLanguage: preferredLanguage == null && nullToAbsent
           ? const Value.absent()
           : Value(preferredLanguage),
+      lastQuestGeneratedAt: lastQuestGeneratedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastQuestGeneratedAt),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -6707,6 +6849,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       preferredLanguage: serializer.fromJson<String?>(
         json['preferredLanguage'],
       ),
+      lastQuestGeneratedAt: serializer.fromJson<DateTime?>(
+        json['lastQuestGeneratedAt'],
+      ),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -6730,6 +6875,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       'coverLocalPath': serializer.toJson<String?>(coverLocalPath),
       'timezone': serializer.toJson<String?>(timezone),
       'preferredLanguage': serializer.toJson<String?>(preferredLanguage),
+      'lastQuestGeneratedAt': serializer.toJson<DateTime?>(
+        lastQuestGeneratedAt,
+      ),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -6751,6 +6899,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     Value<String?> coverLocalPath = const Value.absent(),
     Value<String?> timezone = const Value.absent(),
     Value<String?> preferredLanguage = const Value.absent(),
+    Value<DateTime?> lastQuestGeneratedAt = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProfileData(
@@ -6779,6 +6928,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     preferredLanguage: preferredLanguage.present
         ? preferredLanguage.value
         : this.preferredLanguage,
+    lastQuestGeneratedAt: lastQuestGeneratedAt.present
+        ? lastQuestGeneratedAt.value
+        : this.lastQuestGeneratedAt,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -6815,6 +6967,9 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
       preferredLanguage: data.preferredLanguage.present
           ? data.preferredLanguage.value
           : this.preferredLanguage,
+      lastQuestGeneratedAt: data.lastQuestGeneratedAt.present
+          ? data.lastQuestGeneratedAt.value
+          : this.lastQuestGeneratedAt,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -6838,6 +6993,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           ..write('coverLocalPath: $coverLocalPath, ')
           ..write('timezone: $timezone, ')
           ..write('preferredLanguage: $preferredLanguage, ')
+          ..write('lastQuestGeneratedAt: $lastQuestGeneratedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -6861,6 +7017,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
     coverLocalPath,
     timezone,
     preferredLanguage,
+    lastQuestGeneratedAt,
     createdAt,
     updatedAt,
   );
@@ -6883,6 +7040,7 @@ class ProfileData extends DataClass implements Insertable<ProfileData> {
           other.coverLocalPath == this.coverLocalPath &&
           other.timezone == this.timezone &&
           other.preferredLanguage == this.preferredLanguage &&
+          other.lastQuestGeneratedAt == this.lastQuestGeneratedAt &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -6903,6 +7061,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
   final Value<String?> coverLocalPath;
   final Value<String?> timezone;
   final Value<String?> preferredLanguage;
+  final Value<DateTime?> lastQuestGeneratedAt;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -6922,6 +7081,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     this.coverLocalPath = const Value.absent(),
     this.timezone = const Value.absent(),
     this.preferredLanguage = const Value.absent(),
+    this.lastQuestGeneratedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6942,6 +7102,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     this.coverLocalPath = const Value.absent(),
     this.timezone = const Value.absent(),
     this.preferredLanguage = const Value.absent(),
+    this.lastQuestGeneratedAt = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -6962,6 +7123,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     Expression<String>? coverLocalPath,
     Expression<String>? timezone,
     Expression<String>? preferredLanguage,
+    Expression<DateTime>? lastQuestGeneratedAt,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -6982,6 +7144,8 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
       if (coverLocalPath != null) 'cover_local_path': coverLocalPath,
       if (timezone != null) 'timezone': timezone,
       if (preferredLanguage != null) 'preferred_language': preferredLanguage,
+      if (lastQuestGeneratedAt != null)
+        'last_quest_generated_at': lastQuestGeneratedAt,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -7004,6 +7168,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     Value<String?>? coverLocalPath,
     Value<String?>? timezone,
     Value<String?>? preferredLanguage,
+    Value<DateTime?>? lastQuestGeneratedAt,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -7024,6 +7189,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
       coverLocalPath: coverLocalPath ?? this.coverLocalPath,
       timezone: timezone ?? this.timezone,
       preferredLanguage: preferredLanguage ?? this.preferredLanguage,
+      lastQuestGeneratedAt: lastQuestGeneratedAt ?? this.lastQuestGeneratedAt,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -7078,6 +7244,13 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
     if (preferredLanguage.present) {
       map['preferred_language'] = Variable<String>(preferredLanguage.value);
     }
+    if (lastQuestGeneratedAt.present) {
+      map['last_quest_generated_at'] = Variable<DateTime>(
+        $ProfilesTableTable.$converterlastQuestGeneratedAtn.toSql(
+          lastQuestGeneratedAt.value,
+        ),
+      );
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $ProfilesTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -7112,6 +7285,7 @@ class ProfilesTableCompanion extends UpdateCompanion<ProfileData> {
           ..write('coverLocalPath: $coverLocalPath, ')
           ..write('timezone: $timezone, ')
           ..write('preferredLanguage: $preferredLanguage, ')
+          ..write('lastQuestGeneratedAt: $lastQuestGeneratedAt, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -18559,6 +18733,568 @@ class DaysTableCompanion extends UpdateCompanion<DayData> {
   }
 }
 
+class $SSHHostsTableTable extends SSHHostsTable
+    with TableInfo<$SSHHostsTableTable, SSHHostData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SSHHostsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES organizations (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+    'name',
+    aliasedName,
+    false,
+    additionalChecks: GeneratedColumn.checkTextLength(
+      minTextLength: 1,
+      maxTextLength: 200,
+    ),
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _hostMeta = const VerificationMeta('host');
+  @override
+  late final GeneratedColumn<String> host = GeneratedColumn<String>(
+    'host',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _portMeta = const VerificationMeta('port');
+  @override
+  late final GeneratedColumn<int> port = GeneratedColumn<int>(
+    'port',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(22),
+  );
+  static const VerificationMeta _userMeta = const VerificationMeta('user');
+  @override
+  late final GeneratedColumn<String> user = GeneratedColumn<String>(
+    'username',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SSHHostsTableTable.$convertercreatedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SSHHostsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    name,
+    host,
+    port,
+    user,
+    remotePath,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ssh_hosts';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SSHHostData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('host')) {
+      context.handle(
+        _hostMeta,
+        host.isAcceptableOrUnknown(data['host']!, _hostMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_hostMeta);
+    }
+    if (data.containsKey('port')) {
+      context.handle(
+        _portMeta,
+        port.isAcceptableOrUnknown(data['port']!, _portMeta),
+      );
+    }
+    if (data.containsKey('username')) {
+      context.handle(
+        _userMeta,
+        user.isAcceptableOrUnknown(data['username']!, _userMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_userMeta);
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SSHHostData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SSHHostData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      host: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}host'],
+      )!,
+      port: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}port'],
+      )!,
+      user: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}username'],
+      )!,
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      ),
+      createdAt: $SSHHostsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $SSHHostsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $SSHHostsTableTable createAlias(String alias) {
+    return $SSHHostsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class SSHHostData extends DataClass implements Insertable<SSHHostData> {
+  final String id;
+  final String? tenantID;
+  final String name;
+  final String host;
+  final int port;
+  final String user;
+  final String? remotePath;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const SSHHostData({
+    required this.id,
+    this.tenantID,
+    required this.name,
+    required this.host,
+    required this.port,
+    required this.user,
+    this.remotePath,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    map['name'] = Variable<String>(name);
+    map['host'] = Variable<String>(host);
+    map['port'] = Variable<int>(port);
+    map['username'] = Variable<String>(user);
+    if (!nullToAbsent || remotePath != null) {
+      map['remote_path'] = Variable<String>(remotePath);
+    }
+    {
+      map['created_at'] = Variable<DateTime>(
+        $SSHHostsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $SSHHostsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  SSHHostsTableCompanion toCompanion(bool nullToAbsent) {
+    return SSHHostsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      name: Value(name),
+      host: Value(host),
+      port: Value(port),
+      user: Value(user),
+      remotePath: remotePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePath),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SSHHostData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SSHHostData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      name: serializer.fromJson<String>(json['name']),
+      host: serializer.fromJson<String>(json['host']),
+      port: serializer.fromJson<int>(json['port']),
+      user: serializer.fromJson<String>(json['user']),
+      remotePath: serializer.fromJson<String?>(json['remotePath']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'name': serializer.toJson<String>(name),
+      'host': serializer.toJson<String>(host),
+      'port': serializer.toJson<int>(port),
+      'user': serializer.toJson<String>(user),
+      'remotePath': serializer.toJson<String?>(remotePath),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SSHHostData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    String? name,
+    String? host,
+    int? port,
+    String? user,
+    Value<String?> remotePath = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => SSHHostData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    name: name ?? this.name,
+    host: host ?? this.host,
+    port: port ?? this.port,
+    user: user ?? this.user,
+    remotePath: remotePath.present ? remotePath.value : this.remotePath,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SSHHostData copyWithCompanion(SSHHostsTableCompanion data) {
+    return SSHHostData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      name: data.name.present ? data.name.value : this.name,
+      host: data.host.present ? data.host.value : this.host,
+      port: data.port.present ? data.port.value : this.port,
+      user: data.user.present ? data.user.value : this.user,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SSHHostData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('name: $name, ')
+          ..write('host: $host, ')
+          ..write('port: $port, ')
+          ..write('user: $user, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    name,
+    host,
+    port,
+    user,
+    remotePath,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SSHHostData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.name == this.name &&
+          other.host == this.host &&
+          other.port == this.port &&
+          other.user == this.user &&
+          other.remotePath == this.remotePath &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SSHHostsTableCompanion extends UpdateCompanion<SSHHostData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String> name;
+  final Value<String> host;
+  final Value<int> port;
+  final Value<String> user;
+  final Value<String?> remotePath;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SSHHostsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.name = const Value.absent(),
+    this.host = const Value.absent(),
+    this.port = const Value.absent(),
+    this.user = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SSHHostsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    required String name,
+    required String host,
+    this.port = const Value.absent(),
+    required String user,
+    this.remotePath = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       name = Value(name),
+       host = Value(host),
+       user = Value(user);
+  static Insertable<SSHHostData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? name,
+    Expression<String>? host,
+    Expression<int>? port,
+    Expression<String>? user,
+    Expression<String>? remotePath,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (name != null) 'name': name,
+      if (host != null) 'host': host,
+      if (port != null) 'port': port,
+      if (user != null) 'username': user,
+      if (remotePath != null) 'remote_path': remotePath,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SSHHostsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String>? name,
+    Value<String>? host,
+    Value<int>? port,
+    Value<String>? user,
+    Value<String?>? remotePath,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SSHHostsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      name: name ?? this.name,
+      host: host ?? this.host,
+      port: port ?? this.port,
+      user: user ?? this.user,
+      remotePath: remotePath ?? this.remotePath,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (host.present) {
+      map['host'] = Variable<String>(host.value);
+    }
+    if (port.present) {
+      map['port'] = Variable<int>(port.value);
+    }
+    if (user.present) {
+      map['username'] = Variable<String>(user.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $SSHHostsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $SSHHostsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SSHHostsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('name: $name, ')
+          ..write('host: $host, ')
+          ..write('port: $port, ')
+          ..write('user: $user, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ScoresTableTable extends ScoresTable
     with TableInfo<$ScoresTableTable, ScoreLocalData> {
   @override
@@ -23855,6 +24591,17 @@ class $QuestsTableTable extends QuestsTable
     requiredDuringInsert: false,
     defaultValue: const Constant('daily'),
   );
+  static const VerificationMeta _questTypeMeta = const VerificationMeta(
+    'questType',
+  );
+  @override
+  late final GeneratedColumn<String> questType = GeneratedColumn<String>(
+    'quest_type',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _targetValueMeta = const VerificationMeta(
     'targetValue',
   );
@@ -23959,6 +24706,7 @@ class $QuestsTableTable extends QuestsTable
     title,
     description,
     type,
+    questType,
     targetValue,
     currentValue,
     category,
@@ -24016,6 +24764,12 @@ class $QuestsTableTable extends QuestsTable
       context.handle(
         _typeMeta,
         type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    }
+    if (data.containsKey('quest_type')) {
+      context.handle(
+        _questTypeMeta,
+        questType.isAcceptableOrUnknown(data['quest_type']!, _questTypeMeta),
       );
     }
     if (data.containsKey('target_value')) {
@@ -24105,6 +24859,10 @@ class $QuestsTableTable extends QuestsTable
         DriftSqlType.string,
         data['${effectivePrefix}type'],
       ),
+      questType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quest_type'],
+      ),
       targetValue: attachedDatabase.typeMapping.read(
         DriftSqlType.double,
         data['${effectivePrefix}target_value'],
@@ -24158,6 +24916,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
   final String? title;
   final String? description;
   final String? type;
+  final String? questType;
   final double? targetValue;
   final double? currentValue;
   final String? category;
@@ -24173,6 +24932,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     this.title,
     this.description,
     this.type,
+    this.questType,
     this.targetValue,
     this.currentValue,
     this.category,
@@ -24200,6 +24960,9 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     }
     if (!nullToAbsent || type != null) {
       map['type'] = Variable<String>(type);
+    }
+    if (!nullToAbsent || questType != null) {
+      map['quest_type'] = Variable<String>(questType);
     }
     if (!nullToAbsent || targetValue != null) {
       map['target_value'] = Variable<double>(targetValue);
@@ -24246,6 +25009,9 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           ? const Value.absent()
           : Value(description),
       type: type == null && nullToAbsent ? const Value.absent() : Value(type),
+      questType: questType == null && nullToAbsent
+          ? const Value.absent()
+          : Value(questType),
       targetValue: targetValue == null && nullToAbsent
           ? const Value.absent()
           : Value(targetValue),
@@ -24283,6 +25049,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
       title: serializer.fromJson<String?>(json['title']),
       description: serializer.fromJson<String?>(json['description']),
       type: serializer.fromJson<String?>(json['type']),
+      questType: serializer.fromJson<String?>(json['questType']),
       targetValue: serializer.fromJson<double?>(json['targetValue']),
       currentValue: serializer.fromJson<double?>(json['currentValue']),
       category: serializer.fromJson<String?>(json['category']),
@@ -24303,6 +25070,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
       'title': serializer.toJson<String?>(title),
       'description': serializer.toJson<String?>(description),
       'type': serializer.toJson<String?>(type),
+      'questType': serializer.toJson<String?>(questType),
       'targetValue': serializer.toJson<double?>(targetValue),
       'currentValue': serializer.toJson<double?>(currentValue),
       'category': serializer.toJson<String?>(category),
@@ -24321,6 +25089,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     Value<String?> title = const Value.absent(),
     Value<String?> description = const Value.absent(),
     Value<String?> type = const Value.absent(),
+    Value<String?> questType = const Value.absent(),
     Value<double?> targetValue = const Value.absent(),
     Value<double?> currentValue = const Value.absent(),
     Value<String?> category = const Value.absent(),
@@ -24336,6 +25105,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     title: title.present ? title.value : this.title,
     description: description.present ? description.value : this.description,
     type: type.present ? type.value : this.type,
+    questType: questType.present ? questType.value : this.questType,
     targetValue: targetValue.present ? targetValue.value : this.targetValue,
     currentValue: currentValue.present ? currentValue.value : this.currentValue,
     category: category.present ? category.value : this.category,
@@ -24355,6 +25125,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           ? data.description.value
           : this.description,
       type: data.type.present ? data.type.value : this.type,
+      questType: data.questType.present ? data.questType.value : this.questType,
       targetValue: data.targetValue.present
           ? data.targetValue.value
           : this.targetValue,
@@ -24383,6 +25154,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           ..write('title: $title, ')
           ..write('description: $description, ')
           ..write('type: $type, ')
+          ..write('questType: $questType, ')
           ..write('targetValue: $targetValue, ')
           ..write('currentValue: $currentValue, ')
           ..write('category: $category, ')
@@ -24403,6 +25175,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
     title,
     description,
     type,
+    questType,
     targetValue,
     currentValue,
     category,
@@ -24422,6 +25195,7 @@ class QuestData extends DataClass implements Insertable<QuestData> {
           other.title == this.title &&
           other.description == this.description &&
           other.type == this.type &&
+          other.questType == this.questType &&
           other.targetValue == this.targetValue &&
           other.currentValue == this.currentValue &&
           other.category == this.category &&
@@ -24439,6 +25213,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
   final Value<String?> title;
   final Value<String?> description;
   final Value<String?> type;
+  final Value<String?> questType;
   final Value<double?> targetValue;
   final Value<double?> currentValue;
   final Value<String?> category;
@@ -24455,6 +25230,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     this.title = const Value.absent(),
     this.description = const Value.absent(),
     this.type = const Value.absent(),
+    this.questType = const Value.absent(),
     this.targetValue = const Value.absent(),
     this.currentValue = const Value.absent(),
     this.category = const Value.absent(),
@@ -24472,6 +25248,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     this.title = const Value.absent(),
     this.description = const Value.absent(),
     this.type = const Value.absent(),
+    this.questType = const Value.absent(),
     this.targetValue = const Value.absent(),
     this.currentValue = const Value.absent(),
     this.category = const Value.absent(),
@@ -24489,6 +25266,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     Expression<String>? title,
     Expression<String>? description,
     Expression<String>? type,
+    Expression<String>? questType,
     Expression<double>? targetValue,
     Expression<double>? currentValue,
     Expression<String>? category,
@@ -24506,6 +25284,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
       if (title != null) 'title': title,
       if (description != null) 'description': description,
       if (type != null) 'type': type,
+      if (questType != null) 'quest_type': questType,
       if (targetValue != null) 'target_value': targetValue,
       if (currentValue != null) 'current_value': currentValue,
       if (category != null) 'category': category,
@@ -24525,6 +25304,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     Value<String?>? title,
     Value<String?>? description,
     Value<String?>? type,
+    Value<String?>? questType,
     Value<double?>? targetValue,
     Value<double?>? currentValue,
     Value<String?>? category,
@@ -24542,6 +25322,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
       title: title ?? this.title,
       description: description ?? this.description,
       type: type ?? this.type,
+      questType: questType ?? this.questType,
       targetValue: targetValue ?? this.targetValue,
       currentValue: currentValue ?? this.currentValue,
       category: category ?? this.category,
@@ -24574,6 +25355,9 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
     }
     if (type.present) {
       map['type'] = Variable<String>(type.value);
+    }
+    if (questType.present) {
+      map['quest_type'] = Variable<String>(questType.value);
     }
     if (targetValue.present) {
       map['target_value'] = Variable<double>(targetValue.value);
@@ -24616,6 +25400,7 @@ class QuestsTableCompanion extends UpdateCompanion<QuestData> {
           ..write('title: $title, ')
           ..write('description: $description, ')
           ..write('type: $type, ')
+          ..write('questType: $questType, ')
           ..write('targetValue: $targetValue, ')
           ..write('currentValue: $currentValue, ')
           ..write('category: $category, ')
@@ -25306,6 +26091,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $SocialMetricsTableTable(this);
   late final $MealsTableTable mealsTable = $MealsTableTable(this);
   late final $DaysTableTable daysTable = $DaysTableTable(this);
+  late final $SSHHostsTableTable sSHHostsTable = $SSHHostsTableTable(this);
   late final $ScoresTableTable scoresTable = $ScoresTableTable(this);
   late final $ThemeTableTable themeTable = $ThemeTableTable(this);
   late final $TransactionsTableTable transactionsTable =
@@ -25358,6 +26144,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final QuoteDAO quoteDAO = QuoteDAO(this as AppDatabase);
   late final HealthLogsDAO healthLogsDAO = HealthLogsDAO(this as AppDatabase);
   late final QuestDAO questDAO = QuestDAO(this as AppDatabase);
+  late final SSHHostsDAO sSHHostsDAO = SSHHostsDAO(this as AppDatabase);
   late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
@@ -25389,6 +26176,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     socialMetricsTable,
     mealsTable,
     daysTable,
+    sSHHostsTable,
     scoresTable,
     themeTable,
     transactionsTable,
@@ -25710,6 +26498,13 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('days', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'organizations',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('ssh_hosts', kind: UpdateKind.delete)],
     ),
     WritePropagation(
       on: TableUpdateQuery.onTableName(
@@ -26406,6 +27201,27 @@ final class $$OrganizationsTableTableReferences
     ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
 
     final cache = $_typedResult.readTableOrNull(_daysTableRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$SSHHostsTableTable, List<SSHHostData>>
+  _sSHHostsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
+    db.sSHHostsTable,
+    aliasName: $_aliasNameGenerator(
+      db.organizationsTable.id,
+      db.sSHHostsTable.tenantID,
+    ),
+  );
+
+  $$SSHHostsTableTableProcessedTableManager get sSHHostsTableRefs {
+    final manager = $$SSHHostsTableTableTableManager(
+      $_db,
+      $_db.sSHHostsTable,
+    ).filter((f) => f.tenantID.id.sqlEquals($_itemColumn<String>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_sSHHostsTableRefsTable($_db));
     return ProcessedTableManager(
       manager.$state.copyWith(prefetchedData: cache),
     );
@@ -27196,6 +28012,31 @@ class $$OrganizationsTableTableFilterComposer
           }) => $$DaysTableTableFilterComposer(
             $db: $db,
             $table: $db.daysTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
+  Expression<bool> sSHHostsTableRefs(
+    Expression<bool> Function($$SSHHostsTableTableFilterComposer f) f,
+  ) {
+    final $$SSHHostsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sSHHostsTable,
+      getReferencedColumn: (t) => t.tenantID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SSHHostsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.sSHHostsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -28053,6 +28894,31 @@ class $$OrganizationsTableTableAnnotationComposer
     return f(composer);
   }
 
+  Expression<T> sSHHostsTableRefs<T extends Object>(
+    Expression<T> Function($$SSHHostsTableTableAnnotationComposer a) f,
+  ) {
+    final $$SSHHostsTableTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.sSHHostsTable,
+      getReferencedColumn: (t) => t.tenantID,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$SSHHostsTableTableAnnotationComposer(
+            $db: $db,
+            $table: $db.sSHHostsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+
   Expression<T> scoresTableRefs<T extends Object>(
     Expression<T> Function($$ScoresTableTableAnnotationComposer a) f,
   ) {
@@ -28320,6 +29186,7 @@ class $$OrganizationsTableTableTableManager
             bool socialMetricsTableRefs,
             bool mealsTableRefs,
             bool daysTableRefs,
+            bool sSHHostsTableRefs,
             bool scoresTableRefs,
             bool transactionsTableRefs,
             bool focusSessionsTableRefs,
@@ -28411,6 +29278,7 @@ class $$OrganizationsTableTableTableManager
                 socialMetricsTableRefs = false,
                 mealsTableRefs = false,
                 daysTableRefs = false,
+                sSHHostsTableRefs = false,
                 scoresTableRefs = false,
                 transactionsTableRefs = false,
                 focusSessionsTableRefs = false,
@@ -28446,6 +29314,7 @@ class $$OrganizationsTableTableTableManager
                     if (socialMetricsTableRefs) db.socialMetricsTable,
                     if (mealsTableRefs) db.mealsTable,
                     if (daysTableRefs) db.daysTable,
+                    if (sSHHostsTableRefs) db.sSHHostsTable,
                     if (scoresTableRefs) db.scoresTable,
                     if (transactionsTableRefs) db.transactionsTable,
                     if (focusSessionsTableRefs) db.focusSessionsTable,
@@ -28922,6 +29791,27 @@ class $$OrganizationsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
+                      if (sSHHostsTableRefs)
+                        await $_getPrefetchedData<
+                          OrganizationData,
+                          $OrganizationsTableTable,
+                          SSHHostData
+                        >(
+                          currentTable: table,
+                          referencedTable: $$OrganizationsTableTableReferences
+                              ._sSHHostsTableRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$OrganizationsTableTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).sSHHostsTableRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.tenantID == item.id,
+                              ),
+                          typedResults: items,
+                        ),
                       if (scoresTableRefs)
                         await $_getPrefetchedData<
                           OrganizationData,
@@ -29154,6 +30044,7 @@ typedef $$OrganizationsTableTableProcessedTableManager =
         bool socialMetricsTableRefs,
         bool mealsTableRefs,
         bool daysTableRefs,
+        bool sSHHostsTableRefs,
         bool scoresTableRefs,
         bool transactionsTableRefs,
         bool focusSessionsTableRefs,
@@ -33947,6 +34838,8 @@ typedef $$ProjectsTableTableCreateCompanionBuilder =
       Value<String?> category,
       Value<String?> color,
       Value<int> status,
+      Value<String?> sshHostId,
+      Value<String?> remotePath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -33962,6 +34855,8 @@ typedef $$ProjectsTableTableUpdateCompanionBuilder =
       Value<String?> category,
       Value<String?> color,
       Value<int> status,
+      Value<String?> sshHostId,
+      Value<String?> remotePath,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -34151,6 +35046,16 @@ class $$ProjectsTableTableFilterComposer
 
   ColumnFilters<int> get status => $composableBuilder(
     column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sshHostId => $composableBuilder(
+    column: $table.sshHostId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -34357,6 +35262,16 @@ class $$ProjectsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get sshHostId => $composableBuilder(
+    column: $table.sshHostId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -34445,6 +35360,14 @@ class $$ProjectsTableTableAnnotationComposer
 
   GeneratedColumn<int> get status =>
       $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<String> get sshHostId =>
+      $composableBuilder(column: $table.sshHostId, builder: (column) => column);
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -34647,6 +35570,8 @@ class $$ProjectsTableTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<String?> color = const Value.absent(),
                 Value<int> status = const Value.absent(),
+                Value<String?> sshHostId = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -34660,6 +35585,8 @@ class $$ProjectsTableTableTableManager
                 category: category,
                 color: color,
                 status: status,
+                sshHostId: sshHostId,
+                remotePath: remotePath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -34675,6 +35602,8 @@ class $$ProjectsTableTableTableManager
                 Value<String?> category = const Value.absent(),
                 Value<String?> color = const Value.absent(),
                 Value<int> status = const Value.absent(),
+                Value<String?> sshHostId = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -34688,6 +35617,8 @@ class $$ProjectsTableTableTableManager
                 category: category,
                 color: color,
                 status: status,
+                sshHostId: sshHostId,
+                remotePath: remotePath,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -36889,6 +37820,7 @@ typedef $$ProfilesTableTableCreateCompanionBuilder =
       Value<String?> coverLocalPath,
       Value<String?> timezone,
       Value<String?> preferredLanguage,
+      Value<DateTime?> lastQuestGeneratedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -36910,6 +37842,7 @@ typedef $$ProfilesTableTableUpdateCompanionBuilder =
       Value<String?> coverLocalPath,
       Value<String?> timezone,
       Value<String?> preferredLanguage,
+      Value<DateTime?> lastQuestGeneratedAt,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -37020,6 +37953,12 @@ class $$ProfilesTableTableFilterComposer
   ColumnFilters<String> get preferredLanguage => $composableBuilder(
     column: $table.preferredLanguage,
     builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get lastQuestGeneratedAt => $composableBuilder(
+    column: $table.lastQuestGeneratedAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
   );
 
   ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
@@ -37137,6 +38076,11 @@ class $$ProfilesTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<DateTime> get lastQuestGeneratedAt => $composableBuilder(
+    column: $table.lastQuestGeneratedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -37238,6 +38182,12 @@ class $$ProfilesTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  get lastQuestGeneratedAt => $composableBuilder(
+    column: $table.lastQuestGeneratedAt,
+    builder: (column) => column,
+  );
+
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 
@@ -37311,6 +38261,7 @@ class $$ProfilesTableTableTableManager
                 Value<String?> coverLocalPath = const Value.absent(),
                 Value<String?> timezone = const Value.absent(),
                 Value<String?> preferredLanguage = const Value.absent(),
+                Value<DateTime?> lastQuestGeneratedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -37330,6 +38281,7 @@ class $$ProfilesTableTableTableManager
                 coverLocalPath: coverLocalPath,
                 timezone: timezone,
                 preferredLanguage: preferredLanguage,
+                lastQuestGeneratedAt: lastQuestGeneratedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -37351,6 +38303,7 @@ class $$ProfilesTableTableTableManager
                 Value<String?> coverLocalPath = const Value.absent(),
                 Value<String?> timezone = const Value.absent(),
                 Value<String?> preferredLanguage = const Value.absent(),
+                Value<DateTime?> lastQuestGeneratedAt = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -37370,6 +38323,7 @@ class $$ProfilesTableTableTableManager
                 coverLocalPath: coverLocalPath,
                 timezone: timezone,
                 preferredLanguage: preferredLanguage,
+                lastQuestGeneratedAt: lastQuestGeneratedAt,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -46247,6 +47201,413 @@ typedef $$DaysTableTableProcessedTableManager =
       DayData,
       PrefetchHooks Function({bool tenantID})
     >;
+typedef $$SSHHostsTableTableCreateCompanionBuilder =
+    SSHHostsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      required String name,
+      required String host,
+      Value<int> port,
+      required String user,
+      Value<String?> remotePath,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SSHHostsTableTableUpdateCompanionBuilder =
+    SSHHostsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String> name,
+      Value<String> host,
+      Value<int> port,
+      Value<String> user,
+      Value<String?> remotePath,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+final class $$SSHHostsTableTableReferences
+    extends BaseReferences<_$AppDatabase, $SSHHostsTableTable, SSHHostData> {
+  $$SSHHostsTableTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $OrganizationsTableTable _tenantIDTable(_$AppDatabase db) =>
+      db.organizationsTable.createAlias(
+        $_aliasNameGenerator(
+          db.sSHHostsTable.tenantID,
+          db.organizationsTable.id,
+        ),
+      );
+
+  $$OrganizationsTableTableProcessedTableManager? get tenantID {
+    final $_column = $_itemColumn<String>('tenant_id');
+    if ($_column == null) return null;
+    final manager = $$OrganizationsTableTableTableManager(
+      $_db,
+      $_db.organizationsTable,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_tenantIDTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$SSHHostsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SSHHostsTableTable> {
+  $$SSHHostsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get host => $composableBuilder(
+    column: $table.host,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get port => $composableBuilder(
+    column: $table.port,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get user => $composableBuilder(
+    column: $table.user,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  $$OrganizationsTableTableFilterComposer get tenantID {
+    final $$OrganizationsTableTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableFilterComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SSHHostsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SSHHostsTableTable> {
+  $$SSHHostsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get name => $composableBuilder(
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get host => $composableBuilder(
+    column: $table.host,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get port => $composableBuilder(
+    column: $table.port,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get user => $composableBuilder(
+    column: $table.user,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$OrganizationsTableTableOrderingComposer get tenantID {
+    final $$OrganizationsTableTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.tenantID,
+      referencedTable: $db.organizationsTable,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$OrganizationsTableTableOrderingComposer(
+            $db: $db,
+            $table: $db.organizationsTable,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$SSHHostsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SSHHostsTableTable> {
+  $$SSHHostsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<String> get host =>
+      $composableBuilder(column: $table.host, builder: (column) => column);
+
+  GeneratedColumn<int> get port =>
+      $composableBuilder(column: $table.port, builder: (column) => column);
+
+  GeneratedColumn<String> get user =>
+      $composableBuilder(column: $table.user, builder: (column) => column);
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$OrganizationsTableTableAnnotationComposer get tenantID {
+    final $$OrganizationsTableTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.tenantID,
+          referencedTable: $db.organizationsTable,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$OrganizationsTableTableAnnotationComposer(
+                $db: $db,
+                $table: $db.organizationsTable,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$SSHHostsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SSHHostsTableTable,
+          SSHHostData,
+          $$SSHHostsTableTableFilterComposer,
+          $$SSHHostsTableTableOrderingComposer,
+          $$SSHHostsTableTableAnnotationComposer,
+          $$SSHHostsTableTableCreateCompanionBuilder,
+          $$SSHHostsTableTableUpdateCompanionBuilder,
+          (SSHHostData, $$SSHHostsTableTableReferences),
+          SSHHostData,
+          PrefetchHooks Function({bool tenantID})
+        > {
+  $$SSHHostsTableTableTableManager(_$AppDatabase db, $SSHHostsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SSHHostsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SSHHostsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SSHHostsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> host = const Value.absent(),
+                Value<int> port = const Value.absent(),
+                Value<String> user = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SSHHostsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                name: name,
+                host: host,
+                port: port,
+                user: user,
+                remotePath: remotePath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                required String name,
+                required String host,
+                Value<int> port = const Value.absent(),
+                required String user,
+                Value<String?> remotePath = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SSHHostsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                name: name,
+                host: host,
+                port: port,
+                user: user,
+                remotePath: remotePath,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$SSHHostsTableTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({tenantID = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (tenantID) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.tenantID,
+                                referencedTable: $$SSHHostsTableTableReferences
+                                    ._tenantIDTable(db),
+                                referencedColumn: $$SSHHostsTableTableReferences
+                                    ._tenantIDTable(db)
+                                    .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$SSHHostsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SSHHostsTableTable,
+      SSHHostData,
+      $$SSHHostsTableTableFilterComposer,
+      $$SSHHostsTableTableOrderingComposer,
+      $$SSHHostsTableTableAnnotationComposer,
+      $$SSHHostsTableTableCreateCompanionBuilder,
+      $$SSHHostsTableTableUpdateCompanionBuilder,
+      (SSHHostData, $$SSHHostsTableTableReferences),
+      SSHHostData,
+      PrefetchHooks Function({bool tenantID})
+    >;
 typedef $$ScoresTableTableCreateCompanionBuilder =
     ScoresTableCompanion Function({
       required String id,
@@ -50849,6 +52210,7 @@ typedef $$QuestsTableTableCreateCompanionBuilder =
       Value<String?> title,
       Value<String?> description,
       Value<String?> type,
+      Value<String?> questType,
       Value<double?> targetValue,
       Value<double?> currentValue,
       Value<String?> category,
@@ -50867,6 +52229,7 @@ typedef $$QuestsTableTableUpdateCompanionBuilder =
       Value<String?> title,
       Value<String?> description,
       Value<String?> type,
+      Value<String?> questType,
       Value<double?> targetValue,
       Value<double?> currentValue,
       Value<String?> category,
@@ -50947,6 +52310,11 @@ class $$QuestsTableTableFilterComposer
 
   ColumnFilters<String> get type => $composableBuilder(
     column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get questType => $composableBuilder(
+    column: $table.questType,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -51067,6 +52435,11 @@ class $$QuestsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get questType => $composableBuilder(
+    column: $table.questType,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<double> get targetValue => $composableBuilder(
     column: $table.targetValue,
     builder: (column) => ColumnOrderings(column),
@@ -51176,6 +52549,9 @@ class $$QuestsTableTableAnnotationComposer
 
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get questType =>
+      $composableBuilder(column: $table.questType, builder: (column) => column);
 
   GeneratedColumn<double> get targetValue => $composableBuilder(
     column: $table.targetValue,
@@ -51291,6 +52667,7 @@ class $$QuestsTableTableTableManager
                 Value<String?> title = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> type = const Value.absent(),
+                Value<String?> questType = const Value.absent(),
                 Value<double?> targetValue = const Value.absent(),
                 Value<double?> currentValue = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -51307,6 +52684,7 @@ class $$QuestsTableTableTableManager
                 title: title,
                 description: description,
                 type: type,
+                questType: questType,
                 targetValue: targetValue,
                 currentValue: currentValue,
                 category: category,
@@ -51325,6 +52703,7 @@ class $$QuestsTableTableTableManager
                 Value<String?> title = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<String?> type = const Value.absent(),
+                Value<String?> questType = const Value.absent(),
                 Value<double?> targetValue = const Value.absent(),
                 Value<double?> currentValue = const Value.absent(),
                 Value<String?> category = const Value.absent(),
@@ -51341,6 +52720,7 @@ class $$QuestsTableTableTableManager
                 title: title,
                 description: description,
                 type: type,
+                questType: questType,
                 targetValue: targetValue,
                 currentValue: currentValue,
                 category: category,
@@ -51807,6 +53187,8 @@ class $AppDatabaseManager {
       $$MealsTableTableTableManager(_db, _db.mealsTable);
   $$DaysTableTableTableManager get daysTable =>
       $$DaysTableTableTableManager(_db, _db.daysTable);
+  $$SSHHostsTableTableTableManager get sSHHostsTable =>
+      $$SSHHostsTableTableTableManager(_db, _db.sSHHostsTable);
   $$ScoresTableTableTableManager get scoresTable =>
       $$ScoresTableTableTableManager(_db, _db.scoresTable);
   $$ThemeTableTableTableManager get themeTable =>

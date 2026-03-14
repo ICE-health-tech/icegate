@@ -22,6 +22,9 @@ class ScoreBlock {
 
   final _latestMeals = signal<List<DayWithMeal>>([]);
   final _latestContacts = signal<List<SocialContact>>([]);
+  final _latestAccounts = signal<List<FinancialAccountData>>([]);
+  final _latestAssets = signal<List<AssetData>>([]);
+  final _latestTransactions = signal<List<TransactionData>>([]);
 
   // Track subscriptions and effect cleanups to cancel them on dispose
   final List<dynamic> _subscriptions = [];
@@ -47,6 +50,12 @@ class ScoreBlock {
     0.0,
     debugLabel: 'historicalHealthMetricPoints',
   );
+  
+  // Today's Points Signals
+  final todayHealthPoints = signal<double>(0.0, debugLabel: 'todayHealthPoints');
+  final todaySocialPoints = signal<double>(0.0, debugLabel: 'todaySocialPoints');
+  final todayFinancePoints = signal<double>(0.0, debugLabel: 'todayFinancePoints');
+  final todayProjectPoints = signal<double>(0.0, debugLabel: 'todayProjectPoints');
 
   // Breakdown Signals (Synced from DB categorical metrics)
   final projectsBreakdown = signal<Map<String, double>>(
@@ -185,6 +194,28 @@ class ScoreBlock {
           .watchHistoricalHealthMetricPoints(personID)
           .listen((pts) => _historicalHealthMetricPoints.value = pts),
     );
+    
+    // Today's Points Watchers
+    _subscriptions.add(
+      _metricsDAO
+          .watchTodayHealthQuestPoints(personID)
+          .listen((pts) => todayHealthPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTodaySocialQuestPoints(personID)
+          .listen((pts) => todaySocialPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTodayProjectQuestPoints(personID)
+          .listen((pts) => todayProjectPoints.value = pts),
+    );
+    _subscriptions.add(
+      _metricsDAO
+          .watchTodayFinancialQuestPoints(personID)
+          .listen((pts) => todayFinancePoints.value = pts),
+    );
 
     // 2. Breakdown Watchers (Source of Truth)
     _subscriptions.add(
@@ -225,15 +256,21 @@ class ScoreBlock {
     );
 
     _subscriptions.add(
-      financeDAO.watchAccounts(personID).listen((accounts) async {
-        final assets = await _financeDAO.watchAssets(personID).first;
-        _triggerFinanceUpdate(accounts, assets);
+      financeDAO.watchAccounts(personID).listen((accounts) {
+        _latestAccounts.value = accounts;
+        _triggerFinanceUpdate();
       }),
     );
     _subscriptions.add(
-      financeDAO.watchAssets(personID).listen((assets) async {
-        final accounts = await _financeDAO.watchAccounts(personID).first;
-        _triggerFinanceUpdate(accounts, assets);
+      financeDAO.watchAssets(personID).listen((assets) {
+        _latestAssets.value = assets;
+        _triggerFinanceUpdate();
+      }),
+    );
+    _subscriptions.add(
+      financeDAO.watchAllTransactions(personID).listen((txs) {
+        _latestTransactions.value = txs;
+        _triggerFinanceUpdate();
       }),
     );
     _subscriptions.add(
@@ -288,11 +325,21 @@ class ScoreBlock {
             .watchAccounts(_personID)
             .first
             .timeout(const Duration(seconds: 2), onTimeout: () => []);
+        _latestAccounts.value = accounts;
+
         final assets = await _financeDAO
             .watchAssets(_personID)
             .first
             .timeout(const Duration(seconds: 2), onTimeout: () => []);
-        _updateFinanceScore(accounts, assets, isBootstrap: true);
+        _latestAssets.value = assets;
+
+        final txs = await _financeDAO
+            .watchAllTransactions(_personID)
+            .first
+            .timeout(const Duration(seconds: 2), onTimeout: () => []);
+        _latestTransactions.value = txs;
+
+        _updateFinanceScore(isBootstrap: true);
 
         final contacts = await personDAO.getAllContacts().first.timeout(
           const Duration(seconds: 2),
@@ -343,15 +390,12 @@ class ScoreBlock {
     );
   }
 
-  void _triggerFinanceUpdate(
-    List<FinancialAccountData> accounts,
-    List<AssetData> assets,
-  ) {
+  void _triggerFinanceUpdate() {
     if (!isReady.value) return;
     _financeDebounce?.cancel();
     _financeDebounce = Timer(
       const Duration(milliseconds: 500),
-      () => _updateFinanceScore(accounts, assets),
+      () => _updateFinanceScore(),
     );
   }
 
@@ -366,13 +410,15 @@ class ScoreBlock {
 
   Timer? _healthDebounce, _financeDebounce, _socialDebounce, _careerDebounce;
 
-  void _updateFinanceScore(
-    List<FinancialAccountData> accounts,
-    List<AssetData> assets, {
+  void _updateFinanceScore({
     bool isBootstrap = false,
   }) {
     if (!isBootstrap && !isReady.value) return;
     if (_personID.isEmpty) return;
+
+    final accounts = _latestAccounts.value;
+    final assets = _latestAssets.value;
+    final txs = _latestTransactions.value;
 
     double accountWorth = 0;
     for (var acc in accounts) {
@@ -383,16 +429,31 @@ class ScoreBlock {
       assetWorth += (asset.currentEstimatedValue ?? 0.0);
     }
 
-    double accountScore = 0, assetScore = 0;
-    if (FINANCE_SAVINGS_MILESTONE > 0) {
-      accountScore =
-          (accountWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
-      assetScore =
-          (assetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS;
+    // Logic aligned with FinanceBlock.totalBalance
+    final income = txs
+        .where((t) => t.type == 'income')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final expense = txs
+        .where((t) => t.type == 'expense')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final investment = txs
+        .where((t) => t.type == 'investment')
+        .fold(0.0, (sum, t) => sum + t.amount);
+    final savings = txs
+        .where((t) => t.type == 'savings')
+        .fold(0.0, (sum, t) => sum + t.amount);
+
+    final totalNetWorth =
+        accountWorth + assetWorth + (income + savings - expense - investment);
+
+    double finalScore = 0;
+    if (FINANCE_NET_WORTH_PER_POINT > 0) {
+      // Linear Point Calculation: +2 points for every $10
+      finalScore = totalNetWorth / FINANCE_NET_WORTH_PER_POINT;
     }
 
     final questXP = _totalFinanceQuestPoints.value;
-    final finalScore = accountScore + assetScore + questXP;
+    finalScore += questXP;
 
     _dao.updateFinancialScore(_personID, finalScore);
   }
@@ -547,5 +608,12 @@ class ScoreBlock {
     _totalProjectQuestPoints.dispose();
     _totalFinanceQuestPoints.dispose();
     _historicalHealthMetricPoints.dispose();
+    todayHealthPoints.dispose();
+    todaySocialPoints.dispose();
+    todayFinancePoints.dispose();
+    todayProjectPoints.dispose();
+    _latestAccounts.dispose();
+    _latestAssets.dispose();
+    _latestTransactions.dispose();
   }
 }

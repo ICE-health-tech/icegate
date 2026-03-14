@@ -77,6 +77,7 @@ class GamificationService {
     try {
       final accounts = await _financeDAO.watchAccounts(personID).first;
       final assets = await _financeDAO.watchAssets(personID).first;
+      final txs = await _financeDAO.watchAllTransactions(personID).first;
 
       double totalNetWorth = 0;
       for (var acc in accounts) {
@@ -86,9 +87,27 @@ class GamificationService {
         totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
       }
 
-      financePoints =
-          ((totalNetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS)
-              .floor();
+      final income = txs
+          .where((t) => t.type == 'income')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final expense = txs
+          .where((t) => t.type == 'expense')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final investment = txs
+          .where((t) => t.type == 'investment')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final savings = txs
+          .where((t) => t.type == 'savings')
+          .fold(0.0, (sum, t) => sum + t.amount);
+
+      final netWorth =
+          totalNetWorth + (income + savings - expense - investment);
+
+      if (FINANCE_NET_WORTH_PER_POINT > 0) {
+        financePoints = (netWorth / FINANCE_NET_WORTH_PER_POINT).floor();
+      } else {
+        financePoints = 0;
+      }
     } catch (e) {
       financePoints = 0;
     }
@@ -145,6 +164,8 @@ class GamificationService {
     try {
       final accounts = await _financeDAO.watchAccounts(personID).first;
       final assets = await _financeDAO.watchAssets(personID).first;
+      final txs = await _financeDAO.watchAllTransactions(personID).first;
+
       double totalNetWorth = 0;
       for (var acc in accounts) {
         totalNetWorth += acc.balance;
@@ -152,9 +173,28 @@ class GamificationService {
       for (var asset in assets) {
         totalNetWorth += (asset.currentEstimatedValue ?? 0.0);
       }
-      financePoints =
-          ((totalNetWorth / FINANCE_SAVINGS_MILESTONE) * FINANCE_SAVINGS_POINTS)
-              .floor();
+
+      final income = txs
+          .where((t) => t.type == 'income')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final expense = txs
+          .where((t) => t.type == 'expense')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final investment = txs
+          .where((t) => t.type == 'investment')
+          .fold(0.0, (sum, t) => sum + t.amount);
+      final savings = txs
+          .where((t) => t.type == 'savings')
+          .fold(0.0, (sum, t) => sum + t.amount);
+
+      final netWorth =
+          totalNetWorth + (income + savings - expense - investment);
+
+      if (FINANCE_NET_WORTH_PER_POINT > 0) {
+        financePoints = (netWorth / FINANCE_NET_WORTH_PER_POINT).floor();
+      } else {
+        financePoints = 0;
+      }
     } catch (_) {}
 
     return {

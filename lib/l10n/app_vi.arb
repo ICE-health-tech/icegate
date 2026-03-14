@@ -118,6 +118,7 @@
     "nutri_no_meals": "Chưa có bữa ăn nào được ghi nhận",
     "nutri_kcal": "kcal",
     "nutri_cal": "cal",
+    "todays_gains": "Điểm Hôm Nay",
     "health_metrics_steps": "Bước chân",
     "health_metrics_heart_rate": "Nhịp tim",
     "health_metrics_sleep": "Giấc ngủ",
@@ -939,6 +940,9 @@
     "finance_cat_stock": "Chứng khoán",
     "finance_cat_real_estate": "Bất động sản",
     "finance_power_points": "SỨC MẠNH TÀI CHÍNH",
+    "finance_goal": "Mục tiêu",
+    "finance_efficiency": "Hiệu suất",
+    "finance_savings_rate": "Tỷ lệ tiết kiệm",
     "finance_points_desc": "Điểm tích lũy từ tài sản ròng",
     "ssh_new_session": "Phiên SSH mới",
     "ssh_host_label": "IP Máy Chủ hoặc Tên Miền",
@@ -953,5 +957,7 @@
     "ssh_disconnect": "Ngắt Kết Nối",
     "ssh_search_hint": "Tìm kiếm...",
     "journal": "Nhật ký",
-    "social_notes": "Ghi chú xã hội"
+    "social_notes": "Ghi chú xã hội",
+    "btn_send_feedback": "Gửi phản hồi",
+    "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới"
 }

@@ -7,6 +7,7 @@ class SSHHostModel {
   final int port;
   final String user;
   String? password;
+  String? remoteFilePath;
   final DateTime lastUsed;
 
   SSHHostModel({
@@ -16,18 +17,20 @@ class SSHHostModel {
     this.port = 22,
     required this.user,
     this.password,
+    this.remoteFilePath,
     DateTime? lastUsed,
   }) : id = id ?? const Uuid().v4(),
        lastUsed = lastUsed ?? DateTime.now();
 
-  Map<String, dynamic> toJson({bool includePassword = false}) {
+  Map<String, dynamic> toJson({bool includePassword = false, bool includeHost = false}) {
     return {
       'id': id,
       'name': name,
-      'host': host,
+      if (includeHost) 'host': host,
       'port': port,
       'user': user,
       if (includePassword) 'password': password,
+      if (includePassword) 'remoteFilePath': remoteFilePath,
       'lastUsed': lastUsed.toIso8601String(),
     };
   }
@@ -36,10 +39,11 @@ class SSHHostModel {
     return SSHHostModel(
       id: json['id'],
       name: json['name'],
-      host: json['host'],
+      host: json['host'] ?? '',
       port: json['port'] ?? 22,
       user: json['user'],
       password: json['password'],
+      remoteFilePath: json['remoteFilePath'],
       lastUsed: json['lastUsed'] != null ? DateTime.parse(json['lastUsed']) : null,
     );
   }

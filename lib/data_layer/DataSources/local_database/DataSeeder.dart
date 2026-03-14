@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:drift/drift.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
@@ -223,6 +224,18 @@ class DataSeeder {
         scheduledTime: DateTime.now().add(const Duration(hours: 2)),
         category: const Value('Health'),
       ),
+    );
+
+    // 15. Seed Project Notes
+    await db.projectNoteDAO.insertNote(
+      title: 'Văn phòng ảo',
+      content: jsonEncode([
+        {'insert': 'Thông tin dịch vụ văn phòng ảo:\n'},
+        {'insert': 'Link báo giá: https://greenoffice.com.vn/bao-gia/\n', 'attributes': {'link': 'https://greenoffice.com.vn/bao-gia/'}},
+        {'insert': 'Giá: 650,000 VND / tháng\n'},
+      ]),
+      personID: personId,
+      category: 'finance',
     );
 
     print("Database seeded successfully.");

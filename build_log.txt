@@ -1,0 +1,73 @@
+Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
+Building duylong.art.icegate for device (ios-release)...
+To ensure your app continues to launch on upcoming iOS versions, UIScene lifecycle support will soon be required. Please see https://flutter.dev/to/uiscene-migration for the migration guide.
+
+Running Xcode build...                                          
+Xcode build done.                                           14.7s
+Failed to build iOS app
+Error output from Xcode build:
+↳
+    ** BUILD FAILED **
+
+
+Xcode's output:
+↳
+    Writing result bundle at path:
+    	/var/folders/12/p8277c592h92jxqjp0tp63mr0000gn/T/flutter_tools.1xAZnr/flutter_ios_build_temp_dir35fzgc/temporary_xcresult_bundle
+
+    lib/data_layer/DataSources/local_database/Database.dart:4405:12: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
+     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
+          into(sshHostsTable).insert(entry);
+               ^^^^^^^^^^^^^
+    lib/data_layer/DataSources/local_database/Database.dart:4408:14: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
+     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
+          update(sshHostsTable).replace(entry);
+                 ^^^^^^^^^^^^^
+    lib/data_layer/DataSources/local_database/Database.dart:4411:15: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
+     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
+          (delete(sshHostsTable)..where((t) => t.id.equals(id))).go();
+                  ^^^^^^^^^^^^^
+    lib/data_layer/DataSources/local_database/Database.dart:4411:46: Error: The getter 'id' isn't defined for the type 'Table'.
+     - 'Table' is from 'package:drift/src/dsl/dsl.dart' ('../../../.pub-cache/hosted/pub.dev/drift-2.28.2/lib/src/dsl/dsl.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
+          (delete(sshHostsTable)..where((t) => t.id.equals(id))).go();
+                                                 ^^
+    lib/data_layer/DataSources/local_database/Database.dart:4413:58: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
+     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
+      Stream<List<SSHHostData>> watchAllSSHHosts() => select(sshHostsTable).watch();
+                                                             ^^^^^^^^^^^^^
+    lib/data_layer/DataSources/local_database/Database.dart:4413:73: Error: A value of type 'Stream<List<dynamic>>' can't be returned from a function with return type 'Stream<List<SSHHostData>>'.
+     - 'Stream' is from 'dart:async'.
+     - 'List' is from 'dart:core'.
+     - 'SSHHostData' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+      Stream<List<SSHHostData>> watchAllSSHHosts() => select(sshHostsTable).watch();
+                                                                            ^
+    lib/data_layer/DataSources/local_database/Database.dart:4416:15: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
+     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
+          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+                  ^^^^^^^^^^^^^
+    lib/data_layer/DataSources/local_database/Database.dart:4416:46: Error: The getter 'id' isn't defined for the type 'HasResultSet'.
+     - 'HasResultSet' is from 'package:drift/src/dsl/dsl.dart' ('../../../.pub-cache/hosted/pub.dev/drift-2.28.2/lib/src/dsl/dsl.dart').
+    Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
+          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+                                                 ^^
+    lib/data_layer/DataSources/local_database/Database.dart:4416:62: Error: A value of type 'Future<dynamic>' can't be returned from a function with return type 'Future<SSHHostData?>'.
+     - 'Future' is from 'dart:async'.
+     - 'SSHHostData' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
+          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+                                                                 ^
+    Target kernel_snapshot_program failed: Exception
+    Failed to package /Users/duylong/Code/Flutter/ice_gate.
+    Command PhaseScriptExecution failed with a nonzero exit code
+    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/flutter_app_group_directory-1.1.0/ios/flutter_app_group_directory/Sources/flutter_app_group_directory/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'flutter_app_group_directory' from project 'Pods')
+    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/ios/volume_controller/Sources/volume_controller/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'volume_controller' from project 'Pods')
+    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/live_activities-2.4.3/ios/live_activities/Sources/live_activities/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'live_activities' from project 'Pods')
+    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
+
+Encountered error while building for device.

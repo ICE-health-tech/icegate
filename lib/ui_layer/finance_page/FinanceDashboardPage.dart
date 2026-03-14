@@ -163,7 +163,7 @@ class FinanceDashboardPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            NumberFormat.currency(symbol: '\$').format(currentTotal),
+            context.read<FinanceBlock>().formatCurrency(currentTotal),
             style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 28),
           ),
           const SizedBox(height: 24),
@@ -287,7 +287,7 @@ class FinanceDashboardPage extends StatelessWidget {
           const SizedBox(height: 4),
           FittedBox(
             child: Text(
-              NumberFormat.currency(symbol: '\$').format(amount),
+              context.read<FinanceBlock>().formatCurrency(amount),
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 16,
@@ -361,7 +361,7 @@ class FinanceDashboardPage extends StatelessWidget {
             style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant),
           ),
           trailing: Text(
-            '${isExpense ? '-' : '+'}${NumberFormat.simpleCurrency().format(txn.amount)}',
+            '${isExpense ? '-' : '+'}${block.formatCurrency(txn.amount)}',
             style: TextStyle(
               fontWeight: FontWeight.w900,
               color: color,

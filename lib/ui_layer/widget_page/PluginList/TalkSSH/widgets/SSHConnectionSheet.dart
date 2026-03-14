@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import '../SSHHostModel.dart';
+import '../SSHStorageService.dart';
 
 class SSHConnectionSheet extends StatefulWidget {
   final TextEditingController hostController;
   final TextEditingController portController;
   final TextEditingController userController;
   final TextEditingController passController;
+  final TextEditingController remotePathController;
   final bool useTmux;
   final ValueChanged<bool> onUseTmuxChanged;
   final VoidCallback onConnect;
@@ -16,6 +19,7 @@ class SSHConnectionSheet extends StatefulWidget {
     required this.portController,
     required this.userController,
     required this.passController,
+    required this.remotePathController,
     required this.useTmux,
     required this.onUseTmuxChanged,
     required this.onConnect,
@@ -26,6 +30,26 @@ class SSHConnectionSheet extends StatefulWidget {
 }
 
 class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
+  List<SSHHostModel> _savedHosts = [];
+  bool _isLoadingHosts = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadHosts();
+  }
+
+  Future<void> _loadHosts() async {
+    final storageService = SSHStorageService();
+    final hosts = await storageService.loadHosts();
+    if (mounted) {
+      setState(() {
+        _savedHosts = hosts;
+        _isLoadingHosts = false;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
@@ -72,6 +96,48 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
               ],
             ),
             const SizedBox(height: 24),
+            if (_isLoadingHosts)
+              const Center(child: CircularProgressIndicator())
+            else if (_savedHosts.isNotEmpty) ...[
+              Text(
+                'SAVED CONNECTIONS',
+                style: TextStyle(
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                  fontFamily: 'Courier',
+                  fontSize: 12,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 8),
+              SizedBox(
+                height: 48,
+                child: ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: _savedHosts.length,
+                  separatorBuilder: (context, index) => const SizedBox(width: 8),
+                  itemBuilder: (context, index) {
+                    final host = _savedHosts[index];
+                    return ActionChip(
+                      label: Text(
+                        host.name,
+                        style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold),
+                      ),
+                      avatar: const Icon(Icons.computer, size: 16),
+                      backgroundColor: colorScheme.surfaceVariant,
+                      side: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                      onPressed: () {
+                        widget.hostController.text = host.host;
+                        widget.portController.text = host.port.toString();
+                        widget.userController.text = host.user;
+                        widget.passController.text = host.password ?? '';
+                        widget.remotePathController.text = host.remoteFilePath ?? '';
+                      },
+                    );
+                  },
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
             _buildTextField(context, widget.hostController, l10n.ssh_host_label, Icons.dns),
             const SizedBox(height: 12),
             Row(
@@ -83,6 +149,8 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
             ),
             const SizedBox(height: 12),
             _buildTextField(context, widget.passController, l10n.ssh_pass_label, Icons.lock, obscureText: true),
+            const SizedBox(height: 12),
+            _buildTextField(context, widget.remotePathController, 'REMOTE FILE PATH', Icons.folder_open),
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(

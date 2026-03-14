@@ -32,7 +32,7 @@ void _navigateExternalUrl(BuildContext context, String url) async {
 
   // Handle SSH protocol
   if (url.startsWith('ssh://')) {
-    context.push('/widgets/ssh');
+    context.push('/ssh');
     return;
   }
 
