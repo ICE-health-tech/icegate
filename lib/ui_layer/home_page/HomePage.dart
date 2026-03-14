@@ -440,19 +440,19 @@ class _HomePageState extends State<HomePage> {
                             metrics: [
                               {
                                 'label': AppLocalizations.of(context)!.balance,
-                                'value': '\$${balance.toStringAsFixed(0)}',
+                                'value': financeBlock.formatCurrency(balance),
                               },
                               {
                                 'label': AppLocalizations.of(context)!.spent,
-                                'value': '\$${spending.toStringAsFixed(0)}',
+                                'value': financeBlock.formatCurrency(spending),
                               },
                               {
                                 'label': AppLocalizations.of(context)!.income,
-                                'value': '\$${income.toStringAsFixed(0)}',
+                                'value': financeBlock.formatCurrency(income),
                               },
                               {
                                 'label': AppLocalizations.of(context)!.savings,
-                                'value': '\$${savings.toStringAsFixed(0)}',
+                                'value': financeBlock.formatCurrency(savings),
                               },
                             ],
                             route: '/finance',

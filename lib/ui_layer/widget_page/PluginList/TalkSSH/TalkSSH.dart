@@ -11,7 +11,7 @@ class TalkSSHPlugin extends BasePluginProtocol {
         icon: Icons.terminal_rounded,
         protocol: 'ssh',
         host: 'remote.cli',
-        url: '/ssh',
+        url: '/widgets/ssh',
         imageUrl: null,
         category: PluginCategory.other,
         tags: const ['ssh', 'terminal', 'cli', 'gemini'],

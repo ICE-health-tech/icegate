@@ -216,7 +216,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   String? _localAiMode;
 
   void _toggleAiMode() async {
-    final modes = ['standard', 'gemini', 'opencode'];
+    final modes = ['standard', 'gemini', 'opencode', 'openclaw'];
     final currentIndex = modes.indexOf(_currentAiMode);
     final nextMode = modes[(currentIndex + 1) % modes.length];
     
@@ -467,6 +467,8 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       _sshService.write('\x15gemini prompt $escapedPrompt\r');
     } else if (mode == 'opencode') {
       _sshService.write('\x15opencode run $escapedPrompt\r');
+    } else if (mode == 'openclaw') {
+      _sshService.write('\x15openclaw run $escapedPrompt\r');
     }
   }
 
@@ -571,7 +573,11 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: _currentAiMode == 'standard'
                     ? Colors.white12
-                    : (_currentAiMode == 'gemini' ? Colors.orange.withOpacity(0.2) : Colors.blue.withOpacity(0.2)),
+                    : (_currentAiMode == 'gemini' 
+                        ? Colors.orange.withOpacity(0.2) 
+                        : (_currentAiMode == 'opencode' 
+                            ? Colors.blue.withOpacity(0.2) 
+                            : Colors.purple.withOpacity(0.2))),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
@@ -584,11 +590,19 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                   Icon(
                     _currentAiMode == 'standard'
                         ? Icons.terminal_rounded
-                        : (_currentAiMode == 'gemini' ? Icons.auto_awesome : Icons.code_rounded),
+                        : (_currentAiMode == 'gemini' 
+                            ? Icons.auto_awesome 
+                            : (_currentAiMode == 'opencode' 
+                                ? Icons.code_rounded 
+                                : Icons.hub_rounded)),
                     size: 16,
                     color: _currentAiMode == 'standard'
                         ? Colors.white
-                        : (_currentAiMode == 'gemini' ? Colors.orangeAccent : Colors.blueAccent),
+                        : (_currentAiMode == 'gemini' 
+                            ? Colors.orangeAccent 
+                            : (_currentAiMode == 'opencode' 
+                                ? Colors.blueAccent 
+                                : Colors.purpleAccent)),
                   ),
                   const SizedBox(width: 8),
                   Text(
@@ -599,6 +613,12 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               ),
             ),
           ),
+          if (_currentAiMode == 'openclaw')
+            IconButton(
+              icon: const Icon(Icons.security_rounded, size: 20),
+              onPressed: () => _sshService.write('\x15openclaw providers\r'),
+              tooltip: 'OpenClaw Providers',
+            ),
           IconButton(
             icon: const Icon(Icons.lan_outlined, size: 20),
             onPressed: () => _showConnectDialog(context),

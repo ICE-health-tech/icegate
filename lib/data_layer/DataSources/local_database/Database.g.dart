@@ -155,6 +155,9 @@ mixin _$SSHHostsDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.organizationsTable;
   $SSHHostsTableTable get sSHHostsTable => attachedDatabase.sSHHostsTable;
 }
+mixin _$FeedbackDAOMixin on DatabaseAccessor<AppDatabase> {
+  $FeedbacksTableTable get feedbacksTable => attachedDatabase.feedbacksTable;
+}
 mixin _$QuestDAOMixin on DatabaseAccessor<AppDatabase> {
   $OrganizationsTableTable get organizationsTable =>
       attachedDatabase.organizationsTable;
@@ -15601,6 +15604,528 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   }
 }
 
+class $FeedbacksTableTable extends FeedbacksTable
+    with TableInfo<$FeedbacksTableTable, FeedbackLocalData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $FeedbacksTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _messageMeta = const VerificationMeta(
+    'message',
+  );
+  @override
+  late final GeneratedColumn<String> message = GeneratedColumn<String>(
+    'message',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localImagePathMeta = const VerificationMeta(
+    'localImagePath',
+  );
+  @override
+  late final GeneratedColumn<String> localImagePath = GeneratedColumn<String>(
+    'local_image_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _systemContextMeta = const VerificationMeta(
+    'systemContext',
+  );
+  @override
+  late final GeneratedColumn<String> systemContext = GeneratedColumn<String>(
+    'system_context',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _statusMeta = const VerificationMeta('status');
+  @override
+  late final GeneratedColumn<String> status = GeneratedColumn<String>(
+    'status',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('pending'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    message,
+    type,
+    localImagePath,
+    systemContext,
+    status,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'feedbacks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<FeedbackLocalData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('message')) {
+      context.handle(
+        _messageMeta,
+        message.isAcceptableOrUnknown(data['message']!, _messageMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_messageMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('local_image_path')) {
+      context.handle(
+        _localImagePathMeta,
+        localImagePath.isAcceptableOrUnknown(
+          data['local_image_path']!,
+          _localImagePathMeta,
+        ),
+      );
+    }
+    if (data.containsKey('system_context')) {
+      context.handle(
+        _systemContextMeta,
+        systemContext.isAcceptableOrUnknown(
+          data['system_context']!,
+          _systemContextMeta,
+        ),
+      );
+    }
+    if (data.containsKey('status')) {
+      context.handle(
+        _statusMeta,
+        status.isAcceptableOrUnknown(data['status']!, _statusMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  FeedbackLocalData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return FeedbackLocalData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      message: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}message'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      localImagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_image_path'],
+      ),
+      systemContext: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}system_context'],
+      ),
+      status: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}status'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $FeedbacksTableTable createAlias(String alias) {
+    return $FeedbacksTableTable(attachedDatabase, alias);
+  }
+}
+
+class FeedbackLocalData extends DataClass
+    implements Insertable<FeedbackLocalData> {
+  final String id;
+  final String? personID;
+  final String message;
+  final String type;
+  final String? localImagePath;
+  final String? systemContext;
+  final String status;
+  final DateTime createdAt;
+  const FeedbackLocalData({
+    required this.id,
+    this.personID,
+    required this.message,
+    required this.type,
+    this.localImagePath,
+    this.systemContext,
+    required this.status,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['message'] = Variable<String>(message);
+    map['type'] = Variable<String>(type);
+    if (!nullToAbsent || localImagePath != null) {
+      map['local_image_path'] = Variable<String>(localImagePath);
+    }
+    if (!nullToAbsent || systemContext != null) {
+      map['system_context'] = Variable<String>(systemContext);
+    }
+    map['status'] = Variable<String>(status);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  FeedbacksTableCompanion toCompanion(bool nullToAbsent) {
+    return FeedbacksTableCompanion(
+      id: Value(id),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      message: Value(message),
+      type: Value(type),
+      localImagePath: localImagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localImagePath),
+      systemContext: systemContext == null && nullToAbsent
+          ? const Value.absent()
+          : Value(systemContext),
+      status: Value(status),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory FeedbackLocalData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return FeedbackLocalData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      message: serializer.fromJson<String>(json['message']),
+      type: serializer.fromJson<String>(json['type']),
+      localImagePath: serializer.fromJson<String?>(json['localImagePath']),
+      systemContext: serializer.fromJson<String?>(json['systemContext']),
+      status: serializer.fromJson<String>(json['status']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String?>(personID),
+      'message': serializer.toJson<String>(message),
+      'type': serializer.toJson<String>(type),
+      'localImagePath': serializer.toJson<String?>(localImagePath),
+      'systemContext': serializer.toJson<String?>(systemContext),
+      'status': serializer.toJson<String>(status),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  FeedbackLocalData copyWith({
+    String? id,
+    Value<String?> personID = const Value.absent(),
+    String? message,
+    String? type,
+    Value<String?> localImagePath = const Value.absent(),
+    Value<String?> systemContext = const Value.absent(),
+    String? status,
+    DateTime? createdAt,
+  }) => FeedbackLocalData(
+    id: id ?? this.id,
+    personID: personID.present ? personID.value : this.personID,
+    message: message ?? this.message,
+    type: type ?? this.type,
+    localImagePath: localImagePath.present
+        ? localImagePath.value
+        : this.localImagePath,
+    systemContext: systemContext.present
+        ? systemContext.value
+        : this.systemContext,
+    status: status ?? this.status,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  FeedbackLocalData copyWithCompanion(FeedbacksTableCompanion data) {
+    return FeedbackLocalData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      message: data.message.present ? data.message.value : this.message,
+      type: data.type.present ? data.type.value : this.type,
+      localImagePath: data.localImagePath.present
+          ? data.localImagePath.value
+          : this.localImagePath,
+      systemContext: data.systemContext.present
+          ? data.systemContext.value
+          : this.systemContext,
+      status: data.status.present ? data.status.value : this.status,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedbackLocalData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('message: $message, ')
+          ..write('type: $type, ')
+          ..write('localImagePath: $localImagePath, ')
+          ..write('systemContext: $systemContext, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    personID,
+    message,
+    type,
+    localImagePath,
+    systemContext,
+    status,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is FeedbackLocalData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.message == this.message &&
+          other.type == this.type &&
+          other.localImagePath == this.localImagePath &&
+          other.systemContext == this.systemContext &&
+          other.status == this.status &&
+          other.createdAt == this.createdAt);
+}
+
+class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
+  final Value<String> id;
+  final Value<String?> personID;
+  final Value<String> message;
+  final Value<String> type;
+  final Value<String?> localImagePath;
+  final Value<String?> systemContext;
+  final Value<String> status;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const FeedbacksTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.message = const Value.absent(),
+    this.type = const Value.absent(),
+    this.localImagePath = const Value.absent(),
+    this.systemContext = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  FeedbacksTableCompanion.insert({
+    required String id,
+    this.personID = const Value.absent(),
+    required String message,
+    required String type,
+    this.localImagePath = const Value.absent(),
+    this.systemContext = const Value.absent(),
+    this.status = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       message = Value(message),
+       type = Value(type);
+  static Insertable<FeedbackLocalData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<String>? message,
+    Expression<String>? type,
+    Expression<String>? localImagePath,
+    Expression<String>? systemContext,
+    Expression<String>? status,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (message != null) 'message': message,
+      if (type != null) 'type': type,
+      if (localImagePath != null) 'local_image_path': localImagePath,
+      if (systemContext != null) 'system_context': systemContext,
+      if (status != null) 'status': status,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  FeedbacksTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? personID,
+    Value<String>? message,
+    Value<String>? type,
+    Value<String?>? localImagePath,
+    Value<String?>? systemContext,
+    Value<String>? status,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return FeedbacksTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      message: message ?? this.message,
+      type: type ?? this.type,
+      localImagePath: localImagePath ?? this.localImagePath,
+      systemContext: systemContext ?? this.systemContext,
+      status: status ?? this.status,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (message.present) {
+      map['message'] = Variable<String>(message.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (localImagePath.present) {
+      map['local_image_path'] = Variable<String>(localImagePath.value);
+    }
+    if (systemContext.present) {
+      map['system_context'] = Variable<String>(systemContext.value);
+    }
+    if (status.present) {
+      map['status'] = Variable<String>(status.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('FeedbacksTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('message: $message, ')
+          ..write('type: $type, ')
+          ..write('localImagePath: $localImagePath, ')
+          ..write('systemContext: $systemContext, ')
+          ..write('status: $status, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $FinancialMetricsTableTable extends FinancialMetricsTable
     with TableInfo<$FinancialMetricsTableTable, FinancialMetricsLocal> {
   @override
@@ -26821,6 +27346,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $SessionTableTable sessionTable = $SessionTableTable(this);
   late final $HealthMetricsTableTable healthMetricsTable =
       $HealthMetricsTableTable(this);
+  late final $FeedbacksTableTable feedbacksTable = $FeedbacksTableTable(this);
   late final $FinancialMetricsTableTable financialMetricsTable =
       $FinancialMetricsTableTable(this);
   late final $ProjectMetricsTableTable projectMetricsTable =
@@ -26888,6 +27414,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final QuestDAO questDAO = QuestDAO(this as AppDatabase);
   late final SSHHostsDAO sSHHostsDAO = SSHHostsDAO(this as AppDatabase);
   late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
+  late final FeedbackDAO feedbackDAO = FeedbackDAO(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -26913,6 +27440,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     cVAddressesTable,
     sessionTable,
     healthMetricsTable,
+    feedbacksTable,
     financialMetricsTable,
     projectMetricsTable,
     socialMetricsTable,
@@ -45627,6 +46155,273 @@ typedef $$HealthMetricsTableTableProcessedTableManager =
       HealthMetricsLocal,
       PrefetchHooks Function({bool tenantID, bool personID})
     >;
+typedef $$FeedbacksTableTableCreateCompanionBuilder =
+    FeedbacksTableCompanion Function({
+      required String id,
+      Value<String?> personID,
+      required String message,
+      required String type,
+      Value<String?> localImagePath,
+      Value<String?> systemContext,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$FeedbacksTableTableUpdateCompanionBuilder =
+    FeedbacksTableCompanion Function({
+      Value<String> id,
+      Value<String?> personID,
+      Value<String> message,
+      Value<String> type,
+      Value<String?> localImagePath,
+      Value<String?> systemContext,
+      Value<String> status,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$FeedbacksTableTableFilterComposer
+    extends Composer<_$AppDatabase, $FeedbacksTableTable> {
+  $$FeedbacksTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localImagePath => $composableBuilder(
+    column: $table.localImagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get systemContext => $composableBuilder(
+    column: $table.systemContext,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$FeedbacksTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $FeedbacksTableTable> {
+  $$FeedbacksTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get message => $composableBuilder(
+    column: $table.message,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localImagePath => $composableBuilder(
+    column: $table.localImagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get systemContext => $composableBuilder(
+    column: $table.systemContext,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get status => $composableBuilder(
+    column: $table.status,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$FeedbacksTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $FeedbacksTableTable> {
+  $$FeedbacksTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<String> get message =>
+      $composableBuilder(column: $table.message, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get localImagePath => $composableBuilder(
+    column: $table.localImagePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get systemContext => $composableBuilder(
+    column: $table.systemContext,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get status =>
+      $composableBuilder(column: $table.status, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$FeedbacksTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $FeedbacksTableTable,
+          FeedbackLocalData,
+          $$FeedbacksTableTableFilterComposer,
+          $$FeedbacksTableTableOrderingComposer,
+          $$FeedbacksTableTableAnnotationComposer,
+          $$FeedbacksTableTableCreateCompanionBuilder,
+          $$FeedbacksTableTableUpdateCompanionBuilder,
+          (
+            FeedbackLocalData,
+            BaseReferences<
+              _$AppDatabase,
+              $FeedbacksTableTable,
+              FeedbackLocalData
+            >,
+          ),
+          FeedbackLocalData,
+          PrefetchHooks Function()
+        > {
+  $$FeedbacksTableTableTableManager(
+    _$AppDatabase db,
+    $FeedbacksTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$FeedbacksTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$FeedbacksTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$FeedbacksTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String> message = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String?> localImagePath = const Value.absent(),
+                Value<String?> systemContext = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeedbacksTableCompanion(
+                id: id,
+                personID: personID,
+                message: message,
+                type: type,
+                localImagePath: localImagePath,
+                systemContext: systemContext,
+                status: status,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> personID = const Value.absent(),
+                required String message,
+                required String type,
+                Value<String?> localImagePath = const Value.absent(),
+                Value<String?> systemContext = const Value.absent(),
+                Value<String> status = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => FeedbacksTableCompanion.insert(
+                id: id,
+                personID: personID,
+                message: message,
+                type: type,
+                localImagePath: localImagePath,
+                systemContext: systemContext,
+                status: status,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$FeedbacksTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $FeedbacksTableTable,
+      FeedbackLocalData,
+      $$FeedbacksTableTableFilterComposer,
+      $$FeedbacksTableTableOrderingComposer,
+      $$FeedbacksTableTableAnnotationComposer,
+      $$FeedbacksTableTableCreateCompanionBuilder,
+      $$FeedbacksTableTableUpdateCompanionBuilder,
+      (
+        FeedbackLocalData,
+        BaseReferences<_$AppDatabase, $FeedbacksTableTable, FeedbackLocalData>,
+      ),
+      FeedbackLocalData,
+      PrefetchHooks Function()
+    >;
 typedef $$FinancialMetricsTableTableCreateCompanionBuilder =
     FinancialMetricsTableCompanion Function({
       required String id,
@@ -54774,6 +55569,8 @@ class $AppDatabaseManager {
       $$SessionTableTableTableManager(_db, _db.sessionTable);
   $$HealthMetricsTableTableTableManager get healthMetricsTable =>
       $$HealthMetricsTableTableTableManager(_db, _db.healthMetricsTable);
+  $$FeedbacksTableTableTableManager get feedbacksTable =>
+      $$FeedbacksTableTableTableManager(_db, _db.feedbacksTable);
   $$FinancialMetricsTableTableTableManager get financialMetricsTable =>
       $$FinancialMetricsTableTableTableManager(_db, _db.financialMetricsTable);
   $$ProjectMetricsTableTableTableManager get projectMetricsTable =>

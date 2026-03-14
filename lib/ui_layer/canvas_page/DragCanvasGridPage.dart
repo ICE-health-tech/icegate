@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'dart:ui';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
@@ -10,8 +11,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerB
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 
-import 'dart:ui';
 import 'StoreWidget.dart'; // The Bottom Bar
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
 // --- MAIN SCREEN WRAPPER ---
 
@@ -196,6 +197,45 @@ class _DragCanvasState extends State<DragCanvas> {
                             context.push('/canvas/goals');
                           },
                         ),
+
+                        const SizedBox(height: 32),
+                        _buildSettingsTitle(context, "FINANCE SETTINGS"),
+                        const SizedBox(height: 12),
+                        Watch((context) {
+                          final configBlock = context.read<ConfigBlock>();
+                          final currency = configBlock.currency.watch(context);
+                          return _buildSettingTile(
+                            context: context,
+                            title: "Currency Unit",
+                            subtitle: "Current: $currency",
+                            icon: Icons.monetization_on_rounded,
+                            color: Colors.green,
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  currency,
+                                  style: const TextStyle(
+                                    color: Colors.white70,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Switch.adaptive(
+                                  value: currency == 'VND',
+                                  onChanged: (_) => configBlock.toggleCurrency(),
+                                  activeColor: Colors.greenAccent,
+                                ),
+                              ],
+                            ),
+                            onTap: () => configBlock.toggleCurrency(),
+                          );
+                        }),
+
+                        const SizedBox(height: 32),
+                        _buildSettingsTitle(context, "MODALITY PREFERENCES"),
+                        const SizedBox(height: 12),
+                        _buildModalityGroup(context),
                       ],
                     );
                   }),
@@ -298,6 +338,186 @@ class _DragCanvasState extends State<DragCanvas> {
             Icon(
               Icons.chevron_right_rounded,
               color: Colors.white.withOpacity(0.3),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingsTitle(BuildContext context, String title) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: Text(
+        title,
+        style: TextStyle(
+          color: Colors.blueGrey.shade300,
+          fontSize: 13,
+          fontWeight: FontWeight.w900,
+          letterSpacing: 1.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSettingTile({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    Widget? trailing,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withOpacity(0.05),
+            width: 1,
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing ?? Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withOpacity(0.2),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildModalityGroup(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Theme.of(context).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.05),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        children: [
+          _buildModalityItem(
+            context: context,
+            title: "Health Modality",
+            subtitle: "Custom goals and tracking",
+            icon: Icons.favorite_rounded,
+            color: Colors.redAccent,
+            onTap: () {},
+          ),
+          Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 70),
+          _buildModalityItem(
+            context: context,
+            title: "Social Modality",
+            subtitle: "Privacy and connections",
+            icon: Icons.people_rounded,
+            color: Colors.blueAccent,
+            onTap: () {},
+          ),
+          Divider(color: Colors.white.withOpacity(0.05), height: 1, indent: 70),
+          _buildModalityItem(
+            context: context,
+            title: "Projects Modality",
+            subtitle: "Default folders and AI flow",
+            icon: Icons.code_rounded,
+            color: Colors.deepOrange,
+            onTap: () {},
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildModalityItem({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(28),
+      child: Padding(
+        padding: const EdgeInsets.all(20),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Colors.white.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              color: Colors.white.withOpacity(0.2),
             ),
           ],
         ),

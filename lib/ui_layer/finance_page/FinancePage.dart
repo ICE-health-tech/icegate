@@ -148,7 +148,7 @@ class FinancePage extends StatefulWidget {
                     ),
                     decoration: InputDecoration(
                       labelText: l10n.finance_label_amount,
-                      prefixText: '\$ ',
+                      prefixText: block.useVnd.value ? '₫ ' : '\$ ',
                       border: const OutlineInputBorder(),
                     ),
                   ),

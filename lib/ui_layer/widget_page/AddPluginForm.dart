@@ -419,7 +419,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       ),
       _InternalPlugin(
         name: 'UPLINK',
-        url: '/ssh',
+        url: '/widgets/ssh',
         icon: Icons.terminal_rounded,
         description: 'Secure terminal with AI capabilities.',
         category: PluginCategory.other,

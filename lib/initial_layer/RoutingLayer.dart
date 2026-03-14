@@ -11,6 +11,8 @@ import 'package:provider/provider.dart';
 
 import '../orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart';
+import 'package:provider/provider.dart';
 
 class Adapter extends StatefulWidget {
   final Widget childWidget;
@@ -30,6 +32,7 @@ class _adapterState extends State<Adapter> {
   late AuthBlock authBlock;
   late PersonBlock personBlock;
   late AppDatabase appDatabase;
+  FeedbackBlock feedbackBlock = FeedbackBlock();
 
   void _initAsyncDatabaseLink() async {
     final dao = appDatabase.internalWidgetsDAO;
@@ -83,6 +86,7 @@ class _adapterState extends State<Adapter> {
 
     internalWidgetBlock.refreshBlock(dao, personId, 'home');
     externalWidgetBlock.refreshBlock(externalDao, personId);
+    feedbackBlock.init(appDatabase.feedbackDAO, personId);
   }
 
   @override
@@ -102,8 +106,9 @@ class _adapterState extends State<Adapter> {
         Provider<InternalWidgetBlock>.value(value: internalWidgetBlock),
         Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
 
-        // 5. Provide the AuthBlock
         Provider<AuthBlock>.value(value: authBlock),
+        Provider<PersonBlock>.value(value: personBlock),
+        Provider<FeedbackBlock>.value(value: feedbackBlock),
       ],
       child: widget.childWidget,
     );

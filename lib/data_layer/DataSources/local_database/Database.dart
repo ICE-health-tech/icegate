@@ -1506,6 +1506,23 @@ class QuestsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('FeedbackLocalData')
+class FeedbacksTable extends Table {
+  @override
+  String get tableName => 'feedbacks';
+  TextColumn get id => text()(); // UUID
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get message => text()();
+  TextColumn get type => text()(); // bug, feature, other
+  TextColumn get localImagePath => text().nullable().named('local_image_path')();
+  TextColumn get systemContext => text().nullable().named('system_context')(); // JSON
+  TextColumn get status => text().withDefault(const Constant('pending'))(); // pending, synced
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime).named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DriftAccessor(tables: [ThemeTable])
 class ThemeDAO extends DatabaseAccessor<AppDatabase> with _$ThemeDAOMixin {
   ThemeDAO(super.db);
@@ -4522,6 +4539,29 @@ class SSHHostsDAO extends DatabaseAccessor<AppDatabase>
       (select(sSHHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
 }
 
+@DriftAccessor(tables: [FeedbacksTable])
+class FeedbackDAO extends DatabaseAccessor<AppDatabase> with _$FeedbackDAOMixin {
+  FeedbackDAO(super.db);
+
+  Future<int> insertFeedback(FeedbackLocalData feedback) {
+    return into(feedbacksTable).insert(feedback);
+  }
+
+  Future<List<FeedbackLocalData>> getPendingFeedbacks() {
+    return (select(feedbacksTable)..where((t) => t.status.equals('pending'))).get();
+  }
+
+  Future<void> markAsSynced(String id) {
+    return (update(feedbacksTable)..where((t) => t.id.equals(id))).write(
+      const FeedbacksTableCompanion(status: Value('synced')),
+    );
+  }
+
+  Stream<List<FeedbackLocalData>> watchAllFeedbacks() {
+    return select(feedbacksTable).watch();
+  }
+}
+
 @DriftAccessor(tables: [QuestsTable])
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   QuestDAO(super.db);
@@ -4779,6 +4819,7 @@ class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
     CVAddressesTable,
     SessionTable,
     HealthMetricsTable,
+    FeedbacksTable,
     FinancialMetricsTable,
     ProjectMetricsTable,
     SocialMetricsTable,
@@ -4827,6 +4868,7 @@ class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
     QuestDAO,
     SSHHostsDAO,
     MetricsDAO,
+    FeedbackDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {

@@ -1,12 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
-import 'package:provider/provider.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
@@ -338,67 +340,10 @@ class SettingsWidget extends StatelessWidget {
             ),
 
             // 3. Modality Settings: Finance
-            _buildSettingSection(
-              context: context,
-              title: "Finance Settings",
-              children: [
-                Watch((context) {
-                  final configBlock = context.read<ConfigBlock>();
-                  final currency = configBlock.currency.watch(context);
-                  return _buildPremiumSettingTile(
-                    context: context,
-                    title: "Currency Unit",
-                    subtitle: "Current: $currency",
-                    icon: Icons.monetization_on_rounded,
-                    color: Colors.green,
-                    trailingWidget: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(currency, style: const TextStyle(fontWeight: FontWeight.bold)),
-                        const SizedBox(width: 8),
-                        Switch.adaptive(
-                          value: currency == 'VND',
-                          onChanged: (_) => configBlock.toggleCurrency(),
-                        ),
-                      ],
-                    ),
-                    onTap: () => configBlock.toggleCurrency(),
-                  );
-                }),
-              ],
-            ),
+            
 
             // 4. Modality Settings: Health, Social, Projects
-            _buildSettingSection(
-              context: context,
-              title: "Modality Preferences",
-              children: [
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: "Health Modality",
-                  subtitle: "Custom goals and tracking",
-                  icon: Icons.favorite_rounded,
-                  color: Colors.redAccent,
-                  onTap: () {},
-                ),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: "Social Modality",
-                  subtitle: "Privacy and connections",
-                  icon: Icons.people_rounded,
-                  color: Colors.blueAccent,
-                  onTap: () {},
-                ),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: "Projects Modality",
-                  subtitle: "Default folders and AI flow",
-                  icon: Icons.code_rounded,
-                  color: Colors.deepOrange,
-                  onTap: () {},
-                ),
-              ],
-            ),
+            
 
             // 5. Info & Support
             _buildSettingSection(
@@ -565,59 +510,160 @@ class SettingsWidget extends StatelessWidget {
   void _showFeedbackDialog(BuildContext context) {
     final textController = TextEditingController();
     final colorScheme = Theme.of(context).colorScheme;
+    final feedbackBlock = context.read<FeedbackBlock>();
+    String selectedType = 'bug';
+    final List<String> feedbackTypes = ['bug', 'feature', 'other'];
 
     showDialog(
       context: context,
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text(AppLocalizations.of(context)!.btn_send_feedback),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                AppLocalizations.of(context)!.feedback_subtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: colorScheme.onSurfaceVariant,
-                ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: textController,
-                maxLines: 4,
-                decoration: InputDecoration(
-                  hintText: "...",
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest,
-                ),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text(AppLocalizations.of(context)!.cancel),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final feedback = textController.text;
-                if (feedback.isNotEmpty) {
-                  // TODO: Send feedback to backend or email
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text("Cảm ơn phản hồi của bạn! / Thank you for your feedback!"),
-                      backgroundColor: Colors.green,
+        return StatefulBuilder(
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text(AppLocalizations.of(context)!.btn_send_feedback),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.feedback_subtitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
                     ),
+                    const SizedBox(height: 16),
+                    // Type Selection
+                    DropdownButtonFormField<String>(
+                      value: selectedType,
+                      decoration: InputDecoration(
+                        labelText: "Loại phản hồi / Feedback Type",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest,
+                      ),
+                      items: feedbackTypes.map((type) {
+                        return DropdownMenuItem(
+                          value: type,
+                          child: Text(type.toUpperCase()),
+                        );
+                      }).toList(),
+                      onChanged: (value) {
+                        if (value != null) {
+                          setState(() => selectedType = value);
+                        }
+                      },
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: textController,
+                      maxLines: 4,
+                      decoration: InputDecoration(
+                        hintText: "...",
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest,
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    // Image Attachment
+                    Watch((context) {
+                      final imagePath = feedbackBlock.selectedImage.value;
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          if (imagePath != null)
+                            Stack(
+                              children: [
+                                ClipRRect(
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Image.file(
+                                    File(imagePath),
+                                    height: 150,
+                                    width: double.infinity,
+                                    fit: BoxFit.cover,
+                                  ),
+                                ),
+                                Positioned(
+                                  top: 4,
+                                  right: 4,
+                                  child: IconButton.filled(
+                                    onPressed: () => feedbackBlock.clearImage(),
+                                    icon: const Icon(Icons.close, size: 18),
+                                    style: IconButton.styleFrom(
+                                      backgroundColor: Colors.black54,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          else
+                            OutlinedButton.icon(
+                              onPressed: () => feedbackBlock.pickImage(),
+                              icon: const Icon(Icons.add_a_photo_outlined),
+                              label: const Text("Đính kèm ảnh / Attach Image"),
+                              style: OutlinedButton.styleFrom(
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                              ),
+                            ),
+                        ],
+                      );
+                    }),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () {
+                    feedbackBlock.clearImage();
+                    Navigator.of(context).pop();
+                  },
+                  child: Text(AppLocalizations.of(context)!.cancel),
+                ),
+                Watch((context) {
+                  final loading = feedbackBlock.isLoading.value;
+                  return ElevatedButton(
+                    onPressed: loading
+                        ? null
+                        : () async {
+                            final message = textController.text;
+                            if (message.isNotEmpty) {
+                              final success = await feedbackBlock.submitFeedback(
+                                message: message,
+                                type: selectedType,
+                              );
+                              if (context.mounted) {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(success
+                                        ? "Cảm ơn phản hồi của bạn! / Thank you for your feedback!"
+                                        : "Lỗi khi gửi phản hồi. / Error sending feedback."),
+                                    backgroundColor: success ? Colors.green : Colors.red,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                    child: loading
+                        ? const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Text("Gửi / Send"),
                   );
-                }
-              },
-              child: const Text("Gửi / Send"),
-            ),
-          ],
+                }),
+              ],
+            );
+          },
         );
       },
     );
