@@ -1,34 +1,27 @@
-# Fix: TalkSSH Localization Import and Missing Keys
+# Implementation Report: iOS Privacy Purpose Strings Fix
 
-## Issue Description
-Running `flutter analyze` reported multiple errors indicating `AppLocalizations` was undefined or the URI could not be found within the `TalkSSH` plugin widget files:
-- `TalkSSHPage.dart`
-- `SSHSearchBar.dart`
-- `SSHAIGenerator.dart`
-- `SSHHeader.dart`
-- `SSHCommandInput.dart`
+**Date:** March 15, 2026
+**Branch:** `widget_app`
 
-The localization configuration (`l10n.yaml`) defines `output-dir: lib/l10n`, which means localization files should be imported via `package:ice_gate/l10n/app_localizations.dart` rather than the default `package:flutter_gen/gen_l10n/app_localizations.dart`. Additionally, several SSH-specific string keys were missing in `app_en.arb` and `app_vi.arb`.
+## Overview
+Resolved the `ITMS-90683: Missing purpose string` error reported by App Store Connect for the key `NSLocationAlwaysAndWhenInUseUsageDescription`. This key is required for iOS 11+ when an app or its dependencies (like `geolocator`) reference background location APIs.
 
 ## Changes Made
-1. **Updated Imports:** 
-   - Replaced `import 'package:flutter_gen/gen_l10n/app_localizations.dart';` with `import 'package:ice_gate/l10n/app_localizations.dart';` in all the affected `TalkSSH` sub-widget files.
-   - Added the correct import in `TalkSSHPage.dart`.
 
-2. **Added Missing ARB Keys:**
-   Added the following keys and their translations to `lib/l10n/app_en.arb` and `lib/l10n/app_vi.arb`:
-   - `ssh_new_session`
-   - `ssh_host_label`
-   - `ssh_port_label`
-   - `ssh_user_label`
-   - `ssh_pass_label`
-   - `ssh_connect`
-   - `ssh_ask_ai`
-   - `ssh_ask_ai_desc`
-   - `ssh_generate`
-   - `ssh_type_command`
-   - `ssh_disconnect`
-   - `ssh_search_hint`
+### 1. iOS Info.plist Updates (`ios/Runner/Info.plist`)
+- **Added `NSLocationAlwaysAndWhenInUseUsageDescription`**: Provided a clear, user-facing explanation of why the app needs location access both when active and in the background.
+- **Updated `NSLocationAlwaysUsageDescription`**: Made it more descriptive and consistent with macOS.
+- **Updated `NSLocationWhenInUseUsageDescription`**: Made it more descriptive and consistent with macOS.
+- **Added `NSBluetoothPeripheralUsageDescription`**: Added for compatibility with iOS 12 and earlier, as `NSBluetoothAlwaysUsageDescription` only covers iOS 13+.
+- **Updated `NSBluetoothAlwaysUsageDescription`**: Made it more descriptive and consistent with macOS.
 
-3. **Regenerated Localizations:** 
-   - Ran `flutter gen-l10n` to successfully build the `.dart` localization class files. `flutter analyze` no longer produces compile errors.
+### 2. Consistency & Compliance
+- Ensured all location and Bluetooth-related purpose strings are clear, complete, and provide a user-facing reason as mandated by Apple's privacy guidelines.
+- Aligned iOS descriptions with existing macOS descriptions for better cross-platform consistency.
+
+## Files Modified
+- `ios/Runner/Info.plist`
+
+## Verification
+- Verified that all mandatory keys for used plugins (`geolocator`, `flutter_blue_plus`, `health`, etc.) are now present in `Info.plist`.
+- Confirmed that the error key `NSLocationAlwaysAndWhenInUseUsageDescription` is correctly implemented.

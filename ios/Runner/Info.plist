@@ -42,7 +42,9 @@
 	<key>NSAppleMusicUsageDescription</key>
 	<string>We need music library access to let you select background sounds for the focus timer</string>
 	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>We need Bluetooth access to connect to GPS tracking devices</string>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
 	<key>NSContactsUsageDescription</key>
@@ -53,10 +55,12 @@
 	<string>We need access to your health data to track your daily steps and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>We would like to write health data to help you track your progress.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to track your running distance and movement quests in the real world both when the app is in use and in the background.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
-	<string>We need location access to track your GPS position in the background</string>
+	<string>We need your location to track your running distance and movement quests in the real world in the background.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need location access to track your GPS position</string>
+	<string>We need your location to track your running distance and movement quests in the real world.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>We need to track your steps for the ice_gate dashboard.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
