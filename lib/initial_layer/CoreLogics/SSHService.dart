@@ -44,5 +44,11 @@ class SSHService {
   
   void resize(int width, int height) => _impl.resize(width, height);
   
+  Future<String?> execute(String command) => _impl.execute(command);
+  
+  Future<List<String>> listTmuxSessions() => _impl.listTmuxSessions();
+  
+  void killTmuxSession(String sessionName) => _impl.killTmuxSession(sessionName);
+  
   void disconnect() => _impl.disconnect();
 }

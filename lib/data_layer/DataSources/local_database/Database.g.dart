@@ -185,6 +185,10 @@ mixin _$ConfigsDAOMixin on DatabaseAccessor<AppDatabase> {
   $PersonsTableTable get personsTable => attachedDatabase.personsTable;
   $ConfigsTableTable get configsTable => attachedDatabase.configsTable;
 }
+mixin _$SSHSessionsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $SSHSessionsTableTable get sSHSessionsTable =>
+      attachedDatabase.sSHSessionsTable;
+}
 
 class $OrganizationsTableTable extends OrganizationsTable
     with TableInfo<$OrganizationsTableTable, OrganizationData> {
@@ -19832,6 +19836,627 @@ class SSHHostsTableCompanion extends UpdateCompanion<SSHHostData> {
   }
 }
 
+class $SSHSessionsTableTable extends SSHSessionsTable
+    with TableInfo<$SSHSessionsTableTable, SSHSessionData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SSHSessionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ipAddressMeta = const VerificationMeta(
+    'ipAddress',
+  );
+  @override
+  late final GeneratedColumn<String> ipAddress = GeneratedColumn<String>(
+    'ip_address',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _projectIDMeta = const VerificationMeta(
+    'projectID',
+  );
+  @override
+  late final GeneratedColumn<String> projectID = GeneratedColumn<String>(
+    'project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sessionNameMeta = const VerificationMeta(
+    'sessionName',
+  );
+  @override
+  late final GeneratedColumn<String> sessionName = GeneratedColumn<String>(
+    'session_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _aiModelMeta = const VerificationMeta(
+    'aiModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiModel = GeneratedColumn<String>(
+    'ai_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _isActiveMeta = const VerificationMeta(
+    'isActive',
+  );
+  @override
+  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
+    'is_active',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_active" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SSHSessionsTableTable.$convertercreatedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($SSHSessionsTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ipAddress,
+    localPath,
+    remotePath,
+    projectID,
+    sessionName,
+    aiModel,
+    isActive,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ssh_sessions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SSHSessionData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('ip_address')) {
+      context.handle(
+        _ipAddressMeta,
+        ipAddress.isAcceptableOrUnknown(data['ip_address']!, _ipAddressMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ipAddressMeta);
+    }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
+    if (data.containsKey('project_id')) {
+      context.handle(
+        _projectIDMeta,
+        projectID.isAcceptableOrUnknown(data['project_id']!, _projectIDMeta),
+      );
+    }
+    if (data.containsKey('session_name')) {
+      context.handle(
+        _sessionNameMeta,
+        sessionName.isAcceptableOrUnknown(
+          data['session_name']!,
+          _sessionNameMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_sessionNameMeta);
+    }
+    if (data.containsKey('ai_model')) {
+      context.handle(
+        _aiModelMeta,
+        aiModel.isAcceptableOrUnknown(data['ai_model']!, _aiModelMeta),
+      );
+    }
+    if (data.containsKey('is_active')) {
+      context.handle(
+        _isActiveMeta,
+        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  SSHSessionData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SSHSessionData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      ipAddress: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ip_address'],
+      )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      ),
+      projectID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}project_id'],
+      ),
+      sessionName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}session_name'],
+      )!,
+      aiModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_model'],
+      ),
+      isActive: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_active'],
+      )!,
+      createdAt: $SSHSessionsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $SSHSessionsTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $SSHSessionsTableTable createAlias(String alias) {
+    return $SSHSessionsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class SSHSessionData extends DataClass implements Insertable<SSHSessionData> {
+  final String id;
+  final String ipAddress;
+  final String? localPath;
+  final String? remotePath;
+  final String? projectID;
+  final String sessionName;
+  final String? aiModel;
+  final bool isActive;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const SSHSessionData({
+    required this.id,
+    required this.ipAddress,
+    this.localPath,
+    this.remotePath,
+    this.projectID,
+    required this.sessionName,
+    this.aiModel,
+    required this.isActive,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['ip_address'] = Variable<String>(ipAddress);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    if (!nullToAbsent || remotePath != null) {
+      map['remote_path'] = Variable<String>(remotePath);
+    }
+    if (!nullToAbsent || projectID != null) {
+      map['project_id'] = Variable<String>(projectID);
+    }
+    map['session_name'] = Variable<String>(sessionName);
+    if (!nullToAbsent || aiModel != null) {
+      map['ai_model'] = Variable<String>(aiModel);
+    }
+    map['is_active'] = Variable<bool>(isActive);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $SSHSessionsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $SSHSessionsTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  SSHSessionsTableCompanion toCompanion(bool nullToAbsent) {
+    return SSHSessionsTableCompanion(
+      id: Value(id),
+      ipAddress: Value(ipAddress),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      remotePath: remotePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePath),
+      projectID: projectID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(projectID),
+      sessionName: Value(sessionName),
+      aiModel: aiModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aiModel),
+      isActive: Value(isActive),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory SSHSessionData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SSHSessionData(
+      id: serializer.fromJson<String>(json['id']),
+      ipAddress: serializer.fromJson<String>(json['ipAddress']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      remotePath: serializer.fromJson<String?>(json['remotePath']),
+      projectID: serializer.fromJson<String?>(json['projectID']),
+      sessionName: serializer.fromJson<String>(json['sessionName']),
+      aiModel: serializer.fromJson<String?>(json['aiModel']),
+      isActive: serializer.fromJson<bool>(json['isActive']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'ipAddress': serializer.toJson<String>(ipAddress),
+      'localPath': serializer.toJson<String?>(localPath),
+      'remotePath': serializer.toJson<String?>(remotePath),
+      'projectID': serializer.toJson<String?>(projectID),
+      'sessionName': serializer.toJson<String>(sessionName),
+      'aiModel': serializer.toJson<String?>(aiModel),
+      'isActive': serializer.toJson<bool>(isActive),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  SSHSessionData copyWith({
+    String? id,
+    String? ipAddress,
+    Value<String?> localPath = const Value.absent(),
+    Value<String?> remotePath = const Value.absent(),
+    Value<String?> projectID = const Value.absent(),
+    String? sessionName,
+    Value<String?> aiModel = const Value.absent(),
+    bool? isActive,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => SSHSessionData(
+    id: id ?? this.id,
+    ipAddress: ipAddress ?? this.ipAddress,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    remotePath: remotePath.present ? remotePath.value : this.remotePath,
+    projectID: projectID.present ? projectID.value : this.projectID,
+    sessionName: sessionName ?? this.sessionName,
+    aiModel: aiModel.present ? aiModel.value : this.aiModel,
+    isActive: isActive ?? this.isActive,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  SSHSessionData copyWithCompanion(SSHSessionsTableCompanion data) {
+    return SSHSessionData(
+      id: data.id.present ? data.id.value : this.id,
+      ipAddress: data.ipAddress.present ? data.ipAddress.value : this.ipAddress,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
+      projectID: data.projectID.present ? data.projectID.value : this.projectID,
+      sessionName: data.sessionName.present
+          ? data.sessionName.value
+          : this.sessionName,
+      aiModel: data.aiModel.present ? data.aiModel.value : this.aiModel,
+      isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SSHSessionData(')
+          ..write('id: $id, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('localPath: $localPath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('projectID: $projectID, ')
+          ..write('sessionName: $sessionName, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ipAddress,
+    localPath,
+    remotePath,
+    projectID,
+    sessionName,
+    aiModel,
+    isActive,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SSHSessionData &&
+          other.id == this.id &&
+          other.ipAddress == this.ipAddress &&
+          other.localPath == this.localPath &&
+          other.remotePath == this.remotePath &&
+          other.projectID == this.projectID &&
+          other.sessionName == this.sessionName &&
+          other.aiModel == this.aiModel &&
+          other.isActive == this.isActive &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class SSHSessionsTableCompanion extends UpdateCompanion<SSHSessionData> {
+  final Value<String> id;
+  final Value<String> ipAddress;
+  final Value<String?> localPath;
+  final Value<String?> remotePath;
+  final Value<String?> projectID;
+  final Value<String> sessionName;
+  final Value<String?> aiModel;
+  final Value<bool> isActive;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const SSHSessionsTableCompanion({
+    this.id = const Value.absent(),
+    this.ipAddress = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.projectID = const Value.absent(),
+    this.sessionName = const Value.absent(),
+    this.aiModel = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SSHSessionsTableCompanion.insert({
+    required String id,
+    required String ipAddress,
+    this.localPath = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.projectID = const Value.absent(),
+    required String sessionName,
+    this.aiModel = const Value.absent(),
+    this.isActive = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       ipAddress = Value(ipAddress),
+       sessionName = Value(sessionName);
+  static Insertable<SSHSessionData> custom({
+    Expression<String>? id,
+    Expression<String>? ipAddress,
+    Expression<String>? localPath,
+    Expression<String>? remotePath,
+    Expression<String>? projectID,
+    Expression<String>? sessionName,
+    Expression<String>? aiModel,
+    Expression<bool>? isActive,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ipAddress != null) 'ip_address': ipAddress,
+      if (localPath != null) 'local_path': localPath,
+      if (remotePath != null) 'remote_path': remotePath,
+      if (projectID != null) 'project_id': projectID,
+      if (sessionName != null) 'session_name': sessionName,
+      if (aiModel != null) 'ai_model': aiModel,
+      if (isActive != null) 'is_active': isActive,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SSHSessionsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? ipAddress,
+    Value<String?>? localPath,
+    Value<String?>? remotePath,
+    Value<String?>? projectID,
+    Value<String>? sessionName,
+    Value<String?>? aiModel,
+    Value<bool>? isActive,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return SSHSessionsTableCompanion(
+      id: id ?? this.id,
+      ipAddress: ipAddress ?? this.ipAddress,
+      localPath: localPath ?? this.localPath,
+      remotePath: remotePath ?? this.remotePath,
+      projectID: projectID ?? this.projectID,
+      sessionName: sessionName ?? this.sessionName,
+      aiModel: aiModel ?? this.aiModel,
+      isActive: isActive ?? this.isActive,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (ipAddress.present) {
+      map['ip_address'] = Variable<String>(ipAddress.value);
+    }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
+    if (projectID.present) {
+      map['project_id'] = Variable<String>(projectID.value);
+    }
+    if (sessionName.present) {
+      map['session_name'] = Variable<String>(sessionName.value);
+    }
+    if (aiModel.present) {
+      map['ai_model'] = Variable<String>(aiModel.value);
+    }
+    if (isActive.present) {
+      map['is_active'] = Variable<bool>(isActive.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $SSHSessionsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $SSHSessionsTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SSHSessionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('ipAddress: $ipAddress, ')
+          ..write('localPath: $localPath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('projectID: $projectID, ')
+          ..write('sessionName: $sessionName, ')
+          ..write('aiModel: $aiModel, ')
+          ..write('isActive: $isActive, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ScoresTableTable extends ScoresTable
     with TableInfo<$ScoresTableTable, ScoreLocalData> {
   @override
@@ -27356,6 +27981,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $MealsTableTable mealsTable = $MealsTableTable(this);
   late final $DaysTableTable daysTable = $DaysTableTable(this);
   late final $SSHHostsTableTable sSHHostsTable = $SSHHostsTableTable(this);
+  late final $SSHSessionsTableTable sSHSessionsTable = $SSHSessionsTableTable(
+    this,
+  );
   late final $ScoresTableTable scoresTable = $ScoresTableTable(this);
   late final $ThemeTableTable themeTable = $ThemeTableTable(this);
   late final $TransactionsTableTable transactionsTable =
@@ -27413,6 +28041,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final ConfigsDAO configsDAO = ConfigsDAO(this as AppDatabase);
   late final QuestDAO questDAO = QuestDAO(this as AppDatabase);
   late final SSHHostsDAO sSHHostsDAO = SSHHostsDAO(this as AppDatabase);
+  late final SSHSessionsDAO sSHSessionsDAO = SSHSessionsDAO(
+    this as AppDatabase,
+  );
   late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
   late final FeedbackDAO feedbackDAO = FeedbackDAO(this as AppDatabase);
   @override
@@ -27447,6 +28078,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     mealsTable,
     daysTable,
     sSHHostsTable,
+    sSHSessionsTable,
     scoresTable,
     themeTable,
     transactionsTable,
@@ -49353,6 +49985,313 @@ typedef $$SSHHostsTableTableProcessedTableManager =
       SSHHostData,
       PrefetchHooks Function({bool tenantID})
     >;
+typedef $$SSHSessionsTableTableCreateCompanionBuilder =
+    SSHSessionsTableCompanion Function({
+      required String id,
+      required String ipAddress,
+      Value<String?> localPath,
+      Value<String?> remotePath,
+      Value<String?> projectID,
+      required String sessionName,
+      Value<String?> aiModel,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SSHSessionsTableTableUpdateCompanionBuilder =
+    SSHSessionsTableCompanion Function({
+      Value<String> id,
+      Value<String> ipAddress,
+      Value<String?> localPath,
+      Value<String?> remotePath,
+      Value<String?> projectID,
+      Value<String> sessionName,
+      Value<String?> aiModel,
+      Value<bool> isActive,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$SSHSessionsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SSHSessionsTableTable> {
+  $$SSHSessionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get ipAddress => $composableBuilder(
+    column: $table.ipAddress,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get projectID => $composableBuilder(
+    column: $table.projectID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get sessionName => $composableBuilder(
+    column: $table.sessionName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$SSHSessionsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SSHSessionsTableTable> {
+  $$SSHSessionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get ipAddress => $composableBuilder(
+    column: $table.ipAddress,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get projectID => $composableBuilder(
+    column: $table.projectID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sessionName => $composableBuilder(
+    column: $table.sessionName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isActive => $composableBuilder(
+    column: $table.isActive,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SSHSessionsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SSHSessionsTableTable> {
+  $$SSHSessionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get ipAddress =>
+      $composableBuilder(column: $table.ipAddress, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get projectID =>
+      $composableBuilder(column: $table.projectID, builder: (column) => column);
+
+  GeneratedColumn<String> get sessionName => $composableBuilder(
+    column: $table.sessionName,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aiModel =>
+      $composableBuilder(column: $table.aiModel, builder: (column) => column);
+
+  GeneratedColumn<bool> get isActive =>
+      $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$SSHSessionsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SSHSessionsTableTable,
+          SSHSessionData,
+          $$SSHSessionsTableTableFilterComposer,
+          $$SSHSessionsTableTableOrderingComposer,
+          $$SSHSessionsTableTableAnnotationComposer,
+          $$SSHSessionsTableTableCreateCompanionBuilder,
+          $$SSHSessionsTableTableUpdateCompanionBuilder,
+          (
+            SSHSessionData,
+            BaseReferences<
+              _$AppDatabase,
+              $SSHSessionsTableTable,
+              SSHSessionData
+            >,
+          ),
+          SSHSessionData,
+          PrefetchHooks Function()
+        > {
+  $$SSHSessionsTableTableTableManager(
+    _$AppDatabase db,
+    $SSHSessionsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SSHSessionsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SSHSessionsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SSHSessionsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> ipAddress = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> projectID = const Value.absent(),
+                Value<String> sessionName = const Value.absent(),
+                Value<String?> aiModel = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SSHSessionsTableCompanion(
+                id: id,
+                ipAddress: ipAddress,
+                localPath: localPath,
+                remotePath: remotePath,
+                projectID: projectID,
+                sessionName: sessionName,
+                aiModel: aiModel,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String ipAddress,
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> projectID = const Value.absent(),
+                required String sessionName,
+                Value<String?> aiModel = const Value.absent(),
+                Value<bool> isActive = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SSHSessionsTableCompanion.insert(
+                id: id,
+                ipAddress: ipAddress,
+                localPath: localPath,
+                remotePath: remotePath,
+                projectID: projectID,
+                sessionName: sessionName,
+                aiModel: aiModel,
+                isActive: isActive,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SSHSessionsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SSHSessionsTableTable,
+      SSHSessionData,
+      $$SSHSessionsTableTableFilterComposer,
+      $$SSHSessionsTableTableOrderingComposer,
+      $$SSHSessionsTableTableAnnotationComposer,
+      $$SSHSessionsTableTableCreateCompanionBuilder,
+      $$SSHSessionsTableTableUpdateCompanionBuilder,
+      (
+        SSHSessionData,
+        BaseReferences<_$AppDatabase, $SSHSessionsTableTable, SSHSessionData>,
+      ),
+      SSHSessionData,
+      PrefetchHooks Function()
+    >;
 typedef $$ScoresTableTableCreateCompanionBuilder =
     ScoresTableCompanion Function({
       required String id,
@@ -55583,6 +56522,8 @@ class $AppDatabaseManager {
       $$DaysTableTableTableManager(_db, _db.daysTable);
   $$SSHHostsTableTableTableManager get sSHHostsTable =>
       $$SSHHostsTableTableTableManager(_db, _db.sSHHostsTable);
+  $$SSHSessionsTableTableTableManager get sSHSessionsTable =>
+      $$SSHSessionsTableTableTableManager(_db, _db.sSHSessionsTable);
   $$ScoresTableTableTableManager get scoresTable =>
       $$ScoresTableTableTableManager(_db, _db.scoresTable);
   $$ThemeTableTableTableManager get themeTable =>

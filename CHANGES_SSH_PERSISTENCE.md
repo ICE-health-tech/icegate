@@ -1,34 +1,33 @@
-# CHANGES: SSH Background Persistence & Session Recovery
+# CHANGES: SSH Session Persistence & Management
 
-This update addresses the requirement for SSH connections to remain active when the phone is locked or the app is moved to the background. It combines client-side lifecycle management with server-side session persistence.
+This update introduces local SQLite persistence for SSH sessions, allowing users to track recent connections and manage both live tmux sessions and historical connection records.
 
-## Key Improvements
+## Key Features
 
-### 1. Server-Side Persistence (`tmux`)
-- Added a **Persistent Session (tmux)** toggle to the SSH connection sheet (enabled by default).
-- Upon connection, the app automatically executes `tmux attach -t ice_gate || tmux new-session -s ice_gate`.
-- This ensures that your work on the server survives even if the app process is killed or the network is interrupted.
+### 1. SQLite Persistence Layer
+- Created `ssh_sessions` table in SQLite via Drift.
+- Stores: IP address, remote path, project ID, session name, AI model, and activity status.
+- Automatically saves connection metadata when an SSH uplink is established.
+- Automatically clears session records when a manual disconnect is performed.
 
-### 2. App Lifecycle Integration
-- `SSHService` now implements `WidgetsBindingObserver` to track the app's state.
-- **Background Mode**: When the app is paused or inactive (e.g., phone locked), the service maintains a robust heartbeat with optimized intervals.
-- **Auto-Resumption**: Upon returning to the app, it triggers an immediate health check and initiates auto-recovery if the connection was dropped.
+### 2. Dual-Layer SSH Manager
+- Refined `SSHManagerPage` to show two distinct sections:
+    - **Live Tmux Sessions**: Active sessions on the current remote host.
+    - **Persisted Sessions**: Historical connection records stored in the local database.
+- Integrated "Quick Connect" from persisted records, restoring previous settings (host, path, AI mode).
+- Added "Delete Record" functionality to manually prune the local session history.
 
-### 3. Enhanced Auto-Recovery
-- Increased `maxReconnectAttempts` to **20** to provide a longer window for recovery during extended backgrounding.
-- Optimized the exponential backoff algorithm with jitter and a 64-second cap to balance battery usage and responsiveness.
+### 3. Integrated Lifecycle
+- `TalkSSHPage` now handles the database sync during the `_connect` and `disconnect` cycles.
+- Improved error handling and debug logging for session persistence operations.
 
-### 4. Protocol Stability
-- Set `keepAliveInterval` to 30 seconds at the protocol level.
-- Improved terminal responsiveness during recovery cycles.
+## Files Modified
+- `lib/data_layer/DataSources/local_database/Database.dart`: Schema version 46, new table, and DAO.
+- `lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart`: Logic to save/clear sessions.
+- `lib/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart`: UI to display and manage persisted records.
 
-## Technical Details
-
-- **Files Modified**:
-    - `lib/initial_layer/CoreLogics/SSHServiceNative.dart`: Core logic for lifecycle and tmux.
-    - `lib/initial_layer/CoreLogics/SSHService.dart`: Wrapper update.
-    - `lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart`: UI state management.
-    - `lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHConnectionSheet.dart`: User interface for the tmux toggle.
-
-## Usage
-When establishing a new uplink, ensure "PERSISTENT SESSION (TMUX)" is active. If your connection drops while the phone is closed, simply reopening the app will trigger the auto-recovery which will re-attach to your existing tmux session seamlessly.
+## Verification
+- Verified session saving on successful connection.
+- Verified session record deletion on manual disconnect.
+- Verified manager UI correctly displays both live streams and local database records.
+- Verified "Connect" button on persisted records correctly forwards parameters to the terminal.

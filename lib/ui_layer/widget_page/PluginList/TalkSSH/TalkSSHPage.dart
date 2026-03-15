@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui';
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -24,6 +26,7 @@ class TalkSSHPage extends StatefulWidget {
   final String? remotePath;
   final String? initialContent;
   final String? aiMode; // gemini or opencode
+  final String? autoStartCommand;
 
   const TalkSSHPage({
     super.key,
@@ -32,6 +35,7 @@ class TalkSSHPage extends StatefulWidget {
     this.remotePath,
     this.initialContent,
     this.aiMode,
+    this.autoStartCommand,
   });
 
   @override
@@ -149,6 +153,21 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       _remotePathController.text = widget.remotePath!;
     }
 
+    // Handle autoStartCommand if provided from router
+    if (widget.autoStartCommand != null) {
+      StreamSubscription? sub;
+      sub = _sshService.connectionState.listen((connected) {
+        if (connected) {
+          Future.delayed(const Duration(seconds: 1), () {
+            if (mounted && _sshService.isConnected) {
+              _sshService.write('${widget.autoStartCommand}\n');
+            }
+            sub?.cancel();
+          });
+        }
+      });
+    }
+
     // Auto-connect if hostId is provided
     if (widget.hostId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -173,13 +192,24 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     // Convert to plain text if it's JSON content
     final plainText = _extractPlainText(content);
 
+    if (_sshService.isConnected) {
+      debugPrint('🚀 [TalkSSH] Already connected, sending AI prompt immediately');
+      Future.delayed(const Duration(seconds: 1), () {
+        if (mounted) _sendAiPrompt(plainText);
+      });
+      return;
+    }
+
     // Wait for connection to be active before sending AI prompt
+    debugPrint('⏳ [TalkSSH] Waiting for connection before sending prompt...');
     StreamSubscription? sub;
     sub = _sshService.connectionState.listen((connected) {
       if (connected) {
         // Send AI prompt after a short delay for auto-cd to complete
         Future.delayed(const Duration(seconds: 2), () {
-          _sendAiPrompt(plainText);
+          if (mounted) {
+            _sendAiPrompt(plainText);
+          }
           sub?.cancel();
         });
       }
@@ -277,18 +307,24 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   void _connect() async {
     if (_isConnected) {
       _sshService.disconnect();
+      await _clearSessionFromDb();
     }
 
     try {
+      final host = _hostController.text;
+      final port = int.parse(_portController.text);
+      final user = _userController.text;
+      final pass = _passController.text;
+
       final autoCmd = _remotePathController.text.isNotEmpty
           ? 'cd "${_remotePathController.text}" && clear'
           : null;
 
       await _sshService.connect(
-        host: _hostController.text,
-        port: int.parse(_portController.text),
-        username: _userController.text,
-        password: _passController.text,
+        host: host,
+        port: port,
+        username: user,
+        password: pass,
         useTmux: _useTmux,
         autoStartCommand: autoCmd,
       );
@@ -296,14 +332,17 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       // Save host info if successful
       await _storageService.saveHost(
         SSHHostModel(
-          name: _hostController.text,
-          host: _hostController.text,
-          port: int.parse(_portController.text),
-          user: _userController.text,
-          password: _passController.text,
+          name: host,
+          host: host,
+          port: port,
+          user: user,
+          password: pass,
           remoteFilePath: _remotePathController.text,
         ),
       );
+
+      // Save session to SQLite
+      await _saveSessionToDb();
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -319,6 +358,43 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> _saveSessionToDb() async {
+    try {
+      final db = context.read<AppDatabase>();
+      final host = _hostController.text;
+      
+      // Clear old sessions for this IP first
+      await db.sshSessionsDAO.deleteSessionsByIp(host);
+      
+      await db.sshSessionsDAO.insertSSHSession(SSHSessionsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        ipAddress: host,
+        localPath: const Value.absent(),
+        remotePath: Value(_remotePathController.text),
+        projectID: Value(widget.hostId), // If hostId is project ID in some contexts
+        sessionName: 'ssh_session_${DateTime.now().millisecondsSinceEpoch}',
+        aiModel: Value(_currentAiMode),
+        isActive: const Value(true),
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
+      ));
+      debugPrint('💾 [TalkSSH] Session saved to SQLite for $host');
+    } catch (e) {
+      debugPrint('❌ [TalkSSH] Failed to save session to DB: $e');
+    }
+  }
+
+  Future<void> _clearSessionFromDb() async {
+    try {
+      final db = context.read<AppDatabase>();
+      final host = _hostController.text;
+      await db.sshSessionsDAO.deleteSessionsByIp(host);
+      debugPrint('🧹 [TalkSSH] Session cleared from SQLite for $host');
+    } catch (e) {
+      debugPrint('❌ [TalkSSH] Failed to clear session from DB: $e');
     }
   }
 
@@ -628,6 +704,38 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
             icon: const Icon(Icons.settings_outlined, size: 20),
             onPressed: _showConfigDialog,
             tooltip: 'AI Prompt Settings',
+          ),
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, size: 20),
+            onSelected: (value) {
+              if (value == 'kill_deploy_1') {
+                _sshService.killTmuxSession('deploy_1');
+              } else if (value == 'kill_ice_gate') {
+                _sshService.killTmuxSession('ice_gate');
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'kill_deploy_1',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_forever, color: Colors.redAccent, size: 18),
+                    SizedBox(width: 12),
+                    Text('Kill deploy_1', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+              const PopupMenuItem(
+                value: 'kill_ice_gate',
+                child: Row(
+                  children: [
+                    Icon(Icons.delete_forever, color: Colors.orangeAccent, size: 18),
+                    SizedBox(width: 12),
+                    Text('Kill ice_gate', style: TextStyle(fontSize: 13)),
+                  ],
+                ),
+              ),
+            ],
           ),
           const SizedBox(width: 4),
         ],

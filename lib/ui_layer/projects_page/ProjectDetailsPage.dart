@@ -453,10 +453,22 @@ class ProjectDetailsPage extends StatelessWidget {
                 future: storage.loadHosts(),
                 builder: (context, snapshot) {
                   final hosts = snapshot.data ?? [];
+                  
+                  // Validation: If selectedHostId is not in the list, set it to null to avoid crash
+                  if (selectedHostId != null && !hosts.any((h) => h.id == selectedHostId)) {
+                    selectedHostId = null;
+                  }
+
+                  // Use a Set to ensure unique IDs if the data is corrupted
+                  final uniqueHosts = <String, SSHHostModel>{};
+                  for (var h in hosts) {
+                    uniqueHosts[h.id] = h;
+                  }
+
                   return DropdownButtonFormField<String>(
                     value: selectedHostId,
                     decoration: const InputDecoration(labelText: 'Select SSH Host'),
-                    items: hosts.map((h) => DropdownMenuItem(
+                    items: uniqueHosts.values.map((h) => DropdownMenuItem(
                       value: h.id,
                       child: Text(h.name),
                     )).toList(),

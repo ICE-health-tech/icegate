@@ -238,6 +238,9 @@ class PersonBlock {
   // Signal for the profile currently being viewed (if different from logged in user)
   final viewedInformation = signal<UserInformation?>(null);
 
+  // Sync Status signal for Dynamic Island
+  final isSyncing = signal<bool>(false);
+
   // Computed currentPersonID avoids stale state during login transitions
   late final currentPersonID = computed(() => information.value.profiles.id);
 
@@ -255,21 +258,17 @@ class PersonBlock {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") return;
 
+    isSyncing.value = true;
     try {
       const baseUrl = 'https://backend.duylong.art';
-      debugPrint(
-        '🔄 [PersonBlock] Syncing with backend: $baseUrl/backend/person/app_sync',
+      final url = Uri.parse('$baseUrl/api/v1/users/me');
+      final response = await http.get(
+        url,
+        headers: {
+          'Authorization': 'Bearer $token',
+          'Content-Type': 'application/json',
+        },
       );
-
-      final response = await http
-          .get(
-            Uri.parse('$baseUrl/backend/person/app_sync'),
-            headers: {
-              'Authorization': 'Bearer $token',
-              'Accept': 'application/json',
-            },
-          )
-          .timeout(const Duration(seconds: 15));
 
       if (response.statusCode == 200) {
         final data = json.decode(response.body);
@@ -291,6 +290,8 @@ class PersonBlock {
       }
     } catch (e) {
       debugPrint('⚠️ [PersonBlock] app_sync failed: $e');
+    } finally {
+      isSyncing.value = false;
     }
   }
 

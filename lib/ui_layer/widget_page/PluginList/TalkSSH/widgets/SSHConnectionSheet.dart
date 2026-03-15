@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
 import '../SSHHostModel.dart';
 import '../SSHStorageService.dart';
 
@@ -158,29 +159,63 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
               ),
-              child: SwitchListTile(
-                title: Text(
-                  'PERSISTENT SESSION (TMUX)',
-                  style: TextStyle(
-                    color: colorScheme.onSurface,
-                    fontFamily: 'Courier',
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
+              child: Column(
+                children: [
+                  SwitchListTile(
+                    title: Text(
+                      'PERSISTENT SESSION (TMUX)',
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
+                        fontFamily: 'Courier',
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    subtitle: Text(
+                      'Keeps shell alive on server if app closes',
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withOpacity(0.5),
+                        fontSize: 10,
+                      ),
+                    ),
+                    value: widget.useTmux,
+                    onChanged: widget.onUseTmuxChanged,
+                    activeColor: colorScheme.primary,
                   ),
-                ),
-                subtitle: Text(
-                  'Keeps shell alive on server if app closes',
-                  style: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.5),
-                    fontSize: 10,
+                  const Divider(height: 1, indent: 16, endIndent: 16),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    child: Row(
+                      children: [
+                        Icon(Icons.terminal_rounded, size: 16, color: colorScheme.onSurface.withOpacity(0.5)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'SESSION TOOLS',
+                            style: TextStyle(
+                              color: colorScheme.onSurface.withOpacity(0.5),
+                              fontFamily: 'Courier',
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
+                        TextButton.icon(
+                          icon: const Icon(Icons.close_rounded, size: 14),
+                          label: const Text('KILL DEPLOY_1', style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold)),
+                          style: TextButton.styleFrom(
+                            foregroundColor: Colors.redAccent,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          ),
+                          onPressed: () {
+                            SSHService().killTmuxSession('deploy_1');
+                          },                        ),
+                      ],
+                    ),
                   ),
-                ),
-                value: widget.useTmux,
-                onChanged: widget.onUseTmuxChanged,
-                activeColor: colorScheme.primary,
+                ],
               ),
-            ),
-            const SizedBox(height: 24),
+            ),            const SizedBox(height: 24),
             SizedBox(
               width: double.infinity,
               height: 56,

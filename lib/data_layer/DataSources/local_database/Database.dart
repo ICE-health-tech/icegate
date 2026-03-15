@@ -349,6 +349,31 @@ class SSHHostsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('SSHSessionData')
+class SSHSessionsTable extends Table {
+  @override
+  String get tableName => 'ssh_sessions';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get ipAddress => text().named('ip_address')();
+  TextColumn get localPath => text().nullable().named('local_path')();
+  TextColumn get remotePath => text().nullable().named('remote_path')();
+  TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get sessionName => text().named('session_name')();
+  TextColumn get aiModel => text().nullable().named('ai_model')();
+  BoolColumn get isActive => boolean().withDefault(const Constant(true)).named('is_active')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // --- 3.4 Person Management Tables ---
 
 // Enums
@@ -4796,6 +4821,34 @@ class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
   }
 }
 
+@DriftAccessor(tables: [SSHSessionsTable])
+class SSHSessionsDAO extends DatabaseAccessor<AppDatabase>
+    with _$SSHSessionsDAOMixin {
+  SSHSessionsDAO(super.db);
+
+  Future<int> insertSSHSession(SSHSessionsTableCompanion entry) =>
+      into(sSHSessionsTable).insert(entry);
+
+  Future<bool> updateSSHSession(SSHSessionData entry) =>
+      update(sSHSessionsTable).replace(entry);
+
+  Future<int> deleteSSHSession(String id) =>
+      (delete(sSHSessionsTable)..where((t) => t.id.equals(id))).go();
+
+  Future<int> markSessionAsDeleted(String id) =>
+      (update(sSHSessionsTable)..where((t) => t.id.equals(id)))
+          .write(const SSHSessionsTableCompanion(isActive: Value(false)));
+
+  Stream<List<SSHSessionData>> watchActiveSessions() =>
+      (select(sSHSessionsTable)..where((t) => t.isActive.equals(true))).watch();
+
+  Future<SSHSessionData?> getSessionById(String id) =>
+      (select(sSHSessionsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
+      
+  Future<int> deleteSessionsByIp(String ip) =>
+      (delete(sSHSessionsTable)..where((t) => t.ipAddress.equals(ip))).go();
+}
+
 // --- 6. Main Database Class ---
 
 @DriftDatabase(
@@ -4826,6 +4879,7 @@ class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
     MealsTable,
     DaysTable,
     SSHHostsTable,
+    SSHSessionsTable,
     ScoresTable,
     ThemeTable,
     ProjectsTable,
@@ -4867,6 +4921,7 @@ class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {
     ConfigsDAO,
     QuestDAO,
     SSHHostsDAO,
+    SSHSessionsDAO,
     MetricsDAO,
     FeedbackDAO,
   ],
@@ -4885,6 +4940,7 @@ class AppDatabase extends _$AppDatabase {
 
   QuestDAO get questDAO => QuestDAO(this);
   SSHHostsDAO get sshHostsDAO => SSHHostsDAO(this);
+  SSHSessionsDAO get sshSessionsDAO => SSHSessionsDAO(this);
   ConfigsDAO get configsDAO => ConfigsDAO(this);
 
   @override
@@ -4893,7 +4949,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 45;
+  int get schemaVersion => 46;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -4910,6 +4966,9 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 46) {
+          await m.createTable(sSHSessionsTable);
+        }
         if (from < 45) {
           // Schema version 45 adds quest_type column.
           // Since it's a PowerSync table, we do not use m.addColumn

@@ -289,6 +289,30 @@ class SSHServiceNative with WidgetsBindingObserver {
     _shell?.resizeTerminal(width, height);
   }
 
+  Future<String?> execute(String command) async {
+    if (!isConnected || _client == null) return null;
+    try {
+      final session = await _client!.execute(command);
+      return await utf8.decodeStream(session.stdout);
+    } catch (e) {
+      debugPrint('SSH Execute Error: $e');
+      return null;
+    }
+  }
+
+  Future<List<String>> listTmuxSessions() async {
+    final output = await execute('tmux list-sessions -F "#S"');
+    if (output == null || output.trim().isEmpty) return [];
+    return output.trim().split('\n');
+  }
+
+  void killTmuxSession(String sessionName) {
+    if (isConnected) {
+      terminal.write('\r\n\x1b[38;5;196m>>> TERMINATING TMUX SESSION: $sessionName...\x1b[0m\r\n');
+      _shell?.stdin.add(utf8.encode('tmux kill-session -t $sessionName\n'));
+    }
+  }
+
   void disconnect() {
     _isManuallyDisconnected = true;
     _cleanupSession();

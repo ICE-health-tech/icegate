@@ -35,6 +35,7 @@ import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
 import 'package:ice_gate/ui_layer/animation_page/snowflake_assemble_screen.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart';
 // // Import your pages
 // import 'package:ice_gate/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
 // import 'package:ice_gate/ui_layer/HomePage.dart'; // Your Home
@@ -386,12 +387,28 @@ final GoRouter router = GoRouter(
                 remotePath: data['remotePath'] as String?,
                 initialContent: data['content'] as String?,
                 aiMode: aiMode ?? data['aiMode'] as String?,
+                autoStartCommand: data['autoStartCommand'] as String?,
               );
             }
             return TalkSSHPage(
               initialPrompt: state.extra as String?,
               aiMode: aiMode,
             );
+          },
+        ),
+        GoRoute(
+          path: '/widget/ssh_manager',
+          builder: (context, state) {
+            if (state.extra is Map<String, dynamic>) {
+              final data = state.extra as Map<String, dynamic>;
+              return SSHManagerPage(
+                initialPrompt: data['prompt'] as String? ?? data['initialPrompt'] as String?,
+                hostId: data['hostId'] as String?,
+                remotePath: data['remotePath'] as String?,
+                initialContent: data['content'] as String? ?? data['initialContent'] as String?,
+              );
+            }
+            return const SSHManagerPage();
           },
         ),
         GoRoute(
