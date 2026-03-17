@@ -16,7 +16,10 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 
 class FoodInputPage extends StatefulWidget {
-  const FoodInputPage({super.key});
+  final String? mealId;
+  final XFile? image;
+
+  const FoodInputPage({super.key, this.mealId, this.image});
 
   @override
   State<FoodInputPage> createState() => _FoodInputPageState();
@@ -35,13 +38,13 @@ class FoodInputPage extends StatefulWidget {
 class _FoodInputPageState extends State<FoodInputPage> {
   final _aiService = Aifoodcaloriesservices();
   final _picker = ImagePicker();
-  
+
   final _foodController = TextEditingController();
   final _proteinController = TextEditingController();
   final _carbsController = TextEditingController();
   final _fatController = TextEditingController();
   final _kcalController = TextEditingController();
-  
+
   XFile? _pickedImage;
   String _imagePath = "";
   bool _isAnalyzing = false;
@@ -51,6 +54,60 @@ class _FoodInputPageState extends State<FoodInputPage> {
   void initState() {
     super.initState();
     _healthMealDAO = context.read<HealthMealDAO>();
+
+    if (widget.image != null) {
+      _pickedImage = widget.image;
+      _saveImageAndAnalyze();
+    }
+
+    if (widget.mealId != null) {
+      _loadMealData();
+    }
+  }
+
+  Future<void> _saveImageAndAnalyze() async {
+    if (_pickedImage == null) return;
+
+    try {
+      final authBlock = context.read<AuthBlock>();
+      final userData = authBlock.user.value;
+      final String personID =
+          userData?['person_id']?.toString() ??
+          userData?['id']?.toString() ??
+          '1';
+      final objectBlock = context.read<ObjectDatabaseBlock>();
+
+      final String savedFileName = await objectBlock.saveAnyLocalImage(
+        _pickedImage!,
+        subFolder: 'meals',
+        personId: personID,
+      );
+
+      setState(() {
+        _imagePath = savedFileName;
+      });
+      _analyzeFood();
+    } catch (e) {
+      debugPrint('Error saving image: $e');
+    }
+  }
+
+  Future<void> _loadMealData() async {
+    try {
+      final meal = await _healthMealDAO.getMealById(widget.mealId!);
+      if (meal != null && mounted) {
+        setState(() {
+          _foodController.text = meal.mealName;
+          _proteinController.text = meal.protein.toString();
+          _carbsController.text = meal.carbs.toString();
+          _fatController.text = meal.fat.toString();
+          _kcalController.text = meal.calories.toString();
+          _imagePath = meal.mealImageUrl ?? '';
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading meal: $e');
+    }
   }
 
   @override
@@ -76,9 +133,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
       final authBlock = context.read<AuthBlock>();
       final userData = authBlock.user.value;
-      final String personID = userData?['person_id']?.toString() ?? userData?['id']?.toString() ?? '1';
+      final String personID =
+          userData?['person_id']?.toString() ??
+          userData?['id']?.toString() ??
+          '1';
       final objectBlock = context.read<ObjectDatabaseBlock>();
-      
+
       final String savedFileName = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'meals',
@@ -129,7 +189,10 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
     final authBlock = context.read<AuthBlock>();
     final userData = authBlock.user.value;
-    final String personID = userData?['person_id']?.toString() ?? userData?['id']?.toString() ?? '1';
+    final String personID =
+        userData?['person_id']?.toString() ??
+        userData?['id']?.toString() ??
+        '1';
 
     final now = DateTime.now();
     final normalizedDate = DateTime(now.year, now.month, now.day);
@@ -138,19 +201,39 @@ class _FoodInputPageState extends State<FoodInputPage> {
       DateFormat('yyyy-MM-dd').format(normalizedDate),
     );
 
-    await _healthMealDAO.insertMeal(
-      MealsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        mealName: _foodController.text.isEmpty ? "Meal" : _foodController.text,
-        personID: Value(personID),
-        mealImageUrl: Value(_imagePath),
-        carbs: Value(carbs),
-        protein: Value(protein),
-        fat: Value(fat),
-        calories: Value(calories),
-        eatenAt: Value(now),
-      ),
-    );
+    if (widget.mealId != null) {
+      final db = context.read<AppDatabase>();
+      await (db.update(
+        db.mealsTable,
+      )..where((t) => t.id.equals(widget.mealId!))).write(
+        MealsTableCompanion(
+          mealName: Value(
+            _foodController.text.isEmpty ? "Meal" : _foodController.text,
+          ),
+          mealImageUrl: Value(_imagePath),
+          carbs: Value(carbs),
+          protein: Value(protein),
+          fat: Value(fat),
+          calories: Value(calories),
+        ),
+      );
+    } else {
+      await _healthMealDAO.insertMeal(
+        MealsTableCompanion.insert(
+          id: IDGen.UUIDV7(),
+          mealName: _foodController.text.isEmpty
+              ? "Meal"
+              : _foodController.text,
+          personID: Value(personID),
+          mealImageUrl: Value(_imagePath),
+          carbs: Value(carbs),
+          protein: Value(protein),
+          fat: Value(fat),
+          calories: Value(calories),
+          eatenAt: Value(now),
+        ),
+      );
+    }
 
     await _healthMealDAO.upsertDay(
       DaysTableCompanion.insert(
@@ -205,9 +288,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(32),
-                    child: kIsWeb 
+                    child: kIsWeb
                         ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
-                        : Image.file(File(_pickedImage!.path), fit: BoxFit.cover),
+                        : Image.file(
+                            File(_pickedImage!.path),
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 )
               else
@@ -235,13 +321,20 @@ class _FoodInputPageState extends State<FoodInputPage> {
               const SizedBox(height: 32),
               TextField(
                 controller: _foodController,
-                style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
                 decoration: InputDecoration(
                   labelText: 'What did you eat?',
                   prefixIcon: const Icon(Icons.restaurant_rounded),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                   filled: true,
-                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                  fillColor: colorScheme.surfaceContainerHighest.withOpacity(
+                    0.3,
+                  ),
                 ),
                 onEditingComplete: _analyzeFood,
               ),
@@ -257,9 +350,17 @@ class _FoodInputPageState extends State<FoodInputPage> {
               const SizedBox(height: 16),
               Row(
                 children: [
-                  _buildMacroInput(l10n.nutri_protein, _proteinController, Colors.orange),
+                  _buildMacroInput(
+                    l10n.nutri_protein,
+                    _proteinController,
+                    Colors.orange,
+                  ),
                   const SizedBox(width: 12),
-                  _buildMacroInput(l10n.nutri_carbs, _carbsController, Colors.blue),
+                  _buildMacroInput(
+                    l10n.nutri_carbs,
+                    _carbsController,
+                    Colors.blue,
+                  ),
                   const SizedBox(width: 12),
                   _buildMacroInput(l10n.nutri_fat, _fatController, Colors.pink),
                 ],
@@ -268,21 +369,26 @@ class _FoodInputPageState extends State<FoodInputPage> {
               TextField(
                 controller: _kcalController,
                 keyboardType: TextInputType.number,
-                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                ),
                 decoration: InputDecoration(
                   labelText: "${l10n.nutri_total} (kcal)",
                   prefixIcon: const Icon(Icons.local_fire_department_rounded),
-                  suffixIcon: _isAnalyzing 
-                    ? const Padding(
-                        padding: EdgeInsets.all(12.0),
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.auto_awesome),
-                        onPressed: _analyzeFood,
-                        color: colorScheme.primary,
-                      ),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                  suffixIcon: _isAnalyzing
+                      ? const Padding(
+                          padding: EdgeInsets.all(12.0),
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : IconButton(
+                          icon: const Icon(Icons.auto_awesome),
+                          onPressed: _analyzeFood,
+                          color: colorScheme.primary,
+                        ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
                 ),
               ),
               const SizedBox(height: 40),
@@ -292,11 +398,16 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   backgroundColor: colorScheme.primary,
                   foregroundColor: colorScheme.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(24),
+                  ),
                   elevation: 8,
                   shadowColor: colorScheme.primary.withOpacity(0.4),
                 ),
-                child: const Text('SAVE RECORD', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
+                child: const Text(
+                  'SAVE RECORD',
+                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16),
+                ),
               ),
             ],
           ),
@@ -305,7 +416,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
     );
   }
 
-  Widget _buildCaptureModeButton(IconData icon, String label, Color color, VoidCallback onTap) {
+  Widget _buildCaptureModeButton(
+    IconData icon,
+    String label,
+    Color color,
+    VoidCallback onTap,
+  ) {
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(24),
@@ -320,14 +436,21 @@ class _FoodInputPageState extends State<FoodInputPage> {
           children: [
             Icon(icon, color: color, size: 40),
             const SizedBox(height: 12),
-            Text(label, style: TextStyle(color: color, fontWeight: FontWeight.w900)),
+            Text(
+              label,
+              style: TextStyle(color: color, fontWeight: FontWeight.w900),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildMacroInput(String label, TextEditingController controller, Color color) {
+  Widget _buildMacroInput(
+    String label,
+    TextEditingController controller,
+    Color color,
+  ) {
     return Expanded(
       child: TextField(
         controller: controller,
@@ -336,7 +459,11 @@ class _FoodInputPageState extends State<FoodInputPage> {
         style: const TextStyle(fontWeight: FontWeight.w900),
         decoration: InputDecoration(
           labelText: label,
-          labelStyle: TextStyle(color: color, fontWeight: FontWeight.bold, fontSize: 12),
+          labelStyle: TextStyle(
+            color: color,
+            fontWeight: FontWeight.bold,
+            fontSize: 12,
+          ),
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
           border: OutlineInputBorder(
             borderRadius: BorderRadius.circular(16),
