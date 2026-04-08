@@ -1,0 +1,61 @@
+{
+  "theme_name": "Data-Dense Dashboard",
+  "brightness": "light",
+  "useMaterial3": true,
+  "seed_color": "0xFF3B82F6",
+  "color_scheme": {
+    "primary": "0xFF3B82F6",
+    "onPrimary": "0xFFFFFFFF",
+    "primaryContainer": "0xFFDBEAFE",
+    "onPrimaryContainer": "0xFF1E3A8A",
+    "secondary": "0xFF60A5FA",
+    "onSecondary": "0xFFFFFFFF",
+    "secondaryContainer": "0xFFEFF6FF",
+    "onSecondaryContainer": "0xFF1E40AF",
+    "surface": "0xFFF8FAFC",
+    "onSurface": "0xFF1E293B",
+    "surfaceContainer": "0xFFF1F5F9",
+    "outline": "0xFFCBD5E1",
+    "outlineVariant": "0xFFE2E8F0"
+  },
+  "components": {
+    "appBar": {
+      "backgroundColor": "0xFFF8FAFC",
+      "foregroundColor": "0xFF1E293B",
+      "elevation": 0.0
+    },
+    "elevatedButton": {
+      "backgroundColor": "0xFF3B82F6",
+      "foregroundColor": "0xFFFFFFFF",
+      "borderRadius": 8.0,
+      "elevation": 1.0
+    },
+    "card": {
+      "backgroundColor": "0xFFFFFFFF",
+      "elevation": 1.0,
+      "borderRadius": 12.0
+    },
+    "icon": {
+      "color": "0xFF3B82F6",
+      "size": 24.0
+    }
+  },
+  "text_theme": {
+    "fontFamily": "Outfit",
+    "headlineLarge": {
+      "size": 28.0,
+      "weight": "bold",
+      "color": "0xFF0F172A"
+    },
+    "bodyMedium": {
+      "size": 14.0,
+      "weight": "normal",
+      "color": "0xFF475569"
+    },
+    "labelLarge": {
+      "size": 14.0,
+      "weight": "medium",
+      "color": "0xFFFFFFFF"
+    }
+  }
+}

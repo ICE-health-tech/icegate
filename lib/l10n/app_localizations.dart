@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @health_insights.
   ///
   /// In en, this message translates to:
-  /// **'Insights'**
+  /// **'Health'**
   String get health_insights;
 
   /// No description provided for @health_insight_above_avg.
@@ -557,7 +557,7 @@ abstract class AppLocalizations {
   /// No description provided for @notification_category_social.
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Mind'**
   String get notification_category_social;
 
   /// No description provided for @notification_category_projects.
@@ -1265,7 +1265,7 @@ abstract class AppLocalizations {
   /// No description provided for @scoring_social.
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Mind'**
   String get scoring_social;
 
   /// No description provided for @scoring_career.
@@ -1691,13 +1691,13 @@ abstract class AppLocalizations {
   /// No description provided for @social_dashboard.
   ///
   /// In en, this message translates to:
-  /// **'Social Dashboard'**
+  /// **'Mind Dashboard'**
   String get social_dashboard;
 
   /// No description provided for @social.
   ///
   /// In en, this message translates to:
-  /// **'Social'**
+  /// **'Mind'**
   String get social;
 
   /// No description provided for @social_rank_first.
@@ -1775,7 +1775,7 @@ abstract class AppLocalizations {
   /// No description provided for @social_options.
   ///
   /// In en, this message translates to:
-  /// **'Social Options'**
+  /// **'Mind Options'**
   String get social_options;
 
   /// No description provided for @social_manage_title.
@@ -1832,11 +1832,11 @@ abstract class AppLocalizations {
   /// **'Add new features to your dashboard'**
   String get plugin_desc;
 
-  /// No description provided for @plugin_ssh_gemini.
+  /// No description provided for @plugin_ssh.
   ///
   /// In en, this message translates to:
-  /// **'Gemini AI SSH'**
-  String get plugin_ssh_gemini;
+  /// **'SSH Session'**
+  String get plugin_ssh;
 
   /// No description provided for @plugin_ssh_opencode.
   ///
@@ -1859,7 +1859,7 @@ abstract class AppLocalizations {
   /// No description provided for @homepage_four_life_elements.
   ///
   /// In en, this message translates to:
-  /// **'LIFE ELEMENTS'**
+  /// **'Main Elements'**
   String get homepage_four_life_elements;
 
   /// No description provided for @done.
@@ -2153,19 +2153,19 @@ abstract class AppLocalizations {
   /// No description provided for @rule_social_contact.
   ///
   /// In en, this message translates to:
-  /// **'{points} points for each new meaningful contact added.'**
+  /// **'{points} points for each new meaningful support session or connection.'**
   String rule_social_contact(int points);
 
   /// No description provided for @rule_social_affection.
   ///
   /// In en, this message translates to:
-  /// **'{points} points per {unit} affection level reached.'**
+  /// **'{points} points per {unit} stability level reached.'**
   String rule_social_affection(int points, int unit);
 
   /// No description provided for @rule_social_maintain.
   ///
   /// In en, this message translates to:
-  /// **'Maintain bonds to prevent point decay over time.'**
+  /// **'Practice mindfulness and maintain connections to prevent stability decay.'**
   String get rule_social_maintain;
 
   /// No description provided for @how_it_works.
@@ -3809,7 +3809,7 @@ abstract class AppLocalizations {
   /// No description provided for @social_notes.
   ///
   /// In en, this message translates to:
-  /// **'Social Notes'**
+  /// **'Mind Notes'**
   String get social_notes;
 
   /// No description provided for @btn_send_feedback.

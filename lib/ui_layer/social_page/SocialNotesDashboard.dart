@@ -6,6 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 
 class SocialNotesDashboard extends StatelessWidget {
   const SocialNotesDashboard({super.key});
@@ -18,53 +19,104 @@ class SocialNotesDashboard extends StatelessWidget {
     final personId = personBlock.information.value.profiles.id ?? "";
 
     return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.surface,
-            colorScheme.primary.withOpacity(0.02),
-            colorScheme.surface,
-          ],
-        ),
+      color: colorScheme.surface,
+      child: Column(
+        children: [
+          _buildQuickEntryBar(context, colorScheme, textTheme),
+          const Divider(height: 1, thickness: 0.5),
+          Expanded(
+            child: StreamBuilder<List<ProjectNoteData>>(
+              stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
+                    personId,
+                    'social',
+                  ),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                if (!snapshot.hasData) {
+                  return const Center(child: CircularProgressIndicator());
+                }
+
+                final notes = snapshot.data!;
+
+                if (notes.isEmpty) {
+                  return _buildEmptyState(context, colorScheme, textTheme);
+                }
+
+                return GridView.builder(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.all(12),
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: 0.8,
+                  ),
+                  itemCount: notes.length,
+                  itemBuilder: (context, index) {
+                    final note = notes[index];
+                    return _SocialNoteCard(note: note);
+                  },
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      child: StreamBuilder<List<ProjectNoteData>>(
-        stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
-              personId,
-              'social',
+    );
+  }
+
+  Widget _buildQuickEntryBar(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+  ) {
+    final personBlock = context.read<PersonBlock>();
+    final person = personBlock.information.value.profiles;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          CircleAvatar(
+            radius: 20,
+            backgroundImage: person.profileImageUrl != null
+                ? NetworkImage(person.profileImageUrl!)
+                : null,
+            child: person.profileImageUrl == null
+                ? const Icon(Icons.person)
+                : null,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => _createNewNote(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  border: Border.all(color: colorScheme.outlineVariant),
+                  borderRadius: BorderRadius.circular(24),
+                ),
+                child: Text(
+                  "What's on your mind?",
+                  style: textTheme.bodyMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                  ),
+                ),
+              ),
             ),
-        builder: (context, snapshot) {
-          if (snapshot.hasError) {
-            return Center(child: Text('Error: ${snapshot.error}'));
-          }
-
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final notes = snapshot.data!;
-
-          if (notes.isEmpty) {
-            return _buildEmptyState(context, colorScheme, textTheme);
-          }
-
-          return ListView.builder(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 20,
-              vertical: 24,
-            ),
-            itemCount: notes.length + 1, // +1 for extra space at bottom
-            itemBuilder: (context, index) {
-              if (index == notes.length) {
-                return const SizedBox(height: 100);
-              }
-              final note = notes[index];
-              return _SocialNoteCard(note: note);
-            },
-          );
-        },
+          ),
+          const SizedBox(width: 12),
+          IconButton(
+            onPressed: () => _createNewNote(context),
+            icon: const Icon(Icons.photo_library, color: Colors.green),
+          ),
+        ],
       ),
     );
   }
@@ -78,49 +130,23 @@ class SocialNotesDashboard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.history_edu_rounded,
-              size: 64,
-              color: colorScheme.primary.withOpacity(0.2),
-            ),
+          Icon(
+            Icons.history_edu_rounded,
+            size: 64,
+            color: colorScheme.primary.withOpacity(0.2),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           Text(
-            'No social memories yet',
+            'No mind notes yet',
             style: textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Start writing your first social journal entry.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
           const SizedBox(height: 32),
-          ElevatedButton.icon(
+          ElevatedButton(
             onPressed: () => _createNewNote(context),
-            icon: const Icon(Icons.add),
-            label: const Text('CREATE JOURNAL'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24,
-                vertical: 12,
-              ),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
+            child: const Text('CREATE JOURNAL'),
           ),
         ],
       ),
@@ -141,111 +167,84 @@ class _SocialNoteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
+    final imageUrl = _getPreviewImage(note.content);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+    return Card(
+      elevation: 0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: Material(
-          color: Colors.transparent,
-          child: InkWell(
-            onTap: () => context.push('/projects/editor', extra: note),
-            child: Padding(
-              padding: const EdgeInsets.all(20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          DateFormat.MMMd()
-                              .format(note.updatedAt)
-                              .toUpperCase(),
-                          style: textTheme.labelSmall?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
-                      Icon(
-                        Icons.more_horiz_rounded,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.4),
-                        size: 20,
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    note.title,
-                    style: textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: colorScheme.onSurface,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.push('/projects/editor', extra: note),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            if (imageUrl != null)
+              Expanded(
+                flex: 3,
+                child: LocalFirstImage(
+                  ownerId: note.personID ?? "",
+                  localPath: imageUrl,
+                  remoteUrl: "",
+                  subFolder: "quests", // Default subfolder for images
+                  fit: BoxFit.cover,
+                ),
+              )
+            else
+              Expanded(
+                flex: 3,
+                child: Container(
+                  color: colorScheme.primary.withOpacity(0.05),
+                  child: Center(
+                    child: Icon(
+                      Icons.notes_rounded,
+                      color: colorScheme.primary.withOpacity(0.2),
+                      size: 32,
                     ),
                   ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _getPreviewText(note.content),
-                    style: textTheme.bodyMedium?.copyWith(
-                      color: colorScheme.onSurfaceVariant,
-                      height: 1.5,
+                ),
+              ),
+            Expanded(
+              flex: 2,
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      note.title,
+                      style: textTheme.labelLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 10,
-                        backgroundColor: colorScheme.primary.withOpacity(0.2),
-                        child: Icon(
-                          Icons.person,
-                          size: 12,
-                          color: colorScheme.primary,
+                    const SizedBox(height: 4),
+                    Expanded(
+                      child: Text(
+                        _getPreviewText(note.content),
+                        style: textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant,
                         ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Social Journal Entry',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                        ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat.MMMd().format(note.updatedAt),
+                      style: textTheme.labelSmall?.copyWith(
+                        fontSize: 9,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
                       ),
-                      const Spacer(),
-                      Icon(
-                        Icons.arrow_forward_rounded,
-                        size: 14,
-                        color: colorScheme.primary.withOpacity(0.5),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -258,12 +257,32 @@ class _SocialNoteCard extends StatelessWidget {
         final buffer = StringBuffer();
         for (final op in decoded) {
           if (op is Map && op.containsKey('insert')) {
-            buffer.write(op['insert']);
+            final insert = op['insert'];
+            if (insert is String) {
+              buffer.write(insert);
+            }
           }
         }
         return buffer.toString().trim();
       }
     } catch (_) {}
     return content.trim();
+  }
+
+  String? _getPreviewImage(String content) {
+    try {
+      final decoded = jsonDecode(content);
+      if (decoded is List) {
+        for (final op in decoded) {
+          if (op is Map && op.containsKey('insert')) {
+            final insert = op['insert'];
+            if (insert is Map && insert.containsKey('image')) {
+              return insert['image'] as String;
+            }
+          }
+        }
+      }
+    } catch (_) {}
+    return null;
   }
 }

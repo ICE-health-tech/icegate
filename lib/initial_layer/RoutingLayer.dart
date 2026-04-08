@@ -45,8 +45,16 @@ class _adapterState extends State<Adapter> {
 
     final personId = personBlock.information.value.profiles.id ?? "";
 
-    final existingWidget = await dao.getInternalWidgetByName("WidgetPage");
-    if (existingWidget == null) {
+    final existingWidgets = await dao.getInternaListWidgetByListName([
+      "WidgetPage",
+      "Health Department",
+      "Block Reminder",
+      "ICE GATE SSH"
+    ]);
+
+    final existingNames = existingWidgets.map((e) => e.name).toSet();
+
+    if (!existingNames.contains("WidgetPage")) {
       await dao.insertInternalWidget(
         name: "WidgetPage",
         personID: personId,
@@ -55,7 +63,9 @@ class _adapterState extends State<Adapter> {
         alias: "WidgetPage",
         scope: 'home',
       );
+    }
 
+    if (!existingNames.contains("Health Department")) {
       await dao.insertInternalWidget(
         name: "Health Department",
         personID: personId,
@@ -64,7 +74,9 @@ class _adapterState extends State<Adapter> {
         alias: "HealthPage",
         scope: 'home',
       );
+    }
 
+    if (!existingNames.contains("Block Reminder")) {
       await dao.insertInternalWidget(
         name: "Block Reminder",
         personID: personId,
@@ -73,7 +85,9 @@ class _adapterState extends State<Adapter> {
         alias: "BlockReminder",
         scope: 'home',
       );
+    }
 
+    if (!existingNames.contains("ICE GATE SSH")) {
       await dao.insertInternalWidget(
         name: "ICE GATE SSH",
         personID: personId,

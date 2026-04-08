@@ -30,9 +30,12 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>io.supabase.icegate</string>
+				<string>com.googleusercontent.apps.807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq</string>
 			</array>
 		</dict>
 	</array>
+	<key>GIDClientID</key>
+	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>

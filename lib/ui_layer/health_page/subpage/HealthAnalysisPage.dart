@@ -8,6 +8,7 @@ import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:ice_gate/ui_layer/health_page/subpage/HourlyActivityPage.dart';
 
 class HealthAnalysisPage extends StatelessWidget {
   const HealthAnalysisPage({super.key});
@@ -152,17 +153,14 @@ class HealthAnalysisPage extends StatelessWidget {
                     textTheme,
                     efficiency: efficiency,
                     consistency: consistency,
-                    metabolism: (latest.caloriesBurned ?? 0) > 2000
-                        ? AppLocalizations.of(context)!.health_metabolism_active
-                        : AppLocalizations.of(context)!.health_metabolism_normal,
-                    intensity: (latest.exerciseMinutes ?? 0) > 45
-                        ? AppLocalizations.of(context)!.health_intensity_high
-                        : (latest.exerciseMinutes ?? 0) > 20
-                        ? AppLocalizations.of(context)!.health_intensity_optimal
-                        : AppLocalizations.of(context)!.health_intensity_low,
+                    metabolism: (latest.caloriesBurned ?? 0) > 2000 ? AppLocalizations.of(context)!.health_metabolism_active : AppLocalizations.of(context)!.health_metabolism_normal,
+                    intensity: (latest.exerciseMinutes ?? 0) > 45 ? AppLocalizations.of(context)!.health_intensity_high : AppLocalizations.of(context)!.health_intensity_moderate,
                   ),
-                  const SizedBox(height: 24),
 
+                  const SizedBox(height: 24),
+                  _buildHourlyDrillDown(context, colorScheme, textTheme),
+
+                  const SizedBox(height: 32),
                   // --- ACTIVITY BALANCE SECTION ---
                   _buildActivityBalanceCard(
                     context,
@@ -297,6 +295,57 @@ class HealthAnalysisPage extends StatelessWidget {
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildHourlyDrillDown(BuildContext context, ColorScheme colorScheme, TextTheme textTheme) {
+    return InkWell(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => const HourlyActivityPage()),
+      ),
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [colorScheme.secondaryContainer.withOpacity(0.5), colorScheme.surface],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: colorScheme.secondary.withOpacity(0.1), width: 1),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: colorScheme.secondary.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.timer_outlined, color: colorScheme.secondary, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Hourly Precision",
+                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
+                  ),
+                  Text(
+                    "Drill down into your activity patterns hour-by-hour.",
+                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                  ),
+                ],
+              ),
+            ),
+            Icon(Icons.chevron_right_rounded, color: colorScheme.outline),
+          ],
+        ),
       ),
     );
   }

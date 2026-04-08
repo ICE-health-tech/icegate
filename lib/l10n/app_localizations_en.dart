@@ -170,7 +170,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_insights_title => 'INSIGHTS';
 
   @override
-  String get health_insights => 'Insights';
+  String get health_insights => 'Health';
 
   @override
   String get health_insight_above_avg => 'Above average';
@@ -246,7 +246,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_category_finance => 'Finance';
 
   @override
-  String get notification_category_social => 'Social';
+  String get notification_category_social => 'Mind';
 
   @override
   String get notification_category_projects => 'Projects';
@@ -630,7 +630,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get scoring_finance => 'Finance';
 
   @override
-  String get scoring_social => 'Social';
+  String get scoring_social => 'Mind';
 
   @override
   String get scoring_career => 'Career';
@@ -852,10 +852,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get create_link => 'Create Link';
 
   @override
-  String get social_dashboard => 'Social Dashboard';
+  String get social_dashboard => 'Mind Dashboard';
 
   @override
-  String get social => 'Social';
+  String get social => 'Mind';
 
   @override
   String get social_rank_first => '1ST PLACE';
@@ -898,7 +898,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_bond_strengthened => 'Bond strengthened!';
 
   @override
-  String get social_options => 'Social Options';
+  String get social_options => 'Mind Options';
 
   @override
   String get social_manage_title => 'Manage Link';
@@ -928,7 +928,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get plugin_desc => 'Add new features to your dashboard';
 
   @override
-  String get plugin_ssh_gemini => 'Gemini AI SSH';
+  String get plugin_ssh => 'SSH Session';
 
   @override
   String get plugin_ssh_opencode => 'OpenCode AI SSH';
@@ -940,7 +940,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get config_ai_prompt => 'Configure AI Prompt';
 
   @override
-  String get homepage_four_life_elements => 'LIFE ELEMENTS';
+  String get homepage_four_life_elements => 'Main Elements';
 
   @override
   String get done => 'DONE';
@@ -1111,17 +1111,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String rule_social_contact(int points) {
-    return '$points points for each new meaningful contact added.';
+    return '$points points for each new meaningful support session or connection.';
   }
 
   @override
   String rule_social_affection(int points, int unit) {
-    return '$points points per $unit affection level reached.';
+    return '$points points per $unit stability level reached.';
   }
 
   @override
   String get rule_social_maintain =>
-      'Maintain bonds to prevent point decay over time.';
+      'Practice mindfulness and maintain connections to prevent stability decay.';
 
   @override
   String get how_it_works => 'How it works';
@@ -1984,7 +1984,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get journal => 'Journal';
 
   @override
-  String get social_notes => 'Social Notes';
+  String get social_notes => 'Mind Notes';
 
   @override
   String get btn_send_feedback => 'Send Feedback';

@@ -345,7 +345,7 @@ class HealthMetricsData {
         subtitle: l10n.health_subtitle_todays_intake,
         trend: trendStr(calories, yesterdayCalories, '%'),
         trendPositive: null,
-        detailPage: '/health/food/dashboard',
+        detailPage: '/health/food/consume',
       ),
       'steps': HealthMetric(
         id: 'steps',

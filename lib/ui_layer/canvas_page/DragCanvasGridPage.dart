@@ -187,7 +187,7 @@ class _DragCanvasState extends State<DragCanvas> {
                         const SizedBox(height: 20),
                         _buildEntryCard(
                           context: context,
-                          title: l10n.plugin_ssh_gemini,
+                          title: l10n.plugin_ssh,
                           subtitle: l10n.plugin_ssh_desc,
                           icon: Icons.track_changes_rounded,
                           color: Colors.green,
@@ -280,10 +280,7 @@ class _DragCanvasState extends State<DragCanvas> {
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-          width: 2.5,
-        ),
+        border: Border.all(color: color.withOpacity(0.3), width: 2.5),
         boxShadow: [
           BoxShadow(
             color: color.withOpacity(0.15),

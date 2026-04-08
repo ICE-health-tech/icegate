@@ -53,7 +53,7 @@
   "health_avg_sleep": "Avg Sleep",
   "health_avg_hr": "Avg HR",
   "health_insights_title": "INSIGHTS",
-  "health_insights": "Insights",
+  "health_insights": "Health",
   "health_insight_above_avg": "Above average",
   "health_insight_keep_pushing": "Keep pushing",
   "health_insight_activity_higher": "Your activity is higher than your 7-day average.",
@@ -90,7 +90,7 @@
   "notification_category_daily": "Daily",
   "notification_category_health": "Health",
   "notification_category_finance": "Finance",
-  "notification_category_social": "Social",
+  "notification_category_social": "Mind",
   "notification_category_projects": "Projects",
   "notification_priority_low": "Low",
   "notification_priority_normal": "Normal",
@@ -295,7 +295,7 @@
   },
   "scoring_health": "Health",
   "scoring_finance": "Finance",
-  "scoring_social": "Social",
+  "scoring_social": "Mind",
   "scoring_career": "Career",
   "breakdown_steps": "Steps",
   "breakdown_diet": "Diet",
@@ -394,8 +394,8 @@
   "last_name": "Last Name",
   "relationship_type": "Relationship Type",
   "create_link": "Create Link",
-  "social_dashboard": "Social Dashboard",
-  "social": "Social",
+  "social_dashboard": "Mind Dashboard",
+  "social": "Mind",
   "social_rank_first": "1ST PLACE",
   "social_rank_second": "2ND PLACE",
   "social_rank_third": "3RD PLACE",
@@ -422,7 +422,7 @@
     }
   },
   "social_bond_strengthened": "Bond strengthened!",
-  "social_options": "Social Options",
+  "social_options": "Mind Options",
   "social_manage_title": "Manage Link",
   "social_change_friend": "Set as Friend",
   "social_change_dating": "Set as Dating",
@@ -432,11 +432,11 @@
   "social_feat": "Feat",
   "add_app_plugin": "Add App Plugin",
   "plugin_desc": "Add new features to your dashboard",
-  "plugin_ssh_gemini": "Gemini AI SSH",
+  "plugin_ssh": "SSH Session",
   "plugin_ssh_opencode": "OpenCode AI SSH",
   "plugin_ssh_desc": "AI-powered terminal for remote orchestration",
   "config_ai_prompt": "Configure AI Prompt",
-  "homepage_four_life_elements": "LIFE ELEMENTS",
+  "homepage_four_life_elements": "Main Elements",
   "done": "DONE",
   "edit": "EDIT",
   "analysis": "Analysis",
@@ -564,7 +564,7 @@
     }
   },
   "rule_finance_auto": "Finance points update every 24 hours based on balance changes.",
-  "rule_social_contact": "{points} points for each new meaningful contact added.",
+  "rule_social_contact": "{points} points for each new meaningful support session or connection.",
   "@rule_social_contact": {
     "placeholders": {
       "points": {
@@ -572,7 +572,7 @@
       }
     }
   },
-  "rule_social_affection": "{points} points per {unit} affection level reached.",
+  "rule_social_affection": "{points} points per {unit} stability level reached.",
   "@rule_social_affection": {
     "placeholders": {
       "points": {
@@ -583,7 +583,7 @@
       }
     }
   },
-  "rule_social_maintain": "Maintain bonds to prevent point decay over time.",
+  "rule_social_maintain": "Practice mindfulness and maintain connections to prevent stability decay.",
   "how_it_works": "How it works",
   "scoring_intro": "Our scoring system evaluates your daily performance across four key pillars. Points are rewarded based on consistency, milestones, and efficiency.",
   "scoring_footer": "Scores are processed by the Life Orchestration Engine (LOE) every midnight UTC.",
@@ -961,7 +961,7 @@
   "ssh_disconnect": "Disconnect",
   "ssh_search_hint": "Search...",
   "journal": "Journal",
-  "social_notes": "Social Notes",
+  "social_notes": "Mind Notes",
   "btn_send_feedback": "Send Feedback",
   "feedback_subtitle": "Report issues or suggest features"
 }

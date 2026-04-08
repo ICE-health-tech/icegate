@@ -17,6 +17,8 @@ import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'TaskItem.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
+import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
   final ProjectProtocol project;
@@ -41,7 +43,9 @@ class ProjectDetailsPage extends StatelessWidget {
                 IconButton(
                   padding: const EdgeInsets.only(right: 16),
                   icon: const Icon(Icons.check_circle_outline),
-                  tooltip: AppLocalizations.of(context)!.project_mark_done_tooltip,
+                  tooltip: AppLocalizations.of(
+                    context,
+                  )!.project_mark_done_tooltip,
                   onPressed: () async {
                     final projectBlock = context.read<ProjectBlock>();
                     await projectBlock.completeProject(context, project);
@@ -50,7 +54,9 @@ class ProjectDetailsPage extends StatelessWidget {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
                           content: Text(
-                            AppLocalizations.of(context)!.project_completed_msg(PROJECT_SCORE_INCREMENT.toInt()),
+                            AppLocalizations.of(context)!.project_completed_msg(
+                              PROJECT_SCORE_INCREMENT.toInt(),
+                            ),
                           ),
                           duration: Duration(seconds: 1),
                         ),
@@ -58,6 +64,12 @@ class ProjectDetailsPage extends StatelessWidget {
                     }
                   },
                 ),
+              IconButton(
+                padding: const EdgeInsets.only(right: 16),
+                icon: const Icon(Icons.folder_copy_outlined),
+                tooltip: 'Documents',
+                onPressed: () => context.push('/projects/documents'),
+              ),
               IconButton(
                 padding: const EdgeInsets.only(right: 16),
                 icon: const Icon(Icons.analytics_outlined),
@@ -72,9 +84,15 @@ class ProjectDetailsPage extends StatelessWidget {
                   final confirm = await showDialog<bool>(
                     context: context,
                     builder: (ctx) => AlertDialog(
-                      title: Text(AppLocalizations.of(context)!.project_delete_confirm_title),
+                      title: Text(
+                        AppLocalizations.of(
+                          context,
+                        )!.project_delete_confirm_title,
+                      ),
                       content: Text(
-                        AppLocalizations.of(context)!.project_delete_confirm_msg(project.name),
+                        AppLocalizations.of(
+                          context,
+                        )!.project_delete_confirm_msg(project.name),
                       ),
                       actions: [
                         TextButton(
@@ -98,7 +116,9 @@ class ProjectDetailsPage extends StatelessWidget {
                       Navigator.pop(context);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                          content: Text(AppLocalizations.of(context)!.project_deleted_msg),
+                          content: Text(
+                            AppLocalizations.of(context)!.project_deleted_msg,
+                          ),
                           duration: const Duration(seconds: 1),
                         ),
                       );
@@ -108,12 +128,50 @@ class ProjectDetailsPage extends StatelessWidget {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              title: Text(
-                project.name,
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                ),
+              title: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    project.name,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  if (project.aiModel != null && project.aiModel != 'standard')
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
+                      decoration: BoxDecoration(
+                        color:
+                            (project.aiModel == 'gemini'
+                                    ? Colors.orangeAccent
+                                    : Colors.blueAccent)
+                                .withValues(alpha: 0.2),
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(
+                          color:
+                              (project.aiModel == 'gemini'
+                                      ? Colors.orangeAccent
+                                      : Colors.blueAccent)
+                                  .withValues(alpha: 0.5),
+                        ),
+                      ),
+                      child: Text(
+                        project.aiModel!.toUpperCase(),
+                        style: TextStyle(
+                          color: project.aiModel == 'gemini'
+                              ? Colors.orangeAccent
+                              : Colors.blueAccent,
+                          fontSize: 8,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                ],
               ),
               background: Container(
                 decoration: BoxDecoration(
@@ -135,6 +193,38 @@ class ProjectDetailsPage extends StatelessWidget {
                     mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (project.sshHostId != null)
+                        Container(
+                          margin: const EdgeInsets.only(bottom: 8),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.terminal,
+                                size: 12,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                project.remotePath ?? 'Remote Root',
+                                style: TextStyle(
+                                  color: colorScheme.primary,
+                                  fontSize: 10,
+                                  fontFamily: 'Courier',
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       if (project.description != null)
                         Text(
                           project.description!,
@@ -171,10 +261,12 @@ class ProjectDetailsPage extends StatelessWidget {
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
-                                    AppLocalizations.of(context)!.project_complete_label,
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.project_complete_label,
                                     style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(alpha: 
-                                        0.5,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.5,
                                       ),
                                       fontWeight: FontWeight.bold,
                                       fontSize: 10,
@@ -215,9 +307,17 @@ class ProjectDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildSectionHeader(context, AppLocalizations.of(context)!.tasks, () {
-                    _showAddTaskDialog(context, growthBlock, project.projectID);
-                  }),
+                  _buildSectionHeader(
+                    context,
+                    AppLocalizations.of(context)!.tasks,
+                    () {
+                      _showAddTaskDialog(
+                        context,
+                        growthBlock,
+                        project.projectID,
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                   Watch((context) {
                     final allGoals = growthBlock.goals.value;
@@ -252,17 +352,79 @@ class ProjectDetailsPage extends StatelessWidget {
                     );
                   }),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(context, AppLocalizations.of(context)!.project_notes_label, () {
-                    _createNewNote(
-                      context,
-                      database.projectNoteDAO,
-                      project.projectID,
-                    );
-                  }),
+                  _buildSectionHeader(
+                    context,
+                    'Documents',
+                    () {
+                      context.push('/projects/documents');
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withValues(alpha: 0.05),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
+                    ),
+                    child: InkWell(
+                      onTap: () => context.push('/projects/documents'),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(Icons.folder_copy_rounded, color: colorScheme.primary),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Project Knowledge Base',
+                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                ),
+                                Text(
+                                  'Manage project files, Obsidian notes, and technical docs.',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colorScheme.primary),
+                        ],
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                  _buildSectionHeader(
+                    context,
+                    AppLocalizations.of(context)!.project_notes_label,
+                    () {
+                      _createNewNote(
+                        context,
+                        database.projectNoteDAO,
+                        project.projectID,
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                   _buildRemoteSettings(context),
+                  const SizedBox(height: 16),
+                  _buildAiModelSelector(context),
                   const SizedBox(height: 32),
-                  _buildSectionTitle(context, 'Recent Notes'), // Added title for notes
+                  _buildSectionTitle(
+                    context,
+                    'Recent Notes',
+                  ), // Added title for notes
                   const SizedBox(height: 16),
                   StreamBuilder<List<ProjectNoteData>>(
                     stream: database.projectNoteDAO.watchNotesByProject(
@@ -278,19 +440,25 @@ class ProjectDetailsPage extends StatelessWidget {
                       }
                       return Column(
                         children: notes
-                            .map((note) => _NoteItem(note: note, project: project))
+                            .map(
+                              (note) => _NoteItem(note: note, project: project),
+                            )
                             .toList(),
                       );
                     },
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(context, AppLocalizations.of(context)!.project_finance_label, () {
-                    _showAddProjectTransactionDialog(
-                      context,
-                      context.read<FinanceBlock>(),
-                      project.projectID,
-                    );
-                  }),
+                  _buildSectionHeader(
+                    context,
+                    AppLocalizations.of(context)!.project_finance_label,
+                    () {
+                      _showAddProjectTransactionDialog(
+                        context,
+                        context.read<FinanceBlock>(),
+                        project.projectID,
+                      );
+                    },
+                  ),
                   const SizedBox(height: 16),
                   Watch((context) {
                     final financeBlock = Provider.of<FinanceBlock>(
@@ -303,10 +471,7 @@ class ProjectDetailsPage extends StatelessWidget {
 
                     final l10n = AppLocalizations.of(context)!;
                     if (txs.isEmpty) {
-                      return _buildEmptyState(
-                        context,
-                        l10n.project_no_finance,
-                      );
+                      return _buildEmptyState(context, l10n.project_no_finance);
                     }
                     return Column(
                       children: txs.map((tx) {
@@ -362,6 +527,141 @@ class ProjectDetailsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildAiModelSelector(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final currentAiMode = project.aiModel ?? 'standard';
+
+    IconData getAiIcon(String mode) {
+      switch (mode) {
+        case 'gemini':
+          return Icons.auto_awesome;
+        case 'opencode':
+          return Icons.code_rounded;
+        case 'openclaw':
+          return Icons.hub_rounded;
+        default:
+          return Icons.terminal_rounded;
+      }
+    }
+
+    Color getAiColor(String mode) {
+      switch (mode) {
+        case 'gemini':
+          return Colors.orangeAccent;
+        case 'opencode':
+          return Colors.blueAccent;
+        case 'openclaw':
+          return Colors.purpleAccent;
+        default:
+          return colorScheme.primary;
+      }
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: getAiColor(currentAiMode).withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: getAiColor(currentAiMode).withValues(alpha: 0.1),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                getAiIcon(currentAiMode),
+                color: getAiColor(currentAiMode),
+                size: 20,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'AI AGENT',
+                style: TextStyle(
+                  color: getAiColor(currentAiMode),
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              const Spacer(),
+              Text(
+                currentAiMode.toUpperCase(),
+                style: TextStyle(
+                  color: getAiColor(currentAiMode),
+                  fontWeight: FontWeight.bold,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: ['standard', 'gemini', 'opencode', 'openclaw'].map((
+                mode,
+              ) {
+                final isSelected = currentAiMode == mode;
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8.0),
+                  child: ChoiceChip(
+                    label: Text(mode.toUpperCase()),
+                    selected: isSelected,
+                    onSelected: (selected) async {
+                      if (selected) {
+                        final projectBlock = context.read<ProjectBlock>();
+                        await projectBlock.updateProjectAiModel(
+                          project.id,
+                          mode,
+                        );
+
+                        // If we have a linked SSH host, also sync this preference to it
+                        if (project.sshHostId != null) {
+                          final storage = SSHStorageService();
+                          final hosts = await storage.loadHosts();
+                          final hostIndex = hosts.indexWhere(
+                            (h) => h.id == project.sshHostId,
+                          );
+                          if (hostIndex != -1) {
+                            final host = hosts[hostIndex];
+                            host.aiMode = mode;
+                            await storage.saveHost(host);
+                          }
+                        }
+                      }
+                    },
+                    selectedColor: getAiColor(mode).withValues(alpha: 0.2),
+                    labelStyle: TextStyle(
+                      color: isSelected
+                          ? getAiColor(mode)
+                          : colorScheme.onSurface,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                      fontSize: 11,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Choose the AI engine to power terminal suggestions and code analysis for this project.',
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
+              fontSize: 11,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
@@ -378,7 +678,9 @@ class ProjectDetailsPage extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.primaryContainer.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.primaryContainer.withValues(alpha: 0.2)),
+        border: Border.all(
+          color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,9 +755,10 @@ class ProjectDetailsPage extends StatelessWidget {
                 future: storage.loadHosts(),
                 builder: (context, snapshot) {
                   final hosts = snapshot.data ?? [];
-                  
+
                   // Validation: If selectedHostId is not in the list, set it to null to avoid crash
-                  if (selectedHostId != null && !hosts.any((h) => h.id == selectedHostId)) {
+                  if (selectedHostId != null &&
+                      !hosts.any((h) => h.id == selectedHostId)) {
                     selectedHostId = null;
                   }
 
@@ -467,11 +770,17 @@ class ProjectDetailsPage extends StatelessWidget {
 
                   return DropdownButtonFormField<String>(
                     value: selectedHostId,
-                    decoration: const InputDecoration(labelText: 'Select SSH Host'),
-                    items: uniqueHosts.values.map((h) => DropdownMenuItem(
-                      value: h.id,
-                      child: Text(h.name),
-                    )).toList(),
+                    decoration: const InputDecoration(
+                      labelText: 'Select SSH Host',
+                    ),
+                    items: uniqueHosts.values
+                        .map(
+                          (h) => DropdownMenuItem(
+                            value: h.id,
+                            child: Text(h.name),
+                          ),
+                        )
+                        .toList(),
                     onChanged: (val) => setState(() => selectedHostId = val),
                   );
                 },
@@ -562,7 +871,9 @@ class ProjectDetailsPage extends StatelessWidget {
         title: Text(AppLocalizations.of(context)!.project_add_task_title),
         content: TextField(
           controller: titleController,
-          decoration: InputDecoration(hintText: AppLocalizations.of(context)!.project_task_title_hint),
+          decoration: InputDecoration(
+            hintText: AppLocalizations.of(context)!.project_task_title_hint,
+          ),
           autofocus: true,
         ),
         actions: [
@@ -682,6 +993,76 @@ class _NoteItem extends StatelessWidget {
 
   const _NoteItem({required this.note, required this.project});
 
+  Future<void> _sendToAI(BuildContext context) async {
+    if (project.sshHostId == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No SSH host linked to this project')),
+        );
+      }
+      return;
+    }
+
+    final sshService = SSHService();
+    final storage = SSHStorageService();
+
+    final hosts = await storage.loadHosts();
+    final host = hosts.where((h) => h.id == project.sshHostId).firstOrNull;
+
+    if (host == null) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('SSH host not found')));
+      }
+      return;
+    }
+
+    try {
+      await sshService.connect(
+        host: host.host,
+        port: host.port,
+        username: host.user,
+        password: host.password ?? '',
+        useTmux: true,
+      );
+
+      final remotePath = project.remotePath ?? '';
+      final aiMode = project.aiModel ?? 'gemini';
+      final content = note.content ?? '';
+
+      if (remotePath.isNotEmpty) {
+        sshService.write('cd $remotePath\r');
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      String command;
+      if (aiMode == 'opencode') {
+        command = 'opencode "$content"\r';
+      } else {
+        command = 'gemini "$content"\r';
+      }
+
+      sshService.write(command);
+
+      if (context.mounted) {
+        context.push(
+          '/widgets/ssh',
+          extra: {
+            'hostId': project.sshHostId,
+            'remotePath': project.remotePath,
+          },
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Failed to connect: $e')));
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -713,7 +1094,9 @@ class _NoteItem extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                     Text(
-                      AppLocalizations.of(context)!.project_last_edited_msg(DateFormat.MMMd().format(note.updatedAt)),
+                      AppLocalizations.of(context)!.project_last_edited_msg(
+                        DateFormat.MMMd().format(note.updatedAt),
+                      ),
                       style: TextStyle(
                         fontSize: 12,
                         color: colorScheme.onSurface.withValues(alpha: 0.6),
@@ -722,16 +1105,30 @@ class _NoteItem extends StatelessWidget {
                   ],
                 ),
               ),
+              if (project.sshHostId != null)
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 2,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _getAiColor(project.aiModel).withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: Text(
+                    (project.aiModel ?? 'gemini').toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      color: _getAiColor(project.aiModel),
+                    ),
+                  ),
+                ),
+              const SizedBox(width: 8),
               IconButton(
                 icon: Icon(Icons.psychology, color: colorScheme.primary),
-                tooltip: 'Analyze with AI',
-                onPressed: () {
-                  context.push('/widgets/ssh', extra: {
-                    'hostId': project.sshHostId,
-                    'remotePath': project.remotePath,
-                    'content': note.content,
-                  });
-                },
+                tooltip: 'Send to AI',
+                onPressed: () => _sendToAI(context),
               ),
               const Icon(Icons.chevron_right),
             ],
@@ -739,5 +1136,18 @@ class _NoteItem extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Color _getAiColor(String? mode) {
+    switch (mode?.toLowerCase()) {
+      case 'gemini':
+        return Colors.blue;
+      case 'opencode':
+        return Colors.purple;
+      case 'openclaw':
+        return Colors.orange;
+      default:
+        return Colors.blue;
+    }
   }
 }

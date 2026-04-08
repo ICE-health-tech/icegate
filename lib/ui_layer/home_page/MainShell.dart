@@ -1,22 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodConsumePage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
 import 'package:ice_gate/ui_layer/home_page/HomePage.dart';
 import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
-// import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
-
 import 'package:ice_gate/ui_layer/canvas_page/CanvasDynamicIsland.dart';
-import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
-import 'package:provider/provider.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 
@@ -29,7 +24,8 @@ class MainShell extends StatelessWidget {
     // final height = MediaQuery.of(context).size.height;
     // final cross = sqrt(width * width + height * height);
 
-    final double responsiveSize = (width * 0.19).clamp(56.0, 90.0);
+    // Reducing main button size to ~20% of previous responsive size
+    final double responsiveSize = (width * 1.4).clamp(20.0, 70.0);
 
     // print("Current route: $route");
     // Determine which page's icon to show based on the route
@@ -46,6 +42,9 @@ class MainShell extends StatelessWidget {
         break;
       case '/health':
         pageIcon = HealthPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/food/consume':
+        pageIcon = FoodConsumePage.icon(context, size: responsiveSize);
         break;
       case '/health/food':
         pageIcon = FoodInputPage.icon(context, size: responsiveSize);
@@ -123,6 +122,8 @@ class MainShell extends StatelessWidget {
         currentRoute == '/settings' ||
         currentRoute == '/manual' ||
         currentRoute == '/projects/editor' ||
+        currentRoute.contains('/dashboard') ||
+        currentRoute.contains('/analysis') ||
         currentRoute.startsWith('/webview');
 
     return Scaffold(
@@ -132,35 +133,28 @@ class MainShell extends StatelessWidget {
         child: _getMainButtonForRoute(context, currentRoute),
       ),
 
-     
-    body: Stack(
-      children: [
-        child,
-        if (!shouldHideAppBar)
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: SafeArea(
-              child: SizedBox(
-                height: 80,
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                  child: Align(
-                    alignment: Alignment.centerLeft,
-                    child: Watch((context) {
-                      final socialBlock = context.read<SocialBlock>();
-                      var socialIndex = currentRoute.startsWith('/social')
-                          ? socialBlock.activeTab.value
-                          : null;
-                      return CanvasDynamicIsland(socialIndex: socialIndex);
-                    }),
+      body: Stack(
+        children: [
+          child,
+          if (!shouldHideAppBar)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: SizedBox(
+                  height: 80,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: CanvasDynamicIsland(),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-      ],
+        ],
       ),
     );
   }

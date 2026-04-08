@@ -66,9 +66,11 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
   /// PowerSync calls this to upload local changes to your backend.
   @override
   Future<void> uploadData(PowerSyncDatabase database) async {
-    // 1. Get the next batch of local changes
     final transaction = await database.getNextCrudTransaction();
     if (transaction == null) return;
+
+    // Identities for potential conflict resolution
+    Map<String, Map<String, dynamic>> batchContexts = {};
 
     try {
       for (var crud in transaction.crud) {
@@ -77,8 +79,6 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         final opData = _transformOpData(table, crud.opData);
 
         // --- Skip Guest Data ---
-        // We do not sync data associated with the hardcoded guest ID to Supabase.
-        // This avoids foreign key violations for local-only seeded data.
         const guestId = DataSeeder.guestPersonId;
         final isGuestData =
             id.toString() == guestId ||
@@ -89,91 +89,50 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
 
         if (isGuestData) {
           print(
-            "⏭️ [PowerSync] Skipping guest data sync for $table (id: $id) - person_id matches $guestId",
+            "⏭️ [PowerSync] Skipping guest data sync for $table (id: $id)",
           );
           continue;
+        }
+
+        // --- PRE-FETCH IDENTITY CONTEXT ---
+        // We fetch the full row to get person_id, date, tenant_id etc.
+        // This context is needed for:
+        // 1. Solving 23502 (mandatory columns in patches)
+        // 2. Solving 23505 (targeted cleanup of ghost records)
+        Map<String, dynamic>? ctx;
+        try {
+          ctx = await database.get('SELECT * FROM $table WHERE id = ?', [id]);
+          batchContexts[id] = ctx;
+        } catch (e) {
+          // Table might not exist or ID not found
         }
 
         print(
           "📤 [PowerSync] Syncing $table (op: ${crud.op}, id: $id): $opData",
         );
 
-        // 2. Perform the specific Supabase operation
-        final metricTables = [
-          'health_metrics',
-          'financial_metrics',
-          'project_metrics',
-          'social_metrics',
-        ];
-        final isMetricTable = metricTables.contains(table);
-
         switch (crud.op) {
           case UpdateType.put:
-            if (isMetricTable) {
-              await Supabase.instance.client.from(table).upsert({
-                'id': id,
-                ...opData,
-              }, onConflict: 'person_id,date,category');
-            } else {
-              await Supabase.instance.client.from(table).upsert({
-                'id': id,
-                ...opData,
-              });
-            }
-            break;
           case UpdateType.patch:
-            if (isMetricTable) {
-              // --- ROBUST METRIC SYNC ---
-              // For metric tables, we MUST ensure person_id, date, and category are present
-              // to use the composite unique constraint (person_id, date, category).
-              // Since Drift patches only contain changed columns, we fetch missing keys from local DB.
-              bool hasKeys =
-                  opData.containsKey('person_id') &&
-                  opData.containsKey('date') &&
-                  opData.containsKey('category');
+            // Prepare full payload for upsert
+            Map<String, dynamic> fullPayload = {'id': id, ...opData};
 
-              Map<String, dynamic> fullData = {'id': id, ...opData};
-
-              if (!hasKeys) {
-                // Fetch identifying keys from the regional PowerSync database
-                final row = await database.get(
-                  'SELECT person_id, date, category, tenant_id FROM $table WHERE id = ?',
-                  [id],
-                );
-                fullData['person_id'] = row['person_id'];
-                fullData['date'] = row['date'];
-                fullData['category'] = row['category'];
-                // Also propagate tenant_id if it's missing from opData but present in DB
-                if (!opData.containsKey('tenant_id') &&
-                    row['tenant_id'] != null) {
-                  fullData['tenant_id'] = row['tenant_id'];
+            // Merge in identifying context if available (critical for Patch -> Insert scenarios)
+            if (ctx != null) {
+              const identifyingKeys = [
+                'person_id',
+                'date',
+                'category',
+                'tenant_id'
+              ];
+              for (var key in identifyingKeys) {
+                if (ctx.containsKey(key)) {
+                  fullPayload[key] ??= ctx[key];
                 }
               }
-
-              if (fullData.containsKey('person_id') &&
-                  fullData.containsKey('date')) {
-                print(
-                  "🔄 [PowerSync] Performing composite upsert for $table (id: $id)",
-                );
-                await Supabase.instance.client
-                    .from(table)
-                    .upsert(fullData, onConflict: 'person_id,date,category');
-              } else {
-                print(
-                  "⚠️ [PowerSync] Partial patch for $table missing keys and not found locally. Falling back to ID update.",
-                );
-                await Supabase.instance.client
-                    .from(table)
-                    .update(opData)
-                    .eq('id', id);
-              }
-            } else {
-              // Standard non-metric tables
-              await Supabase.instance.client
-                  .from(table)
-                  .update(opData)
-                  .eq('id', id);
             }
+
+            await Supabase.instance.client.from(table).upsert(fullPayload);
             break;
           case UpdateType.delete:
             await Supabase.instance.client.from(table).delete().eq('id', id);
@@ -181,22 +140,46 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         }
       }
 
-      // 3. IMPORTANT: Tell PowerSync this batch is done
       await transaction.complete();
       print('✅ PowerSync: Batch of ${transaction.crud.length} uploaded.');
     } on PostgrestException catch (e) {
+      final crud = transaction.crud[0];
+      final table = crud.table;
+      final id = crud.id;
       final errorCode = e.code?.toString();
-      print(
-        '❌ PowerSync: Sync error for table ${transaction.crud[0].table}: Code $errorCode - $e',
-      );
-      // PGRST204 = "column not found in schema cache"
+      final ctx = batchContexts[id];
+
+      // --- 23505 CONFLICT RESOLUTION (GHOST CLEANUP) ---
+      // If a row with these identifiers exists but has a DIFFERENT ID (23505 on composite),
+      // we remove the blocker in Supabase and retry.
+      if (errorCode == '23505' && ctx != null) {
+        final pId = ctx['person_id'];
+        final date = ctx['date'];
+        final cat = ctx['category'] ?? 'General';
+
+        if (pId != null && date != null) {
+          print(
+            '⚠️ PowerSync: Conflict detected on composite key ($pId, $date, $cat). Cleaning up Supabase for retry...',
+          );
+          await Supabase.instance.client
+              .from(table)
+              .delete()
+              .match({'person_id': pId, 'date': date, 'category': cat});
+
+          // Let PowerSync retry this batch
+          rethrow;
+        }
+      }
+
+      print('❌ PowerSync: Sync error for table $table: Code $errorCode - $e');
+
+      // PGRST204 = "column not found"
       // 42703 = "column does not exist"
-      // 22008 = "date/time field value out of range" (stale integer timestamp)
-      // 23505 = "duplicate key violation" (stale data conflicts)
-      // 23503 = "foreign key violation" (missing parent data like guest ID)
-      // 23502 = "not-null constraint" (missing required fields in partial sync)
-      // 22P02 = "invalid text representation" (e.g. UUID/empty string for integer column)
-      // These are unrecoverable stale data — skip to unblock the queue.
+      // 22008 = "date range out of bounds"
+      // 23505 = "duplicate key" (that didn't match our resolver)
+      // 23503 = "foreign key" (missing parent data)
+      // 23502 = "not-null constraint"
+      // These are unrecoverable stale data — skip to unblock.
       if (errorCode == 'PGRST204' ||
           errorCode == '42703' ||
           errorCode == '22008' ||
@@ -205,16 +188,14 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
           errorCode == '23502' ||
           errorCode == '22P02') {
         print(
-          '⚠️ PowerSync: Skipping unrecoverable error ($errorCode). Completing transaction to clear queue.',
+          '⚠️ PowerSync: Skipping unrecoverable error ($errorCode). Completing transaction.',
         );
         await transaction.complete();
       } else {
         rethrow;
       }
     } catch (e) {
-      print(
-        '❌ PowerSync: Sync error for table ${transaction.crud[0].table}: $e',
-      );
+      print('❌ PowerSync: Sync error for table ${transaction.crud[0].table}: $e');
       rethrow;
     }
   }

@@ -57,19 +57,19 @@ class GamificationService {
       dietPoints = 0;
     }
 
-    // 3. Points from Social: CONTACT_POINTS per contact, AFFECTION_POINTS per AFFECTION_PER_UNIT affection
-    int socialPoints = 0;
+    // 3. Points from Mind: CONTACT_POINTS per contact, AFFECTION_POINTS per AFFECTION_PER_UNIT affection
+    int mindPoints = 0;
     try {
       final contacts = await _personDAO.getAllContacts().first;
       int totalAffection = 0;
       for (var contact in contacts) {
         totalAffection += contact.affection;
       }
-      socialPoints =
+      mindPoints =
           (contacts.length * CONTACT_POINTS) +
           ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
     } catch (e) {
-      socialPoints = 0;
+      mindPoints = 0;
     }
 
     // 4. Points from Finance: Net Worth / FINANCE_SAVINGS_MILESTONE * FINANCE_SAVINGS_POINTS
@@ -112,7 +112,7 @@ class GamificationService {
       financePoints = 0;
     }
 
-    return stepsPoints + dietPoints + socialPoints + financePoints;
+    return stepsPoints + dietPoints + mindPoints + financePoints;
   }
 
   Future<Map<String, int>> getPointsBreakdown(String personID) async {
@@ -146,15 +146,15 @@ class GamificationService {
       });
     } catch (_) {}
 
-    // 3. Social
-    int socialPoints = 0;
+    // 3. Mind
+    int mindPoints = 0;
     try {
       final contacts = await _personDAO.getAllContacts().first;
       int totalAffection = 0;
       for (var contact in contacts) {
         totalAffection += contact.affection;
       }
-      socialPoints =
+      mindPoints =
           (contacts.length * CONTACT_POINTS) +
           ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS);
     } catch (_) {}
@@ -200,7 +200,7 @@ class GamificationService {
     return {
       'Steps': stepsPoints,
       'Diet': dietPoints,
-      'Social': socialPoints,
+      'Mind': mindPoints,
       'Finance': financePoints,
     };
   }

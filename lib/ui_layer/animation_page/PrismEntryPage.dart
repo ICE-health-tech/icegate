@@ -7,6 +7,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
 
 class PrismEntryPage extends StatefulWidget {
   const PrismEntryPage({super.key});
@@ -80,10 +81,10 @@ class _PrismEntryPageState extends State<PrismEntryPage> with TickerProviderStat
     HapticFeedback.mediumImpact();
     setState(() => _showForm = true);
     _formController.forward();
-    
-    // Auto-navigate if already authenticated, or show login
+
+    // If authenticated, wait for animation to be visible then go home
     if (_authBlock.status.value == AuthStatus.authenticated) {
-      Future.delayed(const Duration(milliseconds: 800), () {
+      Future.delayed(const Duration(milliseconds: 1500), () {
         if (mounted) context.go('/');
       });
     }
@@ -126,7 +127,7 @@ class _PrismEntryPageState extends State<PrismEntryPage> with TickerProviderStat
               animation: _assemblyController,
               builder: (context, child) {
                 final double opacity = Curves.easeInQuint.transform(
-                  (_assemblyController.value - 0.7).clamp(0.0, 1.0) / 0.3,
+                  ((_assemblyController.value - 0.7) / 0.3).clamp(0.0, 1.0),
                 );
                 
                 return Opacity(
@@ -217,7 +218,7 @@ class _PrismEntryPageState extends State<PrismEntryPage> with TickerProviderStat
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
             ),
             child: const Text(
-              'INITIALIZE GATE',
+              'GO INTO',
               style: TextStyle(
                 color: Color(0xFF01579B), // Dark Blue text for contrast on light button
                 fontWeight: FontWeight.w900,

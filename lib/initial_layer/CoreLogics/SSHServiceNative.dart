@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:dartssh2/dartssh2.dart';
 import 'package:flutter/widgets.dart';
 import 'package:xterm/xterm.dart';
+import 'SSHService.dart';
 
 class SSHServiceNative with WidgetsBindingObserver {
   SSHClient? _client;
@@ -94,6 +95,7 @@ class SSHServiceNative with WidgetsBindingObserver {
     currentUsername = username;
     currentPassword = password;
     this.useTmux = useTmux;
+    SSHService().useTmuxSignal.value = useTmux;
     this.autoStartCommand = autoStartCommand;
     _bytesIn = 0;
     _bytesOut = 0;
@@ -272,6 +274,7 @@ class SSHServiceNative with WidgetsBindingObserver {
     currentHost = null;
     connectedAt = null;
     _reconnectAttempts = 0;
+    SSHService().useTmuxSignal.value = false;
     _connectionStateController.add(false);
     _emitStats();
   }

@@ -32,6 +32,115 @@ class UIResponsiveManager {
   static BuildContext? _context;
   static void setContext(BuildContext context) => _context = context;
 
+  // --- Merged from UIConstants ---
+  static const double widgetBorderWidth = 7.0;
+  static const double largeBorderWidth = 10.0;
+  static const double thresholdPercentage = 0.4;
+
+  static const double widgetSizePercentage = 0.22;
+  static const double minWidgetSize = 80.0;
+  static const double maxWidgetSize = 160.0;
+
+  static double getSizeOfWidget(BuildContext context) {
+    double size = MediaQuery.of(context).size.width * widgetSizePercentage;
+    return size.clamp(minWidgetSize, maxWidgetSize);
+  }
+
+  static double getSizeOfDepartment(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 205.0,
+      tablet: 250.0,
+      laptop: 280.0,
+      desktop: 300.0,
+    );
+  }
+
+  static double getBorderWidth(
+    BuildContext context,
+    double width, [
+    double? height,
+  ]) {
+    final double threshold =
+        MediaQuery.of(context).size.width * thresholdPercentage;
+    if (width > threshold || (height != null && height > threshold)) {
+      return largeBorderWidth;
+    }
+    return widgetBorderWidth;
+  }
+
+  // Timer Dimensions
+  static double getTimerTrackSize(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 240.0,
+      tablet: 340.0,
+      laptop: 380.0,
+      desktop: 420.0,
+    );
+  }
+
+  static double getTimerContainerSize(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 320.0,
+      tablet: 440.0,
+      laptop: 480.0,
+      desktop: 520.0,
+    );
+  }
+
+  static double getTimerRippleSize(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 600.0,
+      tablet: 800.0,
+      laptop: 900.0,
+      desktop: 1000.0,
+    );
+  }
+
+  static double getResponsiveFontSize(
+    BuildContext context, {
+    double factor = 0.02,
+    double min = 10.0,
+    double max = 30.0,
+  }) {
+    return (MediaQuery.of(context).size.width * factor).clamp(min, max);
+  }
+
+  // Chart Dimensions
+  static double getChartContainerHeight(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 180.0,
+      tablet: 250.0,
+      laptop: 280.0,
+      desktop: 300.0,
+    );
+  }
+
+  static double getChartBarMaxHeight(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 80.0,
+      tablet: 120.0,
+      laptop: 140.0,
+      desktop: 160.0,
+    );
+  }
+
+  static double getChartBarWidth(BuildContext context) {
+    return responsiveValue(
+      context,
+      phone: 12.0,
+      tablet: 20.0,
+      laptop: 24.0,
+      desktop: 28.0,
+    );
+  }
+  // --- End Merged ---
+
   static T responsive<T>(
     BuildContext context, {
     required T phone,

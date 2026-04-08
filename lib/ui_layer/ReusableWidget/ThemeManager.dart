@@ -72,6 +72,12 @@ class ThemeManager {
                         children: [
                           _buildThemeOption(
                             context,
+                            'Data Dashboard 📊',
+                            'assets/DataDenseDashboard.json',
+                            Icons.dashboard_customize_rounded,
+                          ),
+                          _buildThemeOption(
+                            context,
                             'Haven',
                             'assets/DefaultTheme.json',
                             Icons.security_rounded,

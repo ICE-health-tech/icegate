@@ -7,6 +7,7 @@ class ProjectProtocol {
   final String? color;
   final String? sshHostId;
   final String? remotePath;
+  final String? aiModel;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int status;
@@ -20,6 +21,7 @@ class ProjectProtocol {
     this.color,
     this.sshHostId,
     this.remotePath,
+    this.aiModel,
     required this.createdAt,
     required this.updatedAt,
     this.status = 0,

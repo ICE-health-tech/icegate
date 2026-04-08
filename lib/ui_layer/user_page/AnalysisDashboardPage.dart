@@ -426,7 +426,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             context,
             title: AppLocalizations.of(context)!.scoring_social.toUpperCase(),
             value: score.socialGlobalScore.toInt().toString(),
-            icon: Icons.people_alt_rounded,
+            icon: Icons.psychology_rounded,
             color: Colors.purple,
             breakdown: scoreBlock.socialBreakdown.watch(signalsContext),
             onTap: () => context.push('/social/dashboard'),

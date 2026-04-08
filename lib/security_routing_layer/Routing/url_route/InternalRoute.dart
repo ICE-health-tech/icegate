@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -8,46 +9,44 @@ import 'package:signals_flutter/signals_flutter.dart';
 
 import 'package:ice_gate/ui_layer/ReusableWidget/SettingWidget.dart';
 import 'package:ice_gate/ui_layer/health_page/CaloriesPage.dart';
-import 'package:ice_gate/ui_layer/health_page/ExercisePage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
-import 'package:ice_gate/ui_layer/health_page/HabitDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/StepsDashboardPage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectNotesPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectDetailsPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:provider/provider.dart';
-// import 'package:ice_gate/ui_layer/widget_page/WidgetPage.dart';
-// import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/HeartRatePage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/SleepPage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/WaterPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/TextEditorPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/BlockReminderPage.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
-import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
-import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
-import 'package:ice_gate/ui_layer/animation_page/snowflake_assemble_screen.dart';
+import 'package:ice_gate/ui_layer/animation_page/PrismEntryPage.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart';
-// // Import your pages
-// import 'package:ice_gate/ui_layer/BigWidget/DragCanvasGrid.dart'; // Your Grid
-// import 'package:ice_gate/ui_layer/HomePage.dart'; // Your Home
-// Import the shell we created in Step 1
 import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/ui_layer/home_page/MainShell.dart';
 import 'package:ice_gate/ui_layer/home_page/HomePage.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusHistoryPage.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
+import 'package:ice_gate/ui_layer/user_page/LoginPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/ui_layer/user_page/ChangePasswordPage.dart';
+import 'package:ice_gate/ui_layer/user_page/ChangeUsernamePage.dart';
+import 'package:ice_gate/ui_layer/user_page/DocumentationPage.dart';
+import 'package:ice_gate/ui_layer/health_page/ExercisePage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectNotesPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectDetailsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:provider/provider.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/HeartRatePage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/SleepPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/FoodConsumePage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WaterPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/BlockReminderPage.dart';
+import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
+import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
@@ -55,11 +54,8 @@ import 'package:ice_gate/ui_layer/social_page/SocialDashboardPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
-import 'package:ice_gate/ui_layer/user_page/LoginPage.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_gate/ui_layer/user_page/ChangePasswordPage.dart';
-import 'package:ice_gate/ui_layer/user_page/ChangeUsernamePage.dart';
-// import 'MainShell.dart';
+import 'package:ice_gate/ui_layer/projects_page/DocumentManagerPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/FolderDetailsPage.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -71,7 +67,6 @@ final ValueNotifier<AuthStatus?> authStatusNotifier = ValueNotifier(
 
 final ValueNotifier<bool?> showIntroNotifier = ValueNotifier(null);
 
-// Store the intended path to redirect after login
 final ValueNotifier<String?> intendedPathNotifier = ValueNotifier(null);
 
 final GoRouter router = GoRouter(
@@ -84,7 +79,6 @@ final GoRouter router = GoRouter(
 
     debugPrint("🛣️ [GoRouter] Path: ${state.uri.path}, Status: $status");
 
-    // Check intro logic first on startup
     if (showIntroNotifier.value == null) {
       SessionTracker.shouldShowIntro().then((shouldShow) {
         showIntroNotifier.value = shouldShow;
@@ -93,7 +87,7 @@ final GoRouter router = GoRouter(
     }
 
     if (showIntroNotifier.value == true && state.uri.path != '/intro') {
-      showIntroNotifier.value = false; // Reset so they don't get stuck
+      showIntroNotifier.value = false; 
       return '/intro';
     }
     print("Current Location: ${state.matchedLocation}");
@@ -101,10 +95,13 @@ final GoRouter router = GoRouter(
     if (status == null ||
         status == AuthStatus.checkingSession ||
         status == AuthStatus.init) {
-      // Capture the initial deep link if not logged in yet
-      if (state.uri.path != '/' && state.uri.path != '/login' && state.uri.path != '/intro') {
-         debugPrint("📌 [GoRouter] Capturing intended path: ${state.uri.toString()}");
-         intendedPathNotifier.value = state.uri.toString();
+      if (state.uri.path != '/' &&
+          state.uri.path != '/login' &&
+          state.uri.path != '/intro') {
+        debugPrint(
+          "📌 [GoRouter] Capturing intended path: ${state.uri.toString()}",
+        );
+        intendedPathNotifier.value = state.uri.toString();
       }
       return null;
     }
@@ -112,14 +109,16 @@ final GoRouter router = GoRouter(
     if (status == AuthStatus.authenticated) {
       if (isLoggingIn) {
         debugPrint(
-          "🛣️ [GoRouter] Authenticated, redirecting from /login to /",
+          "🛣️ [GoRouter] Authenticated from login, redirecting to /intro first",
         );
-        return '/';
+        return '/intro';
+      }
+      if (state.uri.path == '/intro') {
+        return null;
       }
     } else {
-      if (!isLoggingIn) {
+      if (!isLoggingIn && state.uri.path != '/intro') {
         debugPrint("🛣️ [GoRouter] Unauthenticated, redirecting to /login");
-        // Capture intended path before redirecting to login
         intendedPathNotifier.value = state.uri.toString();
         return '/login';
       }
@@ -128,7 +127,6 @@ final GoRouter router = GoRouter(
     return null;
   },
   routes: [
-    // --- NON-SHELL ROUTES ---
     GoRoute(
       path: '/login',
       parentNavigatorKey: _rootNavigatorKey,
@@ -137,8 +135,9 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/intro',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const SnowflakeAssembleScreen(),
+      builder: (context, state) => const PrismEntryPage(),
     ),
+
     GoRoute(
       path: '/notifications',
       parentNavigatorKey: _rootNavigatorKey,
@@ -150,36 +149,37 @@ final GoRouter router = GoRouter(
       builder: (context, state) => const NotificationInboxPage(),
     ),
     GoRoute(
+      path: '/documentation',
+      parentNavigatorKey: _rootNavigatorKey,
+      builder: (context, state) => const DocumentationPage(),
+    ),
+    GoRoute(
       path: '/projects/editor',
       parentNavigatorKey: _rootNavigatorKey,
       builder: (context, state) {
         if (state.extra is ProjectNoteData) {
           return TextEditorPage(note: state.extra as ProjectNoteData);
+        } else if (state.extra is File) {
+          return TextEditorPage(initialFile: state.extra as File);
         } else if (state.extra is Map<String, dynamic>) {
           final data = state.extra as Map<String, dynamic>;
           return TextEditorPage(
             note: data['note'] as ProjectNoteData?,
             initialCategory: data['category'] as String?,
+            initialFile: data['file'] as File?,
           );
         }
         return const TextEditorPage();
       },
     ),
 
-    // --- SHELL ROUTE (Wraps pages with the App Bar) ---
     ShellRoute(
       navigatorKey: _shellNavigatorKey,
       builder: (context, state, child) {
-        // 'child' is the widget returned by the specific GoRoute below
         return MainShell(child: child);
       },
       routes: [
-        // Route 1: Home
-        GoRoute(
-          path: '/',
-          builder: (context, state) => const HomePage(),
-        ),
-        // Route 2: The Grid Canvas
+        GoRoute(path: '/', builder: (context, state) => const HomePage()),
         GoRoute(
           path: '/canvas',
           builder: (context, state) => DragCanvasGrid(),
@@ -190,7 +190,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // Route 3: Settings placeholder
         GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsWidget(),
@@ -205,7 +204,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // Route 4: Profile Dashboard
         GoRoute(
           path: '/profile',
           builder: (context, state) => const AnalysisDashboardPage(),
@@ -223,7 +221,6 @@ final GoRouter router = GoRouter(
           path: '/focus-history',
           builder: (context, state) => const FocusHistoryPage(),
         ),
-        // Route 5: Health
         GoRoute(
           path: '/health',
           builder: (context, state) => const HealthPage(),
@@ -263,6 +260,17 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const FoodInputPage(),
               routes: [
                 GoRoute(
+                  path: 'consume',
+                  builder: (context, state) => const FoodConsumePage(),
+                ),
+                GoRoute(
+                  path: 'entry/:id',
+                  builder: (context, state) {
+                    final mealId = state.pathParameters['id'];
+                    return FoodInputPage(mealId: mealId);
+                  },
+                ),
+                GoRoute(
                   path: 'dashboard',
                   builder: (context, state) => const FoodDashboardPage(),
                 ),
@@ -290,17 +298,13 @@ final GoRouter router = GoRouter(
               path: 'water',
               builder: (context, state) => const WaterPage(),
             ),
-            GoRoute(
-              path: 'habits',
-              builder: (context, state) => const HabitDashboardPage(),
-            ),
+
             GoRoute(
               path: 'analysis',
               builder: (context, state) => const HealthAnalysisPage(),
             ),
           ],
         ),
-        // Route 6: Finance
         GoRoute(
           path: '/finance',
           builder: (context, state) => const FinancePage(),
@@ -311,7 +315,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // Route 7: Social
         GoRoute(
           path: '/social',
           builder: (context, state) => const SocialPage(),
@@ -330,7 +333,6 @@ final GoRouter router = GoRouter(
             ),
           ],
         ),
-        // Route 8: Projects
         GoRoute(
           path: '/projects',
           builder: (context, state) => const ProjectsPage(),
@@ -340,33 +342,39 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const ProjectAnalysisPage(),
             ),
             GoRoute(
-              path:
-                  ':projectId', // Đường dẫn con của /projects nên URL sẽ là /projects/123
+              path: 'documents',
+              builder: (context, state) => const DocumentManagerPage(),
+              routes: [
+                GoRoute(
+                  path: 'folder',
+                  builder: (context, state) => FolderDetailsPage(
+                    directory: state.extra as Directory,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: ':projectId',
               builder: (context, state) {
                 final projectId = state.pathParameters['projectId'];
 
                 return Watch((context) {
                   final projects = context.read<ProjectBlock>().projects.value;
 
-                  // TRƯỜNG HỢP 1: Đang tải dữ liệu
                   if (projects.isEmpty) {
                     return const Scaffold(
                       body: Center(child: CircularProgressIndicator()),
                     );
                   }
 
-                  // TRƯỜNG HỢP 2: Tìm kiếm đúng project theo ID từ URL
-                  // Dùng firstWhereOrNull để an toàn (cần import package:collection)
                   final project = projects.cast<ProjectProtocol?>().firstWhere(
                     (p) => p?.id.toString() == projectId,
                     orElse: () => null,
                   );
 
-                  // TRƯỜNG HỢP 3: Hiển thị kết quả
                   if (project != null) {
                     return ProjectDetailsPage(project: project);
                   } else {
-                    // Nếu không tìm thấy ID, quay về trang danh sách
                     return const ProjectsPage();
                   }
                 });
@@ -378,7 +386,7 @@ final GoRouter router = GoRouter(
           path: '/widgets/ssh',
           builder: (context, state) {
             final aiMode = state.uri.queryParameters['aiMode'];
-            
+
             if (state.extra is Map<String, dynamic>) {
               final data = state.extra as Map<String, dynamic>;
               return TalkSSHPage(
@@ -402,19 +410,20 @@ final GoRouter router = GoRouter(
             if (state.extra is Map<String, dynamic>) {
               final data = state.extra as Map<String, dynamic>;
               return SSHManagerPage(
-                initialPrompt: data['prompt'] as String? ?? data['initialPrompt'] as String?,
+                initialPrompt:
+                    data['prompt'] as String? ??
+                    data['initialPrompt'] as String?,
                 hostId: data['hostId'] as String?,
                 remotePath: data['remotePath'] as String?,
-                initialContent: data['content'] as String? ?? data['initialContent'] as String?,
+                initialContent:
+                    data['content'] as String? ??
+                    data['initialContent'] as String?,
               );
             }
             return const SSHManagerPage();
           },
         ),
-        GoRoute(
-          path: '/gps',
-          builder: (context, state) => const GPSTrackingPage(),
-        ),
+
         GoRoute(
           path: '/webview',
           builder: (context, state) => const WebViewPage(

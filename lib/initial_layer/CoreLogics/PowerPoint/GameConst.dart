@@ -18,7 +18,7 @@ const double SLEEP_GOAL = 8.0; // hours
 const int SLEEP_POINTS_PER_HOUR = 2; // 1 hour = 2 points
 const int WEIGHT_POINTS_PER_KG = 100; // 1 kg = 100 points
 
-// ─── ❤️ Social ───
+// ─── 🧠 Mind ───
 const int CONTACT_POINTS = 30; // each contact = +30 points
 const int AFFECTION_PER_UNIT = 5; // every 5 affection...
 const int AFFECTION_POINTS = 10; // ...= +10 points

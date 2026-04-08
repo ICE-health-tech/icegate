@@ -27,6 +27,9 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
 
+      // Increase delay to 1000ms to ensure the UI/Window is ready
+      await Future.delayed(const Duration(milliseconds: 1000));
+
       // 1. Construct the creation options.
       // Ideally, the backend should generate the full options JSON.
       // But for this example/simplification, we might construct parts of it here
@@ -88,10 +91,13 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
 
+      // Increase delay to 1000ms to ensure the UI/Window is ready
+      await Future.delayed(const Duration(milliseconds: 1000));
+
       // Standard WebAuthn PublicKeyCredentialRequestOptions
       final authOptions = {
         "challenge": challenge,
-        "rpId": "auth.duylong.art", // MUST match Associated Domains
+        "rpId": "wthislkepfufkbgiqegs.supabase.co", // Updated to Supabase project domain
         "timeout": 60000,
         "userVerification": "required",
         // "allowCredentials": [], // Empty list allows discovering all credentials for this RP

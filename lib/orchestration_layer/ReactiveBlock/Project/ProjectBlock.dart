@@ -45,6 +45,7 @@ class ProjectBlock {
                     color: e.color,
                     sshHostId: e.sshHostId,
                     remotePath: e.remotePath,
+                    aiModel: e.aiModel,
                     createdAt: e.createdAt,
                     updatedAt: e.updatedAt,
                     status: e.status,
@@ -128,6 +129,19 @@ class ProjectBlock {
       ProjectsTableCompanion(
         sshHostId: Value(sshHostId),
         remotePath: Value(remotePath),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> updateProjectAiModel(
+    String id,
+    String? aiModel,
+  ) async {
+    await _dao.updateProjectManual(
+      id,
+      ProjectsTableCompanion(
+        aiModel: Value(aiModel),
         updatedAt: Value(DateTime.now()),
       ),
     );

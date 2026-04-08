@@ -1,63 +1,64 @@
-# PowerSync Sync Rules - Edition 2 (Fixed Case-Sensitivity & ID Mapping)
-# Generated for Ice Shield based on Supabase + PowerSync best practices
-
+# PowerSync Sync Rules - Edition 5 (Stability Fix)
 config:
   edition: 2
 
 bucket_definitions:
-  # All data is now user-specific or tenant-specific
-  by_user:
-    # Get both the internal integer ID and the tenant ID for the current user
-    # request.user_id() is the Supabase Auth UUID
-    parameters: |
-      SELECT 
-        person_id as p_id,
-        tenant_id as t_id
-      FROM persons 
-      WHERE id = request.user_id()
+  # 1. Personal User Data
+  # This bucket handles everything unique to YOU.
+  user_bucket:
+    parameters: SELECT request.user_id() as uid
     data:
-      # 1. Personal data (Double-filtered by person_id AND tenant_id for security)
-      - SELECT * FROM persons WHERE person_id = bucket.p_id AND tenant_id = bucket.t_id
-      - SELECT * FROM profiles WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM project_notes WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM projects WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM email_addresses WHERE person_id = bucket.p_id AND tenant_id = bucket.t_id
-      - SELECT * FROM user_accounts WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM detail_information WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM skills WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM financial_accounts WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM assets WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM transactions WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM goals WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM scores WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM habits WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM person_widgets WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM health_metrics WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM water_logs WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM sleep_logs WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM exercise_logs WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM focus_sessions WHERE person_id = request.user_id() AND tenant_id = bucket.t_id
-      - SELECT * FROM blog_posts WHERE author_id = request.user_id() AND tenant_id = bucket.t_id
-      
-      # Sessions typically use the Supabase UUID as the row ID
-      - SELECT * FROM sessions WHERE id = request.user_id() AND tenant_id = bucket.t_id
+      - SELECT * FROM persons WHERE id = bucket.uid
+      - SELECT * FROM profiles WHERE person_id = bucket.uid
+      - SELECT * FROM project_notes WHERE person_id = bucket.uid
+      - SELECT * FROM projects WHERE person_id = bucket.uid
+      - SELECT * FROM email_addresses WHERE person_id = bucket.uid
+      - SELECT * FROM user_accounts WHERE person_id = bucket.uid
+      - SELECT * FROM detail_information WHERE person_id = bucket.uid
+      - SELECT * FROM skills WHERE person_id = bucket.uid
+      - SELECT * FROM financial_accounts WHERE person_id = bucket.uid
+      - SELECT * FROM assets WHERE person_id = bucket.uid
+      - SELECT * FROM transactions WHERE person_id = bucket.uid
+      - SELECT * FROM goals WHERE person_id = bucket.uid
+      - SELECT * FROM scores WHERE person_id = bucket.uid
+      - SELECT * FROM habits WHERE person_id = bucket.uid
+      - SELECT * FROM person_widgets WHERE person_id = bucket.uid
+      - SELECT * FROM health_metrics WHERE person_id = bucket.uid
+      - SELECT * FROM water_logs WHERE person_id = bucket.uid
+      - SELECT * FROM sleep_logs WHERE person_id = bucket.uid
+      - SELECT * FROM exercise_logs WHERE person_id = bucket.uid
+      - SELECT * FROM focus_sessions WHERE person_id = bucket.uid
+      - SELECT * FROM quests WHERE person_id = bucket.uid
+      - SELECT * FROM meals WHERE person_id = bucket.uid
+      - SELECT * FROM hourly_activity_log WHERE person_id = bucket.uid
+      - SELECT * FROM sessions WHERE id = bucket.uid
 
-      # 2. Shared/Tenant data (filtered by t_id)
-      - SELECT * FROM internal_widgets WHERE tenant_id = bucket.t_id
-      - SELECT * FROM external_widgets WHERE tenant_id = bucket.t_id
-      - SELECT * FROM themes WHERE tenant_id = bucket.t_id
-      - SELECT * FROM themes_config WHERE tenant_id = bucket.t_id
-      - SELECT * FROM quotes WHERE tenant_id = bucket.t_id
-      - SELECT * FROM quests WHERE tenant_id = bucket.t_id
-      - SELECT * FROM custom_notifications WHERE tenant_id = bucket.t_id
-      - SELECT * FROM meals WHERE tenant_id = bucket.t_id
-      - SELECT * FROM days WHERE tenant_id = bucket.t_id
-      - SELECT * FROM organizations WHERE id = bucket.t_id
-
-  # Global ranking bucket (Sharing scores/names within the organization)
-  rankings:
-    parameters: |
-      SELECT tenant_id as t_id FROM persons WHERE id = request.user_id()
+  # 2. Shared Organization Data
+  # This bucket handles data shared with your team/organization.
+  # It only activates if you have a tenant_id assigned.
+  tenant_bucket:
+    parameters: SELECT tenant_id as tid FROM persons WHERE id = request.user_id()
     data:
-      - SELECT id, person_id, career_global_score, social_global_score, health_global_score, financial_global_score, updated_at FROM scores WHERE tenant_id = bucket.t_id
-      - SELECT id, first_name, last_name, profile_image_url FROM persons WHERE tenant_id = bucket.t_id
+      - SELECT * FROM internal_widgets WHERE tenant_id = bucket.tid
+      - SELECT * FROM external_widgets WHERE tenant_id = bucket.tid
+      - SELECT * FROM themes WHERE tenant_id = bucket.tid
+      - SELECT * FROM themes_config WHERE tenant_id = bucket.tid
+      - SELECT * FROM quotes WHERE tenant_id = bucket.tid
+      - SELECT * FROM custom_notifications WHERE tenant_id = bucket.tid
+      - SELECT * FROM days WHERE tenant_id = bucket.tid
+      - SELECT * FROM organizations WHERE id = bucket.tid
+      # Shared organizational scores
+      - SELECT id, person_id, career_global_score, social_global_score, health_global_score, financial_global_score, updated_at FROM scores WHERE tenant_id = bucket.tid
+      - SELECT id, first_name, last_name, profile_image_url FROM persons WHERE tenant_id = bucket.tid
+
+  # 3. Global Public Data
+  # Data that has no tenant and should be visible to everyone.
+  global_bucket:
+    data:
+      - SELECT * FROM internal_widgets WHERE tenant_id IS NULL
+      - SELECT * FROM external_widgets WHERE tenant_id IS NULL
+      - SELECT * FROM themes WHERE tenant_id IS NULL
+      - SELECT * FROM themes_config WHERE tenant_id IS NULL
+      - SELECT * FROM quotes WHERE tenant_id IS NULL
+      - SELECT * FROM custom_notifications WHERE tenant_id IS NULL
+      - SELECT * FROM days WHERE tenant_id IS NULL

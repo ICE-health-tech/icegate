@@ -6,7 +6,6 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
 import '../UIConstants.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/GamificationService.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart'
     show InternalWidgetBlock;
 // import 'package:ice_gate/initial_layer/FireAPI/UrlNavigate.dart' as WidgetNavigatorAction;
@@ -57,7 +56,13 @@ class HomePage extends StatefulWidget {
       onLongPress: () {
         context.go("/canvas");
       },
-      subButtons: [],
+      subButtons: [
+        SubButton(
+          label: "Docs",
+          icon: Icons.description_rounded,
+          onPressed: () => context.push('/projects/documents'),
+        ),
+      ],
     );
   }
 
@@ -468,7 +473,7 @@ class _HomePageState extends State<HomePage> {
                               return _buildQuickAccessCard(
                                 context,
                                 AppLocalizations.of(context)!.social,
-                                Icons.people_alt_rounded,
+                                Icons.psychology_rounded,
                                 Colors.purple,
                                 metrics: [
                                   {
@@ -666,16 +671,6 @@ class _HomePageState extends State<HomePage> {
   Widget _buildGamifiedHeader(BuildContext context) {
     return Watch((context) {
       final colorScheme = Theme.of(context).colorScheme;
-      final textTheme = Theme.of(context).textTheme;
-
-      final level = scoreBlock.globalLevel.value;
-      final progress = scoreBlock.levelProgress.value;
-      final rank = scoreBlock.rankTitle.value;
-
-      final healthToday = scoreBlock.todayHealthPoints.value;
-      final socialToday = scoreBlock.todaySocialPoints.value;
-      final financeToday = scoreBlock.todayFinancePoints.value;
-      final projectToday = scoreBlock.todayProjectPoints.value;
 
       return ClipRRect(
         borderRadius: BorderRadius.circular(28),
@@ -691,7 +686,7 @@ class _HomePageState extends State<HomePage> {
                 width: 1,
               ),
             ),
-            child: Column(
+            child: const Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
@@ -699,203 +694,16 @@ class _HomePageState extends State<HomePage> {
                   children: [
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          rank.toUpperCase(),
-                          style: textTheme.labelMedium?.copyWith(
-                            color: colorScheme.onPrimary.withOpacity(0.9),
-                            letterSpacing: 1.5,
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.level(level),
-                              style: textTheme.titleLarge?.copyWith(
-                                color: colorScheme.onPrimary,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.5,
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            _buildTodayGainsRow(
-                              context,
-                              health: healthToday,
-                              social: socialToday,
-                              finance: financeToday,
-                              projects: projectToday,
-                              showLabel: false,
-                            ),
-                          ],
-                        ),
-                      ],
+                      children: [],
                     ),
                   ],
                 ),
-                const SizedBox(height: 18),
-
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppLocalizations.of(
-                        context,
-                      )!.progress_to_level(level + 1),
-                      style: textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.6),
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      '${(progress * 100).toInt()}%',
-                      style: textTheme.labelSmall?.copyWith(
-                        color: colorScheme.onSurface,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 8),
-                Stack(
-                  children: [
-                    Container(
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface
-                            .withOpacity(0.2), // Correct scoping
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                    ),
-                    FractionallySizedBox(
-                      widthFactor: progress.clamp(0.0, 1.0),
-                      child: Container(
-                        height: 6,
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              Theme.of(context).colorScheme.primary,
-                              Theme.of(context).colorScheme.secondary,
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Theme.of(
-                                context,
-                              ).colorScheme.primary.withOpacity(0.4),
-                              blurRadius: 6,
-                              offset: const Offset(0, 0),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-
-                // const SizedBox(height: 18),
               ],
             ),
           ),
         ),
       );
     });
-  }
-
-  Widget _buildTodayGainsRow(
-    BuildContext context, {
-    required double health,
-    required double social,
-    required double finance,
-    required double projects,
-    bool showLabel = true,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (showLabel) ...[
-          Text(
-            AppLocalizations.of(context)!.todays_gains.toUpperCase(),
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w900,
-              color: colorScheme.onSurface.withValues(alpha: 0.5),
-              letterSpacing: 1.2,
-            ),
-          ),
-          const SizedBox(height: 10),
-        ],
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _buildGainItem(
-              context,
-              Icons.favorite_rounded,
-              health,
-              Colors.greenAccent,
-            ),
-            const SizedBox(width: 8),
-            _buildGainItem(
-              context,
-              Icons.people_rounded,
-              social,
-              Colors.purpleAccent,
-            ),
-            const SizedBox(width: 8),
-            _buildGainItem(
-              context,
-              Icons.rocket_launch_rounded,
-              projects,
-              Colors.orangeAccent,
-            ),
-            const SizedBox(width: 8),
-            _buildGainItem(
-              context,
-              Icons.account_balance_wallet_rounded,
-              finance,
-              Colors.blueAccent,
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildGainItem(
-    BuildContext context,
-    IconData icon,
-    double pts,
-    Color color,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 0.2), width: 1),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 14, color: color),
-          const SizedBox(width: 4),
-          Text(
-            "+${pts.toInt()}",
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: colorScheme.onSurface.withValues(alpha: 0.9),
-            ),
-          ),
-        ],
-      ),
-    );
   }
 
   Widget _buildSectionHeader(BuildContext context, String title, String route) {
@@ -931,9 +739,6 @@ class _HomePageState extends State<HomePage> {
   }) {
     final isPhone = MediaQuery.of(context).size.width < 600;
     final colorScheme = Theme.of(context).colorScheme;
-    final safeScore = scoreData.isFinite ? scoreData.toInt() : 0;
-    final level = GamificationService.getLevel(safeScore);
-    final progress = GamificationService.getProgressToNextLevel(safeScore);
 
     return Container(
       width: isPhone ? 210 : 280,
@@ -943,7 +748,7 @@ class _HomePageState extends State<HomePage> {
         color: Colors.transparent,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: color.withOpacity(0.12)),
+          side: BorderSide(color: color.withValues(alpha: 0.12)),
         ),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
@@ -958,9 +763,9 @@ class _HomePageState extends State<HomePage> {
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                       colors: [
-                        color.withOpacity(0.18),
-                        color.withOpacity(0.08),
-                        color.withOpacity(0.02),
+                        color.withValues(alpha: 0.18),
+                        color.withValues(alpha: 0.08),
+                        color.withValues(alpha: 0.02),
                       ],
                       stops: const [0.0, 0.5, 1.0],
                     ),
@@ -975,7 +780,7 @@ class _HomePageState extends State<HomePage> {
                   width: 100,
                   height: 100,
                   decoration: BoxDecoration(
-                    color: color.withOpacity(0.1),
+                    color: color.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -988,87 +793,48 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        TweenAnimationBuilder<double>(
-                          tween: Tween<double>(begin: 0, end: progress),
-                          duration: const Duration(milliseconds: 1200),
-                          curve: Curves.easeOutQuart,
-                          builder: (context, value, child) {
-                            return Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                SizedBox(
-                                  width: isPhone ? 64 : 76,
-                                  height: isPhone ? 64 : 76,
-                                  child: CircularProgressIndicator(
-                                    value: value.clamp(0.0, 1.0),
-                                    strokeWidth: isPhone ? 4 : 5,
-                                    backgroundColor: color.withOpacity(0.1),
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      color,
-                                    ),
-                                    strokeCap: StrokeCap.round,
-                                  ),
-                                ),
-                                Container(
-                                  padding: EdgeInsets.all(isPhone ? 12 : 16),
-                                  decoration: BoxDecoration(
-                                    color: color.withOpacity(0.1),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: Icon(
-                                    icon,
-                                    color: color,
-                                    size: isPhone ? 26 : 30,
-                                  ),
-                                ),
-                              ],
-                            );
-                          },
+                        Container(
+                          padding: EdgeInsets.all(isPhone ? 12 : 16),
+                          decoration: BoxDecoration(
+                            color: color.withValues(alpha: 0.1),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            icon,
+                            color: color,
+                            size: isPhone ? 26 : 30,
+                          ),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(
                             horizontal: 5,
                             vertical: 4,
                           ),
-                          child: ScorePulseWrapper(
-                            value: scoreData,
-                            child: Column(
-                              key: ValueKey(title),
-                              children: [
-                                AutoSizeText(
-                                  title,
-                                  style: TextStyle(
-                                    fontWeight: FontWeight.w900,
-                                    fontSize: isPhone ? 18 : 22,
-                                    color: colorScheme.onSurface,
-                                    letterSpacing: -0.5,
-                                  ),
-                                  maxLines: 1,
+                          child: Column(
+                            key: ValueKey(title),
+                            children: [
+                              AutoSizeText(
+                                title,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: isPhone ? 18 : 22,
+                                  color: colorScheme.onSurface,
+                                  letterSpacing: -0.5,
                                 ),
-                                const SizedBox(height: 4),
-                                RollingScoreText(
-                                  value: level,
-                                  prefix: "LV ",
-                                  style: TextStyle(
-                                    color: color,
-                                    fontSize: isPhone ? 14 : 18,
-                                    fontWeight: FontWeight.w900,
-                                    letterSpacing: 0.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 4),
-                                RollingScoreText(
-                                  value: scoreData,
-                                  prefix: "P: ",
-                                  decimalPlaces: 1,
-                                  style: TextStyle(
-                                    color: color.withOpacity(0.9),
-                                    fontSize: isPhone ? 16 : 22,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ],
-                            ),
+                                maxLines: 1,
+                              ),
+                              // const SizedBox(height: 4),
+                              // RollingScoreText(
+                              //   value: level,
+                              //   prefix: "LV ",
+                              //   style: TextStyle(
+                              //     color: colorScheme.onSurface,
+                              //     fontSize: isPhone ? 14 : 18,
+                              //     fontWeight: FontWeight.w900,
+                              //     letterSpacing: 0.5,
+                              //   ),
+                              // ),
+                            ],
                           ),
                         ),
                       ],
@@ -1087,7 +853,7 @@ class _HomePageState extends State<HomePage> {
                               AutoSizeText(
                                 m['value'] ?? '',
                                 style: TextStyle(
-                                  color: colorScheme.onSurface.withOpacity(0.9),
+                                  color: colorScheme.onSurface.withValues(alpha: 0.9),
                                   fontSize: isPhone ? 11 : 13,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
@@ -1098,7 +864,7 @@ class _HomePageState extends State<HomePage> {
                               AutoSizeText(
                                 m['label'] ?? '',
                                 style: TextStyle(
-                                  color: colorScheme.onSurface.withOpacity(0.5),
+                                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                                   fontSize: isPhone ? 9 : 10,
                                   fontWeight: FontWeight.w600,
                                   height: 1.1,
@@ -1126,54 +892,27 @@ class _HomePageState extends State<HomePage> {
     InternalWidgetProtocol? widgetData,
   ) {
     final colorScheme = Theme.of(context).colorScheme;
-
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
 
     if (widgetData == null) {
       return InkWell(
         onTap: () => _showAddPluginDialog(context),
-        borderRadius: BorderRadius.circular(28),
-        customBorder: Border.all(
-          color: colorScheme.outline.withAlpha(90),
-          width: 3,
-        ),
+        borderRadius: BorderRadius.circular(24),
         child: Container(
           width: sizeOfWidget,
           height: sizeOfWidget,
           decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(28),
-
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: colorScheme.outline.withAlpha(90),
-              width: 3,
-              style: BorderStyle
-                  .none, // Can change to solid for dashed effect if custom painter
+              color: colorScheme.outline.withValues(alpha: 0.2),
+              width: 1.5,
             ),
           ),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(20),
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
-                  border: Border.all(
-                    color: colorScheme.primary.withOpacity(0.2),
-                    width: 3,
-                    style: BorderStyle
-                        .none, // Can change to solid for dashed effect if custom painter
-                  ),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.add_rounded,
-                  color: colorScheme.primary,
-                  size: 30,
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
+          child: Icon(
+            Icons.add_rounded,
+            color: colorScheme.primary.withValues(alpha: 0.5),
+            size: 24,
           ),
         ),
       );
@@ -1183,47 +922,68 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(28),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.primary.withOpacity(0.15),
-          width: 3.0, // Thinner, cleaner border
+          color: colorScheme.primary.withValues(alpha: 0.1),
+          width: 1.5,
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(widgetData.icon, color: colorScheme.primary, size: 28),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: AutoSizeText(
-              widgetData.name,
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: colorScheme.primary,
-                letterSpacing: -0.5,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            // Subtle gradient for depth
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.primary.withValues(alpha: 0.05),
+                      colorScheme.primary.withValues(alpha: 0.01),
+                    ],
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
             ),
-          ),
-        ],
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    widgetData.icon,
+                    color: colorScheme.primary.withValues(alpha: 0.8),
+                    size: sizeOfWidget * 0.3,
+                  ),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: AutoSizeText(
+                      widgetData.name.toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        color: colorScheme.primary.withValues(alpha: 0.7),
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -1258,7 +1018,7 @@ class _HomePageState extends State<HomePage> {
                   color: Colors.red,
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.4),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                     width: 5,
                   ),
                 ),
@@ -1293,51 +1053,67 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.primary.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(28),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.primary.withOpacity(0.15),
-          width: 3.0,
+          color: colorScheme.secondary.withValues(alpha: 0.1),
+          width: 1.5,
         ),
       ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.secondaryContainer.withOpacity(0.2),
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: const Icon(
-              Icons.language_rounded,
-              color: Colors.blueAccent,
-              size: 28,
-            ),
-          ),
-          const SizedBox(height: 10),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: AutoSizeText(
-              data.name ?? 'Untitled',
-              style: TextStyle(
-                fontWeight: FontWeight.w800,
-                fontSize: 14,
-                color: colorScheme.primary,
-                letterSpacing: -0.5,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: Stack(
+          children: [
+            Positioned.fill(
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      colorScheme.secondary.withValues(alpha: 0.05),
+                      colorScheme.secondary.withValues(alpha: 0.01),
+                    ],
+                  ),
+                ),
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
             ),
-          ),
-        ],
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.language_rounded,
+                    color: colorScheme.secondary.withValues(alpha: 0.8),
+                    size: sizeOfWidget * 0.3,
+                  ),
+                  const SizedBox(height: 6),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                    child: AutoSizeText(
+                      (data.name ?? 'Untitled').toUpperCase(),
+                      style: TextStyle(
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10,
+                        color: colorScheme.secondary.withValues(alpha: 0.7),
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
@@ -1372,7 +1148,7 @@ class _HomePageState extends State<HomePage> {
                 decoration: BoxDecoration(
                   color: Colors.red,
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.4),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                     width: 5,
                   ),
                   shape: BoxShape.circle,
@@ -1491,7 +1267,7 @@ class _HomePageState extends State<HomePage> {
             children: [
               Icon(
                 Icons.format_quote_rounded,
-                color: colorScheme.primary.withOpacity(0.5),
+                color: colorScheme.primary.withValues(alpha: 0.5),
                 size: 18,
               ),
               const SizedBox(width: 8),
@@ -1504,7 +1280,7 @@ class _HomePageState extends State<HomePage> {
                   style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.w600,
                     fontStyle: FontStyle.italic,
-                    color: colorScheme.onSurface.withOpacity(0.8),
+                    color: colorScheme.onSurface.withValues(alpha: 0.8),
                   ),
                 ),
               ),
@@ -1515,14 +1291,14 @@ class _HomePageState extends State<HomePage> {
                   style: textTheme.bodySmall?.copyWith(
                     fontWeight: FontWeight.bold,
                     fontSize: 10,
-                    color: colorScheme.primary.withOpacity(0.7),
+                    color: colorScheme.primary.withValues(alpha: 0.7),
                   ),
                 ),
                 const SizedBox(width: 4),
               ],
               Icon(
                 Icons.format_quote_rounded,
-                color: colorScheme.primary.withOpacity(0.5),
+                color: colorScheme.primary.withValues(alpha: 0.5),
                 size: 18,
               ),
             ],
@@ -1534,31 +1310,39 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildAddButton(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final sizeOfWidget = UIConstants.getSizeOfWidget(context);
+
     return InkWell(
       onTap: () => _showAddPluginDialog(context),
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(24),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        width: sizeOfWidget,
+        height: sizeOfWidget,
         decoration: BoxDecoration(
-          color: colorScheme.primary.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(28),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+          borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.primary.withOpacity(0.2),
-            width: 3,
+            color: colorScheme.outline.withValues(alpha: 0.1),
+            width: 1.5,
           ),
         ),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.add_rounded, color: colorScheme.primary, size: 32),
+              Icon(
+                Icons.add_rounded,
+                color: colorScheme.primary.withValues(alpha: 0.5),
+                size: 24,
+              ),
               const SizedBox(height: 4),
               Text(
-                AppLocalizations.of(context)!.add,
+                AppLocalizations.of(context)!.add.toUpperCase(),
                 style: TextStyle(
-                  color: colorScheme.primary,
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
+                  color: colorScheme.primary.withValues(alpha: 0.5),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.5,
                 ),
               ),
             ],

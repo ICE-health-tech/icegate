@@ -214,6 +214,16 @@ class ProjectsPage extends StatelessWidget {
                               },
                             ),
                             const SizedBox(width: 12),
+                            _ActionCard(
+                              width: 120,
+                              icon: Icons.description_rounded,
+                              label: 'Doc Manager',
+                              color: Colors.teal,
+                              onTap: () {
+                                context.push("/projects/documents");
+                              },
+                            ),
+                            const SizedBox(width: 12),
                             // Plugin Slot (Limit 1 - Showing Latest)
                             if (apps.isEmpty)
                               _ActionCard(
@@ -482,6 +492,10 @@ class ProjectsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildFinanceSection(BuildContext context) {
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
+  }
+
   Widget _buildSectionTitle(BuildContext context, String title) {
     return Text(
       title,
@@ -532,6 +546,10 @@ class ProjectsPage extends StatelessWidget {
         ),
       ],
     );
+  }
+
+  Widget _buildSettingsSection(BuildContext context) {
+    return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
   IconData _getAppIcon(String? name) {

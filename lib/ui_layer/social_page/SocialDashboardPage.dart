@@ -38,7 +38,7 @@ class SocialDashboardPage extends StatelessWidget {
             onPressed: () => WidgetNavigatorAction.smartPop(context),
           ),
           title: Text(
-            'Social Analysis',
+            'Mind Analysis',
             style: textTheme.titleLarge?.copyWith(
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
@@ -254,14 +254,13 @@ class SocialDashboardPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'SOCIAL BALANCE',
+            'MIND BALANCE',
             style: textTheme.labelSmall?.copyWith(
               color: colorScheme.onSurfaceVariant,
               fontWeight: FontWeight.w900,
               letterSpacing: 1.1,
             ),
-          ),
-          const SizedBox(height: 20),
+          ),          const SizedBox(height: 20),
           Row(
             children: [
               SimplePieChart(
@@ -456,7 +455,7 @@ class SocialDashboardPage extends StatelessWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            'SOCIAL JOURNAL',
+                            'MIND JOURNAL',
                             style: textTheme.labelSmall?.copyWith(
                               color: colorScheme.primary,
                               fontWeight: FontWeight.w900,
@@ -487,7 +486,7 @@ class SocialDashboardPage extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            latestNote?.title ?? 'Start Your Social Diary',
+                            latestNote?.title ?? 'Start Your Mind Journal',
                             style: textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.w900,
                               color: colorScheme.onSurface,
@@ -497,7 +496,7 @@ class SocialDashboardPage extends StatelessWidget {
                           Text(
                             latestNote != null
                                 ? _getPreviewText(latestNote.content)
-                                : 'Record memories, social strategies, and relationship milestones.',
+                                : 'Record emotions, mental strategies, and emotional milestones.',
                             style: textTheme.bodySmall?.copyWith(
                               color: colorScheme.onSurfaceVariant,
                             ),

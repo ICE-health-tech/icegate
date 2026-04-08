@@ -63,6 +63,7 @@ const Schema schema = Schema([
     Column.integer('status'),
     Column.text('ssh_host_id'),
     Column.text('remote_path'),
+    Column.text('ai_model'),
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),
@@ -278,8 +279,8 @@ const Schema schema = Schema([
     Column.text('updated_at'),
   ]),
   Table('health_metrics', [
-    Column.text('metric_id'),
     Column.text('tenant_id'),
+    Column.text('metric_id'),
     Column.text('person_id'),
     Column.text('date'),
     Column.integer('steps'),
@@ -294,6 +295,15 @@ const Schema schema = Schema([
     Column.real('quest_points'),
     Column.text('category'),
     Column.text('updated_at'),
+  ]),
+  Table('hourly_activity_log', [
+    Column.text('person_id'),
+    Column.text('start_time'),
+    Column.text('end_time'),
+    Column.text('log_date'),
+    Column.integer('steps_count'),
+    Column.real('distance_km'),
+    Column.integer('calories_burned'),
   ]),
   Table('financial_metrics', [
     Column.text('metric_id'),

@@ -3162,7 +3162,7 @@ class _SoundSelectorState extends State<_SoundSelector> {
     });
 
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['mp3', 'wav', 'm4a', 'aac', 'flac'],
       );

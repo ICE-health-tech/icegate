@@ -10,6 +10,10 @@ mixin _$InternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
   $InternalWidgetsTableTable get internalWidgetsTable =>
       attachedDatabase.internalWidgetsTable;
 }
+mixin _$HourlyActivityLogDAOMixin on DatabaseAccessor<AppDatabase> {
+  $HourlyActivityLogTableTable get hourlyActivityLogTable =>
+      attachedDatabase.hourlyActivityLogTable;
+}
 mixin _$ThemeDAOMixin on DatabaseAccessor<AppDatabase> {
   $ThemeTableTable get themeTable => attachedDatabase.themeTable;
 }
@@ -174,15 +178,9 @@ mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.exerciseLogsTable;
 }
 mixin _$AiPromptsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $OrganizationsTableTable get organizationsTable =>
-      attachedDatabase.organizationsTable;
-  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
   $AiPromptsTableTable get aiPromptsTable => attachedDatabase.aiPromptsTable;
 }
 mixin _$ConfigsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $OrganizationsTableTable get organizationsTable =>
-      attachedDatabase.organizationsTable;
-  $PersonsTableTable get personsTable => attachedDatabase.personsTable;
   $ConfigsTableTable get configsTable => attachedDatabase.configsTable;
 }
 mixin _$SSHSessionsDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -3452,6 +3450,17 @@ class $ProjectsTableTable extends ProjectsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _aiModelMeta = const VerificationMeta(
+    'aiModel',
+  );
+  @override
+  late final GeneratedColumn<String> aiModel = GeneratedColumn<String>(
+    'ai_model',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -3485,6 +3494,7 @@ class $ProjectsTableTable extends ProjectsTable
     status,
     sshHostId,
     remotePath,
+    aiModel,
     createdAt,
     updatedAt,
   ];
@@ -3570,6 +3580,12 @@ class $ProjectsTableTable extends ProjectsTable
         remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
       );
     }
+    if (data.containsKey('ai_model')) {
+      context.handle(
+        _aiModelMeta,
+        aiModel.isAcceptableOrUnknown(data['ai_model']!, _aiModelMeta),
+      );
+    }
     return context;
   }
 
@@ -3623,6 +3639,10 @@ class $ProjectsTableTable extends ProjectsTable
         DriftSqlType.string,
         data['${effectivePrefix}remote_path'],
       ),
+      aiModel: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ai_model'],
+      ),
       createdAt: $ProjectsTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -3661,6 +3681,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
   final int status;
   final String? sshHostId;
   final String? remotePath;
+  final String? aiModel;
   final DateTime createdAt;
   final DateTime updatedAt;
   const ProjectData({
@@ -3675,6 +3696,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     required this.status,
     this.sshHostId,
     this.remotePath,
+    this.aiModel,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -3707,6 +3729,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     }
     if (!nullToAbsent || remotePath != null) {
       map['remote_path'] = Variable<String>(remotePath);
+    }
+    if (!nullToAbsent || aiModel != null) {
+      map['ai_model'] = Variable<String>(aiModel);
     }
     {
       map['created_at'] = Variable<DateTime>(
@@ -3750,6 +3775,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       remotePath: remotePath == null && nullToAbsent
           ? const Value.absent()
           : Value(remotePath),
+      aiModel: aiModel == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aiModel),
       createdAt: Value(createdAt),
       updatedAt: Value(updatedAt),
     );
@@ -3772,6 +3800,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       status: serializer.fromJson<int>(json['status']),
       sshHostId: serializer.fromJson<String?>(json['sshHostId']),
       remotePath: serializer.fromJson<String?>(json['remotePath']),
+      aiModel: serializer.fromJson<String?>(json['aiModel']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
     );
@@ -3791,6 +3820,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       'status': serializer.toJson<int>(status),
       'sshHostId': serializer.toJson<String?>(sshHostId),
       'remotePath': serializer.toJson<String?>(remotePath),
+      'aiModel': serializer.toJson<String?>(aiModel),
       'createdAt': serializer.toJson<DateTime>(createdAt),
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
     };
@@ -3808,6 +3838,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     int? status,
     Value<String?> sshHostId = const Value.absent(),
     Value<String?> remotePath = const Value.absent(),
+    Value<String?> aiModel = const Value.absent(),
     DateTime? createdAt,
     DateTime? updatedAt,
   }) => ProjectData(
@@ -3822,6 +3853,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     status: status ?? this.status,
     sshHostId: sshHostId.present ? sshHostId.value : this.sshHostId,
     remotePath: remotePath.present ? remotePath.value : this.remotePath,
+    aiModel: aiModel.present ? aiModel.value : this.aiModel,
     createdAt: createdAt ?? this.createdAt,
     updatedAt: updatedAt ?? this.updatedAt,
   );
@@ -3842,6 +3874,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       remotePath: data.remotePath.present
           ? data.remotePath.value
           : this.remotePath,
+      aiModel: data.aiModel.present ? data.aiModel.value : this.aiModel,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -3861,6 +3894,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           ..write('status: $status, ')
           ..write('sshHostId: $sshHostId, ')
           ..write('remotePath: $remotePath, ')
+          ..write('aiModel: $aiModel, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -3880,6 +3914,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     status,
     sshHostId,
     remotePath,
+    aiModel,
     createdAt,
     updatedAt,
   );
@@ -3898,6 +3933,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           other.status == this.status &&
           other.sshHostId == this.sshHostId &&
           other.remotePath == this.remotePath &&
+          other.aiModel == this.aiModel &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -3914,6 +3950,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
   final Value<int> status;
   final Value<String?> sshHostId;
   final Value<String?> remotePath;
+  final Value<String?> aiModel;
   final Value<DateTime> createdAt;
   final Value<DateTime> updatedAt;
   final Value<int> rowid;
@@ -3929,6 +3966,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.status = const Value.absent(),
     this.sshHostId = const Value.absent(),
     this.remotePath = const Value.absent(),
+    this.aiModel = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3945,6 +3983,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.status = const Value.absent(),
     this.sshHostId = const Value.absent(),
     this.remotePath = const Value.absent(),
+    this.aiModel = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -3962,6 +4001,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Expression<int>? status,
     Expression<String>? sshHostId,
     Expression<String>? remotePath,
+    Expression<String>? aiModel,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -3978,6 +4018,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       if (status != null) 'status': status,
       if (sshHostId != null) 'ssh_host_id': sshHostId,
       if (remotePath != null) 'remote_path': remotePath,
+      if (aiModel != null) 'ai_model': aiModel,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -3996,6 +4037,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Value<int>? status,
     Value<String?>? sshHostId,
     Value<String?>? remotePath,
+    Value<String?>? aiModel,
     Value<DateTime>? createdAt,
     Value<DateTime>? updatedAt,
     Value<int>? rowid,
@@ -4012,6 +4054,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       status: status ?? this.status,
       sshHostId: sshHostId ?? this.sshHostId,
       remotePath: remotePath ?? this.remotePath,
+      aiModel: aiModel ?? this.aiModel,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -4054,6 +4097,9 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     if (remotePath.present) {
       map['remote_path'] = Variable<String>(remotePath.value);
     }
+    if (aiModel.present) {
+      map['ai_model'] = Variable<String>(aiModel.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $ProjectsTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -4084,6 +4130,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
           ..write('status: $status, ')
           ..write('sshHostId: $sshHostId, ')
           ..write('remotePath: $remotePath, ')
+          ..write('aiModel: $aiModel, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -27234,9 +27281,6 @@ class $AiPromptsTableTable extends AiPromptsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES persons (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _aiModelMeta = const VerificationMeta(
     'aiModel',
@@ -27599,9 +27643,6 @@ class $ConfigsTableTable extends ConfigsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES persons (id) ON DELETE CASCADE',
-    ),
   );
   static const VerificationMeta _keyMeta = const VerificationMeta('key');
   @override
@@ -27935,6 +27976,533 @@ class ConfigsTableCompanion extends UpdateCompanion<ConfigData> {
   }
 }
 
+class $HourlyActivityLogTableTable extends HourlyActivityLogTable
+    with TableInfo<$HourlyActivityLogTableTable, HourlyActivityLogData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HourlyActivityLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> startTime =
+      GeneratedColumn<DateTime>(
+        'start_time',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>(
+        $HourlyActivityLogTableTable.$converterstartTime,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> endTime =
+      GeneratedColumn<DateTime>(
+        'end_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>(
+        $HourlyActivityLogTableTable.$converterendTimen,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> logDate =
+      GeneratedColumn<DateTime>(
+        'log_date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($HourlyActivityLogTableTable.$converterlogDate);
+  static const VerificationMeta _stepsCountMeta = const VerificationMeta(
+    'stepsCount',
+  );
+  @override
+  late final GeneratedColumn<int> stepsCount = GeneratedColumn<int>(
+    'steps_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _distanceKmMeta = const VerificationMeta(
+    'distanceKm',
+  );
+  @override
+  late final GeneratedColumn<double> distanceKm = GeneratedColumn<double>(
+    'distance_km',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _caloriesBurnedMeta = const VerificationMeta(
+    'caloriesBurned',
+  );
+  @override
+  late final GeneratedColumn<int> caloriesBurned = GeneratedColumn<int>(
+    'calories_burned',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    startTime,
+    endTime,
+    logDate,
+    stepsCount,
+    distanceKm,
+    caloriesBurned,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'hourly_activity_log';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HourlyActivityLogData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_personIDMeta);
+    }
+    if (data.containsKey('steps_count')) {
+      context.handle(
+        _stepsCountMeta,
+        stepsCount.isAcceptableOrUnknown(data['steps_count']!, _stepsCountMeta),
+      );
+    }
+    if (data.containsKey('distance_km')) {
+      context.handle(
+        _distanceKmMeta,
+        distanceKm.isAcceptableOrUnknown(data['distance_km']!, _distanceKmMeta),
+      );
+    }
+    if (data.containsKey('calories_burned')) {
+      context.handle(
+        _caloriesBurnedMeta,
+        caloriesBurned.isAcceptableOrUnknown(
+          data['calories_burned']!,
+          _caloriesBurnedMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HourlyActivityLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HourlyActivityLogData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      startTime: $HourlyActivityLogTableTable.$converterstartTime.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}start_time'],
+        )!,
+      ),
+      endTime: $HourlyActivityLogTableTable.$converterendTimen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}end_time'],
+        ),
+      ),
+      logDate: $HourlyActivityLogTableTable.$converterlogDate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}log_date'],
+        )!,
+      ),
+      stepsCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}steps_count'],
+      )!,
+      distanceKm: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}distance_km'],
+      )!,
+      caloriesBurned: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}calories_burned'],
+      )!,
+    );
+  }
+
+  @override
+  $HourlyActivityLogTableTable createAlias(String alias) {
+    return $HourlyActivityLogTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterstartTime =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterendTime =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterendTimen =
+      NullAwareTypeConverter.wrap($converterendTime);
+  static TypeConverter<DateTime, DateTime> $converterlogDate =
+      const DateTimeUTCConverter();
+}
+
+class HourlyActivityLogData extends DataClass
+    implements Insertable<HourlyActivityLogData> {
+  final String id;
+  final String personID;
+  final DateTime startTime;
+  final DateTime? endTime;
+  final DateTime logDate;
+  final int stepsCount;
+  final double distanceKm;
+  final int caloriesBurned;
+  const HourlyActivityLogData({
+    required this.id,
+    required this.personID,
+    required this.startTime,
+    this.endTime,
+    required this.logDate,
+    required this.stepsCount,
+    required this.distanceKm,
+    required this.caloriesBurned,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['person_id'] = Variable<String>(personID);
+    {
+      map['start_time'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterstartTime.toSql(startTime),
+      );
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterendTimen.toSql(endTime),
+      );
+    }
+    {
+      map['log_date'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterlogDate.toSql(logDate),
+      );
+    }
+    map['steps_count'] = Variable<int>(stepsCount);
+    map['distance_km'] = Variable<double>(distanceKm);
+    map['calories_burned'] = Variable<int>(caloriesBurned);
+    return map;
+  }
+
+  HourlyActivityLogTableCompanion toCompanion(bool nullToAbsent) {
+    return HourlyActivityLogTableCompanion(
+      id: Value(id),
+      personID: Value(personID),
+      startTime: Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      logDate: Value(logDate),
+      stepsCount: Value(stepsCount),
+      distanceKm: Value(distanceKm),
+      caloriesBurned: Value(caloriesBurned),
+    );
+  }
+
+  factory HourlyActivityLogData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HourlyActivityLogData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String>(json['personID']),
+      startTime: serializer.fromJson<DateTime>(json['startTime']),
+      endTime: serializer.fromJson<DateTime?>(json['endTime']),
+      logDate: serializer.fromJson<DateTime>(json['logDate']),
+      stepsCount: serializer.fromJson<int>(json['stepsCount']),
+      distanceKm: serializer.fromJson<double>(json['distanceKm']),
+      caloriesBurned: serializer.fromJson<int>(json['caloriesBurned']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String>(personID),
+      'startTime': serializer.toJson<DateTime>(startTime),
+      'endTime': serializer.toJson<DateTime?>(endTime),
+      'logDate': serializer.toJson<DateTime>(logDate),
+      'stepsCount': serializer.toJson<int>(stepsCount),
+      'distanceKm': serializer.toJson<double>(distanceKm),
+      'caloriesBurned': serializer.toJson<int>(caloriesBurned),
+    };
+  }
+
+  HourlyActivityLogData copyWith({
+    String? id,
+    String? personID,
+    DateTime? startTime,
+    Value<DateTime?> endTime = const Value.absent(),
+    DateTime? logDate,
+    int? stepsCount,
+    double? distanceKm,
+    int? caloriesBurned,
+  }) => HourlyActivityLogData(
+    id: id ?? this.id,
+    personID: personID ?? this.personID,
+    startTime: startTime ?? this.startTime,
+    endTime: endTime.present ? endTime.value : this.endTime,
+    logDate: logDate ?? this.logDate,
+    stepsCount: stepsCount ?? this.stepsCount,
+    distanceKm: distanceKm ?? this.distanceKm,
+    caloriesBurned: caloriesBurned ?? this.caloriesBurned,
+  );
+  HourlyActivityLogData copyWithCompanion(
+    HourlyActivityLogTableCompanion data,
+  ) {
+    return HourlyActivityLogData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      logDate: data.logDate.present ? data.logDate.value : this.logDate,
+      stepsCount: data.stepsCount.present
+          ? data.stepsCount.value
+          : this.stepsCount,
+      distanceKm: data.distanceKm.present
+          ? data.distanceKm.value
+          : this.distanceKm,
+      caloriesBurned: data.caloriesBurned.present
+          ? data.caloriesBurned.value
+          : this.caloriesBurned,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HourlyActivityLogData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('logDate: $logDate, ')
+          ..write('stepsCount: $stepsCount, ')
+          ..write('distanceKm: $distanceKm, ')
+          ..write('caloriesBurned: $caloriesBurned')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    personID,
+    startTime,
+    endTime,
+    logDate,
+    stepsCount,
+    distanceKm,
+    caloriesBurned,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HourlyActivityLogData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.logDate == this.logDate &&
+          other.stepsCount == this.stepsCount &&
+          other.distanceKm == this.distanceKm &&
+          other.caloriesBurned == this.caloriesBurned);
+}
+
+class HourlyActivityLogTableCompanion
+    extends UpdateCompanion<HourlyActivityLogData> {
+  final Value<String> id;
+  final Value<String> personID;
+  final Value<DateTime> startTime;
+  final Value<DateTime?> endTime;
+  final Value<DateTime> logDate;
+  final Value<int> stepsCount;
+  final Value<double> distanceKm;
+  final Value<int> caloriesBurned;
+  final Value<int> rowid;
+  const HourlyActivityLogTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.logDate = const Value.absent(),
+    this.stepsCount = const Value.absent(),
+    this.distanceKm = const Value.absent(),
+    this.caloriesBurned = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HourlyActivityLogTableCompanion.insert({
+    required String id,
+    required String personID,
+    required DateTime startTime,
+    this.endTime = const Value.absent(),
+    required DateTime logDate,
+    this.stepsCount = const Value.absent(),
+    this.distanceKm = const Value.absent(),
+    this.caloriesBurned = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       personID = Value(personID),
+       startTime = Value(startTime),
+       logDate = Value(logDate);
+  static Insertable<HourlyActivityLogData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<DateTime>? startTime,
+    Expression<DateTime>? endTime,
+    Expression<DateTime>? logDate,
+    Expression<int>? stepsCount,
+    Expression<double>? distanceKm,
+    Expression<int>? caloriesBurned,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (logDate != null) 'log_date': logDate,
+      if (stepsCount != null) 'steps_count': stepsCount,
+      if (distanceKm != null) 'distance_km': distanceKm,
+      if (caloriesBurned != null) 'calories_burned': caloriesBurned,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HourlyActivityLogTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? personID,
+    Value<DateTime>? startTime,
+    Value<DateTime?>? endTime,
+    Value<DateTime>? logDate,
+    Value<int>? stepsCount,
+    Value<double>? distanceKm,
+    Value<int>? caloriesBurned,
+    Value<int>? rowid,
+  }) {
+    return HourlyActivityLogTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      logDate: logDate ?? this.logDate,
+      stepsCount: stepsCount ?? this.stepsCount,
+      distanceKm: distanceKm ?? this.distanceKm,
+      caloriesBurned: caloriesBurned ?? this.caloriesBurned,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterstartTime.toSql(startTime.value),
+      );
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterendTimen.toSql(endTime.value),
+      );
+    }
+    if (logDate.present) {
+      map['log_date'] = Variable<DateTime>(
+        $HourlyActivityLogTableTable.$converterlogDate.toSql(logDate.value),
+      );
+    }
+    if (stepsCount.present) {
+      map['steps_count'] = Variable<int>(stepsCount.value);
+    }
+    if (distanceKm.present) {
+      map['distance_km'] = Variable<double>(distanceKm.value);
+    }
+    if (caloriesBurned.present) {
+      map['calories_burned'] = Variable<int>(caloriesBurned.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HourlyActivityLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('logDate: $logDate, ')
+          ..write('stepsCount: $stepsCount, ')
+          ..write('distanceKm: $distanceKm, ')
+          ..write('caloriesBurned: $caloriesBurned, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -28002,6 +28570,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PersonContactsTableTable(this);
   late final $AiPromptsTableTable aiPromptsTable = $AiPromptsTableTable(this);
   late final $ConfigsTableTable configsTable = $ConfigsTableTable(this);
+  late final $HourlyActivityLogTableTable hourlyActivityLogTable =
+      $HourlyActivityLogTableTable(this);
   late final ThemesTableDAO themesTableDAO = ThemesTableDAO(
     this as AppDatabase,
   );
@@ -28046,6 +28616,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   );
   late final MetricsDAO metricsDAO = MetricsDAO(this as AppDatabase);
   late final FeedbackDAO feedbackDAO = FeedbackDAO(this as AppDatabase);
+  late final HourlyActivityLogDAO hourlyActivityLogDAO = HourlyActivityLogDAO(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -28092,6 +28665,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     personContactsTable,
     aiPromptsTable,
     configsTable,
+    hourlyActivityLogTable,
   ];
   @override
   StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
@@ -28556,20 +29130,6 @@ abstract class _$AppDatabase extends GeneratedDatabase {
         limitUpdateKind: UpdateKind.delete,
       ),
       result: [TableUpdate('quests', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'persons',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('ai_prompts', kind: UpdateKind.delete)],
-    ),
-    WritePropagation(
-      on: TableUpdateQuery.onTableName(
-        'persons',
-        limitUpdateKind: UpdateKind.delete,
-      ),
-      result: [TableUpdate('configs', kind: UpdateKind.delete)],
     ),
   ]);
 }
@@ -32715,48 +33275,6 @@ final class $$PersonsTableTableReferences
       manager.$state.copyWith(prefetchedData: cache),
     );
   }
-
-  static MultiTypedResultKey<$AiPromptsTableTable, List<AiPromptData>>
-  _aiPromptsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.aiPromptsTable,
-    aliasName: $_aliasNameGenerator(
-      db.personsTable.id,
-      db.aiPromptsTable.personID,
-    ),
-  );
-
-  $$AiPromptsTableTableProcessedTableManager get aiPromptsTableRefs {
-    final manager = $$AiPromptsTableTableTableManager(
-      $_db,
-      $_db.aiPromptsTable,
-    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_aiPromptsTableRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
-
-  static MultiTypedResultKey<$ConfigsTableTable, List<ConfigData>>
-  _configsTableRefsTable(_$AppDatabase db) => MultiTypedResultKey.fromTable(
-    db.configsTable,
-    aliasName: $_aliasNameGenerator(
-      db.personsTable.id,
-      db.configsTable.personID,
-    ),
-  );
-
-  $$ConfigsTableTableProcessedTableManager get configsTableRefs {
-    final manager = $$ConfigsTableTableTableManager(
-      $_db,
-      $_db.configsTable,
-    ).filter((f) => f.personID.id.sqlEquals($_itemColumn<String>('id')!));
-
-    final cache = $_typedResult.readTableOrNull(_configsTableRefsTable($_db));
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: cache),
-    );
-  }
 }
 
 class $$PersonsTableTableFilterComposer
@@ -33589,56 +34107,6 @@ class $$PersonsTableTableFilterComposer
           }) => $$QuestsTableTableFilterComposer(
             $db: $db,
             $table: $db.questsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> aiPromptsTableRefs(
-    Expression<bool> Function($$AiPromptsTableTableFilterComposer f) f,
-  ) {
-    final $$AiPromptsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.aiPromptsTable,
-      getReferencedColumn: (t) => t.personID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AiPromptsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.aiPromptsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<bool> configsTableRefs(
-    Expression<bool> Function($$ConfigsTableTableFilterComposer f) f,
-  ) {
-    final $$ConfigsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.configsTable,
-      getReferencedColumn: (t) => t.personID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ConfigsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.configsTable,
             $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
             joinBuilder: joinBuilder,
             $removeJoinBuilderFromRootComposer:
@@ -34590,56 +35058,6 @@ class $$PersonsTableTableAnnotationComposer
     );
     return f(composer);
   }
-
-  Expression<T> aiPromptsTableRefs<T extends Object>(
-    Expression<T> Function($$AiPromptsTableTableAnnotationComposer a) f,
-  ) {
-    final $$AiPromptsTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.aiPromptsTable,
-      getReferencedColumn: (t) => t.personID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$AiPromptsTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.aiPromptsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
-
-  Expression<T> configsTableRefs<T extends Object>(
-    Expression<T> Function($$ConfigsTableTableAnnotationComposer a) f,
-  ) {
-    final $$ConfigsTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.id,
-      referencedTable: $db.configsTable,
-      getReferencedColumn: (t) => t.personID,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$ConfigsTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.configsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return f(composer);
-  }
 }
 
 class $$PersonsTableTableTableManager
@@ -34686,8 +35104,6 @@ class $$PersonsTableTableTableManager
             bool sleepLogsTableRefs,
             bool exerciseLogsTableRefs,
             bool questsTableRefs,
-            bool aiPromptsTableRefs,
-            bool configsTableRefs,
           })
         > {
   $$PersonsTableTableTableManager(_$AppDatabase db, $PersonsTableTable table)
@@ -34817,8 +35233,6 @@ class $$PersonsTableTableTableManager
                 sleepLogsTableRefs = false,
                 exerciseLogsTableRefs = false,
                 questsTableRefs = false,
-                aiPromptsTableRefs = false,
-                configsTableRefs = false,
               }) {
                 return PrefetchHooks(
                   db: db,
@@ -34853,8 +35267,6 @@ class $$PersonsTableTableTableManager
                     if (sleepLogsTableRefs) db.sleepLogsTable,
                     if (exerciseLogsTableRefs) db.exerciseLogsTable,
                     if (questsTableRefs) db.questsTable,
-                    if (aiPromptsTableRefs) db.aiPromptsTable,
-                    if (configsTableRefs) db.configsTable,
                   ],
                   addJoins:
                       <
@@ -35501,48 +35913,6 @@ class $$PersonsTableTableTableManager
                               ),
                           typedResults: items,
                         ),
-                      if (aiPromptsTableRefs)
-                        await $_getPrefetchedData<
-                          PersonData,
-                          $PersonsTableTable,
-                          AiPromptData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$PersonsTableTableReferences
-                              ._aiPromptsTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$PersonsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).aiPromptsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.personID == item.id,
-                              ),
-                          typedResults: items,
-                        ),
-                      if (configsTableRefs)
-                        await $_getPrefetchedData<
-                          PersonData,
-                          $PersonsTableTable,
-                          ConfigData
-                        >(
-                          currentTable: table,
-                          referencedTable: $$PersonsTableTableReferences
-                              ._configsTableRefsTable(db),
-                          managerFromTypedResult: (p0) =>
-                              $$PersonsTableTableReferences(
-                                db,
-                                table,
-                                p0,
-                              ).configsTableRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.personID == item.id,
-                              ),
-                          typedResults: items,
-                        ),
                     ];
                   },
                 );
@@ -35594,8 +35964,6 @@ typedef $$PersonsTableTableProcessedTableManager =
         bool sleepLogsTableRefs,
         bool exerciseLogsTableRefs,
         bool questsTableRefs,
-        bool aiPromptsTableRefs,
-        bool configsTableRefs,
       })
     >;
 typedef $$ExternalWidgetsTableTableCreateCompanionBuilder =
@@ -36950,6 +37318,7 @@ typedef $$ProjectsTableTableCreateCompanionBuilder =
       Value<int> status,
       Value<String?> sshHostId,
       Value<String?> remotePath,
+      Value<String?> aiModel,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -36967,6 +37336,7 @@ typedef $$ProjectsTableTableUpdateCompanionBuilder =
       Value<int> status,
       Value<String?> sshHostId,
       Value<String?> remotePath,
+      Value<String?> aiModel,
       Value<DateTime> createdAt,
       Value<DateTime> updatedAt,
       Value<int> rowid,
@@ -37166,6 +37536,11 @@ class $$ProjectsTableTableFilterComposer
 
   ColumnFilters<String> get remotePath => $composableBuilder(
     column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -37382,6 +37757,11 @@ class $$ProjectsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get aiModel => $composableBuilder(
+    column: $table.aiModel,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -37478,6 +37858,9 @@ class $$ProjectsTableTableAnnotationComposer
     column: $table.remotePath,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get aiModel =>
+      $composableBuilder(column: $table.aiModel, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -37682,6 +38065,7 @@ class $$ProjectsTableTableTableManager
                 Value<int> status = const Value.absent(),
                 Value<String?> sshHostId = const Value.absent(),
                 Value<String?> remotePath = const Value.absent(),
+                Value<String?> aiModel = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -37697,6 +38081,7 @@ class $$ProjectsTableTableTableManager
                 status: status,
                 sshHostId: sshHostId,
                 remotePath: remotePath,
+                aiModel: aiModel,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -37714,6 +38099,7 @@ class $$ProjectsTableTableTableManager
                 Value<int> status = const Value.absent(),
                 Value<String?> sshHostId = const Value.absent(),
                 Value<String?> remotePath = const Value.absent(),
+                Value<String?> aiModel = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -37729,6 +38115,7 @@ class $$ProjectsTableTableTableManager
                 status: status,
                 sshHostId: sshHostId,
                 remotePath: remotePath,
+                aiModel: aiModel,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -55833,34 +56220,6 @@ typedef $$AiPromptsTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-final class $$AiPromptsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $AiPromptsTableTable, AiPromptData> {
-  $$AiPromptsTableTableReferences(
-    super.$_db,
-    super.$_table,
-    super.$_typedResult,
-  );
-
-  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
-      db.personsTable.createAlias(
-        $_aliasNameGenerator(db.aiPromptsTable.personID, db.personsTable.id),
-      );
-
-  $$PersonsTableTableProcessedTableManager? get personID {
-    final $_column = $_itemColumn<String>('person_id');
-    if ($_column == null) return null;
-    final manager = $$PersonsTableTableTableManager(
-      $_db,
-      $_db.personsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
 class $$AiPromptsTableTableFilterComposer
     extends Composer<_$AppDatabase, $AiPromptsTableTable> {
   $$AiPromptsTableTableFilterComposer({
@@ -55872,6 +56231,11 @@ class $$AiPromptsTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -55890,29 +56254,6 @@ class $$AiPromptsTableTableFilterComposer
         column: $table.updatedAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
-
-  $$PersonsTableTableFilterComposer get personID {
-    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AiPromptsTableTableOrderingComposer
@@ -55926,6 +56267,11 @@ class $$AiPromptsTableTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -55943,29 +56289,6 @@ class $$AiPromptsTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$PersonsTableTableOrderingComposer get personID {
-    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableOrderingComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AiPromptsTableTableAnnotationComposer
@@ -55980,6 +56303,9 @@ class $$AiPromptsTableTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
   GeneratedColumn<String> get aiModel =>
       $composableBuilder(column: $table.aiModel, builder: (column) => column);
 
@@ -55988,29 +56314,6 @@ class $$AiPromptsTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  $$PersonsTableTableAnnotationComposer get personID {
-    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$AiPromptsTableTableTableManager
@@ -56024,9 +56327,12 @@ class $$AiPromptsTableTableTableManager
           $$AiPromptsTableTableAnnotationComposer,
           $$AiPromptsTableTableCreateCompanionBuilder,
           $$AiPromptsTableTableUpdateCompanionBuilder,
-          (AiPromptData, $$AiPromptsTableTableReferences),
+          (
+            AiPromptData,
+            BaseReferences<_$AppDatabase, $AiPromptsTableTable, AiPromptData>,
+          ),
           AiPromptData,
-          PrefetchHooks Function({bool personID})
+          PrefetchHooks Function()
         > {
   $$AiPromptsTableTableTableManager(
     _$AppDatabase db,
@@ -56074,55 +56380,9 @@ class $$AiPromptsTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$AiPromptsTableTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({personID = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (personID) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.personID,
-                                referencedTable: $$AiPromptsTableTableReferences
-                                    ._personIDTable(db),
-                                referencedColumn:
-                                    $$AiPromptsTableTableReferences
-                                        ._personIDTable(db)
-                                        .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -56137,9 +56397,12 @@ typedef $$AiPromptsTableTableProcessedTableManager =
       $$AiPromptsTableTableAnnotationComposer,
       $$AiPromptsTableTableCreateCompanionBuilder,
       $$AiPromptsTableTableUpdateCompanionBuilder,
-      (AiPromptData, $$AiPromptsTableTableReferences),
+      (
+        AiPromptData,
+        BaseReferences<_$AppDatabase, $AiPromptsTableTable, AiPromptData>,
+      ),
       AiPromptData,
-      PrefetchHooks Function({bool personID})
+      PrefetchHooks Function()
     >;
 typedef $$ConfigsTableTableCreateCompanionBuilder =
     ConfigsTableCompanion Function({
@@ -56160,30 +56423,6 @@ typedef $$ConfigsTableTableUpdateCompanionBuilder =
       Value<int> rowid,
     });
 
-final class $$ConfigsTableTableReferences
-    extends BaseReferences<_$AppDatabase, $ConfigsTableTable, ConfigData> {
-  $$ConfigsTableTableReferences(super.$_db, super.$_table, super.$_typedResult);
-
-  static $PersonsTableTable _personIDTable(_$AppDatabase db) =>
-      db.personsTable.createAlias(
-        $_aliasNameGenerator(db.configsTable.personID, db.personsTable.id),
-      );
-
-  $$PersonsTableTableProcessedTableManager? get personID {
-    final $_column = $_itemColumn<String>('person_id');
-    if ($_column == null) return null;
-    final manager = $$PersonsTableTableTableManager(
-      $_db,
-      $_db.personsTable,
-    ).filter((f) => f.id.sqlEquals($_column));
-    final item = $_typedResult.readTableOrNull(_personIDTable($_db));
-    if (item == null) return manager;
-    return ProcessedTableManager(
-      manager.$state.copyWith(prefetchedData: [item]),
-    );
-  }
-}
-
 class $$ConfigsTableTableFilterComposer
     extends Composer<_$AppDatabase, $ConfigsTableTable> {
   $$ConfigsTableTableFilterComposer({
@@ -56195,6 +56434,11 @@ class $$ConfigsTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -56213,29 +56457,6 @@ class $$ConfigsTableTableFilterComposer
         column: $table.updatedAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
-
-  $$PersonsTableTableFilterComposer get personID {
-    final $$PersonsTableTableFilterComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableFilterComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ConfigsTableTableOrderingComposer
@@ -56249,6 +56470,11 @@ class $$ConfigsTableTableOrderingComposer
   });
   ColumnOrderings<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -56266,29 +56492,6 @@ class $$ConfigsTableTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  $$PersonsTableTableOrderingComposer get personID {
-    final $$PersonsTableTableOrderingComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableOrderingComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ConfigsTableTableAnnotationComposer
@@ -56303,6 +56506,9 @@ class $$ConfigsTableTableAnnotationComposer
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
   GeneratedColumn<String> get key =>
       $composableBuilder(column: $table.key, builder: (column) => column);
 
@@ -56311,29 +56517,6 @@ class $$ConfigsTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
-
-  $$PersonsTableTableAnnotationComposer get personID {
-    final $$PersonsTableTableAnnotationComposer composer = $composerBuilder(
-      composer: this,
-      getCurrentColumn: (t) => t.personID,
-      referencedTable: $db.personsTable,
-      getReferencedColumn: (t) => t.id,
-      builder:
-          (
-            joinBuilder, {
-            $addJoinBuilderToRootComposer,
-            $removeJoinBuilderFromRootComposer,
-          }) => $$PersonsTableTableAnnotationComposer(
-            $db: $db,
-            $table: $db.personsTable,
-            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
-            joinBuilder: joinBuilder,
-            $removeJoinBuilderFromRootComposer:
-                $removeJoinBuilderFromRootComposer,
-          ),
-    );
-    return composer;
-  }
 }
 
 class $$ConfigsTableTableTableManager
@@ -56347,9 +56530,12 @@ class $$ConfigsTableTableTableManager
           $$ConfigsTableTableAnnotationComposer,
           $$ConfigsTableTableCreateCompanionBuilder,
           $$ConfigsTableTableUpdateCompanionBuilder,
-          (ConfigData, $$ConfigsTableTableReferences),
+          (
+            ConfigData,
+            BaseReferences<_$AppDatabase, $ConfigsTableTable, ConfigData>,
+          ),
           ConfigData,
-          PrefetchHooks Function({bool personID})
+          PrefetchHooks Function()
         > {
   $$ConfigsTableTableTableManager(_$AppDatabase db, $ConfigsTableTable table)
     : super(
@@ -56395,54 +56581,9 @@ class $$ConfigsTableTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map(
-                (e) => (
-                  e.readTable(table),
-                  $$ConfigsTableTableReferences(db, table, e),
-                ),
-              )
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
-          prefetchHooksCallback: ({personID = false}) {
-            return PrefetchHooks(
-              db: db,
-              explicitlyWatchedTables: [],
-              addJoins:
-                  <
-                    T extends TableManagerState<
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic,
-                      dynamic
-                    >
-                  >(state) {
-                    if (personID) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.personID,
-                                referencedTable: $$ConfigsTableTableReferences
-                                    ._personIDTable(db),
-                                referencedColumn: $$ConfigsTableTableReferences
-                                    ._personIDTable(db)
-                                    .id,
-                              )
-                              as T;
-                    }
-
-                    return state;
-                  },
-              getPrefetchedDataCallback: (items) async {
-                return [];
-              },
-            );
-          },
+          prefetchHooksCallback: null,
         ),
       );
 }
@@ -56457,9 +56598,297 @@ typedef $$ConfigsTableTableProcessedTableManager =
       $$ConfigsTableTableAnnotationComposer,
       $$ConfigsTableTableCreateCompanionBuilder,
       $$ConfigsTableTableUpdateCompanionBuilder,
-      (ConfigData, $$ConfigsTableTableReferences),
+      (
+        ConfigData,
+        BaseReferences<_$AppDatabase, $ConfigsTableTable, ConfigData>,
+      ),
       ConfigData,
-      PrefetchHooks Function({bool personID})
+      PrefetchHooks Function()
+    >;
+typedef $$HourlyActivityLogTableTableCreateCompanionBuilder =
+    HourlyActivityLogTableCompanion Function({
+      required String id,
+      required String personID,
+      required DateTime startTime,
+      Value<DateTime?> endTime,
+      required DateTime logDate,
+      Value<int> stepsCount,
+      Value<double> distanceKm,
+      Value<int> caloriesBurned,
+      Value<int> rowid,
+    });
+typedef $$HourlyActivityLogTableTableUpdateCompanionBuilder =
+    HourlyActivityLogTableCompanion Function({
+      Value<String> id,
+      Value<String> personID,
+      Value<DateTime> startTime,
+      Value<DateTime?> endTime,
+      Value<DateTime> logDate,
+      Value<int> stepsCount,
+      Value<double> distanceKm,
+      Value<int> caloriesBurned,
+      Value<int> rowid,
+    });
+
+class $$HourlyActivityLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $HourlyActivityLogTableTable> {
+  $$HourlyActivityLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get startTime =>
+      $composableBuilder(
+        column: $table.startTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get endTime =>
+      $composableBuilder(
+        column: $table.endTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get logDate =>
+      $composableBuilder(
+        column: $table.logDate,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<int> get stepsCount => $composableBuilder(
+    column: $table.stepsCount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get caloriesBurned => $composableBuilder(
+    column: $table.caloriesBurned,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$HourlyActivityLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $HourlyActivityLogTableTable> {
+  $$HourlyActivityLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get logDate => $composableBuilder(
+    column: $table.logDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get stepsCount => $composableBuilder(
+    column: $table.stepsCount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get caloriesBurned => $composableBuilder(
+    column: $table.caloriesBurned,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HourlyActivityLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HourlyActivityLogTableTable> {
+  $$HourlyActivityLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get logDate =>
+      $composableBuilder(column: $table.logDate, builder: (column) => column);
+
+  GeneratedColumn<int> get stepsCount => $composableBuilder(
+    column: $table.stepsCount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<double> get distanceKm => $composableBuilder(
+    column: $table.distanceKm,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get caloriesBurned => $composableBuilder(
+    column: $table.caloriesBurned,
+    builder: (column) => column,
+  );
+}
+
+class $$HourlyActivityLogTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HourlyActivityLogTableTable,
+          HourlyActivityLogData,
+          $$HourlyActivityLogTableTableFilterComposer,
+          $$HourlyActivityLogTableTableOrderingComposer,
+          $$HourlyActivityLogTableTableAnnotationComposer,
+          $$HourlyActivityLogTableTableCreateCompanionBuilder,
+          $$HourlyActivityLogTableTableUpdateCompanionBuilder,
+          (
+            HourlyActivityLogData,
+            BaseReferences<
+              _$AppDatabase,
+              $HourlyActivityLogTableTable,
+              HourlyActivityLogData
+            >,
+          ),
+          HourlyActivityLogData,
+          PrefetchHooks Function()
+        > {
+  $$HourlyActivityLogTableTableTableManager(
+    _$AppDatabase db,
+    $HourlyActivityLogTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HourlyActivityLogTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$HourlyActivityLogTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$HourlyActivityLogTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> personID = const Value.absent(),
+                Value<DateTime> startTime = const Value.absent(),
+                Value<DateTime?> endTime = const Value.absent(),
+                Value<DateTime> logDate = const Value.absent(),
+                Value<int> stepsCount = const Value.absent(),
+                Value<double> distanceKm = const Value.absent(),
+                Value<int> caloriesBurned = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HourlyActivityLogTableCompanion(
+                id: id,
+                personID: personID,
+                startTime: startTime,
+                endTime: endTime,
+                logDate: logDate,
+                stepsCount: stepsCount,
+                distanceKm: distanceKm,
+                caloriesBurned: caloriesBurned,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String personID,
+                required DateTime startTime,
+                Value<DateTime?> endTime = const Value.absent(),
+                required DateTime logDate,
+                Value<int> stepsCount = const Value.absent(),
+                Value<double> distanceKm = const Value.absent(),
+                Value<int> caloriesBurned = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HourlyActivityLogTableCompanion.insert(
+                id: id,
+                personID: personID,
+                startTime: startTime,
+                endTime: endTime,
+                logDate: logDate,
+                stepsCount: stepsCount,
+                distanceKm: distanceKm,
+                caloriesBurned: caloriesBurned,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HourlyActivityLogTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HourlyActivityLogTableTable,
+      HourlyActivityLogData,
+      $$HourlyActivityLogTableTableFilterComposer,
+      $$HourlyActivityLogTableTableOrderingComposer,
+      $$HourlyActivityLogTableTableAnnotationComposer,
+      $$HourlyActivityLogTableTableCreateCompanionBuilder,
+      $$HourlyActivityLogTableTableUpdateCompanionBuilder,
+      (
+        HourlyActivityLogData,
+        BaseReferences<
+          _$AppDatabase,
+          $HourlyActivityLogTableTable,
+          HourlyActivityLogData
+        >,
+      ),
+      HourlyActivityLogData,
+      PrefetchHooks Function()
     >;
 
 class $AppDatabaseManager {
@@ -56553,4 +56982,9 @@ class $AppDatabaseManager {
       $$AiPromptsTableTableTableManager(_db, _db.aiPromptsTable);
   $$ConfigsTableTableTableManager get configsTable =>
       $$ConfigsTableTableTableManager(_db, _db.configsTable);
+  $$HourlyActivityLogTableTableTableManager get hourlyActivityLogTable =>
+      $$HourlyActivityLogTableTableTableManager(
+        _db,
+        _db.hourlyActivityLogTable,
+      );
 }

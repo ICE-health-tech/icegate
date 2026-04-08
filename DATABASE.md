@@ -79,6 +79,9 @@ Organizational buckets for work and notes.
 - `category` (Text): Project grouping.
 - `color` (Text): UI accent color.
 - `status` (Int): Progress status.
+- `ssh_host_id` (Text): Link to a specific SSH host.
+- `remote_path` (Text): Path on the remote server.
+- `ai_model` (Text): The AI agent model assigned to the project (e.g., 'gemini', 'opencode').
 
 ### `project_notes`
 Note content associated with projects or general.

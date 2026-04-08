@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:ui';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
@@ -38,6 +39,8 @@ class TalkSSHPage extends StatefulWidget {
     this.autoStartCommand,
   });
 
+  static dynamic get activeState => _TalkSSHPageState.activeState;
+
   @override
   State<TalkSSHPage> createState() => _TalkSSHPageState();
 
@@ -60,7 +63,7 @@ class TalkSSHPage extends StatefulWidget {
                 iconColor: colorScheme.onSecondaryContainer,
                 onPressed: () {
                   if (_TalkSSHPageState._activeState != null) {
-                    _TalkSSHPageState._activeState?._applyHostAndConnect(host);
+                    _TalkSSHPageState._activeState?.applyHostAndConnect(host);
                   } else {
                     context.push('/widgets/ssh', extra: {'hostId': host.id});
                   }
@@ -76,7 +79,8 @@ class TalkSSHPage extends StatefulWidget {
           backgroundColor: colorScheme.primary,
           iconColor: colorScheme.onPrimary,
           mainFunction: () =>
-              _TalkSSHPageState._activeState?._showConnectDialog(context),
+              _TalkSSHPageState._activeState?.showConnectDialog(),
+
           onSwipeUp: () {
             WidgetNavigatorAction.smartPop(context);
           },
@@ -96,17 +100,15 @@ class TalkSSHPage extends StatefulWidget {
 
 class _TalkSSHPageState extends State<TalkSSHPage> {
   static _TalkSSHPageState? _activeState;
+  static _TalkSSHPageState? get activeState => _activeState;
+
   final SSHService _sshService = SSHService();
   final SSHStorageService _storageService = SSHStorageService();
   late final TerminalController _terminalController;
   final TextEditingController _commandController = TextEditingController();
 
-  final TextEditingController _hostController = TextEditingController(
-    text: 'localhost',
-  );
-  final TextEditingController _portController = TextEditingController(
-    text: '22',
-  );
+  final TextEditingController _hostController = TextEditingController();
+  final TextEditingController _portController = TextEditingController();
   final TextEditingController _userController = TextEditingController();
   final TextEditingController _passController = TextEditingController();
   final TextEditingController _remotePathController = TextEditingController();
@@ -114,31 +116,68 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   bool _isConnected = false;
-  String? _aiPromptPrefix;
+  late StreamSubscription _connectionSub;
+  late final dynamic _signalEffect;
+  bool _hasDoneInitialCd = false;
 
   @override
   void initState() {
     super.initState();
     _activeState = this;
     _terminalController = TerminalController();
-    _loadAiPrompt();
+
+    // Initialize from signals
+    _hostController.text = _sshService.hostSignal.value;
+    _portController.text = _sshService.portSignal.value.toString();
+    _userController.text = _sshService.userSignal.value;
+    _passController.text = _sshService.passSignal.value;
+    _remotePathController.text = _sshService.remotePathSignal.value;
+    _useTmux = _sshService.useTmuxSignal.value;
+
+    // Sync controllers to signals when they change
+    _signalEffect = effect(() {
+      final host = _sshService.hostSignal.value;
+      final port = _sshService.portSignal.value;
+      final user = _sshService.userSignal.value;
+      final pass = _sshService.passSignal.value;
+      final remotePath = _sshService.remotePathSignal.value;
+      final tmux = _sshService.useTmuxSignal.value;
+
+      if (_hostController.text != host) _hostController.text = host;
+      if (_portController.text != port.toString()) _portController.text = port.toString();
+      if (_userController.text != user) _userController.text = user;
+      if (_passController.text != pass) _passController.text = pass;
+      if (_remotePathController.text != remotePath) _remotePathController.text = remotePath;
+      if (_useTmux != tmux) {
+        setState(() {
+          _useTmux = tmux;
+        });
+      }
+    });
+
+    if (widget.aiMode != null) {
+      _sshService.aiMode.value = widget.aiMode!;
+    }
 
     // Initialize from existing connection if any
     _isConnected = _sshService.isConnected;
 
     // Listen to connection state
-    _sshService.connectionState.listen((connected) {
+    _connectionSub = _sshService.connectionState.listen((connected) {
       if (mounted) {
         setState(() {
           _isConnected = connected;
         });
+        if (!connected) {
+          _hasDoneInitialCd = false;
+        }
       }
     });
 
     // Initial terminal message if not connected
     if (!_isConnected) {
       _sshService.terminal.write(
-        '\x1b[1m\x1b[38;5;39mUPLINK TERMINAL v2.0 - SECURE ACCESS LAYER\x1b[0m\r\n\x1b[38;5;240m>>> COGNITIVE ENGINE READY. STANDBY FOR LINK.\x1b[0m\r\n\r\n',
+        '\x1b[1m\x1b[38;5;39mREMOTE SSH - SECURE ACCESS LAYER\x1b[0m\r\n\x1b[38;5;240m>>> COGNITIVE ENGINE READY. STANDBY FOR LINK.\x1b[0m\r\n\r\n',
       );
     }
 
@@ -150,7 +189,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     }
 
     if (widget.remotePath != null) {
-      _remotePathController.text = widget.remotePath!;
+      _sshService.remotePathSignal.value = widget.remotePath!;
     }
 
     // Handle autoStartCommand if provided from router
@@ -168,24 +207,30 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       });
     }
 
-    // Auto-connect if hostId is provided
-    if (widget.hostId != null) {
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        final hosts = await _storageService.loadHosts();
-        final host = hosts.cast<SSHHostModel?>().firstWhere(
+    // Auto-connect logic
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final hosts = await _storageService.loadHosts();
+      
+      SSHHostModel? hostToConnect;
+      if (widget.hostId != null) {
+        hostToConnect = hosts.cast<SSHHostModel?>().firstWhere(
           (h) => h?.id == widget.hostId,
           orElse: () => null,
         );
-        if (host != null) {
-          _applyHostAndConnect(host);
+      } else if (!_isConnected && hosts.isNotEmpty) {
+        // Automatically connect to the first (usually last saved) host if not connected
+        hostToConnect = hosts.first;
+      }
 
-          // If we have initial content (e.g. a note), send it as an AI prompt after connecting
-          if (widget.initialContent != null) {
-            _handleInitialContent(widget.initialContent!);
-          }
+      if (hostToConnect != null) {
+        applyHostAndConnect(hostToConnect);
+
+        // If we have initial content (e.g. a note), send it as an AI prompt after connecting
+        if (widget.initialContent != null) {
+          _handleInitialContent(widget.initialContent!);
         }
-      });
-    }
+      }
+    });
   }
 
   void _handleInitialContent(String content) {
@@ -193,7 +238,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     final plainText = _extractPlainText(content);
 
     if (_sshService.isConnected) {
-      debugPrint('🚀 [TalkSSH] Already connected, sending AI prompt immediately');
+      debugPrint('🚀 [RemoteSSH] Already connected, sending AI prompt immediately');
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) _sendAiPrompt(plainText);
       });
@@ -201,7 +246,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     }
 
     // Wait for connection to be active before sending AI prompt
-    debugPrint('⏳ [TalkSSH] Waiting for connection before sending prompt...');
+    debugPrint('⏳ [RemoteSSH] Waiting for connection before sending prompt...');
     StreamSubscription? sub;
     sub = _sshService.connectionState.listen((connected) {
       if (connected) {
@@ -216,53 +261,79 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     });
   }
 
-  Future<void> _loadAiPrompt() async {
-    final personID = context.read<PersonBlock>().information.value.profiles.id;
-    if (personID == null) return;
-
-    final mode = _currentAiMode;
-    final dao = context.read<AppDatabase>().aiPromptsDAO;
-    final data = await dao.getPrompt(personID, mode);
-    
-    setState(() {
-      _aiPromptPrefix = data?.prompt ?? '';
-    });
-  }
-
   Future<void> _saveAiPrompt(String prompt) async {
-    final personID = context.read<PersonBlock>().information.value.profiles.id;
-    if (personID == null) return;
-
-    final mode = _currentAiMode;
-    final dao = context.read<AppDatabase>().aiPromptsDAO;
-    await dao.savePrompt(personID, mode, prompt);
+    _sshService.aiPromptPrefix.value = prompt;
     
-    setState(() {
-      _aiPromptPrefix = prompt;
-    });
+    // Persist to host model if available
+    if (_sshService.currentHostId != null) {
+      final hosts = await _storageService.loadHosts();
+      final hostIndex = hosts.indexWhere((h) => h.id == _sshService.currentHostId);
+      if (hostIndex != -1) {
+        final host = hosts[hostIndex];
+        host.aiPromptPrefix = prompt;
+        await _storageService.saveHost(host);
+        debugPrint('💾 [RemoteSSH] AI prompt prefix persisted for host ${host.name}');
+      }
+    }
+
+    // Also persist to global AI prompts table for this mode
+    final personBlock = context.read<PersonBlock>();
+    final personID = personBlock.information.value.profiles.id;
+    if (personID != null) {
+      final mode = _sshService.aiMode.value;
+      final dao = context.read<AppDatabase>().aiPromptsDAO;
+      await dao.savePrompt(personID, mode, prompt);
+    }
   }
 
-  String get _currentAiMode => _localAiMode ?? widget.aiMode ?? 'standard';
-  String? _localAiMode;
+  String get _currentAiMode => _sshService.aiMode.value;
 
-  void _toggleAiMode() async {
+  void toggleAiMode() async {
     final modes = ['standard', 'gemini', 'opencode', 'openclaw'];
     final currentIndex = modes.indexOf(_currentAiMode);
     final nextMode = modes[(currentIndex + 1) % modes.length];
     
-    setState(() {
-      _localAiMode = nextMode;
-    });
+    _sshService.aiMode.value = nextMode;
     
+    // Persist to host model if available
+    if (_sshService.currentHostId != null) {
+      final hosts = await _storageService.loadHosts();
+      final hostIndex = hosts.indexWhere((h) => h.id == _sshService.currentHostId);
+      if (hostIndex != -1) {
+        final host = hosts[hostIndex];
+        host.aiMode = nextMode;
+        await _storageService.saveHost(host);
+        debugPrint('💾 [RemoteSSH] AI mode persisted for host ${host.name}');
+      }
+    }
+
     // Persist choice to database
     await context.read<AppDatabase>().internalWidgetsDAO.updateInternalWidgetUrl(
       'ssh_uplink',
       '/widgets/ssh?aiMode=$nextMode',
     );
+
+    // Update current active session in DB if connected
+    if (_isConnected) {
+      final db = context.read<AppDatabase>();
+      final host = _sshService.hostSignal.value;
+      try {
+        await db.sshSessionsDAO.updateAiModelByIp(host, nextMode);
+        debugPrint('💾 [RemoteSSH] Session AI model updated in SQLite for $host to $nextMode');
+      } catch (e) {
+        debugPrint('❌ [RemoteSSH] Failed to update session AI model: $e');
+      }
+    }
     
-    // Reload prompt for new mode (if applicable)
-    if (nextMode != 'standard') {
-      _loadAiPrompt();
+    // Reload prompt for new mode from global database if not host-specific
+    final personBlock = context.read<PersonBlock>();
+    final personID = personBlock.information.value.profiles.id;
+    if (personID != null && nextMode != 'standard') {
+      final dao = context.read<AppDatabase>().aiPromptsDAO;
+      final data = await dao.getPrompt(personID, nextMode);
+      if (data != null && _sshService.aiPromptPrefix.value.isEmpty) {
+        _sshService.aiPromptPrefix.value = data.prompt;
+      }
     }
   }
 
@@ -295,12 +366,19 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     );
   }
 
-  void _applyHostAndConnect(SSHHostModel host) {
-    _hostController.text = host.host;
-    _portController.text = host.port.toString();
-    _userController.text = host.user;
-    _passController.text = host.password ?? '';
-    _remotePathController.text = host.remoteFilePath ?? '';
+  void applyHostAndConnect(SSHHostModel host) {
+    _sshService.currentHostId = host.id;
+    // Prefer explicitly passed aiMode if it's already set to something non-standard
+    if (_sshService.aiMode.value == 'standard') {
+      _sshService.aiMode.value = host.aiMode ?? 'standard';
+    }
+    _sshService.aiPromptPrefix.value = host.aiPromptPrefix ?? '';
+
+    _sshService.hostSignal.value = host.host;
+    _sshService.portSignal.value = host.port;
+    _sshService.userSignal.value = host.user;
+    _sshService.passSignal.value = host.password ?? '';
+    _sshService.remotePathSignal.value = host.remoteFilePath ?? '';
     _connect();
   }
 
@@ -311,33 +389,36 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     }
 
     try {
-      final host = _hostController.text;
-      final port = int.parse(_portController.text);
-      final user = _userController.text;
-      final pass = _passController.text;
+      final hostIp = _sshService.hostSignal.value;
+      final port = _sshService.portSignal.value;
+      final user = _sshService.userSignal.value;
+      final pass = _sshService.passSignal.value;
 
-      final autoCmd = _remotePathController.text.isNotEmpty
-          ? 'cd "${_remotePathController.text}" && clear'
+      final autoCmd = _sshService.remotePathSignal.value.isNotEmpty
+          ? 'cd "${_sshService.remotePathSignal.value}" && clear'
           : null;
 
       await _sshService.connect(
-        host: host,
+        host: hostIp,
         port: port,
         username: user,
         password: pass,
-        useTmux: _useTmux,
+        useTmux: _sshService.useTmuxSignal.value,
         autoStartCommand: autoCmd,
       );
 
       // Save host info if successful
       await _storageService.saveHost(
         SSHHostModel(
-          name: host,
-          host: host,
+          id: _sshService.currentHostId,
+          name: hostIp,
+          host: hostIp,
           port: port,
           user: user,
           password: pass,
-          remoteFilePath: _remotePathController.text,
+          remoteFilePath: _sshService.remotePathSignal.value,
+          aiMode: _sshService.aiMode.value,
+          aiPromptPrefix: _sshService.aiPromptPrefix.value,
         ),
       );
 
@@ -364,7 +445,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   Future<void> _saveSessionToDb() async {
     try {
       final db = context.read<AppDatabase>();
-      final host = _hostController.text;
+      final host = _sshService.hostSignal.value;
       
       // Clear old sessions for this IP first
       await db.sshSessionsDAO.deleteSessionsByIp(host);
@@ -373,7 +454,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         id: IDGen.UUIDV7(),
         ipAddress: host,
         localPath: const Value.absent(),
-        remotePath: Value(_remotePathController.text),
+        remotePath: Value(_sshService.remotePathSignal.value),
         projectID: Value(widget.hostId), // If hostId is project ID in some contexts
         sessionName: 'ssh_session_${DateTime.now().millisecondsSinceEpoch}',
         aiModel: Value(_currentAiMode),
@@ -381,20 +462,20 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         createdAt: Value(DateTime.now()),
         updatedAt: Value(DateTime.now()),
       ));
-      debugPrint('💾 [TalkSSH] Session saved to SQLite for $host');
+      debugPrint('💾 [RemoteSSH] Session saved to SQLite for $host');
     } catch (e) {
-      debugPrint('❌ [TalkSSH] Failed to save session to DB: $e');
+      debugPrint('❌ [RemoteSSH] Failed to save session to DB: $e');
     }
   }
 
   Future<void> _clearSessionFromDb() async {
     try {
       final db = context.read<AppDatabase>();
-      final host = _hostController.text;
+      final host = _sshService.hostSignal.value;
       await db.sshSessionsDAO.deleteSessionsByIp(host);
-      debugPrint('🧹 [TalkSSH] Session cleared from SQLite for $host');
+      debugPrint('🧹 [RemoteSSH] Session cleared from SQLite for $host');
     } catch (e) {
-      debugPrint('❌ [TalkSSH] Failed to clear session from DB: $e');
+      debugPrint('❌ [RemoteSSH] Failed to clear session from DB: $e');
     }
   }
 
@@ -420,7 +501,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     final cmd = _commandController.text;
 
     if (_isConnected) {
-      if (cmd.startsWith('/') || cmd.contains('gemini') || cmd.contains('opencode')) {
+      if (_currentAiMode != 'standard' || cmd.startsWith('/') || cmd.contains('gemini') || cmd.contains('opencode')) {
         // AI Command - Provide context if path is set
         _sendAiPrompt(cmd);
       } else {
@@ -502,6 +583,13 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
 
   void _sendAiPrompt(String text, {bool includeContext = true}) {
     if (!_isConnected) return;
+    
+    // Check if we need to do the initial cd
+    if (!_hasDoneInitialCd && _sshService.remotePathSignal.value.isNotEmpty) {
+      _sshService.write('cd "${_sshService.remotePathSignal.value}"\r');
+      _hasDoneInitialCd = true;
+    }
+
     if (_currentAiMode == 'standard') {
       _sshService.write('$text\r');
       return;
@@ -526,13 +614,13 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     }
 
     String aiContext = '';
-    if (includeContext && _remotePathController.text.isNotEmpty) {
+    if (includeContext && _sshService.remotePathSignal.value.isNotEmpty) {
       aiContext =
-          '\n\n[System Context: The user is currently focusing on this remote path/file: ${_remotePathController.text}]';
+          '\n\n[System Context: The user is currently focusing on this remote path/file: ${_sshService.remotePathSignal.value}]';
     }
 
-    final mode = _currentAiMode;
-    final customPrefix = _aiPromptPrefix ?? '';
+    final mode = _sshService.aiMode.value;
+    final customPrefix = _sshService.aiPromptPrefix.value;
     final fullPrompt = '$customPrefix$promptText$aiContext';
 
     // Robust Bash Escaping: wrap in single quotes, escape inner single quotes
@@ -542,14 +630,14 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     if (mode == 'gemini') {
       _sshService.write('\x15gemini prompt $escapedPrompt\r');
     } else if (mode == 'opencode') {
-      _sshService.write('\x15opencode run $escapedPrompt\r');
+      _sshService.write('\x15opencode prompt $escapedPrompt\r');
     } else if (mode == 'openclaw') {
       _sshService.write('\x15openclaw run $escapedPrompt\r');
     }
   }
 
-  void _showConfigDialog() {
-    final controller = TextEditingController(text: _aiPromptPrefix);
+  void showConfigDialog() {
+    final controller = TextEditingController(text: _sshService.aiPromptPrefix.value);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -579,7 +667,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     );
   }
 
-  void _showConnectDialog(BuildContext context) {
+  void showConnectDialog() {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -593,14 +681,24 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           remotePathController: _remotePathController,
           useTmux: _useTmux,
           onUseTmuxChanged: (val) {
-            setModalState(() => _useTmux = val);
-            setState(() {});
+            _sshService.useTmuxSignal.value = val;
+            setModalState(() {});
           },
           onConnect: _connect,
         ),
       ),
     );
   }
+
+  @override
+  void dispose() {
+    if (_activeState == this) _activeState = null;
+    _terminalController.dispose();
+    _connectionSub.cancel();
+    _signalEffect.dispose();
+    super.dispose();
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -610,138 +708,10 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     return Scaffold(
       key: _scaffoldKey,
       backgroundColor: const Color(0xFF0A0C10),
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        flexibleSpace: ClipRect(
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Container(color: Colors.black.withOpacity(0.5)),
-          ),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'UPLINK Terminal',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w900,
-                letterSpacing: -0.5,
-              ),
-            ),
-            Text(
-              _isConnected ? 'Connected to ${_hostController.text}' : 'Ready for Uplink',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _currentAiMode == 'standard'
-                    ? Colors.white12
-                    : (_currentAiMode == 'gemini' 
-                        ? Colors.orange.withOpacity(0.2) 
-                        : (_currentAiMode == 'opencode' 
-                            ? Colors.blue.withOpacity(0.2) 
-                            : Colors.purple.withOpacity(0.2))),
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                elevation: 0,
-              ),
-              onPressed: _toggleAiMode,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    _currentAiMode == 'standard'
-                        ? Icons.terminal_rounded
-                        : (_currentAiMode == 'gemini' 
-                            ? Icons.auto_awesome 
-                            : (_currentAiMode == 'opencode' 
-                                ? Icons.code_rounded 
-                                : Icons.hub_rounded)),
-                    size: 16,
-                    color: _currentAiMode == 'standard'
-                        ? Colors.white
-                        : (_currentAiMode == 'gemini' 
-                            ? Colors.orangeAccent 
-                            : (_currentAiMode == 'opencode' 
-                                ? Colors.blueAccent 
-                                : Colors.purpleAccent)),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    _currentAiMode.toUpperCase(),
-                    style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w900),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          if (_currentAiMode == 'openclaw')
-            IconButton(
-              icon: const Icon(Icons.security_rounded, size: 20),
-              onPressed: () => _sshService.write('\x15openclaw providers\r'),
-              tooltip: 'OpenClaw Providers',
-            ),
-          IconButton(
-            icon: const Icon(Icons.lan_outlined, size: 20),
-            onPressed: () => _showConnectDialog(context),
-            tooltip: 'Connection Settings',
-          ),
-          IconButton(
-            icon: const Icon(Icons.settings_outlined, size: 20),
-            onPressed: _showConfigDialog,
-            tooltip: 'AI Prompt Settings',
-          ),
-          PopupMenuButton<String>(
-            icon: const Icon(Icons.more_vert, size: 20),
-            onSelected: (value) {
-              if (value == 'kill_deploy_1') {
-                _sshService.killTmuxSession('deploy_1');
-              } else if (value == 'kill_ice_gate') {
-                _sshService.killTmuxSession('ice_gate');
-              }
-            },
-            itemBuilder: (context) => [
-              const PopupMenuItem(
-                value: 'kill_deploy_1',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_forever, color: Colors.redAccent, size: 18),
-                    SizedBox(width: 12),
-                    Text('Kill deploy_1', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ),
-              const PopupMenuItem(
-                value: 'kill_ice_gate',
-                child: Row(
-                  children: [
-                    Icon(Icons.delete_forever, color: Colors.orangeAccent, size: 18),
-                    SizedBox(width: 12),
-                    Text('Kill ice_gate', style: TextStyle(fontSize: 13)),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(width: 4),
-        ],
-      ),
       body: Column(
         children: [
+          // Padding for Dynamic Island
+          const SizedBox(height: 70),
           // Terminal Area - Maximized estate
           Expanded(
             child: Container(
@@ -780,8 +750,24 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
             ),
           ),
 
-          // Shortcut Keys
-          SSHShortcutKeyRow(onKeyPressed: _onShortcutPressed),
+     
+          // Quick Command Buttons for better control
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                _quickBtn('ESC', '\x1b', Colors.orangeAccent, colorScheme),
+                _quickBtn('ENTER', '\r', Colors.greenAccent, colorScheme),
+                _quickBtn('CTRL+C', '\x03', Colors.redAccent, colorScheme),
+                const Spacer(),
+                _quickBtn('←', '\x1b[D', colorScheme.primary, colorScheme),
+                _quickBtn('↑', '\x1b[A', colorScheme.primary, colorScheme),
+                _quickBtn('↓', '\x1b[B', colorScheme.primary, colorScheme),
+                _quickBtn('→', '\x1b[C', colorScheme.primary, colorScheme),
+              ],
+            ),
+          ),
 
           // Command Input
           SSHCommandInput(
@@ -795,10 +781,34 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     );
   }
 
-  @override
-  void dispose() {
-    if (_activeState == this) _activeState = null;
-    _terminalController.dispose();
-    super.dispose();
+  Widget _quickBtn(String label, String value, Color color, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 4.0),
+      child: Material(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: () => _sshService.write(value),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              border: Border.all(color: color.withOpacity(0.3)),
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              label,
+              style: TextStyle(
+                color: color,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Courier',
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
+

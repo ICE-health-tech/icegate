@@ -339,6 +339,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         imageCache.evict(cacheKey);
 
         final personBlock = context.read<PersonBlock>();
+        // personBlock.
         personBlock.setCoverImage(
           remoteUrl: objectBlock.userObjectResource.value.coverImage,
           localPath: localPath,

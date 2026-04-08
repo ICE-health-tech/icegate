@@ -23,6 +23,8 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:ice_gate/ui_layer/social_page/SocialAnalysisPage.dart';
+
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
 
@@ -34,30 +36,28 @@ class SocialPage extends StatefulWidget {
       VoidCallback action;
       print("social index: $index");
       switch (index) {
-        case 0:
-          iconData = Icons.share_rounded;
-          action = () {
-            Share.share(
-              AppLocalizations.of(context)!.social_share_msg,
-            );
-          };
-          break;
-        case 1:
-          iconData = Icons.person_add_rounded;
-          action = () => showAddOrImportOptions(context);
-          break;
-        case 2:
-          iconData = Icons.add_task_rounded;
-          action = () => showAddFeatDialog(context);
-          break;
-        case 3:
+        case 0: // Journal
           iconData = Icons.edit_note_rounded;
           action = () => context.push('/projects/editor', extra: {
                 'category': 'social',
               });
           break;
+        case 1: // Relationships
+          iconData = Icons.self_improvement_rounded;
+          action = () => showAddOrImportOptions(context);
+          break;
+        case 2: // Achievements
+          iconData = Icons.spa_rounded;
+          action = () => showAddFeatDialog(context);
+          break;
+        case 3: // Analysis
+          iconData = Icons.bar_chart_rounded;
+          action = () {
+            // Placeholder for analysis action or navigation
+          };
+          break;
         default:
-          iconData = Icons.account_circle_outlined;
+          iconData = Icons.psychology_outlined;
           action = () => context.go("/");
       }
 
@@ -705,13 +705,13 @@ class _SocialPageState extends State<SocialPage>
     final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return l10n.ranking;
+        return l10n.journal;
       case 1:
         return l10n.relationships;
       case 2:
         return l10n.achievements;
       case 3:
-        return l10n.journal;
+        return "ANALYSIS"; // Placeholder for L10n
       default:
         return l10n.social;
     }
@@ -749,9 +749,10 @@ class _SocialPageState extends State<SocialPage>
       child: Scaffold(
         backgroundColor: Theme.of(context).colorScheme.surface,
         appBar: AppBar(
-          toolbarHeight: 0, // We use a custom header
+          toolbarHeight: 80, // We use a custom header (CanvasDynamicIsland)
           backgroundColor: Theme.of(context).colorScheme.surface,
           elevation: 0,
+          automaticallyImplyLeading: false,
         ),
         body: Column(
           children: [
@@ -764,337 +765,15 @@ class _SocialPageState extends State<SocialPage>
                 return TabBarView(
                   controller: _tabController,
                   children: [
-                    _buildGlobalRankingList(context),
+                    const SocialNotesDashboard(),
                     _buildMergedContactList(context),
                     _buildAchievementsGrid(context),
-                     SocialNotesDashboard(),
+                    const SocialAnalysisPage(),
                   ],
                 );
               }),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGlobalRankingList(BuildContext context) {
-    final scoreDao = context.watch<ScoreDAO>();
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return StreamBuilder<List<GlobalRankingEntry>>(
-      stream: scoreDao.watchGlobalRanking(),
-      builder: (context, snapshot) {
-        if (!snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
-        }
-
-        final rankings = snapshot.data!;
-
-        if (rankings.isEmpty) {
-          return _buildEmptyState(
-            context,
-            AppLocalizations.of(context)!.no_data_global_board,
-            Icons.leaderboard_outlined,
-          );
-        }
-
-        return CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 24, bottom: 32),
-                child: _buildLeaderboard(context, rankings.take(3).toList()),
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      AppLocalizations.of(context)!.current_rankings,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      AppLocalizations.of(context)!.updated_time_ago("2M"),
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-            SliverList(
-              delegate: SliverChildBuilderDelegate((context, index) {
-                // Skip top 3 as they are in the leaderboard
-                if (index + 3 >= rankings.length) return null;
-                final entry = rankings[index + 3];
-                return _buildRankingItem(context, entry, index + 4);
-              }, childCount: rankings.length > 3 ? rankings.length - 3 : 0),
-            ),
-            const SliverToBoxAdapter(child: SizedBox(height: 100)),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildLeaderboard(
-    BuildContext context,
-    List<GlobalRankingEntry> topThree,
-  ) {
-    if (topThree.isEmpty) return const SizedBox();
-
-    // Sort to ensure 1st is middle: [2nd, 1st, 3rd]
-    List<GlobalRankingEntry?> displayList = List.filled(3, null);
-    if (topThree.isNotEmpty) displayList[1] = topThree[0]; // 1st
-    if (topThree.length > 1) displayList[0] = topThree[1]; // 2nd
-    if (topThree.length > 2) displayList[2] = topThree[2]; // 3rd
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        // 2nd Place
-        if (displayList[0] != null)
-          GestureDetector(
-            onTap: () => context.push('/profile/${displayList[0]!.person.id}'),
-            child: _leaderboardAvatar(context, displayList[0]!, rank: 2),
-          ),
-        const SizedBox(width: 12),
-        // 1st Place
-        if (displayList[1] != null)
-          GestureDetector(
-            onTap: () => context.push('/profile/${displayList[1]!.person.id}'),
-            child: _leaderboardAvatar(context, displayList[1]!, rank: 1),
-          ),
-        const SizedBox(width: 12),
-        // 3rd Place
-        if (displayList[2] != null)
-          GestureDetector(
-            onTap: () => context.push('/profile/${displayList[2]!.person.id}'),
-            child: _leaderboardAvatar(context, displayList[2]!, rank: 3),
-          ),
-      ],
-    );
-  }
-
-  Widget _leaderboardAvatar(
-    BuildContext context,
-    GlobalRankingEntry entry, {
-    required int rank,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isFirst = rank == 1;
-    final size = isFirst ? 100.0 : 80.0;
-    final person = entry.person;
-
-    return Column(
-      children: [
-        if (isFirst)
-          const Icon(
-            Icons.workspace_premium_rounded,
-            color: Colors.amber,
-            size: 28,
-          ),
-        const SizedBox(height: 4),
-        Stack(
-          alignment: Alignment.bottomCenter,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(4),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: rank == 1
-                      ? Colors.amber
-                      : (rank == 2 ? Colors.grey : Colors.brown),
-                  width: 2,
-                ),
-              ),
-              child: CircleAvatar(
-                radius: size / 2,
-                backgroundColor: colorScheme.surfaceContainerHigh,
-                backgroundImage: person.profileImageUrl != null
-                    ? NetworkImage(person.profileImageUrl!)
-                    : null,
-                child: person.profileImageUrl == null
-                    ? Text(
-                        person.firstName[0].toUpperCase(),
-                        style: TextStyle(
-                          fontSize: size * 0.4,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : null,
-              ),
-            ),
-            Transform.translate(
-              offset: const Offset(0, 12),
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: rank == 1
-                      ? Colors.amber
-                      : (rank == 2 ? Colors.grey : Colors.brown),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white, width: 2),
-                ),
-                child: Text(
-                  _getRankSuffix(context, rank),
-                  style: const TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 20),
-        Text(
-          person.firstName,
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: isFirst ? 16 : 14,
-            color: colorScheme.onSurface,
-          ),
-        ),
-        Text(
-          '${(entry.totalScore / 1000).toStringAsFixed(1)}${AppLocalizations.of(context)!.social_points_suffix}',
-          style: TextStyle(
-            fontWeight: FontWeight.w900,
-            fontSize: isFirst ? 14 : 12,
-            color: colorScheme.primary,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildRankingItem(
-    BuildContext context,
-    GlobalRankingEntry entry,
-    int rank,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final person = entry.person;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
-      child: GestureDetector(
-        onTap: () => context.push('/profile/${person.id}'),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: colorScheme.outlineVariant.withOpacity(0.3),
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.02),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 24,
-                child: Text(
-                  '$rank',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.onSurfaceVariant,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              CircleAvatar(
-                radius: 20,
-                backgroundColor: colorScheme.surfaceContainerHigh,
-                backgroundImage: person.profileImageUrl != null
-                    ? NetworkImage(person.profileImageUrl!)
-                    : null,
-                child: person.profileImageUrl == null
-                    ? Text(person.firstName[0].toUpperCase())
-                    : null,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${person.firstName} ${person.lastName ?? ""}',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    Text(
-                      AppLocalizations.of(context)!.social_tier_veteran,
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${entry.totalScore.toInt()}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      color: colorScheme.onSurface,
-                    ),
-                  ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.arrow_drop_up_rounded,
-                        color: Colors.green,
-                        size: 16,
-                      ),
-                      const Text(
-                        '2', // Placeholder delta
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w900,
-                          color: Colors.green,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ],
-          ),
         ),
       ),
     );

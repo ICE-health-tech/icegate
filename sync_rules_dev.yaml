@@ -29,6 +29,7 @@ bucket_definitions:
       - SELECT * FROM person_widgets
       - SELECT * FROM health_metrics
       - SELECT * FROM meals
+      - SELECT * FROM hourly_activity_log
       - SELECT * FROM sessions
       - SELECT * FROM water_logs
       - SELECT * FROM sleep_logs

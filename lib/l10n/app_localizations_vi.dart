@@ -170,7 +170,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_insights_title => 'NHẬN ĐỊNH';
 
   @override
-  String get health_insights => 'Nhận định';
+  String get health_insights => 'Sức khoẻ';
 
   @override
   String get health_insight_above_avg => 'Trên trung bình';
@@ -246,7 +246,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_category_finance => 'Tài chính';
 
   @override
-  String get notification_category_social => 'Xã hội';
+  String get notification_category_social => 'Tâm trí';
 
   @override
   String get notification_category_projects => 'Dự án';
@@ -630,7 +630,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scoring_finance => 'Tài chính';
 
   @override
-  String get scoring_social => 'Xã hội';
+  String get scoring_social => 'Tâm trí';
 
   @override
   String get scoring_career => 'Sự nghiệp';
@@ -852,10 +852,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get create_link => 'TẠO LIÊN KẾT';
 
   @override
-  String get social_dashboard => 'Bảng điều khiển xã hội';
+  String get social_dashboard => 'Bảng điều khiển Tâm trí';
 
   @override
-  String get social => 'Xã hội';
+  String get social => 'Tâm trí';
 
   @override
   String get social_rank_first => 'HẠNG NHẤT';
@@ -899,7 +899,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_bond_strengthened => 'Mối liên kết được thắt chặt!';
 
   @override
-  String get social_options => 'Tùy chọn xã hội';
+  String get social_options => 'Tùy chọn Tâm trí';
 
   @override
   String get social_manage_title => 'Quản lý liên kết';
@@ -929,7 +929,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plugin_desc => 'Thêm tính năng mới cho giao diện của bạn';
 
   @override
-  String get plugin_ssh_gemini => 'Điều khiển Gemini SSH';
+  String get plugin_ssh => 'Điều khiển SSH';
 
   @override
   String get plugin_ssh_opencode => 'Điều khiển OpenCode SSH';
@@ -1113,17 +1113,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String rule_social_contact(int points) {
-    return '$points điểm cho mỗi liên lạc ý nghĩa mới được thêm.';
+    return '$points điểm cho mỗi phiên hỗ trợ hoặc kết nối ý nghĩa.';
   }
 
   @override
   String rule_social_affection(int points, int unit) {
-    return '$points điểm cho mỗi $unit mức độ tình cảm đạt được.';
+    return '$points điểm cho mỗi $unit mức độ ổn định đạt được.';
   }
 
   @override
   String get rule_social_maintain =>
-      'Duy trì các mối liên kết để ngăn chặn việc giảm điểm theo thời gian.';
+      'Thực hành chánh niệm để duy trì sự ổn định tâm trí.';
 
   @override
   String get how_it_works => 'Cách thức hoạt động';
@@ -1985,7 +1985,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get journal => 'Nhật ký';
 
   @override
-  String get social_notes => 'Ghi chú xã hội';
+  String get social_notes => 'Ghi chú Tâm trí';
 
   @override
   String get btn_send_feedback => 'Gửi phản hồi';

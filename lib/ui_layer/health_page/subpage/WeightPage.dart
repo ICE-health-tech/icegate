@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:drift/drift.dart' hide Column;
-import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class WeightPage extends StatefulWidget {
   const WeightPage({super.key});
@@ -18,8 +18,8 @@ class _WeightPageState extends State<WeightPage> {
   final TextEditingController _weightController = TextEditingController();
 
   Future<void> _showAddWeightDialog() async {
-    final db = context.read<AppDatabase>();
     final personBlock = context.read<PersonBlock>();
+    final healthBlock = context.read<HealthBlock>();
     final personId = personBlock.information.value.profiles.id ?? "";
 
     return showDialog(
@@ -44,21 +44,7 @@ class _WeightPageState extends State<WeightPage> {
             onPressed: () async {
               final weight = double.tryParse(_weightController.text);
               if (weight != null && personId.isNotEmpty) {
-                await db.healthMetricsDAO.insertOrUpdateMetrics(
-                  HealthMetricsTableCompanion(
-                    id: Value(IDGen.UUIDV7()),
-                    personID: Value(personId),
-                    date: Value(
-                      DateTime(
-                        DateTime.now().year,
-                        DateTime.now().month,
-                        DateTime.now().day,
-                      ),
-                    ),
-                    weightKg: Value(weight),
-                    updatedAt: Value(DateTime.now()),
-                  ),
-                );
+                healthBlock.updateWeight(weight);
                 _weightController.clear();
                 if (mounted) Navigator.pop(dialogContext);
               }

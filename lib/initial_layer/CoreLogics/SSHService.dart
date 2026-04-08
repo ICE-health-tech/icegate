@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'SSHServiceStub.dart' if (dart.library.io) 'SSHServiceNative.dart';
 
 class SSHService {
@@ -7,6 +8,17 @@ class SSHService {
   SSHService._internal();
 
   final SSHServiceNative _impl = SSHServiceNative();
+
+  final aiMode = signal<String>('standard');
+  final aiPromptPrefix = signal<String>('');
+  final useTmuxSignal = signal<bool>(false);
+  final hostSignal = signal<String>('localhost');
+  final portSignal = signal<int>(22);
+  final userSignal = signal<String>('');
+  final passSignal = signal<String>('');
+  final remotePathSignal = signal<String>('');
+  final isConfigMode = signal<bool>(false);
+  String? currentHostId;
 
   dynamic get terminal => _impl.terminal;
 

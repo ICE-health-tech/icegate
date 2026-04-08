@@ -5,6 +5,7 @@ import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthMetricCard.dart';
@@ -39,7 +40,7 @@ class HealthPage extends StatefulWidget {
           icon: Icons.restaurant,
           backgroundColor: Colors.orange,
           onPressed: () {
-            context.go('/health/food/dashboard');
+            context.go('/health/food/comsume');
           },
         ),
         SubButton(
@@ -72,23 +73,32 @@ class HealthPage extends StatefulWidget {
   State<HealthPage> createState() => _HealthPageState();
 }
 
-class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
+class _HealthPageState extends State<HealthPage>
+    with WidgetsBindingObserver, TickerProviderStateMixin {
   late AppDatabase database;
   Map<String, HealthMetric> _healthMetrics = {};
   bool _isLoading = false;
   late bool compact;
+  late AnimationController _gridAnimationController;
 
   @override
   void initState() {
     super.initState();
     database = context.read<AppDatabase>();
     WidgetsBinding.instance.addObserver(this);
+
+    _gridAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
     _loadHealthData();
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _gridAnimationController.dispose();
     super.dispose();
   }
 
@@ -117,6 +127,7 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
           _healthMetrics = data;
           _isLoading = false;
         });
+        _gridAnimationController.forward(from: 0.0);
       }
     } catch (e) {
       debugPrint('Error loading health data: $e');
@@ -128,7 +139,6 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    // Get localized strings for this page
     final l10n = AppLocalizations.of(context)!;
     compact = MediaQuery.of(context).size.width < 600;
 
@@ -149,7 +159,7 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
               label: l10n.health_log_food,
               icon: Icons.restaurant,
               color: Colors.orange,
-              onTap: () => context.push('/health/food/dashboard'),
+              onTap: () => context.push('/health/food/consume'),
             ),
             QuickAction(
               label: l10n.health_exercise,
@@ -165,141 +175,215 @@ class _HealthPageState extends State<HealthPage> with WidgetsBindingObserver {
             ),
           ],
         ),
-        body: RefreshIndicator(
-          onRefresh: _loadHealthData,
-          displacement: 40,
-          child: CustomScrollView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            slivers: [
-              // Premium Header
-              SliverAppBar(
-                expandedHeight: 80,
-                collapsedHeight: 70,
-                pinned: true,
-                toolbarHeight: 70,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                centerTitle: true,
-                leadingWidth: 0,
-                leading: const SizedBox.shrink(),
-                actions: [
-                  IconButton(
-                    icon: const Icon(Icons.home_rounded, size: 30),
-                    onPressed: () {
-                      WidgetNavigatorAction.smartPop(context);
-                    },
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.grid_view, size: 30),
-                    onPressed: () => context.go('/canvas'),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.settings, size: 30),
-                    onPressed: () => context.go('/settings'),
-                  ),
-                  const SizedBox(width: 8),
-                ],
-              ),
-
-              // Section Header
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 40, 24, 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        l10n.health_insights,
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w900,
-                          color: colorScheme.onSurface,
-                        ),
-                      ),
-                    ],
-                  ),
+        body: Stack(
+          children: [
+            // Background aesthetics
+            Positioned(
+              top: -100,
+              left: -50,
+              child: Container(
+                width: 300,
+                height: 300,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: colorScheme.primary.withValues(alpha: 0.05),
                 ),
               ),
+            ),
 
-              // Health Metrics Grid
-              _isLoading
-                  ? const SliverFillRemaining(
-                      hasScrollBody: false,
-                      child: Center(child: CircularProgressIndicator()),
-                    )
-                  : Watch((context) {
-                      // Obtain the block once. Since it's not a signal, use read().
-                      // The Watch() widget will track individual signals inside the block.
-                      final healthBlock = context.read<HealthBlock>();
-                      final currentSteps = healthBlock.todaySteps.value;
-
-                      // Construct reactive metrics list for today
-                      final stepGoal = STEP_GOAL;
-                      final currentSleep = healthBlock.todaySleep.value;
-                      final currentHR = healthBlock.todayHeartRate.value;
-
-                      // Create a local copy/list to avoid mutating _healthMetrics during build
-                      final List<HealthMetric> displayMetrics = _healthMetrics
-                          .values
-                          .map((m) {
-                            if (m.id == 'steps') {
-                              return m.copyWith(
-                                value: currentSteps.toString(),
-                                progress: (currentSteps / stepGoal).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
-                              );
-                            }
-                            if (m.id == 'sleep') {
-                              return m.copyWith(
-                                value: currentSleep.toStringAsFixed(1),
-                                progress: (currentSleep / SLEEP_GOAL).clamp(
-                                  0.0,
-                                  1.0,
-                                ),
-                              );
-                            }
-                            if (m.id == 'heart_rate') {
-                              return m.copyWith(
-                                value: currentHR > 0
-                                    ? currentHR.toString()
-                                    : m.value,
-                              );
-                            }
-                            return m;
-                          })
-                          .toList();
-
-                      return SliverPadding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                        sliver: SliverGrid(
-                          gridDelegate:
-                              SliverGridDelegateWithFixedCrossAxisCount(
-                                crossAxisCount: compact ? 2 : 3,
-                                crossAxisSpacing: 16,
-                                mainAxisSpacing: 16,
-                                childAspectRatio: compact ? 0.95 : 1.2,
-                              ),
-                          delegate: SliverChildBuilderDelegate((
-                            context,
-                            index,
-                          ) {
-                            return HealthMetricCard(
-                              metrics: displayMetrics[index],
-                            );
-                          }, childCount: displayMetrics.length),
+            RefreshIndicator(
+              onRefresh: _loadHealthData,
+              displacement: 40,
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+                slivers: [
+                  // Modern Transparent App Bar
+                  SliverAppBar(
+                    expandedHeight: 120,
+                    collapsedHeight: 70,
+                    pinned: true,
+                    toolbarHeight: 70,
+                    backgroundColor: colorScheme.surface.withValues(alpha: 0.8),
+                    elevation: 0,
+                    centerTitle: false,
+                    flexibleSpace: FlexibleSpaceBar(
+                      background: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              colorScheme.primary.withValues(alpha: 0.1),
+                              colorScheme.surface,
+                            ],
+                          ),
                         ),
-                      );
-                    }),
+                      ),
+                    ),
+                    actions: [
+                      _buildHeaderButton(
+                        context,
+                        icon: Icons.auto_graph_rounded,
+                        onPressed: () => context.push('/health/analysis'),
+                      ),
+                      _buildHeaderButton(
+                        context,
+                        icon: Icons.grid_view_rounded,
+                        onPressed: () => context.go('/canvas'),
+                      ),
+                      _buildHeaderButton(
+                        context,
+                        icon: Icons.settings_rounded,
+                        onPressed: () => context.go('/settings'),
+                      ),
+                      const SizedBox(width: 16),
+                    ],
+                  ),
 
-              // Bottom padding to avoid FAB overlap
-              const SliverToBoxAdapter(child: SizedBox(height: 140)),
-            ],
-          ),
+                  // Greeting / Date Section
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(24, 24, 24, 8),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            DateFormat('EEEE, MMMM d').format(DateTime.now()),
+                            style: textTheme.labelLarge?.copyWith(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            "Your health at a glance.",
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.5,
+                              ),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+
+                  // Health Metrics Grid
+                  _isLoading
+                      ? const SliverFillRemaining(
+                          hasScrollBody: false,
+                          child: Center(child: CircularProgressIndicator()),
+                        )
+                      : Watch((context) {
+                          final healthBlock = context.read<HealthBlock>();
+                          final currentSteps = healthBlock.todaySteps.value;
+                          final currentSleep = healthBlock.todaySleep.value;
+                          final currentHR = healthBlock.todayHeartRate.value;
+
+                          final List<HealthMetric> displayMetrics =
+                              _healthMetrics.values.map((m) {
+                                if (m.id == 'steps') {
+                                  return m.copyWith(
+                                    value: currentSteps.toString(),
+                                    progress: (currentSteps / STEP_GOAL).clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
+                                  );
+                                }
+                                if (m.id == 'sleep') {
+                                  return m.copyWith(
+                                    value: currentSleep.toStringAsFixed(1),
+                                    progress: (currentSleep / SLEEP_GOAL).clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
+                                  );
+                                }
+                                if (m.id == 'heart_rate') {
+                                  return m.copyWith(
+                                    value: currentHR > 0
+                                        ? currentHR.toString()
+                                        : m.value,
+                                  );
+                                }
+                                return m;
+                              }).toList();
+
+                          return SliverPadding(
+                            padding: const EdgeInsets.all(16.0),
+                            sliver: SliverGrid(
+                              gridDelegate:
+                                  SliverGridDelegateWithFixedCrossAxisCount(
+                                    crossAxisCount: compact ? 2 : 3,
+                                    crossAxisSpacing: 16,
+                                    mainAxisSpacing: 16,
+                                    childAspectRatio: compact ? 0.92 : 1.1,
+                                  ),
+                              delegate: SliverChildBuilderDelegate((
+                                context,
+                                index,
+                              ) {
+                                final animation =
+                                    Tween<double>(begin: 0.0, end: 1.0).animate(
+                                      CurvedAnimation(
+                                        parent: _gridAnimationController,
+                                        curve: Interval(
+                                          (1 / displayMetrics.length) * index,
+                                          1.0,
+                                          curve: Curves.easeOutCubic,
+                                        ),
+                                      ),
+                                    );
+
+                                return FadeTransition(
+                                  opacity: animation,
+                                  child: Transform.translate(
+                                    offset: Offset(
+                                      0,
+                                      20 * (1.0 - animation.value),
+                                    ),
+                                    child: HealthMetricCard(
+                                      metrics: displayMetrics[index],
+                                    ),
+                                  ),
+                                );
+                              }, childCount: displayMetrics.length),
+                            ),
+                          );
+                        }),
+
+                  // Bottom padding to avoid FAB overlap
+                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return IconButton(
+      icon: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 22, color: colorScheme.onSurface),
+      ),
+      onPressed: onPressed,
     );
   }
 }

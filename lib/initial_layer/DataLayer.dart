@@ -43,6 +43,7 @@ import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.
 import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
@@ -56,7 +57,9 @@ class DataLayer extends StatefulWidget {
 }
 
 class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
-  late AppDatabase database;
+  AppDatabase? _databaseInstance;
+  AppDatabase get database => _databaseInstance!;
+
   late LocalNotificationService notificationService;
   late FocusAudioHandler audioHandler;
 
@@ -80,6 +83,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late SocialBlock socialBlock;
   late LocaleBlock localeBlock;
   late ConfigBlock configBlock;
+  late DocumentationBlock documentationBlock;
   DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
@@ -100,27 +104,27 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   }
 
   void _startHealthSync() {
-    _syncHealthData();
-    _healthSyncTimer = Timer.periodic(const Duration(minutes: 1), (_) {
-      _syncHealthData();
+    _syncHealthData(days: 30);
+    _healthSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      _syncHealthData(days: 3);
     });
   }
 
-  Future<void> _syncHealthData() async {
-    if (!_isInitialized || _hasError) {
+  Future<void> _syncHealthData({int days = 3}) async {
+    if (!_isInitialized || _hasError || healthBlock.personId.isEmpty) {
       debugPrint(
-        "DataLayer: Skipping health sync (not initialized or has error)",
+        "DataLayer: Skipping health sync (not ready: initialized=$_isInitialized, hasPerson=${healthBlock.personId.isNotEmpty})",
       );
       return;
     }
     try {
-      debugPrint("DataLayer: Starting multi-day health sync...");
+      debugPrint("DataLayer: Starting $days-day health sync...");
       final now = DateTime.now();
-      for (int i = 0; i < 3; i++) {
+      for (int i = 0; i < days; i++) {
         final targetDate = now.subtract(Duration(days: i));
         await _syncHealthDataForDay(targetDate);
       }
-      debugPrint("DataLayer: Multi-day health sync completed.");
+      debugPrint("DataLayer: $days-day health sync completed.");
     } catch (e) {
       debugPrint("DataLayer: Error in _syncHealthData: $e");
     }
@@ -136,35 +140,55 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     final steps = await HealthService.fetchStepsForDay(date);
     final calories = await HealthService.fetchCaloriesForDay(date);
 
-    if (steps == 0 && calories == 0) {
-      final isDesktop =
-          kIsWeb ||
-          defaultTargetPlatform == TargetPlatform.macOS ||
-          defaultTargetPlatform == TargetPlatform.linux ||
-          defaultTargetPlatform == TargetPlatform.windows;
+    final isDesktop =
+        kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.windows;
 
-      if (isDesktop) return;
+    if (isDesktop && steps == 0 && calories == 0) {
+      return;
     }
 
     if (isToday) {
       final sleepHours = await HealthService.fetchSleepData();
       final heartRate = await HealthService.fetchLatestHeartRate();
+      final hourlySteps = await HealthService.fetchHourlyStepsForDay(date);
 
       if (mounted && _isInitialized) {
         healthBlock.updateSteps(steps);
+        healthBlock.updateHourlySteps(hourlySteps);
         healthBlock.updateSleep(sleepHours);
         healthBlock.updateHeartRate(heartRate);
         healthBlock.updateCalories(calories.toInt());
+
+        // Ensure record exists in DB even if values are zero or haven't "increased" per HealthBlock logic
+        await database.healthMetricsDAO.insertOrUpdateMetrics(
+          HealthMetricsTableCompanion.insert(
+            id: IDGen.generateDeterministicUuid(
+              healthBlock.personId,
+              "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}:General",
+            ),
+            personID: Value(healthBlock.personId),
+            date: date,
+            steps: Value(steps),
+            caloriesBurned: Value(calories.toInt()),
+            sleepHours: Value(sleepHours),
+            heartRate: Value(heartRate),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
       }
     } else {
+      final normalizedDate = DateTime(date.year, date.month, date.day, 12);
       await database.healthMetricsDAO.insertOrUpdateMetrics(
         HealthMetricsTableCompanion.insert(
           id: IDGen.generateDeterministicUuid(
             healthBlock.personId,
-            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}",
+            "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}:General",
           ),
           personID: Value(healthBlock.personId),
-          date: DateTime(date.year, date.month, date.day, 12),
+          date: normalizedDate,
           steps: Value(steps),
           caloriesBurned: Value(calories.toInt()),
           updatedAt: Value(DateTime.now()),
@@ -174,7 +198,15 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   }
 
   Future<void> _initializeData() async {
+    if (_isInitialized && !_hasError) return;
+
     try {
+      if (_hasError) {
+        setState(() {
+          _hasError = false;
+          _errorMessage = null;
+        });
+      }
       debugPrint("🚀 [Boot] Step 0: Initialize Locale...");
       // Khởi tạo LocaleBlock trước để ngôn ngữ sẵn sàng khi UI render
       localeBlock = LocaleBlock();
@@ -194,17 +226,20 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       String dbPath;
       if (kIsWeb) {
         debugPrint("🌐 [Boot] Web platform detected. Initializing PowerSync with IndexedDB.");
-        dbPath = 'powersync30.db';
+        dbPath = 'powersync33.db';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        dbPath = p.join(dir.path, 'powersync30.db');
+        dbPath = p.join(dir.path, 'powersync33.db');
       }
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
       );
       await powersync.initialize();
-      database = AppDatabase.powersync(powersync);
+      
+      if (_databaseInstance == null) {
+        _databaseInstance = AppDatabase.powersync(powersync);
+      }
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
@@ -258,6 +293,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         healthDao: database.healthMetricsDAO,
         healthLogsDao: database.healthLogsDAO,
         healthMealDao: database.healthMealDAO,
+        hourlyLogDao: database.hourlyActivityLogDAO,
       );
       growthBlock = GrowthBlock();
       scoreBlock = ScoreBlock();
@@ -272,9 +308,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
       configBlock = ConfigBlock();
+      documentationBlock = DocumentationBlock();
 
       musicBlock = MusicBlock(audioHandler: audioHandler);
-
       focusBlock = FocusBlock(
         focusSessionDao: database.focusSessionsDAO,
         healthLogsDao: database.healthLogsDAO,
@@ -489,24 +525,29 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       return MaterialApp(
         home: Scaffold(
           body: Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.error_outline, color: Colors.red, size: 60),
-                const SizedBox(height: 16),
-                const Text(
-                  "Critical Initialization Error",
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Text(_errorMessage ?? "Unknown Error"),
-                ),
-                ElevatedButton(
-                  onPressed: () => _initializeData(),
-                  child: const Text("Retry"),
-                ),
-              ],
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.error_outline, color: Colors.red, size: 60),
+                  const SizedBox(height: 16),
+                  const Text(
+                    "Critical Initialization Error",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    _errorMessage ?? "Unknown Error",
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 24),
+                  ElevatedButton(
+                    onPressed: () => _initializeData(),
+                    child: const Text("Retry"),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -554,6 +595,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<HealthLogsDAO>.value(value: database.healthLogsDAO),
         Provider<QuestDAO>.value(value: database.questDAO),
         Provider<HealthMealDAO>.value(value: database.healthMealDAO),
+        Provider<HourlyActivityLogDAO>.value(value: database.hourlyActivityLogDAO),
         Provider<PersonBlock>.value(value: personBlock),
         Provider<AuthBlock>.value(value: authBlock),
         Provider<ObjectDatabaseBlock>.value(value: objectDatabaseBlock),
@@ -574,6 +616,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<HealthBlock>.value(value: healthBlock),
         Provider<LocaleBlock>.value(value: localeBlock),
         Provider<ConfigBlock>.value(value: configBlock),
+        Provider<DocumentationBlock>.value(value: documentationBlock),
       ],
       child: widget.childWidget,
     );

@@ -9,7 +9,7 @@ class QuestBlock {
   final numberOfQuests = signal<int>(0);
   final quests = signal<List<QuestData>>([]);
 
-  late final QuestService _questService;
+  late QuestService _questService;
   StreamSubscription? _questsSubscription;
 
   void init(AppDatabase db, String personId) {

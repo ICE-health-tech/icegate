@@ -175,10 +175,13 @@ class HealthService {
     final authorized = await requestPermissions();
     if (!authorized) return 0;
 
+    final now = DateTime.now();
+    final isToday = day.year == now.year &&
+        day.month == now.month &&
+        day.day == now.day;
+
     final start = DateTime(day.year, day.month, day.day);
-    final end = day.day == DateTime.now().day
-        ? DateTime.now()
-        : start.add(const Duration(days: 1));
+    final end = isToday ? now : start.add(const Duration(days: 1));
 
     try {
       final steps = await health.getTotalStepsInInterval(start, end);
@@ -209,15 +212,59 @@ class HealthService {
     }
   }
 
+  /// Fetches step count for each hour of a specific day.
+  /// Returns a map where key is hour (0-23) and value is step count.
+  static Future<Map<int, int>> fetchHourlyStepsForDay(DateTime day) async {
+    final authorized = await requestPermissions();
+    if (!authorized) return {};
+
+    final now = DateTime.now();
+    final isToday = day.year == now.year &&
+        day.month == now.month &&
+        day.day == now.day;
+
+    final start = DateTime(day.year, day.month, day.day);
+    final end = isToday ? now : start.add(const Duration(days: 1));
+
+    try {
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: start,
+        endTime: end,
+        types: [HealthDataType.STEPS],
+      );
+
+      final Map<int, int> hourlySteps = {
+        for (var i = 0; i < 24; i++) i: 0
+      };
+
+      for (var data in healthData) {
+        final value = data.value;
+        if (value is NumericHealthValue) {
+          final hour = data.dateFrom.hour;
+          hourlySteps[hour] = (hourlySteps[hour] ?? 0) + value.numericValue.toInt();
+        }
+      }
+
+      debugPrint("HealthService: Fetched hourly steps for $start: $hourlySteps");
+      return hourlySteps;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching hourly steps for $day: $e");
+      return {};
+    }
+  }
+
   /// Fetches calories burned for a specific day.
   static Future<double> fetchCaloriesForDay(DateTime day) async {
     final authorized = await requestPermissions();
     if (!authorized) return 0.0;
 
+    final now = DateTime.now();
+    final isToday = day.year == now.year &&
+        day.month == now.month &&
+        day.day == now.day;
+
     final start = DateTime(day.year, day.month, day.day);
-    final end = day.day == DateTime.now().day
-        ? DateTime.now()
-        : start.add(const Duration(days: 1));
+    final end = isToday ? now : start.add(const Duration(days: 1));
 
     try {
       final healthData = await health.getHealthDataFromTypes(

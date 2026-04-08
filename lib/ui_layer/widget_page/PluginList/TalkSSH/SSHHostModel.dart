@@ -9,6 +9,8 @@ class SSHHostModel {
   String? password;
   String? remoteFilePath;
   final DateTime lastUsed;
+  String? aiMode;
+  String? aiPromptPrefix;
 
   SSHHostModel({
     String? id,
@@ -19,6 +21,8 @@ class SSHHostModel {
     this.password,
     this.remoteFilePath,
     DateTime? lastUsed,
+    this.aiMode,
+    this.aiPromptPrefix,
   }) : id = id ?? const Uuid().v4(),
        lastUsed = lastUsed ?? DateTime.now();
 
@@ -32,6 +36,8 @@ class SSHHostModel {
       if (includePassword) 'password': password,
       if (includePassword) 'remoteFilePath': remoteFilePath,
       'lastUsed': lastUsed.toIso8601String(),
+      'aiMode': aiMode,
+      'aiPromptPrefix': aiPromptPrefix,
     };
   }
 
@@ -45,6 +51,8 @@ class SSHHostModel {
       password: json['password'],
       remoteFilePath: json['remoteFilePath'],
       lastUsed: json['lastUsed'] != null ? DateTime.parse(json['lastUsed']) : null,
+      aiMode: json['aiMode'],
+      aiPromptPrefix: json['aiPromptPrefix'],
     );
   }
 }

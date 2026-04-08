@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 2.6.0+24
+version: 2.6.0+28
 
 environment:  
   sdk: ^3.9.2
@@ -86,7 +86,7 @@ dependencies:
   arkit_plugin: ^1.0.6
   vector_math: ^2.1.4
   audioplayers: ^6.5.1
-  file_picker: ^10.3.10
+  file_picker: ^11.0.1
   audio_service: ^0.18.18
   youtube_explode_dart:
     git:
@@ -104,6 +104,10 @@ dependencies:
   xterm: ^4.0.0
   device_info_plus: ^12.3.0
   package_info_plus: ^8.1.1
+  google_sign_in: ^6.2.1
+  googleapis: ^13.1.0
+  googleapis_auth: ^1.5.0
+  watcher: ^1.1.0
 
 
 dependency_overrides:
@@ -137,20 +141,21 @@ dev_dependencies:
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true
-  image_path: "assets/icon/app_icon.png"
+  remove_alpha_ios: true
+  image_path: "assets/app_icon.png"
   min_sdk_android: 21 # android min sdk min:16, default 21
   web:
     generate: true
-    image_path: "assets/icon/app_icon.png"
+    image_path: "assets/app_icon.png"
     background_color: "#hex_code"
     theme_color: "#hex_code"
   windows:
     generate: true
-    image_path: "assets/icon/app_icon.png"
+    image_path: "assets/app_icon.png"
     icon_size: 48 # min:48, max:256, default: 48
   macos:
     generate: true
-    image_path: "assets/icon/app_icon.png"
+    image_path: "assets/app_icon.png"
 # The following section is specific to Flutter packages.
 flutter:
   generate: true

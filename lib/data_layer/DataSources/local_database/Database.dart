@@ -1,4 +1,5 @@
 // 1. Core Drift and Platform Imports
+import 'package:flutter/foundation.dart';
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
@@ -197,6 +198,48 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
+@DataClassName('HourlyActivityLogData')
+class HourlyActivityLogTable extends Table {
+  @override
+  String get tableName => 'hourly_activity_log';
+
+  TextColumn get id => text()(); // UUID PK
+  TextColumn get personID =>
+      text().named('person_id')();
+  
+  DateTimeColumn get startTime => dateTime().map(const DateTimeUTCConverter()).named('start_time')();
+  DateTimeColumn get endTime => dateTime().map(const DateTimeUTCConverter()).nullable().named('end_time')();
+  
+  // log_date is generated in Postgres, but we can model it as a simple Date field locally for PowerSync mapping
+  DateTimeColumn get logDate => dateTime().map(const DateTimeUTCConverter()).named('log_date')();
+
+  IntColumn get stepsCount => integer().withDefault(const Constant(0)).named('steps_count')();
+  RealColumn get distanceKm => real().withDefault(const Constant(0.0)).named('distance_km')();
+  IntColumn get caloriesBurned => integer().withDefault(const Constant(0)).named('calories_burned')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftAccessor(tables: [HourlyActivityLogTable])
+class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase> with _$HourlyActivityLogDAOMixin {
+  HourlyActivityLogDAO(super.db);
+
+  Stream<List<HourlyActivityLogData>> watchHourlyLogs(String personId, DateTime date) {
+    final startOfDay = DateTime(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+
+    return (select(hourlyActivityLogTable)
+          ..where((t) => t.personID.equals(personId) & t.startTime.isBetweenValues(startOfDay, endOfDay))
+          ..orderBy([(t) => OrderingTerm(expression: t.startTime)]))
+        .watch();
+  }
+
+  Future<void> upsertHourlyLog(HourlyActivityLogTableCompanion entry) async {
+    await into(hourlyActivityLogTable).insertOnConflictUpdate(entry);
+  }
+}
+
 @DataClassName('ExternalWidgetData') // The generated data class name
 class ExternalWidgetsTable extends Table {
   @override
@@ -308,6 +351,7 @@ class ProjectsTable extends Table {
       integer().withDefault(const Constant(0)).named('status')();
   TextColumn get sshHostId => text().nullable().named('ssh_host_id')();
   TextColumn get remotePath => text().nullable().named('remote_path')();
+  TextColumn get aiModel => text().nullable().named('ai_model')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1676,7 +1720,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
       if (existing != null) {
         await (update(
           scoresTable,
-        )..where((t) => t.personID.equals(personID))).write(
+        )..where((t) => t.id.equals(existing.id))).write(
           ScoresTableCompanion(
             careerGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
@@ -1736,7 +1780,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
       if (existing != null) {
         await (update(
           scoresTable,
-        )..where((t) => t.personID.equals(personID))).write(
+        )..where((t) => t.id.equals(existing.id))).write(
           ScoresTableCompanion(
             socialGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
@@ -2111,7 +2155,9 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
               color: row.data['color'] as String?,
               sshHostId: row.data['ssh_host_id'] as String?,
               remotePath: row.data['remote_path'] as String?,
+              aiModel: row.data['ai_model'] as String?,
               status: (row.data['status'] as int?) ?? 0,
+
               createdAt: row.data['created_at'] != null
                   ? DateTime.tryParse(row.data['created_at'].toString()) ??
                         DateTime.now()
@@ -3488,72 +3534,74 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       return null;
     }
 
-    // Use 'General' as default category if not specified for health metrics
+    final normalized = DateTime(date.year, date.month, date.day, 12, 0, 0);
     final dateStr =
-        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
+        "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
+
+    // 1. Preferred path: check deterministic ID for 'General' category
     final targetId = IDGen.generateDeterministicUuid(
       personID,
       "$dateStr:General",
     );
-
-    // 1. Fast path: check exact deterministic ID
     final existingById = await (select(
       healthMetricsTable,
     )..where((t) => t.id.equals(targetId))).getSingleOrNull();
     if (existingById != null) return existingById;
 
-    // 2. Slow path for legacy records containing random UUIDs
-    final all = await (select(
+    // 2. Fallback: Search for ANY record within the same logical day for this person
+    // A logical day is +/- 12 hours from noon.
+    final start = normalized.subtract(const Duration(hours: 12));
+    final end = normalized.add(const Duration(hours: 12));
+
+    final records = await (select(
       healthMetricsTable,
-    )..where((t) => t.personID.equals(personID))).get();
-    if (all.isEmpty) return null;
+    )..where(
+          (t) =>
+              t.personID.equals(personID) & t.date.isBetweenValues(start, end),
+        )).get();
 
-    final noonTarget = DateTime(date.year, date.month, date.day, 12);
-    HealthMetricsLocal? bestMatch;
-    int minDiff = 24; // We care if it's within the same logical day
+    if (records.isEmpty) return null;
 
-    for (final m in all) {
-      final diff = m.date.difference(noonTarget).inHours.abs();
-      if (diff < minDiff) {
-        minDiff = diff;
-        bestMatch = m;
+    // If multiple exist (which cleanupDuplicates should fix), prefer the one with most data or 'General'
+    HealthMetricsLocal best = records.first;
+    for (var r in records) {
+      if (r.category == 'General') {
+        best = r;
+        break;
+      }
+      // Or prefer one that actually has steps
+      if ((r.steps ?? 0) > (best.steps ?? 0)) {
+        best = r;
       }
     }
-
-    // A valid match should be securely within 14 hours (max timezone offset is +/- 14)
-    if (minDiff <= 14) {
-      return bestMatch;
-    }
-
-    return null;
+    return best;
   }
 
-  Future<void> insertOrUpdateMetrics(HealthMetricsTableCompanion entry) async {
+  Future<void> insertOrUpdateMetrics(
+    HealthMetricsTableCompanion entry, {
+    bool force = false,
+  }) async {
     final d = entry.date.value;
     final normalized = DateTime(d.year, d.month, d.day, 12, 0, 0);
     final personId = entry.personID.value;
 
-    if (personId == null || personId.isEmpty) return;
+    if (personId == null || personId.isEmpty) {
+      debugPrint("HealthMetricsDAO: Skipping save, personId is empty");
+      return;
+    }
 
-    final dateStr =
-        "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
-    final category = entry.category.present
-        ? entry.category.value ?? 'General'
-        : 'General';
-    final deterministicId = IDGen.generateDeterministicUuid(
-      personId,
-      "$dateStr:$category",
-    );
-
+    // We prefer to update an existing record for that day regardless of ID
     final existing = await getMetricsForDate(personId, normalized);
 
     if (existing != null) {
+      debugPrint("HealthMetricsDAO: Found existing record for $normalized (ID: ${existing.id}). Updating...");
+      // Merge values: keep the larger value for metrics that should only increase,
+      // and overwrite others if the new one is present.
+      // IF force is true, we always take the new value if present.
       final currentSteps = entry.steps.present ? entry.steps.value ?? 0 : 0;
       final savedSteps = existing.steps ?? 0;
       final updatedSteps = entry.steps.present
-          ? (currentSteps > savedSteps)
-                ? entry.steps
-                : Value(savedSteps)
+          ? (force || currentSteps > savedSteps ? entry.steps : Value(savedSteps))
           : Value(savedSteps);
 
       final currentCalories = entry.caloriesBurned.present
@@ -3561,10 +3609,51 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
           : 0;
       final savedCalories = existing.caloriesBurned ?? 0;
       final updatedCaloriesBurned = entry.caloriesBurned.present
-          ? (currentCalories > savedCalories)
-                ? entry.caloriesBurned
-                : Value(savedCalories)
+          ? (force || currentCalories > savedCalories
+              ? entry.caloriesBurned
+              : Value(savedCalories))
           : Value(savedCalories);
+
+      // Merge other fields if present in entry
+      final updatedSleep = entry.sleepHours.present
+          ? (entry.sleepHours.value != null &&
+                  (force || entry.sleepHours.value! > (existing.sleepHours ?? 0))
+              ? entry.sleepHours
+              : Value(existing.sleepHours))
+          : Value(existing.sleepHours);
+
+      final updatedWater = entry.waterGlasses.present
+          ? (entry.waterGlasses.value != null &&
+                  (force || entry.waterGlasses.value! > (existing.waterGlasses ?? 0))
+              ? entry.waterGlasses
+              : Value(existing.waterGlasses))
+          : Value(existing.waterGlasses);
+
+      final updatedExercise = entry.exerciseMinutes.present
+          ? (entry.exerciseMinutes.value != null &&
+                  (force || entry.exerciseMinutes.value! > (existing.exerciseMinutes ?? 0))
+              ? entry.exerciseMinutes
+              : Value(existing.exerciseMinutes))
+          : Value(existing.exerciseMinutes);
+
+      final updatedFocus = entry.focusMinutes.present
+          ? (entry.focusMinutes.value != null &&
+                  (force || entry.focusMinutes.value! > (existing.focusMinutes ?? 0))
+              ? entry.focusMinutes
+              : Value(existing.focusMinutes))
+          : Value(existing.focusMinutes);
+
+      final updatedWeight = entry.weightKg.present
+          ? (entry.weightKg.value != null && entry.weightKg.value! > 0
+              ? entry.weightKg
+              : Value(existing.weightKg))
+          : Value(existing.weightKg);
+
+      final updatedHeartRate = entry.heartRate.present
+          ? (entry.heartRate.value != null && entry.heartRate.value! > 0
+              ? entry.heartRate
+              : Value(existing.heartRate))
+          : Value(existing.heartRate);
 
       await (update(
         healthMetricsTable,
@@ -3574,10 +3663,28 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
           date: Value(existing.date),
           steps: updatedSteps,
           caloriesBurned: updatedCaloriesBurned,
+          sleepHours: updatedSleep,
+          waterGlasses: updatedWater,
+          exerciseMinutes: updatedExercise,
+          focusMinutes: updatedFocus,
+          weightKg: updatedWeight,
+          heartRate: updatedHeartRate,
           updatedAt: Value(DateTime.now()),
         ),
       );
+      debugPrint("HealthMetricsDAO: ✅ Record updated successfully.");
     } else {
+      final dateStr =
+          "${normalized.year}-${normalized.month.toString().padLeft(2, '0')}-${normalized.day.toString().padLeft(2, '0')}";
+      final category = entry.category.present
+          ? entry.category.value ?? 'General'
+          : 'General';
+      // Use deterministic ID for new records
+      final deterministicId = IDGen.generateDeterministicUuid(
+        personId,
+        "$dateStr:$category",
+      );
+      debugPrint("HealthMetricsDAO: No existing record found for $normalized. Inserting new record (ID: $deterministicId)...");
       await into(healthMetricsTable).insert(
         entry.copyWith(
           id: Value(deterministicId),
@@ -3586,6 +3693,7 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         ),
         mode: InsertMode.insertOrReplace,
       );
+      debugPrint("HealthMetricsDAO: ✅ New record inserted successfully.");
     }
   }
 
@@ -3596,13 +3704,13 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Future<void> cleanupDuplicates(String personId) async {
-    final all =
-        await (select(healthMetricsTable)
-              ..where((t) => t.personID.equals(personId))
-              ..orderBy([
-                (t) => OrderingTerm(expression: t.date, mode: OrderingMode.asc),
-              ]))
-            .get();
+    final all = await (select(healthMetricsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.asc),
+          ])).get();
+
+    if (all.isEmpty) return;
 
     final Map<String, List<HealthMetricsLocal>> grouped = {};
     for (var m in all) {
@@ -3613,20 +3721,67 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
 
     for (var entry in grouped.entries) {
       if (entry.value.length > 1) {
-        final targetId = IDGen.generateDeterministicUuid(personId, entry.key);
-        HealthMetricsLocal? winner;
+        // Find or create a winner (prefer General category or the one with deterministic ID)
+        final dateStr = entry.key;
+        final targetId =
+            IDGen.generateDeterministicUuid(personId, "$dateStr:General");
+
+        HealthMetricsLocal winner = entry.value.first;
         for (var m in entry.value) {
           if (m.id == targetId) {
             winner = m;
             break;
           }
+          if (m.category == 'General') {
+            winner = m;
+          }
         }
-        winner ??= entry.value.first;
+
+        // Merge all data from others into the winner
+        int maxSteps = winner.steps ?? 0;
+        int maxCaloriesBurned = winner.caloriesBurned ?? 0;
+        int maxWater = winner.waterGlasses ?? 0;
+        int maxExercise = winner.exerciseMinutes ?? 0;
+        int maxFocus = winner.focusMinutes ?? 0;
+        double maxSleep = winner.sleepHours ?? 0.0;
+        double latestWeight = winner.weightKg ?? 0.0;
+        int latestHeartRate = winner.heartRate ?? 0;
+
+        for (var m in entry.value) {
+          if (m.id == winner.id) continue;
+          if ((m.steps ?? 0) > maxSteps) maxSteps = m.steps!;
+          if ((m.caloriesBurned ?? 0) > maxCaloriesBurned) {
+            maxCaloriesBurned = m.caloriesBurned!;
+          }
+          if ((m.waterGlasses ?? 0) > maxWater) maxWater = m.waterGlasses!;
+          if ((m.exerciseMinutes ?? 0) > maxExercise) {
+            maxExercise = m.exerciseMinutes!;
+          }
+          if ((m.focusMinutes ?? 0) > maxFocus) maxFocus = m.focusMinutes!;
+          if ((m.sleepHours ?? 0.0) > maxSleep) maxSleep = m.sleepHours!;
+          if ((m.weightKg ?? 0.0) > 0) latestWeight = m.weightKg!;
+          if ((m.heartRate ?? 0) > 0) latestHeartRate = m.heartRate!;
+        }
+
+        // Update winner
+        await (update(healthMetricsTable)..where((t) => t.id.equals(winner.id)))
+            .write(HealthMetricsTableCompanion(
+          steps: Value(maxSteps),
+          caloriesBurned: Value(maxCaloriesBurned),
+          waterGlasses: Value(maxWater),
+          exerciseMinutes: Value(maxExercise),
+          focusMinutes: Value(maxFocus),
+          sleepHours: Value(maxSleep),
+          weightKg: Value(latestWeight),
+          heartRate: Value(latestHeartRate),
+          updatedAt: Value(DateTime.now()),
+        ));
+
+        // Delete others
         for (var m in entry.value) {
           if (m.id != winner.id) {
-            await (delete(
-              healthMetricsTable,
-            )..where((t) => t.id.equals(m.id))).go();
+            await (delete(healthMetricsTable)..where((t) => t.id.equals(m.id)))
+                .go();
           }
         }
       }
@@ -3681,6 +3836,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           orElse: () => existingList.first,
         );
 
+        // Sum points from all records in existingList
+        double totalExistingPoints = 0.0;
+        for (var m in existingList) {
+          totalExistingPoints += (m.questPoints ?? 0.0);
+        }
+
         if (existingList.length > 1) {
           final idsToDelete = existingList
               .where((e) => e.id != existing.id)
@@ -3697,11 +3858,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           healthMetricsTable,
         )..where((t) => t.id.equals(existing.id))).write(
           HealthMetricsTableCompanion(
-            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            questPoints: Value(totalExistingPoints + points),
             updatedAt: Value(now),
           ),
         );
-      } else {
+      }
+ else {
         await into(healthMetricsTable).insert(
           HealthMetricsTableCompanion(
             id: Value(targetId),
@@ -3749,6 +3911,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           orElse: () => existingList.first,
         );
 
+        // Sum points from all records in existingList
+        double totalExistingPoints = 0.0;
+        for (var m in existingList) {
+          totalExistingPoints += (m.questPoints ?? 0.0);
+        }
+
         if (existingList.length > 1) {
           final idsToDelete = existingList
               .where((e) => e.id != existing.id)
@@ -3765,11 +3933,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           socialMetricsTable,
         )..where((t) => t.id.equals(existing.id))).write(
           SocialMetricsTableCompanion(
-            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            questPoints: Value(totalExistingPoints + points),
             updatedAt: Value(now),
           ),
         );
-      } else {
+      }
+ else {
         await into(socialMetricsTable).insert(
           SocialMetricsTableCompanion(
             id: Value(targetId),
@@ -3817,6 +3986,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           orElse: () => existingList.first,
         );
 
+        // Sum points from all records in existingList
+        double totalExistingPoints = 0.0;
+        for (var m in existingList) {
+          totalExistingPoints += (m.questPoints ?? 0.0);
+        }
+
         if (existingList.length > 1) {
           final idsToDelete = existingList
               .where((e) => e.id != existing.id)
@@ -3833,11 +4008,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           financialMetricsTable,
         )..where((t) => t.id.equals(existing.id))).write(
           FinancialMetricsTableCompanion(
-            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            questPoints: Value(totalExistingPoints + points),
             updatedAt: Value(now),
           ),
         );
-      } else {
+      }
+ else {
         await into(financialMetricsTable).insert(
           FinancialMetricsTableCompanion(
             id: Value(targetId),
@@ -3885,6 +4061,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           orElse: () => existingList.first,
         );
 
+        // Sum points from all records in existingList
+        double totalExistingPoints = 0.0;
+        for (var m in existingList) {
+          totalExistingPoints += (m.questPoints ?? 0.0);
+        }
+
         if (existingList.length > 1) {
           final idsToDelete = existingList
               .where((e) => e.id != existing.id)
@@ -3901,11 +4083,12 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
           projectMetricsTable,
         )..where((t) => t.id.equals(existing.id))).write(
           ProjectMetricsTableCompanion(
-            questPoints: Value((existing.questPoints ?? 0.0) + points),
+            questPoints: Value(totalExistingPoints + points),
             updatedAt: Value(now),
           ),
         );
-      } else {
+      }
+ else {
         await into(projectMetricsTable).insert(
           ProjectMetricsTableCompanion(
             id: Value(targetId),
@@ -4718,7 +4901,6 @@ class AiPromptsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get personID => text()
       .nullable()
-      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
       .named('person_id')();
   TextColumn get aiModel => text().named('ai_model')(); // gemini, opencode, etc.
   TextColumn get prompt => text().named('prompt')();
@@ -4772,7 +4954,6 @@ class ConfigsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get personID => text()
       .nullable()
-      .references(PersonsTable, #id, onDelete: KeyAction.cascade)
       .named('person_id')();
   TextColumn get key => text()(); // e.g., 'finance_currency'
   TextColumn get value => text()();
@@ -4847,6 +5028,10 @@ class SSHSessionsDAO extends DatabaseAccessor<AppDatabase>
       
   Future<int> deleteSessionsByIp(String ip) =>
       (delete(sSHSessionsTable)..where((t) => t.ipAddress.equals(ip))).go();
+
+  Future<int> updateAiModelByIp(String ip, String aiModel) =>
+      (update(sSHSessionsTable)..where((t) => t.ipAddress.equals(ip)))
+          .write(SSHSessionsTableCompanion(aiModel: Value(aiModel)));
 }
 
 // --- 6. Main Database Class ---
@@ -4894,8 +5079,8 @@ class SSHSessionsDAO extends DatabaseAccessor<AppDatabase>
     PersonContactsTable,
     AiPromptsTable,
     ConfigsTable,
-  ],
-  daos: [
+    HourlyActivityLogTable,
+    ],  daos: [
     ThemesTableDAO,
     ExternalWidgetsDAO,
     InternalWidgetsDAO,
@@ -4924,14 +5109,14 @@ class SSHSessionsDAO extends DatabaseAccessor<AppDatabase>
     SSHSessionsDAO,
     MetricsDAO,
     FeedbackDAO,
-  ],
-)
+    HourlyActivityLogDAO,
+    ],)
 class AppDatabase extends _$AppDatabase {
   final PowerSyncDatabase? powerSync;
 
   AppDatabase([QueryExecutor? executor, this.powerSync])
     : super(executor ?? _openConnection()) {
-    print("OBVIOUS LOG: DATABASE VERSION IS 25");
+    print("OBVIOUS LOG: DATABASE VERSION IS 49");
   }
 
   factory AppDatabase.powersync(PowerSyncDatabase db) {
@@ -4949,7 +5134,7 @@ class AppDatabase extends _$AppDatabase {
     storeDateTimeAsText: true,
   );
   @override
-  int get schemaVersion => 46;
+  int get schemaVersion => 49;
 
   Future<void> clearAllData() async {
     await transaction(() async {
@@ -4966,6 +5151,22 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
+        if (from < 49) {
+          // Version 49: Fix broken FK in hourly_activity_log by recreating it
+          await m.deleteTable('hourly_activity_log');
+          await m.createTable(hourlyActivityLogTable);
+        }
+        if (from < 48) {
+          // In case it wasn't created yet in an intermediate update
+          try {
+            await m.createTable(hourlyActivityLogTable);
+          } catch (_) {}
+        }
+        if (from < 47) {          // Schema version 47 adds ai_model to the 'projects' table.
+          // Since 'projects' is a PowerSync-managed table, its local representation is a view.
+          // PowerSync manages its own schema updates via powersync_schema.dart.
+          // We must NOT use m.addColumn here for PowerSync tables.
+        }
         if (from < 46) {
           await m.createTable(sSHSessionsTable);
         }
