@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -7,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthMetricCard.dart';
 import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
@@ -16,6 +17,9 @@ import 'package:ice_gate/ui_layer/health_page/widgets/QuickActionButton.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/ui_layer/health_page/widgets/HabitCircularItem.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:drift/drift.dart' hide Column;
 
 class HealthPage extends StatefulWidget {
   const HealthPage({super.key});
@@ -92,7 +96,12 @@ class _HealthPageState extends State<HealthPage>
       duration: const Duration(milliseconds: 1000),
     );
 
-    _loadHealthData();
+    // Load after the first frame so AppLocalizations is fully resolved.
+    // initState runs before the locale delegate provides AppLocalizations,
+    // so calling it directly here would always get null locale and bail out.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _loadHealthData();
+    });
   }
 
   @override
@@ -100,6 +109,13 @@ class _HealthPageState extends State<HealthPage>
     WidgetsBinding.instance.removeObserver(this);
     _gridAnimationController.dispose();
     super.dispose();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // No retry logic needed here — initState schedules load via addPostFrameCallback.
+    // didChangeAppLifecycleState handles app-resume reloads.
   }
 
   @override
@@ -129,10 +145,65 @@ class _HealthPageState extends State<HealthPage>
         });
         _gridAnimationController.forward(from: 0.0);
       }
-    } catch (e) {
-      debugPrint('Error loading health data: $e');
+    } catch (e, stack) {
+      // Log full stack so we can diagnose future issues
+      debugPrint('Error loading health data: $e\n$stack');
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  Future<void> _logWeight(BuildContext context, HealthLogsDAO dao) async {
+    final TextEditingController weightController = TextEditingController();
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text("Log Weight"),
+          content: TextField(
+            controller: weightController,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(
+              hintText: "Enter weight in kg",
+              suffixText: "kg",
+            ),
+            autofocus: true,
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("Cancel"),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                final weight = double.tryParse(weightController.text);
+                if (weight != null && weight > 0) {
+                  final now = DateTime.now();
+                  await dao.insertWeightLog(
+                    WeightLogsTableCompanion.insert(
+                      id: IDGen.generateUuid(),
+                      personID: Value(personId),
+                      weightKg: Value(weight),
+                      timestamp: Value(now),
+                      createdAt: Value(now),
+                    ),
+                  );
+                  // Update the daily metrics record as well for trend tracking
+                  await database.healthMetricsDAO.updateWeight(
+                    personId,
+                    now,
+                    weight,
+                  );
+                  if (context.mounted) Navigator.pop(context);
+                }
+              },
+              child: const Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -186,7 +257,7 @@ class _HealthPageState extends State<HealthPage>
                 height: 300,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: colorScheme.primary.withValues(alpha: 0.05),
+                  color: colorScheme.primary.withValues(alpha: 0.02),
                 ),
               ),
             ),
@@ -208,21 +279,29 @@ class _HealthPageState extends State<HealthPage>
                     backgroundColor: colorScheme.surface.withValues(alpha: 0.8),
                     elevation: 0,
                     centerTitle: false,
-                    flexibleSpace: FlexibleSpaceBar(
-                      background: Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              colorScheme.primary.withValues(alpha: 0.1),
-                              colorScheme.surface,
-                            ],
+                    flexibleSpace: ClipRect(
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                        child: Container(
+                          decoration: BoxDecoration(
+                            color: colorScheme.surface.withValues(alpha: 0.7),
+                            border: Border(
+                              bottom: BorderSide(
+                                color: colorScheme.outlineVariant.withValues(
+                                  alpha: 0.2,
+                                ),
+                              ),
+                            ),
                           ),
                         ),
                       ),
                     ),
                     actions: [
+                      _buildHeaderButton(
+                        context,
+                        icon: Icons.hub_rounded,
+                        onPressed: () => context.push('/health/integrations'),
+                      ),
                       _buildHeaderButton(
                         context,
                         icon: Icons.auto_graph_rounded,
@@ -272,6 +351,8 @@ class _HealthPageState extends State<HealthPage>
                     ),
                   ),
 
+                  // Interactive Weight Tracking Section
+
                   // Health Metrics Grid
                   _isLoading
                       ? const SliverFillRemaining(
@@ -284,35 +365,69 @@ class _HealthPageState extends State<HealthPage>
                           final currentSleep = healthBlock.todaySleep.value;
                           final currentHR = healthBlock.todayHeartRate.value;
 
-                          final List<HealthMetric> displayMetrics =
-                              _healthMetrics.values.map((m) {
-                                if (m.id == 'steps') {
-                                  return m.copyWith(
-                                    value: currentSteps.toString(),
-                                    progress: (currentSteps / STEP_GOAL).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                  );
-                                }
-                                if (m.id == 'sleep') {
-                                  return m.copyWith(
-                                    value: currentSleep.toStringAsFixed(1),
-                                    progress: (currentSleep / SLEEP_GOAL).clamp(
-                                      0.0,
-                                      1.0,
-                                    ),
-                                  );
-                                }
-                                if (m.id == 'heart_rate') {
-                                  return m.copyWith(
-                                    value: currentHR > 0
-                                        ? currentHR.toString()
-                                        : m.value,
-                                  );
-                                }
-                                return m;
-                              }).toList();
+                          final currentWeight = healthBlock.latestWeight.value;
+                          print("current weight: " + currentWeight.toString());
+                          final currentWaterMl = healthBlock.todayWater.value;
+
+                          // todayExerciseMinutes is the SUM of exercise_logs.duration_minutes for today.
+                          // Updated reactively by _exerciseSubscription whenever an exercise is logged.
+                          final currentExerciseMin =
+                              healthBlock.todayExerciseMinutes.value;
+
+                          final List<HealthMetric>
+                          displayMetrics = _healthMetrics.values.map((m) {
+                            if (m.id == 'steps') {
+                              return m.copyWith(
+                                value: currentSteps.toString(),
+                                progress: (currentSteps / STEP_GOAL).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                            }
+                            if (m.id == 'sleep') {
+                              return m.copyWith(
+                                value: currentSleep.toStringAsFixed(1),
+                                progress: (currentSleep / SLEEP_GOAL).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                            }
+                            if (m.id == 'heart_rate') {
+                              return m.copyWith(
+                                value: currentHR > 0
+                                    ? currentHR.toString()
+                                    : m.value,
+                              );
+                            }
+                            if (m.id == 'weight' && currentWeight > 0) {
+                              return m.copyWith(
+                                value: currentWeight.toStringAsFixed(1),
+                              );
+                            }
+                            // Reactively update water card from the live signal.
+                            // This ensures the card reflects real-time water_logs sum.
+                            if (m.id == 'water' && currentWaterMl > 0) {
+                              return m.copyWith(
+                                value: currentWaterMl.toString(),
+                                progress: (currentWaterMl / WATER_GOAL).clamp(
+                                  0.0,
+                                  1.0,
+                                ),
+                              );
+                            }
+                            // Reactively update exercise card from the live signal.
+                            // Driven by _exerciseSubscription → SUM(exercise_logs.duration_minutes).
+                            if (m.id == 'exercise' && currentExerciseMin > 0) {
+                              return m.copyWith(
+                                value: currentExerciseMin.toString(),
+                                progress: (currentExerciseMin / EXERCISE_GOAL)
+                                    .clamp(0.0, 1.0),
+                              );
+                            }
+                            return m;
+                          }).toList();
 
                           return SliverPadding(
                             padding: const EdgeInsets.all(16.0),

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'; // Import generated code
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
@@ -78,7 +78,9 @@ class FocusBlock {
 
   // Exercise Mode Signals
   final isExerciseMode = signal<bool>(false);
+  final isStopwatchMode = signal<bool>(false);
   final exerciseType = signal<String>('');
+  final stopwatchElapsedSeconds = signal<int>(0);
 
   // Elon Musk 5-Minute Block Mode Signals
   final isMuskMode = signal<bool>(false);
@@ -100,7 +102,9 @@ class FocusBlock {
 
   // Timer
   Timer? _timer;
-  DateTime? _actualStartTime; // Persists across pauses for logging
+  DateTime? _actualStartTime; // Absolute start of the session
+  DateTime? _lastStartTime;   // Start of current running segment (for pause support)
+  int _accumulatedSeconds = 0; // Sum of durations of all segments before the current one
   DateTime? _targetEndTime;
   String? _activeSessionId;
   bool _isStarting = false;
@@ -182,9 +186,15 @@ class FocusBlock {
     try {
       isRunning.value = true;
       _actualStartTime ??= DateTime.now();
-      _targetEndTime = DateTime.now().add(
-        Duration(seconds: remainingTime.value),
-      );
+      _lastStartTime = DateTime.now();
+      
+      if (isStopwatchMode.value) {
+        _targetEndTime = null;
+      } else {
+        _targetEndTime = DateTime.now().add(
+          Duration(seconds: remainingTime.value),
+        );
+      }
 
       // Force immediate metadata update for instant play/pause button toggle
       _updateMediaMetadata();
@@ -193,6 +203,24 @@ class FocusBlock {
       _timer?.cancel();
       final totalSeconds = remainingTime.value;
       _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
+        if (isStopwatchMode.value) {
+          final now = DateTime.now();
+          final currentSegmentElapsed = now.difference(_lastStartTime!).inSeconds;
+          final totalElapsed = _accumulatedSeconds + currentSegmentElapsed;
+          
+          if (totalElapsed != stopwatchElapsedSeconds.value) {
+            stopwatchElapsedSeconds.value = totalElapsed;
+            // Update remainingTime for UI consistency
+            remainingTime.value = totalElapsed; 
+            
+            if (totalElapsed % 5 == 0) {
+              _updateLiveActivity();
+            }
+            _updateMediaMetadata();
+          }
+          return;
+        }
+
         if (_targetEndTime == null) return;
         final now = DateTime.now();
         final remaining = _targetEndTime!.difference(now);
@@ -308,14 +336,13 @@ class FocusBlock {
 
       try {
         _liveActivities.updateActivity(_activityId!, {
-          'title': "ICE Gate Focus",
-          'songName': songName,
+          'title': isStopwatchMode.value ? "Exercise Active" : "ICE Gate Focus",
+          'songName': isStopwatchMode.value ? exerciseType.value : songName,
           'cover': "music_cover",
-          'artist': currentSessionType.value,
-          'progress':
-              1.0 -
-              (remainingTime.value /
-                  _getDurationForType(currentSessionType.value)),
+          'artist': isStopwatchMode.value ? "Active" : currentSessionType.value,
+          'progress': isStopwatchMode.value 
+              ? 0.0 // No progress bar for stopwatch
+              : (1.0 - (remainingTime.value / _getDurationForType(currentSessionType.value))),
         });
       } catch (e) {
         print("FocusBlock: Live Activity update failed (quietly skipped): $e");
@@ -331,6 +358,13 @@ class FocusBlock {
 
     isRunning.value = false;
     isSyncingWithClock.value = false;
+
+    // Accumulate time spent in current segment
+    if (_lastStartTime != null) {
+      _accumulatedSeconds += DateTime.now().difference(_lastStartTime!).inSeconds;
+      _lastStartTime = null;
+    }
+
     if (_targetEndTime != null) {
       remainingTime.value = _targetEndTime!
           .difference(DateTime.now())
@@ -369,6 +403,8 @@ class FocusBlock {
   void resetTimer() {
     pauseTimer();
     _actualStartTime = null;
+    _lastStartTime = null;
+    _accumulatedSeconds = 0;
     _targetEndTime = null;
     _activeSessionId = null;
     remainingTime.value = _getDurationForType(currentSessionType.value);
@@ -377,11 +413,17 @@ class FocusBlock {
     _updateMediaMetadata();
   }
 
-  void stopTimer() {
-    // Save as 'interrupted' if desired, or just reset
-    _saveSession(status: 'interrupted');
+  /// Persists session (including exercise_logs when [isExerciseMode]) then clears timer state.
+  Future<void> stopTimer() async {
+    print("FocusBlock: stopTimer called. Saving session...");
+    await _saveSession(status: 'interrupted');
     resetTimer();
   }
+
+  /// True when there is elapsed time or the timer is still running (exercise save/stop).
+  bool get hasActiveClockForSave =>
+      _actualStartTime != null &&
+      (_accumulatedSeconds > 0 || isRunning.value);
 
   Future<void> completeSession() async {
     pauseTimer();
@@ -566,21 +608,50 @@ class FocusBlock {
     print("🚀 [FocusBlock] Starting Exercise: $type for $minutes min");
     currentSessionType.value = 'Focus';
     isExerciseMode.value = true;
+    isStopwatchMode.value = false;
+    stopwatchElapsedSeconds.value = 0;
     exerciseType.value = type;
     remainingTime.value = minutes * 60;
     startTimer();
   }
 
+  void startStopwatchExercise(String type) {
+    print("🚀 [FocusBlock] Starting Stopwatch Exercise: $type");
+    currentSessionType.value = 'Focus';
+    isExerciseMode.value = true;
+    isStopwatchMode.value = true;
+    stopwatchElapsedSeconds.value = 0;
+    exerciseType.value = type;
+    remainingTime.value = 0;
+    startTimer();
+  }
+
   // --- Database Actions ---
 
-  Future<String?> _saveSession({required String status}) async {
-    if (_currentPersonId.isEmpty) return null;
+  Future<String?> _saveSession({String status = 'completed'}) async {
+    if (_actualStartTime == null) return null;
 
-    final totalDuration = _getDurationForType(currentSessionType.value);
-    final duration = totalDuration - remainingTime.value;
+    // Important: Final accumulation if currently running
+    if (isRunning.value && _lastStartTime != null) {
+      _accumulatedSeconds += DateTime.now().difference(_lastStartTime!).inSeconds;
+      _lastStartTime = DateTime.now(); // Reset for next segment if needed
+    }
 
-    // Only save significant sessions (e.g., > 1 minute)
-    if (duration < 60) return null;
+    final duration = _accumulatedSeconds;
+    if (duration == 0 && status == 'interrupted') {
+      return null;
+    }
+    // Manual stop: skip noise for normal focus, but always allow exercise timer saves.
+    if (duration < 10 &&
+        status == 'interrupted' &&
+        !isExerciseMode.value) {
+      print("FocusBlock: Session too short to save (< 10s).");
+      return null;
+    }
+
+    final exerciseMinutesLogged = duration <= 0
+        ? 0
+        : ((duration + 59) ~/ 60); // ceil to minutes for exercise_logs / metrics
 
     final sessionId = IDGen.UUIDV7();
     final session = FocusSessionsTableCompanion.insert(
@@ -596,33 +667,51 @@ class FocusBlock {
       notes: drift.Value(
         sessionNotes.value.isNotEmpty ? sessionNotes.value : null,
       ),
+      categories: drift.Value(
+        isExerciseMode.value ? 'health-exercise' : null,
+      ),
     );
 
     await _focusSessionDao.insertSession(session);
 
     // Record to Health Metrics
+    // Standardize to NOON local to match HealthBlock normalization exactly
     final normalizedToday = DateTime(
       _actualStartTime!.year,
       _actualStartTime!.month,
       _actualStartTime!.day,
+      12,
     );
     await _healthMetricsDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion(
         personID: drift.Value(_currentPersonId),
         date: drift.Value(normalizedToday),
-        focusMinutes: drift.Value(duration ~/ 60),
+        focusMinutes: drift.Value(
+          isExerciseMode.value ? 0 : duration ~/ 60,
+        ),
+        exerciseMinutes: drift.Value(
+          isExerciseMode.value ? exerciseMinutesLogged : 0,
+        ),
         updatedAt: drift.Value(DateTime.now()),
       ),
     );
 
     // Record Exercise Log if in Exercise Mode
-    if (isExerciseMode.value && status == 'completed') {
+    // For exercise, we log even if interrupted (as long as > 1 min)
+    if (isExerciseMode.value &&
+        duration > 0 &&
+        (status == 'completed' || status == 'interrupted')) {
       final exerciseLog = ExerciseLogsTableCompanion.insert(
         id: IDGen.UUIDV7(),
         personID: drift.Value(_currentPersonId),
         type: exerciseType.value,
-        durationMinutes: duration ~/ 60,
+        durationMinutes: exerciseMinutesLogged,
+        intensity: const drift.Value('medium'),
         timestamp: drift.Value(DateTime.now()),
+        // Link to the focus_session row so getDailyExerciseWithSession()
+        // can JOIN and return the exact duration_seconds instead of the rounded minutes.
+        // sessionId is the UUID of the focus_sessions row we just inserted above.
+        focusSessionID: drift.Value(sessionId),
       );
       await _healthLogsDao.insertExerciseLog(exerciseLog);
       print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");

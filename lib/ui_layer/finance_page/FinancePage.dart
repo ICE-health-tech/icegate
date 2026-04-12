@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/ui_layer/finance_page/models/FinanceAsset.dart';
 import 'package:ice_gate/ui_layer/finance_page/services/FinanceService.dart';
@@ -11,6 +11,8 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/ui_layer/finance_page/widgets/MarketTicker.dart';
+import 'package:ice_gate/ui_layer/finance_page/utils/QuantMath.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -347,10 +349,24 @@ class _FinancePageState extends State<FinancePage> {
               ],
             ),
 
-            // Portfolio Summary
+            // Market Ticker Marquee
+            SliverToBoxAdapter(
+              child: MarketTicker(
+                items: [
+                  TickerItem(symbol: 'BTC/USD', price: '-', change: 0.0),
+                  TickerItem(symbol: 'ETH/USD', price: '-', change: 0.0),
+                  TickerItem(symbol: 'S&P 500', price: '-', change: 0.0),
+                  TickerItem(symbol: 'VND/USD', price: '-', change: 0.0),
+                  TickerItem(symbol: 'FPT', price: '-', change: 0.0),
+                  TickerItem(symbol: 'GOLD', price: '-', change: 0.0),
+                ],
+              ),
+            ),
+
+            // Quant Command Center
             SliverToBoxAdapter(
               child: Watch((context) {
-                return _buildPortfolioHeader(context, financeBlock);
+                return _buildCommandCenter(context, financeBlock);
               }),
             ),
 
@@ -437,175 +453,230 @@ class _FinancePageState extends State<FinancePage> {
     );
   }
 
-  Widget _buildPortfolioHeader(BuildContext context, FinanceBlock block) {
+  Widget _buildCommandCenter(BuildContext context, FinanceBlock block) {
     final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final totalBalance = block.totalBalance.value;
-    final financePoints = block.financePoints.value;
     final l10n = AppLocalizations.of(context)!;
-
-    // Dynamic values for trend
-    final totalChange = block.monthlyNetChange.watch(context);
-    final changePercent = block.netChangePercent.watch(context);
-    final isPositive = totalChange >= 0;
+    
+    final totalBalance = block.totalBalance.value;
+    final dailyDelta = block.dailyDelta.value;
+    final sharpe = block.sharpeRatio.value;
+    final drawdown = block.drawdown.value;
+    
+    final isDeltaPositive = dailyDelta >= 0;
 
     return Container(
-      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-      padding: const EdgeInsets.all(28),
+      margin: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primary,
-            colorScheme.primary.withRed(
-              (colorScheme.primary.red + 40).clamp(0, 255),
+        color: Colors.black.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white10),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          // Total AUM Banner
+          Container(
+            padding: const EdgeInsets.all(24),
+            width: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blueGrey.shade900, Colors.black],
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+              ),
             ),
-            colorScheme.tertiary,
-          ],
-          stops: const [0.0, 0.5, 1.0],
-        ),
-        borderRadius: BorderRadius.circular(36),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.4),
-            blurRadius: 30,
-            offset: const Offset(0, 15),
-            spreadRadius: -5,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      "TOTAL AUM (ASSETS UNDER MANAGEMENT)",
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontFamily: 'monospace',
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    Icon(Icons.terminal_rounded, color: Colors.amberAccent, size: 16),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  block.formatCurrency(totalBalance),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'monospace',
+                    fontSize: 32,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Quant Metrics Grid
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: GridView.count(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisCount: 2,
+              childAspectRatio: 1.8,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              children: [
+                _buildQuantMetricTile(
+                  label: "DAILY DELTA (Δ)",
+                  value: "${isDeltaPositive ? '+' : ''}${block.formatCurrency(dailyDelta)}",
+                  subValue: "${(block.netChangePercent.value).toStringAsFixed(2)}%",
+                  color: isDeltaPositive ? Colors.greenAccent : Colors.redAccent,
+                ),
+                _buildQuantMetricTile(
+                  label: "SHARPE RATIO",
+                  value: sharpe.toStringAsFixed(2),
+                  subValue: "RISK-ADJUSTED",
+                  color: sharpe > 1 ? Colors.cyanAccent : Colors.orangeAccent,
+                ),
+                _buildQuantMetricTile(
+                  label: "MAX DRAWDOWN",
+                  value: "-${(drawdown * 100).toStringAsFixed(1)}%",
+                  subValue: "FROM ATH",
+                  color: Colors.redAccent,
+                ),
+                _buildQuantMetricTile(
+                  label: "SYSTEM STABILITY",
+                  value: "${block.spendingEfficiency.value.toStringAsFixed(0)}%",
+                  subValue: "LIQUIDITY SCORE",
+                  color: Colors.amberAccent,
+                ),
+              ],
+            ),
+          ),
+          
+          // Performance Bar
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+            child: _buildTacticalProgress(context, totalBalance),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildQuantMetricTile({
+    required String label,
+    required String value,
+    required String subValue,
+    required Color color,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                l10n.finance_total_net_worth,
-                style: textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onPrimary.withOpacity(0.7),
-                  letterSpacing: 2.0,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              Icon(
-                Icons.wallet_rounded,
-                color: colorScheme.onPrimary.withOpacity(0.4),
-                size: 20,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
           Text(
-            block.formatCurrency(totalBalance),
-            style: textTheme.displaySmall?.copyWith(
-              color: colorScheme.onPrimary,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -1.5,
-              height: 1.0,
+            label,
+            style: TextStyle(
+              color: Colors.white38,
+              fontFamily: 'monospace',
+              fontSize: 8,
+              fontWeight: FontWeight.bold,
             ),
           ),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 8,
-                ),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      (isPositive ? Colors.greenAccent : Colors.redAccent)
-                          .withValues(alpha: 0.25),
-                      (isPositive ? Colors.greenAccent : Colors.redAccent)
-                          .withValues(alpha: 0.05),
-                    ],
-                  ),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: (isPositive ? Colors.greenAccent : Colors.redAccent)
-                        .withValues(alpha: 0.25),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color:
-                          (isPositive ? Colors.greenAccent : Colors.redAccent)
-                              .withValues(alpha: 0.15),
-                      blurRadius: 8,
-                      spreadRadius: -1,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isPositive
-                          ? Icons.trending_up_rounded
-                          : Icons.trending_down_rounded,
-                      color: isPositive ? Colors.greenAccent : Colors.redAccent,
-                      size: 14,
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      '${isPositive ? '+' : ''}${block.formatCurrency(totalChange)} (${changePercent.toStringAsFixed(1)}%)',
-                      style: TextStyle(
-                        color: isPositive
-                            ? Colors.greenAccent
-                            : Colors.redAccent,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 13,
-                        letterSpacing: 0.3,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // Points display - REMOVED
-              // Container(
-              //   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-              //   decoration: BoxDecoration(
-              //     color: Colors.white.withOpacity(0.15),
-              //     borderRadius: BorderRadius.circular(20),
-              //     border: Border.all(
-              //       color: Colors.white.withOpacity(0.2),
-              //       width: 1,
-              //     ),
-              //   ),
-              //   child: Row(
-              //     mainAxisSize: MainAxisSize.min,
-              //     children: [
-              //       const Icon(
-              //         Icons.bolt_rounded,
-              //         color: Colors.amberAccent,
-              //         size: 16,
-              //       ),
-              //       const SizedBox(width: 6),
-              //       Text(
-              //         '${financePoints.toInt()} ${l10n.social_points_suffix}',
-              //         style: const TextStyle(
-              //           color: Colors.white,
-              //           fontWeight: FontWeight.w900,
-              //           fontSize: 13,
-              //         ),
-              //       ),
-              //     ],
-              //   ),
-              // ),
-            ],
+          const SizedBox(height: 4),
+          Text(
+            value,
+            style: TextStyle(
+              color: color,
+              fontFamily: 'monospace',
+              fontSize: 14,
+              fontWeight: FontWeight.w900,
+            ),
           ),
-          const SizedBox(height: 16),
-          // Progress to next milestone (visual improvement)
-          _buildPointsProgress(context, totalBalance),
+          Text(
+            subValue,
+            style: TextStyle(
+              color: Colors.white24,
+              fontFamily: 'monospace',
+              fontSize: 8,
+            ),
+          ),
         ],
       ),
+    );
+  }
+
+  Widget _buildTacticalProgress(BuildContext context, double totalBalance) {
+    final block = context.read<FinanceBlock>();
+    final percentage = block.milestoneProgress.value;
+    final nextVal = block.nextMilestone.value;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              "NEXT MILESTONE: ${block.formatCurrency(nextVal)}",
+              style: TextStyle(
+                color: Colors.white38,
+                fontFamily: 'monospace',
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              "${(percentage * 100).toInt()}%",
+              style: TextStyle(
+                color: Colors.amberAccent,
+                fontFamily: 'monospace',
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Stack(
+          children: [
+            Container(
+              height: 4,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.white10,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 800),
+              curve: Curves.easeOutQuart,
+              height: 4,
+              width: MediaQuery.of(context).size.width * 0.8 * percentage.clamp(0.01, 1.0),
+              decoration: BoxDecoration(
+                color: Colors.amberAccent,
+                borderRadius: BorderRadius.circular(2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.amberAccent.withValues(alpha: 0.5),
+                    blurRadius: 4,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ],
     );
   }
 

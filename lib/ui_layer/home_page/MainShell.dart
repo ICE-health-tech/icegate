@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodConsumePage.dart';
@@ -10,23 +12,32 @@ import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/projects_page.dart';
 import 'package:ice_gate/ui_layer/canvas_page/CanvasDynamicIsland.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightInputPage.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
 
   const MainShell({super.key, required this.child});
-  Widget _getMainButtonForRoute(BuildContext context, String route) {
-    final width = MediaQuery.of(context).size.width;
-    // final height = MediaQuery.of(context).size.height;
-    // final cross = sqrt(width * width + height * height);
 
-    // Reducing main button size to ~20% of previous responsive size
-    final double responsiveSize = (width * 1.4).clamp(20.0, 70.0);
+  /// Laptop / desktop window: smaller FAB and dock to the right (not centered).
+  static bool _wideChromeLayout(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (defaultTargetPlatform == TargetPlatform.macOS) {
+      return width >= 560;
+    }
+    return width >= 720;
+  }
 
+  Widget _getMainButtonForRoute(
+    BuildContext context,
+    String route,
+    double responsiveSize,
+  ) {
     // print("Current route: $route");
     // Determine which page's icon to show based on the route
     Widget pageIcon;
@@ -63,6 +74,12 @@ class MainShell extends StatelessWidget {
         break;
       case '/health/water':
         pageIcon = HealthPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/weight':
+        pageIcon = WeightPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/weight/log':
+        pageIcon = WeightInputPage.icon(context, size: responsiveSize);
         break;
       case '/health/food/dashboard':
         pageIcon = FoodDashboardPage.icon(context, size: responsiveSize);
@@ -126,11 +143,40 @@ class MainShell extends StatelessWidget {
         currentRoute.contains('/analysis') ||
         currentRoute.startsWith('/webview');
 
+    final bool wideLayout = _wideChromeLayout(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final double responsiveSize = wideLayout
+        ? (width * 0.028).clamp(32.0, 44.0)
+        : (width * 0.24).clamp(20.0, 58.0);
+    final mainButton = _getMainButtonForRoute(
+      context,
+      currentRoute,
+      responsiveSize,
+    );
+
     return Scaffold(
       // --- DYNAMIC BODY (Changes based on route) ---
+      // Wide desktop: bottomNavigationBar can get unbounded height — without a
+      // tight height, Align(centerRight) vertically centers the FAB mid-window.
       bottomNavigationBar: Padding(
-        padding: const EdgeInsets.only(bottom: 20.0, top: 5),
-        child: _getMainButtonForRoute(context, currentRoute),
+        padding: EdgeInsets.only(
+          bottom: wideLayout ? 16.0 : 20.0,
+          top: 5,
+          left: wideLayout ? 16.0 : 0,
+          right: wideLayout ? 16.0 : 0,
+        ),
+        child: wideLayout
+            ? SizedBox(
+                height: responsiveSize,
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: mainButton,
+                ),
+              )
+            : SizedBox(
+                height: responsiveSize,
+                child: Center(child: mainButton),
+              ),
       ),
 
       body: Stack(

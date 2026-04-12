@@ -5,7 +5,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/internal_route.dart';
 import 'package:ice_gate/ui_layer/animation_page/PrismEntryPage.dart'; // For TacticalGrid
 
 class LoginPage extends StatefulWidget {

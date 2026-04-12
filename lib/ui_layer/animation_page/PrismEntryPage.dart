@@ -1,13 +1,9 @@
 import 'dart:math' as math;
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
-import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
 
 class PrismEntryPage extends StatefulWidget {
   const PrismEntryPage({super.key});

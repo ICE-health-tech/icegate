@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
@@ -183,6 +183,8 @@ class HealthMetricsData {
         trend: '-3%',
         trendPositive: true,
         detailPage: '/health/heart_rate',
+        isFuture: true,
+        availabilityMessage: 'Apple Watch Required',
       ),
       HealthMetric(
         id: 'sleep',
@@ -198,6 +200,8 @@ class HealthMetricsData {
         trend: '+0.5h',
         trendPositive: true,
         detailPage: '/health/sleep',
+        isFuture: true,
+        availabilityMessage: 'Coming Soon',
       ),
       HealthMetric(
         id: 'water',
@@ -331,7 +335,10 @@ class HealthMetricsData {
     const exerciseGoal = EXERCISE_GOAL; // min
     const sleepGoal = SLEEP_GOAL; // hours
 
-    final l10n = AppLocalizations.of(context)!;
+    // AppLocalizations must be available — HealthPage._loadHealthData() guards this.
+    // If somehow still null (edge case), return empty map gracefully.
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return {};
 
     // 7. Build metric map
     return {
@@ -415,6 +422,8 @@ class HealthMetricsData {
         trend: null,
         trendPositive: null,
         detailPage: '/health/heart_rate',
+        isFuture: true,
+        availabilityMessage: 'Apple Watch Required',
       ),
       'sleep': HealthMetric(
         id: 'sleep',
@@ -428,6 +437,8 @@ class HealthMetricsData {
         trend: sleepHrs > 0 ? trendStr(sleepHrs, ySleep, l10n.health_hours_label[0]) : null,
         trendPositive: sleepHrs > 0 ? trendPositive(sleepHrs, ySleep) : null,
         detailPage: '/health/sleep',
+        isFuture: true,
+        availabilityMessage: 'Coming Soon',
       ),
       'focus': HealthMetric(
         id: 'focus',

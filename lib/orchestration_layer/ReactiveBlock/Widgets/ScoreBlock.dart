@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/GamificationService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
@@ -20,11 +20,11 @@ class ScoreBlock {
   late String _personID;
   String? _tenantID;
 
-  final _latestMeals = signal<List<DayWithMeal>>([]);
-  final _latestContacts = signal<List<SocialContact>>([]);
+  final _latestNotes = signal<List<ProjectNoteData>>([]);
   final _latestAccounts = signal<List<FinancialAccountData>>([]);
   final _latestAssets = signal<List<AssetData>>([]);
   final _latestTransactions = signal<List<TransactionData>>([]);
+  final _latestMeals = signal<List<DayWithMeal>>([]);
 
   // Track subscriptions and effect cleanups to cancel them on dispose
   final List<dynamic> _subscriptions = [];
@@ -129,6 +129,18 @@ class ScoreBlock {
     });
   }
 
+  /// Manual point increment for social actions (Legacy support)
+  Future<void> manualSocialIncrement(double amount) async {
+    final now = DateTime.now();
+    await _dao.incrementScore(
+      _personID,
+      now,
+      amount,
+      'social',
+      _tenantID,
+    );
+  }
+
   String? _initializedPersonID;
 
   Future<void> init(
@@ -138,6 +150,7 @@ class ScoreBlock {
     HealthBlock healthBlock,
     HealthMealDAO mealDAO,
     MetricsDAO metricsDAO,
+    ProjectNoteDAO noteDAO,
     String personID, {
     String? tenantID,
   }) async {
@@ -274,8 +287,8 @@ class ScoreBlock {
       }),
     );
     _subscriptions.add(
-      personDAO.getAllContacts().listen(
-        (contacts) => _latestContacts.value = contacts,
+      noteDAO.watchAllNotes(personID).listen(
+        (notes) => _latestNotes.value = notes,
       ),
     );
     _subscriptions.add(
@@ -311,8 +324,8 @@ class ScoreBlock {
     _subscriptions.add(
       effect(() {
         if (!isReady.value) return;
-        _triggerSocialUpdate(
-          _latestContacts.value,
+        _triggerMindUpdate(
+          _latestNotes.value,
           _totalSocialQuestPoints.value,
         );
       }),
@@ -341,12 +354,12 @@ class ScoreBlock {
 
         _updateFinanceScore(isBootstrap: true);
 
-        final contacts = await personDAO.getAllContacts().first.timeout(
+        final notes = await noteDAO.watchAllNotes(_personID).first.timeout(
           const Duration(seconds: 2),
           onTimeout: () => [],
         );
-        _updateSocialScore(
-          contacts,
+        _updateMindScore(
+          notes,
           _totalSocialQuestPoints.value,
           isBootstrap: true,
         );
@@ -399,12 +412,12 @@ class ScoreBlock {
     );
   }
 
-  void _triggerSocialUpdate(List<SocialContact> contacts, double questXP) {
+  void _triggerMindUpdate(List<ProjectNoteData> notes, double questXP) {
     if (!isReady.value) return;
     _socialDebounce?.cancel();
     _socialDebounce = Timer(
       const Duration(milliseconds: 500),
-      () => _updateSocialScore(contacts, questXP),
+      () => _updateMindScore(notes, questXP),
     );
   }
 
@@ -458,25 +471,19 @@ class ScoreBlock {
     _dao.updateFinancialScore(_personID, finalScore);
   }
 
-  Future<void> _updateSocialScore(
-    List<SocialContact> contacts,
+  Future<void> _updateMindScore(
+    List<ProjectNoteData> notes,
     double questXP, {
     bool isBootstrap = false,
   }) async {
     if (!isBootstrap && !isReady.value) return;
     if (_personID.isEmpty) return;
 
-    int totalAffection = 0;
-    for (var contact in contacts) {
-      totalAffection += contact.affection;
-    }
-
-    final contactPoints = (contacts.length * CONTACT_POINTS).toDouble();
-    final affectionPoints =
-        ((totalAffection ~/ AFFECTION_PER_UNIT) * AFFECTION_POINTS).toDouble();
-    final finalScore = contactPoints + affectionPoints + questXP;
-
-    await _dao.updateSocialScore(_personID, finalScore);
+    await _dao.updateMindScore(
+      _personID,
+      strategyNoteCount: notes.length,
+      questXP: questXP,
+    );
   }
 
   Future<void> _updateHealthScore(
@@ -539,12 +546,12 @@ class ScoreBlock {
     await _dao.updateHealthScore(_personID, finalScore);
   }
 
-  Future<void> manualSocialIncrement(double points, {String? label}) async {
+  Future<void> manualMindIncrement(double points, {String? label}) async {
     if (!isReady.value || _personID.isEmpty) return;
     await _metricsDAO.incrementSocialQuestPoints(
       _personID,
       points,
-      category: label ?? 'General',
+      category: label ?? 'Mind',
       tenantId: _tenantID,
     );
   }
@@ -602,7 +609,6 @@ class ScoreBlock {
     levelProgress.dispose();
     rankTitle.dispose();
     _latestMeals.dispose();
-    _latestContacts.dispose();
     _totalHealthQuestPoints.dispose();
     _totalSocialQuestPoints.dispose();
     _totalProjectQuestPoints.dispose();

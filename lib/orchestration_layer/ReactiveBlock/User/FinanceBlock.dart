@@ -2,12 +2,13 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:intl/intl.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/ui_layer/finance_page/utils/QuantMath.dart';
+import 'package:intl/intl.dart';
 
 class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
@@ -19,7 +20,10 @@ class FinanceBlock {
   StreamSubscription? _transactionsSubscription;
 
   late FinanceDAO _dao;
+  late PortfolioSnapshotsDAO _snapshotDao;
   late String _personId;
+
+  final _persistedAth = signal<double>(0.0);
 
   void updateAccounts(List<FinancialAccountProtocol> data) {
     accounts.value = data;
@@ -131,6 +135,70 @@ class FinanceBlock {
     return (change / previousBalance) * 100;
   });
 
+  /// All-Time High Net Worth (Persisted)
+  late final athBalance = computed(() {
+    final current = totalBalance.value;
+    final persisted = _persistedAth.value;
+    return current > persisted ? current : persisted;
+  });
+
+  /// Daily Delta (Net change today)
+  late final dailyDelta = computed(() {
+    final now = DateTime.now();
+    final todayStart = DateTime(now.year, now.month, now.day);
+    final txs = transactions.value;
+
+    final todayNet = txs
+        .where((t) => t.transactionDate.isAfter(todayStart))
+        .fold(0.0, (sum, t) {
+      if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
+      if (t.type == 'expense' || t.type == 'investment') return sum - t.amount;
+      return sum;
+    });
+
+    return todayNet;
+  });
+
+  /// Portfolio Sharpe Ratio
+  late final sharpeRatio = computed(() {
+    final history = historicalNetWorth.value;
+    if (history.length < 5) return 0.0;
+    
+    final returns = <double>[];
+    for (int i = 1; i < history.length; i++) {
+      if (history[i - 1] > 0) {
+        returns.add((history[i] - history[i - 1]) / history[i - 1]);
+      }
+    }
+    return QuantMath.calculateSharpeRatio(returns);
+  });
+
+  /// Current Drawdown from ATH
+  late final drawdown = computed(() {
+    final current = totalBalance.value;
+    final ath = athBalance.value;
+    return QuantMath.calculateDrawdown(current, ath);
+  });
+
+  /// 30-day Historical Net Worth series
+  late final historicalNetWorth = computed(() {
+    final List<double> series = [];
+    final now = DateTime.now();
+    final currentNW = totalBalance.value;
+    final txs = transactions.value;
+
+    for (int i = 0; i < 30; i++) {
+      final dateThreshold = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
+      final futureTxs = txs.where((t) => t.transactionDate.isAfter(dateThreshold)).fold(0.0, (sum, t) {
+        if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
+        if (t.type == 'expense' || t.type == 'investment') return sum - t.amount;
+        return sum;
+      });
+      series.add(currentNW - futureTxs);
+    }
+    return series.reversed.toList();
+  });
+
   /// Spending grouped by category this month
   late final spendingByCategory = computed(() {
     final now = DateTime.now();
@@ -180,8 +248,9 @@ class FinanceBlock {
 
     // We calculate progress relative to the previous "step"
     double start = 0;
-    if (target == 1000) start = 0;
-    else if (target == 5000) start = 1000;
+    if (target == 1000) {
+      start = 0;
+    } else if (target == 5000) start = 1000;
     else if (target == 10000) start = 5000;
     else start = target - 10000;
 
@@ -194,15 +263,37 @@ class FinanceBlock {
   late final useVnd = computed(() => _configBlock?.currency.value == 'VND');
 
   ConfigBlock? _configBlock;
+  void Function()? _snapshotDisposer;
 
-  void init(FinanceDAO dao, String personId, {ConfigBlock? configBlock}) async {
+  void init(
+    FinanceDAO dao,
+    PortfolioSnapshotsDAO snapshotDao,
+    String personId, {
+    ConfigBlock? configBlock,
+  }) async {
     if (personId.isEmpty) {
       debugPrint("FinanceBlock: Skipping init, personId is empty.");
       return;
     }
     _dao = dao;
+    _snapshotDao = snapshotDao;
     _personId = personId;
     _configBlock = configBlock;
+
+    // Load persistent ATH
+    final latest = await snapshotDao.getLatestSnapshot(personId);
+    if (latest != null) {
+      _persistedAth.value = latest.athAtTime;
+    }
+
+    _snapshotDisposer?.call();
+    _snapshotDisposer = effect(() {
+      final currentNW = totalBalance.value;
+      if (currentNW > _persistedAth.value) {
+        _persistedAth.value = currentNW;
+        _saveSnapshot();
+      }
+    });
 
     _accountsSubscription?.cancel();
     _accountsSubscription = dao.watchAccounts(personId).listen((data) {
@@ -302,9 +393,27 @@ class FinanceBlock {
     return _usdFormat.format(amount);
   }
 
+  Future<void> _saveSnapshot() async {
+    if (_personId.isEmpty) return;
+    try {
+      await _snapshotDao.insertSnapshot(
+        PortfolioSnapshotsTableCompanion.insert(
+          id: IDGen.UUIDV7(),
+          personID: Value(_personId),
+          totalNetWorth: totalBalance.value,
+          athAtTime: athBalance.value,
+          timestamp: Value(DateTime.now()),
+        ),
+      );
+    } catch (e) {
+      debugPrint("FinanceBlock: Failed to save snapshot: $e");
+    }
+  }
+
   void dispose() {
     _accountsSubscription?.cancel();
     _assetsSubscription?.cancel();
     _transactionsSubscription?.cancel();
+    _snapshotDisposer?.call();
   }
 }

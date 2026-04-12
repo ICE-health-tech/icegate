@@ -1,7 +1,7 @@
 import '../../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart';
 // import 'CarTracker.dart';
-import 'IOTTracker/IOTTracker.dart';
+// import 'IOTTracker/IOTTracker.dart';
 import '../../../orchestration_layer/Action/WebView/LiveMapPlugin.dart';
 import 'WebPlugin/GoogleCalendar.dart';
 import 'WebPlugin/Gmail.dart';
@@ -17,7 +17,7 @@ import 'TalkSSH/TalkSSH.dart';
 class AvailablePlugins {
   static const List<BasePluginProtocol> all = [
     // CarTrackerPlugin(),
-    IOTTrackerPlugin(),
+    // IOTTrackerPlugin(),
     // OSMMapPlugin(),
     LiveMapPlugin(),
     GoogleCalendarPlugin(),

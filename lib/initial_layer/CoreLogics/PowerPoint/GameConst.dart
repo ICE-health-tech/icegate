@@ -18,11 +18,10 @@ const double SLEEP_GOAL = 8.0; // hours
 const int SLEEP_POINTS_PER_HOUR = 2; // 1 hour = 2 points
 const int WEIGHT_POINTS_PER_KG = 100; // 1 kg = 100 points
 
-// ─── 🧠 Mind ───
-const int CONTACT_POINTS = 30; // each contact = +30 points
-const int AFFECTION_PER_UNIT = 5; // every 5 affection...
-const int AFFECTION_POINTS = 10; // ...= +10 points
-const int DEFAULT_AFFECTION_INCREASE = 5; // default increase on manual action
+// ─── 🧠 Mind (Strategy & Cognitive) ───
+const int STRATEGY_NOTE_POINTS = 50; // each strategy note = +50 points
+const int MENTAL_MILESTONE_POINTS = 100; // special entries
+const int STRATEGY_DEPTH_GOAL = 10; // notes per week?
 
 // ─── 💼 Projects ───
 const double TASK_SCORE_INCREMENT = 10; // each task completion = +10
@@ -43,10 +42,16 @@ const int FINANCE_BUDGET_ADHERENCE_POINTS = 50; // Staying under budget = +50 po
 const double FINANCE_INVESTMENT_RETURN_THRESHOLD = 5.0; // Every 5% return
 const double FINANCE_INVESTMENT_POINTS = 10; // ...= +10 points
 
-// ─── 🏆 Completion Bonuses (Daily) ───
+// ─── Completion Bonuses (Daily) ───
 const double STEP_GOAL_BONUS = 15.0;
 const double WATER_GOAL_BONUS = 10.0;
 const double FOCUS_GOAL_BONUS = 30.0;
 const double EXERCISE_GOAL_BONUS = 20.0;
 const double SLEEP_GOAL_BONUS = 15.0;
 const double CALORIE_LIMIT_BONUS = 20.0;
+
+// ─── Legacy Social (Kept for backward compatibility) ───
+const int CONTACT_POINTS = 10;
+const int AFFECTION_PER_UNIT = 10;
+const int AFFECTION_POINTS = 5;
+const double DEFAULT_AFFECTION_INCREASE = 1.0;

@@ -1,5 +1,7 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -7,14 +9,14 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 
-class DocumentManagerPage extends StatefulWidget {
-  const DocumentManagerPage({super.key});
+class NoteManagerPage extends StatefulWidget {
+  const NoteManagerPage({super.key});
 
   @override
-  State<DocumentManagerPage> createState() => _DocumentManagerPageState();
+  State<NoteManagerPage> createState() => _NoteManagerPageState();
 }
 
-class _DocumentManagerPageState extends State<DocumentManagerPage> {
+class _NoteManagerPageState extends State<NoteManagerPage> {
   final PageController _pageController = PageController();
   bool _isExpanded = false;
 
@@ -42,6 +44,32 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
       backgroundColor: colorScheme.surface,
       body: Stack(
         children: [
+          // Background Decorative Elements
+          Positioned(
+            top: -100,
+            right: -100,
+            child: Container(
+              width: 300,
+              height: 300,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colorScheme.primary.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 100,
+            left: -50,
+            child: Container(
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: colorScheme.secondary.withValues(alpha: 0.05),
+              ),
+            ),
+          ),
+
           PageView(
             controller: _pageController,
             onPageChanged: (index) {
@@ -75,102 +103,151 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
 
       return SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24),
+          physics: const BouncingScrollPhysics(),
+          padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SizedBox(height: 60), // Room for Dynamic Island
-              // Search Bar
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHighest.withValues(
-                    alpha: 0.3,
-                  ),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: TextField(
-                  controller: _searchController,
-                  onChanged: (val) => setState(() => _searchQuery = val),
-                  decoration: InputDecoration(
-                    icon: Icon(
-                      Icons.search,
-                      color: colorScheme.onSurface.withValues(alpha: 0.3),
+              const SizedBox(height: 60),
+              
+              // Search Bar with Glassmorphism
+              ClipRRect(
+                borderRadius: BorderRadius.circular(20),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
                     ),
-                    hintText: 'Search across Notion & Drive...',
-                    hintStyle: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.3),
-                      fontSize: 15,
+                    child: TextField(
+                      controller: _searchController,
+                      onChanged: (val) => setState(() => _searchQuery = val),
+                      style: TextStyle(color: colorScheme.onSurface),
+                      decoration: InputDecoration(
+                        icon: Icon(Icons.search, color: colorScheme.primary),
+                        hintText: 'Search notes...',
+                        hintStyle: TextStyle(
+                          color: colorScheme.onSurface.withValues(alpha: 0.3),
+                          fontSize: 15,
+                        ),
+                        border: InputBorder.none,
+                        suffixIcon: _searchQuery.isNotEmpty
+                            ? IconButton(
+                                icon: const Icon(Icons.close, size: 18),
+                                onPressed: () {
+                                  _searchController.clear();
+                                  setState(() => _searchQuery = '');
+                                },
+                              )
+                            : null,
+                      ),
                     ),
-                    border: InputBorder.none,
-                    suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.close, size: 18),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _searchQuery = '');
-                            },
-                          )
-                        : null,
                   ),
                 ),
               ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 12),
+
+              // Instant Status Feedback (Errors/Success)
+              Watch((context) {
+                final status = block.syncStatus.value;
+                if (status == null) return const SizedBox.shrink();
+                
+                final isError = status.contains('❌');
+                final isWarning = status.contains('⚠️');
+                final color = isError 
+                    ? colorScheme.error 
+                    : (isWarning ? Colors.orange : colorScheme.primary);
+                
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 24),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: color.withValues(alpha: 0.2)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              isError ? Icons.error_outline : (isWarning ? Icons.warning_amber_rounded : Icons.info_outline),
+                              size: 18,
+                              color: color,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                status,
+                                style: TextStyle(
+                                  color: color,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                );
+              }),
+
+              const SizedBox(height: 12),
 
               // Library Heading
               Watch((context) {
                 final selectedDir = block.selectedDirectory.value;
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            children: [
-                              if (selectedDir != null) ...[
-                                IconButton(
-                                  onPressed: () =>
-                                      block.selectedDirectory.value = null,
-                                  icon: const Icon(Icons.arrow_back_ios_new,
-                                      size: 18),
-                                  style: IconButton.styleFrom(
-                                      padding: EdgeInsets.zero),
-                                ),
-                                const SizedBox(width: 4),
-                              ],
-                              Text(
-                                selectedDir != null
-                                    ? p.basename(selectedDir.path)
-                                    : 'Library',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.bold,
-                                  color: colorScheme.onSurface,
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '${allFiles.length} documents ${selectedDir != null ? "in this folder" : "total"}',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: colorScheme.onSurface.withValues(alpha: 0.5),
-                              fontWeight: FontWeight.w500,
+                    Row(
+                      children: [
+                        if (selectedDir != null) ...[
+                          IconButton(
+                            onPressed: () => block.selectedDirectory.value = null,
+                            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                            style: IconButton.styleFrom(
+                              backgroundColor: colorScheme.surface.withValues(alpha: 0.5),
+                              padding: const EdgeInsets.all(8),
                             ),
                           ),
+                          const SizedBox(width: 8),
                         ],
+                        Text(
+                          selectedDir != null ? p.basename(selectedDir.path) : 'Note Hub',
+                          style: TextStyle(
+                            fontSize: 32,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -1,
+                            color: colorScheme.onSurface,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Padding(
+                      padding: const EdgeInsets.only(left: 4),
+                      child: Text(
+                        '${allFiles.length} notes ${selectedDir != null ? "in this vault" : "total"}',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: colorScheme.onSurface.withValues(alpha: 0.4),
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
                   ],
                 );
               }),
-              const SizedBox(height: 12),
+              const SizedBox(height: 32),
               
               // Folder Section
               Text(
@@ -178,26 +255,37 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
                 style: TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4),
-                  letterSpacing: 1.2,
+                  color: colorScheme.primary.withValues(alpha: 0.6),
+                  letterSpacing: 1.5,
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 16),
               Watch((context) {
                 final dirs = context.read<DocumentationBlock>().directories.value;
                 if (dirs.isEmpty) {
-                  return Text(
-                    'No folders found',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: colorScheme.onSurface.withValues(alpha: 0.2),
+                  return Container(
+                    padding: const EdgeInsets.all(20),
+                    decoration: BoxDecoration(
+                      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.03)),
+                    ),
+                    child: Center(
+                      child: Text(
+                        'No vaults found',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: colorScheme.onSurface.withValues(alpha: 0.2),
+                        ),
+                      ),
                     ),
                   );
                 }
                 return SizedBox(
-                  height: 100,
+                  height: 110,
                   child: ListView.builder(
                     scrollDirection: Axis.horizontal,
+                    physics: const BouncingScrollPhysics(),
                     itemCount: dirs.length,
                     itemBuilder: (context, index) {
                       final dir = dirs[index];
@@ -207,16 +295,16 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
                   ),
                 );
               }),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
 
-              // Recent Documents
+              // Recent Notes
               Text(
-                'LIVE DOCUMENTS',
+                'LIVE NOTES',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.w900,
-                  color: colorScheme.onSurface.withValues(alpha: 0.4),
-                  letterSpacing: 1.2,
+                  color: colorScheme.secondary.withValues(alpha: 0.6),
+                  letterSpacing: 1.5,
                 ),
               ),
               const SizedBox(height: 16),
@@ -229,12 +317,12 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
                         Icon(
                           Icons.description_outlined,
                           size: 48,
-                          color: Colors.grey.withOpacity(0.3),
+                          color: colorScheme.onSurface.withValues(alpha: 0.05),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
-                          'No documents found',
-                          style: TextStyle(color: Colors.grey),
+                        Text(
+                          'No notes found',
+                          style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.2)),
                         ),
                       ],
                     ),
@@ -243,6 +331,7 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
               else
                 ListView.builder(
                   shrinkWrap: true,
+                  padding: EdgeInsets.zero,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: filteredFiles.length,
                   itemBuilder: (context, index) {
@@ -251,7 +340,7 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
                   },
                 ),
 
-              const SizedBox(height: 100), // Spacing for FAB
+              const SizedBox(height: 120),
             ],
           ),
         ),
@@ -263,11 +352,12 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
     final name = p.basename(file.path);
     final stats = file.statSync();
     final timeStr = DateFormat('MMM d, HH:mm').format(stats.modified);
+    final colorScheme = Theme.of(context).colorScheme;
     
     // Source Indicators
     String source = 'LOCAL';
-    IconData icon = Icons.description;
-    Color color = Colors.blue;
+    IconData icon = Icons.article_rounded;
+    Color color = colorScheme.primary;
 
     if (file.path.contains('/Notion/')) {
       source = 'NOTION';
@@ -279,14 +369,79 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
       color = Colors.green;
     }
 
-    return GestureDetector(
-      onTap: () => context.push('/projects/editor', extra: file),
-      child: _buildDocListItem(
-        name.replaceAll('.md', ''),
-        source,
-        timeStr,
-        icon,
-        color.withValues(alpha: 0.1),
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: colorScheme.surface.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.03)),
+      ),
+      child: ListTile(
+        onTap: () => context.push('/projects/editor', extra: file),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: color, size: 22),
+        ),
+        title: Text(
+          name.replaceAll('.md', ''),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurface,
+          ),
+        ),
+        subtitle: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.05),
+                borderRadius: BorderRadius.circular(4),
+              ),
+              child: Text(
+                source,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
+                  color: color,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              timeStr,
+              style: TextStyle(
+                fontSize: 11,
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
+              ),
+            ),
+          ],
+        ),
+        trailing: PopupMenuButton<String>(
+          icon: Icon(Icons.more_vert_rounded, color: colorScheme.onSurface.withValues(alpha: 0.3)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          onSelected: (val) {
+            HapticFeedback.selectionClick();
+            if (val == 'delete') {
+               _showFileDeleteConfirmation(context, name, file);
+            } else if (val == 'move') {
+              _showFolderPicker(context, source: file, isMove: true);
+            } else if (val == 'copy') {
+              _showFolderPicker(context, source: file, isMove: false);
+            }
+          },
+          itemBuilder: (context) => [
+            const PopupMenuItem(value: 'move', child: Row(children: [Icon(Icons.move_to_inbox_rounded, size: 18), SizedBox(width: 12), Text('Move to...')])),
+            const PopupMenuItem(value: 'copy', child: Row(children: [Icon(Icons.copy_rounded, size: 18), SizedBox(width: 12), Text('Copy to...')])),
+            const PopupMenuDivider(),
+            const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red), SizedBox(width: 12), Text('Delete', style: TextStyle(color: Colors.red))])),
+          ],
+        ),
       ),
     );
   }
@@ -510,96 +665,6 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
     );
   }
 
-  Widget _buildDocListItem(
-    String title,
-    String source,
-    String time,
-    IconData icon,
-    Color bg,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerLow,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: colorScheme.primary, size: 20),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold,
-                    color: colorScheme.onSurface,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            source == 'NOTION'
-                                ? Icons.article_outlined
-                                : Icons.add_to_drive,
-                            size: 10,
-                            color: colorScheme.onSurface.withValues(alpha: 0.4),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            source,
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.4,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Modified $time',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: colorScheme.onSurface.withValues(alpha: 0.4),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSpeedDialFAB(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -1150,6 +1215,138 @@ class _DocumentManagerPageState extends State<DocumentManagerPage> {
           border: InputBorder.none,
           floatingLabelBehavior: FloatingLabelBehavior.always,
         ),
+      ),
+    );
+  }
+  void _showFileDeleteConfirmation(BuildContext context, String name, File file) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Delete Document?'),
+        content: Text('Are you sure you want to delete "$name"? This action cannot be undone.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('CANCEL'),
+          ),
+          TextButton(
+            onPressed: () {
+              context.read<DocumentationBlock>().deleteFile(file);
+              Navigator.pop(context);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Deleted $name')),
+              );
+            },
+            child: const Text('DELETE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _showFolderPicker(BuildContext context, {required File source, required bool isMove}) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (context) => _FolderPickerSheet(
+        onFolderSelected: (destination) {
+          final block = context.read<DocumentationBlock>();
+          if (isMove) {
+            block.moveFile(source, destination);
+          } else {
+            block.copyFile(source, destination);
+          }
+          Navigator.pop(context);
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('${isMove ? "Moved" : "Copied"} to ${p.basename(destination.path)}')),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _FolderPickerSheet extends StatelessWidget {
+  final Function(Directory) onFolderSelected;
+
+  const _FolderPickerSheet({required this.onFolderSelected});
+
+  @override
+  Widget build(BuildContext context) {
+    final block = context.watch<DocumentationBlock>();
+    final allDirs = block.directories.value;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Container(
+      height: MediaQuery.of(context).size.height * 0.7,
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 12),
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurface.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(24),
+            child: Row(
+              children: [
+                Text(
+                  'Destination',
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const Spacer(),
+                IconButton(
+                  icon: const Icon(Icons.close_rounded),
+                  onPressed: () => Navigator.pop(context),
+                  style: IconButton.styleFrom(
+                    backgroundColor: colorScheme.onSurface.withValues(alpha: 0.05),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              itemCount: allDirs.length,
+              itemBuilder: (context, index) {
+                final dir = allDirs[index];
+                final name = p.basename(dir.path);
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: ListTile(
+                    leading: Icon(Icons.folder_rounded, color: colorScheme.primary),
+                    title: Text(
+                      name,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    trailing: const Icon(Icons.chevron_right_rounded, size: 20),
+                    onTap: () => onFolderSelected(dir),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
       ),
     );
   }

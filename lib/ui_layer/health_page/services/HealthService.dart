@@ -37,8 +37,9 @@ class HealthService {
       HealthDataType.SLEEP_AWAKE,
       HealthDataType.HEART_RATE,
       HealthDataType.ACTIVE_ENERGY_BURNED,
+      HealthDataType.WEIGHT,
     ];
-    final permissions = List.filled(6, HealthDataAccess.READ);
+    final permissions = List.filled(types.length, HealthDataAccess.READ);
 
     try {
       debugPrint("HealthService: Requesting health authorization...");
@@ -63,13 +64,15 @@ class HealthService {
     final midnight = DateTime(now.year, now.month, now.day);
 
     try {
+      debugPrint("HealthService: [iPhone Sync] Requesting total steps for interval: $midnight to $now");
       final steps = await health.getTotalStepsInInterval(midnight, now);
       debugPrint(
-        "HealthService: [iPhone Sync] Steps for $midnight to $now: $steps",
+        "HealthService: [iPhone Sync] Result from getTotalStepsInInterval: $steps",
       );
 
       // Fallback: Get raw points if getTotalStepsInInterval returns 0 or null
       if (steps == null || steps == 0) {
+        debugPrint("HealthService: [iPhone Sync] Steps is null/0. Attempting raw points fallback...");
         final rawSteps = await health.getHealthDataFromTypes(
           startTime: midnight,
           endTime: now,
@@ -82,19 +85,23 @@ class HealthService {
         int sumRaw = 0;
         for (var p in rawSteps) {
           final v = p.value;
-          if (v is NumericHealthValue) sumRaw += v.numericValue.toInt();
+          if (v is NumericHealthValue) {
+            sumRaw += v.numericValue.toInt();
+          }
         }
         if (sumRaw > 0) {
           debugPrint(
             "HealthService: [iPhone Sync] Fallback Success: Summed $sumRaw steps from raw points.",
           );
           return sumRaw;
+        } else {
+          debugPrint("HealthService: [iPhone Sync] Fallback failed. No raw step data found for today.");
         }
       }
 
       return steps ?? 0;
-    } catch (e) {
-      debugPrint("HealthService: Error fetching steps: $e");
+    } catch (e, stack) {
+      debugPrint("HealthService: Error fetching steps: $e\n$stack");
       return 0;
     }
   }
@@ -280,6 +287,68 @@ class HealthService {
       return totalCalories;
     } catch (e) {
       debugPrint("HealthService: Error fetching calories for $day: $e");
+      return 0.0;
+    }
+  }
+
+
+  /// Fetches the latest weight reading.
+  static Future<double> fetchLatestWeight() async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0.0;
+
+    final now = DateTime.now();
+    final oneMonthAgo = now.subtract(const Duration(days: 30));
+
+    try {
+      final types = [HealthDataType.WEIGHT];
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: oneMonthAgo,
+        endTime: now,
+        types: types,
+      );
+
+      if (healthData.isEmpty) return 0.0;
+
+      // Sort by date to get the LATEST
+      healthData.sort((a, b) => b.dateTo.compareTo(a.dateTo));
+      final latestValue = healthData.first.value;
+
+      if (latestValue is NumericHealthValue) {
+        return latestValue.numericValue.toDouble();
+      }
+      return 0.0;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching latest weight: $e");
+      return 0.0;
+    }
+  }
+
+  /// Fetches weight for a specific day.
+  static Future<double> fetchWeightForDay(DateTime day) async {
+    final authorized = await requestPermissions();
+    if (!authorized) return 0.0;
+
+    final start = DateTime(day.year, day.month, day.day);
+    final end = start.add(const Duration(days: 1));
+
+    try {
+      final healthData = await health.getHealthDataFromTypes(
+        startTime: start,
+        endTime: end,
+        types: [HealthDataType.WEIGHT],
+      );
+
+      if (healthData.isEmpty) return 0.0;
+
+      // Usually weight is a single reading per day, take the latest for that day
+      healthData.sort((a, b) => b.dateTo.compareTo(a.dateTo));
+      final value = healthData.first.value;
+
+      if (value is NumericHealthValue) return value.numericValue.toDouble();
+      return 0.0;
+    } catch (e) {
+      debugPrint("HealthService: Error fetching weight for $day: $e");
       return 0.0;
     }
   }

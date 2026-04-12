@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/widget_page/ConfirmDialog.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
+// import '../widget_page/PluginList/x/OTTracker/OSMMapPlugin.dart';
 import '../../orchestration_layer/Action/WebView/LiveMapPlugin.dart';
 
 import 'package:go_router/go_router.dart';
@@ -17,10 +17,7 @@ import 'package:go_router/go_router.dart';
 void _navigateExternalUrl(BuildContext context, String url) async {
   // Check for special widget protocol
   if (url.startsWith('widget://')) {
-    if (url == 'widget://map') {
-      OSMMapPlugin.navigateToMap(context);
-      return;
-    }
+   
     if (url.startsWith('widget://webview')) {
       debugPrint("WebView widget detected: $url - Drag this to canvas to use");
       LiveMapPlugin.navigateToWebView(context, url);

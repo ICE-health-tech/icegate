@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class HourlyActivityPage extends StatefulWidget {
@@ -197,7 +196,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
                     logDate: DateTime.now(),
                     stepsCount: 0,
                     distanceKm: 0.0,
-                    caloriesBurned: 0,
+                    caloriesBurned: 0, createdAt: DateTime.now(), updatedAt: DateTime.now(),
                   ),
                 );
                 final heightFactor = (log.stepsCount / 2000).clamp(0.05, 1.0);

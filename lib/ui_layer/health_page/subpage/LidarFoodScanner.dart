@@ -63,10 +63,10 @@ class _LidarFoodScannerState extends State<LidarFoodScanner> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  FloatingActionButton.large(
+                  FloatingActionButton(
                     onPressed: _takeSnapshot,
                     backgroundColor: theme.colorScheme.primary,
-                    child: const Icon(Icons.camera_alt, size: 40),
+                    child: const Icon(Icons.camera_alt, size: 28),
                   ),
                 ],
               ),

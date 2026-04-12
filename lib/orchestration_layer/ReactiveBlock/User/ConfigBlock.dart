@@ -1,5 +1,5 @@
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 class ConfigBlock {
   late ConfigsDAO _dao;
@@ -21,7 +21,7 @@ class ConfigBlock {
   Future<void> _loadAllConfigs() async {
     final currencyConfig = await _dao.getConfig(_personId, 'app_currency');
     if (currencyConfig != null) {
-      currency.value = currencyConfig.value;
+      currency.value = currencyConfig.configValue;
     }
   }
 

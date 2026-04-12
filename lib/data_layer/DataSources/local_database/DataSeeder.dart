@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
@@ -16,17 +16,15 @@ class DataSeeder {
     final person = await db.personManagementDAO.getPersonById(guestPersonId);
     if (person != null) return; // Already seeded
 
-    print("Seeding database...");
-
-    // 1. Create Person using PersonProtocol
+    // 1. Create Person using PersonProtocol (generic guest — no real PII)
     final personProtocol = PersonProtocol(
       id: guestPersonId,
-      firstName: 'Long',
-      lastName: 'Duy',
-      dateOfBirth: DateTime(1, 1, 1),
-      gender: 'Unknown',
-      phoneNumber: '0123456789',
-      profileImageUrl: 'https://example.com/profile.jpg',
+      firstName: 'Guest',
+      lastName: null,
+      dateOfBirth: null,
+      gender: null,
+      phoneNumber: null,
+      profileImageUrl: null,
     );
     final personId = await db.personManagementDAO.createPerson(
       personProtocol,
@@ -37,32 +35,31 @@ class DataSeeder {
     // 2. Create Email using EmailAddressProtocol
     final emailProtocol = EmailAddressProtocol.create(
       personID: personId,
-      emailAddress: 'longduy@example.com',
+      emailAddress: 'guest@example.invalid',
       isPrimary: true,
-      status: EmailStatus.verified,
+      status: EmailStatus.pending,
     );
-    print("DUYLONG>>>>>>$emailProtocol");
     await db.personManagementDAO.addEmail(emailProtocol);
 
     // 3. Create Account using UserAccountProtocol
     final accountProtocol = UserAccountProtocol.create(
       personID: personId,
       username: 'Guest',
-      role: 'admin',
+      role: 'user',
     );
     await db.personManagementDAO.createAccount(
       accountProtocol,
-      passwordHash: 'hashed_password', // Mock hash
+      passwordHash: r'$MOCK$SEED$PASSWORD$HASH$NOT$USABLE',
     );
 
     // 4. Create CV Address using CVAddressProtocol
     final cvAddressProtocol = CVAddressProtocol.create(
       personID: personId,
-      bio: 'Flutter Developer & Tech Enthusiast',
-      occupation: 'Software Engineer',
-      educationLevel: 'Bachelor',
-      location: 'Ha Noi, Vietnam',
-      websiteUrl: 'https://example.com',
+      bio: '',
+      occupation: '',
+      educationLevel: '',
+      location: '',
+      websiteUrl: null,
     );
     await db.personManagementDAO.createCVAddress(cvAddressProtocol);
 
@@ -71,7 +68,7 @@ class DataSeeder {
       FinancialAccountsTableCompanion(
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
-        accountName: const Value('Main Checking'),
+        accountName: const Value('Primary'),
         accountType: const Value('checking'),
         balance: const Value(0.00),
         currency: const Value(CurrencyType.USD),
@@ -106,8 +103,8 @@ class DataSeeder {
       GoalsTableCompanion(
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
-        title: const Value('Learn Rust'),
-        category: const Value('education'),
+        title: const Value('Sample goal'),
+        category: const Value('general'),
         status: const Value('active'),
         progressPercentage: const Value(0),
       ),
@@ -119,7 +116,7 @@ class DataSeeder {
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         goalID: Value(goalId),
-        habitName: const Value('Code Rust daily'),
+        habitName: const Value('Sample habit'),
         frequency: const Value('daily'),
         targetCount: const Value(1),
       ),
@@ -130,8 +127,8 @@ class DataSeeder {
       SkillsTableCompanion(
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
-        skillName: const Value('Flutter'),
-        proficiencyLevel: const Value(SkillLevel.expert),
+        skillName: const Value('Sample skill'),
+        proficiencyLevel: const Value(SkillLevel.beginner),
         yearsOfExperience: const Value(0),
         isFeatured: const Value(true),
       ),
@@ -142,10 +139,8 @@ class DataSeeder {
       AiAnalysisTableCompanion(
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
-        title: const Value('Welcome Analysis'),
-        detailedAnalysis: const Value(
-          'Initial system analysis of your profile and goals.',
-        ),
+        title: const Value('Sample analysis'),
+        detailedAnalysis: const Value('Placeholder content for local seed data.'),
         status: const Value('published'),
         category: const Value('Overall'),
         aiModel: const Value('system'),
@@ -173,44 +168,46 @@ class DataSeeder {
     await db.questDAO.insertQuest(
       QuestsTableCompanion(
         id: Value(IDGen.UUIDV7()),
-        title: const Value('Stamina Boost'),
+        title: const Value('Sample quest A'),
         personID: Value(personId),
-        description: const Value('Walk 10,000 steps today.'),
-        targetValue: const Value(10000.0),
-        currentValue: const Value(4320.0),
+        description: const Value('Mock quest description.'),
+        targetValue: const Value(1.0),
+        currentValue: const Value(0.0),
         category: const Value('health'),
+        type: const Value('system'),
       ),
     );
     await db.questDAO.insertQuest(
       QuestsTableCompanion(
         id: Value(IDGen.UUIDV7()),
-        title: const Value('Iron Will'),
+        title: const Value('Sample quest B'),
         personID: Value(personId),
-        description: const Value('Complete 3 heavy focus sessions.'),
-        targetValue: const Value(3.0),
-        currentValue: const Value(1.0),
+        description: const Value('Mock quest description.'),
+        targetValue: const Value(1.0),
+        currentValue: const Value(0.0),
         category: const Value('productivity'),
+        type: const Value('system'),
       ),
     );
 
     // 13. Seed External Widgets
     await db.externalWidgetsDAO.insertNewWidget(
       externalWidgetProtocol: const ExternalWidgetProtocol(
-        name: 'System Monitor',
+        name: 'Sample widget A',
         protocol: 'https',
         host: 'example.com',
-        url: '/widgets/monitor',
-        imageUrl: 'https://img.icons8.com/isometric/512/processor.png',
+        url: '/placeholder/a',
+        imageUrl: 'https://example.com/placeholder.png',
       ),
       personID: personId,
     );
     await db.externalWidgetsDAO.insertNewWidget(
       externalWidgetProtocol: const ExternalWidgetProtocol(
-        name: 'Weather Core',
+        name: 'Sample widget B',
         protocol: 'https',
         host: 'example.com',
-        url: '/widgets/weather',
-        imageUrl: 'https://img.icons8.com/isometric/512/cloud.png',
+        url: '/placeholder/b',
+        imageUrl: 'https://example.com/placeholder.png',
       ),
       personID: personId,
     );
@@ -219,8 +216,8 @@ class DataSeeder {
     await db.customNotificationDAO.insertNotification(
       CustomNotificationsTableCompanion.insert(
         id: IDGen.UUIDV7(),
-        title: 'Hydration Protocol',
-        content: 'Drink 500ml of water to maintain peak performance.',
+        title: 'Sample reminder',
+        content: 'Placeholder notification body.',
         scheduledTime: DateTime.now().add(const Duration(hours: 2)),
         category: const Value('Health'),
       ),
@@ -228,16 +225,12 @@ class DataSeeder {
 
     // 15. Seed Project Notes
     await db.projectNoteDAO.insertNote(
-      title: 'Văn phòng ảo',
+      title: 'Sample note',
       content: jsonEncode([
-        {'insert': 'Thông tin dịch vụ văn phòng ảo:\n'},
-        {'insert': 'Link báo giá: https://greenoffice.com.vn/bao-gia/\n', 'attributes': {'link': 'https://greenoffice.com.vn/bao-gia/'}},
-        {'insert': 'Giá: 650,000 VND / tháng\n'},
+        {'insert': 'Placeholder note content.\n'},
       ]),
       personID: personId,
-      category: 'finance',
+      category: 'general',
     );
-
-    print("Database seeded successfully.");
   }
 }

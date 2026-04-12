@@ -31,7 +31,7 @@ class DocumentationBlock {
   final directories = signal<List<Directory>>([]);
   final isSyncing = signal<bool>(false);
   final syncStatus = signal<String?>(null);
-  final activeDocumentTab = signal<int>(0); // Syncs with DocumentManagerPage PageView
+  final activeDocumentTab = signal<int>(0); // Syncs with NoteManagerPage PageView
 
   final notionSecret = signal<String?>(null); // Notion Phase 4
   final obsidianFolderName = signal<String?>(null); // Custom Obsidian Folder Name
@@ -121,6 +121,23 @@ class DocumentationBlock {
     }
   }
 
+  /// Deletes a file.
+  Future<void> deleteFile(File file) async {
+    try {
+      if (await file.exists()) {
+        syncStatus.value = "Deleting ${p.basename(file.path)}...";
+        await file.delete();
+        syncStatus.value = "✅ File deleted!";
+        _loadFiles();
+      }
+    } catch (e) {
+      print("Error deleting file: $e");
+      syncStatus.value = "❌ Delete failed: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
   /// Deletes a folder and all its contents recursively.
   Future<void> deleteFolder(Directory directory) async {
     try {
@@ -141,6 +158,86 @@ class DocumentationBlock {
       syncStatus.value = "❌ Delete failed: $e";
     } finally {
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
+  /// Moves a file to a new destination folder.
+  Future<void> moveFile(File file, Directory destination) async {
+    try {
+      final newPath = p.join(destination.path, p.basename(file.path));
+      if (file.path == newPath) return; // Same location
+
+      syncStatus.value = "Moving ${p.basename(file.path)}...";
+      await file.rename(newPath);
+      syncStatus.value = "✅ Moved!";
+      _loadFiles();
+    } catch (e) {
+      syncStatus.value = "❌ Move failed: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
+  /// Copies a file to a new destination folder.
+  Future<void> copyFile(File file, Directory destination) async {
+    try {
+      final newPath = p.join(destination.path, p.basename(file.path));
+      if (file.path == newPath) return; // Same location
+
+      syncStatus.value = "Copying ${p.basename(file.path)}...";
+      await file.copy(newPath);
+      syncStatus.value = "✅ Copied!";
+      _loadFiles();
+    } catch (e) {
+      syncStatus.value = "❌ Copy failed: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
+  /// Moves a folder to a new parent folder.
+  Future<void> moveFolder(Directory source, Directory destinationParent) async {
+    try {
+      final newPath = p.join(destinationParent.path, p.basename(source.path));
+      if (source.path == newPath) return;
+
+      syncStatus.value = "Moving folder ${p.basename(source.path)}...";
+      await source.rename(newPath);
+      syncStatus.value = "✅ Folder moved!";
+      _loadFiles();
+    } catch (e) {
+      syncStatus.value = "❌ Move failed: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
+  /// Copies a folder (recursively) to a new destination.
+  Future<void> copyFolder(Directory source, Directory destinationParent) async {
+    try {
+      final newPath = p.join(destinationParent.path, p.basename(source.path));
+      if (source.path == newPath) return;
+
+      syncStatus.value = "Copying folder ${p.basename(source.path)}...";
+      await _copyDirRecursive(source, Directory(newPath));
+      syncStatus.value = "✅ Folder copied!";
+      _loadFiles();
+    } catch (e) {
+      syncStatus.value = "❌ Copy failed: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
+    }
+  }
+
+  Future<void> _copyDirRecursive(Directory source, Directory destination) async {
+    await destination.create(recursive: true);
+    await for (final entity in source.list(recursive: false)) {
+      if (entity is Directory) {
+        final newDir = Directory(p.join(destination.path, p.basename(entity.path)));
+        await _copyDirRecursive(entity, newDir);
+      } else if (entity is File) {
+        await entity.copy(p.join(destination.path, p.basename(entity.path)));
+      }
     }
   }
 
@@ -387,10 +484,14 @@ class DocumentationBlock {
     
     files.value = filteredFiles;
 
-    // Load Folders (Top-level or with content)
+    // Load Folders (Children of current directory)
     final allDirs = allEntities.whereType<Directory>().where((dir) {
       final name = p.basename(dir.path);
-      return !_shouldIgnore(name);
+      if (_shouldIgnore(name)) return false;
+      
+      final parentPath = selectedDirectory.value?.path ?? _docDir!.path;
+      // Only show immediate children of the parent path
+      return p.equals(dir.parent.path, parentPath);
     }).toList();
     
     directories.value = allDirs;
@@ -486,11 +587,24 @@ class DocumentationBlock {
   /// Create a Local Folder and refresh UI
   Future<void> createLocalFolder(String name) async {
     if (_docDir == null) return;
-    final dirPath = p.join(_docDir!.path, name);
-    final dir = Directory(dirPath);
-    if (!await dir.exists()) {
-      await dir.create(recursive: true);
-      _loadFiles(); // Instant UI update
+    try {
+      final parentPath = selectedDirectory.value?.path ?? _docDir!.path;
+      final dirPath = p.join(parentPath, name);
+      final dir = Directory(dirPath);
+      
+      if (!await dir.exists()) {
+        syncStatus.value = "Creating folder '$name'...";
+        await dir.create(recursive: true);
+        syncStatus.value = "✅ Folder created!";
+        _loadFiles(); // Instant UI update
+      } else {
+        syncStatus.value = "⚠️ Folder '$name' already exists.";
+      }
+    } catch (e) {
+      print("Error creating folder: $e");
+      syncStatus.value = "❌ Error creating folder: $e";
+    } finally {
+      Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
     }
   }
 

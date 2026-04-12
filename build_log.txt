@@ -1,73 +1,1050 @@
-Warning: Building for device with codesigning disabled. You will have to manually codesign before deploying to device.
-Building duylong.art.icegate for device (ios-release)...
-To ensure your app continues to launch on upcoming iOS versions, UIScene lifecycle support will soon be required. Please see https://flutter.dev/to/uiscene-migration for the migration guide.
-
-Running Xcode build...                                          
-Xcode build done.                                           14.7s
-Failed to build iOS app
-Error output from Xcode build:
-↳
-    ** BUILD FAILED **
-
-
-Xcode's output:
-↳
-    Writing result bundle at path:
-    	/var/folders/12/p8277c592h92jxqjp0tp63mr0000gn/T/flutter_tools.1xAZnr/flutter_ios_build_temp_dir35fzgc/temporary_xcresult_bundle
-
-    lib/data_layer/DataSources/local_database/Database.dart:4405:12: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
-     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
-          into(sshHostsTable).insert(entry);
-               ^^^^^^^^^^^^^
-    lib/data_layer/DataSources/local_database/Database.dart:4408:14: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
-     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
-          update(sshHostsTable).replace(entry);
-                 ^^^^^^^^^^^^^
-    lib/data_layer/DataSources/local_database/Database.dart:4411:15: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
-     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
-          (delete(sshHostsTable)..where((t) => t.id.equals(id))).go();
-                  ^^^^^^^^^^^^^
-    lib/data_layer/DataSources/local_database/Database.dart:4411:46: Error: The getter 'id' isn't defined for the type 'Table'.
-     - 'Table' is from 'package:drift/src/dsl/dsl.dart' ('../../../.pub-cache/hosted/pub.dev/drift-2.28.2/lib/src/dsl/dsl.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
-          (delete(sshHostsTable)..where((t) => t.id.equals(id))).go();
-                                                 ^^
-    lib/data_layer/DataSources/local_database/Database.dart:4413:58: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
-     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
-      Stream<List<SSHHostData>> watchAllSSHHosts() => select(sshHostsTable).watch();
-                                                             ^^^^^^^^^^^^^
-    lib/data_layer/DataSources/local_database/Database.dart:4413:73: Error: A value of type 'Stream<List<dynamic>>' can't be returned from a function with return type 'Stream<List<SSHHostData>>'.
-     - 'Stream' is from 'dart:async'.
-     - 'List' is from 'dart:core'.
-     - 'SSHHostData' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-      Stream<List<SSHHostData>> watchAllSSHHosts() => select(sshHostsTable).watch();
-                                                                            ^
-    lib/data_layer/DataSources/local_database/Database.dart:4416:15: Error: The getter 'sshHostsTable' isn't defined for the type 'SSHHostsDAO'.
-     - 'SSHHostsDAO' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'sshHostsTable'.
-          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
-                  ^^^^^^^^^^^^^
-    lib/data_layer/DataSources/local_database/Database.dart:4416:46: Error: The getter 'id' isn't defined for the type 'HasResultSet'.
-     - 'HasResultSet' is from 'package:drift/src/dsl/dsl.dart' ('../../../.pub-cache/hosted/pub.dev/drift-2.28.2/lib/src/dsl/dsl.dart').
-    Try correcting the name to the name of an existing getter, or defining a getter or field named 'id'.
-          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
-                                                 ^^
-    lib/data_layer/DataSources/local_database/Database.dart:4416:62: Error: A value of type 'Future<dynamic>' can't be returned from a function with return type 'Future<SSHHostData?>'.
-     - 'Future' is from 'dart:async'.
-     - 'SSHHostData' is from 'package:ice_gate/data_layer/DataSources/local_database/Database.dart' ('lib/data_layer/DataSources/local_database/Database.dart').
-          (select(sshHostsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
-                                                                 ^
-    Target kernel_snapshot_program failed: Exception
-    Failed to package /Users/duylong/Code/Flutter/ice_gate.
-    Command PhaseScriptExecution failed with a nonzero exit code
-    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/flutter_app_group_directory-1.1.0/ios/flutter_app_group_directory/Sources/flutter_app_group_directory/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'flutter_app_group_directory' from project 'Pods')
-    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/volume_controller-3.4.2/ios/volume_controller/Sources/volume_controller/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'volume_controller' from project 'Pods')
-    warning: no rule to process file '/Users/duylong/.pub-cache/hosted/pub.dev/live_activities-2.4.3/ios/live_activities/Sources/live_activities/PrivacyInfo.xcprivacy' of type 'text.xml' for architecture 'arm64' (in target 'live_activities' from project 'Pods')
-    note: Run script build phase 'Run Script' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
-    note: Run script build phase 'Thin Binary' will be run during every build because the option to run the script phase "Based on dependency analysis" is unchecked. (in target 'Runner' from project 'Runner')
-
-Encountered error while building for device.
+  Generating the build script.
+  Compiling the build script.
+  Reading the asset graph.
+  Creating the asset graph.
+  Doing initial build cleanup.
+  Updating the asset graph.
+  Building, full build because there is no valid asset graph.
+  0s retrofit_generator on 233 inputs; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart
+W SDK language version 3.11.0 is newer than `analyzer` language version 3.9.0. Run `flutter packages upgrade`.
+  0s retrofit_generator on 233 inputs: 1 no-op; lib/data_layer/DataSources/cloud_database/powersync_connector.dart
+  retrofit_generator on lib/data_layer/DataSources/local_database/database.dart:
+  Running RetrofitGenerator
+  10s retrofit_generator on 233 inputs: 6 no-op; spent 8s analyzing, 1s resolving; lib/data_layer/DomainData/InternalWidget/ExternalWidget.dart
+  retrofit_generator on lib/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/Account/AuthenticationProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/Health/CaloriesProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/Health/TargetCaloriesProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/CVAddressProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/EmailAddressProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/PersonProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/PersonalInformationProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/ProfileProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/RegistrationProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/data_layer/Protocol/User/UserAccountProtocol.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/initial_layer/CoreLogics/HumanEvaluation.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  Running RetrofitGenerator
+W retrofit_generator on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  GpsLocation must provide a `toJson()` method which return a Map.
+  It is programmer's responsibility to make sure the GpsLocation is properly serialized
+W retrofit_generator on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  GpsLocation must provide a `toJson()` method which return a Map.
+  It is programmer's responsibility to make sure the GpsLocation is properly serialized
+  retrofit_generator on lib/initial_layer/FireAPI/GPSTracker/MapFetch.dart:
+  Running RetrofitGenerator
+  retrofit_generator on lib/ui_layer/widget_page/PluginList/WebPlugin/PluginDefinition.dart:
+  Running RetrofitGenerator
+  11s retrofit_generator on 233 inputs: 2 output, 231 no-op; spent 9s analyzing, 1s resolving
+  0s freezed on 233 inputs; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart
+  freezed on lib/data_layer/DataSources/local_database/database.dart:
+  Running FreezedGenerator
+  0s freezed on 233 inputs: 6 no-op; lib/data_layer/DomainData/InternalWidget/ExternalWidget.dart
+  freezed on lib/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/Account/AuthenticationProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/Health/CaloriesProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/Health/TargetCaloriesProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/CVAddressProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/EmailAddressProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/PersonProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/PersonalInformationProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/ProfileProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/RegistrationProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/data_layer/Protocol/User/UserAccountProtocol.dart:
+  Running FreezedGenerator
+  freezed on lib/initial_layer/CoreLogics/HumanEvaluation.dart:
+  Running FreezedGenerator
+  freezed on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  Running FreezedGenerator
+  freezed on lib/initial_layer/FireAPI/GPSTracker/MapFetch.dart:
+  Running FreezedGenerator
+  freezed on lib/ui_layer/widget_page/PluginList/WebPlugin/PluginDefinition.dart:
+  Running FreezedGenerator
+  1s freezed on 233 inputs: 15 output, 218 no-op
+  0s json_serializable on 466 inputs; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart
+  json_serializable on lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  1s json_serializable on 466 inputs: 1 no-op; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.freezed.dart
+  json_serializable on lib/data_layer/DataSources/cloud_database/powersync_connector.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/cloud_database/powersync_connector.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DataSources/cloud_database/powersync_schema.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/cloud_database/powersync_schema.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/DataSeeder.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/DataSeeder.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/DatabaseAgent.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/DatabaseAgent.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/database.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DataSources/local_database/database.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/ExternalWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/ExternalWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/ExternalWidgetImage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/ExternalWidgetImage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/WidgetProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/InternalWidget/WidgetProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/BluetoothDeviceInfo.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/GpsLocation.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Account/AuthenticationProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Account/AuthenticationProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/WidgetManager.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Canvas/WidgetManager.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Finance/FinanceMetricsProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Finance/FinanceMetricsProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Health/CaloriesProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Health/CaloriesProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Health/HealthMetricsData.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Health/HealthMetricsData.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  3s json_serializable on 466 inputs: 12 skipped, 4 output, 21 no-op; spent 2s analyzing; lib/data_layer/Protocol/Health/HealthMetricsData.freezed.dart
+  json_serializable on lib/data_layer/Protocol/Health/MindfulnessLogProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Health/MindfulnessLogProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Health/TargetCaloriesProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Health/TargetCaloriesProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Home/InternalWidgetProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Home/InternalWidgetProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Home/PluginProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Home/PluginProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Plugin/BasePluginProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Plugin/BasePluginProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Project/ProjectMetricsData.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Project/ProjectMetricsData.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Project/ProjectProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Project/ProjectProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Quest/QuestProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Quest/QuestProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Social/SocialMetricsData.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Social/SocialMetricsData.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Theme/JsonThemeAdapter.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Theme/JsonThemeAdapter.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/Theme/ThemeAdapter.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/Theme/ThemeAdapter.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/CVAddressProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/CVAddressProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/ContentProtocols.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/ContentProtocols.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/EmailAddressProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/EmailAddressProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/FinanceProtocols.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/FinanceProtocols.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/GrowthProtocols.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/GrowthProtocols.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/PersonProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/PersonProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/PersonalInformationProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/PersonalInformationProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/ProfileProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/ProfileProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/RegistrationProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/RegistrationProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/UserAccountProtocol.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/UserAccountProtocol.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Protocol/User/WidgetProtocols.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Protocol/User/WidgetProtocols.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/data_layer/Services/YoutubeService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/data_layer/Services/YoutubeService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  4s json_serializable on 466 inputs: 27 skipped, 11 output, 45 no-op; spent 3s analyzing; lib/data_layer/Services/YoutubeService.freezed.dart
+  json_serializable on lib/initial_layer/CoreLogics/BiometricAuthService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/BiometricAuthService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/CustomAuthService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/CustomAuthService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/GamificationService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/GamificationService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/Health/AIFoodCaloriesServices.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/HumanEvaluation.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/HumanEvaluation.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/LoginAction.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/LoginAction.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PasskeyAuthService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PasskeyAuthService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/GameConst.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/GameConst.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/GamificationService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/GamificationService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/StepPoint.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/PowerPoint/StepPoint.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHServiceNative.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHServiceNative.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHServiceStub.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SSHServiceStub.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SaveProfileAction.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SaveProfileAction.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SecureStorageService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/SecureStorageService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/CoreLogics/session_tracker.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/CoreLogics/session_tracker.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/DataLayer.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/DataLayer.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  9s json_serializable on 466 inputs: 44 skipped, 12 output, 63 no-op; spent 7s analyzing, 1s resolving; lib/initial_layer/DataLayer.freezed.dart
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetch.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetchExample.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/GpsLocationFetchExample.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/MapFetch.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/FireAPI/GPSTracker/MapFetch.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/FireAPI/UrlNavigate.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/FireAPI/UrlNavigate.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/FocusAudioHandler.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/FocusAudioHandler.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/Notification/NotificationInit.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/Notification/NotificationInit.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/RoutingLayer.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/RoutingLayer.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/ThemeLayer/CurrentThemeData.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/ThemeLayer/CurrentThemeData.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/initial_layer/ThemeLayer/ThemeLayer.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/initial_layer/ThemeLayer/ThemeLayer.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/l10n/app_localizations.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/l10n/app_localizations.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/l10n/app_localizations_en.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/l10n/app_localizations_en.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/l10n/app_localizations_vi.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/l10n/app_localizations_vi.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/main.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/main.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/LiveMapPlugin.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/LiveMapPlugin.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/WebViewPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/WebViewPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/WebViewWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/Action/WebView/WebViewWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/Action/WidgetNavigator.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/Action/WidgetNavigator.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/IDGen.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/IDGen.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Health/CaloriesBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Health/CaloriesBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Health/TargetCaloriesBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Health/TargetCaloriesBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  10s json_serializable on 466 inputs: 69 skipped, 12 output, 88 no-op; spent 8s analyzing, 1s resolving; lib/orchestration_layer/ReactiveBlock/Plugin/BluetoothGPSService.freezed.dart
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/AuthBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/AuthBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ContentBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ContentBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FocusBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/FocusBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/HealthBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/HealthBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/MusicBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/MusicBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/PersonBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/PersonBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/SocialBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/SocialBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/UpdateScoreGlobalState.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/ReactiveBlock/Widgets/UpdateScoreGlobalState.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/orchestration_layer/Services/QuestService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/orchestration_layer/Services/QuestService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/security_routing_layer/Routing/navigate_route/WidgetNameMapping.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/security_routing_layer/Routing/navigate_route/WidgetNameMapping.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/security_routing_layer/Routing/url_route/internal_route.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/security_routing_layer/Routing/url_route/internal_route.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ErrorPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ErrorPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/AnalysisCharts.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/AnalysisCharts.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/BackWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/BackWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/DepartmentCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/DepartmentCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ManaNotificationWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ManaNotificationWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/Score/UpdateScoreWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/Score/UpdateScoreWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ScoreAnimations.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ScoreAnimations.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/SettingWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/SettingWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/SwipeablePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/SwipeablePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ThemeManager.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/ThemeManager.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/UIResponsiveManager.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/UIResponsiveManager.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/WidgetCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/ReusableWidget/WidgetCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/UIConstants.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/UIConstants.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/animation_page/PrismEntryPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/animation_page/PrismEntryPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/CanvasDynamicIsland.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/CanvasDynamicIsland.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/DragCanvasGridPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/DragCanvasGridPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/ExternalDragWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/ExternalDragWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  11s json_serializable on 466 inputs: 109 skipped, 12 output, 128 no-op; spent 8s analyzing, 2s resolving; lib/ui_layer/canvas_page/ExternalDragWidget.freezed.dart
+  json_serializable on lib/ui_layer/canvas_page/GoalConfigurationWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/GoalConfigurationWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/InternalDragIconWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/InternalDragIconWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/PluginPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/PluginPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/canvas_page/StoreWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/canvas_page/StoreWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/common/LocalFirstImage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/common/LocalFirstImage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/FinanceDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/FinanceDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/FinancePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/FinancePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/finance_form/AddAccountDialog.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/finance_form/AddAccountDialog.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/finance_form/AddAssetDialog.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/finance_form/AddAssetDialog.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/models/FinanceAsset.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/models/FinanceAsset.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/finance_page/services/FinanceService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/finance_page/services/FinanceService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesMetrics.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesMetrics.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/CaloriesPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/ExercisePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/ExercisePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/HabitDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/HabitDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/HealthMetricCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/HealthMetricCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/HealthPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/HealthPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/Input/CameraFoodImport.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/Input/CameraFoodImport.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/models/HealthMetric.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/models/HealthMetric.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/services/HealthService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/services/HealthService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/ExerciseAnalysisPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodConsumePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodConsumePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodInputPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/FoodInputPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HealthAnalysisPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HealthAnalysisPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HeartRatePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HeartRatePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HourlyActivityPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/HourlyActivityPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/LidarFoodScanner.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/LidarFoodScanner.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/SleepPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/SleepPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/StepsDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/StepsDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/StepsPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/StepsPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/WaterPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/WaterPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/WeightPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/WeightPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/components/NutritionRingChart.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/components/NutritionRingChart.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/data_integration_page.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/subpage/data_integration_page.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/widgets/AddFoodModal.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/widgets/AddFoodModal.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/health_page/widgets/QuickActionButton.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/health_page/widgets/QuickActionButton.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/home_page/AddWidgetDialog.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/home_page/AddWidgetDialog.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/home_page/HomePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/home_page/HomePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/home_page/MainButton.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/home_page/MainButton.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/home_page/MainShell.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/home_page/MainShell.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/info_page/ScoringRulesPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/info_page/ScoringRulesPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/notification_page/NotificationInboxPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/notification_page/NotificationInboxPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/notification_page/NotificationManagerPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/notification_page/NotificationManagerPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/BlockReminderPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/BlockReminderPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/CreateProjectDialog.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/CreateProjectDialog.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/FocusHistoryPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/FocusHistoryPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  12s json_serializable on 466 inputs: 157 skipped, 12 output, 176 no-op; spent 9s analyzing, 2s resolving; lib/ui_layer/projects_page/FocusHistoryPage.freezed.dart
+  json_serializable on lib/ui_layer/projects_page/FocusPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/FocusPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectAnalysisPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectAnalysisPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectDetailsPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectDetailsPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectNotesPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/ProjectNotesPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/TaskItem.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/TaskItem.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/TextEditorPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/TextEditorPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/folder_details_page.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/folder_details_page.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/note_manager_page.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/note_manager_page.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/projects_page.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/projects_page.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/projects_page/text_editor_page.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/projects_page/text_editor_page.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/social_page/SocialAnalysisPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/social_page/SocialAnalysisPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/social_page/SocialDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/social_page/SocialDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/social_page/SocialNotesDashboard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/social_page/SocialNotesDashboard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/social_page/SocialPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/social_page/SocialPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/AnalysisDashboardPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/AnalysisDashboardPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/ChangePasswordPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/ChangePasswordPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/ChangeUsernamePage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/ChangeUsernamePage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/DocumentationPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/DocumentationPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/HunterInformationPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/HunterInformationPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/LoginPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/LoginPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/PersonalInformationPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/PersonalInformationPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/FinanceSectionCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/FinanceSectionCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/HealthSectionCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/HealthSectionCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/ProfileHeader.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/ProfileHeader.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/ProjectSectionCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/ProjectSectionCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/SocialSectionCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/user_page/main_deparment/SocialSectionCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/AddPluginForm.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/AddPluginForm.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/ConfirmDialog.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/ConfirmDialog.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/AvailablePlugins.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/AvailablePlugins.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/CompactOSMMapWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/CompactOSMMapWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/IOTTracker.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/IOTTracker.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/LocationCard.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/IOTTracker/OSMMapWidget.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/Notion/Notion.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/Notion/Notion.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSH.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSH.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewAdapter.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewAdapter.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewNative.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewNative.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewStub.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewStub.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewWeb.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/TerminalViewWeb.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHCommandInput.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHCommandInput.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHConnectionSheet.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHConnectionSheet.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHNoteSelectorSheet.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHNoteSelectorSheet.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHSearchBar.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHSearchBar.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHShortcutKeyRow.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/TalkSSH/widgets/SSHShortcutKeyRow.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/CryptoTracker.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/CryptoTracker.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/GitHub.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/GitHub.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Gmail.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Gmail.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Map.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Map.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/PluginDefinition.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/PluginDefinition.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Spotify.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Spotify.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Trello.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Trello.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Weather.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on lib/ui_layer/widget_page/PluginList/WebPlugin/Weather.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  json_serializable on test/WidgetTest.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on test/WidgetTest.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  14s json_serializable on 466 inputs: 216 skipped, 12 output, 235 no-op; spent 10s analyzing, 2s resolving; test/WidgetTest.freezed.dart
+  json_serializable on test/widget_test.dart:
+  Running JsonSerializableGenerator - 1 of 2
+  json_serializable on test/widget_test.dart:
+  Running JsonLiteralGenerator - 2 of 2
+  14s json_serializable on 466 inputs: 218 skipped, 12 output, 236 no-op; spent 10s analyzing, 2s resolving
+  0s drift_dev on 1864 inputs; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart
+  8s drift_dev on 1864 inputs: 5 skipped, 6 output; spent 8s analyzing; lib/data_layer/DataSources/local_database/database.freezed.dart
+  110s drift_dev on 1864 inputs: 223 skipped, 254 output; spent 110s analyzing; lib/data_layer/DataSources/local_database/database.freezed.dart
+  112s drift_dev on 1864 inputs: 451 skipped, 467 output, 35 no-op; spent 110s analyzing, 2s building; lib/data_layer/DataSources/local_database/database.dart.types.temp.dart
+  112s drift_dev on 1864 inputs: 1119 skipped, 467 output, 278 no-op; spent 110s analyzing, 2s building
+  0s source_gen:combining_builder on 932 inputs; lib/data_layer/DataSources/cloud_database/PowerSyncConnector.dart
+  0s source_gen:combining_builder on 932 inputs: 485 skipped, 15 output, 169 no-op; lib/ui_layer/info_page/ScoringRulesPage.dart.types.temp.dart
+  0s source_gen:combining_builder on 932 inputs: 683 skipped, 15 output, 234 no-op
+  Running the post build.
+  Writing the asset graph.
+  Built with build_runner in 139s; wrote 512 outputs.

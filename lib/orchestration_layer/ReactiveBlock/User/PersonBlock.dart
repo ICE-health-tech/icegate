@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -514,14 +514,14 @@ class PersonBlock {
       information.value = UserInformation(
         profiles: const UserProfile(
           id: DataSeeder.guestPersonId,
-          firstName: 'DuyLong',
-          lastName: 'Art',
-          username: 'Guest-Shield',
+          firstName: 'Guest',
+          lastName: 'DuyLongArt',
+          username: 'Guest',
           profileImageUrl:
               'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
         ),
         details: const UserDetails(
-          bio: 'Securing the digital frontier.',
+          bio: 'Securing the digital life.',
           occupation: 'Core Security Agent',
           location: 'Unknown Sector',
           email: 'agent@ice-shield.net',

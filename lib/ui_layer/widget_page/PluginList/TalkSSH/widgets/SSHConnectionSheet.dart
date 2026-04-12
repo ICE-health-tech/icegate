@@ -124,7 +124,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                         style: const TextStyle(fontFamily: 'Courier', fontWeight: FontWeight.bold),
                       ),
                       avatar: const Icon(Icons.computer, size: 16),
-                      backgroundColor: colorScheme.surfaceVariant,
+                      backgroundColor: colorScheme.surfaceContainerHighest,
                       side: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
                       onPressed: () {
                         widget.hostController.text = host.host;
@@ -155,7 +155,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceVariant.withOpacity(0.2),
+                color: colorScheme.surfaceContainerHighest.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
               ),
@@ -180,7 +180,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                     ),
                     value: widget.useTmux,
                     onChanged: widget.onUseTmuxChanged,
-                    activeColor: colorScheme.primary,
+                    activeThumbColor: colorScheme.primary,
                   ),
                   const Divider(height: 1, indent: 16, endIndent: 16),
                   Padding(
@@ -267,7 +267,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

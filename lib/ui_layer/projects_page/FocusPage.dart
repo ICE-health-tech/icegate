@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/UIConstants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
@@ -489,12 +489,14 @@ class _TimerControls extends StatelessWidget {
   final bool isRunning;
   final int totalDuration;
   final Color modeColor;
+  final bool isExerciseMode;
 
   const _TimerControls({
     required this.focusBlock,
     required this.isRunning,
     required this.totalDuration,
     required this.modeColor,
+    required this.isExerciseMode,
   });
 
   @override
@@ -503,10 +505,22 @@ class _TimerControls extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton.filled(
-          onPressed: () => focusBlock.resetTimer(),
-          icon: const Icon(Icons.refresh_rounded, size: 20),
+          tooltip: isExerciseMode ? 'Save & end exercise' : 'Reset timer',
+          onPressed: () async {
+            if (isExerciseMode && focusBlock.hasActiveClockForSave) {
+              await focusBlock.stopTimer();
+            } else {
+              focusBlock.resetTimer();
+            }
+          },
+          icon: Icon(
+            isExerciseMode ? Icons.stop_rounded : Icons.refresh_rounded,
+            size: 20,
+          ),
           style: IconButton.styleFrom(
-            backgroundColor: Theme.of(context).colorScheme.surfaceContainerHigh,
+            backgroundColor: isExerciseMode
+                ? Theme.of(context).colorScheme.errorContainer
+                : Theme.of(context).colorScheme.surfaceContainerHigh,
             padding: const EdgeInsets.all(12),
           ),
         ),
@@ -1247,6 +1261,7 @@ class _TimerCircle extends StatelessWidget {
                 isRunning: isRunning,
                 totalDuration: totalDuration,
                 modeColor: modeColor,
+                isExerciseMode: isExerciseMode,
               ),
             ],
           ),

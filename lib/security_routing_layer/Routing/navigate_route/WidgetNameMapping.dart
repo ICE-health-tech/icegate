@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_gate/ui_layer/user_page/HunterInformationPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/projects_page.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/TextEditorPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/text_editor_page.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SettingWidget.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectNotesPage.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
+// import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
 
 typedef WidgetFactory = Widget Function({String? identifier});
 
@@ -25,7 +25,7 @@ class WidgetNameMapping {
     "NotesPage": ({identifier}) => const TextEditorPage(),
     "SettingsPage": ({identifier}) => const SettingsWidget(),
     "ProjectNotes": ({identifier}) => const ProjectNotesPage(),
-    "GPSPage": ({identifier}) => const GPSTrackingPage(),
+    // "GPSPage": ({identifier}) => const GPSTrackingPage(),
   };
 
   Widget getWidgetByName(String name) {

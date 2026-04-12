@@ -3,9 +3,9 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
     as DatabaseAgent;
 import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
@@ -28,7 +28,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart'
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_gate/data_layer/DataSources/cloud_database/PowerSyncConnector.dart';
+import 'package:ice_gate/data_layer/DataSources/cloud_database/powersync_connector.dart';
 import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_service/audio_service.dart';
@@ -39,13 +39,14 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
-import 'package:ice_gate/security_routing_layer/Routing/url_route/InternalRoute.dart';
+import 'package:ice_gate/security_routing_layer/Routing/url_route/internal_route.dart';
 import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -99,11 +100,32 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _startHealthSync();
+    // NOTE: _startHealthSync() is called AFTER _initializeData() completes
+    // to ensure healthBlock is initialized before being accessed.
     _initializeData();
   }
 
   void _startHealthSync() {
+    // Exercise data source of truth is exercise_logs (Supabase/PowerSync),
+    // not HealthKit. Re-aggregate exercise_logs → health_metrics on ALL
+    // platforms (including macOS) since it reads from local DB.
+    healthBlock.syncExerciseHistory();
+
+    // Desktop platforms (macOS, Linux, Windows, Web) have no health sensors.
+    // They receive real sensor data passively via PowerSync from the phone.
+    // Skip HealthKit polling to prevent writing steps=0 and corrupting
+    // the source-of-truth data from iPhone.
+    final isDesktop = kIsWeb ||
+        defaultTargetPlatform == TargetPlatform.macOS ||
+        defaultTargetPlatform == TargetPlatform.linux ||
+        defaultTargetPlatform == TargetPlatform.windows;
+    if (isDesktop) {
+      debugPrint(
+        "DataLayer: ⏭️ Skipping HealthKit sync on desktop — no health sensors.",
+      );
+      return;
+    }
+
     _syncHealthData(days: 30);
     _healthSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _syncHealthData(days: 3);
@@ -111,10 +133,16 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   }
 
   Future<void> _syncHealthData({int days = 3}) async {
-    if (!_isInitialized || _hasError || healthBlock.personId.isEmpty) {
+    // Guard: healthBlock is a `late` field — check _isInitialized first to
+    // avoid LateInitializationError before _initializeData() assigns it.
+    if (!_isInitialized || _hasError) {
       debugPrint(
-        "DataLayer: Skipping health sync (not ready: initialized=$_isInitialized, hasPerson=${healthBlock.personId.isNotEmpty})",
+        "DataLayer: Skipping health sync (not ready: initialized=$_isInitialized)",
       );
+      return;
+    }
+    if (healthBlock.personId.isEmpty) {
+      debugPrint("DataLayer: Skipping health sync — personId not set yet.");
       return;
     }
     try {
@@ -150,6 +178,16 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       return;
     }
 
+    final personId = healthBlock.personId;
+    if (personId.isEmpty || personId == DataSeeder.guestPersonId) {
+      debugPrint("DataLayer: ⚠️ Skipping health sync for Guest ID ($personId)");
+      return;
+    }
+
+    // NOTE: exercise_minutes is NOT synced from HealthKit here.
+    // Its source of truth is exercise_logs (Supabase) → summed by
+    // HealthBlock._exerciseSubscription → saved to health_metrics.
+
     if (isToday) {
       final sleepHours = await HealthService.fetchSleepData();
       final heartRate = await HealthService.fetchLatestHeartRate();
@@ -162,7 +200,6 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         healthBlock.updateHeartRate(heartRate);
         healthBlock.updateCalories(calories.toInt());
 
-        // Ensure record exists in DB even if values are zero or haven't "increased" per HealthBlock logic
         await database.healthMetricsDAO.insertOrUpdateMetrics(
           HealthMetricsTableCompanion.insert(
             id: IDGen.generateDeterministicUuid(
@@ -225,21 +262,22 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       debugPrint("🚀 [Boot] Step 2: Initialize PowerSync...");
       String dbPath;
       if (kIsWeb) {
-        debugPrint("🌐 [Boot] Web platform detected. Initializing PowerSync with IndexedDB.");
-        dbPath = 'powersync33.db';
+        debugPrint(
+          "🌐 [Boot] Web platform detected. Initializing PowerSync with IndexedDB.",
+        );
+        // Bumped to powersync42.db to apply the stripped drift schemas cleanly.
+        dbPath = 'powersync42.db';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        dbPath = p.join(dir.path, 'powersync33.db');
+        dbPath = p.join(dir.path, 'powersync42.db');
       }
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
         path: dbPath,
       );
       await powersync.initialize();
-      
-      if (_databaseInstance == null) {
-        _databaseInstance = AppDatabase.powersync(powersync);
-      }
+
+      _databaseInstance ??= AppDatabase.powersync(powersync);
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
@@ -248,7 +286,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       debugPrint("🚀 [Boot] Step 4: Initialize Audio...");
       try {
         if (kIsWeb) {
-          debugPrint("🌐 [Boot] Web platform detected. Initializing raw FocusAudioHandler.");
+          debugPrint(
+            "🌐 [Boot] Web platform detected. Initializing raw FocusAudioHandler.",
+          );
           audioHandler = FocusAudioHandler();
         } else if (!_isAudioInitialized) {
           audioHandler = await AudioService.init(
@@ -336,7 +376,12 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 _syncHealthData();
 
                 projectBlock.init(database.projectsDAO, personId);
-                financeBlock.init(database.financeDAO, personId, configBlock: configBlock);
+                financeBlock.init(
+                  database.financeDAO,
+                  database.portfolioSnapshotsDAO,
+                  personId,
+                  configBlock: configBlock,
+                );
                 configBlock.init(database.configsDAO, personId);
                 questBlock.init(database, personId);
                 contentBlock.init(database.aiAnalysisDAO, personId);
@@ -349,6 +394,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   healthBlock,
                   database.healthMealDAO,
                   database.metricsDAO,
+                  database.projectNoteDAO,
                   personId,
                   tenantID: personBlock.information.value.profiles.tenantId,
                 );
@@ -399,7 +445,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         setState(() {
           _isInitialized = true;
         });
-        _syncHealthData();
+        // Start the periodic health sync NOW that all blocks are initialized.
+        _startHealthSync();
       }
       debugPrint("🚀 [Boot] ✅ initializationData sequence COMPLETED.");
 
@@ -585,6 +632,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<WidgetDAO>.value(value: database.widgetDAO),
         Provider<HealthMetricsDAO>.value(value: database.healthMetricsDAO),
         Provider<ProjectsDAO>.value(value: database.projectsDAO),
+        Provider<PortfolioSnapshotsDAO>.value(
+          value: database.portfolioSnapshotsDAO,
+        ),
         Provider<FocusSessionsDAO>.value(value: database.focusSessionsDAO),
         Provider<ScoreDAO>.value(value: database.scoreDAO),
         Provider<CustomNotificationDAO>.value(
@@ -595,7 +645,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<HealthLogsDAO>.value(value: database.healthLogsDAO),
         Provider<QuestDAO>.value(value: database.questDAO),
         Provider<HealthMealDAO>.value(value: database.healthMealDAO),
-        Provider<HourlyActivityLogDAO>.value(value: database.hourlyActivityLogDAO),
+        Provider<AchievementsDAO>.value(value: database.achievementsDAO),
+        Provider<HourlyActivityLogDAO>.value(
+          value: database.hourlyActivityLogDAO,
+        ),
         Provider<PersonBlock>.value(value: personBlock),
         Provider<AuthBlock>.value(value: authBlock),
         Provider<ObjectDatabaseBlock>.value(value: objectDatabaseBlock),

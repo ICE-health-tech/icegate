@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
@@ -256,11 +255,13 @@ class CanvasDynamicIsland extends StatelessWidget {
             else
               const Spacer(),
 
-            // Actions
+            // Actions (extra leading gap so quest/notification badge never paints over title)
             if (!isAnyTabOpen)
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
+              Padding(
+                padding: EdgeInsets.only(left: 10 * scalingFactor),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
                   if (currentRoute != '/widgets/ssh') ...[
                     // Focus Shortcut
                     GestureDetector(
@@ -282,7 +283,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                       ),
                     ),
                     SizedBox(width: 4 * scalingFactor),
-                    // Notifications
+                    // Notifications (badge shows active quest count; cap display to avoid overlap)
                     GestureDetector(
                       onTap: () {
                         HapticFeedback.selectionClick();
@@ -290,6 +291,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                       },
                       child: Stack(
                         clipBehavior: Clip.none,
+                        alignment: Alignment.topRight,
                         children: [
                           Container(
                             padding: EdgeInsets.all(4 * scalingFactor),
@@ -305,26 +307,38 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ),
                           if (numberOfQuests > 0)
                             Positioned(
-                              right: -2,
+                              right: 0,
                               top: -2,
                               child: Container(
-                                padding: EdgeInsets.all(3 * scalingFactor),
+                                padding: EdgeInsets.symmetric(
+                                  horizontal: 5 * scalingFactor,
+                                  vertical: 2 * scalingFactor,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colorScheme.error,
-                                  shape: BoxShape.circle,
+                                  borderRadius:
+                                      BorderRadius.circular(10 * scalingFactor),
                                 ),
                                 constraints: BoxConstraints(
-                                  minWidth: 14 * scalingFactor,
-                                  minHeight: 14 * scalingFactor,
+                                  minWidth: 16 * scalingFactor,
+                                  minHeight: 16 * scalingFactor,
+                                  maxWidth: 34 * scalingFactor,
                                 ),
-                                child: Text(
-                                  '$numberOfQuests',
-                                  style: TextStyle(
-                                    color: colorScheme.onError,
-                                    fontSize: 8 * scalingFactor,
-                                    fontWeight: FontWeight.bold,
+                                alignment: Alignment.center,
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    numberOfQuests > 99
+                                        ? '99+'
+                                        : '$numberOfQuests',
+                                    style: TextStyle(
+                                      color: colorScheme.onError,
+                                      fontSize: 9 * scalingFactor,
+                                      fontWeight: FontWeight.bold,
+                                      height: 1,
+                                    ),
+                                    textAlign: TextAlign.center,
                                   ),
-                                  textAlign: TextAlign.center,
                                 ),
                               ),
                             ),
@@ -333,6 +347,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                     ),
                   ],
                 ],
+                ),
               )
             else
               Row(
@@ -570,6 +585,8 @@ class CanvasDynamicIsland extends StatelessWidget {
           letterSpacing: 1.2 * scalingFactor,
         ),
         maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        minFontSize: 8,
       ),
     );
   }
@@ -594,8 +611,9 @@ class CanvasDynamicIsland extends StatelessWidget {
           final bytesIn = stats['bytesIn'] as int? ?? 0;
 
           String formatBytes(int bytes) {
-            if (bytes >= 1024 * 1024)
+            if (bytes >= 1024 * 1024) {
               return '${(bytes / (1024 * 1024)).toStringAsFixed(1)}M';
+            }
             if (bytes >= 1024) return '${(bytes / 1024).toStringAsFixed(1)}K';
             return '${bytes}B';
           }

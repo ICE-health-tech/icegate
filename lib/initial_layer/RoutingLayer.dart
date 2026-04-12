@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // NOTE: Please ensure these imports are correct for your project structure
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     hide ThemeData;
 // import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
@@ -12,7 +12,6 @@ import 'package:provider/provider.dart';
 import '../orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart';
-import 'package:provider/provider.dart';
 
 class Adapter extends StatefulWidget {
   final Widget childWidget;

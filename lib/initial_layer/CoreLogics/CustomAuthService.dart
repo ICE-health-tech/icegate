@@ -142,24 +142,39 @@ class CustomAuthService {
 
   /// Optional: Check for session JWT (similar to the TS machine's getJWT)
 
-  /// Trigger backend user synchronization
+  /// Trigger backend user synchronization with retry logic
   Future<Map<String, dynamic>> appSync(String token) async {
     final url = Uri.parse('$baseUrl/backend/person/app_sync');
-    try {
-      _logger.info('Triggering app_sync to $url');
-      final response = await http.get(
-        url,
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Bearer $token',
-        },
-      );
+    int retryCount = 0;
+    const maxRetries = 3;
 
-      return _handleJsonResponse(response);
-    } catch (e) {
-      _logger.severe('Error during app_sync: $e');
-      throw Exception('Sync failed: $e');
+    while (retryCount < maxRetries) {
+      try {
+        _logger.info('Triggering app_sync to $url (Attempt ${retryCount + 1})');
+        final response = await http.get(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer $token',
+          },
+        ).timeout(const Duration(seconds: 30));
+
+        return _handleJsonResponse(response);
+      } catch (e) {
+        retryCount++;
+        _logger.warning('Attempt $retryCount of app_sync failed: $e');
+        
+        if (retryCount >= maxRetries) {
+          _logger.severe('All $maxRetries attempts for app_sync failed: $e');
+          throw Exception('Sync failed after $maxRetries attempts: $e');
+        }
+        
+        // Wait before retrying (exponential backoff)
+        int delay = math.pow(2, retryCount).toInt();
+        await Future.delayed(Duration(seconds: delay));
+      }
     }
+    throw Exception('Unreachable state in appSync');
   }
 
   /// Fetch current user profile from backend
@@ -315,9 +330,13 @@ class CustomAuthService {
 
     if (!contentType.contains('application/json')) {
       _logger.warning('Expected JSON but got: $contentType');
-      _logger.fine('Response body: ${response.body}');
       
       // Handle HTML/Text error pages (like Cloudflare 530 or Nginx errors)
+      if (response.statusCode == 530) {
+        _logger.warning('Backend is offline (530). Returning offline sentinel.');
+        return {'status': 'offline', 'error': '530', 'message': 'The backend is currently unreachable.'};
+      }
+      
       if (response.statusCode >= 500) {
         throw Exception('Server error (${response.statusCode}). The backend might be offline.');
       } else if (response.statusCode >= 400) {

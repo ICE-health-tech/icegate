@@ -1,10 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
@@ -95,22 +96,58 @@ class ProjectsPage extends StatelessWidget {
           elevation: 0,
           leadingWidth: 0,
           leading: const SizedBox.shrink(),
+          flexibleSpace: ClipRect(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colorScheme.surface.withValues(alpha: 0.7),
+                  border: Border(
+                    bottom: BorderSide(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
           actions: [
             IconButton(
-              icon: const Icon(Icons.home_rounded, size: 30),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.home_rounded, size: 22),
+              ),
               onPressed: () {
                 WidgetNavigatorAction.smartPop(context);
               },
             ),
             IconButton(
-              icon: const Icon(Icons.grid_view, size: 30),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.grid_view, size: 22),
+              ),
               onPressed: () => context.go('/canvas'),
             ),
             IconButton(
-              icon: const Icon(Icons.settings, size: 30),
+              icon: Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(Icons.settings, size: 22),
+              ),
               onPressed: () => context.go('/settings'),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: 16),
           ],
         ),
         body: CustomScrollView(
@@ -144,42 +181,46 @@ class ProjectsPage extends StatelessWidget {
                           .where((g) => g.status != 'done')
                           .length;
 
-                      return Container(
-                        padding: const EdgeInsets.all(20),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [
-                              colorScheme.primaryContainer.withOpacity(0.4),
-                              colorScheme.primaryContainer.withOpacity(0.1),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: colorScheme.primaryContainer.withOpacity(
-                              0.2,
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(24),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          child: Container(
+                            padding: const EdgeInsets.all(20),
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  colorScheme.primaryContainer.withValues(alpha: 0.4),
+                                  colorScheme.primaryContainer.withValues(alpha: 0.1),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(24),
+                              border: Border.all(
+                                color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceAround,
+                              children: [
+                                _buildSummaryItem(
+                                  context,
+                                  'Projects',
+                                  '$projectsDone/${projectsActive + projectsDone}',
+                                  Icons.folder_copy_rounded,
+                                  Colors.blue,
+                                ),
+                                _buildSummaryItem(
+                                  context,
+                                  'Tasks',
+                                  '$tasksDone/${tasksDone + tasksActive}',
+                                  Icons.task_alt_rounded,
+                                  Colors.orange,
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceAround,
-                          children: [
-                            _buildSummaryItem(
-                              context,
-                              'Projects',
-                              '$projectsDone/${projectsActive + projectsDone}',
-                              Icons.folder_copy_rounded,
-                              Colors.blue,
-                            ),
-                            _buildSummaryItem(
-                              context,
-                              'Tasks',
-                              '$tasksDone/${tasksDone + tasksActive}',
-                              Icons.task_alt_rounded,
-                              Colors.orange,
-                            ),
-                          ],
                         ),
                       );
                     }),
@@ -205,22 +246,12 @@ class ProjectsPage extends StatelessWidget {
                             ),
                             const SizedBox(width: 12),
                             _ActionCard(
-                              width: 130,
-                              icon: Icons.library_books_rounded,
+                              width: 150,
+                              icon: Icons.edit_note_rounded,
                               label: 'Notes',
                               color: Colors.blue,
                               onTap: () {
-                                context.push("/project_notes");
-                              },
-                            ),
-                            const SizedBox(width: 12),
-                            _ActionCard(
-                              width: 120,
-                              icon: Icons.description_rounded,
-                              label: 'Doc Manager',
-                              color: Colors.teal,
-                              onTap: () {
-                                context.push("/projects/documents");
+                                context.push("/projects/notes");
                               },
                             ),
                             const SizedBox(width: 12),

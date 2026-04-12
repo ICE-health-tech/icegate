@@ -4,7 +4,7 @@ import 'dart:ui';
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -14,7 +14,6 @@ import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import '../../../../initial_layer/CoreLogics/SSHService.dart';
 import '../../../home_page/MainButton.dart';
-import 'widgets/SSHShortcutKeyRow.dart';
 import 'widgets/SSHCommandInput.dart';
 import 'widgets/SSHConnectionSheet.dart';
 import 'widgets/SSHNoteSelectorSheet.dart';
@@ -690,6 +689,131 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     );
   }
 
+  Widget _buildTerminalVisualEffects() {
+    return Stack(
+      children: [
+        // Scanlines
+        Positioned.fill(
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: List.generate(
+                  200,
+                  (index) => index % 2 == 0 ? Colors.black.withOpacity(0.05) : Colors.transparent,
+                ),
+                stops: List.generate(200, (index) => index / 200),
+              ),
+            ),
+          ),
+        ),
+        // Vignette
+        Positioned.fill(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: RadialGradient(
+                colors: [
+                  Colors.transparent,
+                  Colors.black.withOpacity(0.4),
+                ],
+                stops: const [0.7, 1.0],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTerminalHUD() {
+    final colorScheme = Theme.of(context).colorScheme;
+    return StreamBuilder<Map<String, dynamic>>(
+      stream: _sshService.statsStream,
+      builder: (context, snapshot) {
+        final stats = snapshot.data ?? {};
+        final latency = stats['latencyMs']?.toStringAsFixed(1) ?? '0.0';
+        final uptime = stats['uptime']?.toString().split('.').first ?? '00:00:00';
+        final kbitsIn = ((stats['bytesIn'] ?? 0) * 8 / 1024).toStringAsFixed(1);
+
+        return Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: Colors.black.withOpacity(0.8),
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _hudLine('UPLINK', _isConnected ? 'LINKED' : 'OFFLINE', _isConnected ? Colors.greenAccent : Colors.redAccent),
+              const SizedBox(height: 4),
+              _hudLine('LATENCY', '${latency}ms', colorScheme.primary),
+              const SizedBox(height: 4),
+              _hudLine('TRAFFIC', '${kbitsIn}kbps', colorScheme.secondary),
+              const SizedBox(height: 4),
+              _hudLine('UPTIME', uptime, Colors.white.withOpacity(0.5)),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _hudLine(String label, String value, Color color) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          label,
+          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          value,
+          style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.w900, fontFamily: 'Monospace'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildUplinkOfflineOverlay() {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
+        child: Container(
+          color: Colors.black.withOpacity(0.7),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.wifi_off_rounded, color: Colors.redAccent, size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                'UPLINK INTERRUPTED',
+                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w900, letterSpacing: 2),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'INITIATING AUTO-RECOVERY PROTOCOL...',
+                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 24),
+              SizedBox(
+                width: 120,
+                child: LinearProgressIndicator(
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  valueColor: const AlwaysStoppedAnimation(Colors.redAccent),
+                  minHeight: 2,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   void dispose() {
     if (_activeState == this) _activeState = null;
@@ -730,22 +854,41 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: LayoutBuilder(
-                  builder: (context, constraints) {
-                    final cols = (constraints.maxWidth / 9.0).floor();
-                    final rows = (constraints.maxHeight / 18.0).floor();
+              child: Stack(
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        final cols = (constraints.maxWidth / 9.0).floor();
+                        final rows = (constraints.maxHeight / 18.0).floor();
 
-                    _sshService.resize(cols, rows);
+                        _sshService.resize(cols, rows);
 
-                    return TerminalViewNative(
-                      _sshService.terminal,
-                      controller: _terminalController,
-                      autofocus: true,
-                    );
-                  },
-                ),
+                        return TerminalViewNative(
+                          _sshService.terminal,
+                          controller: _terminalController,
+                          autofocus: true,
+                        );
+                      },
+                    ),
+                  ),
+                  // Terminal Overlay (Scanlines/Glow)
+                  IgnorePointer(
+                    child: _buildTerminalVisualEffects(),
+                  ),
+                  // HUD Telemetry
+                  Positioned(
+                    top: 12,
+                    right: 12,
+                    child: _buildTerminalHUD(),
+                  ),
+                  // Connection Stability Indicator
+                  if (!_isConnected)
+                    Positioned.fill(
+                      child: _buildUplinkOfflineOverlay(),
+                    ),
+                ],
               ),
             ),
           ),

@@ -69,8 +69,9 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
     final transaction = await database.getNextCrudTransaction();
     if (transaction == null) return;
 
-    // Identities for potential conflict resolution
-    Map<String, Map<String, dynamic>> batchContexts = {};
+    // Group data by table to perform bulk operations
+    final Map<String, List<Map<String, dynamic>>> upsertBatches = {};
+    final Map<String, List<String>> deleteBatches = {};
 
     try {
       for (var crud in transaction.crud) {
@@ -78,108 +79,47 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
         final id = crud.id;
         final opData = _transformOpData(table, crud.opData);
 
-        // --- Skip Guest Data ---
-        const guestId = DataSeeder.guestPersonId;
-        final isGuestData =
-            id.toString() == guestId ||
-            opData['person_id']?.toString() == guestId ||
-            opData['author_id']?.toString() == guestId ||
-            opData['user_id']?.toString() == guestId ||
-            opData['owner_id']?.toString() == guestId;
-
-        if (isGuestData) {
-          print(
-            "⏭️ [PowerSync] Skipping guest data sync for $table (id: $id)",
-          );
+        // --- 1. Skip Guest Data ---
+        if (_isGuest(id, opData)) {
+          debugPrint("⏭️ [PowerSync] Skipping guest data sync for $table (id: $id)");
           continue;
         }
 
-        // --- PRE-FETCH IDENTITY CONTEXT ---
-        // We fetch the full row to get person_id, date, tenant_id etc.
-        // This context is needed for:
-        // 1. Solving 23502 (mandatory columns in patches)
-        // 2. Solving 23505 (targeted cleanup of ghost records)
-        Map<String, dynamic>? ctx;
-        try {
-          ctx = await database.get('SELECT * FROM $table WHERE id = ?', [id]);
-          batchContexts[id] = ctx;
-        } catch (e) {
-          // Table might not exist or ID not found
+        if (crud.op == UpdateType.put || crud.op == UpdateType.patch) {
+          // --- 2. Build Full Payload with Context ---
+          // Fetch full row to ensure mandatory columns are present (person_id, date, etc.)
+          final ctx = await database.get('SELECT * FROM $table WHERE id = ?', [id]);
+          Map<String, dynamic> fullPayload = {'id': id, ...opData};
+
+          const identifyingKeys = ['person_id', 'date', 'category', 'tenant_id'];
+          for (var key in identifyingKeys) {
+            if (ctx.containsKey(key)) fullPayload[key] ??= ctx[key];
+          }
+        
+          upsertBatches.putIfAbsent(table, () => []).add(fullPayload);
+        } else if (crud.op == UpdateType.delete) {
+          deleteBatches.putIfAbsent(table, () => []).add(id);
         }
+      }
 
-        print(
-          "📤 [PowerSync] Syncing $table (op: ${crud.op}, id: $id): $opData",
-        );
+      // --- 3. Execute Bulk Upserts ---
+      for (var entry in upsertBatches.entries) {
+        debugPrint("📤 [PowerSync] Bulk Upserting ${entry.value.length} records to ${entry.key}");
+        await Supabase.instance.client.from(entry.key).upsert(entry.value);
+      }
 
-        switch (crud.op) {
-          case UpdateType.put:
-          case UpdateType.patch:
-            // Prepare full payload for upsert
-            Map<String, dynamic> fullPayload = {'id': id, ...opData};
-
-            // Merge in identifying context if available (critical for Patch -> Insert scenarios)
-            if (ctx != null) {
-              const identifyingKeys = [
-                'person_id',
-                'date',
-                'category',
-                'tenant_id'
-              ];
-              for (var key in identifyingKeys) {
-                if (ctx.containsKey(key)) {
-                  fullPayload[key] ??= ctx[key];
-                }
-              }
-            }
-
-            await Supabase.instance.client.from(table).upsert(fullPayload);
-            break;
-          case UpdateType.delete:
-            await Supabase.instance.client.from(table).delete().eq('id', id);
-            break;
-        }
+      // --- 4. Execute Bulk Deletes ---
+      for (var entry in deleteBatches.entries) {
+        debugPrint("🗑️ [PowerSync] Bulk Deleting ${entry.value.length} records from ${entry.key}");
+        await Supabase.instance.client.from(entry.key).delete().inFilter('id', entry.value);
       }
 
       await transaction.complete();
-      print('✅ PowerSync: Batch of ${transaction.crud.length} uploaded.');
     } on PostgrestException catch (e) {
-      final crud = transaction.crud[0];
-      final table = crud.table;
-      final id = crud.id;
       final errorCode = e.code?.toString();
-      final ctx = batchContexts[id];
+      debugPrint('❌ [PowerSync] Sync error: Code $errorCode | $e');
 
-      // --- 23505 CONFLICT RESOLUTION (GHOST CLEANUP) ---
-      // If a row with these identifiers exists but has a DIFFERENT ID (23505 on composite),
-      // we remove the blocker in Supabase and retry.
-      if (errorCode == '23505' && ctx != null) {
-        final pId = ctx['person_id'];
-        final date = ctx['date'];
-        final cat = ctx['category'] ?? 'General';
-
-        if (pId != null && date != null) {
-          print(
-            '⚠️ PowerSync: Conflict detected on composite key ($pId, $date, $cat). Cleaning up Supabase for retry...',
-          );
-          await Supabase.instance.client
-              .from(table)
-              .delete()
-              .match({'person_id': pId, 'date': date, 'category': cat});
-
-          // Let PowerSync retry this batch
-          rethrow;
-        }
-      }
-
-      print('❌ PowerSync: Sync error for table $table: Code $errorCode - $e');
-
-      // PGRST204 = "column not found"
-      // 42703 = "column does not exist"
-      // 22008 = "date range out of bounds"
-      // 23505 = "duplicate key" (that didn't match our resolver)
-      // 23503 = "foreign key" (missing parent data)
-      // 23502 = "not-null constraint"
-      // These are unrecoverable stale data — skip to unblock.
+      // Unrecoverable errors skip logic
       if (errorCode == 'PGRST204' ||
           errorCode == '42703' ||
           errorCode == '22008' ||
@@ -187,16 +127,24 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
           errorCode == '23503' ||
           errorCode == '23502' ||
           errorCode == '22P02') {
-        print(
-          '⚠️ PowerSync: Skipping unrecoverable error ($errorCode). Completing transaction.',
-        );
+        debugPrint('⚠️ PowerSync: Skipping unrecoverable error. Completing transaction.');
         await transaction.complete();
       } else {
         rethrow;
       }
     } catch (e) {
-      print('❌ PowerSync: Sync error for table ${transaction.crud[0].table}: $e');
+      debugPrint('❌ PowerSync: Sync fatal error: $e');
       rethrow;
     }
+  }
+
+  /// Helper to identify if the given ID or payload belongs to the Guest user.
+  bool _isGuest(String id, Map<String, dynamic> opData) {
+    const guestId = DataSeeder.guestPersonId;
+    return id.toString() == guestId ||
+        opData['person_id']?.toString() == guestId ||
+        opData['author_id']?.toString() == guestId ||
+        opData['user_id']?.toString() == guestId ||
+        opData['owner_id']?.toString() == guestId;
   }
 }

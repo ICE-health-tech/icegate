@@ -7,20 +7,30 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:path/path.dart' as p;
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
   final String? initialCategory;
   final File? initialFile;
+  final String? initialImage;
+  final Directory? initialDirectory; // Directory to save new files into
 
-  const TextEditorPage({super.key, this.note, this.initialCategory, this.initialFile});
+  const TextEditorPage({
+    super.key,
+    this.note,
+    this.initialCategory,
+    this.initialFile,
+    this.initialImage,
+    this.initialDirectory,
+  });
 
   @override
   State<TextEditorPage> createState() => _TextEditorPageState();
@@ -48,6 +58,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   
   // AI Status
   final ValueNotifier<String?> syncStatus = ValueNotifier<String?>(null);
+  String? _vaultPath;
 
   // Animation
   late final AnimationController _headerAnimController;
@@ -56,6 +67,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   @override
   void initState() {
     super.initState();
+    _initVaultPath();
     String title = widget.note?.title ?? '';
     String initialContent = '';
     
@@ -76,6 +88,12 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
 
     _titleController = TextEditingController(text: title);
+    
+    // If initialImage is provided for a new note, insert it into the content
+    if (widget.initialImage != null && initialContent.isEmpty) {
+      initialContent = "![Image](${widget.initialImage})\n\n";
+    }
+    
     _contentController = TextEditingController(text: initialContent);
     _editorFocusNode = FocusNode();
     _titleFocusNode = FocusNode();
@@ -150,6 +168,52 @@ class _TextEditorPageState extends State<TextEditorPage>
     _titleFocusNode.dispose();
     _headerAnimController.dispose();
     super.dispose();
+  }
+
+  Future<void> _initVaultPath() async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user != null) {
+      final appDir = await getApplicationDocumentsDirectory();
+      setState(() {
+        _vaultPath = '${appDir.path}/${user.id}/user_markdown_documentation';
+      });
+    }
+  }
+
+  Future<void> _pickAndInsertImage() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.image,
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final imageFile = File(result.files.single.path!);
+        final extension = p.extension(imageFile.path);
+        final fileName = 'img_${DateTime.now().millisecondsSinceEpoch}$extension';
+
+        if (_vaultPath == null) await _initVaultPath();
+        if (_vaultPath == null) return;
+
+        final vaultDir = Directory(_vaultPath!);
+        if (!await vaultDir.exists()) {
+          await vaultDir.create(recursive: true);
+        }
+
+        final destination = File('${vaultDir.path}/$fileName');
+        await imageFile.copy(destination.path);
+
+        // Insert markdown link at cursor
+        _insertMarkdown('![Image]($fileName)');
+        HapticFeedback.mediumImpact();
+      }
+    } catch (e) {
+      debugPrint('❌ [Editor] Image pick failed: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to add image: $e')),
+        );
+      }
+    }
   }
 
   void _toggleFocusMode() {
@@ -287,25 +351,26 @@ class _TextEditorPageState extends State<TextEditorPage>
      
       final String? userAlias = Supabase.instance.client.auth.currentUser?.id;
         final fileName = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-         // 1. Automatic Save to user_markdown_documentation
+          // 1. Automatic Save to user_markdown_documentation
       final appDir = await getApplicationDocumentsDirectory();
-                            
-      final docDir = Directory('${appDir.path}/${userAlias}/user_markdown_documentation');
+      
+      late final Directory docDir;
+      if (widget.initialDirectory != null) {
+        docDir = widget.initialDirectory!;
+      } else {
+        docDir = Directory('${appDir.path}/${userAlias ?? "unknown_user"}/user_markdown_documentation');
+      }
+
       if (!await docDir.exists()) {
         await docDir.create(recursive: true);
       }
       
-      final String savingPath=docDir.path+"/"+fileName+".md";
-      // Clean filename
-    
-      // final localFile = File('${docDir.path}/$fileName.md');
-          final localFile = File(savingPath);
+      final String savingPath = p.join(docDir.path, "$fileName.md");
+      final localFile = File(savingPath);
       await localFile.writeAsString(content);
       
       // If we didn't have a file opened manually, track this auto-saved one
-      if (_openedFile == null) {
-        _openedFile = localFile;
-      }
+      _openedFile ??= localFile;
 
       // 2. Database Sync
       if (widget.note != null) {
@@ -705,52 +770,54 @@ class _TextEditorPageState extends State<TextEditorPage>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return PopScope(
-      canPop: !_hasUnsavedChanges,
-      onPopInvokedWithResult: (didPop, result) async {
-        if (didPop) return;
-        final shouldSave = await showDialog<bool>(
-          context: context,
-          builder: (ctx) => AlertDialog(
-            title: const Text('Unsaved Changes'),
-            content: const Text('Do you want to save before leaving?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(ctx, false),
-                child: const Text('Discard'),
-              ),
-              FilledButton(
-                onPressed: () => Navigator.pop(ctx, true),
-                child: const Text('Save'),
-              ),
-            ],
-          ),
-        );
-        if (shouldSave == true) {
-          await _saveNote(showSnackbar: false);
-        }
-        if (context.mounted) Navigator.pop(context);
-      },
-      child: CallbackShortcuts(
-        bindings: {
-          const SingleActivator(LogicalKeyboardKey.keyS, control: true): () => _saveNote(),
-          const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () => _saveNote(),
-          const SingleActivator(LogicalKeyboardKey.keyB, control: true): () => _insertMarkdown('**', suffix: '**'),
-          const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () => _insertMarkdown('**', suffix: '**'),
-          const SingleActivator(LogicalKeyboardKey.keyI, control: true): () => _insertMarkdown('*', suffix: '*'),
-          const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () => _insertMarkdown('*', suffix: '*'),
-          const SingleActivator(LogicalKeyboardKey.keyP, control: true): () => setState(() => _isPreview = !_isPreview),
-          const SingleActivator(LogicalKeyboardKey.keyP, meta: true): () => setState(() => _isPreview = !_isPreview),
-          const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
-          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): _undo,
-          const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true): _redo,
-          const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true): _redo,
+    return Hero(
+      tag: 'note_${widget.note?.id ?? "new"}',
+      child: PopScope(
+        canPop: !_hasUnsavedChanges,
+        onPopInvokedWithResult: (didPop, result) async {
+          if (didPop) return;
+          final shouldSave = await showDialog<bool>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: const Text('Unsaved Changes'),
+              content: const Text('Do you want to save before leaving?'),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(ctx, false),
+                  child: const Text('Discard'),
+                ),
+                FilledButton(
+                  onPressed: () => Navigator.pop(ctx, true),
+                  child: const Text('Save'),
+                ),
+              ],
+            ),
+          );
+          if (shouldSave == true) {
+            await _saveNote(showSnackbar: false);
+          }
+          if (context.mounted) Navigator.pop(context);
         },
-        child: Scaffold(
-          backgroundColor: colorScheme.surface,
-          extendBodyBehindAppBar: true,
-          body: Stack(
-            children: [
+        child: CallbackShortcuts(
+          bindings: {
+            const SingleActivator(LogicalKeyboardKey.keyS, control: true): () => _saveNote(),
+            const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () => _saveNote(),
+            const SingleActivator(LogicalKeyboardKey.keyB, control: true): () => _insertMarkdown('**', suffix: '**'),
+            const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () => _insertMarkdown('**', suffix: '**'),
+            const SingleActivator(LogicalKeyboardKey.keyI, control: true): () => _insertMarkdown('*', suffix: '*'),
+            const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () => _insertMarkdown('*', suffix: '*'),
+            const SingleActivator(LogicalKeyboardKey.keyP, control: true): () => setState(() => _isPreview = !_isPreview),
+            const SingleActivator(LogicalKeyboardKey.keyP, meta: true): () => setState(() => _isPreview = !_isPreview),
+            const SingleActivator(LogicalKeyboardKey.keyZ, control: true): _undo,
+            const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): _undo,
+            const SingleActivator(LogicalKeyboardKey.keyZ, control: true, shift: true): _redo,
+            const SingleActivator(LogicalKeyboardKey.keyZ, meta: true, shift: true): _redo,
+          },
+          child: Scaffold(
+            backgroundColor: colorScheme.surface,
+            extendBodyBehindAppBar: true,
+            body: Stack(
+              children: [
               // Background gradient
               Positioned.fill(
                 child: Container(
@@ -1004,8 +1071,9 @@ class _TextEditorPageState extends State<TextEditorPage>
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildMarkdownEditor(ColorScheme colorScheme) {
     return TextField(
@@ -1038,6 +1106,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   Widget _buildMarkdownPreview(ColorScheme colorScheme) {
     return Markdown(
       data: _contentController.text,
+      imageDirectory: _vaultPath,
       padding: const EdgeInsets.only(bottom: 120),
       selectable: true,
       styleSheet: MarkdownStyleSheet(
@@ -1173,6 +1242,8 @@ class _TextEditorPageState extends State<TextEditorPage>
                     _toolbarBtn(Icons.link_rounded, 'Link', () {
                       _insertMarkdown('[', suffix: '](url)');
                     }),
+                    _toolbarBtn(Icons.image_rounded, 'Image', _pickAndInsertImage,
+                        color: colorScheme.secondary),
                     _toolbarDivider(colorScheme),
                     _toolbarBtn(Icons.terminal_rounded, 'AI Hub', () {
                       final plainText = _contentController.text;

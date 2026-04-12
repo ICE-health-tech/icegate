@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'dart:ui';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
@@ -17,7 +18,6 @@ import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'TaskItem.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
 
 class ProjectDetailsPage extends StatelessWidget {
@@ -27,7 +27,8 @@ class ProjectDetailsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final growthBlock = context.watch<GrowthBlock>();
     final database = context.read<AppDatabase>();
 
@@ -128,176 +129,186 @@ class ProjectDetailsPage extends StatelessWidget {
               ),
             ],
             flexibleSpace: FlexibleSpaceBar(
-              title: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    project.name,
-                    style: TextStyle(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.bold,
+              title: Text(
+                project.name,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: -1.0,
+                  shadows: [
+                    Shadow(
+                      color: colorScheme.surface.withOpacity(0.5),
+                      blurRadius: 10,
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  if (project.aiModel != null && project.aiModel != 'standard')
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 6,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color:
-                            (project.aiModel == 'gemini'
-                                    ? Colors.orangeAccent
-                                    : Colors.blueAccent)
-                                .withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(4),
-                        border: Border.all(
-                          color:
-                              (project.aiModel == 'gemini'
-                                      ? Colors.orangeAccent
-                                      : Colors.blueAccent)
-                                  .withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: Text(
-                        project.aiModel!.toUpperCase(),
-                        style: TextStyle(
-                          color: project.aiModel == 'gemini'
-                              ? Colors.orangeAccent
-                              : Colors.blueAccent,
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                ],
+                  ],
+                ),
               ),
-              background: Container(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [
-                      (project.color != null
-                              ? Color(int.parse(project.color!))
-                              : Colors.blue)
-                          .withValues(alpha: 0.4),
-                      colorScheme.surface,
-                    ],
-                  ),
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.end,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (project.sshHostId != null)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 8),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.terminal,
-                                size: 12,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(
-                                project.remotePath ?? 'Remote Root',
-                                style: TextStyle(
-                                  color: colorScheme.primary,
-                                  fontSize: 10,
-                                  fontFamily: 'Courier',
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (project.description != null)
-                        Text(
-                          project.description!,
-                          style: TextStyle(
-                            color: colorScheme.onSurface.withValues(alpha: 0.7),
-                            fontSize: 14,
-                          ),
-                        ),
-                      const SizedBox(height: 16),
-                      StreamBuilder<List<GoalData>>(
-                        stream: database.growthDAO.watchGoalsByProject(
-                          project.projectID,
-                        ),
-                        builder: (context, snapshot) {
-                          final tasks = snapshot.data ?? [];
-                          final completed = tasks
-                              .where((t) => t.status == 'done')
-                              .length;
-                          final total = tasks.length;
-                          final progress = total > 0 ? completed / total : 0.0;
-
-                          return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Text(
-                                    '${(progress * 100).toInt()}%',
-                                    style: TextStyle(
-                                      color: colorScheme.primary,
-                                      fontWeight: FontWeight.w900,
-                                      fontSize: 18,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    AppLocalizations.of(
-                                      context,
-                                    )!.project_complete_label,
-                                    style: TextStyle(
-                                      color: colorScheme.onSurface.withValues(
-                                        alpha: 0.5,
-                                      ),
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 10,
-                                      letterSpacing: 1.2,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 8),
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(4),
-                                child: LinearProgressIndicator(
-                                  value: progress,
-                                  minHeight: 8,
-                                  backgroundColor: colorScheme.primary
-                                      .withValues(alpha: 0.1),
-                                  valueColor: AlwaysStoppedAnimation(
-                                    colorScheme.primary,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          );
-                        },
+              background: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Luminous Gradient Background
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          (project.color != null ? Color(int.parse(project.color!)) : colorScheme.primary).withOpacity(0.8),
+                          (project.color != null ? Color(int.parse(project.color!)) : colorScheme.primary).withOpacity(0.3),
+                          colorScheme.surface.withOpacity(0.9),
+                        ],
                       ),
-                      const SizedBox(
-                        height: 60,
-                      ), // Increased height to prevent overlap with title
-                    ],
+                    ),
                   ),
-                ),
+                  // Deep Glass Blur
+                  Positioned.fill(
+                    child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 50, sigmaY: 50),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surface.withOpacity(0.1),
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.white.withOpacity(0.1),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Content with Modern Typography
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        if (project.description != null)
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: colorScheme.onSurface.withOpacity(0.05),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              project.description!,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colorScheme.onSurface.withOpacity(0.7),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        const SizedBox(height: 24),
+                        StreamBuilder<List<GoalData>>(
+                          stream: database.growthDAO.watchGoalsByProject(project.projectID),
+                          builder: (context, snapshot) {
+                            final tasks = snapshot.data ?? [];
+                            final completed = tasks.where((t) => t.status == 'done').length;
+                            final total = tasks.length;
+                            final progress = total > 0 ? completed / total : 0.0;
+
+                            return Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          '${(progress * 100).toInt()}%',
+                                          style: TextStyle(
+                                            color: colorScheme.onSurface,
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 32,
+                                            letterSpacing: -1.5,
+                                          ),
+                                        ),
+                                        Text(
+                                          'PROJECT COMPLETION',
+                                          style: TextStyle(
+                                            color: colorScheme.onSurface.withOpacity(0.4),
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 9,
+                                            letterSpacing: 2.0,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    Container(
+                                      padding: const EdgeInsets.all(12),
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.primary.withOpacity(0.1),
+                                        shape: BoxShape.circle,
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: colorScheme.primary.withOpacity(0.1),
+                                            blurRadius: 20,
+                                            spreadRadius: 2,
+                                          ),
+                                        ],
+                                      ),
+                                      child: Icon(
+                                        Icons.auto_awesome_mosaic_rounded,
+                                        color: colorScheme.primary,
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                Stack(
+                                  children: [
+                                    // Track
+                                    Container(
+                                      height: 10,
+                                      width: double.infinity,
+                                      decoration: BoxDecoration(
+                                        color: colorScheme.onSurface.withOpacity(0.05),
+                                        borderRadius: BorderRadius.circular(20),
+                                      ),
+                                    ),
+                                    // Luminous Progress
+                                    FractionallySizedBox(
+                                      widthFactor: progress,
+                                      child: Container(
+                                        height: 10,
+                                        decoration: BoxDecoration(
+                                          gradient: LinearGradient(
+                                            colors: [
+                                              colorScheme.primary,
+                                              colorScheme.primary.withOpacity(0.5),
+                                            ],
+                                          ),
+                                          borderRadius: BorderRadius.circular(20),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: colorScheme.primary.withOpacity(0.3),
+                                              blurRadius: 12,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -351,99 +362,63 @@ class ProjectDetailsPage extends StatelessWidget {
                       }).toList(),
                     );
                   }),
-                  const SizedBox(height: 32),
-                  _buildSectionHeader(
-                    context,
-                    'Documents',
-                    () {
-                      context.push('/projects/documents');
-                    },
-                  ),
+                  
+                
                   const SizedBox(height: 16),
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: colorScheme.primary.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
-                    ),
-                    child: InkWell(
-                      onTap: () => context.push('/projects/documents'),
-                      child: Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(Icons.folder_copy_rounded, color: colorScheme.primary),
+                  InkWell(
+                    onTap: () => context.push('/projects/documents'),
+                    borderRadius: BorderRadius.circular(32),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(32),
+                      child: BackdropFilter(
+                        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.all(28),
+                          decoration: BoxDecoration(
+                            color: colorScheme.primaryContainer.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(32),
+                            border: Border.all(color: colorScheme.primary.withOpacity(0.1), width: 2),
                           ),
-                          const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Project Knowledge Base',
-                                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                                ),
-                                Text(
-                                  'Manage project files, Obsidian notes, and technical docs.',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface.withValues(alpha: 0.6),
-                                    fontSize: 12,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary.withOpacity(0.1),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Icon(Icons.hub_rounded, color: colorScheme.primary, size: 24),
                                   ),
-                                ),
-                              ],
-                            ),
+                              //  w_forward_ios_rounded, size: 16, color: colorScheme.primary.withOpacity(0.4)),
+                                ],
+                              ),
+                              // const SizedBox(height: 16),
+                           
+                              
+                            ],
                           ),
-                          Icon(Icons.arrow_forward_ios_rounded, size: 16, color: colorScheme.primary),
-                        ],
+                        ),
                       ),
                     ),
                   ),
                   const SizedBox(height: 32),
-                  _buildSectionHeader(
-                    context,
-                    AppLocalizations.of(context)!.project_notes_label,
-                    () {
-                      _createNewNote(
-                        context,
-                        database.projectNoteDAO,
-                        project.projectID,
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  _buildRemoteSettings(context),
-                  const SizedBox(height: 16),
-                  _buildAiModelSelector(context),
-                  const SizedBox(height: 32),
-                  _buildSectionTitle(
-                    context,
-                    'Recent Notes',
-                  ), // Added title for notes
-                  const SizedBox(height: 16),
                   StreamBuilder<List<ProjectNoteData>>(
-                    stream: database.projectNoteDAO.watchNotesByProject(
-                      project.projectID,
-                    ),
+                    stream: database.projectNoteDAO.watchNotesByProject(project.projectID),
                     builder: (context, snapshot) {
                       final notes = snapshot.data ?? [];
-                      if (notes.isEmpty) {
-                        return _buildEmptyState(
-                          context,
-                          AppLocalizations.of(context)!.project_no_notes,
-                        );
-                      }
+                      if (notes.isEmpty) return const SizedBox.shrink();
+                      
                       return Column(
-                        children: notes
-                            .map(
-                              (note) => _NoteItem(note: note, project: project),
-                            )
-                            .toList(),
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _buildSectionTitle(context, 'Recent Updates'),
+                          const SizedBox(height: 16),
+                          ...notes.take(3).map((note) => _NoteItem(note: note, project: project)),
+                        ],
                       );
                     },
                   ),
@@ -527,104 +502,125 @@ class ProjectDetailsPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAiModelSelector(BuildContext context) {
+  Widget _buildMiniTag(BuildContext context, String label, IconData icon) {
     final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: colorScheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: colorScheme.primary),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontSize: 8,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildAiModelSelector(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final currentAiMode = project.aiModel ?? 'standard';
 
     IconData getAiIcon(String mode) {
       switch (mode) {
-        case 'gemini':
-          return Icons.auto_awesome;
-        case 'opencode':
-          return Icons.code_rounded;
-        case 'openclaw':
-          return Icons.hub_rounded;
-        default:
-          return Icons.terminal_rounded;
+        case 'gemini': return Icons.auto_awesome;
+        case 'opencode': return Icons.code_rounded;
+        case 'openclaw': return Icons.hub_rounded;
+        default: return Icons.terminal_rounded;
       }
     }
 
     Color getAiColor(String mode) {
       switch (mode) {
-        case 'gemini':
-          return Colors.orangeAccent;
-        case 'opencode':
-          return Colors.blueAccent;
-        case 'openclaw':
-          return Colors.purpleAccent;
-        default:
-          return colorScheme.primary;
+        case 'gemini': return Colors.orangeAccent;
+        case 'opencode': return Colors.blueAccent;
+        case 'openclaw': return Colors.purpleAccent;
+        default: return colorScheme.primary;
       }
     }
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: getAiColor(currentAiMode).withValues(alpha: 0.05),
+        color: getAiColor(currentAiMode).withOpacity(0.04),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: getAiColor(currentAiMode).withValues(alpha: 0.1),
-        ),
+        border: Border.all(color: getAiColor(currentAiMode).withOpacity(0.1), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(
-                getAiIcon(currentAiMode),
-                color: getAiColor(currentAiMode),
-                size: 20,
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: getAiColor(currentAiMode).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(getAiIcon(currentAiMode), color: getAiColor(currentAiMode), size: 18),
               ),
               const SizedBox(width: 12),
               Text(
-                'AI AGENT',
-                style: TextStyle(
+                'AI CO-PILOT',
+                style: theme.textTheme.labelLarge?.copyWith(
                   color: getAiColor(currentAiMode),
                   fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  letterSpacing: 1.2,
+                  letterSpacing: 2.0,
                 ),
               ),
               const Spacer(),
-              Text(
-                currentAiMode.toUpperCase(),
-                style: TextStyle(
-                  color: getAiColor(currentAiMode),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: getAiColor(currentAiMode).withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Text(
+                  currentAiMode.toUpperCase(),
+                  style: TextStyle(
+                    color: getAiColor(currentAiMode),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 20),
           SingleChildScrollView(
             scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
             child: Row(
-              children: ['standard', 'gemini', 'opencode', 'openclaw'].map((
-                mode,
-              ) {
+              children: ['standard', 'gemini', 'opencode', 'openclaw'].map((mode) {
                 final isSelected = currentAiMode == mode;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8.0),
+                  padding: const EdgeInsets.only(right: 10.0),
                   child: ChoiceChip(
                     label: Text(mode.toUpperCase()),
                     selected: isSelected,
                     onSelected: (selected) async {
                       if (selected) {
                         final projectBlock = context.read<ProjectBlock>();
-                        await projectBlock.updateProjectAiModel(
-                          project.id,
-                          mode,
-                        );
-
-                        // If we have a linked SSH host, also sync this preference to it
+                        await projectBlock.updateProjectAiModel(project.id, mode);
                         if (project.sshHostId != null) {
                           final storage = SSHStorageService();
                           final hosts = await storage.loadHosts();
-                          final hostIndex = hosts.indexWhere(
-                            (h) => h.id == project.sshHostId,
-                          );
+                          final hostIndex = hosts.indexWhere((h) => h.id == project.sshHostId);
                           if (hostIndex != -1) {
                             final host = hosts[hostIndex];
                             host.aiMode = mode;
@@ -633,27 +629,32 @@ class ProjectDetailsPage extends StatelessWidget {
                         }
                       }
                     },
-                    selectedColor: getAiColor(mode).withValues(alpha: 0.2),
-                    labelStyle: TextStyle(
-                      color: isSelected
-                          ? getAiColor(mode)
-                          : colorScheme.onSurface,
-                      fontWeight: isSelected
-                          ? FontWeight.bold
-                          : FontWeight.normal,
-                      fontSize: 11,
+                    selectedColor: getAiColor(mode).withOpacity(0.15),
+                    backgroundColor: Colors.transparent,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isSelected ? getAiColor(mode) : colorScheme.onSurface.withOpacity(0.1),
+                        width: 1.5,
+                      ),
                     ),
+                    labelStyle: TextStyle(
+                      color: isSelected ? getAiColor(mode) : colorScheme.onSurface.withOpacity(0.6),
+                      fontWeight: FontWeight.w900,
+                      fontSize: 11,
+                      letterSpacing: 0.5,
+                    ),
+                    showCheckmark: false,
                   ),
                 );
               }).toList(),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 12),
           Text(
-            'Choose the AI engine to power terminal suggestions and code analysis for this project.',
-            style: TextStyle(
-              color: colorScheme.onSurface.withValues(alpha: 0.4),
-              fontSize: 11,
+            'Choose your intelligence layer for terminal assistance and code generation.',
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurface.withOpacity(0.4),
               fontStyle: FontStyle.italic,
             ),
           ),
@@ -670,37 +671,47 @@ class ProjectDetailsPage extends StatelessWidget {
   }
 
   Widget _buildRemoteSettings(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
     final isLinked = project.sshHostId != null;
 
     return Container(
-      padding: const EdgeInsets.all(20),
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.1),
+        color: colorScheme.primaryContainer.withOpacity(0.04),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.primaryContainer.withValues(alpha: 0.2),
-        ),
+        border: Border.all(color: colorScheme.primary.withOpacity(0.1), width: 1.5),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.terminal, color: colorScheme.primary, size: 20),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.terminal_rounded, color: colorScheme.primary, size: 18),
+              ),
               const SizedBox(width: 12),
               Text(
-                'REMOTE DEVELOPMENT',
-                style: TextStyle(
+                'REMOTE ENVIRONMENT',
+                style: theme.textTheme.labelLarge?.copyWith(
                   color: colorScheme.primary,
                   fontWeight: FontWeight.w900,
-                  fontSize: 14,
-                  letterSpacing: 1.2,
+                  letterSpacing: 2.0,
                 ),
               ),
               const Spacer(),
               IconButton(
-                icon: const Icon(Icons.edit_note, size: 20),
+                style: IconButton.styleFrom(
+                  backgroundColor: colorScheme.primary.withOpacity(0.05),
+                  padding: const EdgeInsets.all(8),
+                ),
+                icon: Icon(Icons.settings_input_component_rounded, size: 18, color: colorScheme.primary),
                 onPressed: () => _showRemoteConfigDialog(context),
               ),
             ],
@@ -708,31 +719,48 @@ class ProjectDetailsPage extends StatelessWidget {
           const SizedBox(height: 16),
           if (isLinked) ...[
             Text(
-              'Linked to Remote Path:',
-              style: TextStyle(
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
-                fontSize: 12,
-                fontWeight: FontWeight.bold,
+              'Linked Path'.toUpperCase(),
+              style: theme.textTheme.labelSmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.4),
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.5,
               ),
             ),
-            const SizedBox(height: 4),
-            Text(
-              project.remotePath ?? 'Project Root',
-              style: const TextStyle(
-                fontFamily: 'Courier',
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: colorScheme.surface.withOpacity(0.8),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.folder_shared_rounded, size: 16, color: colorScheme.onSurface.withOpacity(0.4)),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(
+                      project.remotePath ?? 'Project Root',
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        fontFamily: 'Courier',
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-          ] else
+          ] else ...[
             Text(
-              'No remote environment linked. Link to enable AI-powered terminal features.',
-              style: TextStyle(
-                color: colorScheme.onSurface.withValues(alpha: 0.4),
-                fontSize: 12,
+              'No remote environment linked. Connect to a host to enable advanced AI-orchestrated tools.',
+              style: theme.textTheme.bodySmall?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.4),
                 fontStyle: FontStyle.italic,
+                height: 1.4,
               ),
             ),
+          ],
         ],
       ),
     );
@@ -769,7 +797,7 @@ class ProjectDetailsPage extends StatelessWidget {
                   }
 
                   return DropdownButtonFormField<String>(
-                    value: selectedHostId,
+                    initialValue: selectedHostId,
                     decoration: const InputDecoration(
                       labelText: 'Select SSH Host',
                     ),
@@ -823,17 +851,40 @@ class ProjectDetailsPage extends StatelessWidget {
     String title,
     VoidCallback onAdd,
   ) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           title,
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          style: theme.textTheme.titleLarge?.copyWith(
+            fontWeight: FontWeight.w900,
+            letterSpacing: -0.5,
+          ),
         ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Container(
+            height: 1,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.onSurface.withOpacity(0.1),
+                  colorScheme.onSurface.withOpacity(0.0),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 12),
         IconButton(
           onPressed: onAdd,
-          icon: const Icon(Icons.add_circle_outline),
-          color: Theme.of(context).colorScheme.primary,
+          style: IconButton.styleFrom(
+            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            padding: const EdgeInsets.all(8),
+          ),
+          icon: Icon(Icons.add_rounded, size: 20, color: colorScheme.primary),
         ),
       ],
     );

@@ -1,16 +1,23 @@
 import 'dart:convert';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 
-class SocialNotesDashboard extends StatelessWidget {
+class SocialNotesDashboard extends StatefulWidget {
   const SocialNotesDashboard({super.key});
 
+  @override
+  State<SocialNotesDashboard> createState() => _SocialNotesDashboardState();
+}
+
+class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -19,11 +26,20 @@ class SocialNotesDashboard extends StatelessWidget {
     final personId = personBlock.information.value.profiles.id ?? "";
 
     return Container(
-      color: colorScheme.surface,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            colorScheme.surface,
+            colorScheme.surfaceContainerLowest,
+          ],
+        ),
+      ),
       child: Column(
         children: [
           _buildQuickEntryBar(context, colorScheme, textTheme),
-          const Divider(height: 1, thickness: 0.5),
+          const Divider(height: 1, thickness: 0.2),
           Expanded(
             child: StreamBuilder<List<ProjectNoteData>>(
               stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
@@ -45,18 +61,22 @@ class SocialNotesDashboard extends StatelessWidget {
                   return _buildEmptyState(context, colorScheme, textTheme);
                 }
 
+                // Sort by updatedAt descending
+                final sortedNotes = List<ProjectNoteData>.from(notes)
+                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
                 return GridView.builder(
                   physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.all(12),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    childAspectRatio: 0.8,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    childAspectRatio: 0.75,
                   ),
-                  itemCount: notes.length,
+                  itemCount: sortedNotes.length,
                   itemBuilder: (context, index) {
-                    final note = notes[index];
+                    final note = sortedNotes[index];
                     return _SocialNoteCard(note: note);
                   },
                 );
@@ -77,44 +97,48 @@ class SocialNotesDashboard extends StatelessWidget {
     final person = personBlock.information.value.profiles;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          CircleAvatar(
-            radius: 20,
-            backgroundImage: person.profileImageUrl != null
-                ? NetworkImage(person.profileImageUrl!)
-                : null,
-            child: person.profileImageUrl == null
-                ? const Icon(Icons.person)
-                : null,
-          ),
-          const SizedBox(width: 12),
+          
           Expanded(
             child: GestureDetector(
               onTap: () => _createNewNote(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 10,
+                  horizontal: 20,
+                  vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  border: Border.all(color: colorScheme.outlineVariant),
-                  borderRadius: BorderRadius.circular(24),
-                ),
-                child: Text(
-                  "What's on your mind?",
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
+                  color: colorScheme.surfaceContainerHigh.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: colorScheme.outlineVariant.withOpacity(0.3),
                   ),
+                ),
+                child: Row(
+                  children: [
+                
+                    Text(
+                      "What's on your mind?",
+                      style: textTheme.bodyMedium?.copyWith(
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
           ),
           const SizedBox(width: 12),
-          IconButton(
-            onPressed: () => _createNewNote(context),
-            icon: const Icon(Icons.photo_library, color: Colors.green),
+          IconButton.filledTonal(
+            onPressed: () => _pickAndCreateImageNote(context),
+            icon: const Icon(Icons.add_photo_alternate_rounded, size: 22),
+            style: IconButton.styleFrom(
+              backgroundColor: colorScheme.secondaryContainer.withOpacity(0.4),
+              foregroundColor: colorScheme.secondary,
+            ),
           ),
         ],
       ),
@@ -130,23 +154,45 @@ class SocialNotesDashboard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            Icons.history_edu_rounded,
-            size: 64,
-            color: colorScheme.primary.withOpacity(0.2),
+          Container(
+            padding: const EdgeInsets.all(32),
+            decoration: BoxDecoration(
+              color: colorScheme.primary.withOpacity(0.05),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              Icons.auto_stories_rounded,
+              size: 80,
+              color: colorScheme.primary.withOpacity(0.15),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           Text(
-            'No mind notes yet',
-            style: textTheme.titleMedium?.copyWith(
+            'Your story begins here',
+            style: textTheme.headlineSmall?.copyWith(
               color: colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Capture moments, thoughts, and ideas.',
+            style: textTheme.bodyMedium?.copyWith(
+              color: colorScheme.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 32),
-          ElevatedButton(
+          FilledButton.icon(
             onPressed: () => _createNewNote(context),
-            child: const Text('CREATE JOURNAL'),
+            icon: const Icon(Icons.add_rounded),
+            label: const Text('START JOURNAL'),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
           ),
         ],
       ),
@@ -155,6 +201,33 @@ class SocialNotesDashboard extends StatelessWidget {
 
   void _createNewNote(BuildContext context) {
     context.push('/projects/editor', extra: {'category': 'social'});
+  }
+
+  Future<void> _pickAndCreateImageNote(BuildContext context) async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      imageQuality: 85,
+    );
+
+    if (image != null && context.mounted) {
+      final personBlock = context.read<PersonBlock>();
+      final objectBlock = context.read<ObjectDatabaseBlock>();
+      final personId = personBlock.currentPersonID.value;
+
+      final savedPath = await objectBlock.saveAnyLocalImage(
+        image,
+        subFolder: 'user_markdown_documentation',
+        personId: personId,
+      );
+
+      if (context.mounted) {
+        context.push('/projects/editor', extra: {
+          'category': 'social',
+          'initialImage': savedPath,
+        });
+      }
+    }
   }
 }
 
@@ -168,89 +241,147 @@ class _SocialNoteCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final imageUrl = _getPreviewImage(note.content);
+    final previewText = _getPreviewText(note.content);
 
-    return Card(
-      elevation: 0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: colorScheme.outlineVariant.withOpacity(0.5)),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/projects/editor', extra: note),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (imageUrl != null)
-              Expanded(
-                flex: 3,
-                child: LocalFirstImage(
-                  ownerId: note.personID ?? "",
-                  localPath: imageUrl,
-                  remoteUrl: "",
-                  subFolder: "quests", // Default subfolder for images
-                  fit: BoxFit.cover,
-                ),
-              )
-            else
-              Expanded(
-                flex: 3,
-                child: Container(
-                  color: colorScheme.primary.withOpacity(0.05),
-                  child: Center(
-                    child: Icon(
-                      Icons.notes_rounded,
-                      color: colorScheme.primary.withOpacity(0.2),
-                      size: 32,
-                    ),
-                  ),
-                ),
-              ),
-            Expanded(
-              flex: 2,
-              child: Padding(
-                padding: const EdgeInsets.all(8.0),
+    return Hero(
+      tag: 'note_${note.id}',
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(24),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Material(
+              color: colorScheme.surfaceContainerLow.withOpacity(0.7),
+              child: InkWell(
+                onTap: () => context.push('/projects/editor', extra: note),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      note.title,
-                      style: textTheme.labelLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
                     Expanded(
-                      child: Text(
-                        _getPreviewText(note.content),
-                        style: textTheme.bodySmall?.copyWith(
-                          color: colorScheme.onSurfaceVariant,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
+                      flex: 4,
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          if (imageUrl != null)
+                            LocalFirstImage(
+                              ownerId: note.personID ?? "",
+                              localPath: imageUrl,
+                              remoteUrl: "",
+                              subFolder: "user_markdown_documentation",
+                              fit: BoxFit.cover,
+                            )
+                          else
+                            Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topLeft,
+                                  end: Alignment.bottomRight,
+                                  colors: [
+                                    colorScheme.primaryContainer.withOpacity(0.3),
+                                    colorScheme.secondaryContainer.withOpacity(0.1),
+                                  ],
+                                ),
+                              ),
+                              child: Icon(
+                                Icons.auto_awesome_rounded,
+                                color: colorScheme.primary.withOpacity(0.2),
+                                size: 40,
+                              ),
+                            ),
+                          // Premium overlay gradient
+                          Positioned.fill(
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Colors.black.withOpacity(0.1),
+                                    Colors.transparent,
+                                    Colors.black.withOpacity(0.3),
+                                  ],
+                                  stops: const [0.0, 0.5, 1.0],
+                                ),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            bottom: 12,
+                            left: 12,
+                            right: 12,
+                            child: Text(
+                              DateFormat('MMM d').format(note.updatedAt),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat.MMMd().format(note.updatedAt),
-                      style: textTheme.labelSmall?.copyWith(
-                        fontSize: 9,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                    Expanded(
+                      flex: 3,
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              note.title,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: -0.2,
+                                height: 1.2,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 6),
+                            Expanded(
+                              child: Text(
+                                previewText,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                  height: 1.4,
+                                  fontSize: 11,
+                                ),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 
   String _getPreviewText(String content) {
+    if (content.isEmpty) return "";
+    
+    String plainText = content;
+    
+    // 1. Handle JSON (Quill Delta)
     try {
       final decoded = jsonDecode(content);
       if (decoded is List) {
@@ -263,26 +394,64 @@ class _SocialNoteCard extends StatelessWidget {
             }
           }
         }
-        return buffer.toString().trim();
+        plainText = buffer.toString();
       }
     } catch (_) {}
-    return content.trim();
+
+    // 2. STICKY FIX: Robust Markdown Strip
+    // Strip images: ![alt](url)
+    plainText = plainText.replaceAll(RegExp(r'!\[.*?\]\((.*?)\)'), '');
+    // Strip links: [text](url) -> text
+    plainText = plainText.replaceAllMapped(RegExp(r'\[(.*?)\]\(.*?\文明\)'), (match) => match.group(1) ?? '');
+    // Strip bold/italic: **bold**, __bold__, *italic*, _italic_
+    plainText = plainText.replaceAll(RegExp(r'(\*\*|__|\*|_|~~)'), '');
+    // Strip headers: # Header
+    plainText = plainText.replaceAll(RegExp(r'^#+\s+', multiLine: true), '');
+    // Strip horizontal rules
+    plainText = plainText.replaceAll(RegExp(r'^\s*([-*_])\s*\1\s*\1\s*$', multiLine: true), '');
+    // Strip multiple newlines
+    plainText = plainText.replaceAll(RegExp(r'\n+'), ' ');
+
+    return plainText.trim();
   }
 
   String? _getPreviewImage(String content) {
+    if (content.isEmpty) return null;
+    
+    String textToSearch = content;
+
+    // 1. Handle JSON (Quill Delta)
     try {
       final decoded = jsonDecode(content);
       if (decoded is List) {
+        final buffer = StringBuffer();
         for (final op in decoded) {
           if (op is Map && op.containsKey('insert')) {
             final insert = op['insert'];
+            
+            // Check for direct image map
             if (insert is Map && insert.containsKey('image')) {
               return insert['image'] as String;
             }
+            
+            if (insert is String) {
+              buffer.write(insert);
+            }
           }
         }
+        textToSearch = buffer.toString();
       }
     } catch (_) {}
+
+    // 2. Robust Markdown extraction
+    // Also support standard markdown image
+    final regExp = RegExp(r'!\[.*?\]\((.*?)\)');
+    final match = regExp.firstMatch(textToSearch);
+    if (match != null && match.groupCount >= 1) {
+      return match.group(1);
+    }
+    
     return null;
   }
 }
+

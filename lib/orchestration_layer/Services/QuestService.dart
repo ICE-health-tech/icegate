@@ -1,5 +1,5 @@
 import 'dart:math';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:drift/drift.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
@@ -50,9 +50,7 @@ class QuestService {
   }
 
   Future<void> _generateNewDailyQuests(String personId) async {
-    // 1. Delete old daily quests (optional, or keep them if not completed)
-    // For a clean daily reset, we might want to archive them.
-    // For now, let's just add new ones.
+    await _db.questDAO.deleteIncompleteDailyQuestsForPerson(personId);
 
     final random = Random();
     

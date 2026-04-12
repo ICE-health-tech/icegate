@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:provider/provider.dart';
@@ -142,6 +142,7 @@ class HabitDashboardPage extends StatelessWidget {
           personID: const Value(''),
           type: type,
           durationMinutes: minutes,
+          intensity: const Value('medium'),
           timestamp: Value(DateTime.now()),
         ),
       );

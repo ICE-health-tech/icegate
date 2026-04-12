@@ -5,7 +5,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     hide ThemeData;
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -197,14 +197,14 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
           ),
 
         if (_sshService.isConnected && !_isLoading) ...[
-          _buildSectionHeader(context, 'LIVE TMUX SESSIONS'),
+          _buildSectionHeader('LIVE TMUX SESSIONS', Icons.terminal_rounded),
           _buildLiveSessions(l10n, theme),
         ],
 
-        _buildSectionHeader(context, 'SESSION HISTORY'),
+        _buildSectionHeader('SESSION HISTORY', Icons.history_rounded),
         _buildSessionHistoryGrid(l10n, theme),
 
-        _buildSectionHeader(context, 'PERSISTED SESSIONS (SQLITE)'),
+        _buildSectionHeader('PERSISTED SESSIONS (SQLITE)', Icons.storage_rounded),
         _buildPersistedSessions(l10n, theme),
 
         const SliverToBoxAdapter(child: SizedBox(height: 40)),
@@ -212,51 +212,139 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
     );
   }
 
-  Widget _buildSectionHeader(BuildContext context, String title) {
+  Widget _buildSectionHeader(String title, IconData icon) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    
     return SliverToBoxAdapter(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 24, 16, 12),
-        child: Text(
-          title,
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.primary,
-            fontWeight: FontWeight.w900,
-            fontSize: 12,
-            letterSpacing: 1.5,
-          ),
+        padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(8),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, size: 18, color: colorScheme.primary),
+            ),
+            const SizedBox(width: 12),
+            Text(
+              title,
+              style: theme.textTheme.labelLarge?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2.0,
+                color: colorScheme.onSurface.withOpacity(0.8),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      colorScheme.onSurface.withOpacity(0.1),
+                      colorScheme.onSurface.withOpacity(0.0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 
   Widget _buildNoConnection(AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            Icons.cloud_off_rounded,
-            size: 64,
-            color: Colors.grey.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'NO ACTIVE UPLINK',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.grey.withOpacity(0.8),
+      child: Padding(
+        padding: const EdgeInsets.all(32.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Decorative Background Glow
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [
+                        colorScheme.primary.withOpacity(0.2),
+                        colorScheme.primary.withOpacity(0.0),
+                      ],
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.cloud_off_rounded,
+                  size: 80,
+                  color: colorScheme.primary.withOpacity(0.4),
+                ),
+              ],
             ),
-          ),
-          const SizedBox(height: 8),
-          const Text('Connect to a host first to manage live sessions.'),
-          const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.push('/widgets/ssh'),
-            icon: const Icon(Icons.lan),
-            label: const Text('GO TO TERMINAL'),
-          ),
-        ],
+            const SizedBox(height: 32),
+            Text(
+              'NO ACTIVE UPLINK',
+              style: theme.textTheme.headlineSmall?.copyWith(
+                fontWeight: FontWeight.w900,
+                letterSpacing: 4.0,
+                color: colorScheme.onSurface,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'Connect to a host first to manage live sessions.',
+              textAlign: TextAlign.center,
+              style: theme.textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withOpacity(0.6),
+                height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 48),
+            Container(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: colorScheme.primary.withOpacity(0.2),
+                    blurRadius: 20,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              child: FilledButton.icon(
+                onPressed: () => context.push('/widgets/ssh'),
+                style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 20,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                ),
+                icon: const Icon(Icons.terminal_rounded),
+                label: const Text(
+                  'GO TO TERMINAL',
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -349,6 +437,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
           itemCount: _savedHosts.length,
           itemBuilder: (context, index) {
             final host = _savedHosts[index];
+            final colorScheme = theme.colorScheme;
             return InkWell(
               onTap: () async {
                 if (host.id == _sshService.currentHostId &&
@@ -377,10 +466,21 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.03),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white.withOpacity(0.08)),
+                  color: colorScheme.surface.withOpacity(0.5),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(
+                    color: colorScheme.onSurface.withOpacity(0.08),
+                    width: 1.5,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.03),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
                 ),
+                clipBehavior: Clip.antiAlias,
                 padding: const EdgeInsets.all(12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -461,14 +561,13 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                           ),
                         ),
                         const Spacer(),
-                        if (host.lastUsed != null)
-                          Text(
-                            _formatLastUsed(host.lastUsed!),
-                            style: const TextStyle(
-                              color: Colors.white12,
-                              fontSize: 8,
-                            ),
+                        Text(
+                          _formatLastUsed(host.lastUsed),
+                          style: const TextStyle(
+                            color: Colors.white12,
+                            fontSize: 8,
                           ),
+                        ),
                       ],
                     ),
                   ],

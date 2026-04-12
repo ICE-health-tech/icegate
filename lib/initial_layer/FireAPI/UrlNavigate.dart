@@ -1,4 +1,4 @@
-import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
+// import 'package:ice_gate/ui_layer/widget_page/PluginList/IOTTracker/OSMMapPlugin.dart';
 import 'package:ice_gate/orchestration_layer/Action/WebView/LiveMapPlugin.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart'; // For debugPrint
@@ -32,10 +32,7 @@ Future<void> urlNavigate(String url) async {
 void navigateExternalUrl(BuildContext context, String url) async {
   // Check for special widget protocol
   if (url.startsWith('widget://')) {
-    if (url == 'widget://map') {
-      OSMMapPlugin.navigateToMap(context);
-      return;
-    }
+    
     if (url.startsWith('widget://webview')) {
       debugPrint("WebView widget detected: $url - Drag this to canvas to use");
       LiveMapPlugin.navigateToWebView(context, url);

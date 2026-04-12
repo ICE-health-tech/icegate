@@ -10,11 +10,10 @@ import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 
 class SettingsWidget extends StatelessWidget {
   final String? title;
@@ -339,11 +338,10 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
 
-            // 3. Modality Settings: Finance
-            
+            // 3. Health Settings
+          
 
-            // 4. Modality Settings: Health, Social, Projects
-            
+            // 4. Modality Settings: Social, Projects
 
             // 5. Info & Support
             _buildSettingSection(
@@ -536,7 +534,7 @@ class SettingsWidget extends StatelessWidget {
                     const SizedBox(height: 16),
                     // Type Selection
                     DropdownButtonFormField<String>(
-                      value: selectedType,
+                      initialValue: selectedType,
                       decoration: InputDecoration(
                         labelText: "Loại phản hồi / Feedback Type",
                         border: OutlineInputBorder(

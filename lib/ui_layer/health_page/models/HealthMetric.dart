@@ -8,11 +8,13 @@ class HealthMetric {
   final IconData icon;
   final Color color;
   final String unit;
-  final String? detailPage;
-  final double? progress; // Progress value from 0.0 to 1.0
-  final String? subtitle;
   final String? trend; // e.g., "+5%", "-2%"
   final bool? trendPositive; // true if trend is good, false if bad
+  final bool isFuture;
+  final String? detailPage;
+  final double? progress;
+  final String? subtitle;
+  final String? availabilityMessage; // e.g., "Apple Watch Required"
 
   const HealthMetric({
     required this.id,
@@ -26,6 +28,8 @@ class HealthMetric {
     this.subtitle,
     this.trend,
     this.trendPositive,
+    this.isFuture = false,
+    this.availabilityMessage,
   });
 
   /// Creates a copy with updated values
@@ -41,6 +45,8 @@ class HealthMetric {
     String? subtitle,
     String? trend,
     bool? trendPositive,
+    bool? isFuture,
+    String? availabilityMessage,
   }) {
     return HealthMetric(
       id: id ?? this.id,
@@ -54,6 +60,8 @@ class HealthMetric {
       subtitle: subtitle ?? this.subtitle,
       trend: trend ?? this.trend,
       trendPositive: trendPositive ?? this.trendPositive,
+      isFuture: isFuture ?? this.isFuture,
+      availabilityMessage: availabilityMessage ?? this.availabilityMessage,
     );
   }
 }

@@ -5,7 +5,7 @@ import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:provider/provider.dart';
 import 'dart:math' as math;
 import 'package:ice_gate/ui_layer/health_page/subpage/HourlyActivityPage.dart';
@@ -106,7 +106,7 @@ class HealthAnalysisPage extends StatelessWidget {
                 exerciseMinutes: 0,
                 focusMinutes: 0,
                 category: 'General',
-                updatedAt: now,
+                updatedAt: now, createdAt: DateTime.now(),
               ),
             );
 

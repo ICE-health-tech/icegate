@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationInboxPage.dart';
@@ -12,7 +12,7 @@ import 'package:ice_gate/ui_layer/health_page/CaloriesPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/StepsDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/TextEditorPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/text_editor_page.dart';
 import 'package:ice_gate/ui_layer/animation_page/PrismEntryPage.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
 import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
@@ -41,6 +41,8 @@ import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodConsumePage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/WaterPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightInputPage.dart';
+import 'package:ice_gate/ui_layer/health_page/subpage/data_integration_page.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/BlockReminderPage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
@@ -50,12 +52,12 @@ import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.
 import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_gate/ui_layer/social_page/SocialDashboardPage.dart';
+import 'package:ice_gate/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
-import 'package:ice_gate/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/projects_page.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/DocumentManagerPage.dart';
-import 'package:ice_gate/ui_layer/projects_page/FolderDetailsPage.dart';
+import 'package:ice_gate/ui_layer/projects_page/note_manager_page.dart';
+import 'package:ice_gate/ui_layer/projects_page/folder_details_page.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -167,6 +169,8 @@ final GoRouter router = GoRouter(
             note: data['note'] as ProjectNoteData?,
             initialCategory: data['category'] as String?,
             initialFile: data['file'] as File?,
+            initialImage: data['initialImage'] as String?,
+            initialDirectory: data['initialDirectory'] as Directory?,
           );
         }
         return const TextEditorPage();
@@ -254,6 +258,12 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'weight',
               builder: (context, state) => const WeightPage(),
+              routes: [
+                GoRoute(
+                  path: 'log',
+                  builder: (context, state) => const WeightInputPage(),
+                ),
+              ],
             ),
             GoRoute(
               path: 'food',
@@ -303,6 +313,14 @@ final GoRouter router = GoRouter(
               path: 'analysis',
               builder: (context, state) => const HealthAnalysisPage(),
             ),
+            GoRoute(
+              path: 'goals',
+              builder: (context, state) => const GoalConfigurationWidget(),
+            ),
+            GoRoute(
+              path: 'integrations',
+              builder: (context, state) => const DataIntegrationPage(),
+            ),
           ],
         ),
         GoRoute(
@@ -321,7 +339,7 @@ final GoRouter router = GoRouter(
           routes: [
             GoRoute(
               path: 'dashboard',
-              builder: (context, state) => const SocialDashboardPage(),
+              builder: (context, state) => const MindAnalysisPage(),
             ),
             GoRoute(
               path: 'journal',
@@ -342,9 +360,24 @@ final GoRouter router = GoRouter(
               builder: (context, state) => const ProjectAnalysisPage(),
             ),
             GoRoute(
-              path: 'documents',
-              builder: (context, state) => const DocumentManagerPage(),
+              path: 'notes',
+              builder: (context, state) => const NoteManagerPage(),
               routes: [
+                GoRoute(
+                  path: 'folder',
+                  builder: (context, state) => FolderDetailsPage(
+                    directory: state.extra as Directory,
+                  ),
+                ),
+              ],
+            ),
+            GoRoute(
+              path: 'documents',
+              builder: (context, state) => const NoteManagerPage(),
+              routes: [
+                // folder_details_page.dart and note_manager_page.dart both push
+                // '/projects/documents/folder' — this sub-route was missing, causing
+                // GoRouter to throw "no routes for location".
                 GoRoute(
                   path: 'folder',
                   builder: (context, state) => FolderDetailsPage(

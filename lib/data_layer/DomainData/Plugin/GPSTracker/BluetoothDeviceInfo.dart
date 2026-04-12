@@ -5,7 +5,7 @@ part 'BluetoothDeviceInfo.g.dart';
 
 /// Bluetooth device information model
 @freezed
-abstract class BluetoothDeviceInfo with _$BluetoothDeviceInfo {
+class BluetoothDeviceInfo with _$BluetoothDeviceInfo {
   const factory BluetoothDeviceInfo({
     required String id,
     required String name,

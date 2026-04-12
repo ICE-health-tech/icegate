@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'dart:math' as math;
+import 'dart:ui';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
@@ -52,12 +54,16 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
       if (_hourlyChartController.hasClients) {
         final currentHour = DateTime.now().hour;
         final barWidth = UIConstants.getChartBarWidth(context);
-        const margin = 12.0; // horizontal gap
-        final scrollPosition = (barWidth + margin) * currentHour - 100;
+        // Each bar container has width (barWidth + 14) and horizontal margin 10 (total 20)
+        final barTotalWidth = barWidth + 34; 
+        final screenWidth = MediaQuery.of(context).size.width;
+        
+        final scrollPosition = (barTotalWidth * currentHour) + (barTotalWidth / 2) - (screenWidth / 2);
+        
         _hourlyChartController.animateTo(
           scrollPosition.clamp(0, _hourlyChartController.position.maxScrollExtent),
-          duration: const Duration(seconds: 1),
-          curve: Curves.easeOutCubic,
+          duration: const Duration(milliseconds: 1200),
+          curve: Curves.easeOutQuart,
         );
       }
     });
@@ -408,8 +414,8 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
   Widget _buildRobustHourlyChart(BuildContext context, HealthBlock healthBlock) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final containerHeight = UIConstants.getChartContainerHeight(context) + 20;
-    final barMaxHeight = UIConstants.getChartBarMaxHeight(context);
+    final containerHeight = UIConstants.getChartContainerHeight(context) + 40;
+    final barMaxHeight = UIConstants.getChartBarMaxHeight(context)*0.8;
     final barWidth = UIConstants.getChartBarWidth(context);
 
     return Watch((context) {
@@ -419,112 +425,187 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
       final maxSteps = hourly.values.fold<int>(1, (max, val) => val > max ? val : max);
       final currentHour = DateTime.now().hour;
 
-      return Container(
-        height: containerHeight,
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withValues(alpha: 0.4),
-          borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  "Hourly Activity",
-                  style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w900),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(36),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+          child: Container(
+            height: containerHeight + 20,
+            padding: const EdgeInsets.all(28),
+            decoration: BoxDecoration(
+              color: colorScheme.surface.withOpacity(0.035),
+              borderRadius: BorderRadius.circular(36),
+              border: Border.all(
+                color: Colors.white.withOpacity(0.07),
+                width: 1.5,
+              ),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Colors.white.withOpacity(0.07),
+                  Colors.white.withOpacity(0.015),
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.1),
+                  blurRadius: 40,
+                  offset: const Offset(0, 20),
                 ),
-                if (_selectedHour != null)
-                  Text(
-                    "${_selectedHour}h: ${hourly[_selectedHour] ?? 0} steps",
-                    style: TextStyle(
-                      color: colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
               ],
             ),
-            const SizedBox(height: 24),
-            Expanded(
-              child: SingleChildScrollView(
-                controller: _hourlyChartController,
-                physics: const BouncingScrollPhysics(),
-                scrollDirection: Axis.horizontal,
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: List.generate(24, (index) {
-                    final steps = hourly[index] ?? 0;
-                    final barHeight = (steps / maxSteps * barMaxHeight).clamp(6.0, barMaxHeight);
-                    final isCurrentHour = index == currentHour;
-                    final isSelected = _selectedHour == index;
-
-                    return GestureDetector(
-                      onTap: () => setState(() => _selectedHour = _selectedHour == index ? null : index),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.end,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "HOURLY ACTIVITY",
+                          style: textTheme.labelSmall?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2.0,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          "Peak: $maxSteps steps",
+                          style: textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (_selectedHour != null)
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                        ),
+                        child: Row(
                           children: [
-                            if (steps > 0)
-                              Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: Text(
-                                  steps.toString(),
-                                  style: TextStyle(
-                                    fontSize: 9,
-                                    fontWeight: isCurrentHour || isSelected ? FontWeight.w900 : FontWeight.bold,
-                                    color: isCurrentHour || isSelected ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.6),
-                                  ),
-                                ),
-                              )
-                            else
-                              const SizedBox(height: 15), // Placeholder to keep baseline alignment
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 400),
-                              width: barWidth + (isSelected ? 4 : 0),
-                              height: barHeight,
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.bottomCenter,
-                                  end: Alignment.topCenter,
-                                  colors: isCurrentHour || isSelected
-                                    ? [colorScheme.primary, colorScheme.primaryContainer]
-                                    : [
-                                        colorScheme.primary.withValues(alpha: 0.15),
-                                        colorScheme.primary.withValues(alpha: 0.35)
-                                      ],
-                                ),
-                                borderRadius: BorderRadius.circular(barWidth / 2),
-                                boxShadow: isSelected ? [
-                                  BoxShadow(
-                                    color: colorScheme.primary.withValues(alpha: 0.3),
-                                    blurRadius: 10,
-                                  )
-                                ] : null,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
+                            Icon(Icons.timer_rounded, color: colorScheme.primary, size: 14),
+                            const SizedBox(width: 8),
                             Text(
-                              "${index}h",
+                              "${_selectedHour}:00 - ${hourly[_selectedHour] ?? 0}",
                               style: TextStyle(
-                                fontSize: 10,
-                                color: isCurrentHour ? colorScheme.primary : colorScheme.onSurface.withValues(alpha: 0.4),
-                                fontWeight: isCurrentHour || isSelected ? FontWeight.w900 : FontWeight.bold,
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                                                                      fontSize: UIConstants.getResponsiveFontSize(context, factor: 0.02, min: 6.0, max: 10.0),
                               ),
                             ),
                           ],
                         ),
                       ),
-                    );
-                  }),
+                  ],
                 ),
-              ),
+                const SizedBox(height: 12),
+                Expanded(
+                  child: SingleChildScrollView(
+                    controller: _hourlyChartController,
+                    physics: const BouncingScrollPhysics(),
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: List.generate(24, (index) {
+                        final steps = hourly[index] ?? 0;
+                        final isCurrentHour = index == currentHour;
+                        final isSelected = _selectedHour == index;
+                        
+                        // Robust height calculation
+                        final barHeight = (steps == 0) 
+                            ? 6.0 
+                            : (math.pow(steps / maxSteps, 0.4) * barMaxHeight).clamp(6.0, barMaxHeight);
+
+                        return GestureDetector(
+                          onTap: () => setState(() => _selectedHour = _selectedHour == index ? null : index),
+                          child: AnimatedContainer(
+                            duration: const Duration(milliseconds: 400),
+                            margin: const EdgeInsets.symmetric(horizontal: 10),
+                            width: barWidth + 16,
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: [
+                                // Step Count label
+                                AnimatedOpacity(
+                                  duration: const Duration(milliseconds: 300),
+                                  opacity: (steps > 0 || isSelected) ? 1.0 : 0.0,
+                                  child: Padding(
+                                    padding: const EdgeInsets.only(bottom: 4),
+                                    child: Text(
+                                      steps.toString(),
+                                      style: TextStyle(
+                                        fontSize: UIConstants.getResponsiveFontSize(context, factor: 0.02, min: 6.0, max: 10.0),
+                                        fontWeight: FontWeight.w900,
+                                        color: isCurrentHour || isSelected 
+                                            ? colorScheme.primary 
+                                            : colorScheme.onSurface.withOpacity(0.35),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                // const Spacer(),
+                                // Bar
+                                AnimatedContainer(
+                                  duration: const Duration(milliseconds: 1000),
+                                  curve: Curves.elasticOut,
+                                  width: barWidth + (isSelected ? 8 : 0),
+                                  height: barHeight,
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.bottomCenter,
+                                      end: Alignment.topCenter,
+                                      colors: isCurrentHour || isSelected
+                                        ? [
+                                            colorScheme.primary,
+                                            colorScheme.primary.withOpacity(0.4),
+                                          ]
+                                        : [
+                                            colorScheme.onSurface.withOpacity(0.04),
+                                            colorScheme.onSurface.withOpacity(0.12),
+                                          ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: (isCurrentHour || isSelected) ? [
+                                      BoxShadow(
+                                        color: colorScheme.primary.withOpacity(0.35),
+                                        blurRadius: 15,
+                                        spreadRadius: 2,
+                                      )
+                                    ] : null,
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+                                // Hour Label
+                                Text(
+                                  "${index}h",
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    color: isCurrentHour || isSelected 
+                                        ? colorScheme.primary 
+                                        : colorScheme.onSurface.withOpacity(0.3),
+                                    fontWeight: isCurrentHour || isSelected ? FontWeight.w900 : FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       );
     });
@@ -553,7 +634,7 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
             offset: const Offset(0, 8),
           ),
         ],
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -562,7 +643,7 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.1),
+              color: color.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: color, size: 20),
@@ -585,7 +666,7 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
                   Text(
                     unit,
                     style: textTheme.labelSmall?.copyWith(
-                      color: colorScheme.onSurface.withValues(alpha: 0.4),
+                      color: colorScheme.onSurface.withValues(alpha: 0.3),
                       fontWeight: FontWeight.w900,
                     ),
                   ),
@@ -597,7 +678,7 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 style: textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.35),
                   fontWeight: FontWeight.w900,
                   fontSize: 9,
                   letterSpacing: 0.5,

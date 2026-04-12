@@ -1,115 +1,130 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:drift/drift.dart' hide Column;
+import 'package:ice_gate/ui_layer/health_page/subpage/WeightInputPage.dart';
+import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 
 class WeightPage extends StatefulWidget {
   const WeightPage({super.key});
 
   @override
   State<WeightPage> createState() => _WeightPageState();
+
+  static Widget icon(BuildContext context, {double? size}) {
+    return MainButton(
+      type: "weight",
+            onSwipeUp: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeRight: () {
+        WidgetNavigatorAction.smartPop(context);
+      },
+      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
+      destination: "/health/weight",
+      size: size,
+      icon: Icons.scale,
+      mainFunction: () {
+
+        context.go("/health/weight/log");
+      },
+    );
+  }
 }
 
 class _WeightPageState extends State<WeightPage> {
-  final TextEditingController _weightController = TextEditingController();
-
-  Future<void> _showAddWeightDialog() async {
-    final personBlock = context.read<PersonBlock>();
-    final healthBlock = context.read<HealthBlock>();
-    final personId = personBlock.information.value.profiles.id ?? "";
-
-    return showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text("Log Weight"),
-        content: TextField(
-          controller: _weightController,
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          decoration: const InputDecoration(
-            labelText: "Weight (kg)",
-            suffixText: "kg",
-          ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext),
-            child: const Text("Cancel"),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final weight = double.tryParse(_weightController.text);
-              if (weight != null && personId.isNotEmpty) {
-                healthBlock.updateWeight(weight);
-                _weightController.clear();
-                if (mounted) Navigator.pop(dialogContext);
-              }
-            },
-            child: const Text("Save"),
-          ),
-        ],
-      ),
-    );
-  }
 
   @override
   Widget build(BuildContext context) {
     final db = context.watch<AppDatabase>();
     final personBlock = context.watch<PersonBlock>();
     final personId = personBlock.information.value.profiles.id ?? "";
-    final colorScheme = Theme.of(context).colorScheme;
 
-    return SwipeablePage(
-      onSwipe: () => Navigator.maybePop(context),
-      direction: SwipeablePageDirection.leftToRight,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          title: const Text(
-            "Weight Tracker",
-            style: TextStyle(fontWeight: FontWeight.bold),
-          ),
-          centerTitle: true,
-          elevation: 0,
-          backgroundColor: Colors.transparent,
-          leading: IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            onPressed: () => Navigator.pop(context),
+    return Scaffold(
+      backgroundColor: Colors.black,
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(
+        title: const Text(
+          "WEIGHT JOURNEY",
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            letterSpacing: 4,
+            fontSize: 18,
           ),
         ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _showAddWeightDialog,
-          child: const Icon(Icons.add_rounded),
+        centerTitle: true,
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          onPressed: () => Navigator.pop(context),
         ),
-        body: StreamBuilder<List<HealthMetricsLocal>>(
-          stream: db.healthMetricsDAO.watchAllMetrics(personId),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+      ),
+      
+      body: Stack(
+        children: [
+          Positioned(
+            top: -100,
+            left: -50,
+            child: _AmbientGlow(color: Colors.purple.withValues(alpha: 0.15)),
+          ),
+          Positioned(
+            bottom: 100,
+            right: -50,
+            child: _AmbientGlow(color: Colors.blue.withValues(alpha: 0.1)),
+          ),
+          
+          StreamBuilder<List<HealthMetricsLocal>>(
+            stream: db.healthMetricsDAO.watchAllMetrics(personId),
+            builder: (context, snapshot) {
+              if (!snapshot.hasData) {
+                return const Center(child: CircularProgressIndicator());
+              }
 
-            final data =
-                snapshot.data!.where((m) => (m.weightKg ?? 0) > 0).toList()
-                  ..sort((a, b) => b.date.compareTo(a.date));
+              final data =
+                  snapshot.data!.where((m) => (m.weightKg ?? 0) > 0).toList()
+                    ..sort((a, b) => b.date.compareTo(a.date));
 
-            if (data.isEmpty) {
-              return const Center(child: Text("No weight data logged yet."));
-            }
+              if (data.isEmpty) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.monitor_weight_outlined,
+                        size: 80,
+                        color: Colors.white.withValues(alpha: 0.05),
+                      ),
+                      const SizedBox(height: 24),
+                      const Text(
+                        "YOUR JOURNEY STARTS HERE",
+                        style: TextStyle(
+                          color: Colors.white38,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
 
-            return ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: data.length,
-              itemBuilder: (context, index) {
-                final metric = data[index];
-                return _WeightListItem(metric: metric);
-              },
-            );
-          },
-        ),
+              return ListView.builder(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(20, 120, 20, 100),
+                itemCount: data.length,
+                itemBuilder: (context, index) {
+                  final metric = data[index];
+                  return _WeightListItem(metric: metric);
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
@@ -122,35 +137,91 @@ class _WeightListItem extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                DateFormat('MMMM d, yyyy').format(metric.date),
-                style: const TextStyle(fontWeight: FontWeight.bold),
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.05),
               ),
-              Text(
-                "${(metric.weightKg ?? 0.0).toStringAsFixed(1)} kg",
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Theme.of(context).colorScheme.primary,
-                  fontWeight: FontWeight.w900,
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.purpleAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                  ),
+                  child: const Icon(
+                    Icons.monitor_weight_rounded,
+                    color: Colors.purpleAccent,
+                    size: 24,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 20),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        DateFormat('MMMM d, yyyy').format(metric.date).toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white38,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                          fontSize: 10,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        "${(metric.weightKg ?? 0.0).toStringAsFixed(1)} kg",
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 24,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(
+                  Icons.chevron_right_rounded,
+                  color: Colors.white12,
+                ),
+              ],
+            ),
           ),
-          const Icon(Icons.monitor_weight_rounded, color: Colors.blueAccent),
+        ),
+      ),
+    );
+  }
+}
+
+class _AmbientGlow extends StatelessWidget {
+  final Color color;
+  const _AmbientGlow({required this.color});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 400,
+      height: 400,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 100,
+            spreadRadius: 50,
+          ),
         ],
       ),
     );

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 enum DeviceType { phone, tablet, laptop, desktop }
 
 class UIResponsiveManager {
-  static const double phoneMax = 600;
+  static const double phoneMax = 500;
   static const double tabletMax = 1024;
   static const double laptopMax = 1440;
 
