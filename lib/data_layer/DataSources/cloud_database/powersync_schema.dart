@@ -53,6 +53,7 @@ const Schema schema = Schema([
     Column.text('updated_at'),
     Column.text('project_id'),
     Column.text('category'),
+    Column.text('mood'),
   ]),
   Table('projects', [
     Column.text('project_id'),
@@ -369,6 +370,8 @@ const Schema schema = Schema([
     Column.integer('impact_score'),
     Column.text('impact_desc_who'),
     Column.text('impact_desc_how'),
+    Column.text('mood_pre'),
+    Column.text('mood_post'),
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),

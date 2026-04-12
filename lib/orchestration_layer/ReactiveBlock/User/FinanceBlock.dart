@@ -280,18 +280,35 @@ class FinanceBlock {
     _personId = personId;
     _configBlock = configBlock;
 
-    // Load persistent ATH
+    // Load persistent ATH and latest timestamp
+    DateTime? lastSnapshotTime;
     final latest = await snapshotDao.getLatestSnapshot(personId);
     if (latest != null) {
       _persistedAth.value = latest.athAtTime;
+      lastSnapshotTime = latest.timestamp;
     }
 
     _snapshotDisposer?.call();
     _snapshotDisposer = effect(() {
       final currentNW = totalBalance.value;
+      if (currentNW == 0) return; // Wait for initial data load
+
+      bool shouldSave = false;
+
+      // Rule 1: All-Time High
       if (currentNW > _persistedAth.value) {
         _persistedAth.value = currentNW;
+        shouldSave = true;
+      }
+
+      // Rule 2: Daily Snapshot
+      if (lastSnapshotTime == null || DateTime.now().difference(lastSnapshotTime!).inDays >= 1) {
+        shouldSave = true;
+      }
+
+      if (shouldSave) {
         _saveSnapshot();
+        lastSnapshotTime = DateTime.now();
       }
     });
 

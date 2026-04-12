@@ -246,7 +246,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_category_finance => 'Tài chính';
 
   @override
-  String get notification_category_social => 'Tâm trí';
+  String get notification_category_social => 'Tinh thần';
 
   @override
   String get notification_category_projects => 'Dự án';
@@ -630,7 +630,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get scoring_finance => 'Tài chính';
 
   @override
-  String get scoring_social => 'Tâm trí';
+  String get scoring_social => 'Tinh thần';
 
   @override
   String get scoring_career => 'Sự nghiệp';
@@ -852,10 +852,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get create_link => 'TẠO LIÊN KẾT';
 
   @override
-  String get social_dashboard => 'Bảng điều khiển Tâm trí';
+  String get social_dashboard => 'Bảng điều khiển Tinh thần';
 
   @override
-  String get social => 'Tâm trí';
+  String get social => 'Tinh thần';
 
   @override
   String get social_rank_first => 'HẠNG NHẤT';
@@ -899,7 +899,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_bond_strengthened => 'Mối liên kết được thắt chặt!';
 
   @override
-  String get social_options => 'Tùy chọn Tâm trí';
+  String get social_options => 'Tùy chọn Tinh thần';
 
   @override
   String get social_manage_title => 'Quản lý liên kết';
@@ -1123,7 +1123,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get rule_social_maintain =>
-      'Thực hành chánh niệm để duy trì sự ổn định tâm trí.';
+      'Thực hành chánh niệm để duy trì sự ổn định Tinh thần.';
 
   @override
   String get how_it_works => 'Cách thức hoạt động';
@@ -1985,7 +1985,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get journal => 'Nhật ký';
 
   @override
-  String get social_notes => 'Ghi chú Tâm trí';
+  String get social_notes => 'Ghi chú Tinh thần';
 
   @override
   String get btn_send_feedback => 'Gửi phản hồi';

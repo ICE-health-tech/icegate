@@ -318,7 +318,6 @@ class _SocialNoteCard extends StatelessWidget {
                           Positioned(
                             bottom: 12,
                             left: 12,
-                            right: 12,
                             child: Text(
                               DateFormat('MMM d').format(note.updatedAt),
                               style: const TextStyle(
@@ -329,6 +328,26 @@ class _SocialNoteCard extends StatelessWidget {
                               ),
                             ),
                           ),
+                          if (note.mood != null && note.mood!.isNotEmpty)
+                            Positioned(
+                              bottom: 12,
+                              right: 12,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary,
+                                  borderRadius: BorderRadius.circular(4),
+                                ),
+                                child: Text(
+                                  note.mood!.toUpperCase(),
+                                  style: TextStyle(
+                                    color: colorScheme.onPrimary,
+                                    fontSize: 8,
+                                    fontWeight: FontWeight.w900,
+                                  ),
+                                ),
+                              ),
+                            ),
                         ],
                       ),
                     ),

@@ -2412,6 +2412,15 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     requiredDuringInsert: false,
     defaultValue: const Constant('projects'),
   );
+  static const VerificationMeta _moodMeta = const VerificationMeta('mood');
+  @override
+  late final GeneratedColumn<String> mood = GeneratedColumn<String>(
+    'mood',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2424,6 +2433,7 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     updatedAt,
     projectID,
     category,
+    mood,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2488,6 +2498,12 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
       );
     }
+    if (data.containsKey('mood')) {
+      context.handle(
+        _moodMeta,
+        mood.isAcceptableOrUnknown(data['mood']!, _moodMeta),
+      );
+    }
     return context;
   }
 
@@ -2541,6 +2557,10 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         DriftSqlType.string,
         data['${effectivePrefix}category'],
       )!,
+      mood: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mood'],
+      ),
     );
   }
 
@@ -2566,6 +2586,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
   final DateTime updatedAt;
   final String? projectID;
   final String category;
+  final String? mood;
   const ProjectNoteData({
     required this.id,
     this.tenantID,
@@ -2577,6 +2598,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     required this.updatedAt,
     this.projectID,
     required this.category,
+    this.mood,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2607,6 +2629,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       map['project_id'] = Variable<String>(projectID);
     }
     map['category'] = Variable<String>(category);
+    if (!nullToAbsent || mood != null) {
+      map['mood'] = Variable<String>(mood);
+    }
     return map;
   }
 
@@ -2630,6 +2655,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           ? const Value.absent()
           : Value(projectID),
       category: Value(category),
+      mood: mood == null && nullToAbsent ? const Value.absent() : Value(mood),
     );
   }
 
@@ -2649,6 +2675,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
       projectID: serializer.fromJson<String?>(json['projectID']),
       category: serializer.fromJson<String>(json['category']),
+      mood: serializer.fromJson<String?>(json['mood']),
     );
   }
   @override
@@ -2665,6 +2692,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       'updatedAt': serializer.toJson<DateTime>(updatedAt),
       'projectID': serializer.toJson<String?>(projectID),
       'category': serializer.toJson<String>(category),
+      'mood': serializer.toJson<String?>(mood),
     };
   }
 
@@ -2679,6 +2707,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     DateTime? updatedAt,
     Value<String?> projectID = const Value.absent(),
     String? category,
+    Value<String?> mood = const Value.absent(),
   }) => ProjectNoteData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -2690,6 +2719,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     updatedAt: updatedAt ?? this.updatedAt,
     projectID: projectID.present ? projectID.value : this.projectID,
     category: category ?? this.category,
+    mood: mood.present ? mood.value : this.mood,
   );
   ProjectNoteData copyWithCompanion(ProjectNotesTableCompanion data) {
     return ProjectNoteData(
@@ -2703,6 +2733,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
       projectID: data.projectID.present ? data.projectID.value : this.projectID,
       category: data.category.present ? data.category.value : this.category,
+      mood: data.mood.present ? data.mood.value : this.mood,
     );
   }
 
@@ -2718,7 +2749,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('projectID: $projectID, ')
-          ..write('category: $category')
+          ..write('category: $category, ')
+          ..write('mood: $mood')
           ..write(')'))
         .toString();
   }
@@ -2735,6 +2767,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     updatedAt,
     projectID,
     category,
+    mood,
   );
   @override
   bool operator ==(Object other) =>
@@ -2749,7 +2782,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt &&
           other.projectID == this.projectID &&
-          other.category == this.category);
+          other.category == this.category &&
+          other.mood == this.mood);
 }
 
 class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
@@ -2763,6 +2797,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
   final Value<DateTime> updatedAt;
   final Value<String?> projectID;
   final Value<String> category;
+  final Value<String?> mood;
   final Value<int> rowid;
   const ProjectNotesTableCompanion({
     this.id = const Value.absent(),
@@ -2775,6 +2810,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.updatedAt = const Value.absent(),
     this.projectID = const Value.absent(),
     this.category = const Value.absent(),
+    this.mood = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNotesTableCompanion.insert({
@@ -2788,6 +2824,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.updatedAt = const Value.absent(),
     this.projectID = const Value.absent(),
     this.category = const Value.absent(),
+    this.mood = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2803,6 +2840,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Expression<DateTime>? updatedAt,
     Expression<String>? projectID,
     Expression<String>? category,
+    Expression<String>? mood,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2816,6 +2854,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       if (updatedAt != null) 'updated_at': updatedAt,
       if (projectID != null) 'project_id': projectID,
       if (category != null) 'category': category,
+      if (mood != null) 'mood': mood,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2831,6 +2870,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Value<DateTime>? updatedAt,
     Value<String?>? projectID,
     Value<String>? category,
+    Value<String?>? mood,
     Value<int>? rowid,
   }) {
     return ProjectNotesTableCompanion(
@@ -2844,6 +2884,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       updatedAt: updatedAt ?? this.updatedAt,
       projectID: projectID ?? this.projectID,
       category: category ?? this.category,
+      mood: mood ?? this.mood,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2885,6 +2926,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
+    if (mood.present) {
+      map['mood'] = Variable<String>(mood.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2904,6 +2948,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
           ..write('updatedAt: $updatedAt, ')
           ..write('projectID: $projectID, ')
           ..write('category: $category, ')
+          ..write('mood: $mood, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -29724,6 +29769,28 @@ class $AchievementsTableTable extends AchievementsTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _moodPreMeta = const VerificationMeta(
+    'moodPre',
+  );
+  @override
+  late final GeneratedColumn<String> moodPre = GeneratedColumn<String>(
+    'mood_pre',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _moodPostMeta = const VerificationMeta(
+    'moodPost',
+  );
+  @override
+  late final GeneratedColumn<String> moodPost = GeneratedColumn<String>(
+    'mood_post',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _impactDescWhoMeta = const VerificationMeta(
     'impactDescWho',
   );
@@ -29776,6 +29843,8 @@ class $AchievementsTableTable extends AchievementsTable
     domain,
     meaningScore,
     impactScore,
+    moodPre,
+    moodPost,
     impactDescWho,
     impactDescHow,
     createdAt,
@@ -29853,6 +29922,18 @@ class $AchievementsTableTable extends AchievementsTable
     } else if (isInserting) {
       context.missing(_impactScoreMeta);
     }
+    if (data.containsKey('mood_pre')) {
+      context.handle(
+        _moodPreMeta,
+        moodPre.isAcceptableOrUnknown(data['mood_pre']!, _moodPreMeta),
+      );
+    }
+    if (data.containsKey('mood_post')) {
+      context.handle(
+        _moodPostMeta,
+        moodPost.isAcceptableOrUnknown(data['mood_post']!, _moodPostMeta),
+      );
+    }
     if (data.containsKey('impact_desc_who')) {
       context.handle(
         _impactDescWhoMeta,
@@ -29916,6 +29997,14 @@ class $AchievementsTableTable extends AchievementsTable
         DriftSqlType.int,
         data['${effectivePrefix}impact_score'],
       )!,
+      moodPre: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mood_pre'],
+      ),
+      moodPost: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mood_post'],
+      ),
       impactDescWho: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}impact_desc_who'],
@@ -29959,6 +30048,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
   final String domain;
   final int? meaningScore;
   final int impactScore;
+  final String? moodPre;
+  final String? moodPost;
   final String impactDescWho;
   final String impactDescHow;
   final DateTime createdAt;
@@ -29972,6 +30063,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     required this.domain,
     this.meaningScore,
     required this.impactScore,
+    this.moodPre,
+    this.moodPost,
     required this.impactDescWho,
     required this.impactDescHow,
     required this.createdAt,
@@ -29996,6 +30089,12 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       map['meaning_score'] = Variable<int>(meaningScore);
     }
     map['impact_score'] = Variable<int>(impactScore);
+    if (!nullToAbsent || moodPre != null) {
+      map['mood_pre'] = Variable<String>(moodPre);
+    }
+    if (!nullToAbsent || moodPost != null) {
+      map['mood_post'] = Variable<String>(moodPost);
+    }
     map['impact_desc_who'] = Variable<String>(impactDescWho);
     map['impact_desc_how'] = Variable<String>(impactDescHow);
     {
@@ -30029,6 +30128,12 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           ? const Value.absent()
           : Value(meaningScore),
       impactScore: Value(impactScore),
+      moodPre: moodPre == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodPre),
+      moodPost: moodPost == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodPost),
       impactDescWho: Value(impactDescWho),
       impactDescHow: Value(impactDescHow),
       createdAt: Value(createdAt),
@@ -30050,6 +30155,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       domain: serializer.fromJson<String>(json['domain']),
       meaningScore: serializer.fromJson<int?>(json['meaningScore']),
       impactScore: serializer.fromJson<int>(json['impactScore']),
+      moodPre: serializer.fromJson<String?>(json['moodPre']),
+      moodPost: serializer.fromJson<String?>(json['moodPost']),
       impactDescWho: serializer.fromJson<String>(json['impactDescWho']),
       impactDescHow: serializer.fromJson<String>(json['impactDescHow']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -30068,6 +30175,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       'domain': serializer.toJson<String>(domain),
       'meaningScore': serializer.toJson<int?>(meaningScore),
       'impactScore': serializer.toJson<int>(impactScore),
+      'moodPre': serializer.toJson<String?>(moodPre),
+      'moodPost': serializer.toJson<String?>(moodPost),
       'impactDescWho': serializer.toJson<String>(impactDescWho),
       'impactDescHow': serializer.toJson<String>(impactDescHow),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -30084,6 +30193,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     String? domain,
     Value<int?> meaningScore = const Value.absent(),
     int? impactScore,
+    Value<String?> moodPre = const Value.absent(),
+    Value<String?> moodPost = const Value.absent(),
     String? impactDescWho,
     String? impactDescHow,
     DateTime? createdAt,
@@ -30097,6 +30208,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     domain: domain ?? this.domain,
     meaningScore: meaningScore.present ? meaningScore.value : this.meaningScore,
     impactScore: impactScore ?? this.impactScore,
+    moodPre: moodPre.present ? moodPre.value : this.moodPre,
+    moodPost: moodPost.present ? moodPost.value : this.moodPost,
     impactDescWho: impactDescWho ?? this.impactDescWho,
     impactDescHow: impactDescHow ?? this.impactDescHow,
     createdAt: createdAt ?? this.createdAt,
@@ -30118,6 +30231,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
       impactScore: data.impactScore.present
           ? data.impactScore.value
           : this.impactScore,
+      moodPre: data.moodPre.present ? data.moodPre.value : this.moodPre,
+      moodPost: data.moodPost.present ? data.moodPost.value : this.moodPost,
       impactDescWho: data.impactDescWho.present
           ? data.impactDescWho.value
           : this.impactDescWho,
@@ -30140,6 +30255,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           ..write('domain: $domain, ')
           ..write('meaningScore: $meaningScore, ')
           ..write('impactScore: $impactScore, ')
+          ..write('moodPre: $moodPre, ')
+          ..write('moodPost: $moodPost, ')
           ..write('impactDescWho: $impactDescWho, ')
           ..write('impactDescHow: $impactDescHow, ')
           ..write('createdAt: $createdAt, ')
@@ -30158,6 +30275,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     domain,
     meaningScore,
     impactScore,
+    moodPre,
+    moodPost,
     impactDescWho,
     impactDescHow,
     createdAt,
@@ -30175,6 +30294,8 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
           other.domain == this.domain &&
           other.meaningScore == this.meaningScore &&
           other.impactScore == this.impactScore &&
+          other.moodPre == this.moodPre &&
+          other.moodPost == this.moodPost &&
           other.impactDescWho == this.impactDescWho &&
           other.impactDescHow == this.impactDescHow &&
           other.createdAt == this.createdAt &&
@@ -30190,6 +30311,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
   final Value<String> domain;
   final Value<int?> meaningScore;
   final Value<int> impactScore;
+  final Value<String?> moodPre;
+  final Value<String?> moodPost;
   final Value<String> impactDescWho;
   final Value<String> impactDescHow;
   final Value<DateTime> createdAt;
@@ -30204,6 +30327,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     this.domain = const Value.absent(),
     this.meaningScore = const Value.absent(),
     this.impactScore = const Value.absent(),
+    this.moodPre = const Value.absent(),
+    this.moodPost = const Value.absent(),
     this.impactDescWho = const Value.absent(),
     this.impactDescHow = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -30219,6 +30344,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     this.domain = const Value.absent(),
     this.meaningScore = const Value.absent(),
     required int impactScore,
+    this.moodPre = const Value.absent(),
+    this.moodPost = const Value.absent(),
     required String impactDescWho,
     required String impactDescHow,
     this.createdAt = const Value.absent(),
@@ -30238,6 +30365,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     Expression<String>? domain,
     Expression<int>? meaningScore,
     Expression<int>? impactScore,
+    Expression<String>? moodPre,
+    Expression<String>? moodPost,
     Expression<String>? impactDescWho,
     Expression<String>? impactDescHow,
     Expression<DateTime>? createdAt,
@@ -30253,6 +30382,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
       if (domain != null) 'domain': domain,
       if (meaningScore != null) 'meaning_score': meaningScore,
       if (impactScore != null) 'impact_score': impactScore,
+      if (moodPre != null) 'mood_pre': moodPre,
+      if (moodPost != null) 'mood_post': moodPost,
       if (impactDescWho != null) 'impact_desc_who': impactDescWho,
       if (impactDescHow != null) 'impact_desc_how': impactDescHow,
       if (createdAt != null) 'created_at': createdAt,
@@ -30270,6 +30401,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     Value<String>? domain,
     Value<int?>? meaningScore,
     Value<int>? impactScore,
+    Value<String?>? moodPre,
+    Value<String?>? moodPost,
     Value<String>? impactDescWho,
     Value<String>? impactDescHow,
     Value<DateTime>? createdAt,
@@ -30285,6 +30418,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
       domain: domain ?? this.domain,
       meaningScore: meaningScore ?? this.meaningScore,
       impactScore: impactScore ?? this.impactScore,
+      moodPre: moodPre ?? this.moodPre,
+      moodPost: moodPost ?? this.moodPost,
       impactDescWho: impactDescWho ?? this.impactDescWho,
       impactDescHow: impactDescHow ?? this.impactDescHow,
       createdAt: createdAt ?? this.createdAt,
@@ -30320,6 +30455,12 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
     if (impactScore.present) {
       map['impact_score'] = Variable<int>(impactScore.value);
     }
+    if (moodPre.present) {
+      map['mood_pre'] = Variable<String>(moodPre.value);
+    }
+    if (moodPost.present) {
+      map['mood_post'] = Variable<String>(moodPost.value);
+    }
     if (impactDescWho.present) {
       map['impact_desc_who'] = Variable<String>(impactDescWho.value);
     }
@@ -30353,6 +30494,8 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
           ..write('domain: $domain, ')
           ..write('meaningScore: $meaningScore, ')
           ..write('impactScore: $impactScore, ')
+          ..write('moodPre: $moodPre, ')
+          ..write('moodPost: $moodPost, ')
           ..write('impactDescWho: $impactDescWho, ')
           ..write('impactDescHow: $impactDescHow, ')
           ..write('createdAt: $createdAt, ')
@@ -31669,6 +31812,7 @@ typedef $$ProjectNotesTableTableCreateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<String?> projectID,
       Value<String> category,
+      Value<String?> mood,
       Value<int> rowid,
     });
 typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
@@ -31683,6 +31827,7 @@ typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
       Value<String?> projectID,
       Value<String> category,
+      Value<String?> mood,
       Value<int> rowid,
     });
 
@@ -31746,6 +31891,11 @@ class $$ProjectNotesTableTableFilterComposer
     column: $table.category,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get mood => $composableBuilder(
+    column: $table.mood,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectNotesTableTableOrderingComposer
@@ -31806,6 +31956,11 @@ class $$ProjectNotesTableTableOrderingComposer
     column: $table.category,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get mood => $composableBuilder(
+    column: $table.mood,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectNotesTableTableAnnotationComposer
@@ -31846,6 +32001,9 @@ class $$ProjectNotesTableTableAnnotationComposer
 
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
+
+  GeneratedColumn<String> get mood =>
+      $composableBuilder(column: $table.mood, builder: (column) => column);
 }
 
 class $$ProjectNotesTableTableTableManager
@@ -31898,6 +32056,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String?> mood = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion(
                 id: id,
@@ -31910,6 +32069,7 @@ class $$ProjectNotesTableTableTableManager
                 updatedAt: updatedAt,
                 projectID: projectID,
                 category: category,
+                mood: mood,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -31924,6 +32084,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<DateTime> updatedAt = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<String> category = const Value.absent(),
+                Value<String?> mood = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion.insert(
                 id: id,
@@ -31936,6 +32097,7 @@ class $$ProjectNotesTableTableTableManager
                 updatedAt: updatedAt,
                 projectID: projectID,
                 category: category,
+                mood: mood,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -44748,6 +44910,8 @@ typedef $$AchievementsTableTableCreateCompanionBuilder =
       Value<String> domain,
       Value<int?> meaningScore,
       required int impactScore,
+      Value<String?> moodPre,
+      Value<String?> moodPost,
       required String impactDescWho,
       required String impactDescHow,
       Value<DateTime> createdAt,
@@ -44764,6 +44928,8 @@ typedef $$AchievementsTableTableUpdateCompanionBuilder =
       Value<String> domain,
       Value<int?> meaningScore,
       Value<int> impactScore,
+      Value<String?> moodPre,
+      Value<String?> moodPost,
       Value<String> impactDescWho,
       Value<String> impactDescHow,
       Value<DateTime> createdAt,
@@ -44817,6 +44983,16 @@ class $$AchievementsTableTableFilterComposer
 
   ColumnFilters<int> get impactScore => $composableBuilder(
     column: $table.impactScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get moodPre => $composableBuilder(
+    column: $table.moodPre,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get moodPost => $composableBuilder(
+    column: $table.moodPost,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -44892,6 +45068,16 @@ class $$AchievementsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get moodPre => $composableBuilder(
+    column: $table.moodPre,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get moodPost => $composableBuilder(
+    column: $table.moodPost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get impactDescWho => $composableBuilder(
     column: $table.impactDescWho,
     builder: (column) => ColumnOrderings(column),
@@ -44951,6 +45137,12 @@ class $$AchievementsTableTableAnnotationComposer
     column: $table.impactScore,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get moodPre =>
+      $composableBuilder(column: $table.moodPre, builder: (column) => column);
+
+  GeneratedColumn<String> get moodPost =>
+      $composableBuilder(column: $table.moodPost, builder: (column) => column);
 
   GeneratedColumn<String> get impactDescWho => $composableBuilder(
     column: $table.impactDescWho,
@@ -45017,6 +45209,8 @@ class $$AchievementsTableTableTableManager
                 Value<String> domain = const Value.absent(),
                 Value<int?> meaningScore = const Value.absent(),
                 Value<int> impactScore = const Value.absent(),
+                Value<String?> moodPre = const Value.absent(),
+                Value<String?> moodPost = const Value.absent(),
                 Value<String> impactDescWho = const Value.absent(),
                 Value<String> impactDescHow = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -45031,6 +45225,8 @@ class $$AchievementsTableTableTableManager
                 domain: domain,
                 meaningScore: meaningScore,
                 impactScore: impactScore,
+                moodPre: moodPre,
+                moodPost: moodPost,
                 impactDescWho: impactDescWho,
                 impactDescHow: impactDescHow,
                 createdAt: createdAt,
@@ -45047,6 +45243,8 @@ class $$AchievementsTableTableTableManager
                 Value<String> domain = const Value.absent(),
                 Value<int?> meaningScore = const Value.absent(),
                 required int impactScore,
+                Value<String?> moodPre = const Value.absent(),
+                Value<String?> moodPost = const Value.absent(),
                 required String impactDescWho,
                 required String impactDescHow,
                 Value<DateTime> createdAt = const Value.absent(),
@@ -45061,6 +45259,8 @@ class $$AchievementsTableTableTableManager
                 domain: domain,
                 meaningScore: meaningScore,
                 impactScore: impactScore,
+                moodPre: moodPre,
+                moodPost: moodPost,
                 impactDescWho: impactDescWho,
                 impactDescHow: impactDescHow,
                 createdAt: createdAt,

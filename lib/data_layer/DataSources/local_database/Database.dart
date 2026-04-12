@@ -360,6 +360,8 @@ class ProjectNotesTable extends Table {
   TextColumn get category =>
       text().withDefault(const Constant('projects')).named('category')();
 
+  TextColumn get mood => text().nullable().named('mood')();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -1668,6 +1670,9 @@ class AchievementsTable extends Table {
   
   // 1-10 mandatory
   IntColumn get impactScore => integer().named('impact_score')();
+
+  TextColumn get moodPre => text().nullable().named('mood_pre')();
+  TextColumn get moodPost => text().nullable().named('mood_post')();
   TextColumn get impactDescWho => text().named('impact_desc_who')();
   TextColumn get impactDescHow => text().named('impact_desc_how')();
 

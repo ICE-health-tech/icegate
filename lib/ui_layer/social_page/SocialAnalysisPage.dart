@@ -4,6 +4,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/ui_layer/UIConstants.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialAnalysisPage extends StatelessWidget {
@@ -56,6 +57,8 @@ class SocialAnalysisPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 32),
+                      _buildMonthlyReflectionCard(context, personId),
+                      const SizedBox(height: 24),
                       _buildSummaryCard(context, notes),
                       const SizedBox(height: 24),
                       _buildStepsDistribution(context, healthBlock),
@@ -283,5 +286,60 @@ class SocialAnalysisPage extends StatelessWidget {
   int _countImages(List<ProjectNoteData> notes) {
     // Basic placeholder logic
     return notes.length; 
+  }
+
+  Widget _buildMonthlyReflectionCard(BuildContext context, String personId) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final socialBlock = context.read<SocialBlock>();
+    final achievementsDao = context.read<AchievementsDAO>();
+    
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.tertiaryContainer.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.tertiary.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.auto_awesome, color: colorScheme.tertiary),
+              const SizedBox(width: 8),
+              Text(
+                "MONTHLY REFLECTION",
+                style: TextStyle(
+                  color: colorScheme.tertiary,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1.5,
+                  fontSize: 12,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          FutureBuilder<String>(
+            future: socialBlock.getMonthlyReflection(achievementsDao, personId),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              }
+              if (snapshot.hasError) {
+                return Text("Error generating reflection: \${snapshot.error}");
+              }
+              return Text(
+                snapshot.data ?? "No reflection generated.",
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  height: 1.5,
+                ),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 }

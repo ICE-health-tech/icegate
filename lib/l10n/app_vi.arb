@@ -90,7 +90,7 @@
   "notification_category_daily": "Hàng ngày",
   "notification_category_health": "Sức khỏe",
   "notification_category_finance": "Tài chính",
-  "notification_category_social": "Tâm trí",
+  "notification_category_social": "Tinh thần",
   "notification_category_projects": "Dự án",
   "notification_priority_low": "Thấp",
   "notification_priority_normal": "Bình thường",
@@ -295,7 +295,7 @@
   },
   "scoring_health": "Sức khỏe",
   "scoring_finance": "Tài chính",
-  "scoring_social": "Tâm trí",
+  "scoring_social": "Tinh thần",
   "scoring_career": "Sự nghiệp",
   "breakdown_steps": "Bước chân",
   "breakdown_diet": "Chế độ ăn",
@@ -394,8 +394,8 @@
   "last_name": "Họ",
   "relationship_type": "LOẠI MỐI QUAN HỆ",
   "create_link": "TẠO LIÊN KẾT",
-  "social_dashboard": "Bảng điều khiển Tâm trí",
-  "social": "Tâm trí",
+  "social_dashboard": "Bảng điều khiển Tinh thần",
+  "social": "Tinh thần",
   "social_rank_first": "HẠNG NHẤT",
   "social_rank_second": "HẠNG NHÌ",
   "social_rank_third": "HẠNG BA",
@@ -422,7 +422,7 @@
     }
   },
   "social_bond_strengthened": "Mối liên kết được thắt chặt!",
-  "social_options": "Tùy chọn Tâm trí",
+  "social_options": "Tùy chọn Tinh thần",
   "social_manage_title": "Quản lý liên kết",
   "social_change_friend": "Đặt là Bạn bè",
   "social_change_dating": "Đặt là Hẹn hò",
@@ -583,7 +583,7 @@
       }
     }
   },
-  "rule_social_maintain": "Thực hành chánh niệm để duy trì sự ổn định tâm trí.",
+  "rule_social_maintain": "Thực hành chánh niệm để duy trì sự ổn định Tinh thần.",
   "how_it_works": "Cách thức hoạt động",
   "scoring_intro": "Hệ thống điểm số của chúng tôi đánh giá hiệu suất hàng ngày của bạn qua bốn trụ cột chính. Điểm được thưởng dựa trên tính nhất quán, các mốc quan trọng và hiệu quả.",
   "scoring_footer": "Điểm số được xử lý bởi Life Orchestration Engine (LOE) vào mỗi nửa đêm giờ UTC.",
@@ -961,7 +961,7 @@
   "ssh_disconnect": "Ngắt Kết Nối",
   "ssh_search_hint": "Tìm kiếm...",
   "journal": "Nhật ký",
-  "social_notes": "Ghi chú Tâm trí",
+  "social_notes": "Ghi chú Tinh thần",
   "btn_send_feedback": "Gửi phản hồi",
   "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới"
 }
