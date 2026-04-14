@@ -28,7 +28,7 @@ class MainShell extends StatelessWidget {
   static bool _wideChromeLayout(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
     if (defaultTargetPlatform == TargetPlatform.macOS) {
-      return width >= 600;
+      return width >= 560;
     }
     return width >= 720;
   }
@@ -146,8 +146,8 @@ class MainShell extends StatelessWidget {
     final bool wideLayout = _wideChromeLayout(context);
     final width = MediaQuery.sizeOf(context).width;
     final double responsiveSize = wideLayout
-        ? (width * 0.027).clamp(25.0, 60.0)
-        : (width * 0.35).clamp(45, 63.8);
+        ? (width * 0.028).clamp(32.0, 44.0)
+        : (width * 0.24).clamp(20.0, 58.0);
     final mainButton = _getMainButtonForRoute(
       context,
       currentRoute,
