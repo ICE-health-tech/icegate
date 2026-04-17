@@ -371,9 +371,9 @@ class _HomePageState extends State<HomePage> {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  // --- SECTION: GAMIFIED HEADER ---
-                  _buildGamifiedHeader(context),
-                  const SizedBox(height: 16),
+                  // // --- SECTION: GAMIFIED HEADER ---
+                  // _buildGamifiedHeader(context),
+                  // const SizedBox(height: 16),
                   _buildQuotesSection(context),
                   const SizedBox(height: 16),
                   // --- SECTION: 4 life elements ---

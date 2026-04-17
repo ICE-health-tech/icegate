@@ -222,7 +222,26 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
         ),
         _buildShineSweep(),
+        _buildScanline(),
       ],
+    );
+  }
+
+  Widget _buildScanline() {
+    return AnimatedBuilder(
+      animation: _scanController,
+      builder: (context, child) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: Container(
+            width: double.infinity,
+            height: 520,
+            child: CustomPaint(
+              painter: _ScanlinePainter(progress: _scanController.value),
+            ),
+          ),
+        );
+      },
     );
   }
 
@@ -778,5 +797,40 @@ class _ShinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ShinePainter oldDelegate) =>
+      oldDelegate.progress != progress;
+}
+
+class _ScanlinePainter extends CustomPainter {
+  final double progress;
+
+  _ScanlinePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double y = progress * size.height;
+    final paint = Paint()
+      ..shader = LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          const Color(0xFFBB86FC).withValues(alpha: 0.0),
+          const Color(0xFFBB86FC).withValues(alpha: 0.2),
+          const Color(0xFFBB86FC).withValues(alpha: 0.0),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(0, y - 40, size.width, 80));
+
+    canvas.drawRect(Rect.fromLTWH(0, y - 20, size.width, 40), paint);
+
+    // Subtle bright leading line
+    final linePaint = Paint()
+      ..color = const Color(0xFFBB86FC).withValues(alpha: 0.3)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+    canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ScanlinePainter oldDelegate) =>
       oldDelegate.progress != progress;
 }
