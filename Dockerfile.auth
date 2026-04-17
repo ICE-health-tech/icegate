@@ -1,0 +1,36 @@
+# Stage 1: Build the Go binary
+FROM golang:1.22-alpine AS builder
+
+# Install git for fetching dependencies
+RUN apk add --no-cache git
+
+WORKDIR /app
+
+# Copy go.mod and fetch dependencies
+COPY ice_gate_auth/go.mod ./
+# Note: Since we don't have go.sum yet, we'll let go mod tidy handles it
+# COPY ice_gate_auth/go.sum ./ 
+
+RUN go mod download
+
+# Copy source code
+COPY ice_gate_auth/ .
+
+# Build the binary
+RUN CGO_ENABLED=0 GOOS=linux go build -o passkey-hub ./cmd/server/main.go
+
+# Stage 2: Production environment
+FROM alpine:latest
+
+RUN apk --no-cache add ca-certificates
+
+WORKDIR /root/
+
+# Copy the binary from the builder stage
+COPY --from=builder /app/passkey-hub .
+
+# Expose the port (Northflank will use this)
+EXPOSE 8080
+
+# Command to run
+CMD ["./passkey-hub"]

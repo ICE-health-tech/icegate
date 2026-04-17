@@ -94,8 +94,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: Colors.black, // High-end Black base
-        body: SnowSilverBackground(
+        backgroundColor: const Color(0xFF0F011E), // Deep Cyber Purple base
+        body: SnowSilverBackground( // Note: We can tint this with the ornaments
           child: Stack(
             children: [
               // 1. Floating Tech Ornaments
@@ -147,7 +147,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             turns: _hudRotationController,
             child: _CoolerHUD(
               size: 400,
-              color: Colors.white.withValues(alpha: 0.1),
+              color: const Color(0xFFBB86FC).withValues(alpha: 0.15), // Cyber Lavender
             ),
           ),
         ),
@@ -161,7 +161,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ).animate(_hudRotationController),
             child: _CoolerHUD(
               size: 500,
-              color: const Color(0xFF8E8E93).withValues(alpha: 0.15),
+              color: const Color(0xFF6200EE).withValues(alpha: 0.2), // Deep Purple
             ),
           ),
         ),
@@ -180,15 +180,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.7), // Deeper Glass
+                color: const Color(0xFF1A0B2E).withValues(alpha: 0.8), // Deep Purple Glass
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: const Color(0xFFC7C7CC).withValues(alpha: 0.3), // Sharp Silver Border
+                  color: const Color(0xFFBB86FC).withValues(alpha: 0.3), // Neon Purple Border
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1),
+                    color: Colors.purpleAccent.withValues(alpha: 0.1),
                     blurRadius: 40,
                     spreadRadius: -10,
                   ),
@@ -256,16 +256,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFC7C7CC).withValues(alpha: 0.05),
+                  color: const Color(0xFFBB86FC).withValues(alpha: 0.05),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFC7C7CC).withValues(alpha: 0.2),
+                      color: const Color(0xFFBB86FC).withValues(alpha: 0.2),
                       blurRadius: glow,
                       spreadRadius: 2,
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFC7C7CC).withValues(alpha: 0.2),
+                    color: const Color(0xFFBB86FC).withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
@@ -292,7 +292,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     child: const Icon(
                       Icons.ac_unit_rounded,
                       size: 48,
-                      color: Color(0xFF8E8E93),
+                      color: Color(0xFFBB86FC),
                     ),
                   );
                 },
@@ -384,15 +384,15 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFD1D1D6), // Bright Silver
-            const Color(0xFF8E8E93), // Brushed Chrome
+            const Color(0xFFBB86FC), // Cyber Lavender
+            const Color(0xFF6200EE), // Deep Purple
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.white.withValues(alpha: 0.1),
+            color: Colors.purpleAccent.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(-2, -2),
           ),
@@ -403,7 +403,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
         ],
         border: Border.all(
-          color: Colors.white.withValues(alpha: 0.4),
+          color: Colors.purpleAccent.withValues(alpha: 0.4),
           width: 0.5,
         ),
       ),
@@ -427,7 +427,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
-                  color: Colors.black,
+                  color: Colors.white,
                   strokeWidth: 3,
                 ),
               )
@@ -437,7 +437,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 4.0,
-                  color: Colors.black,
+                  color: Colors.white,
                 ),
               ),
       ),

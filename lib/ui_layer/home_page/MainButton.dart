@@ -137,7 +137,7 @@ class _MainButtonState extends State<MainButton>
   OverlayEntry _createOverlayEntry() {
     return OverlayEntry(
       builder: (context) {
-        final mainSize = widget.size ?? 56.0;
+        final mainSize = widget.size ?? 66.0;
         final subSize = mainSize * 0.9; // Larger hit area
         final double radius = mainSize * 1.5; // More spread
         final List<SubButton> buttonsToRender = widget.subButtons ?? [];
@@ -309,7 +309,7 @@ class _MainButtonState extends State<MainButton>
 
   @override
   Widget build(BuildContext context) {
-    final mainSize = widget.size ?? 56.0;
+    final mainSize = widget.size ?? 66.0;
 
     return CompositedTransformTarget(
       link: _layerLink,

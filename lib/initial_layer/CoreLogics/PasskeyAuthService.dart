@@ -45,7 +45,7 @@ class PasskeyAuthService {
         "challenge": challenge,
         "rp": {
           "name": "ICE Gate",
-          "id": "auth.duylong.art", // MUST match Associated Domains
+          "id": "passkey.duylong.art", // MUST match Associated Domains
         },
         "user": {
           "id": base64Encode(utf8.encode(userId)),
@@ -76,7 +76,7 @@ class PasskeyAuthService {
       return result; // This is the credential to be sent back to the backend for verification
     } catch (e) {
       if (e.toString().contains('1004')) {
-        _logger.severe('Passkey Error 1004: Identity verification failed. Ensure apple-app-site-association is correctly hosted on auth.duylong.art and entitlements match.');
+        _logger.severe('Passkey Error 1004: Identity verification failed. Ensure apple-app-site-association is correctly hosted on passkey.duylong.art and entitlements match.');
       }
       _logger.severe('Error registering passkey: $e');
       rethrow;
@@ -100,7 +100,7 @@ class PasskeyAuthService {
       // Standard WebAuthn PublicKeyCredentialRequestOptions
       final authOptions = {
         "challenge": challenge,
-        "rpId": "auth.duylong.art", // MUST match registration and Associated Domains
+        "rpId": "passkey.duylong.art", // MUST match registration and Associated Domains
         "timeout": 60000,
         "userVerification": "required",
         // "allowCredentials": [], // Empty list allows discovering all credentials for this RP
