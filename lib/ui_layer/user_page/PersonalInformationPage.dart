@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
@@ -12,7 +13,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/ui_layer/user_page/PasskeyEnrollmentWidget.dart';
+import 'package:ice_gate/ui_layer/identity_page/widgets/PasskeySetupCard.dart';
+import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PersonalInformationPage extends StatefulWidget {
@@ -24,6 +26,8 @@ class PersonalInformationPage extends StatefulWidget {
       icon: Icons.settings,
       destination: "/personal-info",
       size: size,
+      backgroundColor: EntryColors.arcticSilver,
+      iconColor: EntryColors.obsidianBase,
       mainFunction: () {
         context.push("/settings");
       },
@@ -106,6 +110,43 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         objectBlock.logFolderContents('quests');
       }
     });
+
+    _animationController.forward();
+  }
+
+  void _showPasskeySetupDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (context) => Center(
+        child: SingleChildScrollView(
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+            child: Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: EntryColors.obsidianBase.withValues(alpha: 0.8),
+                  borderRadius: BorderRadius.circular(32),
+                  border: Border.all(
+                    color: EntryColors.glassBorder,
+                  ),
+                ),
+                child: const Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    SizedBox(height: 8),
+                    PasskeySetupCard(),
+                    SizedBox(height: 8),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   // Helper to sync controllers with current state (call in build or listener)
@@ -483,77 +524,6 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 ),
 
                 // IDENTITY EVOLUTION BANNER
-                Watch((context) {
-                  final hasPassword = _authBlock.hasLocalPassword.value;
-                  if (hasPassword) return const SizedBox.shrink();
-
-                  return Container(
-                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          colorScheme.primary.withValues(alpha: 0.1),
-                          colorScheme.secondary.withValues(alpha: 0.05),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: colorScheme.primary.withValues(alpha: 0.2),
-                        width: 1,
-                      ),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.auto_awesome_rounded, color: colorScheme.primary),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                "IDENTITY EVOLUTION",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                "Level 1: Google. Set a local password to upgrade your security tier.",
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        TextButton(
-                          onPressed: () => context.push('/change-password'),
-                          child: const Text("SET"),
-                        ),
-                      ],
-                    ),
-                  );
-                }),
-
-                // PASSKEY UPGRADE SECTION
-                Watch((context) {
-                  final hasPassword = _authBlock.hasLocalPassword.value;
-                  final isPasskeyEnrolled = _authBlock.isPasskeyEnrolled.value;
-
-                  if (hasPassword && !isPasskeyEnrolled) {
-                    return const PasskeyEnrollmentWidget();
-                  }
-                  
-                  if (isPasskeyEnrolled) {
-                   return Center(child: const PasskeyEnrollmentWidget()); // Will show status view
-                  }
-
-                  return const SizedBox.shrink();
-                }),
-
                 Padding(
                   padding: const EdgeInsets.all(12.0),
                   child: Column(
@@ -742,41 +712,155 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           ),
                         ],
                       ),
+                      Watch((context) {
+                        final hasPassword = _authBlock.hasLocalPassword.value;
+                        if (hasPassword) return const SizedBox.shrink();
 
+                        return Container(
+                          margin: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                colorScheme.primary.withValues(alpha: 0.1),
+                                colorScheme.secondary.withValues(alpha: 0.05),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(20),
+                            border: Border.all(
+                              color: colorScheme.primary.withValues(alpha: 0.2),
+                              width: 1,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.auto_awesome_rounded,
+                                color: colorScheme.primary,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    const Text(
+                                      "IDENTITY EVOLUTION",
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.w900,
+                                        fontSize: 12,
+                                        letterSpacing: 2,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      "Level 1: Google. Set a local password to upgrade your security tier.",
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              TextButton(
+                                onPressed: () =>
+                                    context.push('/change-password'),
+                                child: const Text("SET"),
+                              ),
+                            ],
+                          ),
+                        );
+                      }),
+
+                      // SECURITY & PRIVACY SECTION
+                      Watch((context) {
+                        final colorScheme = Theme.of(context).colorScheme;
+
+                        return _buildInfoGroup(
+                          title: "Security & Accuracy",
+                          icon: Icons.security_rounded,
+                          children: [
+                            _buildSecurityItem(
+                              context: context,
+                              title: "Passkey Settings",
+                              subtitle: _authBlock.isPasskeyEnrolled.value
+                                  ? "Fast-Track Active (Secure)"
+                                  : "Upgrade to Biometric Fast-Track",
+                              icon: Icons.fingerprint_rounded,
+                              trailing: Icon(
+                                _authBlock.isPasskeyEnrolled.value
+                                    ? Icons.verified_user_rounded
+                                    : Icons.chevron_right_rounded,
+                                color: _authBlock.isPasskeyEnrolled.value
+                                    ? Colors.green
+                                    : colorScheme.primary.withValues(
+                                        alpha: 0.5,
+                                      ),
+                              ),
+                              onTap: () => _showPasskeySetupDialog(),
+                            ),
+                            _buildSecurityItem(
+                              context: context,
+                              title: "Encryption Key",
+                              subtitle: "Managed by Ice Gate Protocol",
+                              icon: Icons.vpn_key_rounded,
+                              trailing: const Icon(
+                                Icons.lock_rounded,
+                                size: 16,
+                                color: Colors.grey,
+                              ),
+                              onTap: () {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text(
+                                      "Key rotations are handled automatically by the neural engine.",
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        );
+                      }),
                       const SizedBox(height: 48),
 
                       // Danger Zone / Logout
-                      InkWell(
-                        onTap: () {
-                          _authBlock.logout();
-                          context.go("/login");
-                        },
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            vertical: 16,
-                            horizontal: 24,
-                          ),
-                          decoration: BoxDecoration(
-                            border: Border.all(
-                              color: colorScheme.error.withOpacity(0.3),
+                      SizedBox(
+                        width: MediaQuery.of(context).size.width / 2,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(
+                              color: EntryColors.midSilver.withValues(alpha: 0.1),
                             ),
-                            borderRadius: BorderRadius.circular(16),
+                            backgroundColor: EntryColors.obsidianBase.withValues(alpha: 0.3),
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
                           ),
+                          onPressed: () {
+                            _authBlock.logout();
+                            context.go("/login");
+                          },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.power_settings_new_rounded,
-                                color: colorScheme.error,
+                                color: EntryColors.midSilver,
                               ),
                               const SizedBox(width: 12),
-                              Text(
-                                AppLocalizations.of(context)!.logout,
-                                style: TextStyle(
-                                  color: colorScheme.error,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1,
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                child: Text(
+                                  AppLocalizations.of(context)!.logout,
+                                  style: const TextStyle(
+                                    color: EntryColors.midSilver,
+                                    fontWeight: FontWeight.w400,
+                                    letterSpacing: 2,
+                                  ),
                                 ),
                               ),
                             ],
@@ -1231,6 +1315,49 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSecurityItem({
+    required BuildContext context,
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Widget trailing,
+    required VoidCallback onTap,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: colorScheme.surfaceContainerHigh.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        leading: Container(
+          padding: const EdgeInsets.all(10),
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withOpacity(0.1),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Icon(icon, color: colorScheme.primary, size: 22),
+        ),
+        title: Text(
+          title,
+          style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+        ),
+        subtitle: Text(
+          subtitle,
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+          ),
+        ),
+        trailing: trailing,
       ),
     );
   }

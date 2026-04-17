@@ -146,8 +146,8 @@ class MainShell extends StatelessWidget {
     final bool wideLayout = _wideChromeLayout(context);
     final width = MediaQuery.sizeOf(context).width;
     final double responsiveSize = wideLayout
-        ? (width * 0.035).clamp(32.0, 44.0)
-        : (width * 0.3).clamp(30.0, 58.0);
+        ? (width * 0.035).clamp(40.0, 50.0)
+        : (width * 0.5).clamp(40.0, 68.0);
     final mainButton = _getMainButtonForRoute(
       context,
       currentRoute,

@@ -9,6 +9,7 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/ui_layer/finance_page/widgets/SubscriptionManager.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -329,21 +330,19 @@ class _FinancePageState extends State<FinancePage> {
             children: [
               // Main Billing Card
               Watch((context) {
-                return _buildMainBillingCard(context, financeBlock);
+                return _buildPremiumIceCard(context, financeBlock);
               }),
-              const SizedBox(height: 20),
+              const SizedBox(height: 24),
+
+              // Subscription Manager
+              SubscriptionManager(financeBlock: financeBlock),
+              const SizedBox(height: 32),
 
               // Summary Cards
               Watch((context) {
                 return _buildSummaryCardRow(context, financeBlock);
               }),
-              const SizedBox(height: 32),
-
-              // Month Selector & Calendar
-              _buildMonthHeader(context),
-              const SizedBox(height: 16),
-              _buildCalendarGrid(context),
-              const SizedBox(height: 32),
+              const SizedBox(height: 40),
 
               // Daily Activity
               _buildDailyActivityHeader(context),
@@ -366,155 +365,178 @@ class _FinancePageState extends State<FinancePage> {
     );
   }
 
-  Widget _buildMainBillingCard(BuildContext context, FinanceBlock block) {
-    final totalBilled = block.totalSubscriptionsBilling.value;
-    final budgetUsage = block.budgetUsagePercent.value;
-    final remaining = block.remainingBudget.value;
-    final progress = block.milestoneProgress.value;
+  Widget _buildPremiumIceCard(BuildContext context, FinanceBlock block) {
+    final burnRate = block.monthlyBurnRate.value;
+    final totalSpent = block.monthlySpending.value;
+    final progress = block.budgetUsagePercent.value / 100;
 
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: const Color(0xFF1A1A1A),
-        borderRadius: BorderRadius.circular(32),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "TOTAL BILLED THIS MONTH",
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.5),
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.2,
-                ),
-              ),
-              const Icon(
-                Icons.credit_card_rounded,
-                color: Colors.white24,
-                size: 18,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            block.formatCurrency(totalBilled),
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 44,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Row(
-            children: [
-              Expanded(
-                child: _buildBillingSubCard(
-                  label: "STATUS",
-                  value: "+${budgetUsage.toStringAsFixed(1)}%",
-                  subLabel: "OF BUDGET",
-                  valueColor: Colors.greenAccent,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: _buildBillingSubCard(
-                  label: "REMAINING",
-                  value: block.formatCurrency(remaining),
-                  subLabel: "TO SPEND",
-                  valueColor: Colors.white,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Text(
-                "MILESTONE",
-                style: TextStyle(
-                  color: Colors.white38,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                "${(progress * 100).toStringAsFixed(0)}%",
-                style: const TextStyle(
-                  color: Colors.white38,
-                  fontSize: 10,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 6,
-              backgroundColor: Colors.white.withValues(alpha: 0.1),
-              valueColor: const AlwaysStoppedAnimation<Color>(
-                Colors.amberAccent,
-              ),
-            ),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            const Color(0xFF2E1A47), // Deep Violet
+            const Color(0xFF1A1A2E), // Obsidian
+          ],
+        ),
+        borderRadius: BorderRadius.circular(36),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.deepPurple.withOpacity(0.2),
+            blurRadius: 40,
+            offset: const Offset(0, 20),
           ),
         ],
+        border: Border.all(color: Colors.white.withOpacity(0.05)),
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(36),
+        child: Stack(
+          children: [
+            Positioned(
+              right: -50,
+              top: -50,
+              child: Container(
+                width: 200,
+                height: 200,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      Colors.blueAccent.withOpacity(0.1),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "ESTIMATED MONTHLY BURN",
+                        style: TextStyle(
+                          color: Colors.white54,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.1),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(Icons.ac_unit_rounded,
+                            color: Colors.white, size: 14),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        block.formatCurrency(burnRate),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 48,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: -1,
+                        ),
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.only(bottom: 12, left: 4),
+                        child: Text(
+                          "/ mo",
+                          style: TextStyle(color: Colors.white38, fontSize: 16),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _buildIceSubStat(
+                          label: "ACTUAL SPENT",
+                          value: block.formatCurrency(totalSpent),
+                          icon: Icons.payments_rounded,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: _buildIceSubStat(
+                          label: "BUDGET HEALTH",
+                          value: "${(progress * 100).toStringAsFixed(0)}%",
+                          icon: Icons.shield_moon_rounded,
+                          color: progress > 0.8 ? Colors.redAccent : Colors.tealAccent,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 24),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: LinearProgressIndicator(
+                      value: progress.clamp(0.0, 1.0),
+                      minHeight: 8,
+                      backgroundColor: Colors.white.withOpacity(0.05),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        progress > 0.9 ? Colors.redAccent : Colors.blueAccent.shade100,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBillingSubCard({
+  Widget _buildIceSubStat({
     required String label,
     required String value,
-    required String subLabel,
-    required Color valueColor,
+    required IconData icon,
+    Color color = Colors.white,
   }) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            label,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.3),
-              fontSize: 9,
-              fontWeight: FontWeight.bold,
-              letterSpacing: 1,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, color: Colors.white24, size: 12),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 9,
+                fontWeight: FontWeight.bold,
+              ),
             ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Text(
+          value,
+          style: TextStyle(
+            color: color,
+            fontSize: 18,
+            fontWeight: FontWeight.w900,
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: TextStyle(
-              color: valueColor,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 2),
-          Text(
-            subLabel,
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.2),
-              fontSize: 8,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -555,15 +577,9 @@ class _FinancePageState extends State<FinancePage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: color,
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: color.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -571,16 +587,16 @@ class _FinancePageState extends State<FinancePage> {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.2),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 20),
+            child: Icon(icon, color: color, size: 20),
           ),
           const SizedBox(height: 16),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
+            style: TextStyle(
+              color: color.withValues(alpha: 0.8),
               fontSize: 10,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -600,148 +616,31 @@ class _FinancePageState extends State<FinancePage> {
     );
   }
 
-  Widget _buildMonthHeader(BuildContext context) {
-    final now = DateTime.now();
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          DateFormat('MMMM yyyy').format(now),
-          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900),
-        ),
-        Row(
-          children: [
-            _buildChevronButton(Icons.chevron_left_rounded),
-            const SizedBox(width: 8),
-            _buildChevronButton(Icons.chevron_right_rounded),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildChevronButton(IconData icon) {
-    return Container(
-      padding: const EdgeInsets.all(8),
-      decoration: BoxDecoration(
-        color: Colors.grey.withValues(alpha: 0.05),
-        shape: BoxShape.circle,
-      ),
-      child: Icon(icon, size: 20, color: Colors.black54),
-    );
-  }
-
-  Widget _buildCalendarGrid(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 30,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: const ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN']
-                .map(
-                  (day) => Text(
-                    day,
-                    style: TextStyle(
-                      color: Colors.black26,
-                      fontSize: 9,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                )
-                .toList(),
-          ),
-          const SizedBox(height: 16),
-          _buildDatesGrid(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDatesGrid() {
-    final now = DateTime.now();
-    final firstDay = DateTime(now.year, now.month, 1);
-    final daysInMonth = DateTime(now.year, now.month + 1, 0).day;
-    final startWeekday = firstDay.weekday; // 1 = Mon
-
-    final today = now.day;
-
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 7,
-        mainAxisSpacing: 10,
-        crossAxisSpacing: 10,
-      ),
-      itemCount: 35, // Show 5 weeks
-      itemBuilder: (context, index) {
-        final dayNum = index - (startWeekday - 2);
-        if (dayNum <= 0 || dayNum > daysInMonth) {
-          return const Center(child: SizedBox());
-        }
-
-        final isToday = dayNum == today;
-
-        return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "$dayNum",
-                style: TextStyle(
-                  color: isToday ? Colors.black : Colors.black87,
-                  fontSize: 14,
-                  fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
-                ),
-              ),
-              if (isToday)
-                Container(
-                  margin: const EdgeInsets.only(top: 2),
-                  width: 4,
-                  height: 4,
-                  decoration: const BoxDecoration(
-                    color: Colors.green,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
   Widget _buildDailyActivityHeader(BuildContext context) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         const Text(
-          "Daily Activity",
-          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          "DAILY ACTIVITY",
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 12,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
         ),
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: Colors.green.shade50,
-            borderRadius: BorderRadius.circular(8),
+            color: Colors.white.withValues(alpha: 0.05),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
           ),
-          child: Text(
-            "TODAY",
+          child: const Text(
+            "RECENT",
             style: TextStyle(
-              color: Colors.green.shade700,
-              fontSize: 10,
+              color: Colors.white54,
+              fontSize: 9,
               fontWeight: FontWeight.bold,
             ),
           ),
@@ -753,10 +652,25 @@ class _FinancePageState extends State<FinancePage> {
   Widget _buildDailyActivityList(BuildContext context, FinanceBlock block) {
     final txns = block.transactions.value;
     if (txns.isEmpty) {
-      return const Center(
+      return Center(
         child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 32),
-          child: Text("No activity items yet."),
+          padding: const EdgeInsets.symmetric(vertical: 40),
+          child: Column(
+            children: [
+              Icon(Icons.history_rounded,
+                  color: Colors.white.withValues(alpha: 0.05), size: 48),
+              const SizedBox(height: 16),
+              const Text(
+                "NO RECENT ACTIVITY",
+                style: TextStyle(
+                  color: Colors.white24,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
+                ),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -776,32 +690,27 @@ class _FinancePageState extends State<FinancePage> {
     FinanceBlock block,
   ) {
     final l10n = AppLocalizations.of(context)!;
+    final isIncome = txn.type == 'income';
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.03),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.grey.shade50,
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
             ),
             child: Icon(
               _getCategoryIcon(txn.category),
-              color: Colors.black54,
+              color: Colors.white70,
               size: 24,
             ),
           ),
@@ -814,17 +723,19 @@ class _FinancePageState extends State<FinancePage> {
                   txn.description ??
                       _getCategoryNameDisplay(l10n, txn.category),
                   style: const TextStyle(
+                    color: Colors.white,
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                const SizedBox(height: 4),
                 Text(
                   txn.category.toUpperCase(),
                   style: const TextStyle(
-                    fontSize: 10,
-                    color: Colors.black26,
+                    fontSize: 9,
+                    color: Colors.white24,
                     fontWeight: FontWeight.bold,
-                    letterSpacing: 0.5,
+                    letterSpacing: 1.0,
                   ),
                 ),
               ],
@@ -835,17 +746,20 @@ class _FinancePageState extends State<FinancePage> {
             children: [
               Text(
                 block.formatCurrency(txn.amount),
-                style: const TextStyle(
+                style: TextStyle(
+                  color: isIncome ? Colors.tealAccent : Colors.white,
                   fontSize: 16,
                   fontWeight: FontWeight.w900,
                 ),
               ),
+              const SizedBox(height: 4),
               Text(
-                "PAID",
+                txn.type.toUpperCase(),
                 style: TextStyle(
-                  fontSize: 9,
-                  color: Colors.green.shade400,
+                  fontSize: 8,
+                  color: isIncome ? Colors.tealAccent : Colors.white24,
                   fontWeight: FontWeight.bold,
+                  letterSpacing: 1,
                 ),
               ),
             ],

@@ -14,10 +14,12 @@ class FinanceBlock {
   final accounts = listSignal<FinancialAccountProtocol>([]);
   final assets = listSignal<AssetProtocol>([]);
   final transactions = listSignal<TransactionData>([]);
+  final subscriptions = listSignal<SubscriptionData>([]);
 
   StreamSubscription? _accountsSubscription;
   StreamSubscription? _assetsSubscription;
   StreamSubscription? _transactionsSubscription;
+  StreamSubscription? _subscriptionsSubscription;
 
   late FinanceDAO _dao;
   late PortfolioSnapshotsDAO _snapshotDao;
@@ -245,7 +247,9 @@ class FinanceBlock {
   /// Total billing for subscriptions and bills this month
   late final totalSubscriptionsBilling = computed(() {
     final now = DateTime.now();
-    return transactions.value
+    
+    // Sum from recorded transactions (actual payments)
+    final actualPayments = transactions.value
         .where(
           (t) =>
               (t.category == 'subscriptions' || t.category == 'bills') &&
@@ -254,6 +258,18 @@ class FinanceBlock {
               t.transactionDate.year == now.year,
         )
         .fold(0.0, (sum, t) => sum + t.amount);
+        
+    // Also include active subscriptions that might not have been paid yet this month
+    // if we want a "Burn Rate" view. For now, let's keep it to actual payments 
+    // but the user might want to see the "Total Committed" amount.
+    return actualPayments;
+  });
+
+  /// Monthly Burn Rate (Total of all active subscriptions)
+  late final monthlyBurnRate = computed(() {
+    return subscriptions.value
+        .where((s) => s.isActive)
+        .fold(0.0, (sum, s) => sum + s.amount);
   });
 
   /// Remaining budget for the month
@@ -404,6 +420,11 @@ class FinanceBlock {
     ) {
       transactions.value = data;
     });
+
+    _subscriptionsSubscription?.cancel();
+    _subscriptionsSubscription = dao.watchSubscriptions(personId).listen((data) {
+      subscriptions.value = data;
+    });
   }
 
   Future<void> addTransaction({
@@ -427,6 +448,31 @@ class FinanceBlock {
         projectID: Value(projectID),
       ),
     );
+  }
+
+  Future<void> addSubscription({
+    required String name,
+    required double amount,
+    required int billingDay,
+    String category = 'subscriptions',
+  }) async {
+    if (_personId.isEmpty) return;
+    await _dao.insertSubscription(
+      SubscriptionsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: _personId,
+        name: name,
+        amount: amount,
+        billingDay: billingDay,
+        category: category,
+        isActive: const Value(true),
+        createdAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> deleteSubscription(String id) async {
+    await _dao.deleteSubscription(id);
   }
 
   Future<void> deleteTransaction(String id) async {
@@ -475,6 +521,7 @@ class FinanceBlock {
     _accountsSubscription?.cancel();
     _assetsSubscription?.cancel();
     _transactionsSubscription?.cancel();
+    _subscriptionsSubscription?.cancel();
     _snapshotDisposer?.call();
   }
 }

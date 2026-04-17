@@ -17,9 +17,20 @@ class SceneDelegate: FlutterSceneDelegate {
         flutterViewController.view.addSubview(pickerView.view)
         pickerView.didMove(toParent: flutterViewController)
         
+        
         // Expose the picker view controller to the plugin
         screenTimePlugin.pickerViewController = pickerView
         
         super.scene(scene, willConnectTo: session, options: connectionOptions)
+        
+        // --- PASSKEY FIX (Nuclear) ---
+        // We call this AFTER super.scene to ensure Flutter has initialized the window.
+        // makeKeyAndVisible() is what populates UIApplication.shared.keyWindow
+        window?.makeKeyAndVisible()
+        
+        // Synchronize with AppDelegate for legacy plugin support
+        if let delegate = UIApplication.shared.delegate as? AppDelegate {
+            delegate.window = self.window
+        }
     }
 }

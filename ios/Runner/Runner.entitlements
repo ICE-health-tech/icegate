@@ -8,7 +8,7 @@
 	<true/>
 	<key>com.apple.developer.associated-domains</key>
 	<array>
-		<string>webcredentials:passkey.duylong.art</string>
+		<string>webcredentials:passkey.duylong.art?mode=developer</string>
 	</array>
 	<key>com.apple.developer.family-controls</key>
 	<true/>

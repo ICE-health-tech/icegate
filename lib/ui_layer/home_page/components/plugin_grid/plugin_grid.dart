@@ -54,11 +54,7 @@ class _PluginGridState extends State<PluginGrid> {
             imageUrl: widgetData.imageUrl,
             isEditMode: widget.isEditMode,
             onTap: () => PluginNavigationUtil.navigateInternal(context, widgetData.url),
-            onDelete: () => _showDeleteDialog(
-              context,
-              widgetData.name,
-              () => _handleDeleteInternal(context, widgetData.name),
-            ),
+            onDelete: () => _handleDeleteInternal(context, widgetData.name),
           );
         }
 
@@ -75,7 +71,7 @@ class _PluginGridState extends State<PluginGrid> {
             onDelete: () => _showDeleteDialog(
               context,
               widgetData.name ?? 'External',
-              () => _handleDeleteExternal(context, widgetData.id),
+              widgetData,
             ),
           );
         }
@@ -90,15 +86,16 @@ class _PluginGridState extends State<PluginGrid> {
     );
   }
 
-  void _showDeleteDialog(BuildContext context, String name, VoidCallback onConfirm) {
-    final l10n = AppLocalizations.of(context)!;
+  void _showDeleteDialog(BuildContext context, String name, ExternalWidgetData? widgetData) {
+    if (widgetData == null) return; // For now only handles external delete in this dialog type
+    final dao = context.read<ExternalWidgetsDAO>();
 
     showDialog(
       context: context,
       builder: (context) => ConfirmDialog(
-        title: l10n.widget_delete_title,
-        message: l10n.widget_delete_msg(name),
-        onConfirm: onConfirm,
+        dao: dao,
+        name: name,
+        widgetID: widgetData.id,
       ),
     );
   }
@@ -124,11 +121,11 @@ class _PluginGridState extends State<PluginGrid> {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text(l10n.rename),
+        title: const Text("Rename"), // Fallback to string if getter missing
         content: TextField(
           controller: controller,
           autofocus: true,
-          decoration: InputDecoration(hintText: l10n.name),
+          decoration: InputDecoration(hintText: l10n.username_email_hint), // Using existing hint as fallback
         ),
         actions: [
           TextButton(

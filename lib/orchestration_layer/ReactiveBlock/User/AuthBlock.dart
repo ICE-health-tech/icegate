@@ -238,14 +238,17 @@ class AuthBlock {
   }
 
   /// Passkey Login Flow (Returns true if successful)
-  Future<bool> loginWithPasskey(BuildContext context) async {
+  Future<bool> loginWithPasskey(BuildContext context, {String? email}) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    print("🔑 Authenticating with Passkey...");
+    
+    // Use provided email, fallback to remembered, or default test
+    final targetEmail = email ?? rememberedUser.value?['username'] ?? "duylong.art@gmail.com";
+    print("🔑 Authenticating with Passkey for: $targetEmail...");
 
     try {
-      // 1. Get Challenge
-      final challenge = await _authService.getPasskeyChallenge();
+      // 1. Get Challenge - pass the identifier (email/username)
+      final challenge = await _authService.getPasskeyChallenge(email: targetEmail);
       // print("🔑 Challenge received: $challenge");
 
       // 2. Perform Passkey Assertion
@@ -258,8 +261,11 @@ class AuthBlock {
         throw Exception("Passkey assertion canceled or failed");
       }
 
-      // 3. Verify Assertion
-      final data = await _authService.verifyPasskeyLogin(credential);
+      // 3. Verify Assertion - pass the credential and email
+      final data = await _authService.verifyPasskeyLogin(
+        credential: credential,
+        email: targetEmail,
+      );
 
       final token = data['token'] ?? data['jwt'];
       if (token != null && token.toString().isNotEmpty) {
@@ -282,28 +288,37 @@ class AuthBlock {
         throw Exception("Server returned no token for passkey");
       }
     } catch (e) {
-      print("❌ Passkey Authentication failed: $e");
-      error.value = "Passkey Error: ${e.toString()}";
+      final errorStr = e.toString();
+      print("❌ Passkey Authentication failed: $errorStr");
+      
+      // Don't show scary error if user simply canceled or dismissed the prompt
+      if (!errorStr.contains('1001') && !errorStr.contains('canceled') && !errorStr.contains('dismissed')) {
+        error.value = "Auth Error: $errorStr";
+      }
+      
       status.value = AuthStatus.unauthenticated;
       return false;
     }
   }
 
   /// Passkey Enrollment Flow (Registers this device as an authenticator)
-  Future<bool> enrollPasskey(BuildContext context) async {
+  /// Returns 'success', 'canceled', or an error message.
+  Future<String> enrollPasskey(BuildContext context) async {
     final authUser = Supabase.instance.client.auth.currentUser;
-    if (authUser == null) return false;
+    if (authUser == null) return "User session not found";
 
-    print("🔑 [AuthBlock] Initiating Passkey Enrollment...");
+    print("🔑 [AuthBlock] Initiating Passkey Enrollment for ${authUser.email}...");
     try {
-      // 1. Get Registration Challenge from Backend
-      final challenge = await _authService.getPasskeyChallenge();
+      // 1. Get Registration Options from Backend
+      final registrationOptionsJson = await _authService.getPasskeyRegistrationOptions(authUser.email!);
       
       // 2. Perform Passkey Registration on device
+      // Pass the JSON directly as the plugin expects standard creation options
       final credential = await _passkeyService.registerRequest(
         userId: authUser.id,
         username: authUser.email ?? "Ice_User",
-        challenge: challenge,
+        challenge: "", // Not used as challenge is inside registrationOptionsJson now
+        optionsJson: registrationOptionsJson,
       );
 
       if (credential == null) {
@@ -311,7 +326,11 @@ class AuthBlock {
       }
 
       // 3. Verify and Save Credential on server
-      await _authService.verifyPasskeyRegistration(credential);
+      await _authService.verifyPasskeyRegistration(
+        credential: credential,
+        email: authUser.email!,
+        userId: authUser.id,
+      );
 
       print("✅ [AuthBlock] Passkey Enrollment successful.");
       isPasskeyEnrolled.value = true;
@@ -319,11 +338,17 @@ class AuthBlock {
       // Save info that we have a passkey for this user
       await _secureStorage.setBiometricEnabled(true);
       
-      return true;
+      return "success";
     } catch (e) {
-      print("❌ [AuthBlock] Passkey Enrollment failed: $e");
-      error.value = "Enrollment Error: ${e.toString()}";
-      return false;
+      final errorStr = e.toString();
+      print("❌ [AuthBlock] Passkey Enrollment failed: $errorStr");
+      
+      if (errorStr.contains('1001') || errorStr.contains('canceled')) {
+        return "canceled";
+      }
+      
+      error.value = "Enrollment Error: $errorStr";
+      return errorStr;
     }
   }
   // --- Actions ---
@@ -651,9 +676,13 @@ class AuthBlock {
         final hash = accountResponse?['password_hash'];
         hasLocalPassword.value = hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
         
-        // Also check if passkey is enrolled (locally for now, or via specific DB check if schema allows)
-        isPasskeyEnrolled.value = await _secureStorage.isBiometricEnabled();
-
+        // Check for passkey enrollment on this device/account
+        final passkeyEnrolled = await _secureStorage.isBiometricEnabled();
+        isPasskeyEnrolled.value = passkeyEnrolled;
+        hasLocalPassword.value = true;
+        
+        // isPasskeyEnrolled.value = passkeyEnrolled; // Already set above
+        
         status.value = AuthStatus.authenticated;
         print(
           "✅ [AuthBlock] Profile fetched for ${username.value} with email ${session.user.email}",

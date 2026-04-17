@@ -14,8 +14,17 @@ import SwiftUI
     didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
   ) -> Bool {
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
-    let controller : FlutterViewController = window?.rootViewController as! FlutterViewController
-    screenTimePlugin = ScreenTimePlugin(messenger: controller.binaryMessenger)
+    
+    // Ensure the window is accessible to plugins
+    if let window = self.window {
+        let controller : FlutterViewController = window.rootViewController as! FlutterViewController
+        screenTimePlugin = ScreenTimePlugin(messenger: controller.binaryMessenger)
+    } else {
+        // Fallback for SceneDelegate scenarios where window might be nil at this point
+        if #available(iOS 13.0, *) {
+            // Scene connection will handle this later
+        }
+    }
     
     GeneratedPluginRegistrant.register(with: self)
     return result
@@ -167,5 +176,14 @@ struct AppPickerView: View {
                 }
             }
         }
+    }
+}
+@available(iOS 13.0, *)
+extension UIApplication {
+    @objc var customKeyWindow: UIWindow? {
+        return connectedScenes
+            .compactMap { $0 as? UIWindowScene }
+            .flatMap { $0.windows }
+            .first { $0.isKeyWindow }
     }
 }

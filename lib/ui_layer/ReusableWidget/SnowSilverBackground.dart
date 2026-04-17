@@ -69,12 +69,12 @@ class _SnowSilverBackgroundState extends State<SnowSilverBackground>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Color(0xFF000000), // Jet Black
-                  Color(0xFF0A0A0B), // Near Black
-                  Color(0xFF1A1A1C), // Dark Charcoal
-                  Color(0xFF2C2C2E), // Deep Metallic Grey
+                  Color(0xFF030303), // Obsidian Black
+                  Color(0xFF0A0A0B), // Deep Charcoal
+                  Color(0xFF1C1C1E), // Dark Metallic Silver
+                  Color(0xFF2C2C2E), // Mid Silver/Graphite
                 ],
-                stops: [0.0, 0.3, 0.7, 1.0],
+                stops: [0.0, 0.4, 0.8, 1.0],
               ),
             ),
           ),

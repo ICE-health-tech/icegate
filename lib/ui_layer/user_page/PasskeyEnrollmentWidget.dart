@@ -16,21 +16,21 @@ class _PasskeyEnrollmentWidgetState extends State<PasskeyEnrollmentWidget> {
   Future<void> _handleEnrollment(AuthBlock authBlock) async {
     setState(() => _isEnrolling = true);
     
-    final success = await authBlock.enrollPasskey(context);
+    final result = await authBlock.enrollPasskey(context);
     
     if (mounted) {
       setState(() => _isEnrolling = false);
-      if (success) {
+      if (result == "success") {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text("Passkey Enrolled Successfully!"),
             backgroundColor: Colors.green,
           ),
         );
-      } else {
+      } else if (result != "canceled") {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(authBlock.error.value ?? "Passkey enrollment failed"),
+            content: Text(result),
             backgroundColor: Colors.red,
           ),
         );

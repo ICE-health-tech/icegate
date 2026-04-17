@@ -8,6 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SnowSilverBackground.dart';
+import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -25,6 +26,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _scanController;
   late AnimationController _appearanceController;
   late AnimationController _shineController;
+  late AnimationController _ringFastController;
+  late AnimationController _ringMidController;
+  late AnimationController _ringSlowController;
 
   late AuthBlock _authBlock;
   late final void Function() _disposeEffect;
@@ -59,6 +63,21 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       duration: const Duration(seconds: 4),
     )..repeat();
 
+    _ringFastController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 20),
+    )..repeat();
+
+    _ringMidController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 45),
+    )..repeat();
+
+    _ringSlowController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 80),
+    )..repeat();
+
     // Redirect when authenticated
     _disposeEffect = effect(() {
       if (_authBlock.status.value == AuthStatus.authenticated) {
@@ -77,6 +96,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _scanController.dispose();
     _appearanceController.dispose();
     _shineController.dispose();
+    _ringFastController.dispose();
+    _ringMidController.dispose();
+    _ringSlowController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -94,8 +116,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: const Color(0xFF0F011E), // Deep Cyber Purple base
-        body: SnowSilverBackground( // Note: We can tint this with the ornaments
+        backgroundColor: EntryColors.obsidianBase,
+        body: SnowSilverBackground(
+          // Note: We can tint this with the ornaments
           child: Stack(
             children: [
               // 1. Floating Tech Ornaments
@@ -140,28 +163,74 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget _buildTechOrnaments() {
     return Stack(
       children: [
+        // 1. Slow Bottom-Right Large Ring
+        Positioned(
+          bottom: -100,
+          right: -100,
+          child: RotationTransition(
+            turns: _ringSlowController,
+            child: const _SpinningRing(
+              size: 500,
+              opacity: 0.1,
+              isClockwise: true,
+            ),
+          ),
+        ),
+
+        // 2. Mid Top-Left Ring
+        Positioned(
+          top: -50,
+          left: -80,
+          child: RotationTransition(
+            turns: _ringMidController,
+            child: const _SpinningRing(
+              size: 380,
+              opacity: 0.12,
+              isClockwise: false,
+            ),
+          ),
+        ),
+
+        // 3. Fast Small Center-Left Ring
+        Positioned(
+          top: 300,
+          left: -120,
+          child: RotationTransition(
+            turns: _ringFastController,
+            child: const _SpinningRing(
+              size: 250,
+              opacity: 0.08,
+              isClockwise: true,
+            ),
+          ),
+        ),
+
         Positioned(
           top: -100,
           right: -100,
-          child: RotationTransition(
-            turns: _hudRotationController,
-            child: _CoolerHUD(
-              size: 400,
-              color: const Color(0xFFBB86FC).withValues(alpha: 0.15), // Cyber Lavender
+          child: RepaintBoundary(
+            child: RotationTransition(
+              turns: _hudRotationController,
+              child: _CoolerHUD(
+                size: 400,
+                color: EntryColors.arcticSilver.withValues(alpha: 0.1),
+              ),
             ),
           ),
         ),
         Positioned(
           bottom: -150,
           left: -150,
-          child: RotationTransition(
-            turns: Tween<double>(
-              begin: 1.0,
-              end: 0.0,
-            ).animate(_hudRotationController),
-            child: _CoolerHUD(
-              size: 500,
-              color: const Color(0xFF6200EE).withValues(alpha: 0.2), // Deep Purple
+          child: RepaintBoundary(
+            child: RotationTransition(
+              turns: Tween<double>(
+                begin: 1.0,
+                end: 0.0,
+              ).animate(_hudRotationController),
+              child: _CoolerHUD(
+                size: 500,
+                color: EntryColors.arcticSilver.withValues(alpha: 0.1),
+              ),
             ),
           ),
         ),
@@ -180,15 +249,17 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A0B2E).withValues(alpha: 0.8), // Deep Purple Glass
+                color: Colors.white.withOpacity(
+                  0.03,
+                ), // Ultra-frosted silver glass
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: const Color(0xFFBB86FC).withValues(alpha: 0.3), // Neon Purple Border
+                  color: Colors.white.withOpacity(0.15), // Silver Glass Border
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.purpleAccent.withValues(alpha: 0.1),
+                    color: EntryColors.arcticSilver.withValues(alpha: 0.1),
                     blurRadius: 40,
                     spreadRadius: -10,
                   ),
@@ -221,8 +292,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ),
         ),
-        _buildShineSweep(),
-        _buildScanline(),
+        IgnorePointer(child: RepaintBoundary(child: _buildShineSweep())),
+        IgnorePointer(child: RepaintBoundary(child: _buildScanline())),
       ],
     );
   }
@@ -233,7 +304,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       builder: (context, child) {
         return ClipRRect(
           borderRadius: BorderRadius.circular(32),
-          child: Container(
+          child: SizedBox(
             width: double.infinity,
             height: 520,
             child: CustomPaint(
@@ -266,58 +337,60 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget _buildLogoSection() {
     return Column(
       children: [
-        AnimatedBuilder(
-          animation: _logoPulseController,
-          builder: (context, child) {
-            final double glow =
-                20 + math.sin(_logoPulseController.value * math.pi) * 15;
-            return Container(
-              padding: const EdgeInsets.all(20),
+        RepaintBoundary(
+          child: AnimatedBuilder(
+            animation: _logoPulseController,
+            builder: (context, child) {
+              final double glow =
+                  20 + math.sin(_logoPulseController.value * math.pi) * 15;
+              return Container(
+                padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: const Color(0xFFBB86FC).withValues(alpha: 0.05),
+                  color: EntryColors.arcticSilver.withValues(alpha: 0.05),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFBB86FC).withValues(alpha: 0.2),
+                      color: EntryColors.arcticSilver.withValues(alpha: 0.2),
                       blurRadius: glow,
                       spreadRadius: 2,
                     ),
                   ],
                   border: Border.all(
-                    color: const Color(0xFFBB86FC).withValues(alpha: 0.2),
+                    color: EntryColors.arcticSilver.withValues(alpha: 0.2),
                     width: 1,
                   ),
                 ),
-              child: AnimatedBuilder(
-                animation: _logoPulseController,
-                builder: (context, child) {
-                  return ShaderMask(
-                    shaderCallback: (bounds) {
-                      return LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withValues(alpha: 0.8),
-                          Colors.white,
-                          Colors.white.withValues(alpha: 0.8),
-                        ],
-                        stops: [
-                          (_logoPulseController.value - 0.2).clamp(0.0, 1.0),
-                          _logoPulseController.value,
-                          (_logoPulseController.value + 0.2).clamp(0.0, 1.0),
-                        ],
-                      ).createShader(bounds);
-                    },
-                    child: const Icon(
-                      Icons.ac_unit_rounded,
-                      size: 48,
-                      color: Color(0xFFBB86FC),
-                    ),
-                  );
-                },
-              ),
-            );
-          },
+                child: AnimatedBuilder(
+                  animation: _logoPulseController,
+                  builder: (context, child) {
+                    return ShaderMask(
+                      shaderCallback: (bounds) {
+                        return LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            EntryColors.arcticSilver.withValues(alpha: 0.8),
+                            Colors.white,
+                            EntryColors.arcticSilver.withValues(alpha: 0.8),
+                          ],
+                          stops: [
+                            (_logoPulseController.value - 0.2).clamp(0.0, 1.0),
+                            _logoPulseController.value,
+                            (_logoPulseController.value + 0.2).clamp(0.0, 1.0),
+                          ],
+                        ).createShader(bounds);
+                      },
+                      child: Icon(
+                        Icons.ac_unit_rounded,
+                        size: 48,
+                        color: EntryColors.arcticSilver,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ),
         const SizedBox(height: 24),
         ShaderMask(
@@ -403,16 +476,16 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
           colors: [
-            const Color(0xFFBB86FC), // Cyber Lavender
-            const Color(0xFF6200EE), // Deep Purple
+            Color(0xFFE5E5EA), // Light Silver
+            Color(0xFFA1A1A6), // Metallic Silver
           ],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.purpleAccent.withValues(alpha: 0.2),
-            blurRadius: 10,
+            color: EntryColors.arcticSilver.withValues(alpha: 0.3),
+            blurRadius: 15,
             offset: const Offset(-2, -2),
           ),
           BoxShadow(
@@ -422,7 +495,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           ),
         ],
         border: Border.all(
-          color: Colors.purpleAccent.withValues(alpha: 0.4),
+          color: Colors.white.withValues(alpha: 0.5),
           width: 0.5,
         ),
       ),
@@ -450,13 +523,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   strokeWidth: 3,
                 ),
               )
-            : Text(
-                AppLocalizations.of(context)!.go_to_gate.toUpperCase(),
-                style: const TextStyle(
+            : const Text(
+                'ENTER THE GATE',
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 4.0,
-                  color: Colors.white,
+                  color: Colors.black87,
                 ),
               ),
       ),
@@ -533,7 +606,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               children: [
                 Icon(
                   icon,
-                  color: const Color(0xFFE5E5EA).withValues(alpha: 0.8),
+                  color: EntryColors.arcticSilver.withValues(alpha: 0.9),
                   size: isGmail ? 28 : 22,
                 ),
                 const SizedBox(width: 12),
@@ -585,7 +658,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             prefixIcon: Icon(
               icon,
               size: 20,
-              color: const Color(0xFFE5E5EA).withValues(alpha: 0.6),
+              color: EntryColors.arcticSilver.withValues(alpha: 0.8),
             ),
             filled: true,
             fillColor: Colors.black.withValues(alpha: 0.1),
@@ -608,7 +681,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(
-                color: Color(0xFFE5E5EA),
+                color: EntryColors.arcticSilver,
                 width: 1.5,
               ),
             ),
@@ -755,6 +828,100 @@ class _HexagonPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
+class _SpinningRing extends StatelessWidget {
+  final double size;
+  final double opacity;
+  final bool isClockwise;
+
+  const _SpinningRing({
+    required this.size,
+    required this.opacity,
+    required this.isClockwise,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      child: CustomPaint(
+        painter: _RingPainter(opacity: opacity),
+      ),
+    );
+  }
+}
+
+class _RingPainter extends CustomPainter {
+  final double opacity;
+
+  _RingPainter({required this.opacity});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = size.width / 2;
+
+    final paint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.0
+          ..shader = LinearGradient(
+            colors: [
+              Colors.white.withValues(alpha: opacity),
+              Colors.white.withValues(alpha: opacity * 0.2),
+              Colors.white.withValues(alpha: opacity * 0.8),
+            ],
+            stops: const [0.0, 0.5, 1.0],
+          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+
+    // Draw main ring
+    canvas.drawCircle(center, radius, paint);
+
+    // Draw dashed outer ring
+    final dashedPaint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 3.0
+          ..color = Colors.white.withValues(alpha: opacity * 1.5);
+
+    const int dashes = 8;
+    const double dashAngle = 2 * math.pi / dashes;
+    for (int i = 0; i < dashes; i++) {
+      final startAngle = i * dashAngle;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius + 8),
+        startAngle,
+        dashAngle * 0.2,
+        false,
+        dashedPaint,
+      );
+    }
+
+    // Draw notches
+    final notchPaint =
+        Paint()
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 10.0
+          ..color = Colors.white.withValues(alpha: opacity * 2);
+
+    const int notches = 4;
+    const double notchAngle = 2 * math.pi / notches;
+    for (int i = 0; i < notches; i++) {
+      final startAngle = i * notchAngle;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius - 20),
+        startAngle,
+        0.05,
+        false,
+        notchPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
 class _ShinePainter extends CustomPainter {
   final double progress;
 
@@ -813,9 +980,9 @@ class _ScanlinePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          const Color(0xFFBB86FC).withValues(alpha: 0.0),
-          const Color(0xFFBB86FC).withValues(alpha: 0.2),
-          const Color(0xFFBB86FC).withValues(alpha: 0.0),
+          EntryColors.arcticSilver.withValues(alpha: 0.0),
+          EntryColors.arcticSilver.withValues(alpha: 0.2),
+          EntryColors.arcticSilver.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, y - 40, size.width, 80));
@@ -824,7 +991,7 @@ class _ScanlinePainter extends CustomPainter {
 
     // Subtle bright leading line
     final linePaint = Paint()
-      ..color = const Color(0xFFBB86FC).withValues(alpha: 0.3)
+      ..color = EntryColors.arcticSilver.withValues(alpha: 0.3)
       ..strokeWidth = 1.0
       ..style = PaintingStyle.stroke;
     canvas.drawLine(Offset(0, y), Offset(size.width, y), linePaint);

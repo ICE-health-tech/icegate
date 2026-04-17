@@ -24,10 +24,11 @@ class LoginAction {
   }
 
   /// Login with passkey
-  Future<Map<String, dynamic>> loginWithPasskey() async {
+  Future<Map<String, dynamic>> loginWithPasskey({String? email}) async {
+    final targetEmail = email ?? "duylong.art@gmail.com";
     try {
       // 1. Get challenge from backend
-      final challenge = await _authService.getPasskeyChallenge();
+      final challenge = await _authService.getPasskeyChallenge(email: targetEmail);
 
       // 2. Trigger platform passkey UI
       final credential = await _passkeyService.loginRequest(
@@ -39,7 +40,10 @@ class LoginAction {
       }
 
       // 3. Verify credential with backend
-      return await _authService.verifyPasskeyLogin(credential);
+      return await _authService.verifyPasskeyLogin(
+        credential: credential,
+        email: targetEmail,
+      );
     } catch (e) {
       _logger.severe('Passkey login failed: $e');
       throw Exception(e.toString());

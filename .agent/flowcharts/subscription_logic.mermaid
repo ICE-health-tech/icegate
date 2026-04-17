@@ -1,0 +1,7 @@
+graph TD
+    A[Add Subscription] --> B[Save to SubscriptionsTable]
+    B --> C[Add to FinanceBlock.subscriptions Signal]
+    C --> D[Compute Monthly Burn]
+    D --> E[Update UI: Total Billed Card]
+    E --> F[Check Billing Day]
+    F -->|Monthly Trigger| G[Insert Transaction to History]

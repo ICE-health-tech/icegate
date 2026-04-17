@@ -55,60 +55,84 @@ class CustomAuthService {
   }
 
   /// Get passkey challenge from backend
-  Future<String> getPasskeyChallenge() async {
-    // Passkey related operations use Supabase Edge Functions
-    const supabaseUrl = "https://wthislkepfufkbgiqegs.supabase.co/functions/v1";
-    final url = Uri.parse('$supabaseUrl/passkey-challenge');
+  Future<String> getPasskeyChallenge({String? email}) async {
+    // Passkey related operations now use our dedicated Go Hub on Northflank
+    const authHubUrl = "https://passkey.duylong.art/v1";
+    final url = Uri.parse('$authHubUrl/login/begin');
+    
+    // Fallback email if not provided (should ideally be passed from AuthBlock)
+    final targetEmail = email ?? "duylong.art@gmail.com";
     try {
       _logger.info('Fetching passkey challenge from $url');
-      final response = await http.get(url).timeout(const Duration(seconds: 5));
+      // Pass the user email to the Hub to get specific credentials
+      final response = await http.post(
+        url, 
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': targetEmail})
+      ).timeout(const Duration(seconds: 10));
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final challenge = data['challenge'];
-        _logger.info('Successfully received challenge: $challenge');
+        final challenge = data['publicKey']['challenge'];
+        _logger.info('Successfully received challenge from Hub: $challenge');
         return challenge;
       } else {
-        _logger.warning('Supabase Function returned ${response.statusCode} for challenge');
-        return _getMockChallenge();
+        _logger.warning('Passkey Hub returned ${response.statusCode} for challenge');
+        throw Exception('Passkey Hub rejected request (Status: ${response.statusCode})');
       }
     } catch (e) {
       _logger.severe('Error getting passkey challenge: $e');
-      return _getMockChallenge();
+      rethrow;
     }
   }
 
-  String _getMockChallenge() {
-    final mockChallenge = 'mock_challenge_${DateTime.now().millisecondsSinceEpoch}';
-    _logger.info('Using [KeyChallenge] mock fallback: $mockChallenge');
-    return mockChallenge;
+  /// Get passkey registration options from backend
+  Future<String> getPasskeyRegistrationOptions(String email) async {
+    const authHubUrl = "https://passkey.duylong.art/v1";
+    final url = Uri.parse('$authHubUrl/register/begin');
+    try {
+      _logger.info('Fetching registration options from $url for $email');
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'email': email})
+      ).timeout(const Duration(seconds: 10));
+
+      if (response.statusCode == 200) {
+        // Return the full publicKey options for registration
+        return response.body;
+      } else {
+        throw Exception('Hub returned ${response.statusCode} for registration options');
+      }
+    } catch (e) {
+      _logger.severe('Error getting registration options: $e');
+      rethrow;
+    }
   }
 
+
   /// Verify passkey login assertion
-  Future<Map<String, dynamic>> verifyPasskeyLogin(String credential) async {
-    const supabaseUrl = "https://wthislkepfufkbgiqegs.supabase.co/functions/v1";
-    final url = Uri.parse('$supabaseUrl/passkey-verify');
+  Future<Map<String, dynamic>> verifyPasskeyLogin({
+    required String credential,
+    required String email,
+  }) async {
+    const authHubUrl = "https://passkey.duylong.art/v1";
+    final url = Uri.parse('$authHubUrl/login/finish');
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'credential': credential}),
+        body: jsonEncode({
+          'email': email,
+          'data': jsonDecode(credential)
+        }),
       );
 
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
         _logger.warning('Passkey verification failed with status: ${response.statusCode}');
-        // Mock success for development if verification fails
-        return {
-          "token": "mockToken_passkey",
-          "refreshToken": "mockRefreshToken_passkey",
-          "user": {
-            "id": 1,
-            "username": "passkeyUser",
-            "email": "passkey@example.com",
-          }
-        };
+        throw Exception('Server rejected passkey assertion (Status: ${response.statusCode})');
       }
     } catch (e) {
       _logger.severe('Error verifying passkey: $e');
@@ -117,18 +141,27 @@ class CustomAuthService {
   }
 
   /// Verify passkey registration credential
-  Future<void> verifyPasskeyRegistration(String credential) async {
-    const supabaseUrl = "https://wthislkepfufkbgiqegs.supabase.co/functions/v1";
-    final url = Uri.parse('$supabaseUrl/passkey-register');
+  Future<void> verifyPasskeyRegistration({
+    required String credential,
+    required String email,
+    required String userId,
+  }) async {
+    const authHubUrl = "https://passkey.duylong.art/v1";
+    final url = Uri.parse('$authHubUrl/register/finish');
     try {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'credential': credential}),
+        body: jsonEncode({
+          'email': email,
+          'user_id': userId,
+          'data': jsonDecode(credential)
+        }),
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
-        _logger.warning('Passkey registration verification failed: ${response.statusCode}');
+        final error = jsonDecode(response.body);
+        throw Exception(error['error'] ?? 'Registration verification failed');
       }
     } catch (e) {
       _logger.severe('Error verifying passkey registration: $e');

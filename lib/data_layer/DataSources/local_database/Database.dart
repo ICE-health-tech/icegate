@@ -888,6 +888,26 @@ class TransactionsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('SubscriptionData')
+class SubscriptionsTable extends Table {
+  @override
+  String get tableName => 'subscriptions';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get name => text().named('name')();
+  RealColumn get amount => real().named('amount')();
+  IntColumn get billingDay => integer().named('billing_day')(); // 1-31
+  TextColumn get category => text().named('category')(); // e.g. 'software', 'entertainment'
+  BoolColumn get isActive => boolean().withDefault(const Constant(true)).named('is_active')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 @DataClassName('GoalData')
 class GoalsTable extends Table {
   @override
@@ -3235,9 +3255,33 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 }
 
 // 4.5 FinanceDAO
-@DriftAccessor(tables: [FinancialAccountsTable, AssetsTable, TransactionsTable])
+@DriftAccessor(
+  tables: [
+    FinancialAccountsTable,
+    AssetsTable,
+    TransactionsTable,
+    SubscriptionsTable,
+  ],
+)
 class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   FinanceDAO(super.db);
+
+  // Subscriptions
+  Future<int> insertSubscription(SubscriptionsTableCompanion subscription) =>
+      into(subscriptionsTable).insert(subscription);
+
+  Future<int> deleteSubscription(String id) =>
+      (delete(subscriptionsTable)..where((t) => t.id.equals(id))).go();
+
+  Future<bool> updateSubscription(SubscriptionsTableCompanion subscription) =>
+      update(subscriptionsTable).replace(subscription);
+
+  Stream<List<SubscriptionData>> watchSubscriptions(String personId) {
+    return (select(subscriptionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
+        .watch();
+  }
 
   // Accounts
   Future<int> createAccount(FinancialAccountsTableCompanion account) =>
@@ -5939,6 +5983,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     ScoresTable,
     ProjectsTable,
     TransactionsTable,
+    SubscriptionsTable,
     FocusSessionsTable,
     CustomNotificationsTable,
     QuotesTable,
