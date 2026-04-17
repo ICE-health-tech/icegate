@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/base64"
+	"log"
 	"net/http"
 
 	"ice_gate_auth/internal/store"
@@ -100,6 +101,7 @@ func (h *AuthHandler) FinishRegistration(c *gin.Context) {
 
 // ServeAASA provides the Apple App Site Association file
 func (h *AuthHandler) ServeAASA(c *gin.Context) {
+	log.Printf("AASA request received for: %s", c.Request.URL.Path)
 	aasa := gin.H{
 		"webcredentials": gin.H{
 			"apps": []string{"JJ5CR7B87P.duylong.art.icegate"},
