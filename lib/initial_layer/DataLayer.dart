@@ -17,6 +17,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/WidgetSettingsBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
@@ -47,6 +48,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlo
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -81,7 +83,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ExternalWidgetBlock externalWidgetBlock;
   late QuoteBlock quoteBlock;
   late QuestBlock questBlock;
+  late SocialBlockerBlock socialBlockerBlock;
   late SocialBlock socialBlock;
+  late ChallengeBlock challengeBlock;
   late LocaleBlock localeBlock;
   late ConfigBlock configBlock;
   late DocumentationBlock documentationBlock;
@@ -349,8 +353,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       objectDatabaseBlock = ObjectDatabaseBlock();
       configBlock = ConfigBlock();
       documentationBlock = DocumentationBlock();
+      challengeBlock = ChallengeBlock();
 
       musicBlock = MusicBlock(audioHandler: audioHandler);
+      socialBlockerBlock = SocialBlockerBlock();
       focusBlock = FocusBlock(
         focusSessionDao: database.focusSessionsDAO,
         healthLogsDao: database.healthLogsDAO,
@@ -383,9 +389,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   configBlock: configBlock,
                 );
                 configBlock.init(database.configsDAO, personId);
-                questBlock.init(database, personId);
-                contentBlock.init(database.aiAnalysisDAO, personId);
                 widgetSettingsBlock.init(database.widgetDAO, personId);
+                questBlock.init(database, personId);
+                notificationService.startWatchingEnabledNotifications(personId);
 
                 scoreBlock.init(
                   database.scoreDAO,
@@ -423,6 +429,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       focusBlock
         ..growthBlock = growthBlock
         ..scoreBlock = scoreBlock;
+      await socialBlockerBlock.init(focusBlock);
+      
       await focusBlock.init();
 
       widgetManagerBlock = WidgetManagerBlock(
@@ -662,6 +670,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
         Provider<QuoteBlock>.value(value: quoteBlock),
         Provider<QuestBlock>.value(value: questBlock),
+        Provider<SocialBlockerBlock>.value(value: socialBlockerBlock),
         Provider<SocialBlock>.value(value: socialBlock),
         Provider<WidgetManagerBlock>.value(value: widgetManagerBlock),
         Provider<MusicBlock>.value(value: musicBlock),
@@ -670,6 +679,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<LocaleBlock>.value(value: localeBlock),
         Provider<ConfigBlock>.value(value: configBlock),
         Provider<DocumentationBlock>.value(value: documentationBlock),
+        Provider<ChallengeBlock>.value(value: challengeBlock),
       ],
       child: widget.childWidget,
     );

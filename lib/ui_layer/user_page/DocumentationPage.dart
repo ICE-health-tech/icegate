@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/ui_layer/projects_page/text_editor_page.dart';
@@ -49,6 +50,11 @@ class _DocumentationPageState extends State<DocumentationPage> {
             icon: const Icon(Icons.file_upload_outlined),
             onPressed: () => documentationBlock.importFromDevice(),
             tooltip: 'Import from Device',
+          ),
+          IconButton(
+            icon: const Icon(Icons.hub_outlined),
+            onPressed: () => context.push('/sync-engine'),
+            tooltip: 'Sync Engine',
           ),
           IconButton(
             icon: Icon(_showConfig ? Icons.settings : Icons.settings_outlined),

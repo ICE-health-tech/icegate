@@ -250,7 +250,7 @@ class _HealthPageState extends State<HealthPage>
           children: [
             // Background aesthetics
             Positioned(
-              top: -100,
+              top: -60,
               left: -50,
               child: Container(
                 width: 300,
@@ -272,7 +272,7 @@ class _HealthPageState extends State<HealthPage>
                 slivers: [
                   // Modern Transparent App Bar
                   SliverAppBar(
-                    expandedHeight: 120,
+                    expandedHeight: 60,
                     collapsedHeight: 70,
                     pinned: true,
                     toolbarHeight: 70,
@@ -302,22 +302,6 @@ class _HealthPageState extends State<HealthPage>
                         icon: Icons.hub_rounded,
                         onPressed: () => context.push('/health/integrations'),
                       ),
-                      _buildHeaderButton(
-                        context,
-                        icon: Icons.auto_graph_rounded,
-                        onPressed: () => context.push('/health/analysis'),
-                      ),
-                      _buildHeaderButton(
-                        context,
-                        icon: Icons.grid_view_rounded,
-                        onPressed: () => context.go('/canvas'),
-                      ),
-                      _buildHeaderButton(
-                        context,
-                        icon: Icons.settings_rounded,
-                        onPressed: () => context.go('/settings'),
-                      ),
-                      const SizedBox(width: 16),
                     ],
                   ),
 

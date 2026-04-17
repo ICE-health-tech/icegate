@@ -11,9 +11,10 @@ import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
+import 'package:ice_gate/ui_layer/canvas_page/SSHConfigForm.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
+import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
+import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
@@ -31,6 +32,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return "ICE GATE";
 
+    if (path == '/social/blocker') return "APP BLOCKER";
     if (path == '/') return "ICE GATE";
     if (path.startsWith('/canvas')) return "CANVAS";
     if (path.startsWith('/profile')) return "ANALYSIS";
@@ -96,7 +98,9 @@ class CanvasDynamicIsland extends StatelessWidget {
     if (currentRoute.startsWith('/canvas/') && currentRoute != '/canvas') {
       return const SizedBox.shrink();
     }
-    if (currentRoute.startsWith('/projects/') && currentRoute != '/projects' && currentRoute != '/projects/documents') {
+    if (currentRoute.startsWith('/projects/') &&
+        currentRoute != '/projects' &&
+        currentRoute != '/projects/documents') {
       return const SizedBox.shrink();
     }
     final isCanvas = currentRoute == '/canvas';
@@ -109,6 +113,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     final focusBlock = context.watch<FocusBlock>();
     final questBlock = context.watch<QuestBlock>();
     final docBlock = context.watch<DocumentationBlock>();
+    final notificationService = context.watch<LocalNotificationService>();
     final sshService = SSHService();
 
     return Watch((context) {
@@ -116,6 +121,9 @@ class CanvasDynamicIsland extends StatelessWidget {
       final activeTab = DragCanvasGrid.activeCanvasTab.value;
       final isAnyTabOpen = isCanvas && activeTab != 'none';
       final numberOfQuests = questBlock.numberOfQuests.value;
+      final numberOfEnabledNotifications =
+          notificationService.numberOfEnabledNotifications.value;
+      final totalNotifications = numberOfQuests + numberOfEnabledNotifications;
       final isFocusRunning = focusBlock.isRunning.value;
       final isSyncing = docBlock.isSyncing.value;
       final syncStatus = docBlock.syncStatus.value;
@@ -135,7 +143,9 @@ class CanvasDynamicIsland extends StatelessWidget {
           ? 320
           : (currentRoute.startsWith('/widgets/ssh')
                 ? 340
-                : (isSyncing ? 280 : (isFocusRunning ? 260 : (useTmux ? 220 : 200))));
+                : (isSyncing
+                      ? 320
+                      : (isFocusRunning ? 280 : (useTmux ? 260 : 240))));
       final double width = (targetWidth * scalingFactor).clamp(
         0.0,
         screenWidth - 40, // More breathing room
@@ -155,7 +165,7 @@ class CanvasDynamicIsland extends StatelessWidget {
           borderRadius: BorderRadius.circular(27 * scalingFactor),
           border: Border.all(
             color: isFocusRunning
-                ? focusColor.withOpacity(0.5)
+                ? focusColor.withValues(alpha: 0.5)
                 : (useTmux
                       ? Colors.greenAccent.withOpacity(0.5)
                       : colorScheme.outlineVariant.withOpacity(0.5)),
@@ -237,7 +247,12 @@ class CanvasDynamicIsland extends StatelessWidget {
                       : useTmux
                       ? _buildTmuxStatus(context, scalingFactor, colorScheme)
                       : isSyncing
-                      ? _buildSyncStatus(context, syncStatus, scalingFactor, colorScheme)
+                      ? _buildSyncStatus(
+                          context,
+                          syncStatus,
+                          scalingFactor,
+                          colorScheme,
+                        )
                       : Watch((context) {
                           final socialBlock = context.read<SocialBlock>();
                           return _buildDefaultTitle(
@@ -262,91 +277,117 @@ class CanvasDynamicIsland extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                  if (currentRoute != '/widgets/ssh') ...[
-                    // Focus Shortcut
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.push('/health/focus');
-                      },
-                      child: Container(
-                        padding: EdgeInsets.all(4 * scalingFactor),
-                        decoration: const BoxDecoration(
-                          color: Colors.transparent,
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.timer_outlined,
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.8),
-                          size: 22 * scalingFactor,
+                    if (currentRoute != '/widgets/ssh') ...[
+                      // Focus Shortcut
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          context.push('/health/focus');
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4 * scalingFactor),
+                          decoration: const BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.timer_outlined,
+                            color: colorScheme.onSurfaceVariant.withOpacity(
+                              0.8,
+                            ),
+                            size: 20 * scalingFactor,
+                          ),
                         ),
                       ),
-                    ),
-                    SizedBox(width: 4 * scalingFactor),
-                    // Notifications (badge shows active quest count; cap display to avoid overlap)
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.selectionClick();
-                        context.push('/notifications');
-                      },
-                      child: Stack(
-                        clipBehavior: Clip.none,
-                        alignment: Alignment.topRight,
-                        children: [
-                          Container(
-                            padding: EdgeInsets.all(4 * scalingFactor),
-                            decoration: const BoxDecoration(
-                              color: Colors.transparent,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.notifications_none_rounded,
-                              color: colorScheme.onSurfaceVariant,
-                              size: 22 * scalingFactor,
-                            ),
+
+                      // SizedBox(width: 4 * scalingFactor),
+                      // Settings shortcut
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          context.push('/settings');
+                        },
+                        child: Container(
+                          padding: EdgeInsets.all(4 * scalingFactor),
+                          decoration: const BoxDecoration(
+                            color: Colors.transparent,
+                            shape: BoxShape.circle,
                           ),
-                          if (numberOfQuests > 0)
-                            Positioned(
-                              right: 0,
-                              top: -2,
-                              child: Container(
-                                padding: EdgeInsets.symmetric(
-                                  horizontal: 5 * scalingFactor,
-                                  vertical: 2 * scalingFactor,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.error,
-                                  borderRadius:
-                                      BorderRadius.circular(10 * scalingFactor),
-                                ),
-                                constraints: BoxConstraints(
-                                  minWidth: 16 * scalingFactor,
-                                  minHeight: 16 * scalingFactor,
-                                  maxWidth: 34 * scalingFactor,
-                                ),
-                                alignment: Alignment.center,
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    numberOfQuests > 99
-                                        ? '99+'
-                                        : '$numberOfQuests',
-                                    style: TextStyle(
-                                      color: colorScheme.onError,
-                                      fontSize: 9 * scalingFactor,
-                                      fontWeight: FontWeight.bold,
-                                      height: 1,
+                          child: Icon(
+                            Icons.settings_rounded,
+                            color: colorScheme.onSurfaceVariant.withOpacity(
+                              0.8,
+                            ),
+                            size: 20 * scalingFactor,
+                          ),
+                        ),
+                      ),
+                      SizedBox(width: 4 * scalingFactor),
+                      // Notifications (badge shows active quest count; cap display to avoid overlap)
+                      GestureDetector(
+                        onTap: () {
+                          HapticFeedback.selectionClick();
+                          context.push('/notifications');
+                        },
+                        child: Stack(
+                          clipBehavior: Clip.none,
+                          alignment: Alignment.topRight,
+                          children: [
+                            Container(
+                              padding: EdgeInsets.all(4 * scalingFactor),
+                              decoration: const BoxDecoration(
+                                color: Colors.transparent,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.notifications_none_rounded,
+                                color: colorScheme.onSurfaceVariant,
+                                size: 20 * scalingFactor,
+                              ),
+                            ),
+                            if (totalNotifications > 0)
+                              Positioned(
+                                right: 0,
+                                top: -2,
+                                child: Container(
+                                  padding: EdgeInsets.symmetric(
+                                    horizontal: 5 * scalingFactor,
+                                    vertical: 2 * scalingFactor,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.error,
+                                    borderRadius: BorderRadius.circular(
+                                      10 * scalingFactor,
                                     ),
-                                    textAlign: TextAlign.center,
+                                  ),
+                                  constraints: BoxConstraints(
+                                    minWidth: 16 * scalingFactor,
+                                    minHeight: 16 * scalingFactor,
+                                    maxWidth: 34 * scalingFactor,
+                                  ),
+                                  alignment: Alignment.center,
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    child: Text(
+                                      totalNotifications > 99
+                                          ? '99+'
+                                          : '$totalNotifications',
+                                      style: TextStyle(
+                                        color: colorScheme.onError,
+                                        fontSize: 9 * scalingFactor,
+                                        fontWeight: FontWeight.bold,
+                                        height: 1,
+                                      ),
+                                      textAlign: TextAlign.center,
+                                    ),
                                   ),
                                 ),
                               ),
-                            ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
+                    ],
                   ],
-                ],
                 ),
               )
             else
@@ -491,7 +532,10 @@ class CanvasDynamicIsland extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(width: 8),
-        _RotatingSyncIcon(scalingFactor: scalingFactor, colorScheme: colorScheme),
+        _RotatingSyncIcon(
+          scalingFactor: scalingFactor,
+          colorScheme: colorScheme,
+        ),
         const SizedBox(width: 10),
         Flexible(
           child: AutoSizeText(
@@ -575,8 +619,14 @@ class CanvasDynamicIsland extends StatelessWidget {
           context,
           currentRoute,
           socialBlock,
-          socialIndex ?? (currentRoute.startsWith('/social') ? socialBlock.activeTab.value : null),
-          documentIndex ?? (currentRoute.startsWith('/projects/documents') ? context.read<DocumentationBlock>().activeDocumentTab.value : null),
+          socialIndex ??
+              (currentRoute.startsWith('/social')
+                  ? socialBlock.activeTab.value
+                  : null),
+          documentIndex ??
+              (currentRoute.startsWith('/projects/documents')
+                  ? context.read<DocumentationBlock>().activeDocumentTab.value
+                  : null),
         ),
         style: TextStyle(
           color: colorScheme.onSurface,
@@ -656,7 +706,9 @@ class CanvasDynamicIsland extends StatelessWidget {
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color: (isConnected ? Colors.greenAccent : Colors.redAccent).withValues(alpha: 0.5),
+                      color:
+                          (isConnected ? Colors.greenAccent : Colors.redAccent)
+                              .withValues(alpha: 0.5),
                       blurRadius: 4,
                       spreadRadius: 1,
                     ),
@@ -664,14 +716,17 @@ class CanvasDynamicIsland extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 8),
-              
+
               // AI Mode Label
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
                   color: getAiColor().withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(4),
-                  border: Border.all(color: getAiColor().withValues(alpha: 0.3), width: 0.5),
+                  border: Border.all(
+                    color: getAiColor().withValues(alpha: 0.3),
+                    width: 0.5,
+                  ),
                 ),
                 child: Text(
                   aiMode.toUpperCase(),
@@ -683,7 +738,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 8),
 
               // IP Address or Status
@@ -694,7 +749,9 @@ class CanvasDynamicIsland extends StatelessWidget {
                       : "NOT ACTIVE",
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    color: isConnected ? colorScheme.onSurface : colorScheme.onSurfaceVariant,
+                    color: isConnected
+                        ? colorScheme.onSurface
+                        : colorScheme.onSurfaceVariant,
                     fontSize: 9 * scalingFactor,
                     fontWeight: FontWeight.bold,
                     fontFamily: 'Courier',
@@ -718,7 +775,10 @@ class CanvasDynamicIsland extends StatelessWidget {
                     TalkSSHPage.activeState?.showConnectDialog();
                   },
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: colorScheme.primary,
                       borderRadius: BorderRadius.circular(8),
@@ -734,13 +794,14 @@ class CanvasDynamicIsland extends StatelessWidget {
                   ),
                 ),
               ],
-              
+
               const SizedBox(width: 8),
               // Config Toggle
               GestureDetector(
                 onTap: () {
                   HapticFeedback.selectionClick();
-                  sshService.isConfigMode.value = !sshService.isConfigMode.value;
+                  sshService.isConfigMode.value =
+                      !sshService.isConfigMode.value;
                 },
                 child: Icon(
                   Icons.settings_outlined,
@@ -760,285 +821,9 @@ class CanvasDynamicIsland extends StatelessWidget {
     ColorScheme colorScheme,
     double scalingFactor,
   ) {
-    final sshService = SSHService();
-
-    return Watch((context) {
-      final host = sshService.hostSignal.value;
-      final port = sshService.portSignal.value;
-      final user = sshService.userSignal.value;
-      final pass = sshService.passSignal.value;
-      final remotePath = sshService.remotePathSignal.value;
-      final useTmux = sshService.useTmuxSignal.value;
-      final aiMode = sshService.aiMode.value;
-
-      return Row(
-        children: [
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.lightImpact();
-              sshService.isConfigMode.value = false;
-            },
-            child: Icon(
-              Icons.close_rounded,
-              size: 14 * scalingFactor,
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              child: Row(
-                children: [
-                  _configItem(
-                    "IP",
-                    host,
-                    (val) => sshService.hostSignal.value = val,
-                    colorScheme,
-                    scalingFactor,
-                  ),
-                  _divider(colorScheme),
-                  _configItem(
-                    "PORT",
-                    port.toString(),
-                    (val) =>
-                        sshService.portSignal.value = int.tryParse(val) ?? 22,
-                    colorScheme,
-                    scalingFactor,
-                    keyboardType: TextInputType.number,
-                  ),
-                  _divider(colorScheme),
-                  _configItem(
-                    "USER",
-                    user,
-                    (val) => sshService.userSignal.value = val,
-                    colorScheme,
-                    scalingFactor,
-                  ),
-                  _divider(colorScheme),
-                  _configItem(
-                    "PASS",
-                    "••••",
-                    (val) => sshService.passSignal.value = val,
-                    colorScheme,
-                    scalingFactor,
-                    isPassword: true,
-                  ),
-                  _divider(colorScheme),
-                  _configItem(
-                    "PATH",
-                    remotePath.isEmpty ? "/" : remotePath,
-                    (val) => sshService.remotePathSignal.value = val,
-                    colorScheme,
-                    scalingFactor,
-                  ),
-                  _divider(colorScheme),
-                  // TMUX Toggle
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      sshService.useTmuxSignal.value = !useTmux;
-                    },
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          "TMUX",
-                          style: TextStyle(
-                            color: colorScheme.onSurfaceVariant,
-                            fontSize: 7 * scalingFactor,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        const SizedBox(width: 4),
-                        Icon(
-                          useTmux ? Icons.toggle_on : Icons.toggle_off,
-                          color: useTmux
-                              ? Colors.greenAccent
-                              : colorScheme.onSurfaceVariant.withOpacity(0.5),
-                          size: 16 * scalingFactor,
-                        ),
-                      ],
-                    ),
-                  ),
-                  _divider(colorScheme),
-                  // AI Prefix Config button
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.mediumImpact();
-                      TalkSSHPage.activeState?.showConfigDialog();
-                    },
-                    child: Container(
-                      padding: EdgeInsets.symmetric(
-                        horizontal: 6 * scalingFactor,
-                        vertical: 2 * scalingFactor,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        "AI PRE",
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontSize: 7 * scalingFactor,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                    ),
-                  ),
-                  _divider(colorScheme),
-                  // Kill Sessions
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      _killButton("D1", "deploy_1", Colors.redAccent, scalingFactor),
-                      const SizedBox(width: 4),
-                      _killButton("IG", "ice_gate", Colors.orangeAccent, scalingFactor),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // CONNECT Button
-          GestureDetector(
-            onTap: () {
-              HapticFeedback.mediumImpact();
-              TalkSSHPage.activeState?.applyHostAndConnect(
-                SSHHostModel(
-                  id: sshService.currentHostId,
-                  name: sshService.hostSignal.value,
-                  host: sshService.hostSignal.value,
-                  port: sshService.portSignal.value,
-                  user: sshService.userSignal.value,
-                  password: sshService.passSignal.value,
-                  remoteFilePath: sshService.remotePathSignal.value,
-                  aiMode: sshService.aiMode.value,
-                  aiPromptPrefix: sshService.aiPromptPrefix.value,
-                ),
-              );
-              sshService.isConfigMode.value = false;
-            },
-            child: Container(
-              padding: EdgeInsets.symmetric(
-                horizontal: 10 * scalingFactor,
-                vertical: 4 * scalingFactor,
-              ),
-              decoration: BoxDecoration(
-                color: Colors.greenAccent.withOpacity(0.8),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Text(
-                "CONNECT",
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 8 * scalingFactor,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ),
-          ),
-        ],
-      );
-    });
-  }
-
-  Widget _killButton(
-    String label,
-    String sessionName,
-    Color color,
-    double scalingFactor,
-  ) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.heavyImpact();
-        SSHService().killTmuxSession(sessionName);
-      },
-      child: Container(
-        padding: EdgeInsets.symmetric(
-          horizontal: 6 * scalingFactor,
-          vertical: 2 * scalingFactor,
-        ),
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
-          borderRadius: BorderRadius.circular(4),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 0.5,
-          ),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            color: color,
-            fontSize: 7 * scalingFactor,
-            fontWeight: FontWeight.w900,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _configItem(
-    String label,
-    String value,
-    Function(String) onChanged,
-    ColorScheme colorScheme,
-    double scalingFactor, {
-    TextInputType keyboardType = TextInputType.text,
-    bool isPassword = false,
-  }) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: TextStyle(
-            color: colorScheme.onSurfaceVariant,
-            fontSize: 7 * scalingFactor,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 1),
-        SizedBox(
-          width: 60 * scalingFactor,
-          height: 14 * scalingFactor,
-          child: TextField(
-            controller: TextEditingController(text: value),
-            onSubmitted: (val) {
-              HapticFeedback.lightImpact();
-              onChanged(val);
-            },
-            obscureText: isPassword,
-            keyboardType: keyboardType,
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 9 * scalingFactor,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Courier',
-            ),
-            decoration: const InputDecoration(
-              isDense: true,
-              contentPadding: EdgeInsets.zero,
-              border: InputBorder.none,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _divider(ColorScheme colorScheme) {
-    return Container(
-      width: 0.5,
-      height: 12,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+    return SSHConfigForm(
+      scalingFactor: scalingFactor,
+      colorScheme: colorScheme,
     );
   }
 

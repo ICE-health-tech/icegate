@@ -226,13 +226,17 @@ class _HomePageState extends State<HomePage> {
     await dao.deleteInternalWidget('Gemini AI SSH');
     await dao.deleteInternalWidget('OpenCode AI SSH');
     await dao.deleteInternalWidget('ICE GATE SSH'); // Cleanup old name
-    
+
     // Also cleanup by alias if they exist
     final oldSsh = await dao.getInternalWidgetByAlias('ice_gate_ssh');
-    if (oldSsh != null && oldSsh.name != null) await dao.deleteInternalWidget(oldSsh.name!);
-    
-    final oldAiController = await dao.getInternalWidgetByAlias('ssh_ai_controller');
-    if (oldAiController != null && oldAiController.name != null) await dao.deleteInternalWidget(oldAiController.name!);
+    if (oldSsh != null && oldSsh.name != null)
+      await dao.deleteInternalWidget(oldSsh.name!);
+
+    final oldAiController = await dao.getInternalWidgetByAlias(
+      'ssh_ai_controller',
+    );
+    if (oldAiController != null && oldAiController.name != null)
+      await dao.deleteInternalWidget(oldAiController.name!);
 
     // UPLINK (The single unified terminal)
     // Use the refactored DAO which now safely handles duplicates via limit(1)
@@ -312,21 +316,7 @@ class _HomePageState extends State<HomePage> {
           centerTitle: true,
           leadingWidth: 0,
           leading: const SizedBox.shrink(),
-          actions: [
-            // IconButton(
-            //   icon: const Icon(Icons.home_rounded, size: 30),
-            //   onPressed: () => context.go('/'),
-            // ),
-            IconButton(
-              icon: const Icon(Icons.grid_view, size: 30),
-              onPressed: () => context.go('/canvas'),
-            ),
-            IconButton(
-              icon: const Icon(Icons.settings, size: 30),
-              onPressed: () => context.go('/settings'),
-            ),
-            const SizedBox(width: 8),
-          ],
+          actions: [const SizedBox(width: 8)],
         ),
         floatingActionButton: Watch((context) {
           final level = _levelUpToShow.value;
@@ -356,7 +346,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   // --- SECTION: USER HEADER (Row 2) ---
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    mainAxisAlignment: MainAxisAlignment.end,
                     children: [
                       TextButton(
                         child: Text(
@@ -722,7 +712,10 @@ class _HomePageState extends State<HomePage> {
         TextButton.icon(
           onPressed: () => context.go(route),
           icon: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
-          label: Text(AppLocalizations.of(context)!.analysis),
+          label: Text(
+            AppLocalizations.of(context)!.analysis,
+            style: TextStyle(fontWeight: FontWeight.bold),
+          ),
           style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
         ),
       ],
@@ -854,7 +847,9 @@ class _HomePageState extends State<HomePage> {
                               AutoSizeText(
                                 m['value'] ?? '',
                                 style: TextStyle(
-                                  color: colorScheme.onSurface.withValues(alpha: 0.9),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.9,
+                                  ),
                                   fontSize: isPhone ? 11 : 13,
                                   fontWeight: FontWeight.w800,
                                   height: 1.1,
@@ -865,7 +860,9 @@ class _HomePageState extends State<HomePage> {
                               AutoSizeText(
                                 m['label'] ?? '',
                                 style: TextStyle(
-                                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.5,
+                                  ),
                                   fontSize: isPhone ? 9 : 10,
                                   fontWeight: FontWeight.w600,
                                   height: 1.1,

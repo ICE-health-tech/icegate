@@ -239,7 +239,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 child: Column(
                   children: [
                     Icon(
-                      Icons.lock_reset_rounded,
+                      _requiresCurrentPassword ? Icons.lock_reset_rounded : Icons.security_outlined,
                       size: 64,
                       color: colorScheme.primary,
                     ),
@@ -248,10 +248,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     Text(
                       _requiresCurrentPassword
                           ? AppLocalizations.of(context)!.change_password
-                          : AppLocalizations.of(context)!.set_password,
+                          : "IDENTITY UPGRADE",
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
+                        letterSpacing: 2,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -261,7 +262,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           ? AppLocalizations.of(
                               context,
                             )!.msg_password_requirement
-                          : AppLocalizations.of(context)!.msg_no_local_password,
+                          : "You've successfully established your identity via Google. Now, set a unique local password to unlock advanced security features and Passkey enrollment.",
                       textAlign: TextAlign.center,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant,

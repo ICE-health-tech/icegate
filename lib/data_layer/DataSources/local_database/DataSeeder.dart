@@ -164,31 +164,31 @@ class DataSeeder {
     //   );
     // }
 
-    // 12. Seed Quests
-    await db.questDAO.insertQuest(
-      QuestsTableCompanion(
-        id: Value(IDGen.UUIDV7()),
-        title: const Value('Sample quest A'),
-        personID: Value(personId),
-        description: const Value('Mock quest description.'),
-        targetValue: const Value(1.0),
-        currentValue: const Value(0.0),
-        category: const Value('health'),
-        type: const Value('system'),
-      ),
-    );
-    await db.questDAO.insertQuest(
-      QuestsTableCompanion(
-        id: Value(IDGen.UUIDV7()),
-        title: const Value('Sample quest B'),
-        personID: Value(personId),
-        description: const Value('Mock quest description.'),
-        targetValue: const Value(1.0),
-        currentValue: const Value(0.0),
-        category: const Value('productivity'),
-        type: const Value('system'),
-      ),
-    );
+    // // 12. Seed Quests
+    // await db.questDAO.insertQuest(
+    //   QuestsTableCompanion(
+    //     id: Value(IDGen.UUIDV7()),
+    //     title: const Value('Sample quest A'),
+    //     personID: Value(personId),
+    //     description: const Value('Mock quest description.'),
+    //     targetValue: const Value(1.0),
+    //     currentValue: const Value(0.0),
+    //     category: const Value('health'),
+    //     type: const Value('system'),
+    //   ),
+    // );
+    // await db.questDAO.insertQuest(
+    //   QuestsTableCompanion(
+    //     id: Value(IDGen.UUIDV7()),
+    //     title: const Value('Sample quest B'),
+    //     personID: Value(personId),
+    //     description: const Value('Mock quest description.'),
+    //     targetValue: const Value(1.0),
+    //     currentValue: const Value(0.0),
+    //     category: const Value('productivity'),
+    //     type: const Value('system'),
+    //   ),
+    // );
 
     // 13. Seed External Widgets
     await db.externalWidgetsDAO.insertNewWidget(
@@ -212,16 +212,16 @@ class DataSeeder {
       personID: personId,
     );
 
-    // 14. Seed Reminders
-    await db.customNotificationDAO.insertNotification(
-      CustomNotificationsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        title: 'Sample reminder',
-        content: 'Placeholder notification body.',
-        scheduledTime: DateTime.now().add(const Duration(hours: 2)),
-        category: const Value('Health'),
-      ),
-    );
+    // // 14. Seed Reminders
+    // await db.customNotificationDAO.insertNotification(
+    //   CustomNotificationsTableCompanion.insert(
+    //     id: IDGen.UUIDV7(),
+    //     title: 'Sample reminder',
+    //     content: 'Placeholder notification body.',
+    //     scheduledTime: DateTime.now().add(const Duration(hours: 2)),
+    //     category: const Value('Health'),
+    //   ),
+    // );
 
     // 15. Seed Project Notes
     await db.projectNoteDAO.insertNote(

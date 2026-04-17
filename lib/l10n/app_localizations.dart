@@ -98,6 +98,120 @@ abstract class AppLocalizations {
     Locale('vi'),
   ];
 
+  /// No description provided for @quick_actions.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Actions'**
+  String get quick_actions;
+
+  /// No description provided for @new_label.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get new_label;
+
+  /// No description provided for @my_projects_label.
+  ///
+  /// In en, this message translates to:
+  /// **'My Projects'**
+  String get my_projects_label;
+
+  /// No description provided for @completed_projects_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Completed Projects'**
+  String get completed_projects_label;
+
+  /// No description provided for @active_tasks_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Tasks'**
+  String get active_tasks_label;
+
+  /// No description provided for @recent_notes_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Notes'**
+  String get recent_notes_label;
+
+  /// No description provided for @project_drive_sync.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud Sync'**
+  String get project_drive_sync;
+
+  /// No description provided for @project_drive_sync_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync with Google Drive'**
+  String get project_drive_sync_tooltip;
+
+  /// No description provided for @project_sync_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync completed successfully!'**
+  String get project_sync_success;
+
+  /// No description provided for @project_sync_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync failed: {error}'**
+  String project_sync_failed(String error);
+
+  /// No description provided for @project_created_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Project created with all components!'**
+  String get project_created_msg;
+
+  /// No description provided for @project_create_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Error creating project: {error}'**
+  String project_create_failed(String error);
+
+  /// No description provided for @create_project_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create Project Widget'**
+  String get create_project_title;
+
+  /// No description provided for @project_name_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Project Name'**
+  String get project_name_label;
+
+  /// No description provided for @project_name_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a name'**
+  String get project_name_required;
+
+  /// No description provided for @description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get description;
+
+  /// No description provided for @project_initial_investment_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Initial Investment'**
+  String get project_initial_investment_label;
+
+  /// No description provided for @project_internal_path_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Internal Path (Optional)'**
+  String get project_internal_path_label;
+
+  /// No description provided for @create.
+  ///
+  /// In en, this message translates to:
+  /// **'CREATE'**
+  String get create;
+
   /// No description provided for @helloWorld.
   ///
   /// In en, this message translates to:
@@ -2882,6 +2996,12 @@ abstract class AppLocalizations {
   /// **'Last edited {date}'**
   String project_last_edited_msg(String date);
 
+  /// No description provided for @recent_updates.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent Updates'**
+  String get recent_updates;
+
   /// No description provided for @project_note_untitled.
   ///
   /// In en, this message translates to:
@@ -3823,6 +3943,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Report issues or suggest features'**
   String get feedback_subtitle;
+
+  /// No description provided for @sync_engine_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync Engine'**
+  String get sync_engine_title;
+
+  /// No description provided for @system_health.
+  ///
+  /// In en, this message translates to:
+  /// **'SYSTEM HEALTH'**
+  String get system_health;
+
+  /// No description provided for @uptime.
+  ///
+  /// In en, this message translates to:
+  /// **'UPTIME'**
+  String get uptime;
+
+  /// No description provided for @sync_method.
+  ///
+  /// In en, this message translates to:
+  /// **'SYNC METHOD'**
+  String get sync_method;
+
+  /// No description provided for @refresh_rate.
+  ///
+  /// In en, this message translates to:
+  /// **'REFRESH RATE'**
+  String get refresh_rate;
+
+  /// No description provided for @initialize_drive.
+  ///
+  /// In en, this message translates to:
+  /// **'INITIALIZE DRIVE'**
+  String get initialize_drive;
+
+  /// No description provided for @test_connection.
+  ///
+  /// In en, this message translates to:
+  /// **'TEST CONNECTION'**
+  String get test_connection;
+
+  /// No description provided for @recent_activity.
+  ///
+  /// In en, this message translates to:
+  /// **'RECENT ACTIVITY'**
+  String get recent_activity;
+
+  /// No description provided for @live_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'LIVE LOGS'**
+  String get live_logs;
+
+  /// No description provided for @select_folder.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT FOLDER'**
+  String get select_folder;
+
+  /// No description provided for @my_drive.
+  ///
+  /// In en, this message translates to:
+  /// **'My Drive'**
+  String get my_drive;
+
+  /// No description provided for @breadcrumb_separator.
+  ///
+  /// In en, this message translates to:
+  /// **'>'**
+  String get breadcrumb_separator;
+
+  /// No description provided for @drive_notion_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Drive → Notion Complete'**
+  String get drive_notion_complete;
+
+  /// No description provided for @scheduled_sweep.
+  ///
+  /// In en, this message translates to:
+  /// **'Scheduled Sweep'**
+  String get scheduled_sweep;
+
+  /// No description provided for @standby.
+  ///
+  /// In en, this message translates to:
+  /// **'STANDBY'**
+  String get standby;
+
+  /// No description provided for @target_folder_id.
+  ///
+  /// In en, this message translates to:
+  /// **'TARGET FOLDER ID'**
+  String get target_folder_id;
+
+  /// No description provided for @internal_integration_token.
+  ///
+  /// In en, this message translates to:
+  /// **'INTERNAL INTEGRATION TOKEN'**
+  String get internal_integration_token;
+
+  /// No description provided for @database_schema_id.
+  ///
+  /// In en, this message translates to:
+  /// **'DATABASE SCHEMA ID'**
+  String get database_schema_id;
 }
 
 class _AppLocalizationsDelegate

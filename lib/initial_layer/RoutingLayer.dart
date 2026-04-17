@@ -48,7 +48,8 @@ class _adapterState extends State<Adapter> {
       "WidgetPage",
       "Health Department",
       "Block Reminder",
-      "ICE GATE SSH"
+      "ICE GATE SSH",
+      "Social Blocker"
     ]);
 
     final existingNames = existingWidgets.map((e) => e.name).toSet();
@@ -82,6 +83,17 @@ class _adapterState extends State<Adapter> {
         imageUrl: "assets/internalwidget/defaul.png",
         url: "/health/block-reminder",
         alias: "BlockReminder",
+        scope: 'home',
+      );
+    }
+
+    if (!existingNames.contains("Social Blocker")) {
+      await dao.insertInternalWidget(
+        name: "Social Blocker",
+        personID: personId,
+        imageUrl: "assets/internalwidget/defaul.png",
+        url: "/social/blocker",
+        alias: "SocialBlocker",
         scope: 'home',
       );
     }

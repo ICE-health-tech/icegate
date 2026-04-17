@@ -9,6 +9,67 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
+  String get quick_actions => 'Hành động nhanh';
+
+  @override
+  String get new_label => 'Tạo mới';
+
+  @override
+  String get my_projects_label => 'Dự án của tôi';
+
+  @override
+  String get completed_projects_label => 'Dự án đã xong';
+
+  @override
+  String get active_tasks_label => 'Nhiệm vụ đang chạy';
+
+  @override
+  String get recent_notes_label => 'Ghi chú gần đây';
+
+  @override
+  String get project_drive_sync => 'Đồng bộ Mây';
+
+  @override
+  String get project_drive_sync_tooltip => 'Đồng bộ với Google Drive';
+
+  @override
+  String get project_sync_success => 'Đồng bộ thành công!';
+
+  @override
+  String project_sync_failed(String error) {
+    return 'Đồng bộ thất bại: $error';
+  }
+
+  @override
+  String get project_created_msg => 'Đã tạo dự án với đầy đủ thành phần!';
+
+  @override
+  String project_create_failed(String error) {
+    return 'Lỗi khi tạo dự án: $error';
+  }
+
+  @override
+  String get create_project_title => 'Tạo Widget Dự án';
+
+  @override
+  String get project_name_label => 'Tên Dự án';
+
+  @override
+  String get project_name_required => 'Vui lòng nhập tên';
+
+  @override
+  String get description => 'Mô tả';
+
+  @override
+  String get project_initial_investment_label => 'Đầu tư ban đầu';
+
+  @override
+  String get project_internal_path_label => 'Đường dẫn nội bộ (Tùy chọn)';
+
+  @override
+  String get create => 'TẠO';
+
+  @override
   String get helloWorld => 'Chào thế giới!';
 
   @override
@@ -929,7 +990,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get plugin_desc => 'Thêm tính năng mới cho giao diện của bạn';
 
   @override
-  String get plugin_ssh => 'Điều khiển SSH';
+  String get plugin_ssh => 'SSH';
 
   @override
   String get plugin_ssh_opencode => 'Điều khiển OpenCode SSH';
@@ -1137,17 +1198,17 @@ class AppLocalizationsVi extends AppLocalizations {
       'Điểm số được xử lý bởi Life Orchestration Engine (LOE) vào mỗi nửa đêm giờ UTC.';
 
   @override
-  String get canvas_notification_center => 'Trung tâm thông báo';
+  String get canvas_notification_center => 'Thông báo';
 
   @override
   String get canvas_notification_desc =>
       'Điều khiển và kiểm soát mọi thông báo hệ thống';
 
   @override
-  String get canvas_goal_center => 'Tiến hóa mục tiêu';
+  String get canvas_goal_center => 'Mục tiêu';
 
   @override
-  String get canvas_goal_desc => 'Điều chỉnh các tham số mục tiêu chiến thuật';
+  String get canvas_goal_desc => 'Điều chỉnh mục tiêu';
 
   @override
   String get gps_permissions_required => 'Yêu cầu quyền GPS để theo dõi.';
@@ -1500,6 +1561,9 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get recent_updates => 'Cập nhật gần đây';
+
+  @override
   String get project_note_untitled => 'Chưa đặt tên';
 
   @override
@@ -1692,7 +1756,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get remaining => 'Còn lại';
 
   @override
-  String get notification_manager_title => 'TRUNG TÂM THÔNG BÁO';
+  String get notification_manager_title => 'Thông báo';
 
   @override
   String get notification_hunter_hub => 'Trung tâm Thợ săn';
@@ -1757,7 +1821,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_wisdom_author => 'Tác giả';
 
   @override
-  String get notification_inbox_title => 'TRUNG TÂM THÔNG BÁO';
+  String get notification_inbox_title => 'Thông báo';
 
   @override
   String get notification_mission_history => 'Lịch sử nhiệm vụ';
@@ -1992,4 +2056,58 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get feedback_subtitle => 'Báo lỗi hoặc đề xuất tính năng mới';
+
+  @override
+  String get sync_engine_title => 'Sync Engine';
+
+  @override
+  String get system_health => 'SỨC KHỎE HỆ THỐNG';
+
+  @override
+  String get uptime => 'THỜI GIAN HOẠT ĐỘNG';
+
+  @override
+  String get sync_method => 'PHƯƠNG THỨC ĐỒNG BỘ';
+
+  @override
+  String get refresh_rate => 'TẦN SUẤT LÀM MỚI';
+
+  @override
+  String get initialize_drive => 'KHỞI TẠO DRIVE';
+
+  @override
+  String get test_connection => 'KIỂM TRA KẾT NỐI';
+
+  @override
+  String get recent_activity => 'HOẠT ĐỘNG GẦN ĐÂY';
+
+  @override
+  String get live_logs => 'NHẬT KÝ TRỰC TIẾP';
+
+  @override
+  String get select_folder => 'CHỌN THƯ MỤC';
+
+  @override
+  String get my_drive => 'Drive của tôi';
+
+  @override
+  String get breadcrumb_separator => '>';
+
+  @override
+  String get drive_notion_complete => 'Drive → Notion Hoàn tất';
+
+  @override
+  String get scheduled_sweep => 'Quét định kỳ';
+
+  @override
+  String get standby => 'CHỜ';
+
+  @override
+  String get target_folder_id => 'ID THƯ MỤC MỤC TIÊU';
+
+  @override
+  String get internal_integration_token => 'MÃ TÍCH HỢP NỘI BỘ';
+
+  @override
+  String get database_schema_id => 'ID SCHEMA CƠ SỞ DỮ LIỆU';
 }

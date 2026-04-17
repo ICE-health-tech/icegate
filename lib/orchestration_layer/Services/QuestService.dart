@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:drift/drift.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
@@ -52,7 +51,6 @@ class QuestService {
   Future<void> _generateNewDailyQuests(String personId) async {
     await _db.questDAO.deleteIncompleteDailyQuestsForPerson(personId);
 
-    final random = Random();
     
     // Generate 3 random Health Quests
     final healthQuestPool = [
@@ -123,23 +121,6 @@ class QuestService {
     final selectedBusiness = businessQuestPool.first;
     await _insertQuestFromTemplate(personId, selectedBusiness, 'finance');
 
-    // Generate 1 Secret Quest (rarer)
-    if (random.nextDouble() > 0.7) { // 30% chance for a secret quest
-      await _db.questDAO.insertQuest(QuestsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        personID: Value(personId),
-        title: const Value("???"),
-        description: const Value("A mysterious challenge awaits. Complete a 1-hour workout to reveal."),
-        type: const Value('secret'),
-        questType: const Value('exercise'),
-        category: const Value('health'),
-        targetValue: const Value(60.0),
-        currentValue: const Value(0.0),
-        rewardExp: const Value(150),
-        isCompleted: const Value(false),
-        createdAt: Value(DateTime.now()),
-      ));
-    }
   }
 }
 

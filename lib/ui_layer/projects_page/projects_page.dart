@@ -1,6 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/utils/l10n_extensions.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
@@ -112,42 +113,19 @@ class ProjectsPage extends StatelessWidget {
             ),
           ),
           actions: [
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.home_rounded, size: 22),
-              ),
-              onPressed: () {
-                WidgetNavigatorAction.smartPop(context);
-              },
-            ),
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.grid_view, size: 22),
-              ),
-              onPressed: () => context.go('/canvas'),
-            ),
-            IconButton(
-              icon: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.settings, size: 22),
-              ),
-              onPressed: () => context.go('/settings'),
-            ),
-            const SizedBox(width: 16),
+            // IconButton(
+            //   icon: Container(
+            //     padding: const EdgeInsets.all(8),
+            //     decoration: BoxDecoration(
+            //       color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
+            //       shape: BoxShape.circle,
+            //     ),
+            //     child: const Icon(Icons.home_rounded, size: 22),
+            //   ),
+            //   onPressed: () {
+            //     WidgetNavigatorAction.smartPop(context);
+            //   },
+            // ),
           ],
         ),
         body: CustomScrollView(
@@ -192,13 +170,19 @@ class ProjectsPage extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  colorScheme.primaryContainer.withValues(alpha: 0.4),
-                                  colorScheme.primaryContainer.withValues(alpha: 0.1),
+                                  colorScheme.primaryContainer.withValues(
+                                    alpha: 0.4,
+                                  ),
+                                  colorScheme.primaryContainer.withValues(
+                                    alpha: 0.1,
+                                  ),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(24),
                               border: Border.all(
-                                color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+                                color: colorScheme.primaryContainer.withValues(
+                                  alpha: 0.2,
+                                ),
                               ),
                             ),
                             child: Row(
@@ -206,14 +190,14 @@ class ProjectsPage extends StatelessWidget {
                               children: [
                                 _buildSummaryItem(
                                   context,
-                                  'Projects',
+                                  context.l10n.projects,
                                   '$projectsDone/${projectsActive + projectsDone}',
                                   Icons.folder_copy_rounded,
                                   Colors.blue,
                                 ),
                                 _buildSummaryItem(
                                   context,
-                                  'Tasks',
+                                  context.l10n.tasks,
                                   '$tasksDone/${tasksDone + tasksActive}',
                                   Icons.task_alt_rounded,
                                   Colors.orange,
@@ -225,7 +209,7 @@ class ProjectsPage extends StatelessWidget {
                       );
                     }),
                     const SizedBox(height: 32),
-                    _buildSectionTitle(context, 'Quick Actions'),
+                    _buildSectionTitle(context, context.l10n.quick_actions),
                     const SizedBox(height: 16),
                     Watch((context) {
                       final apps = internalWidgetBlock
@@ -240,7 +224,7 @@ class ProjectsPage extends StatelessWidget {
                             _ActionCard(
                               width: 100,
                               icon: Icons.note_add_rounded,
-                              label: 'New',
+                              label: context.l10n.new_label,
                               color: Colors.orange,
                               onTap: () => context.push('/projects/editor'),
                             ),
@@ -248,7 +232,7 @@ class ProjectsPage extends StatelessWidget {
                             _ActionCard(
                               width: 150,
                               icon: Icons.edit_note_rounded,
-                              label: 'Notes',
+                              label: context.l10n.project_notes_label,
                               color: Colors.blue,
                               onTap: () {
                                 context.push("/projects/notes");
@@ -296,7 +280,7 @@ class ProjectsPage extends StatelessWidget {
                       );
                     }),
                     const SizedBox(height: 32),
-                    _buildSectionTitle(context, 'My Projects'),
+                    _buildSectionTitle(context, context.l10n.my_projects_label),
                     const SizedBox(height: 16),
                   ],
                 ),
@@ -343,7 +327,7 @@ class ProjectsPage extends StatelessWidget {
 
                 return Padding(
                   padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
-                  child: _buildSectionTitle(context, 'Completed Projects'),
+                  child: _buildSectionTitle(context, context.l10n.completed_projects_label),
                 );
               }),
             ),
@@ -377,7 +361,7 @@ class ProjectsPage extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildSectionTitle(context, 'Active Tasks'),
+                    _buildSectionTitle(context, context.l10n.active_tasks_label),
                     TextButton(
                       onPressed: () => _showAddTaskDialog(context, growthBlock),
                       child: const Text('Add Task'),
@@ -464,7 +448,7 @@ class ProjectsPage extends StatelessWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(20, 32, 20, 16),
-                child: _buildSectionTitle(context, 'Recent Notes'),
+                child: _buildSectionTitle(context, context.l10n.recent_notes_label),
               ),
             ),
             StreamBuilder<List<ProjectNoteData>>(

@@ -127,19 +127,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
 
     return Scaffold(
       backgroundColor: theme.colorScheme.surface,
-      appBar: AppBar(
-        title: const Text('SSH TMUX MANAGER'),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => WidgetNavigatorAction.smartPop(context),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh_rounded),
-            onPressed: _isLoading ? null : _refreshSessions,
-          ),
-        ],
-      ),
+
       body: _buildBody(l10n, theme),
     );
   }
@@ -204,7 +192,10 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
         _buildSectionHeader('SESSION HISTORY', Icons.history_rounded),
         _buildSessionHistoryGrid(l10n, theme),
 
-        _buildSectionHeader('PERSISTED SESSIONS (SQLITE)', Icons.storage_rounded),
+        _buildSectionHeader(
+          'PERSISTED SESSIONS (SQLITE)',
+          Icons.storage_rounded,
+        ),
         _buildPersistedSessions(l10n, theme),
 
         const SliverToBoxAdapter(child: SizedBox(height: 40)),
@@ -215,7 +206,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
   Widget _buildSectionHeader(String title, IconData icon) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
@@ -292,15 +283,8 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 32),
-            Text(
-              'NO ACTIVE UPLINK',
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.w900,
-                letterSpacing: 4.0,
-                color: colorScheme.onSurface,
-              ),
-            ),
+
+            // const SizedBox(height: 32),
             const SizedBox(height: 16),
             Text(
               'Connect to a host first to manage live sessions.',

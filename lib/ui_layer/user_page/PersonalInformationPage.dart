@@ -12,6 +12,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/ui_layer/user_page/PasskeyEnrollmentWidget.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class PersonalInformationPage extends StatefulWidget {
@@ -415,17 +416,17 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       extendBodyBehindAppBar: true,
       appBar: AppBar(
         toolbarHeight: 70,
-        title: Text(AppLocalizations.of(context)!.personal_info_title),
+        // title: Text(AppLocalizations.of(context)!.personal_info_title),
         leadingWidth: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new_rounded),
-          onPressed: () => context.pop(),
-          style: IconButton.styleFrom(
-            backgroundColor: Theme.of(
-              context,
-            ).colorScheme.surface.withOpacity(0.1),
-          ),
-        ),
+        // leading: IconButton(
+        //   icon: const Icon(Icons.arrow_back_ios_new_rounded),
+        //   onPressed: () => context.pop(),
+        //   style: IconButton.styleFrom(
+        //     backgroundColor: Theme.of(
+        //       context,
+        //     ).colorScheme.surface.withOpacity(0.1),
+        //   ),
+        // ),
         backgroundColor: Colors.transparent,
         elevation: 0,
         foregroundColor: Colors.white,
@@ -480,6 +481,78 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                   objectResource,
                   info,
                 ),
+
+                // IDENTITY EVOLUTION BANNER
+                Watch((context) {
+                  final hasPassword = _authBlock.hasLocalPassword.value;
+                  if (hasPassword) return const SizedBox.shrink();
+
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          colorScheme.primary.withValues(alpha: 0.1),
+                          colorScheme.secondary.withValues(alpha: 0.05),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.primary.withValues(alpha: 0.2),
+                        width: 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.auto_awesome_rounded, color: colorScheme.primary),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                "IDENTITY EVOLUTION",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 12,
+                                  letterSpacing: 2,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                "Level 1: Google. Set a local password to upgrade your security tier.",
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        TextButton(
+                          onPressed: () => context.push('/change-password'),
+                          child: const Text("SET"),
+                        ),
+                      ],
+                    ),
+                  );
+                }),
+
+                // PASSKEY UPGRADE SECTION
+                Watch((context) {
+                  final hasPassword = _authBlock.hasLocalPassword.value;
+                  final isPasskeyEnrolled = _authBlock.isPasskeyEnrolled.value;
+
+                  if (hasPassword && !isPasskeyEnrolled) {
+                    return const PasskeyEnrollmentWidget();
+                  }
+                  
+                  if (isPasskeyEnrolled) {
+                   return Center(child: const PasskeyEnrollmentWidget()); // Will show status view
+                  }
+
+                  return const SizedBox.shrink();
+                }),
 
                 Padding(
                   padding: const EdgeInsets.all(12.0),
@@ -936,30 +1009,49 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 // Name & Alias
                 Column(
                   children: [
-                    Text(
-                      info.profiles.firstName.isNotEmpty
-                          ? "${info.profiles.firstName} ${info.profiles.lastName}"
-                          : "User",
-                      style: textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: -0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+                    // Username Badge (Top)
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 10,
-                        vertical: 2,
+                        vertical: 4,
                       ),
                       decoration: BoxDecoration(
                         color: colorScheme.primary.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: colorScheme.primary.withOpacity(0.2),
+                        ),
                       ),
                       child: Text(
                         "@${info.profiles.username.split('-').first}",
                         style: textTheme.labelMedium?.copyWith(
                           color: colorScheme.primary,
                           fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    // Name Badge (Bottom)
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: colorScheme.secondary.withOpacity(0.1),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(
+                          color: colorScheme.secondary.withOpacity(0.2),
+                        ),
+                      ),
+                      child: Text(
+                        info.profiles.firstName.isNotEmpty
+                            ? "${info.profiles.firstName} ${info.profiles.lastName}"
+                            : "User",
+                        style: textTheme.headlineSmall?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          letterSpacing: -0.5,
                         ),
                       ),
                     ),

@@ -142,18 +142,18 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
               )
             : null,
         actions: [
-          IconButton(
-            icon: const Icon(Icons.settings_rounded, color: Colors.white70),
-            onPressed: () => context.push("/personal-info"),
-            style: IconButton.styleFrom(
-              backgroundColor: Colors.white.withOpacity(0.05),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
-          ),
+          // IconButton(
+          //   icon: const Icon(Icons.settings_rounded, color: Colors.white70),
+          //   onPressed: () => context.push("/personal-info"),
+          //   style: IconButton.styleFrom(
+          //     backgroundColor: Colors.white.withOpacity(0.05),
+          //   ),
+          // ),
+          // const SizedBox(width: 12),
+          // Padding(
+          //   padding: const EdgeInsets.only(right: 16.0),
+          //   child: Icon(Icons.auto_graph_rounded, color: colorScheme.primary),
+          // ),
         ],
       ),
       body: SingleChildScrollView(
@@ -620,8 +620,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                       ],
                     ),
                   ),
-                )
-                ,
+                ),
           ],
         ),
       ),

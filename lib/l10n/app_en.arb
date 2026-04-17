@@ -1,4 +1,37 @@
 {
+  "quick_actions": "Quick Actions",
+  "new_label": "New",
+  "my_projects_label": "My Projects",
+  "completed_projects_label": "Completed Projects",
+  "active_tasks_label": "Active Tasks",
+  "recent_notes_label": "Recent Notes",
+  "project_drive_sync": "Cloud Sync",
+  "project_drive_sync_tooltip": "Sync with Google Drive",
+  "project_sync_success": "Sync completed successfully!",
+  "project_sync_failed": "Sync failed: {error}",
+  "@project_sync_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "project_created_msg": "Project created with all components!",
+  "project_create_failed": "Error creating project: {error}",
+  "@project_create_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "create_project_title": "Create Project Widget",
+  "project_name_label": "Project Name",
+  "project_name_required": "Please enter a name",
+  "description": "Description",
+  "project_initial_investment_label": "Initial Investment",
+  "project_internal_path_label": "Internal Path (Optional)",
+  "create": "CREATE",
   "@@locale": "en",
   "helloWorld": "Hello World!",
   "app_title": "Ice Gate",
@@ -738,6 +771,7 @@
       }
     }
   },
+  "recent_updates": "Recent Updates",
   "project_note_untitled": "Untitled",
   "project_unknown_date": "Unknown date",
   "project_delete_note_title": "Delete Note",
@@ -963,5 +997,23 @@
   "journal": "Journal",
   "social_notes": "Mind Notes",
   "btn_send_feedback": "Send Feedback",
-  "feedback_subtitle": "Report issues or suggest features"
+  "feedback_subtitle": "Report issues or suggest features" ,
+  "sync_engine_title": "Sync Engine",
+  "system_health": "SYSTEM HEALTH",
+  "uptime": "UPTIME",
+  "sync_method": "SYNC METHOD",
+  "refresh_rate": "REFRESH RATE",
+  "initialize_drive": "INITIALIZE DRIVE",
+  "test_connection": "TEST CONNECTION",
+  "recent_activity": "RECENT ACTIVITY",
+  "live_logs": "LIVE LOGS",
+  "select_folder": "SELECT FOLDER",
+  "my_drive": "My Drive",
+  "breadcrumb_separator": ">",
+  "drive_notion_complete": "Drive → Notion Complete",
+  "scheduled_sweep": "Scheduled Sweep",
+  "standby": "STANDBY",
+  "target_folder_id": "TARGET FOLDER ID",
+  "internal_integration_token": "INTERNAL INTEGRATION TOKEN",
+  "database_schema_id": "DATABASE SCHEMA ID"
 }

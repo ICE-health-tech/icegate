@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
@@ -15,7 +16,11 @@ class LocalNotificationService {
   /// Whether notifications are currently enabled
   final notificationsEnabled = signal<bool>(true);
 
+  /// Number of custom notifications currently enabled and scheduled
+  final numberOfEnabledNotifications = signal<int>(0);
+
   AppDatabase? _database;
+  StreamSubscription<int>? _enabledNotificationsSubscription;
 
   Future<void> init([AppDatabase? database]) async {
     if (kIsWeb) {
@@ -141,6 +146,22 @@ class LocalNotificationService {
     await _notificationsPlugin.cancelAll();
   }
 
+  /// Start watching enabled notifications count for badge display
+  void startWatchingEnabledNotifications(String personId) {
+    if (_database == null || personId.isEmpty) return;
+    
+    _enabledNotificationsSubscription?.cancel();
+    _enabledNotificationsSubscription = _database!.customNotificationDAO
+        .watchEnabledNotificationsCount(personId)
+        .listen((count) {
+      numberOfEnabledNotifications.value = count;
+    });
+  }
+
+  void dispose() {
+    _enabledNotificationsSubscription?.cancel();
+  }
+
   Future<void> cancelNotification(int id) async {
     debugPrint("🧹 Cancelling notification ID: $id");
     await _notificationsPlugin.cancel(id: id);
@@ -213,8 +234,9 @@ class LocalNotificationService {
       );
 
       for (final day in selectedDays) {
+        final dayInt = day.toInt();
         // Unique ID per day: Combine hashCode with day index
-        final dayId = (data.notificationID.hashCode % 100000) * 10 + day;
+        final dayId = (data.notificationID.hashCode % 100000) * 10 + dayInt;
 
         await _notificationsPlugin.zonedSchedule(
           id: dayId,

@@ -13,7 +13,7 @@ import 'package:ice_gate/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/StepsDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/text_editor_page.dart';
-import 'package:ice_gate/ui_layer/animation_page/PrismEntryPage.dart';
+import 'package:ice_gate/ui_layer/animation_page/prism_entry_page.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/session_tracker.dart';
 import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
@@ -54,10 +54,12 @@ import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
+import 'package:ice_gate/ui_layer/social_page/blocker/SocialBlockerPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/projects_page.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/note_manager_page.dart';
 import 'package:ice_gate/ui_layer/projects_page/folder_details_page.dart';
+import 'package:ice_gate/ui_layer/home_page/SyncEnginePage.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -132,12 +134,24 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/login',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const LoginPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const LoginPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     ),
     GoRoute(
       path: '/intro',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const PrismEntryPage(),
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const PrismEntryPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
     ),
 
     GoRoute(
@@ -183,7 +197,10 @@ final GoRouter router = GoRouter(
         return MainShell(child: child);
       },
       routes: [
-        GoRoute(path: '/', builder: (context, state) => const HomePage()),
+        GoRoute(
+          path: '/',
+          builder: (context, state) => const HomePage(),
+        ),
         GoRoute(
           path: '/canvas',
           builder: (context, state) => DragCanvasGrid(),
@@ -349,6 +366,10 @@ final GoRouter router = GoRouter(
               path: 'contacts',
               builder: (context, state) => const SocialPage(),
             ),
+            GoRoute(
+              path: 'blocker',
+              builder: (context, state) => const SocialBlockerPage(),
+            ),
           ],
         ),
         GoRoute(
@@ -470,12 +491,24 @@ final GoRouter router = GoRouter(
           builder: (context, state) => const PersonalInformationPage(),
         ),
         GoRoute(
+          path: '/change-password',
+          builder: (context, state) => const ChangePasswordPage(),
+        ),
+        GoRoute(
+          path: '/change-username',
+          builder: (context, state) => const ChangeUsernamePage(),
+        ),
+        GoRoute(
           path: "/project_notes",
           builder: (context, state) => const ProjectNotesPage(),
         ),
         GoRoute(
           path: '/manual',
           builder: (context, state) => const ScoringRulesPage(),
+        ),
+        GoRoute(
+          path: '/sync-engine',
+          builder: (context, state) => const SyncEnginePage(),
         ),
       ],
     ),

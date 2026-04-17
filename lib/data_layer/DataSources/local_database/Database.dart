@@ -5302,6 +5302,13 @@ class CustomNotificationDAO extends DatabaseAccessor<AppDatabase>
         .get();
   }
 
+  Stream<int> watchEnabledNotificationsCount(String personId) {
+    return (select(customNotificationsTable)
+          ..where((t) => t.isEnabled.equals(true) & t.personID.equals(personId)))
+        .watch()
+        .map((list) => list.length);
+  }
+
   Future<void> patchNotification(
     String id,
     CustomNotificationsTableCompanion companion,
@@ -5404,6 +5411,14 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
               t.personID.equals(personId) &
               t.isCompleted.equals(false) &
               t.type.equals('daily'),
+        ))
+        .go();
+  }
+
+  /// Removes all secret quests for a person. Used to clean up mock mysterious quests.
+  Future<int> deleteSecretQuestsForPerson(String personId) {
+    return (delete(questsTable)..where(
+          (t) => t.personID.equals(personId) & t.type.equals('secret'),
         ))
         .go();
   }

@@ -846,168 +846,224 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
       _obsidianFolderController.text = block.obsidianFolderName.value!;
     }
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Container(
-      color: colorScheme.surface,
-      child: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 60), // Room for Dynamic Island
-            Expanded(
-              child: Watch((context) {
-                final syncing = block.isSyncing.value;
-                final status = block.syncStatus.value;
-
-                return ListView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                  children: [
-                    // Header Status (Only if syncing)
-                    if (syncing)
-                      Container(
-                        margin: const EdgeInsets.only(bottom: 24),
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: colorScheme.primary.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              children: [
-                                SizedBox(
-                                  width: 14,
-                                  height: 14,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  status ?? 'Processing...',
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.w600,
-                                    color: colorScheme.primary,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 12),
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(4),
-                              child: LinearProgressIndicator(
-                                backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
-                                valueColor: AlwaysStoppedAnimation(colorScheme.primary),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-
-                    // Section: Notion
-                    _buildSettingsCard(
-                      title: 'NOTION PIPELINE',
-                      description: 'Auto-ingest pages from your Notion workspace.',
-                      icon: Icons.hub_rounded,
-                      iconColor: const Color(0xFF000000), // Notion Black
-                      child: Column(
-                        children: [
-                          _buildConfigField(
-                            'Integration Secret',
-                            'secret_...',
-                            _notionSecretController,
-                            true,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildActionButton(
-                            'Ingest Notion Content',
-                            Icons.auto_awesome_rounded,
-                            onPressed: () {
-                              block.setNotionSecret(_notionSecretController.text.trim());
-                              block.fetchFromNotionAuto();
-                            },
-                            isLoading: syncing,
-                            color: colorScheme.primary,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Section: Cloud Storage
-                    _buildSettingsCard(
-                      title: 'CLOUD VAULT (OBSIDIAN)',
-                      description: 'Two-way synchronization with Google Drive.',
-                      icon: Icons.cloud_sync_rounded,
-                      iconColor: colorScheme.secondary,
-                      child: Column(
-                        children: [
-                          _buildConfigField(
-                            'G-Drive Folder Name',
-                            'KnowledgeVault',
-                            _obsidianFolderController,
-                            false,
-                            onChanged: (val) => block.setObsidianFolderName(val.trim()),
-                          ),
-                          const SizedBox(height: 16),
-                          _buildActionButton(
-                            'Sync Cloud Folder',
-                            Icons.download_for_offline_rounded,
-                            onPressed: () => _showFetchDialog(context),
-                            isLoading: syncing,
-                            color: colorScheme.secondary,
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-
-                    // Section: Maintenance
-                    _buildSettingsCard(
-                      title: 'MAINTENANCE',
-                      description: 'Keep your local library healthy.',
-                      icon: Icons.settings_suggest_rounded,
-                      iconColor: colorScheme.tertiary,
-                      child: Column(
-                        children: [
-                          _buildSettingsTile(
-                            'Rescan Library',
-                            Icons.refresh_rounded,
-                            'Refresh all local document indexing.',
-                            onTap: () {
-                              // Force reload logic if any, but loadFiles is reactive
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Rescanning library...')),
-                              );
-                            },
-                          ),
-                          _buildSettingsTile(
-                            'Clear App Cache',
-                            Icons.delete_sweep_rounded,
-                            'Clears temporary ingestion data.',
-                            onTap: () {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Cache cleared.')),
-                              );
-                            },
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 40),
-                  ],
-                );
-              }),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        image: isDark ? null : const DecorationImage(
+          image: NetworkImage('https://www.transparenttextures.com/patterns/cubes.png'), // Subtle texture for light mode
+          opacity: 0.03,
+          repeat: ImageRepeat.repeat,
+        ),
+      ),
+      child: Stack(
+        children: [
+          // Ambient backgrounds
+          if (isDark) ...[
+            Positioned(
+              top: -100,
+              right: -50,
+              child: _buildBlurCircle(colorScheme.primary.withValues(alpha: 0.08), 300),
+            ),
+            Positioned(
+              bottom: -50,
+              left: -50,
+              child: _buildBlurCircle(colorScheme.secondary.withValues(alpha: 0.05), 250),
             ),
           ],
+          SafeArea(
+            child: Column(
+              children: [
+                const SizedBox(height: 60), // Room for Dynamic Island
+                Expanded(
+                  child: Watch((context) {
+                    final syncing = block.isSyncing.value;
+                    final status = block.syncStatus.value;
+
+                    return ListView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      physics: const BouncingScrollPhysics(),
+                      children: [
+                        // Header Status (Only if syncing)
+                        if (syncing)
+                          _buildSyncStatusHeader(context, status),
+
+                        // Section: Notion
+                        _buildSettingsCard(
+                          title: 'NOTION PIPELINE',
+                          description: 'Auto-ingest pages from your Notion workspace.',
+                          icon: Icons.hub_rounded,
+                          iconColor: isDark ? Colors.white : Colors.black, // Notion Style
+                          child: Column(
+                            children: [
+                              _buildConfigField(
+                                'Integration Secret',
+                                'secret_...',
+                                _notionSecretController,
+                                true,
+                              ),
+                              const SizedBox(height: 20),
+                              _buildActionButton(
+                                'Ingest Notion Content',
+                                Icons.auto_awesome_rounded,
+                                onPressed: () {
+                                  block.setNotionSecret(_notionSecretController.text.trim());
+                                  block.fetchFromNotionAuto();
+                                },
+                                isLoading: syncing,
+                                color: isDark ? colorScheme.primary : Colors.black,
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Section: Cloud Storage
+                        _buildSettingsCard(
+                          title: 'CLOUD VAULT (OBSIDIAN)',
+                          description: 'Two-way synchronization with Google Drive.',
+                          icon: Icons.cloud_sync_rounded,
+                          iconColor: const Color(0xFF00B2FF), // Cloud Cyan
+                          child: Column(
+                            children: [
+                              _buildConfigField(
+                                'G-Drive Folder Name',
+                                'KnowledgeVault',
+                                _obsidianFolderController,
+                                false,
+                                onChanged: (val) => block.setObsidianFolderName(val.trim()),
+                              ),
+                              const SizedBox(height: 20),
+                              _buildActionButton(
+                                'Sync Cloud Folder',
+                                Icons.download_for_offline_rounded,
+                                onPressed: () => _showFetchDialog(context),
+                                isLoading: syncing,
+                                color: const Color(0xFF00B2FF),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 28),
+
+                        // Section: Maintenance
+                        _buildSettingsCard(
+                          title: 'MAINTENANCE',
+                          description: 'Keep your local library healthy.',
+                          icon: Icons.settings_suggest_rounded,
+                          iconColor: const Color(0xFFFF9500), // Alert Amber
+                          child: Column(
+                            children: [
+                              _buildSettingsTile(
+                                'Rescan Library',
+                                Icons.refresh_rounded,
+                                'Refresh all local document indexing.',
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Rescanning library...')),
+                                  );
+                                },
+                              ),
+                              Divider(color: colorScheme.onSurface.withValues(alpha: 0.05)),
+                              _buildSettingsTile(
+                                'Clear App Cache',
+                                Icons.delete_sweep_rounded,
+                                'Clears temporary ingestion data.',
+                                onTap: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Cache cleared.')),
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(height: 40),
+                      ],
+                    );
+                  }),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildBlurCircle(Color color, double size) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: [
+          BoxShadow(
+            color: color,
+            blurRadius: 100,
+            spreadRadius: 50,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSyncStatusHeader(BuildContext context, String? status) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [
+            colorScheme.primary.withValues(alpha: 0.15),
+            colorScheme.primary.withValues(alpha: 0.05),
+          ],
         ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: colorScheme.primary.withValues(alpha: 0.2),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: colorScheme.primary,
+                ),
+              ),
+              const SizedBox(width: 14),
+              Text(
+                status ?? 'Processing...',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w800,
+                  color: colorScheme.primary,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              minHeight: 6,
+              backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
+              valueColor: AlwaysStoppedAnimation(colorScheme.primary),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1020,67 +1076,106 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     required Widget child,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
     return Container(
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: colorScheme.onSurface.withValues(alpha: 0.05),
-        ),
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: [
+          BoxShadow(
+            color: iconColor.withValues(alpha: 0.1),
+            blurRadius: 40,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
-      clipBehavior: Clip.antiAlias,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(28),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: Container(
+            decoration: BoxDecoration(
+              color: isDark 
+                  ? colorScheme.surface.withValues(alpha: 0.7) 
+                  : colorScheme.surface.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(28),
+              border: Border.all(
+                color: colorScheme.onSurface.withValues(alpha: 0.12),
+                width: 1.2,
+              ),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(icon, color: iconColor, size: 22),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Row(
                     children: [
-                      Text(
-                        title,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w900,
-                          color: colorScheme.onSurface.withValues(alpha: 0.9),
-                          letterSpacing: 1.1,
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [
+                              iconColor,
+                              iconColor.withValues(alpha: 0.7),
+                            ],
+                          ),
+                          borderRadius: BorderRadius.circular(14),
+                          boxShadow: [
+                            BoxShadow(
+                              color: iconColor.withValues(alpha: 0.3),
+                              blurRadius: 10,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
+                        child: Icon(icon, color: Colors.white, size: 24),
                       ),
-                      const SizedBox(height: 2),
-                      Text(
-                        description,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      const SizedBox(width: 18),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              title,
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                                color: colorScheme.onSurface,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              description,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onSurface.withValues(alpha: 0.6),
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],
                   ),
                 ),
+                Divider(
+                  height: 1,
+                  thickness: 1,
+                  color: colorScheme.onSurface.withValues(alpha: 0.08),
+                ),
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: child,
+                ),
               ],
             ),
           ),
-          Divider(
-            height: 1,
-            color: colorScheme.onSurface.withValues(alpha: 0.05),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: child,
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -1092,34 +1187,60 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     bool isLoading = false,
     required Color color,
   }) {
-    return SizedBox(
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
       width: double.infinity,
-      child: TextButton.icon(
-        onPressed: isLoading ? null : onPressed,
-        icon: isLoading
-            ? SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: color,
-                ),
-              )
-            : Icon(icon, size: 18),
-        label: Text(
-          label.toUpperCase(),
-          style: const TextStyle(
-            fontWeight: FontWeight.w800,
-            fontSize: 13,
-            letterSpacing: 0.5,
-          ),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(18),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            color,
+            color.withValues(alpha: 0.8),
+          ],
         ),
-        style: TextButton.styleFrom(
-          backgroundColor: color.withValues(alpha: 0.1),
-          foregroundColor: color,
-          padding: const EdgeInsets.symmetric(vertical: 18),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.3),
+            blurRadius: 15,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: isLoading ? null : onPressed,
+          borderRadius: BorderRadius.circular(18),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 18),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (isLoading)
+                  SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white.withValues(alpha: 0.9),
+                    ),
+                  )
+                else
+                  Icon(icon, size: 20, color: Colors.white),
+                const SizedBox(width: 12),
+                Text(
+                  label.toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 13,
+                    letterSpacing: 1.1,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -1187,30 +1308,42 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.1)),
+        color: colorScheme.surface.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: colorScheme.onSurface.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: TextField(
         controller: controller,
         obscureText: obscure,
         onChanged: onChanged,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 15,
           fontWeight: FontWeight.w600,
           color: colorScheme.onSurface,
         ),
         decoration: InputDecoration(
+          contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
           labelText: label,
           labelStyle: TextStyle(
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.6),
             fontSize: 12,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
           ),
           hintText: hint,
           hintStyle: TextStyle(
-            color: colorScheme.onSurface.withValues(alpha: 0.2),
+            color: colorScheme.onSurface.withValues(alpha: 0.3),
           ),
           border: InputBorder.none,
           floatingLabelBehavior: FloatingLabelBehavior.always,

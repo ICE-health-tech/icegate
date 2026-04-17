@@ -116,6 +116,26 @@ class CustomAuthService {
     }
   }
 
+  /// Verify passkey registration credential
+  Future<void> verifyPasskeyRegistration(String credential) async {
+    const supabaseUrl = "https://wthislkepfufkbgiqegs.supabase.co/functions/v1";
+    final url = Uri.parse('$supabaseUrl/passkey-register');
+    try {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({'credential': credential}),
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        _logger.warning('Passkey registration verification failed: ${response.statusCode}');
+      }
+    } catch (e) {
+      _logger.severe('Error verifying passkey registration: $e');
+      throw Exception('Connection error: $e');
+    }
+  }
+
   /// Register a new user
   Future<Map<String, dynamic>> register(dynamic payload) async {
     final url = Uri.parse('$baseUrl/backend/auth/signup');

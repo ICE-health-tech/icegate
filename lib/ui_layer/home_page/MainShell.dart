@@ -146,8 +146,8 @@ class MainShell extends StatelessWidget {
     final bool wideLayout = _wideChromeLayout(context);
     final width = MediaQuery.sizeOf(context).width;
     final double responsiveSize = wideLayout
-        ? (width * 0.028).clamp(32.0, 44.0)
-        : (width * 0.24).clamp(20.0, 58.0);
+        ? (width * 0.035).clamp(32.0, 44.0)
+        : (width * 0.3).clamp(30.0, 58.0);
     final mainButton = _getMainButtonForRoute(
       context,
       currentRoute,
@@ -189,9 +189,9 @@ class MainShell extends StatelessWidget {
               right: 0,
               child: SafeArea(
                 child: SizedBox(
-                  height: 80,
+                  height: 50,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
                       child: CanvasDynamicIsland(),

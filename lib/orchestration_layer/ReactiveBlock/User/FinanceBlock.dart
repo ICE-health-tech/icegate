@@ -151,10 +151,11 @@ class FinanceBlock {
     final todayNet = txs
         .where((t) => t.transactionDate.isAfter(todayStart))
         .fold(0.0, (sum, t) {
-      if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
-      if (t.type == 'expense' || t.type == 'investment') return sum - t.amount;
-      return sum;
-    });
+          if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
+          if (t.type == 'expense' || t.type == 'investment')
+            return sum - t.amount;
+          return sum;
+        });
 
     return todayNet;
   });
@@ -163,7 +164,7 @@ class FinanceBlock {
   late final sharpeRatio = computed(() {
     final history = historicalNetWorth.value;
     if (history.length < 5) return 0.0;
-    
+
     final returns = <double>[];
     for (int i = 1; i < history.length; i++) {
       if (history[i - 1] > 0) {
@@ -188,12 +189,20 @@ class FinanceBlock {
     final txs = transactions.value;
 
     for (int i = 0; i < 30; i++) {
-      final dateThreshold = DateTime(now.year, now.month, now.day).subtract(Duration(days: i));
-      final futureTxs = txs.where((t) => t.transactionDate.isAfter(dateThreshold)).fold(0.0, (sum, t) {
-        if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
-        if (t.type == 'expense' || t.type == 'investment') return sum - t.amount;
-        return sum;
-      });
+      final dateThreshold = DateTime(
+        now.year,
+        now.month,
+        now.day,
+      ).subtract(Duration(days: i));
+      final futureTxs = txs
+          .where((t) => t.transactionDate.isAfter(dateThreshold))
+          .fold(0.0, (sum, t) {
+            if (t.type == 'income' || t.type == 'savings')
+              return sum + t.amount;
+            if (t.type == 'expense' || t.type == 'investment')
+              return sum - t.amount;
+            return sum;
+          });
       series.add(currentNW - futureTxs);
     }
     return series.reversed.toList();
@@ -230,6 +239,37 @@ class FinanceBlock {
     return (1 - (exp / inc)).clamp(0.0, 1.0) * 100;
   });
 
+  /// Monthly budget limit (Default $1500)
+  final monthlyBudgetLimit = signal<double>(1500.0);
+
+  /// Total billing for subscriptions and bills this month
+  late final totalSubscriptionsBilling = computed(() {
+    final now = DateTime.now();
+    return transactions.value
+        .where(
+          (t) =>
+              (t.category == 'subscriptions' || t.category == 'bills') &&
+              t.type == 'expense' &&
+              t.transactionDate.month == now.month &&
+              t.transactionDate.year == now.year,
+        )
+        .fold(0.0, (sum, t) => sum + t.amount);
+  });
+
+  /// Remaining budget for the month
+  late final remainingBudget = computed(() {
+    return (monthlyBudgetLimit.value - totalSubscriptionsBilling.value).clamp(
+      0.0,
+      double.infinity,
+    );
+  });
+
+  /// Budget usage percentage (0.0 to 100.0+)
+  late final budgetUsagePercent = computed(() {
+    if (monthlyBudgetLimit.value <= 0) return 0.0;
+    return (totalSubscriptionsBilling.value / monthlyBudgetLimit.value) * 100;
+  });
+
   /// Next major milestone (next $5000 or $10000 depending on current balance)
   late final nextMilestone = computed(() {
     final balance = totalBalance.value;
@@ -250,9 +290,12 @@ class FinanceBlock {
     double start = 0;
     if (target == 1000) {
       start = 0;
-    } else if (target == 5000) start = 1000;
-    else if (target == 10000) start = 5000;
-    else start = target - 10000;
+    } else if (target == 5000)
+      start = 1000;
+    else if (target == 10000)
+      start = 5000;
+    else
+      start = target - 10000;
 
     final range = target - start;
     if (range <= 0) return 1.0;
@@ -302,7 +345,8 @@ class FinanceBlock {
       }
 
       // Rule 2: Daily Snapshot
-      if (lastSnapshotTime == null || DateTime.now().difference(lastSnapshotTime!).inDays >= 1) {
+      if (lastSnapshotTime == null ||
+          DateTime.now().difference(lastSnapshotTime!).inDays >= 1) {
         shouldSave = true;
       }
 

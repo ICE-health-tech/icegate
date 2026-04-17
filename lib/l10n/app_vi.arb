@@ -1,4 +1,37 @@
 {
+  "quick_actions": "Hành động nhanh",
+  "new_label": "Tạo mới",
+  "my_projects_label": "Dự án của tôi",
+  "completed_projects_label": "Dự án đã xong",
+  "active_tasks_label": "Nhiệm vụ đang chạy",
+  "recent_notes_label": "Ghi chú gần đây",
+  "project_drive_sync": "Đồng bộ Mây",
+  "project_drive_sync_tooltip": "Đồng bộ với Google Drive",
+  "project_sync_success": "Đồng bộ thành công!",
+  "project_sync_failed": "Đồng bộ thất bại: {error}",
+  "@project_sync_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "project_created_msg": "Đã tạo dự án với đầy đủ thành phần!",
+  "project_create_failed": "Lỗi khi tạo dự án: {error}",
+  "@project_create_failed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "create_project_title": "Tạo Widget Dự án",
+  "project_name_label": "Tên Dự án",
+  "project_name_required": "Vui lòng nhập tên",
+  "description": "Mô tả",
+  "project_initial_investment_label": "Đầu tư ban đầu",
+  "project_internal_path_label": "Đường dẫn nội bộ (Tùy chọn)",
+  "create": "TẠO",
   "@@locale": "vi",
   "helloWorld": "Chào thế giới!",
   "app_title": "Ice Gate",
@@ -432,7 +465,7 @@
   "social_feat": "Chiến công",
   "add_app_plugin": "Thêm Plugin ứng dụng",
   "plugin_desc": "Thêm tính năng mới cho giao diện của bạn",
-  "plugin_ssh": "Điều khiển SSH",
+  "plugin_ssh": "SSH",
   "plugin_ssh_opencode": "Điều khiển OpenCode SSH",
   "plugin_ssh_desc": "Terminal hỗ trợ AI để điều phối hệ thống từ xa",
   "config_ai_prompt": "Cấu hình Prompt AI",
@@ -587,10 +620,10 @@
   "how_it_works": "Cách thức hoạt động",
   "scoring_intro": "Hệ thống điểm số của chúng tôi đánh giá hiệu suất hàng ngày của bạn qua bốn trụ cột chính. Điểm được thưởng dựa trên tính nhất quán, các mốc quan trọng và hiệu quả.",
   "scoring_footer": "Điểm số được xử lý bởi Life Orchestration Engine (LOE) vào mỗi nửa đêm giờ UTC.",
-  "canvas_notification_center": "Trung tâm thông báo",
+  "canvas_notification_center": "Thông báo",
   "canvas_notification_desc": "Điều khiển và kiểm soát mọi thông báo hệ thống",
-  "canvas_goal_center": "Tiến hóa mục tiêu",
-  "canvas_goal_desc": "Điều chỉnh các tham số mục tiêu chiến thuật",
+  "canvas_goal_center": "Mục tiêu",
+  "canvas_goal_desc": "Điều chỉnh mục tiêu",
   "gps_permissions_required": "Yêu cầu quyền GPS để theo dõi.",
   "gps_title": "THEO DÕI GPS",
   "gps_disconnect_tooltip": "Ngắt kết nối thiết bị",
@@ -738,6 +771,7 @@
       }
     }
   },
+  "recent_updates": "Cập nhật gần đây",
   "project_note_untitled": "Chưa đặt tên",
   "project_unknown_date": "Không rõ ngày",
   "project_delete_note_title": "Xóa ghi chú",
@@ -829,7 +863,7 @@
   "member_status": "Thành viên",
   "change_username": "Thay đổi tên người dùng",
   "remaining": "Còn lại",
-  "notification_manager_title": "TRUNG TÂM THÔNG BÁO",
+  "notification_manager_title": "Thông báo",
   "notification_hunter_hub": "Trung tâm Thợ săn",
   "notification_tab_active": "ĐANG CHẠY",
   "notification_tab_reminders": "NHẮC NHỞ",
@@ -860,7 +894,7 @@
   "notification_add_wisdom_title": "Thêm Trí Tuệ",
   "notification_wisdom_content": "Nội dung Trí Tuệ",
   "notification_wisdom_author": "Tác giả",
-  "notification_inbox_title": "TRUNG TÂM THÔNG BÁO",
+  "notification_inbox_title": "Thông báo",
   "notification_mission_history": "Lịch sử nhiệm vụ",
   "notification_mission_success": "NHIỆM VỤ THÀNH CÔNG",
   "notification_focus_complete": "TẬP TRUNG HOÀN TẤT",
@@ -963,5 +997,23 @@
   "journal": "Nhật ký",
   "social_notes": "Ghi chú Tinh thần",
   "btn_send_feedback": "Gửi phản hồi",
-  "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới"
+  "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới" ,
+  "sync_engine_title": "Sync Engine",
+  "system_health": "SỨC KHỎE HỆ THỐNG",
+  "uptime": "THỜI GIAN HOẠT ĐỘNG",
+  "sync_method": "PHƯƠNG THỨC ĐỒNG BỘ",
+  "refresh_rate": "TẦN SUẤT LÀM MỚI",
+  "initialize_drive": "KHỞI TẠO DRIVE",
+  "test_connection": "KIỂM TRA KẾT NỐI",
+  "recent_activity": "HOẠT ĐỘNG GẦN ĐÂY",
+  "live_logs": "NHẬT KÝ TRỰC TIẾP",
+  "select_folder": "CHỌN THƯ MỤC",
+  "my_drive": "Drive của tôi",
+  "breadcrumb_separator": ">",
+  "drive_notion_complete": "Drive → Notion Hoàn tất",
+  "scheduled_sweep": "Quét định kỳ",
+  "standby": "CHỜ",
+  "target_folder_id": "ID THƯ MỤC MỤC TIÊU",
+  "internal_integration_token": "MÃ TÍCH HỢP NỘI BỘ",
+  "database_schema_id": "ID SCHEMA CƠ SỞ DỮ LIỆU"
 }

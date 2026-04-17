@@ -104,15 +104,15 @@ class SettingsWidget extends StatelessWidget {
       children: [
         Padding(
           padding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
-          child: Text(
-            title.toUpperCase(),
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w900,
-              color: colorScheme.primary,
-              letterSpacing: 1.5,
-            ),
-          ),
+          // child: Text(
+          //   title.toUpperCase(),
+          //   style: TextStyle(
+          //     fontSize: 12,
+          //     fontWeight: FontWeight.w900,
+          //     color: colorScheme.primary,
+          //     letterSpacing: 1.5,
+          //   ),
+          // ),
         ),
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -213,33 +213,13 @@ class SettingsWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title ?? AppLocalizations.of(context)!.app_settings_title),
-        toolbarHeight: 70,
-        leadingWidth: 0,
-        leading: const SizedBox.shrink(),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.home_rounded, size: 30),
-            onPressed: () {
-              WidgetNavigatorAction.smartPop(context);
-            },
-          ),
-          IconButton(
-            icon: const Icon(Icons.grid_view, size: 30),
-            onPressed: () => context.go('/canvas'),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
       body: SingleChildScrollView(
         child: Column(
           children: <Widget>[
-            _buildProfileHeader(context),
+            // _buildProfileHeader(context),
 
             // 1. Account Settings
+            SizedBox(height: 20),
             _buildSettingSection(
               context: context,
               title: AppLocalizations.of(context)!.account_section,
@@ -338,8 +318,7 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
 
-            // 3. Health Settings
-          
+
 
             // 4. Modality Settings: Social, Projects
 
@@ -378,22 +357,22 @@ class SettingsWidget extends StatelessWidget {
               ],
             ),
 
-            _buildSettingSection(
-              context: context,
-              title: "Developer Tools",
-              children: [
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: "Reset Database",
-                  subtitle: "Wipe all local data",
-                  icon: Icons.delete_forever_rounded,
-                  color: Colors.red,
-                  onTap: () => _showResetDatabaseDialog(context),
-                ),
-              ],
-            ),
+            // _buildSettingSection(
+            //   context: context,
+            //   title: "Developer Tools",
+            //   children: [
+            //     _buildPremiumSettingTile(
+            //       context: context,
+            //       title: "Reset Database",
+            //       subtitle: "Wipe all local data",
+            //       icon: Icons.delete_forever_rounded,
+            //       color: Colors.red,
+            //       onTap: () => _showResetDatabaseDialog(context),
+            //     ),
+            //   ],
+            // ),
 
-            const SizedBox(height: 40),
+            // const SizedBox(height: 40),
           ],
         ),
       ),
@@ -633,18 +612,23 @@ class SettingsWidget extends StatelessWidget {
                         : () async {
                             final message = textController.text;
                             if (message.isNotEmpty) {
-                              final success = await feedbackBlock.submitFeedback(
-                                message: message,
-                                type: selectedType,
-                              );
+                              final success = await feedbackBlock
+                                  .submitFeedback(
+                                    message: message,
+                                    type: selectedType,
+                                  );
                               if (context.mounted) {
                                 Navigator.of(context).pop();
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   SnackBar(
-                                    content: Text(success
-                                        ? "Cảm ơn phản hồi của bạn! / Thank you for your feedback!"
-                                        : "Lỗi khi gửi phản hồi. / Error sending feedback."),
-                                    backgroundColor: success ? Colors.green : Colors.red,
+                                    content: Text(
+                                      success
+                                          ? "Cảm ơn phản hồi của bạn! / Thank you for your feedback!"
+                                          : "Lỗi khi gửi phản hồi. / Error sending feedback.",
+                                    ),
+                                    backgroundColor: success
+                                        ? Colors.green
+                                        : Colors.red,
                                   ),
                                 );
                               }

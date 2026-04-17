@@ -13,6 +13,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import 'package:provider/provider.dart';
+import 'package:ice_gate/utils/l10n_extensions.dart';
 
 class CreateProjectDialog extends StatefulWidget {
   const CreateProjectDialog({super.key});
@@ -172,8 +173,8 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         if (mounted) {
           Navigator.of(context).pop();
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Project created with all components!'),
+            SnackBar(
+              content: Text(context.l10n.project_created_msg),
             ),
           );
         }
@@ -182,7 +183,7 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Error creating project: $e'),
+              content: Text(context.l10n.project_create_failed(e.toString())),
               backgroundColor: Colors.red,
             ),
           );
@@ -205,19 +206,19 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Create Project Widget',
+                  context.l10n.create_project_title,
                   style: Theme.of(context).textTheme.headlineSmall,
                 ),
                 const SizedBox(height: 24),
                 TextFormField(
                   controller: _nameController,
-                  decoration: const InputDecoration(
-                    labelText: 'Project Name',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.project_name_label,
+                    border: const OutlineInputBorder(),
                   ),
                   validator: (value) {
                     if (value == null || value.isEmpty) {
-                      return 'Please enter a name';
+                      return context.l10n.project_name_required;
                     }
                     return null;
                   },
@@ -225,17 +226,17 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _descriptionController,
-                  decoration: const InputDecoration(
-                    labelText: 'Description',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.description,
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _spendingController,
-                  decoration: const InputDecoration(
-                    labelText: 'Initial Investment',
-                    border: OutlineInputBorder(),
+                  decoration: InputDecoration(
+                    labelText: context.l10n.project_initial_investment_label,
+                    border: const OutlineInputBorder(),
                     prefixText: '\$',
                   ),
                   keyboardType: TextInputType.number,
@@ -244,10 +245,10 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                 const SizedBox(height: 16),
                 TextFormField(
                   controller: _urlController,
-                  decoration: const InputDecoration(
-                    labelText: 'Internal Path (Optional)',
+                  decoration: InputDecoration(
+                    labelText: context.l10n.project_internal_path_label,
                     hintText: '/projects/custom-path',
-                    border: OutlineInputBorder(),
+                    border: const OutlineInputBorder(),
                   ),
                 ),
                 const SizedBox(height: 24),
@@ -256,12 +257,12 @@ class _CreateProjectDialogState extends State<CreateProjectDialog> {
                   children: [
                     TextButton(
                       onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                      child: Text(context.l10n.cancel),
                     ),
                     const SizedBox(width: 8),
                     FilledButton(
                       onPressed: _handleSubmit,
-                      child: const Text('Create'),
+                      child: Text(context.l10n.create),
                     ),
                   ],
                 ),

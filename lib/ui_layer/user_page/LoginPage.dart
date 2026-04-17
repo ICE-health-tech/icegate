@@ -1,12 +1,13 @@
 import 'dart:ui';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/security_routing_layer/Routing/url_route/internal_route.dart';
-import 'package:ice_gate/ui_layer/animation_page/PrismEntryPage.dart'; // For TacticalGrid
+import 'package:ice_gate/ui_layer/ReusableWidget/SnowSilverBackground.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -19,8 +20,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  late final AnimationController _hudRotationController;
-  late final AnimationController _logoPulseController;
+  late AnimationController _hudRotationController;
+  late AnimationController _logoPulseController;
+  late AnimationController _scanController;
+  late AnimationController _appearanceController;
+  late AnimationController _shineController;
 
   late AuthBlock _authBlock;
   late final void Function() _disposeEffect;
@@ -32,25 +36,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     _hudRotationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 20),
+      duration: const Duration(seconds: 30),
     )..repeat();
 
     _logoPulseController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 8),
     )..repeat(reverse: true);
+
+    _scanController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 6),
+    )..repeat();
+
+    _appearanceController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    )..forward();
+
+    _shineController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
 
     // Redirect when authenticated
     _disposeEffect = effect(() {
       if (_authBlock.status.value == AuthStatus.authenticated) {
         if (mounted) {
-          final intendedPath = intendedPathNotifier.value;
-          if (intendedPath != null && intendedPath.isNotEmpty) {
-            debugPrint("📌 [LoginPage] Redirecting to intended path via intro: $intendedPath");
-            context.go('/intro');
-          } else {
-            context.go('/intro');
-          }
+          context.go('/intro');
         }
       }
     });
@@ -58,9 +71,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   @override
   void dispose() {
-    _disposeEffect(); // Stop watching the signal
+    _disposeEffect();
     _hudRotationController.dispose();
     _logoPulseController.dispose();
+    _scanController.dispose();
+    _appearanceController.dispose();
+    _shineController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     super.dispose();
@@ -78,182 +94,273 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: const Color(0xFF010A15), // Deep Midnight Blue
-        body: Stack(
-          children: [
-            // 1. Tactical Grid Background (Sharp/Striking)
-            const Positioned.fill(child: TacticalGridBackground()),
+        backgroundColor: Colors.black, // High-end Black base
+        body: SnowSilverBackground(
+          child: Stack(
+            children: [
+              // 1. Floating Tech Ornaments
+              _buildTechOrnaments(),
 
-            // 2. Floating Tech Ornaments (HUD Style)
-            Positioned(
-              top: 100,
-              left: -50,
-              child: RotationTransition(
-                turns: _hudRotationController,
-                child: _CircularHUD(
-                  size: 200,
-                  color: const Color(0xFFE1F5FE).withOpacity(0.1),
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 100,
-              right: -50,
-              child: RotationTransition(
-                turns: _hudRotationController,
-                child: _CircularHUD(
-                  size: 250,
-                  color: const Color(0xFF80DEEA).withOpacity(0.05),
-                ),
-              ),
-            ),
-
-            // 3. Main Content
-            Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    // Sharp Glass Card
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: BackdropFilter(
-                        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                        child: Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.03),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: Colors.white.withOpacity(0.1),
-                              width: 1,
-                            ),
-                          ),
-                          child: Column(
-                            children: [
-                              // App Icon / Logo with Neon Glow
-                              ScaleTransition(
-                                scale: Tween<double>(begin: 1.0, end: 1.05)
-                                    .animate(
-                                      CurvedAnimation(
-                                        parent: _logoPulseController,
-                                        curve: Curves.easeInOut,
-                                      ),
-                                    ),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFE1F5FE).withOpacity(0.05),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(0xFFE1F5FE).withOpacity(0.2),
-                                      width: 1,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: const Color(0xFF80DEEA).withOpacity(0.1),
-                                        blurRadius: 30,
-                                      ),
-                                    ],
-                                  ),
-                                  child: const Icon(
-                                    Icons.ac_unit_rounded,
-                                    size: 60,
-                                    color: Color(0xFFE1F5FE),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 24),
-                              const Text(
-                                'ICE GATE',
-                                style: TextStyle(
-                                  fontSize: 28,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 8.0,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(height: 40),
-
-                              // Error Display
-                              if (error != null)
-                                _buildError(error),
-
-                              // Form
-                              _buildModernField(
-                                controller: _emailController,
-                                hint: AppLocalizations.of(context)!.username_email_hint,
-                                icon: Icons.alternate_email_rounded,
-                                keyboardType: TextInputType.emailAddress,
-                              ),
-                              const SizedBox(height: 16),
-                              _buildModernField(
-                                controller: _passwordController,
-                                hint: AppLocalizations.of(context)!.password_hint,
-                                icon: Icons.vpn_key_rounded,
-                                obscureText: true,
-                              ),
-                              const SizedBox(height: 32),
-
-                              // Login Button
-                              _buildLoginButton(isLoading, context),
-                              const SizedBox(height: 20),
-
-                              // Auth Alternatives
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: _buildIconButton(
-                                      icon: Icons.fingerprint_rounded,
-                                      label: AppLocalizations.of(context)!.secure_login,
-                                      onPressed: isLoading ? null : _handleSecureLogin,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: _buildIconButton(
-                                      icon: Icons.g_mobiledata_rounded,
-                                      label: AppLocalizations.of(context)!.google_login,
-                                      onPressed: isLoading ? null : _handleGoogleSignIn,
-                                      isGmail: true,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
+              // 2. Main Content
+              Center(
+                child: FadeTransition(
+                  opacity: _appearanceController,
+                  child: SlideTransition(
+                    position:
+                        Tween<Offset>(
+                          begin: const Offset(0, 0.1),
+                          end: Offset.zero,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: _appearanceController,
+                            curve: Curves.easeOutCubic,
                           ),
                         ),
+                    child: SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          _buildMainCard(isLoading, error, context),
+                          const SizedBox(height: 40),
+                          _buildFooter(isLoading, context),
+                        ],
                       ),
                     ),
-
-                    const SizedBox(height: 32),
-
-                    // Footer Options
-                    _buildFooter(isLoading, context),
-                  ],
+                  ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       );
     });
   }
 
+  Widget _buildTechOrnaments() {
+    return Stack(
+      children: [
+        Positioned(
+          top: -100,
+          right: -100,
+          child: RotationTransition(
+            turns: _hudRotationController,
+            child: _CoolerHUD(
+              size: 400,
+              color: Colors.white.withValues(alpha: 0.1),
+            ),
+          ),
+        ),
+        Positioned(
+          bottom: -150,
+          left: -150,
+          child: RotationTransition(
+            turns: Tween<double>(
+              begin: 1.0,
+              end: 0.0,
+            ).animate(_hudRotationController),
+            child: _CoolerHUD(
+              size: 500,
+              color: const Color(0xFF8E8E93).withValues(alpha: 0.15),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMainCard(bool isLoading, String? error, BuildContext context) {
+    return Stack(
+      children: [
+        ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.7), // Deeper Glass
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: const Color(0xFFC7C7CC).withValues(alpha: 0.3), // Sharp Silver Border
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 40,
+                    spreadRadius: -10,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildLogoSection(),
+                  const SizedBox(height: 48),
+                  if (error != null) _buildError(error),
+                  _buildModernField(
+                    controller: _emailController,
+                    hint: AppLocalizations.of(context)!.username_email_hint,
+                    icon: Icons.alternate_email_rounded,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 20),
+                  _buildModernField(
+                    controller: _passwordController,
+                    hint: AppLocalizations.of(context)!.password_hint,
+                    icon: Icons.lock_outline_rounded,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 40),
+                  _buildLoginButton(isLoading, context),
+                  const SizedBox(height: 24),
+                  _buildAuthAlternatives(isLoading, context),
+                ],
+              ),
+            ),
+          ),
+        ),
+        _buildShineSweep(),
+      ],
+    );
+  }
+
+  Widget _buildShineSweep() {
+    return AnimatedBuilder(
+      animation: _shineController,
+      builder: (context, child) {
+        return ClipRRect(
+          borderRadius: BorderRadius.circular(32),
+          child: SizedBox(
+            width: double.infinity,
+            height: 520, // Approximate height of the card
+            child: CustomPaint(
+              painter: _ShinePainter(progress: _shineController.value),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildLogoSection() {
+    return Column(
+      children: [
+        AnimatedBuilder(
+          animation: _logoPulseController,
+          builder: (context, child) {
+            final double glow =
+                20 + math.sin(_logoPulseController.value * math.pi) * 15;
+            return Container(
+              padding: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: const Color(0xFFC7C7CC).withValues(alpha: 0.05),
+                  boxShadow: [
+                    BoxShadow(
+                      color: const Color(0xFFC7C7CC).withValues(alpha: 0.2),
+                      blurRadius: glow,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                  border: Border.all(
+                    color: const Color(0xFFC7C7CC).withValues(alpha: 0.2),
+                    width: 1,
+                  ),
+                ),
+              child: AnimatedBuilder(
+                animation: _logoPulseController,
+                builder: (context, child) {
+                  return ShaderMask(
+                    shaderCallback: (bounds) {
+                      return LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Colors.white.withValues(alpha: 0.8),
+                          Colors.white,
+                          Colors.white.withValues(alpha: 0.8),
+                        ],
+                        stops: [
+                          (_logoPulseController.value - 0.2).clamp(0.0, 1.0),
+                          _logoPulseController.value,
+                          (_logoPulseController.value + 0.2).clamp(0.0, 1.0),
+                        ],
+                      ).createShader(bounds);
+                    },
+                    child: const Icon(
+                      Icons.ac_unit_rounded,
+                      size: 48,
+                      color: Color(0xFF8E8E93),
+                    ),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+        const SizedBox(height: 24),
+        ShaderMask(
+          shaderCallback: (bounds) => const LinearGradient(
+            colors: [Color(0xFFE5E5EA), Colors.white],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ).createShader(bounds),
+          child: const Text(
+            'ICE GATE',
+            style: TextStyle(
+              fontSize: 28,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 10.0,
+              color: Colors.white,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAuthAlternatives(bool isLoading, BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: _buildIconButton(
+            icon: Icons.fingerprint_rounded,
+            label: "",
+            onPressed: isLoading ? null : _handleSecureLogin,
+          ),
+        ),
+        const SizedBox(width: 16),
+        Expanded(
+          child: _buildIconButton(
+            icon: Icons.g_mobiledata_rounded,
+            label: AppLocalizations.of(context)!.google_login,
+            onPressed: isLoading ? null : _handleGoogleSignIn,
+            isGmail: true,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildError(String error) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
-        color: Colors.redAccent.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.redAccent.withOpacity(0.3)),
+        color: Colors.redAccent.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.redAccent.withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline_rounded, color: Colors.redAccent, size: 18),
-          const SizedBox(width: 8),
+          const Icon(
+            Icons.error_outline_rounded,
+            color: Colors.redAccent,
+            size: 20,
+          ),
+          const SizedBox(width: 12),
           Expanded(
             child: Text(
               error,
@@ -272,38 +379,66 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Widget _buildLoginButton(bool isLoading, BuildContext context) {
     return Container(
       width: double.infinity,
-      height: 56,
+      height: 60,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(12),
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE0F7FA), Color(0xFF80DEEA)],
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          colors: [
+            const Color(0xFFD1D1D6), // Bright Silver
+            const Color(0xFF8E8E93), // Brushed Chrome
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE0F7FA).withOpacity(0.3),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: Colors.white.withValues(alpha: 0.1),
+            blurRadius: 10,
+            offset: const Offset(-2, -2),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(4, 8),
           ),
         ],
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.4),
+          width: 0.5,
+        ),
       ),
       child: ElevatedButton(
-        key: const ValueKey('login_btn'),
-        onPressed: isLoading ? null : _handleLogin,
+        onPressed: isLoading
+            ? null
+            : () {
+                HapticFeedback.mediumImpact();
+                _handleLogin();
+              },
         style: ElevatedButton.styleFrom(
           backgroundColor: Colors.transparent,
           shadowColor: Colors.transparent,
-          foregroundColor: const Color(0xFF01579B),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          foregroundColor: Colors.black, // Dark text on silver button
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
         ),
         child: isLoading
             ? const SizedBox(
                 height: 24,
                 width: 24,
-                child: CircularProgressIndicator(color: Color(0xFF01579B), strokeWidth: 3),
+                child: CircularProgressIndicator(
+                  color: Colors.black,
+                  strokeWidth: 3,
+                ),
               )
             : Text(
                 AppLocalizations.of(context)!.go_to_gate.toUpperCase(),
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w900, letterSpacing: 2.0),
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 4.0,
+                  color: Colors.black,
+                ),
               ),
       ),
     );
@@ -318,24 +453,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           child: Text(
             AppLocalizations.of(context)!.guest_access,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.4),
               fontWeight: FontWeight.bold,
               fontSize: 11,
               letterSpacing: 2.0,
             ),
           ),
         ),
+        const SizedBox(width: 10),
         Container(
           width: 4,
           height: 4,
-          decoration: BoxDecoration(color: Colors.white.withOpacity(0.1), shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: const Color(0xFF8E8E93).withValues(alpha: 0.3),
+            shape: BoxShape.circle,
+          ),
         ),
+        const SizedBox(width: 10),
         TextButton(
           onPressed: () {},
           child: Text(
             AppLocalizations.of(context)!.enroll_hub,
             style: const TextStyle(
-              color: Color(0xFFE1F5FE),
+              color: Color(0xFFE5E5EA),
               fontWeight: FontWeight.w900,
               fontSize: 11,
               letterSpacing: 2.0,
@@ -346,42 +486,50 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-
   Widget _buildIconButton({
     required IconData icon,
     required String label,
     required VoidCallback? onPressed,
     bool isGmail = false,
   }) {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
-      ),
-      child: InkWell(
-        onTap: onPressed,
-        borderRadius: BorderRadius.circular(20),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
-              color: isGmail ? Colors.white : const Color(0xFF80DEEA),
-              size: isGmail ? 28 : 24,
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+        child: Container(
+          height: 60,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
+          ),
+          child: InkWell(
+            onTap: () {
+              HapticFeedback.lightImpact();
+              onPressed?.call();
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  icon,
+                  color: const Color(0xFFE5E5EA).withValues(alpha: 0.8),
+                  size: isGmail ? 28 : 22,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  label.split(' ').first, // Symbolic/Minimal label
+                  style: TextStyle(
+                    color: const Color(0xFFE5E5EA),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(width: 10),
-            Text(
-              label,
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.7),
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 1.0,
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
@@ -394,60 +542,70 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     bool obscureText = false,
     TextInputType? keyboardType,
   }) {
-    return TextField(
-      controller: controller,
-      obscureText: obscureText,
-      keyboardType: keyboardType,
-      style: const TextStyle(
-        color: Colors.white,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 1.2,
-      ),
-      decoration: InputDecoration(
-        hintText: hint,
-        hintStyle: TextStyle(
-          color: Colors.white.withOpacity(0.2),
-          fontSize: 12,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1.5,
-        ),
-        prefixIcon: Icon(icon, size: 18, color: const Color(0xFF80DEEA)),
-        filled: true,
-        fillColor: Colors.black.withOpacity(0.2),
-        contentPadding: const EdgeInsets.symmetric(
-          vertical: 18,
-          horizontal: 20,
-        ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-        ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
-        ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE1F5FE), width: 1.5),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: TextField(
+          controller: controller,
+          obscureText: obscureText,
+          keyboardType: keyboardType,
+          style: const TextStyle(
+            color: Color(0xFFE5E5EA),
+            fontWeight: FontWeight.w600,
+            letterSpacing: 1.2,
+          ),
+          decoration: InputDecoration(
+            hintText: hint.toUpperCase(),
+            hintStyle: TextStyle(
+              color: const Color(0xFFE5E5EA).withValues(alpha: 0.4),
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2.0,
+            ),
+            prefixIcon: Icon(
+              icon,
+              size: 20,
+              color: const Color(0xFFE5E5EA).withValues(alpha: 0.6),
+            ),
+            filled: true,
+            fillColor: Colors.black.withValues(alpha: 0.1),
+            contentPadding: const EdgeInsets.symmetric(
+              vertical: 20,
+              horizontal: 24,
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: BorderSide(
+                color: Colors.white.withValues(alpha: 0.1),
+              ),
+            ),
+            focusedBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(16),
+              borderSide: const BorderSide(
+                color: Color(0xFFE5E5EA),
+                width: 1.5,
+              ),
+            ),
+          ),
         ),
       ),
     );
   }
 
   Future<void> _handleSecureLogin() async {
-    // Hide keyboard to ensure the native biometric/passkey dialog has no UI interference
     FocusScope.of(context).unfocus();
-    
     try {
-      // Small pause after hiding keyboard
       await Future.delayed(const Duration(milliseconds: 300));
-      
-      // First attempt biometric (FaceID/TouchID)
+      if (!mounted) return;
       final success = await _authBlock.loginWithBiometrics(context);
       if (!success && mounted) {
-        // If biometric fails or cancelled, we can offer Passkey as second attempt
-        // or just let the user try again. For "Gate" experience, we'll auto-trigger passkey
-        // if the device supports it but biometrics weren't the winning path.
         await _authBlock.loginWithPasskey(context);
       }
     } catch (e) {
@@ -459,7 +617,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                 context,
               )!.msg_secure_login_failed(e.toString()),
             ),
-            backgroundColor: Colors.redAccent,
           ),
         );
       }
@@ -469,7 +626,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleLogin() async {
     final email = _emailController.text.trim();
     final password = _passwordController.text.trim();
-
     if (email.isEmpty || password.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -478,7 +634,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       );
       return;
     }
-
     await _authBlock.login(email, password, context);
   }
 
@@ -489,65 +644,58 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleGoogleSignIn() async {
     try {
       await _authBlock.signInWithGoogle();
-      // The session change will be picked up by the 'effect' in initState
-      // which already redirects to /intro. 
-      // But we can add a fallback check here if needed.
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Google Sign-In Error: $e')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Google Sign-In Error: $e')));
       }
     }
   }
 }
 
-class _CircularHUD extends StatelessWidget {
+class _CoolerHUD extends StatelessWidget {
   final Color color;
   final double size;
-  const _CircularHUD({required this.color, required this.size});
+  const _CoolerHUD({required this.color, required this.size});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(color: color.withOpacity(0.5), width: 1),
-      ),
       child: Stack(
         alignment: Alignment.center,
         children: [
+          // Hexagon Ring
+          CustomPaint(
+            size: Size(size, size),
+            painter: _HexagonPainter(color: color.withValues(alpha: 0.5)),
+          ),
+          // Dashed Ring
           Container(
-            width: size * 0.8,
-            height: size * 0.8,
+            width: size * 0.7,
+            height: size * 0.7,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              border: Border.all(color: color.withOpacity(0.2), width: 2),
+              border: Border.all(
+                color: color.withValues(alpha: 0.3),
+                width: 1,
+                style: BorderStyle.solid,
+              ),
             ),
           ),
-          Container(
-            width: size * 0.6,
-            height: size * 0.6,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              border: Border.all(color: color.withOpacity(0.1), width: 8),
-            ),
-          ),
-          // Small dots or accents
+          // Crosshair
           for (int i = 0; i < 4; i++)
             Transform.rotate(
-              angle: i * (3.14159 / 2),
+              angle: i * (math.pi / 2),
               child: Align(
                 alignment: Alignment.topCenter,
                 child: Container(
-                  width: 4,
-                  height: 10,
-                  decoration: BoxDecoration(
-                    color: color,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
+                  width: 2,
+                  height: size * 0.1,
+                  margin: EdgeInsets.only(top: size * 0.05),
+                  color: color,
                 ),
               ),
             ),
@@ -555,4 +703,80 @@ class _CircularHUD extends StatelessWidget {
       ),
     );
   }
+}
+
+class _HexagonPainter extends CustomPainter {
+  final Color color;
+  _HexagonPainter({required this.color});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+
+    final path = Path();
+    final double radius = size.width / 2;
+    for (int i = 0; i < 6; i++) {
+      double angle = (i * 60) * math.pi / 180;
+      double x = size.width / 2 + radius * math.cos(angle);
+      double y = size.height / 2 + radius * math.sin(angle);
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class _ShinePainter extends CustomPainter {
+  final double progress;
+
+  _ShinePainter({required this.progress});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0 || progress >= 1) return;
+
+    final paint = Paint()
+      ..shader =
+          LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            stops: const [0.0, 0.5, 1.0],
+            colors: [
+              Colors.white.withValues(alpha: 0.0),
+              Colors.white.withValues(alpha: 0.2),
+              Colors.white.withValues(alpha: 0.0),
+            ],
+          ).createShader(
+            Rect.fromLTWH(
+              (progress * size.width * 2) - size.width,
+              0,
+              size.width,
+              size.height,
+            ),
+          );
+
+    // Draw diagonal shine
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width, size.height)
+      ..lineTo(0, size.height)
+      ..close();
+
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShinePainter oldDelegate) =>
+      oldDelegate.progress != progress;
 }

@@ -37,6 +37,13 @@ class AuthBlock {
   final username = signal<String?>(null);
   final user = signal<Map<String, dynamic>?>(null);
   final showWelcomeBack = signal<bool>(false);
+  
+  // Security Identity State
+  final hasLocalPassword = signal<bool>(true); // Default true to avoid flash
+  final isPasskeyEnrolled = signal<bool>(false);
+  
+  // Remembered user for "Identity Glance" on entry page
+  final rememberedUser = signal<Map<String, String?>?> (null);
 
   AuthBlock({
     required CustomAuthService authService,
@@ -281,6 +288,44 @@ class AuthBlock {
       return false;
     }
   }
+
+  /// Passkey Enrollment Flow (Registers this device as an authenticator)
+  Future<bool> enrollPasskey(BuildContext context) async {
+    final authUser = Supabase.instance.client.auth.currentUser;
+    if (authUser == null) return false;
+
+    print("🔑 [AuthBlock] Initiating Passkey Enrollment...");
+    try {
+      // 1. Get Registration Challenge from Backend
+      final challenge = await _authService.getPasskeyChallenge();
+      
+      // 2. Perform Passkey Registration on device
+      final credential = await _passkeyService.registerRequest(
+        userId: authUser.id,
+        username: authUser.email ?? "Ice_User",
+        challenge: challenge,
+      );
+
+      if (credential == null) {
+        throw Exception("Passkey registration canceled or failed");
+      }
+
+      // 3. Verify and Save Credential on server
+      await _authService.verifyPasskeyRegistration(credential);
+
+      print("✅ [AuthBlock] Passkey Enrollment successful.");
+      isPasskeyEnrolled.value = true;
+      
+      // Save info that we have a passkey for this user
+      await _secureStorage.setBiometricEnabled(true);
+      
+      return true;
+    } catch (e) {
+      print("❌ [AuthBlock] Passkey Enrollment failed: $e");
+      error.value = "Enrollment Error: ${e.toString()}";
+      return false;
+    }
+  }
   // --- Actions ---
 
   /// Step 1: Check for existing session (e.g. from cookies/local storage)
@@ -288,6 +333,9 @@ class AuthBlock {
   Future<void> checkSession(BuildContext context) async {
     status.value = AuthStatus.checkingSession;
     print("🔍 [AuthBlock] Checking for Supabase session...");
+    
+    // Load remembered identity for UI preview
+    await _loadRememberedUser();
 
     try {
       final session = Supabase.instance.client.auth.currentSession;
@@ -412,8 +460,14 @@ class AuthBlock {
 
         // Securely store credentials if biometric login is not yet confirmed
         // For production, you might want to ask the user before enabling this.
-        await _secureStorage.saveCredentials(email, password);
+        await _secureStorage.saveCredentials(
+          email, 
+          password,
+          displayName: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'],
+          avatarUrl: session.user.userMetadata?['avatar_url'],
+        );
         await _secureStorage.setBiometricEnabled(true);
+        await _loadRememberedUser();
 
         await fetchUser();
       } else {
@@ -454,8 +508,14 @@ class AuthBlock {
 
         // Save metadata for credential persistence
         final email = user.email ?? "GoogleUser";
-        await _secureStorage.saveCredentials(email, "GOOGLE_AUTH");
+        await _secureStorage.saveCredentials(
+          email, 
+          "GOOGLE_AUTH",
+          displayName: user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
+          avatarUrl: user.userMetadata?['avatar_url'],
+        );
         await _secureStorage.setBiometricEnabled(true);
+        await _loadRememberedUser();
       }
 
       print("✅ [AuthBlock] User account synced to database.");
@@ -499,8 +559,13 @@ class AuthBlock {
           status.value = AuthStatus.authenticated;
 
           // Save credentials after registration
-          await _secureStorage.saveCredentials(payload.email, payload.password);
+          await _secureStorage.saveCredentials(
+            payload.email, 
+            payload.password,
+            displayName: payload.userName,
+          );
           await _secureStorage.setBiometricEnabled(true);
+          await _loadRememberedUser();
 
           await fetchUser();
         } else {
@@ -571,7 +636,7 @@ class AuthBlock {
           session.user.userMetadata?['person_id'] ?? session.user.id;
       final accountResponse = await Supabase.instance.client
           .from('user_accounts')
-          .select('username')
+          .select('username, password_hash')
           .eq('person_id', personId)
           .maybeSingle();
 
@@ -582,6 +647,12 @@ class AuthBlock {
             session.user.email ??
             "SupabaseUser";
         user.value!['email'] = session.user.email;
+        
+        final hash = accountResponse?['password_hash'];
+        hasLocalPassword.value = hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
+        
+        // Also check if passkey is enrolled (locally for now, or via specific DB check if schema allows)
+        isPasskeyEnrolled.value = await _secureStorage.isBiometricEnabled();
 
         status.value = AuthStatus.authenticated;
         print(
@@ -705,5 +776,15 @@ class AuthBlock {
         }
       }
     });
+  }
+
+  Future<void> _loadRememberedUser() async {
+    final data = await _secureStorage.getRememberedUser();
+    if (data['username'] != null) {
+      rememberedUser.value = data;
+      print("🧊 [AuthBlock] Remembered user loaded: ${data['displayName'] ?? data['username']}");
+    } else {
+      rememberedUser.value = null;
+    }
   }
 }

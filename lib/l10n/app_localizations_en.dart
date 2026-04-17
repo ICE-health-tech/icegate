@@ -9,6 +9,67 @@ class AppLocalizationsEn extends AppLocalizations {
   AppLocalizationsEn([String locale = 'en']) : super(locale);
 
   @override
+  String get quick_actions => 'Quick Actions';
+
+  @override
+  String get new_label => 'New';
+
+  @override
+  String get my_projects_label => 'My Projects';
+
+  @override
+  String get completed_projects_label => 'Completed Projects';
+
+  @override
+  String get active_tasks_label => 'Active Tasks';
+
+  @override
+  String get recent_notes_label => 'Recent Notes';
+
+  @override
+  String get project_drive_sync => 'Cloud Sync';
+
+  @override
+  String get project_drive_sync_tooltip => 'Sync with Google Drive';
+
+  @override
+  String get project_sync_success => 'Sync completed successfully!';
+
+  @override
+  String project_sync_failed(String error) {
+    return 'Sync failed: $error';
+  }
+
+  @override
+  String get project_created_msg => 'Project created with all components!';
+
+  @override
+  String project_create_failed(String error) {
+    return 'Error creating project: $error';
+  }
+
+  @override
+  String get create_project_title => 'Create Project Widget';
+
+  @override
+  String get project_name_label => 'Project Name';
+
+  @override
+  String get project_name_required => 'Please enter a name';
+
+  @override
+  String get description => 'Description';
+
+  @override
+  String get project_initial_investment_label => 'Initial Investment';
+
+  @override
+  String get project_internal_path_label => 'Internal Path (Optional)';
+
+  @override
+  String get create => 'CREATE';
+
+  @override
   String get helloWorld => 'Hello World!';
 
   @override
@@ -1499,6 +1560,9 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get recent_updates => 'Recent Updates';
+
+  @override
   String get project_note_untitled => 'Untitled';
 
   @override
@@ -1991,4 +2055,58 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get feedback_subtitle => 'Report issues or suggest features';
+
+  @override
+  String get sync_engine_title => 'Sync Engine';
+
+  @override
+  String get system_health => 'SYSTEM HEALTH';
+
+  @override
+  String get uptime => 'UPTIME';
+
+  @override
+  String get sync_method => 'SYNC METHOD';
+
+  @override
+  String get refresh_rate => 'REFRESH RATE';
+
+  @override
+  String get initialize_drive => 'INITIALIZE DRIVE';
+
+  @override
+  String get test_connection => 'TEST CONNECTION';
+
+  @override
+  String get recent_activity => 'RECENT ACTIVITY';
+
+  @override
+  String get live_logs => 'LIVE LOGS';
+
+  @override
+  String get select_folder => 'SELECT FOLDER';
+
+  @override
+  String get my_drive => 'My Drive';
+
+  @override
+  String get breadcrumb_separator => '>';
+
+  @override
+  String get drive_notion_complete => 'Drive → Notion Complete';
+
+  @override
+  String get scheduled_sweep => 'Scheduled Sweep';
+
+  @override
+  String get standby => 'STANDBY';
+
+  @override
+  String get target_folder_id => 'TARGET FOLDER ID';
+
+  @override
+  String get internal_integration_token => 'INTERNAL INTEGRATION TOKEN';
+
+  @override
+  String get database_schema_id => 'DATABASE SCHEMA ID';
 }

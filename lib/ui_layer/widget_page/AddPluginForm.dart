@@ -424,6 +424,14 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         description: 'Secure terminal with AI capabilities.',
         category: PluginCategory.other,
       ),
+      // Digital wellbeing — block social media apps via Screen Time API
+      _InternalPlugin(
+        name: 'Social Blocker',
+        url: '/social/blocker',
+        icon: Icons.shield_moon_rounded,
+        description: 'Block social media apps.',
+        category: PluginCategory.productivity,
+      ),
     ];
 
     return _buildPluginGrid(internalShortcuts);

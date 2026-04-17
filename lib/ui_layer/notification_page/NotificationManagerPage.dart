@@ -12,6 +12,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -618,7 +619,121 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               ),
             ),
           ),
+        const SizedBox(height: 32),
+        _buildSystemPreferencesSection(context),
+        const SizedBox(height: 100),
       ],
+    );
+  }
+
+  Widget _buildSystemPreferencesSection(BuildContext context) {
+    // ignore: unused_local_variable
+    final blocker = context.watch<SocialBlockerBlock>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          "SYSTEM PREFERENCES",
+          style: TextStyle(
+            color: colorScheme.onSurface.withOpacity(0.5),
+            fontSize: 11,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 1.2,
+          ),
+        ),
+        const SizedBox(height: 16),
+        _buildPreferenceTile(
+          context,
+          title: "Pomodoros Reminder",
+          subtitle: "Receive notification after you finish a pomodoro or end a break.",
+          icon: Icons.notifications_active_rounded,
+          color: Colors.greenAccent,
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "on",
+                style: TextStyle(
+                  color: colorScheme.onSurface.withOpacity(0.5),
+                  fontSize: 13,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: colorScheme.onSurface.withOpacity(0.3),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        _buildPreferenceTile(
+          context,
+          title: "Live Activities",
+          subtitle: "Track focus timer and information on your Lock Screen.",
+          icon: Icons.timer_rounded,
+          color: Colors.blueAccent,
+          trailing: Switch.adaptive(
+            value: true, // Sync with Block later
+            activeColor: Colors.blueAccent,
+            onChanged: (val) {},
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPreferenceTile(
+    BuildContext context, {
+    required String title,
+    required String subtitle,
+    required IconData icon,
+    required Color color,
+    Widget? trailing,
+  }) {
+    return _buildGlassCard(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: color, size: 20),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            trailing ?? const SizedBox.shrink(),
+          ],
+        ),
+      ),
     );
   }
 

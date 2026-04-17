@@ -16,6 +16,9 @@ bucket_definitions:
       - SELECT * FROM user_accounts WHERE person_id = bucket.uid
       - SELECT * FROM detail_information WHERE person_id = bucket.uid
       - SELECT * FROM skills WHERE person_id = bucket.uid
+      - SELECT * FROM weight_logs WHERE person_id = bucket.uid
+      - SELECT * FROM exercise_logs WHERE person_id = bucket.uid
+      - SELECT * FROM focus_sessions WHERE person_id = bucket.uid
       - SELECT * FROM financial_accounts WHERE person_id = bucket.uid
       - SELECT * FROM assets WHERE person_id = bucket.uid
       - SELECT * FROM transactions WHERE person_id = bucket.uid
@@ -24,13 +27,12 @@ bucket_definitions:
       - SELECT * FROM habits WHERE person_id = bucket.uid
       - SELECT * FROM person_widgets WHERE person_id = bucket.uid
       - SELECT * FROM health_metrics WHERE person_id = bucket.uid
+      - SELECT * FROM hourly_activity_log WHERE person_id = bucket.uid
+    
       - SELECT * FROM water_logs WHERE person_id = bucket.uid
       - SELECT * FROM sleep_logs WHERE person_id = bucket.uid
-      - SELECT * FROM exercise_logs WHERE person_id = bucket.uid
-      - SELECT * FROM focus_sessions WHERE person_id = bucket.uid
       - SELECT * FROM quests WHERE person_id = bucket.uid
       - SELECT * FROM meals WHERE person_id = bucket.uid
-      - SELECT * FROM hourly_activity_log WHERE person_id = bucket.uid
       - SELECT * FROM sessions WHERE id = bucket.uid
 
   # 2. Shared Organization Data
