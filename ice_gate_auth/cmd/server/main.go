@@ -33,7 +33,7 @@ func main() {
 	// Setup Router
 	r := gin.Default()
 
-	// CORS Middleware (simplified)
+	// CORS Middleware
 	r.Use(func(c *gin.Context) {
 		c.Writer.Header().Set("Access-Control-Allow-Origin", "*")
 		c.Writer.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
@@ -45,7 +45,9 @@ func main() {
 		c.Next()
 	})
 
-	// Public Endpoints
+	// Apple App Site Association (AASA)
+	// We serve it at both the root and .well-known for maximum compatibility
+	r.GET("/apple-app-site-association", h.ServeAASA)
 	r.GET("/.well-known/apple-app-site-association", h.ServeAASA)
 
 	// API v1 Endpoints
@@ -53,8 +55,6 @@ func main() {
 	{
 		v1.POST("/register/begin", h.BeginRegistration)
 		v1.POST("/register/finish", h.FinishRegistration)
-		// To be implemented: v1.POST("/login/begin", h.BeginLogin)
-		// To be implemented: v1.POST("/login/finish", h.FinishLogin)
 	}
 
 	// Health Check

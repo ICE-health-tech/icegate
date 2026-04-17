@@ -75,7 +75,7 @@ func (h *AuthHandler) FinishRegistration(c *gin.Context) {
 		return
 	}
 
-	// Reconstruct the user (simplified for this logic)
+	// Reconstruct the user
 	user := &User{id: []byte(body.Email), displayName: body.Email}
 	session := webauthn.SessionData{Challenge: challenge}
 
@@ -105,7 +105,8 @@ func (h *AuthHandler) ServeAASA(c *gin.Context) {
 			"apps": []string{"JJ5CR7B87P.duylong.art.icegate"},
 		},
 	}
-	// Important: iOS requires the correct Content-Type without extension
+	// Important: iOS requires application/json mime type
+	// We serve it without extension support at both root and .well-known
 	c.Header("Content-Type", "application/json")
 	c.JSON(http.StatusOK, aasa)
 }

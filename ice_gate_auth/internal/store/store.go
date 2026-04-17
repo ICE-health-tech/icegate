@@ -74,7 +74,7 @@ func (s *Store) SaveCredential(userID uuid.UUID, credentialID, publicKey string)
 	return err
 }
 
-// GetCredentials retrieves all passkeys for an email
+// GetCredentialsByEmail retrieves all passkeys for an email
 func (s *Store) GetCredentialsByEmail(email string) ([]struct{ ID, Key string }, error) {
 	query := `
 		SELECT credential_id, public_key FROM public.user_passkeys
