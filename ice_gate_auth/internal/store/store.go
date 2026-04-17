@@ -2,7 +2,7 @@ package store
 
 import (
 	"context"
-	"fmt"
+	"errors"
 	"os"
 	"time"
 
@@ -17,7 +17,7 @@ type Store struct {
 func NewStore() (*Store, error) {
 	connStr := os.Getenv("DATABASE_URL")
 	if connStr == "" {
-		return nil, fmt.Errorf("DATABASE_URL environment variable is not set")
+		return nil, errors.New("DATABASE_URL environment variable is not set")
 	}
 
 	config, err := pgxpool.ParseConfig(connStr)
