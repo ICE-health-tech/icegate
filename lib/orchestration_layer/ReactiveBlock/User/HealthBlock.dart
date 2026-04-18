@@ -42,6 +42,8 @@ class HealthBlock {
   final todayCaloriesConsumed = signal<int>(0);
   final todayWeight = signal<double>(0.0);
   final latestWeight = signal<double>(0.0);
+  final dailyWeightLast30Days = signal<Map<String, double>>({});
+  final dailyWaterLast30Days = signal<Map<String, int>>({});
   final hasInitialSync = signal<bool>(false);
 
   late final totalSteps = computed(
@@ -51,6 +53,19 @@ class HealthBlock {
   late final weeklySteps = computed(() {
     return dailyStepsLast7Days.value.values
         .fold<int>(0, (sum, val) => sum + val);
+  });
+
+  late final weightTrend = computed(() {
+    final weights = dailyWeightLast30Days.value.values.where((w) => w > 0).toList();
+    if (weights.length < 2) return 0.0;
+    return weights.last - weights.first;
+  });
+
+  late final averageWater7d = computed(() {
+    final waters = dailyWaterLast30Days.value.values.toList();
+    if (waters.isEmpty) return 0.0;
+    final last7 = waters.length > 7 ? waters.sublist(waters.length - 7) : waters;
+    return last7.fold<int>(0, (sum, val) => sum + val) / 7;
   });
 
   StreamSubscription? _metricsSubscription;
@@ -147,6 +162,8 @@ class HealthBlock {
           int foundTodayExerciseMinutes = 0;
           int foundTodayFocusMinutes = 0;
           final Map<String, int> stepsLast7Days = {};
+          final Map<String, double> weightHistory = {};
+          final Map<String, int> waterHistory = {};
 
           debugPrint(
             "HealthBlock: 📊 Received ${metrics.length} metrics from DB. Today: $todayStr, Yesterday: $yesterdayStr",
@@ -190,6 +207,13 @@ class HealthBlock {
                 normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
               stepsLast7Days[dateStr] = (stepsLast7Days[dateStr] ?? 0) + steps;
             }
+
+            // Track weight and water for trend analysis (last 30 days)
+            final thirtyDaysAgo = today.subtract(const Duration(days: 30));
+            if (m.date.isAfter(thirtyDaysAgo)) {
+              if ((m.weightKg ?? 0) > 0) weightHistory[dateStr] = m.weightKg!;
+              if ((m.waterGlasses ?? 0) > 0) waterHistory[dateStr] = m.waterGlasses!;
+            }
           }
 
           historicalSteps.value = totalHistorical;
@@ -221,6 +245,8 @@ class HealthBlock {
           stepsLast7Days[todayStr] = bestTodaySteps;
           
           dailyStepsLast7Days.value = Map.from(stepsLast7Days);
+          dailyWeightLast30Days.value = Map.from(weightHistory);
+          dailyWaterLast30Days.value = Map.from(waterHistory);
 
           // Mark initial sync complete
           if (!hasInitialSync.value) {

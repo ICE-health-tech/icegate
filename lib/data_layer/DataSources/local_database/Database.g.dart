@@ -525,6 +525,7 @@ class $ExternalWidgetsTableTable extends ExternalWidgetsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _widgetIDMeta = const VerificationMeta(
     'widgetID',
@@ -1714,6 +1715,7 @@ class $InternalWidgetsTableTable extends InternalWidgetsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _widgetIDMeta = const VerificationMeta(
     'widgetID',
@@ -2329,6 +2331,7 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _noteIDMeta = const VerificationMeta('noteID');
   @override
@@ -2985,6 +2988,7 @@ class $PersonsTableTable extends PersonsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _firstNameMeta = const VerificationMeta(
     'firstName',
@@ -3933,6 +3937,7 @@ class $EmailAddressesTableTable extends EmailAddressesTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _emailAddressIDMeta = const VerificationMeta(
     'emailAddressID',
@@ -4569,6 +4574,7 @@ class $UserAccountsTableTable extends UserAccountsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _accountIDMeta = const VerificationMeta(
     'accountID',
@@ -6518,6 +6524,7 @@ class $SkillsTableTable extends SkillsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _skillIDMeta = const VerificationMeta(
     'skillID',
@@ -7256,6 +7263,7 @@ class $FinancialAccountsTableTable extends FinancialAccountsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _accountIDMeta = const VerificationMeta(
     'accountID',
@@ -7984,6 +7992,7 @@ class $AssetsTableTable extends AssetsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _assetIDMeta = const VerificationMeta(
     'assetID',
@@ -8922,6 +8931,7 @@ class $GoalsTableTable extends GoalsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _goalIDMeta = const VerificationMeta('goalID');
   @override
@@ -9781,6 +9791,7 @@ class $HabitsTableTable extends HabitsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _habitIDMeta = const VerificationMeta(
     'habitID',
@@ -10605,6 +10616,7 @@ class $AiAnalysisTableTable extends AiAnalysisTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -11495,6 +11507,7 @@ class $PersonWidgetsTableTable extends PersonWidgetsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personWidgetIDMeta = const VerificationMeta(
     'personWidgetID',
@@ -12230,6 +12243,7 @@ class $CVAddressesTableTable extends CVAddressesTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _cvAddressIDMeta = const VerificationMeta(
     'cvAddressID',
@@ -13328,6 +13342,7 @@ class $SessionTableTable extends SessionTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _localIDMeta = const VerificationMeta(
     'localID',
@@ -13740,6 +13755,7 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _metricIDMeta = const VerificationMeta(
     'metricID',
@@ -15324,6 +15340,7 @@ class $FinancialMetricsTableTable extends FinancialMetricsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _metricIDMeta = const VerificationMeta(
     'metricID',
@@ -16081,6 +16098,7 @@ class $ProjectMetricsTableTable extends ProjectMetricsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _metricIDMeta = const VerificationMeta(
     'metricID',
@@ -16781,6 +16799,7 @@ class $SocialMetricsTableTable extends SocialMetricsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _metricIDMeta = const VerificationMeta(
     'metricID',
@@ -17425,6 +17444,7 @@ class $MealsTableTable extends MealsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _mealIDMeta = const VerificationMeta('mealID');
   @override
@@ -18081,6 +18101,7 @@ class $DaysTableTable extends DaysTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> dayID =
@@ -18444,6 +18465,7 @@ class $SSHHostsTableTable extends SSHHostsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
@@ -19624,6 +19646,7 @@ class $ScoresTableTable extends ScoresTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _scoreIDMeta = const VerificationMeta(
     'scoreID',
@@ -20345,6 +20368,7 @@ class $ProjectsTableTable extends ProjectsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _projectIDMeta = const VerificationMeta(
     'projectID',
@@ -21158,6 +21182,7 @@ class $TransactionsTableTable extends TransactionsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _transactionIDMeta = const VerificationMeta(
     'transactionID',
@@ -21822,6 +21847,17 @@ class $SubscriptionsTableTable extends SubscriptionsTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
   );
@@ -21869,9 +21905,9 @@ class $SubscriptionsTableTable extends SubscriptionsTable
   late final GeneratedColumn<String> category = GeneratedColumn<String>(
     'category',
     aliasedName,
-    false,
+    true,
     type: DriftSqlType.string,
-    requiredDuringInsert: true,
+    requiredDuringInsert: false,
   );
   static const VerificationMeta _isActiveMeta = const VerificationMeta(
     'isActive',
@@ -21901,6 +21937,7 @@ class $SubscriptionsTableTable extends SubscriptionsTable
   @override
   List<GeneratedColumn> get $columns => [
     id,
+    tenantID,
     personID,
     name,
     amount,
@@ -21925,6 +21962,12 @@ class $SubscriptionsTableTable extends SubscriptionsTable
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     } else if (isInserting) {
       context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
     }
     if (data.containsKey('person_id')) {
       context.handle(
@@ -21963,8 +22006,6 @@ class $SubscriptionsTableTable extends SubscriptionsTable
         _categoryMeta,
         category.isAcceptableOrUnknown(data['category']!, _categoryMeta),
       );
-    } else if (isInserting) {
-      context.missing(_categoryMeta);
     }
     if (data.containsKey('is_active')) {
       context.handle(
@@ -21985,6 +22026,10 @@ class $SubscriptionsTableTable extends SubscriptionsTable
         DriftSqlType.string,
         data['${effectivePrefix}id'],
       )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -22004,7 +22049,7 @@ class $SubscriptionsTableTable extends SubscriptionsTable
       category: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}category'],
-      )!,
+      ),
       isActive: attachedDatabase.typeMapping.read(
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
@@ -22030,20 +22075,22 @@ class $SubscriptionsTableTable extends SubscriptionsTable
 class SubscriptionData extends DataClass
     implements Insertable<SubscriptionData> {
   final String id;
+  final String? tenantID;
   final String personID;
   final String name;
   final double amount;
   final int billingDay;
-  final String category;
+  final String? category;
   final bool isActive;
   final DateTime createdAt;
   const SubscriptionData({
     required this.id,
+    this.tenantID,
     required this.personID,
     required this.name,
     required this.amount,
     required this.billingDay,
-    required this.category,
+    this.category,
     required this.isActive,
     required this.createdAt,
   });
@@ -22051,11 +22098,16 @@ class SubscriptionData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
     map['person_id'] = Variable<String>(personID);
     map['name'] = Variable<String>(name);
     map['amount'] = Variable<double>(amount);
     map['billing_day'] = Variable<int>(billingDay);
-    map['category'] = Variable<String>(category);
+    if (!nullToAbsent || category != null) {
+      map['category'] = Variable<String>(category);
+    }
     map['is_active'] = Variable<bool>(isActive);
     {
       map['created_at'] = Variable<DateTime>(
@@ -22068,11 +22120,16 @@ class SubscriptionData extends DataClass
   SubscriptionsTableCompanion toCompanion(bool nullToAbsent) {
     return SubscriptionsTableCompanion(
       id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
       personID: Value(personID),
       name: Value(name),
       amount: Value(amount),
       billingDay: Value(billingDay),
-      category: Value(category),
+      category: category == null && nullToAbsent
+          ? const Value.absent()
+          : Value(category),
       isActive: Value(isActive),
       createdAt: Value(createdAt),
     );
@@ -22085,11 +22142,12 @@ class SubscriptionData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SubscriptionData(
       id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
       personID: serializer.fromJson<String>(json['personID']),
       name: serializer.fromJson<String>(json['name']),
       amount: serializer.fromJson<double>(json['amount']),
       billingDay: serializer.fromJson<int>(json['billingDay']),
-      category: serializer.fromJson<String>(json['category']),
+      category: serializer.fromJson<String?>(json['category']),
       isActive: serializer.fromJson<bool>(json['isActive']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -22099,11 +22157,12 @@ class SubscriptionData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
       'personID': serializer.toJson<String>(personID),
       'name': serializer.toJson<String>(name),
       'amount': serializer.toJson<double>(amount),
       'billingDay': serializer.toJson<int>(billingDay),
-      'category': serializer.toJson<String>(category),
+      'category': serializer.toJson<String?>(category),
       'isActive': serializer.toJson<bool>(isActive),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -22111,26 +22170,29 @@ class SubscriptionData extends DataClass
 
   SubscriptionData copyWith({
     String? id,
+    Value<String?> tenantID = const Value.absent(),
     String? personID,
     String? name,
     double? amount,
     int? billingDay,
-    String? category,
+    Value<String?> category = const Value.absent(),
     bool? isActive,
     DateTime? createdAt,
   }) => SubscriptionData(
     id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
     personID: personID ?? this.personID,
     name: name ?? this.name,
     amount: amount ?? this.amount,
     billingDay: billingDay ?? this.billingDay,
-    category: category ?? this.category,
+    category: category.present ? category.value : this.category,
     isActive: isActive ?? this.isActive,
     createdAt: createdAt ?? this.createdAt,
   );
   SubscriptionData copyWithCompanion(SubscriptionsTableCompanion data) {
     return SubscriptionData(
       id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
       personID: data.personID.present ? data.personID.value : this.personID,
       name: data.name.present ? data.name.value : this.name,
       amount: data.amount.present ? data.amount.value : this.amount,
@@ -22147,6 +22209,7 @@ class SubscriptionData extends DataClass
   String toString() {
     return (StringBuffer('SubscriptionData(')
           ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
           ..write('personID: $personID, ')
           ..write('name: $name, ')
           ..write('amount: $amount, ')
@@ -22161,6 +22224,7 @@ class SubscriptionData extends DataClass
   @override
   int get hashCode => Object.hash(
     id,
+    tenantID,
     personID,
     name,
     amount,
@@ -22174,6 +22238,7 @@ class SubscriptionData extends DataClass
       identical(this, other) ||
       (other is SubscriptionData &&
           other.id == this.id &&
+          other.tenantID == this.tenantID &&
           other.personID == this.personID &&
           other.name == this.name &&
           other.amount == this.amount &&
@@ -22185,16 +22250,18 @@ class SubscriptionData extends DataClass
 
 class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
   final Value<String> id;
+  final Value<String?> tenantID;
   final Value<String> personID;
   final Value<String> name;
   final Value<double> amount;
   final Value<int> billingDay;
-  final Value<String> category;
+  final Value<String?> category;
   final Value<bool> isActive;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const SubscriptionsTableCompanion({
     this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
     this.personID = const Value.absent(),
     this.name = const Value.absent(),
     this.amount = const Value.absent(),
@@ -22206,11 +22273,12 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
   });
   SubscriptionsTableCompanion.insert({
     required String id,
+    this.tenantID = const Value.absent(),
     required String personID,
     required String name,
     required double amount,
     required int billingDay,
-    required String category,
+    this.category = const Value.absent(),
     this.isActive = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -22218,10 +22286,10 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
        personID = Value(personID),
        name = Value(name),
        amount = Value(amount),
-       billingDay = Value(billingDay),
-       category = Value(category);
+       billingDay = Value(billingDay);
   static Insertable<SubscriptionData> custom({
     Expression<String>? id,
+    Expression<String>? tenantID,
     Expression<String>? personID,
     Expression<String>? name,
     Expression<double>? amount,
@@ -22233,6 +22301,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
       if (personID != null) 'person_id': personID,
       if (name != null) 'name': name,
       if (amount != null) 'amount': amount,
@@ -22246,17 +22315,19 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
 
   SubscriptionsTableCompanion copyWith({
     Value<String>? id,
+    Value<String?>? tenantID,
     Value<String>? personID,
     Value<String>? name,
     Value<double>? amount,
     Value<int>? billingDay,
-    Value<String>? category,
+    Value<String?>? category,
     Value<bool>? isActive,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
     return SubscriptionsTableCompanion(
       id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
       personID: personID ?? this.personID,
       name: name ?? this.name,
       amount: amount ?? this.amount,
@@ -22273,6 +22344,9 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     final map = <String, Expression>{};
     if (id.present) {
       map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
     }
     if (personID.present) {
       map['person_id'] = Variable<String>(personID.value);
@@ -22307,6 +22381,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
   String toString() {
     return (StringBuffer('SubscriptionsTableCompanion(')
           ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
           ..write('personID: $personID, ')
           ..write('name: $name, ')
           ..write('amount: $amount, ')
@@ -22342,9 +22417,10 @@ class $FocusSessionsTableTable extends FocusSessionsTable
   late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
     'tenant_id',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -22589,7 +22665,7 @@ class $FocusSessionsTableTable extends FocusSessionsTable
       tenantID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tenant_id'],
-      ),
+      )!,
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -22673,7 +22749,7 @@ class $FocusSessionsTableTable extends FocusSessionsTable
 class FocusSessionData extends DataClass
     implements Insertable<FocusSessionData> {
   final String id;
-  final String? tenantID;
+  final String tenantID;
   final String? personID;
   final String? projectID;
   final String? taskID;
@@ -22690,7 +22766,7 @@ class FocusSessionData extends DataClass
   final DateTime? updatedAt;
   const FocusSessionData({
     required this.id,
-    this.tenantID,
+    required this.tenantID,
     this.personID,
     this.projectID,
     this.taskID,
@@ -22708,9 +22784,7 @@ class FocusSessionData extends DataClass
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || tenantID != null) {
-      map['tenant_id'] = Variable<String>(tenantID);
-    }
+    map['tenant_id'] = Variable<String>(tenantID);
     if (!nullToAbsent || personID != null) {
       map['person_id'] = Variable<String>(personID);
     }
@@ -22755,9 +22829,7 @@ class FocusSessionData extends DataClass
   FocusSessionsTableCompanion toCompanion(bool nullToAbsent) {
     return FocusSessionsTableCompanion(
       id: Value(id),
-      tenantID: tenantID == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tenantID),
+      tenantID: Value(tenantID),
       personID: personID == null && nullToAbsent
           ? const Value.absent()
           : Value(personID),
@@ -22796,7 +22868,7 @@ class FocusSessionData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return FocusSessionData(
       id: serializer.fromJson<String>(json['id']),
-      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      tenantID: serializer.fromJson<String>(json['tenantID']),
       personID: serializer.fromJson<String?>(json['personID']),
       projectID: serializer.fromJson<String?>(json['projectID']),
       taskID: serializer.fromJson<String?>(json['taskID']),
@@ -22816,7 +22888,7 @@ class FocusSessionData extends DataClass
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'tenantID': serializer.toJson<String?>(tenantID),
+      'tenantID': serializer.toJson<String>(tenantID),
       'personID': serializer.toJson<String?>(personID),
       'projectID': serializer.toJson<String?>(projectID),
       'taskID': serializer.toJson<String?>(taskID),
@@ -22834,7 +22906,7 @@ class FocusSessionData extends DataClass
 
   FocusSessionData copyWith({
     String? id,
-    Value<String?> tenantID = const Value.absent(),
+    String? tenantID,
     Value<String?> personID = const Value.absent(),
     Value<String?> projectID = const Value.absent(),
     Value<String?> taskID = const Value.absent(),
@@ -22849,7 +22921,7 @@ class FocusSessionData extends DataClass
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => FocusSessionData(
     id: id ?? this.id,
-    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    tenantID: tenantID ?? this.tenantID,
     personID: personID.present ? personID.value : this.personID,
     projectID: projectID.present ? projectID.value : this.projectID,
     taskID: taskID.present ? taskID.value : this.taskID,
@@ -22948,7 +23020,7 @@ class FocusSessionData extends DataClass
 
 class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
   final Value<String> id;
-  final Value<String?> tenantID;
+  final Value<String> tenantID;
   final Value<String?> personID;
   final Value<String?> projectID;
   final Value<String?> taskID;
@@ -23037,7 +23109,7 @@ class FocusSessionsTableCompanion extends UpdateCompanion<FocusSessionData> {
 
   FocusSessionsTableCompanion copyWith({
     Value<String>? id,
-    Value<String?>? tenantID,
+    Value<String>? tenantID,
     Value<String?>? personID,
     Value<String?>? projectID,
     Value<String?>? taskID,
@@ -23178,6 +23250,7 @@ class $CustomNotificationsTableTable extends CustomNotificationsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _notificationIDMeta = const VerificationMeta(
     'notificationID',
@@ -24064,9 +24137,10 @@ class $QuotesTableTable extends QuotesTable
   late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
     'tenant_id',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -24199,7 +24273,7 @@ class $QuotesTableTable extends QuotesTable
       tenantID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tenant_id'],
-      ),
+      )!,
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -24236,7 +24310,7 @@ class $QuotesTableTable extends QuotesTable
 
 class QuoteData extends DataClass implements Insertable<QuoteData> {
   final String id;
-  final String? tenantID;
+  final String tenantID;
   final String? personID;
   final String content;
   final String? author;
@@ -24244,7 +24318,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
   final DateTime createdAt;
   const QuoteData({
     required this.id,
-    this.tenantID,
+    required this.tenantID,
     this.personID,
     required this.content,
     this.author,
@@ -24255,9 +24329,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || tenantID != null) {
-      map['tenant_id'] = Variable<String>(tenantID);
-    }
+    map['tenant_id'] = Variable<String>(tenantID);
     if (!nullToAbsent || personID != null) {
       map['person_id'] = Variable<String>(personID);
     }
@@ -24277,9 +24349,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
   QuotesTableCompanion toCompanion(bool nullToAbsent) {
     return QuotesTableCompanion(
       id: Value(id),
-      tenantID: tenantID == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tenantID),
+      tenantID: Value(tenantID),
       personID: personID == null && nullToAbsent
           ? const Value.absent()
           : Value(personID),
@@ -24299,7 +24369,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return QuoteData(
       id: serializer.fromJson<String>(json['id']),
-      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      tenantID: serializer.fromJson<String>(json['tenantID']),
       personID: serializer.fromJson<String?>(json['personID']),
       content: serializer.fromJson<String>(json['content']),
       author: serializer.fromJson<String?>(json['author']),
@@ -24312,7 +24382,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'tenantID': serializer.toJson<String?>(tenantID),
+      'tenantID': serializer.toJson<String>(tenantID),
       'personID': serializer.toJson<String?>(personID),
       'content': serializer.toJson<String>(content),
       'author': serializer.toJson<String?>(author),
@@ -24323,7 +24393,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
 
   QuoteData copyWith({
     String? id,
-    Value<String?> tenantID = const Value.absent(),
+    String? tenantID,
     Value<String?> personID = const Value.absent(),
     String? content,
     Value<String?> author = const Value.absent(),
@@ -24331,7 +24401,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
     DateTime? createdAt,
   }) => QuoteData(
     id: id ?? this.id,
-    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    tenantID: tenantID ?? this.tenantID,
     personID: personID.present ? personID.value : this.personID,
     content: content ?? this.content,
     author: author.present ? author.value : this.author,
@@ -24382,7 +24452,7 @@ class QuoteData extends DataClass implements Insertable<QuoteData> {
 
 class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
   final Value<String> id;
-  final Value<String?> tenantID;
+  final Value<String> tenantID;
   final Value<String?> personID;
   final Value<String> content;
   final Value<String?> author;
@@ -24434,7 +24504,7 @@ class QuotesTableCompanion extends UpdateCompanion<QuoteData> {
 
   QuotesTableCompanion copyWith({
     Value<String>? id,
-    Value<String?>? tenantID,
+    Value<String>? tenantID,
     Value<String?>? personID,
     Value<String>? content,
     Value<String?>? author,
@@ -24527,6 +24597,7 @@ class $WaterLogsTableTable extends WaterLogsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -25054,6 +25125,7 @@ class $SleepLogsTableTable extends SleepLogsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _logIDMeta = const VerificationMeta('logID');
   @override
@@ -25681,6 +25753,7 @@ class $WeightLogsTableTable extends WeightLogsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -26210,6 +26283,7 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _healthMetricIDMeta = const VerificationMeta(
     'healthMetricID',
@@ -26890,6 +26964,7 @@ class $QuestsTableTable extends QuestsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -29792,6 +29867,7 @@ class $PortfolioSnapshotsTableTable extends PortfolioSnapshotsTable
     true,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -30215,9 +30291,10 @@ class $AchievementsTableTable extends AchievementsTable
   late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
     'tenant_id',
     aliasedName,
-    true,
+    false,
     type: DriftSqlType.string,
     requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
   );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
@@ -30490,7 +30567,7 @@ class $AchievementsTableTable extends AchievementsTable
       tenantID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}tenant_id'],
-      ),
+      )!,
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -30559,7 +30636,7 @@ class $AchievementsTableTable extends AchievementsTable
 
 class AchievementData extends DataClass implements Insertable<AchievementData> {
   final String id;
-  final String? tenantID;
+  final String tenantID;
   final String? personID;
   final String title;
   final String? description;
@@ -30574,7 +30651,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
   final DateTime updatedAt;
   const AchievementData({
     required this.id,
-    this.tenantID,
+    required this.tenantID,
     this.personID,
     required this.title,
     this.description,
@@ -30592,9 +30669,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
     map['id'] = Variable<String>(id);
-    if (!nullToAbsent || tenantID != null) {
-      map['tenant_id'] = Variable<String>(tenantID);
-    }
+    map['tenant_id'] = Variable<String>(tenantID);
     if (!nullToAbsent || personID != null) {
       map['person_id'] = Variable<String>(personID);
     }
@@ -30631,9 +30706,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
   AchievementsTableCompanion toCompanion(bool nullToAbsent) {
     return AchievementsTableCompanion(
       id: Value(id),
-      tenantID: tenantID == null && nullToAbsent
-          ? const Value.absent()
-          : Value(tenantID),
+      tenantID: Value(tenantID),
       personID: personID == null && nullToAbsent
           ? const Value.absent()
           : Value(personID),
@@ -30666,7 +30739,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return AchievementData(
       id: serializer.fromJson<String>(json['id']),
-      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      tenantID: serializer.fromJson<String>(json['tenantID']),
       personID: serializer.fromJson<String?>(json['personID']),
       title: serializer.fromJson<String>(json['title']),
       description: serializer.fromJson<String?>(json['description']),
@@ -30686,7 +30759,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
       'id': serializer.toJson<String>(id),
-      'tenantID': serializer.toJson<String?>(tenantID),
+      'tenantID': serializer.toJson<String>(tenantID),
       'personID': serializer.toJson<String?>(personID),
       'title': serializer.toJson<String>(title),
       'description': serializer.toJson<String?>(description),
@@ -30704,7 +30777,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
 
   AchievementData copyWith({
     String? id,
-    Value<String?> tenantID = const Value.absent(),
+    String? tenantID,
     Value<String?> personID = const Value.absent(),
     String? title,
     Value<String?> description = const Value.absent(),
@@ -30719,7 +30792,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
     DateTime? updatedAt,
   }) => AchievementData(
     id: id ?? this.id,
-    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    tenantID: tenantID ?? this.tenantID,
     personID: personID.present ? personID.value : this.personID,
     title: title ?? this.title,
     description: description.present ? description.value : this.description,
@@ -30822,7 +30895,7 @@ class AchievementData extends DataClass implements Insertable<AchievementData> {
 
 class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
   final Value<String> id;
-  final Value<String?> tenantID;
+  final Value<String> tenantID;
   final Value<String?> personID;
   final Value<String> title;
   final Value<String?> description;
@@ -30912,7 +30985,7 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
 
   AchievementsTableCompanion copyWith({
     Value<String>? id,
-    Value<String?>? tenantID,
+    Value<String>? tenantID,
     Value<String?>? personID,
     Value<String>? title,
     Value<String?>? description,
@@ -42089,11 +42162,12 @@ typedef $$TransactionsTableTableProcessedTableManager =
 typedef $$SubscriptionsTableTableCreateCompanionBuilder =
     SubscriptionsTableCompanion Function({
       required String id,
+      Value<String?> tenantID,
       required String personID,
       required String name,
       required double amount,
       required int billingDay,
-      required String category,
+      Value<String?> category,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -42101,11 +42175,12 @@ typedef $$SubscriptionsTableTableCreateCompanionBuilder =
 typedef $$SubscriptionsTableTableUpdateCompanionBuilder =
     SubscriptionsTableCompanion Function({
       Value<String> id,
+      Value<String?> tenantID,
       Value<String> personID,
       Value<String> name,
       Value<double> amount,
       Value<int> billingDay,
-      Value<String> category,
+      Value<String?> category,
       Value<bool> isActive,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -42122,6 +42197,11 @@ class $$SubscriptionsTableTableFilterComposer
   });
   ColumnFilters<String> get id => $composableBuilder(
     column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -42176,6 +42256,11 @@ class $$SubscriptionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get personID => $composableBuilder(
     column: $table.personID,
     builder: (column) => ColumnOrderings(column),
@@ -42223,6 +42308,9 @@ class $$SubscriptionsTableTableAnnotationComposer
   });
   GeneratedColumn<String> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
 
   GeneratedColumn<String> get personID =>
       $composableBuilder(column: $table.personID, builder: (column) => column);
@@ -42289,16 +42377,18 @@ class $$SubscriptionsTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
                 Value<String> personID = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<double> amount = const Value.absent(),
                 Value<int> billingDay = const Value.absent(),
-                Value<String> category = const Value.absent(),
+                Value<String?> category = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SubscriptionsTableCompanion(
                 id: id,
+                tenantID: tenantID,
                 personID: personID,
                 name: name,
                 amount: amount,
@@ -42311,16 +42401,18 @@ class $$SubscriptionsTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
+                Value<String?> tenantID = const Value.absent(),
                 required String personID,
                 required String name,
                 required double amount,
                 required int billingDay,
-                required String category,
+                Value<String?> category = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SubscriptionsTableCompanion.insert(
                 id: id,
+                tenantID: tenantID,
                 personID: personID,
                 name: name,
                 amount: amount,
@@ -42362,7 +42454,7 @@ typedef $$SubscriptionsTableTableProcessedTableManager =
 typedef $$FocusSessionsTableTableCreateCompanionBuilder =
     FocusSessionsTableCompanion Function({
       required String id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       Value<String?> projectID,
       Value<String?> taskID,
@@ -42380,7 +42472,7 @@ typedef $$FocusSessionsTableTableCreateCompanionBuilder =
 typedef $$FocusSessionsTableTableUpdateCompanionBuilder =
     FocusSessionsTableCompanion Function({
       Value<String> id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       Value<String?> projectID,
       Value<String?> taskID,
@@ -42659,7 +42751,7 @@ class $$FocusSessionsTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<String?> taskID = const Value.absent(),
@@ -42693,7 +42785,7 @@ class $$FocusSessionsTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
                 Value<String?> taskID = const Value.absent(),
@@ -43177,7 +43269,7 @@ typedef $$CustomNotificationsTableTableProcessedTableManager =
 typedef $$QuotesTableTableCreateCompanionBuilder =
     QuotesTableCompanion Function({
       required String id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       required String content,
       Value<String?> author,
@@ -43188,7 +43280,7 @@ typedef $$QuotesTableTableCreateCompanionBuilder =
 typedef $$QuotesTableTableUpdateCompanionBuilder =
     QuotesTableCompanion Function({
       Value<String> id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       Value<String> content,
       Value<String?> author,
@@ -43351,7 +43443,7 @@ class $$QuotesTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String> content = const Value.absent(),
                 Value<String?> author = const Value.absent(),
@@ -43371,7 +43463,7 @@ class $$QuotesTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 required String content,
                 Value<String?> author = const Value.absent(),
@@ -46263,7 +46355,7 @@ typedef $$PortfolioSnapshotsTableTableProcessedTableManager =
 typedef $$AchievementsTableTableCreateCompanionBuilder =
     AchievementsTableCompanion Function({
       required String id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       required String title,
       Value<String?> description,
@@ -46281,7 +46373,7 @@ typedef $$AchievementsTableTableCreateCompanionBuilder =
 typedef $$AchievementsTableTableUpdateCompanionBuilder =
     AchievementsTableCompanion Function({
       Value<String> id,
-      Value<String?> tenantID,
+      Value<String> tenantID,
       Value<String?> personID,
       Value<String> title,
       Value<String?> description,
@@ -46562,7 +46654,7 @@ class $$AchievementsTableTableTableManager
           updateCompanionCallback:
               ({
                 Value<String> id = const Value.absent(),
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String> title = const Value.absent(),
                 Value<String?> description = const Value.absent(),
@@ -46596,7 +46688,7 @@ class $$AchievementsTableTableTableManager
           createCompanionCallback:
               ({
                 required String id,
-                Value<String?> tenantID = const Value.absent(),
+                Value<String> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 required String title,
                 Value<String?> description = const Value.absent(),

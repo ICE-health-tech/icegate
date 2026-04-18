@@ -103,8 +103,11 @@ class SubscriptionManager extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.auto_awesome_mosaic_rounded,
-                color: Colors.white.withOpacity(0.1), size: 32),
+            Icon(
+              Icons.auto_awesome_mosaic_rounded,
+              color: Colors.white.withOpacity(0.1),
+              size: 32,
+            ),
             const SizedBox(height: 8),
             Text(
               "No recurring subscriptions yet",
@@ -150,7 +153,7 @@ class SubscriptionManager extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Icon(
-                        _getCategoryIcon(sub.category),
+                        _getCategoryIcon(sub.category ?? 'software'),
                         color: Colors.blueAccent.shade100,
                         size: 24,
                       ),
@@ -158,8 +161,11 @@ class SubscriptionManager extends StatelessWidget {
                     IconButton(
                       visualDensity: VisualDensity.compact,
                       onPressed: () => financeBlock.deleteSubscription(sub.id),
-                      icon: Icon(Icons.close_rounded,
-                          color: Colors.white.withOpacity(0.2), size: 18),
+                      icon: Icon(
+                        Icons.close_rounded,
+                        color: Colors.white.withOpacity(0.2),
+                        size: 18,
+                      ),
                     ),
                   ],
                 ),
@@ -185,8 +191,10 @@ class SubscriptionManager extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.white.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(20),
@@ -238,195 +246,222 @@ class SubscriptionManager extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => StatefulBuilder(builder: (ctx, setState) {
-        return Container(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
-            left: 24,
-            right: 24,
-            top: 24,
-          ),
-          decoration: BoxDecoration(
-            color: const Color(0xFF16161E),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                "NEW SUBSCRIPTION",
-                style: TextStyle(
-                  color: Colors.white70,
-                  fontSize: 10,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 2,
-                ),
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setState) {
+          return Container(
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
+              left: 24,
+              right: 24,
+              top: 24,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0xFF16161E),
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(32),
               ),
-              const SizedBox(height: 24),
-              TextField(
-                controller: nameController,
-                style: const TextStyle(
+              border: Border.all(color: Colors.white.withOpacity(0.1)),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "NEW SUBSCRIPTION",
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2,
+                  ),
+                ),
+                const SizedBox(height: 24),
+                TextField(
+                  controller: nameController,
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
-                    fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  hintText: "Service Name (e.g. Netflix)",
-                  hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
-                  prefixIcon: const Icon(Icons.label_outline_rounded,
-                      color: Colors.white24),
-                  filled: true,
-                  fillColor: Colors.white.withOpacity(0.05),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(20),
-                    borderSide: BorderSide.none,
+                    fontWeight: FontWeight.bold,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: "Service Name (e.g. Netflix)",
+                    hintStyle: TextStyle(color: Colors.white.withOpacity(0.2)),
+                    prefixIcon: const Icon(
+                      Icons.label_outline_rounded,
+                      color: Colors.white24,
+                    ),
+                    filled: true,
+                    fillColor: Colors.white.withOpacity(0.05),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide.none,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                children: [
-                  Expanded(
-                    flex: 2,
-                    child: TextField(
-                      controller: amountController,
-                      keyboardType: TextInputType.number,
-                      style: const TextStyle(
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      flex: 2,
+                      child: TextField(
+                        controller: amountController,
+                        keyboardType: TextInputType.number,
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
-                          fontWeight: FontWeight.bold),
-                      decoration: InputDecoration(
-                        hintText: "Amount",
-                        hintStyle:
-                            TextStyle(color: Colors.white.withOpacity(0.2)),
-                        prefixIcon: const Icon(Icons.attach_money_rounded,
-                            color: Colors.white24),
-                        filled: true,
-                        fillColor: Colors.white.withOpacity(0.05),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(20),
-                          borderSide: BorderSide.none,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: "Amount",
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.2),
+                          ),
+                          prefixIcon: const Icon(
+                            Icons.attach_money_rounded,
+                            color: Colors.white24,
+                          ),
+                          filled: true,
+                          fillColor: Colors.white.withOpacity(0.05),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide.none,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: DropdownButtonHideUnderline(
-                        child: DropdownButton<int>(
-                          value: billingDay,
-                          dropdownColor: const Color(0xFF1A1A24),
-                          items: List.generate(31, (index) => index + 1)
-                              .map((day) => DropdownMenuItem(
-                                    value: day,
-                                    child: Text("Day $day",
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 14)),
-                                  ))
-                              .toList(),
-                          onChanged: (val) =>
-                              setState(() => billingDay = val ?? 1),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                "CATEGORY",
-                style: TextStyle(
-                  color: Colors.white38,
-                  fontSize: 9,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1,
-                ),
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                height: 50,
-                child: ListView(
-                  scrollDirection: Axis.horizontal,
-                  children: [
-                    'software',
-                    'entertainment',
-                    'music',
-                    'health',
-                    'bills',
-                    'rent'
-                  ].map((cat) {
-                    final isSelected = selectedCategory == cat;
-                    return GestureDetector(
-                      onTap: () => setState(() => selectedCategory = cat),
+                    const SizedBox(width: 12),
+                    Expanded(
                       child: Container(
-                        margin: const EdgeInsets.only(right: 8),
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: isSelected
-                              ? Colors.deepPurple.shade900.withOpacity(0.5)
-                              : Colors.white.withOpacity(0.03),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: isSelected
-                                ? Colors.deepPurple.shade400
-                                : Colors.white.withOpacity(0.05),
-                          ),
+                          color: Colors.white.withOpacity(0.05),
+                          borderRadius: BorderRadius.circular(20),
                         ),
-                        child: Center(
-                          child: Text(
-                            cat.toUpperCase(),
-                            style: TextStyle(
-                              color: isSelected ? Colors.white : Colors.white38,
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int>(
+                            value: billingDay,
+                            dropdownColor: const Color(0xFF1A1A24),
+                            items: List.generate(31, (index) => index + 1)
+                                .map(
+                                  (day) => DropdownMenuItem(
+                                    value: day,
+                                    child: Text(
+                                      "Day $day",
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (val) =>
+                                setState(() => billingDay = val ?? 1),
                           ),
                         ),
                       ),
-                    );
-                  }).toList(),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () async {
-                    final amount = double.tryParse(amountController.text);
-                    if (nameController.text.isEmpty || amount == null) return;
+                const SizedBox(height: 16),
+                const Text(
+                  "CATEGORY",
+                  style: TextStyle(
+                    color: Colors.white38,
+                    fontSize: 9,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 50,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    children:
+                        [
+                          'software',
+                          'entertainment',
+                          'music',
+                          'health',
+                          'bills',
+                          'rent',
+                        ].map((cat) {
+                          final isSelected = selectedCategory == cat;
+                          return GestureDetector(
+                            onTap: () => setState(() => selectedCategory = cat),
+                            child: Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
+                              decoration: BoxDecoration(
+                                color: isSelected
+                                    ? Colors.deepPurple.shade900.withOpacity(
+                                        0.5,
+                                      )
+                                    : Colors.white.withOpacity(0.03),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? Colors.deepPurple.shade400
+                                      : Colors.white.withOpacity(0.05),
+                                ),
+                              ),
+                              child: Center(
+                                child: Text(
+                                  cat.toUpperCase(),
+                                  style: TextStyle(
+                                    color: isSelected
+                                        ? Colors.white
+                                        : Colors.white38,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: FilledButton(
+                    onPressed: () async {
+                      final amount = double.tryParse(amountController.text);
+                      if (nameController.text.isEmpty || amount == null) return;
 
-                    await financeBlock.addSubscription(
-                      name: nameController.text,
-                      amount: amount,
-                      billingDay: billingDay,
-                      category: selectedCategory,
-                    );
-                    if (ctx.mounted) Navigator.pop(ctx);
-                  },
-                  style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    backgroundColor: Colors.deepPurple.shade500,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      await financeBlock.addSubscription(
+                        name: nameController.text,
+                        amount: amount,
+                        billingDay: billingDay,
+                        category: selectedCategory,
+                      );
+                      if (ctx.mounted) Navigator.pop(ctx);
+                    },
+                    style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      backgroundColor: Colors.deepPurple.shade500,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      "SAVE SUBSCRIPTION",
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 14,
+                      ),
                     ),
                   ),
-                  child: const Text(
-                    "SAVE SUBSCRIPTION",
-                    style: TextStyle(fontWeight: FontWeight.w900, fontSize: 14),
-                  ),
                 ),
-              ),
-            ],
-          ),
-        );
-      }),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 }

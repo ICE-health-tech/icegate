@@ -22,6 +22,8 @@ import 'dart:convert';
 // For finding the database path
 // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
 // 2. Part Directives (Crucial for generated code)
@@ -82,9 +84,7 @@ class InternalWidgetsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
 
   // These are currently nullable in your DB
   TextColumn get name =>
@@ -106,6 +106,23 @@ class InternalWidgetsTable extends Table {
 class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     with _$InternalWidgetsDAOMixin {
   InternalWidgetsDAO(super.db);
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(internalWidgetsTable).insertOnConflictUpdate(
+      InternalWidgetsTableCompanion.insert(
+        id: r['id'] as String,
+        tenantID: Value(r['tenant_id'] as String?),
+        widgetID: Value(r['widget_id'] as String?),
+        personID: Value(r['person_id'] as String?),
+        name: Value(r['name'] as String?),
+        url: Value(r['url'] as String?),
+        dateAdded: Value(r['date_added'] as String?),
+        imageUrl: Value(r['image_url'] as String?),
+        alias: Value(r['alias'] as String?),
+        scope: Value(r['scope'] as String?),
+      ),
+    );
+  }
   Future<InternalWidgetData?> getInternalWidgetByName(String name) {
     // return (select(internalWidgetsTable)..where((table)=>table.name.equals(_name)).getSingleOrNull());
     return (select(internalWidgetsTable)
@@ -270,9 +287,7 @@ class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase>
     )..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
 
     if (existing != null) {
-      final currentSteps = entry.stepsCount.present
-          ? entry.stepsCount.value
-          : 0;
+      final currentSteps = entry.stepsCount.present ? entry.stepsCount.value : 0;
       final existingSteps = existing.stepsCount;
       if (currentSteps > existingSteps) {
         await (update(
@@ -282,6 +297,30 @@ class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase>
     } else {
       await into(hourlyActivityLogTable).insert(entry);
     }
+
+    // Direct push to Supabase
+    final Map<String, dynamic> payload = {};
+    for (final col in hourlyActivityLogTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+    await db.pushToSupabase(table: 'hourly_activity_log', payload: payload);
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = HourlyActivityLogTableCompanion(
+      id: Value(r['id'] as String),
+      personID: Value(r['person_id'] as String),
+      startTime: Value(DateTime.parse(r['start_time'] as String)),
+      endTime: Value(r['end_time'] != null ? DateTime.parse(r['end_time'] as String) : null),
+      logDate: Value(DateTime.parse(r['log_date'] as String)),
+      stepsCount: Value(r['steps_count'] as int? ?? 0),
+      distanceKm: Value((r['distance_km'] as num?)?.toDouble() ?? 0.0),
+      caloriesBurned: Value(r['calories_burned'] as int? ?? 0),
+    );
+    await into(hourlyActivityLogTable).insert(companion, mode: InsertMode.insertOrReplace);
   }
 }
 
@@ -295,9 +334,7 @@ class ExternalWidgetsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get name =>
       text().withLength(min: 1, max: 100).named("name").nullable()();
   TextColumn get alias => text()
@@ -345,9 +382,7 @@ class ProjectNotesTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get noteID => text().nullable().named('note_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
   TextColumn get content =>
       text().named('content')(); // JSON string of the note content
@@ -359,9 +394,7 @@ class ProjectNotesTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('updated_at')();
-  TextColumn get projectID => text()
-      .nullable()
-      .named('project_id')();
+  TextColumn get projectID => text().nullable().named('project_id')();
 
   TextColumn get category =>
       text().withDefault(const Constant('projects')).named('category')();
@@ -382,9 +415,7 @@ class ProjectsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get projectID => text().nullable().named('project_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
   TextColumn get description => text().nullable().named('description')();
   TextColumn get category =>
@@ -588,9 +619,7 @@ class EmailAddressesTable extends Table {
       .named('tenant_id')();
   TextColumn get emailAddressID =>
       text().nullable().named('email_address_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get emailAddress =>
       text().withLength(max: 320).named('email_address')();
   TextColumn get emailType =>
@@ -623,19 +652,15 @@ class UserAccountsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get accountID => text().nullable().named('account_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .unique()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().unique().named('person_id')();
   TextColumn get username => text()
       .withLength(min: 3, max: 50)
       .nullable()
       .unique()
       .named('username')();
   TextColumn get passwordHash => text().nullable().named('password_hash')();
-  TextColumn get primaryEmailID => text()
-      .nullable()
-      .named('primary_email_id')();
+  TextColumn get primaryEmailID =>
+      text().nullable().named('primary_email_id')();
   TextColumn get role =>
       textEnum<UserRole>().withDefault(const Constant('user')).named('role')();
   BoolColumn get isLocked => boolean()
@@ -676,10 +701,7 @@ class ProfilesTable extends Table {
   String get tableName => 'profiles';
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get profileID => text().nullable().named('profile_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .unique()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().unique().named('person_id')();
   TextColumn get bio => text().nullable().named('bio')();
   TextColumn get occupation => text().nullable().named('occupation')();
   TextColumn get educationLevel => text().nullable().named('education_level')();
@@ -722,10 +744,7 @@ class CVAddressesTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get cvAddressID => text().nullable().named('cv_address_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .unique()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().unique().named('person_id')();
   TextColumn get githubUrl => text().nullable().named('github_url')();
   TextColumn get websiteUrl => text().nullable().named('website_url')();
   TextColumn get company => text().nullable().named('company')();
@@ -764,9 +783,7 @@ class SkillsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get skillID => text().nullable().named('skill_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get skillName => text().named('skill_name')();
   TextColumn get skillCategory => text().nullable().named('skill_category')();
   TextColumn get proficiencyLevel => textEnum<SkillLevel>()
@@ -800,9 +817,7 @@ class FinancialAccountsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get accountID => text().nullable().named('account_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get accountName => text().named('account_name')();
   TextColumn get accountType =>
       text().withDefault(const Constant('checking')).named('account_type')();
@@ -838,9 +853,7 @@ class AssetsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get assetID => text().nullable().named('asset_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get assetName => text().named('asset_name')();
   TextColumn get assetCategory => text().named('asset_category')();
   DateTimeColumn get purchaseDate =>
@@ -880,9 +893,7 @@ class TransactionsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get transactionID => text().nullable().named('transaction_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get category => text().named(
     'category',
   )(); // e.g. 'food', 'transport', 'salary', 'savings'
@@ -896,9 +907,7 @@ class TransactionsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('created_at')();
-  TextColumn get projectID => text()
-      .nullable()
-      .named('project_id')();
+  TextColumn get projectID => text().nullable().named('project_id')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -914,8 +923,10 @@ class SubscriptionsTable extends Table {
   TextColumn get name => text().named('name')();
   RealColumn get amount => real().named('amount')();
   IntColumn get billingDay => integer().named('billing_day')(); // 1-31
-  TextColumn get category => text().named('category')(); // e.g. 'software', 'entertainment'
-  BoolColumn get isActive => boolean().withDefault(const Constant(true)).named('is_active')();
+  TextColumn get category =>
+      text().nullable().named('category')(); // e.g. 'software', 'entertainment'
+  BoolColumn get isActive =>
+      boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -935,9 +946,7 @@ class GoalsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get goalID => text().nullable().named('goal_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get title => text().named('title')();
   TextColumn get description => text().nullable().named('description')();
   TextColumn get category =>
@@ -966,9 +975,7 @@ class GoalsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('updated_at')();
-  TextColumn get projectID => text()
-      .nullable()
-      .named('project_id')();
+  TextColumn get projectID => text().nullable().named('project_id')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -984,11 +991,8 @@ class ScoresTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get scoreID => text().named('score_id').nullable()();
-  TextColumn get personID => text()
-      .nullable()
-      .nullable()
-      .unique()
-      .named('person_id')();
+  TextColumn get personID =>
+      text().nullable().nullable().unique().named('person_id')();
   RealColumn get healthGlobalScore => real()
       .withDefault(const Constant(0.0))
       .named('health_global_score')
@@ -1032,12 +1036,8 @@ class HabitsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get habitID => text().nullable().named('habit_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
-  TextColumn get goalID => text()
-      .nullable()
-      .named('goal_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get goalID => text().nullable().named('goal_id')();
   TextColumn get habitName => text().named('habit_name')();
   TextColumn get description => text().nullable().named('description')();
   TextColumn get frequency =>
@@ -1072,9 +1072,7 @@ class AiAnalysisTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get title => text().named('title')();
   TextColumn get summary => text().nullable().named('summary')();
   TextColumn get detailedAnalysis => text().named('detailed_analysis')();
@@ -1116,9 +1114,7 @@ class PersonWidgetsTable extends Table {
       .named('tenant_id')();
   IntColumn get personWidgetID =>
       integer().nullable().named('person_widget_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get widgetName => text().named('widget_name')();
   TextColumn get widgetType => text().named('widget_type')();
   TextColumn get configuration =>
@@ -1152,9 +1148,7 @@ class HealthMetricsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   DateTimeColumn get date =>
       dateTime().map(const DateTimeUTCConverter()).named('date')();
   IntColumn get steps =>
@@ -1177,18 +1171,27 @@ class HealthMetricsTable extends Table {
       .nullable()();
   RealColumn get weightKg =>
       real().withDefault(const Constant(0.0)).named('weight_kg').nullable()();
-  IntColumn get caloriesConsumed =>
-      integer().withDefault(const Constant(0)).named('calories_consumed').nullable()();
-  IntColumn get caloriesBurned =>
-      integer().withDefault(const Constant(0)).named('calories_burned').nullable()();
-  RealColumn get questPoints =>
-      real().withDefault(const Constant(0.0)).named('quest_points').nullable()();
-  TextColumn get category =>
-      text().nullable().named('category')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at').nullable()();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at').nullable()();
+  IntColumn get caloriesConsumed => integer()
+      .withDefault(const Constant(0))
+      .named('calories_consumed')
+      .nullable()();
+  IntColumn get caloriesBurned => integer()
+      .withDefault(const Constant(0))
+      .named('calories_burned')
+      .nullable()();
+  RealColumn get questPoints => real()
+      .withDefault(const Constant(0.0))
+      .named('quest_points')
+      .nullable()();
+  TextColumn get category => text().nullable().named('category')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .named('created_at')
+      .nullable()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .named('updated_at')
+      .nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1209,9 +1212,7 @@ class FinancialMetricsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   DateTimeColumn get date =>
       dateTime().map(const DateTimeUTCConverter()).named('date')();
   RealColumn get totalBalance => real()
@@ -1262,9 +1263,7 @@ class ProjectMetricsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   DateTimeColumn get date =>
       dateTime().map(const DateTimeUTCConverter()).named('date')();
   IntColumn get tasksCompleted => integer()
@@ -1311,9 +1310,7 @@ class SocialMetricsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   DateTimeColumn get date =>
       dateTime().map(const DateTimeUTCConverter()).named('date')();
   IntColumn get contactsCount => integer()
@@ -1356,9 +1353,7 @@ class MealsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get mealID => text().nullable().named("meal_id")();
-  TextColumn get personID => text()
-      .nullable()
-      .named("person_id")();
+  TextColumn get personID => text().nullable().named("person_id")();
   TextColumn get mealName => text()
       .withLength(min: 1, max: 50)
       .named("meal_name")(); // breakfast, lunch, etc.
@@ -1429,9 +1424,7 @@ class WaterLogsTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   IntColumn get amount =>
       integer().withDefault(const Constant(0)).named('amount')();
   DateTimeColumn get timestamp => dateTime()
@@ -1439,9 +1432,8 @@ class WaterLogsTable extends Table {
       .map(const DateTimeUTCConverter())
       .named('timestamp')();
 
-  TextColumn get healthMetricID => text()
-      .nullable()
-      .named('health_metric_id')();
+  TextColumn get healthMetricID =>
+      text().nullable().named('health_metric_id')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1467,9 +1459,7 @@ class WeightLogsTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   RealColumn get weightKg =>
       real().withDefault(const Constant(0.0)).named('weight_kg')();
   DateTimeColumn get timestamp => dateTime()
@@ -1477,9 +1467,8 @@ class WeightLogsTable extends Table {
       .map(const DateTimeUTCConverter())
       .named('timestamp')();
 
-  TextColumn get healthMetricID => text()
-      .nullable()
-      .named('health_metric_id')();
+  TextColumn get healthMetricID =>
+      text().nullable().named('health_metric_id')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1506,9 +1495,7 @@ class SleepLogsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get logID => text().nullable().named('log_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   DateTimeColumn get startTime =>
       dateTime().map(const DateTimeUTCConverter()).named('start_time')();
   DateTimeColumn get endTime => dateTime()
@@ -1518,9 +1505,8 @@ class SleepLogsTable extends Table {
   IntColumn get quality =>
       integer().withDefault(const Constant(3)).named('quality')(); // 1-5 rating
 
-  TextColumn get healthMetricID => text()
-      .nullable()
-      .named('health_metric_id')();
+  TextColumn get healthMetricID =>
+      text().nullable().named('health_metric_id')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1546,12 +1532,9 @@ class ExerciseLogsTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get healthMetricID => text()
-      .nullable()
-      .named('health_metric_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get healthMetricID =>
+      text().nullable().named('health_metric_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get type => text().named('type')(); // e.g., 'Gym', 'Running'
   IntColumn get durationMinutes => integer().named('duration_minutes')();
   TextColumn get intensity => text()
@@ -1561,19 +1544,20 @@ class ExerciseLogsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('timestamp')();
-  TextColumn get focusSessionID => text()
-      .nullable()
-      .named('focus_session_id')();
-  DateTimeColumn get createdAt =>
-      dateTime().withDefault(currentDateAndTime).named('created_at').nullable()();
-  DateTimeColumn get updatedAt =>
-      dateTime().withDefault(currentDateAndTime).named('updated_at').nullable()();
-
+  TextColumn get focusSessionID =>
+      text().nullable().named('focus_session_id')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .named('created_at')
+      .nullable()();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .named('updated_at')
+      .nullable()();
 
   @override
   Set<Column> get primaryKey => {id};
 }
-
 
 @DataClassName('CustomNotificationData')
 class CustomNotificationsTable extends Table {
@@ -1602,9 +1586,7 @@ class CustomNotificationsTable extends Table {
   TextColumn get priority => text()
       .withDefault(const Constant('Normal'))
       .named('priority')(); // Low, Normal, High, Urgent
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get icon => text().nullable().named('icon')();
   BoolColumn get isEnabled =>
       boolean().withDefault(const Constant(true)).named('is_enabled')();
@@ -1630,9 +1612,7 @@ class QuestsTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get title =>
       text().withLength(min: 1, max: 200).nullable().named('title')();
   TextColumn get description => text().nullable().named('description')();
@@ -1686,9 +1666,7 @@ class PortfolioSnapshotsTable extends Table {
       .nullable()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   RealColumn get totalNetWorth => real().named('total_net_worth')();
   RealColumn get athAtTime => real().named('ath_at_time')();
   DateTimeColumn get timestamp => dateTime()
@@ -1708,22 +1686,20 @@ class AchievementsTable extends Table {
   TextColumn get tenantID => text()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
-  TextColumn get title =>
-      text().withLength(min: 1, max: 200).named('title')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
   TextColumn get description => text().nullable().named('description')();
-  
+
   // 'health', 'finance', 'good social impact', 'relationship', 'project', 'knowledge'
-  TextColumn get domain => text().withDefault(const Constant('project')).named('domain')();
-  
+  TextColumn get domain =>
+      text().withDefault(const Constant('project')).named('domain')();
+
   // 1-10
   IntColumn get meaningScore => integer()
       .nullable()
       .withDefault(const Constant(5))
       .named('meaning_score')();
-  
+
   // 1-10 mandatory
   IntColumn get impactScore => integer().named('impact_score')();
 
@@ -1756,7 +1732,7 @@ class MindLogsTable extends Table {
   // 1=Awful, 2=Bad, 3=Meh, 4=Good, 5=Rad
   IntColumn get moodScore => integer().named('mood_score')();
   TextColumn get moodEmoji => text().nullable().named('mood_emoji')();
-  
+
   // JSON array of strings: ["Deep Work", "Exercise", "Family"]
   TextColumn get activities => text().named('activities')();
   TextColumn get note => text().nullable().named('note')();
@@ -1765,7 +1741,7 @@ class MindLogsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named('log_date')();
-      
+
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1776,29 +1752,63 @@ class MindLogsTable extends Table {
 }
 
 @DriftAccessor(tables: [MindLogsTable])
-class MindLogsDAO extends DatabaseAccessor<AppDatabase> with _$MindLogsDAOMixin {
+class MindLogsDAO extends DatabaseAccessor<AppDatabase>
+    with _$MindLogsDAOMixin {
   MindLogsDAO(super.db);
 
   Stream<List<MindLogData>> watchLogsByPerson(String personId) {
     return (select(mindLogsTable)
           ..where((tbl) => tbl.personID.equals(personId))
-          ..orderBy([(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)]))
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+          ]))
         .watch();
   }
 
-  Future<void> insertLog(MindLogsTableCompanion entry) => into(mindLogsTable).insert(entry);
-  
-  Future<void> deleteLog(String id) => (delete(mindLogsTable)..where((tbl) => tbl.id.equals(id))).go();
+  Future<void> insertLog(MindLogsTableCompanion entry) async {
+    await into(mindLogsTable).insert(entry);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in mindLogsTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'mind_logs', payload: payload);
+  }
+
+  Future<void> deleteLog(String id) async {
+    await (delete(mindLogsTable)..where((tbl) => tbl.id.equals(id))).go();
+    // Direct delete from Supabase
+    await db.pushToSupabase(
+      table: 'mind_logs',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
 
   Stream<List<MindLogData>> watchLogsByMood(String personId, int moodScore) {
     return (select(mindLogsTable)
-          ..where((tbl) => tbl.personID.equals(personId) & tbl.moodScore.equals(moodScore))
-          ..orderBy([(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)]))
+          ..where(
+            (tbl) =>
+                tbl.personID.equals(personId) & tbl.moodScore.equals(moodScore),
+          )
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+          ]))
         .watch();
   }
 
   Stream<List<MindLogData>> watchAllLogs(String personId) {
-    return (select(mindLogsTable)..where((tbl) => tbl.personID.equals(personId))).watch();
+    return (select(
+      mindLogsTable,
+    )..where((tbl) => tbl.personID.equals(personId))).watch();
   }
 
   Stream<List<MindLogData>> watchLogsByDay(String personId, DateTime date) {
@@ -1806,15 +1816,40 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase> with _$MindLogsDAOMixin 
     // If Supabase stores '2026-04-18', it's exactly what we want to find.
     final startOfDay = DateTime.utc(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
-    
+
     return (select(mindLogsTable)
-          ..where((tbl) =>
-              tbl.personID.equals(personId) &
-              tbl.logDate.isBetweenValues(startOfDay, endOfDay))
-          ..orderBy(
-            [(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)],
-          ))
+          ..where(
+            (tbl) =>
+                tbl.personID.equals(personId) &
+                tbl.logDate.isBetweenValues(startOfDay, endOfDay),
+          )
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+          ]))
         .watch();
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = MindLogsTableCompanion(
+      id: Value(r['id'] as String),
+      tenantID: Value(r['tenant_id'] as String?),
+      personID: Value(r['person_id'] as String?),
+      moodScore: Value(r['mood_score'] as int),
+      moodEmoji: Value(r['mood_emoji'] as String?),
+      activities: Value(
+        r['activities'] is String
+            ? r['activities'] as String
+            : jsonEncode(r['activities']),
+      ),
+      note: Value(r['note'] as String?),
+      logDate: Value(DateTime.parse(r['log_date'] as String)),
+      createdAt: Value(DateTime.parse(r['created_at'] as String)),
+    );
+    await into(mindLogsTable).insert(
+      companion,
+      mode: InsertMode.insertOrReplace,
+    );
   }
 }
 
@@ -1839,9 +1874,6 @@ class FeedbacksTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-
-
-
 class ThemeDAO {
   final AppDatabase db;
   ThemeDAO(this.db);
@@ -1860,7 +1892,10 @@ class ThemeDAO {
     return CurrentThemeData(themePath: path);
   }
 
-  Future<void> insertTheme({required String themeName, required String themePath}) async {
+  Future<void> insertTheme({
+    required String themeName,
+    required String themePath,
+  }) async {
     // Legacy no-op
   }
 }
@@ -1903,6 +1938,17 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
+  Future<void> _pushScoreToSupabase(ScoresTableCompanion entry) async {
+    final Map<String, dynamic> payload = {};
+    for (final col in scoresTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+    await db.pushToSupabase(table: 'scores', payload: payload);
+  }
+
   Future<void> updateScores(
     ScoresTableCompanion entry, {
     bool force = false,
@@ -1914,8 +1960,11 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
       scoresTable,
     )..where((t) => t.personID.equals(personId))).getSingleOrNull();
 
+    _pushScoreToSupabase(entry);
+
+    ScoresTableCompanion finalEntry;
+
     if (existing != null) {
-      // Comparison logic: Only update if the incoming score is greater than existing
       final updatedHealth = entry.healthGlobalScore.present
           ? (force ||
                     (entry.healthGlobalScore.value ?? 0.0) >
@@ -1956,23 +2005,26 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
                 : Value(existing.penaltyScore))
           : Value(existing.penaltyScore);
 
-      await (update(scoresTable)..where((t) => t.id.equals(existing.id))).write(
-        entry.copyWith(
-          healthGlobalScore: updatedHealth,
-          socialGlobalScore: updatedSocial,
-          financialGlobalScore: updatedFinancial,
-          careerGlobalScore: updatedCareer,
-          penaltyScore: updatedPenalty,
-          updatedAt: Value(DateTime.now()),
-        ),
+      finalEntry = entry.copyWith(
+        id: Value(existing.id),
+        healthGlobalScore: updatedHealth,
+        socialGlobalScore: updatedSocial,
+        financialGlobalScore: updatedFinancial,
+        careerGlobalScore: updatedCareer,
+        penaltyScore: updatedPenalty,
+        updatedAt: Value(DateTime.now()),
       );
+      await (update(
+        scoresTable,
+      )..where((t) => t.id.equals(existing.id))).write(finalEntry);
     } else {
-      await into(scoresTable).insert(
-        entry.copyWith(
-          createdAt: Value(DateTime.now()),
-          updatedAt: Value(DateTime.now()),
-        ),
+      final id = entry.id.present ? entry.id.value : IDGen.generateUuid();
+      finalEntry = entry.copyWith(
+        id: Value(id),
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
       );
+      await into(scoresTable).insert(finalEntry);
     }
   }
 
@@ -2012,16 +2064,39 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
       if (category == 'career') career += amount;
 
       companion = ScoresTableCompanion(
+        id: Value(existing.id),
         healthGlobalScore: Value(health),
         socialGlobalScore: Value(social),
         financialGlobalScore: Value(finance),
         careerGlobalScore: Value(career),
         updatedAt: Value(DateTime.now()),
       );
-      await (update(
-        scoresTable,
-      )..where((t) => t.personID.equals(personId))).write(companion);
+      await (update(scoresTable)..where((t) => t.id.equals(existing.id)))
+          .write(companion);
     }
+    
+    _pushScoreToSupabase(companion);
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    final personId = record['person_id'] as String;
+    await into(scoresTable).insert(
+      ScoresTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(personId),
+        healthGlobalScore: Value((record['health_global_score'] as num?)?.toDouble() ?? 0.0),
+        socialGlobalScore: Value((record['social_global_score'] as num?)?.toDouble() ?? 0.0),
+        financialGlobalScore: Value((record['financial_global_score'] as num?)?.toDouble() ?? 0.0),
+        careerGlobalScore: Value((record['career_global_score'] as num?)?.toDouble() ?? 0.0),
+        penaltyScore: Value((record['penalty_score'] as num?)?.toDouble() ?? 0.0),
+        updatedAt: Value(
+          record['updated_at'] != null
+              ? DateTime.parse(record['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
   Future<ScoreLocalData?> getScoreByPersonID(String personID) {
@@ -2287,6 +2362,24 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     with _$ExternalWidgetsDAOMixin {
   ExternalWidgetsDAO(super.db);
 
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(externalWidgetsTable).insertOnConflictUpdate(
+      ExternalWidgetsTableCompanion.insert(
+        id: r['id'] as String,
+        tenantID: Value(r['tenant_id'] as String?),
+        widgetID: Value(r['widget_id'] as String?),
+        personID: Value(r['person_id'] as String?),
+        name: Value(r['name'] as String?),
+        alias: Value(r['alias'] as String?),
+        protocol: Value(r['protocol'] as String?),
+        host: Value(r['host'] as String?),
+        url: Value(r['url'] as String?),
+        imageUrl: Value(r['image_url'] as String?),
+        dateAdded: Value(r['date_added'] as String?),
+      ),
+    );
+  }
+
   String _generateRandomAlias(int length) {
     const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
     final random = Random();
@@ -2436,31 +2529,75 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     String? mood,
   }) async {
     final uuid = IDGen.UUIDV7();
-    into(projectNotesTable).insert(
-      ProjectNotesTableCompanion.insert(
-        id: uuid,
-        tenantID: Value(tenantID),
-        title: title,
-        content: content,
-        projectID: Value(projectID),
-        personID: Value(personID),
-        category: Value(category ?? 'projects'),
-        mood: Value(mood),
-        createdAt: Value(DateTime.now()),
-        updatedAt: Value(DateTime.now()),
-      ),
+    final companion = ProjectNotesTableCompanion.insert(
+      id: uuid,
+      tenantID: Value(tenantID),
+      title: title,
+      content: content,
+      projectID: Value(projectID),
+      personID: Value(personID),
+      category: Value(category ?? 'projects'),
+      mood: Value(mood),
+      createdAt: Value(DateTime.now()),
+      updatedAt: Value(DateTime.now()),
+    );
+    await into(projectNotesTable).insert(companion);
+
+    await db.pushToSupabase(
+      table: 'project_notes',
+      payload: db.companionToMap(companion, projectNotesTable),
     );
     return uuid;
   }
 
-  Future<bool> updateNote(ProjectNoteData note) {
-    return update(
-      projectNotesTable,
-    ).replace(note.copyWith(updatedAt: DateTime.now()));
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    await into(projectNotesTable).insert(
+      ProjectNotesTableCompanion(
+        id: Value(record['id'] as String),
+        tenantID: Value(record['tenant_id'] as String?),
+        personID: Value(record['person_id'] as String?),
+        title: Value(record['title'] as String? ?? 'Untitled Note'),
+        content: Value(record['content'] as String? ?? ''),
+        projectID: Value(record['project_id'] as String?),
+        category: Value(record['category'] as String? ?? 'projects'),
+        mood: Value(record['mood'] as String?),
+        createdAt: Value(
+          record['created_at'] != null
+              ? DateTime.parse(record['created_at'].toString())
+              : DateTime.now(),
+        ),
+        updatedAt: Value(
+          record['updated_at'] != null
+              ? DateTime.parse(record['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
-  Future<int> deleteNote(String id) {
-    return (delete(projectNotesTable)..where((tbl) => tbl.id.equals(id))).go();
+  Future<bool> updateNote(ProjectNoteData note) async {
+    final updatedNote = note.copyWith(updatedAt: DateTime.now());
+    final success = await update(projectNotesTable).replace(updatedNote);
+    if (success) {
+      await db.pushToSupabase(
+        table: 'project_notes',
+        payload: updatedNote.toJson(),
+      );
+    }
+    return success;
+  }
+
+  Future<int> deleteNote(String id) async {
+    final count = await (delete(projectNotesTable)..where((tbl) => tbl.id.equals(id))).go();
+    if (count > 0) {
+      await db.pushToSupabase(
+        table: 'project_notes',
+        payload: {'id': id},
+        isDelete: true,
+      );
+    }
+    return count;
   }
 
   Stream<List<ProjectNoteData>> watchAllNotes(String personID) {
@@ -2521,8 +2658,41 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     with _$ProjectsDAOMixin {
   ProjectsDAO(super.db);
 
-  Future<int> insertProject(ProjectsTableCompanion project) =>
-      into(projectsTable).insert(project);
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = ProjectsTableCompanion(
+      id: Value(r['id'] as String),
+      tenantID: Value(r['tenant_id'] as String?),
+      projectID: Value(r['project_id'] as String?),
+      personID: Value(r['person_id'] as String?),
+      name: Value(r['name'] as String? ?? 'Untitled Project'),
+      description: Value(r['description'] as String?),
+      category: Value(r['category'] as String?),
+      color: Value(r['color'] as String?),
+      status: Value(r['status'] as int? ?? 0),
+      sshHostId: Value(r['ssh_host_id'] as String?),
+      remotePath: Value(r['remote_path'] as String?),
+      aiModel: Value(r['ai_model'] as String?),
+      createdAt: Value(DateTime.parse(r['created_at'] as String)),
+      updatedAt: Value(DateTime.parse(r['updated_at'] as String)),
+    );
+    await into(projectsTable).insert(companion, mode: InsertMode.insertOrReplace);
+  }
+
+  Future<void> insertProject(ProjectsTableCompanion project) async {
+    await into(projectsTable).insert(project);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in projectsTable.$columns) {
+      final value = project.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'projects', payload: payload);
+  }
 
   Stream<List<ProjectData>> watchAllProjects(String personID) {
     return customSelect(
@@ -2560,14 +2730,39 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  Future<bool> updateProject(ProjectData project) =>
-      update(projectsTable).replace(project);
+  Future<void> updateProject(ProjectData project) async {
+    await update(projectsTable).replace(project);
+    // Convert data class to map
+    final payload = project.toJson();
+    await db.pushToSupabase(table: 'projects', payload: payload);
+  }
 
-  Future<int> updateProjectManual(String id, ProjectsTableCompanion project) =>
-      (update(projectsTable)..where((t) => t.id.equals(id))).write(project);
+  Future<void> updateProjectManual(
+    String id,
+    ProjectsTableCompanion project,
+  ) async {
+    await (update(projectsTable)..where((t) => t.id.equals(id))).write(project);
 
-  Future<int> deleteProjectByUuid(String id) =>
-      (delete(projectsTable)..where((t) => t.id.equals(id))).go();
+    // Construct payload from companion + ID
+    final Map<String, dynamic> payload = {'id': id};
+    for (final col in projectsTable.$columns) {
+      final value = project.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    await db.pushToSupabase(table: 'projects', payload: payload);
+  }
+
+  Future<void> deleteProjectByUuid(String id) async {
+    await (delete(projectsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'projects',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
 
   Future<int> deleteProjectByProjectId(String projectID) =>
       (delete(projectsTable)..where((t) => t.projectID.equals(projectID))).go();
@@ -2606,7 +2801,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     final String newUuid = id ?? IDGen.UUIDV7();
 
     final companion = PersonsTableCompanion.insert(
-      id: newUuid, // Use the provided or generated UUID
+      id: newUuid,
       tenantID: Value(tenantId),
       firstName: person.firstName,
       lastName: Value(person.lastName),
@@ -2614,24 +2809,30 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       gender: Value(person.gender),
       phoneNumber: Value(person.phoneNumber),
       profileImageUrl: Value(person.profileImageUrl),
-      // relationship: Value(relationship ?? 'none'), // Removed because not generated
       isActive: Value(person.isActive),
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
     await into(personsTable).insert(companion);
-    // print("person ID");
+
     if (relationship != null) {
-      await customUpdate(
-        'UPDATE persons SET relationship = ? WHERE id = ?',
-        variables: [
-          Variable.withString(relationship),
-          Variable.withString(newUuid),
-        ],
-        updates: {personsTable},
-        updateKind: UpdateKind.update,
+      await (update(personsTable)..where((t) => t.id.equals(newUuid))).write(
+        PersonsTableCompanion(relationship: Value(relationship)),
       );
     }
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in personsTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'persons', payload: payload);
+
     return newUuid;
   }
 
@@ -2666,34 +2867,99 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     return (delete(personsTable)..where((t) => t.id.equals(personID))).go();
   }
 
-  Future<void> updatePerson(PersonData person) =>
-      update(personsTable).replace(person);
+  Future<void> updatePerson(PersonData person) async {
+    await update(personsTable).replace(person);
+    final companion = PersonsTableCompanion.insert(
+      id: person.id,
+      firstName: person.firstName,
+      lastName: Value(person.lastName),
+      dateOfBirth: Value(person.dateOfBirth),
+      gender: Value(person.gender),
+      phoneNumber: Value(person.phoneNumber),
+      profileImageUrl: Value(person.profileImageUrl),
+      isActive: Value(person.isActive),
+      relationship: Value(person.relationship),
+      affection: Value(person.affection),
+      tenantID: Value(person.tenantID),
+      updatedAt: Value(person.updatedAt),
+    );
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in personsTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    await db.pushToSupabase(table: 'persons', payload: payload);
+  }
 
   Future<void> updateTenantId(String personId, String tenantId) async {
-    await (update(personsTable)..where((t) => t.id.equals(personId))).write(
-      PersonsTableCompanion(
-        tenantID: Value(tenantId),
-        updatedAt: Value(DateTime.now()),
-      ),
+    final updateCompanion = PersonsTableCompanion(
+      tenantID: Value(tenantId),
+      updatedAt: Value(DateTime.now()),
+    );
+    await (update(
+      personsTable,
+    )..where((t) => t.id.equals(personId))).write(updateCompanion);
+
+    // We only push what changed + ID
+    await db.pushToSupabase(
+      table: 'persons',
+      payload: {
+        'id': personId,
+        'tenant_id': tenantId,
+        'updated_at': DateTime.now().toIso8601String(),
+      },
     );
   }
 
   /// Migrates all data from the guest user account to a new authenticated account.
   /// This is called immediately after a real login to ensure "orphaned" local
   /// progress is promoted to the cloud.
-  Future<void> migrateGuestData(String newPersonId, [String tenantId = DEFAULT_TENANT_ID]) async {
+  Future<void> migrateGuestData(
+    String newPersonId, [
+    String tenantId = DEFAULT_TENANT_ID,
+  ]) async {
     const guestId = DataSeeder.guestPersonId;
     if (newPersonId == guestId) return; // No self-migration
 
-    print("🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...");
+    print(
+      "🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...",
+    );
 
     final tables = [
-      'scores', 'achievements', 'mind_logs', 'habits', 'goals',
-      'health_metrics', 'weight_logs', 'exercise_logs', 'sleep_logs', 'water_logs',
-      'financial_metrics', 'financial_accounts', 'assets', 'transactions', 'subscriptions', 'portfolio_snapshots',
-      'projects', 'project_notes', 'project_metrics', 'skills',
-      'focus_sessions', 'quests', 'feedbacks', 'ai_analysis', 'person_widgets',
-      'meals', 'custom_notifications', 'quotes', 'ai_prompts'
+      'scores',
+      'achievements',
+      'mind_logs',
+      'habits',
+      'goals',
+      'health_metrics',
+      'weight_logs',
+      'exercise_logs',
+      'sleep_logs',
+      'water_logs',
+      'financial_metrics',
+      'financial_accounts',
+      'assets',
+      'transactions',
+      'subscriptions',
+      'portfolio_snapshots',
+      'projects',
+      'project_notes',
+      'project_metrics',
+      'skills',
+      'focus_sessions',
+      'quests',
+      'feedbacks',
+      'ai_analysis',
+      'person_widgets',
+      'meals',
+      'custom_notifications',
+      'quotes',
+      'ai_prompts',
     ];
 
     await transaction(() async {
@@ -2705,7 +2971,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
             variables: [
               Variable(newPersonId),
               Variable(tenantId),
-              Variable(guestId)
+              Variable(guestId),
             ],
           );
         } catch (e) {
@@ -2723,28 +2989,41 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     final id = entry.id.value;
     final existing = await getPersonById(id);
 
+    PersonsTableCompanion finalEntry;
+
     if (existing != null) {
-      // Comparison logic: Only update if the incoming affection is greater than existing
       final updatedAffection = entry.affection.present
           ? (force || (entry.affection.value ?? 0) > (existing.affection ?? 0)
                 ? entry.affection
                 : Value(existing.affection))
           : Value(existing.affection);
 
-      await (update(personsTable)..where((t) => t.id.equals(id))).write(
-        entry.copyWith(
-          affection: updatedAffection,
-          updatedAt: Value(DateTime.now()),
-        ),
+      finalEntry = entry.copyWith(
+        affection: updatedAffection,
+        updatedAt: Value(DateTime.now()),
       );
+      await (update(
+        personsTable,
+      )..where((t) => t.id.equals(id))).write(finalEntry);
     } else {
-      await into(personsTable).insert(
-        entry.copyWith(
-          createdAt: Value(DateTime.now()),
-          updatedAt: Value(DateTime.now()),
-        ),
+      finalEntry = entry.copyWith(
+        createdAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now()),
       );
+      await into(personsTable).insert(finalEntry);
     }
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in personsTable.$columns) {
+      final value = finalEntry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'persons', payload: payload);
   }
 
   Stream<List<SocialContact>> getContactsByRelationship(String type) {
@@ -2968,7 +3247,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   }
 
   // Emails
-  Future<int> addEmail(EmailAddressProtocol email, {String? overridePersonID}) {
+  Future<void> addEmail(
+    EmailAddressProtocol email, {
+    String? overridePersonID,
+  }) async {
     // Convert string status to EmailStatus enum
     EmailStatus emailStatus;
     switch (email.status.toString().toLowerCase()) {
@@ -2988,7 +3270,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     final companion = EmailAddressesTableCompanion.insert(
       id: IDGen.UUIDV7(),
       emailAddressID: Value(email.emailAddressID),
-      personID: Value(email.personID),
+      personID: Value(overridePersonID ?? email.personID),
       emailAddress: email.emailAddress,
       emailType: Value(email.emailType),
       isPrimary: Value(email.isPrimary),
@@ -2996,7 +3278,19 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       verifiedAt: Value(email.verifiedAt),
       createdAt: Value(DateTime.now()),
     );
-    return into(emailAddressesTable).insert(companion);
+    await into(emailAddressesTable).insert(companion);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in emailAddressesTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'email_addresses', payload: payload);
   }
 
   Future<List<EmailAddressData>> getEmailsForPerson(String personId) => (select(
@@ -3007,11 +3301,11 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       update(emailAddressesTable).replace(email);
 
   // Accounts
-  Future<int> createAccount(
+  Future<void> createAccount(
     UserAccountProtocol account, {
     String? overridePersonID,
     String? passwordHash,
-  }) {
+  }) async {
     // Convert string role to UserRole enum
     UserRole userRole;
     switch (account.role.toLowerCase()) {
@@ -3025,7 +3319,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
         userRole = UserRole.user;
     }
 
-    // Defensive check for username length (Drift constraint: min 3)
+    // Defensive check for username length
     String safeUsername = account.username;
     if (safeUsername.length < 3) {
       safeUsername = "user_${DateTime.now().millisecondsSinceEpoch % 1000}";
@@ -3036,15 +3330,26 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       accountID: Value(account.accountID),
       personID: Value(overridePersonID ?? account.personID),
       username: Value(safeUsername),
-      passwordHash: Value(passwordHash ?? ''), // Default empty if not provided
-      primaryEmailID: const Value.absent(),
+      passwordHash: Value(passwordHash ?? ''),
       role: Value(userRole),
       isLocked: Value(account.isLocked),
       lastLoginAt: Value(account.lastLoginAt),
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
-    return into(userAccountsTable).insert(companion);
+    await into(userAccountsTable).insert(companion);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in userAccountsTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'user_accounts', payload: payload);
   }
 
   Future<UserAccountData?> getAccountByUsername(String username) => (select(
@@ -3063,7 +3368,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       update(userAccountsTable).replace(account);
 
   // Profiles
-  Future<int> createProfile(ProfileProtocol profile, String? overridePersonID) {
+  Future<void> createProfile(
+    ProfileProtocol profile,
+    String? overridePersonID,
+  ) async {
     final companion = ProfilesTableCompanion.insert(
       id: IDGen.UUIDV7(),
       profileID: Value(profile.profileID),
@@ -3078,7 +3386,19 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
-    return into(profilesTable).insert(companion);
+    await into(profilesTable).insert(companion);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in profilesTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'profiles', payload: payload);
   }
 
   Future<ProfileData?> getProfileForPerson(String personId) => (select(
@@ -3112,10 +3432,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
   }
 
   // CV Addresses
-  Future<int> createCVAddress(
+  Future<void> createCVAddress(
     CVAddressProtocol cvAddress, {
     String? overridePersonID,
-  }) {
+  }) async {
     final companion = CVAddressesTableCompanion.insert(
       id: IDGen.UUIDV7(),
       cvAddressID: Value(cvAddress.cvAddressID),
@@ -3132,7 +3452,19 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
-    return into(cVAddressesTable).insert(companion);
+    await into(cVAddressesTable).insert(companion);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in cVAddressesTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'cv_addresses', payload: payload);
   }
 
   Future<PersonalInformationProtocol> getAllInformation(String id) async {
@@ -3447,14 +3779,54 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   FinanceDAO(super.db);
 
   // Subscriptions
-  Future<int> insertSubscription(SubscriptionsTableCompanion subscription) =>
-      into(subscriptionsTable).insert(subscription);
+  Future<void> insertSubscription(
+    SubscriptionsTableCompanion subscription,
+  ) async {
+    await into(subscriptionsTable).insert(subscription);
+    await db.pushToSupabase(
+      table: 'subscriptions',
+      payload: db.companionToMap(subscription, subscriptionsTable),
+    );
+  }
 
-  Future<int> deleteSubscription(String id) =>
-      (delete(subscriptionsTable)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteSubscription(String id) async {
+    await (delete(subscriptionsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'subscriptions',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
 
-  Future<bool> updateSubscription(SubscriptionsTableCompanion subscription) =>
-      update(subscriptionsTable).replace(subscription);
+  Future<void> updateSubscription(
+    SubscriptionsTableCompanion subscription,
+  ) async {
+    await update(subscriptionsTable).replace(subscription);
+    await db.pushToSupabase(
+      table: 'subscriptions',
+      payload: db.companionToMap(subscription, subscriptionsTable),
+    );
+  }
+
+  Future<void> upsertFromSupabaseSubscription(Map<String, dynamic> record) async {
+    await into(subscriptionsTable).insert(
+      SubscriptionsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String),
+        name: Value(record['name'] as String),
+        amount: Value((record['amount'] as num).toDouble()),
+        billingDay: Value((record['billing_day'] as num).toInt()),
+        category: Value(record['category'] as String?),
+        isActive: Value(record['is_active'] == true || record['is_active'] == 1),
+        createdAt: Value(
+          record['created_at'] != null
+              ? DateTime.parse(record['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
 
   Stream<List<SubscriptionData>> watchSubscriptions(String personId) {
     return (select(subscriptionsTable)
@@ -3464,8 +3836,60 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   }
 
   // Accounts
-  Future<int> createAccount(FinancialAccountsTableCompanion account) =>
-      into(financialAccountsTable).insert(account);
+  Future<void> createAccount(FinancialAccountsTableCompanion account) async {
+    await into(financialAccountsTable).insert(account);
+    await db.pushToSupabase(
+      table: 'financial_accounts',
+      payload: db.companionToMap(account, financialAccountsTable),
+    );
+  }
+
+  Future<void> deleteAccount(String id) async {
+    await (delete(financialAccountsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'financial_accounts',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  Future<void> upsertFromSupabaseAccount(Map<String, dynamic> record) async {
+    final id = record['id'] as String;
+    final personId = record['person_id'] as String;
+
+    final companion = FinancialAccountsTableCompanion(
+      id: Value(id),
+      accountID: Value(record['account_id'] as String?),
+      personID: Value(personId),
+      accountName: Value(record['account_name'] as String? ?? 'Untitled Account'),
+      accountType: Value(record['account_type'] as String? ?? 'checking'),
+      balance: Value((record['balance'] as num?)?.toDouble() ?? 0.0),
+      currency: Value(
+        CurrencyType.values.firstWhere(
+          (e) => e.name == record['currency'],
+          orElse: () => CurrencyType.USD,
+        ),
+      ),
+      isPrimary: Value(record['is_primary'] == true || record['is_primary'] == 1),
+      isActive: Value(record['is_active'] == true || record['is_active'] == 1),
+      createdAt: Value(
+        record['created_at'] != null
+            ? DateTime.parse(record['created_at'].toString())
+            : DateTime.now(),
+      ),
+      updatedAt: Value(
+        record['updated_at'] != null
+            ? DateTime.parse(record['updated_at'].toString())
+            : DateTime.now(),
+      ),
+    );
+
+    await into(financialAccountsTable).insert(
+      companion,
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
   Stream<List<FinancialAccountData>> watchAccounts(String personId) {
     return customSelect(
       'SELECT * FROM financial_accounts WHERE person_id = ?',
@@ -3507,8 +3931,68 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   }
 
   // Assets
-  Future<int> createAsset(AssetsTableCompanion asset) =>
-      into(assetsTable).insert(asset);
+  Future<void> createAsset(AssetsTableCompanion asset) async {
+    await into(assetsTable).insert(asset);
+    await db.pushToSupabase(
+      table: 'assets',
+      payload: db.companionToMap(asset, assetsTable),
+    );
+  }
+
+  Future<void> deleteAsset(String id) async {
+    await (delete(assetsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'assets',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  Future<void> upsertFromSupabaseAsset(Map<String, dynamic> record) async {
+    final id = record['id'] as String;
+    final personId = record['person_id'] as String;
+
+    await into(assetsTable).insert(
+      AssetsTableCompanion(
+        id: Value(id),
+        assetID: Value(record['asset_id'] as String?),
+        personID: Value(personId),
+        assetName: Value(record['asset_name'] as String? ?? 'Untitled Asset'),
+        assetCategory: Value(record['asset_category'] as String? ?? 'other'),
+        purchaseDate: Value(
+          record['purchase_date'] != null
+              ? DateTime.parse(record['purchase_date'].toString())
+              : null,
+        ),
+        purchasePrice: Value((record['purchase_price'] as num?)?.toDouble()),
+        currentEstimatedValue: Value(
+          (record['current_estimated_value'] as num?)?.toDouble(),
+        ),
+        currency: Value(
+          CurrencyType.values.firstWhere(
+            (e) => e.name == record['currency'],
+            orElse: () => CurrencyType.USD,
+          ),
+        ),
+        condition: Value(record['condition'] as String? ?? 'good'),
+        location: Value(record['location'] as String?),
+        notes: Value(record['notes'] as String?),
+        isInsured: Value(record['is_insured'] == true || record['is_insured'] == 1),
+        createdAt: Value(
+          record['created_at'] != null
+              ? DateTime.parse(record['created_at'].toString())
+              : DateTime.now(),
+        ),
+        updatedAt: Value(
+          record['updated_at'] != null
+              ? DateTime.parse(record['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
   Stream<List<AssetData>> watchAssets(String personId) {
     return customSelect(
       'SELECT * FROM assets WHERE person_id = ?',
@@ -3556,11 +4040,51 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   }
 
   // Transactions
-  Future<int> insertTransaction(TransactionsTableCompanion txn) =>
-      into(transactionsTable).insert(txn);
+  Future<void> insertTransaction(TransactionsTableCompanion txn) async {
+    await into(transactionsTable).insert(txn);
+    await db.pushToSupabase(
+      table: 'financial_transactions',
+      payload: db.companionToMap(txn, transactionsTable),
+    );
+  }
 
-  Future<void> deleteTransaction(String id) =>
-      (delete(transactionsTable)..where((t) => t.id.equals(id))).go();
+  Future<void> upsertFromSupabaseTransaction(Map<String, dynamic> record) async {
+    final id = record['id'] as String;
+    final personId = record['person_id'] as String;
+
+    await into(transactionsTable).insert(
+      TransactionsTableCompanion(
+        id: Value(id),
+        transactionID: Value(record['transaction_id'] as String?),
+        personID: Value(personId),
+        category: Value(record['category'] as String? ?? 'uncategorized'),
+        type: Value(record['type'] as String? ?? 'expense'),
+        amount: Value((record['amount'] as num?)?.toDouble() ?? 0.0),
+        description: Value(record['description'] as String?),
+        transactionDate: Value(
+          record['transaction_date'] != null
+              ? DateTime.parse(record['transaction_date'].toString())
+              : DateTime.now(),
+        ),
+        createdAt: Value(
+          record['created_at'] != null
+              ? DateTime.parse(record['created_at'].toString())
+              : DateTime.now(),
+        ),
+        projectID: Value(record['project_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> deleteTransaction(String id) async {
+    await (delete(transactionsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'financial_transactions',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
 
   Stream<List<TransactionData>> watchAllTransactions(String personId) {
     return customSelect(
@@ -3763,8 +4287,22 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
   }
 
   // Habits
-  Future<int> createHabit(HabitsTableCompanion habit) =>
-      into(habitsTable).insert(habit);
+  Future<void> createHabit(HabitsTableCompanion habit) async {
+    await into(habitsTable).insert(habit);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in habitsTable.$columns) {
+      final value = habit.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'habits', payload: payload);
+  }
+
   Stream<List<HabitData>> watchHabits(String personId) {
     return customSelect(
       'SELECT * FROM habits WHERE person_id = ?',
@@ -3868,6 +4406,32 @@ class AiAnalysisDAO extends DatabaseAccessor<AppDatabase>
 @DriftAccessor(tables: [PersonWidgetsTable])
 class WidgetDAO extends DatabaseAccessor<AppDatabase> with _$WidgetDAOMixin {
   WidgetDAO(super.db);
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(personWidgetsTable).insertOnConflictUpdate(
+      PersonWidgetsTableCompanion.insert(
+        id: r['id'] as String,
+        tenantID: Value(r['tenant_id'] as String?),
+        personWidgetID: Value(r['person_widget_id'] as int?),
+        personID: Value(r['person_id'] as String?),
+        widgetName: r['widget_name'] as String,
+        widgetType: r['widget_type'] as String,
+        configuration: Value(r['configuration'] as String),
+        displayOrder: Value(r['display_order'] as int),
+        isActive: Value(r['is_active'] as bool),
+        role: Value(UserRole.values.firstWhere(
+          (e) => e.name == r['role'],
+          orElse: () => UserRole.admin,
+        )),
+        createdAt: Value(r['created_at'] != null
+            ? DateTime.tryParse(r['created_at'].toString())
+            : null),
+        updatedAt: Value(r['updated_at'] != null
+            ? DateTime.tryParse(r['updated_at'].toString())
+            : null),
+      ),
+    );
+  }
 
   Future<int> createWidget(PersonWidgetsTableCompanion widget) =>
       into(personWidgetsTable).insert(widget);
@@ -4220,12 +4784,16 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         updatedAt: Value(DateTime.now()),
       );
 
+      HealthMetricsTableCompanion finalCompanion;
+
       if (existingRecord != null) {
+        finalCompanion = updatedCompanion;
         await (update(
           tbl,
-        )..where((t) => t.id.equals(deterministicId))).write(updatedCompanion);
+        )..where((t) => t.id.equals(deterministicId))).write(finalCompanion);
       } else {
-        await into(tbl).insert(updatedCompanion);
+        finalCompanion = updatedCompanion;
+        await into(tbl).insert(finalCompanion);
       }
 
       // Clean up the legacy record if it had a different ID
@@ -4241,21 +4809,73 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       debugPrint(
         "HealthMetricsDAO: ✅ Record converged to $deterministicId successfully.",
       );
+
+      // Convert companion to map with raw values
+      final Map<String, dynamic> payload = {};
+      for (final col in healthMetricsTable.$columns) {
+        final value = finalCompanion.toColumns(true)[col.name];
+        if (value is Variable) {
+          payload[col.name] = value.value;
+        }
+      }
+
+      // Direct push to Supabase
+      await db.pushToSupabase(table: 'health_metrics', payload: payload);
     } else {
       debugPrint(
         "HealthMetricsDAO: Inserting new record (ID: $deterministicId)...",
       );
-      await into(healthMetricsTable).insert(
-        entry.copyWith(
-          id: Value(deterministicId),
-          date: Value(normalized),
-          category: Value(category),
-          updatedAt: Value(DateTime.now()),
-        ),
-        mode: InsertMode.insertOrReplace,
+      final finalCompanion = entry.copyWith(
+        id: Value(deterministicId),
+        date: Value(normalized),
+        category: Value(category),
+        updatedAt: Value(DateTime.now()),
       );
+      await into(
+        healthMetricsTable,
+      ).insert(finalCompanion, mode: InsertMode.insertOrReplace);
       debugPrint("HealthMetricsDAO: ✅ New record inserted successfully.");
+
+      // Convert companion to map with raw values
+      final Map<String, dynamic> payload = {};
+      for (final col in healthMetricsTable.$columns) {
+        final value = finalCompanion.toColumns(true)[col.name];
+        if (value is Variable) {
+          payload[col.name] = value.value;
+        }
+      }
+
+      // Direct push to Supabase
+      await db.pushToSupabase(table: 'health_metrics', payload: payload);
     }
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = HealthMetricsTableCompanion(
+      id: Value(r['id'] as String),
+      personID: Value(r['person_id'] as String?),
+      date: Value(DateTime.parse(r['date'] as String)),
+      steps: Value(r['steps'] as int?),
+      caloriesBurned: Value(r['calories_burned'] as int?),
+      caloriesConsumed: Value(r['calories_consumed'] as int?),
+      sleepHours: Value((r['sleep_hours'] as num?)?.toDouble()),
+      waterGlasses: Value(r['water_glasses'] as int?),
+      exerciseMinutes: Value(r['exercise_minutes'] as int?),
+      focusMinutes: Value(r['focus_minutes'] as int?),
+      weightKg: Value((r['weight_kg'] as num?)?.toDouble()),
+      heartRate: Value((r['heart_rate'] as num?)?.toInt()),
+      questPoints: Value((r['quest_points'] as num?)?.toDouble()),
+      updatedAt: Value(
+        r['updated_at'] != null
+            ? DateTime.parse(r['updated_at'] as String)
+            : DateTime.now(),
+      ),
+      category: Value(r['category'] as String?),
+    );
+    await into(healthMetricsTable).insert(
+      companion,
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
   Future<int> deleteMetricsForPerson(String personID) {
@@ -5306,15 +5926,9 @@ class FocusSessionsTable extends Table {
   TextColumn get tenantID => text()
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
-  TextColumn get projectID => text()
-      .nullable()
-      .named('project_id')();
-  TextColumn get taskID => text()
-      .nullable()
-      .named('task_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get taskID => text().nullable().named('task_id')();
   DateTimeColumn get startTime =>
       dateTime().map(const DateTimeUTCConverter()).named('start_time')();
   DateTimeColumn get endTime => dateTime()
@@ -5354,8 +5968,43 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
     with _$FocusSessionsDAOMixin {
   FocusSessionsDAO(super.db);
 
-  Future<int> insertSession(FocusSessionsTableCompanion session) {
-    return into(focusSessionsTable).insert(session);
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = FocusSessionsTableCompanion(
+      id: Value(r['id'] as String),
+      tenantID: Value(r['tenant_id'] as String? ?? '00000000-0000-0000-0000-000000000000'),
+      personID: Value(r['person_id'] as String?),
+      projectID: Value(r['project_id'] as String?),
+      taskID: Value(r['task_id'] as String?),
+      startTime: Value(DateTime.parse(r['start_time'] as String)),
+      endTime: Value(
+        r['end_time'] != null ? DateTime.parse(r['end_time'] as String) : null,
+      ),
+      durationSeconds: Value(r['duration_seconds'] as int? ?? 0),
+      status: Value(r['status'] as String? ?? 'completed'),
+      sessionType: Value(r['session_type'] as String? ?? 'Focus'),
+      createdAt: Value(DateTime.parse(r['created_at'] as String)),
+      updatedAt: Value(r['updated_at'] != null ? DateTime.parse(r['updated_at'] as String) : DateTime.now()),
+    );
+    await into(focusSessionsTable).insert(
+      companion,
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> insertSession(FocusSessionsTableCompanion session) async {
+    await into(focusSessionsTable).insert(session);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in focusSessionsTable.$columns) {
+      final value = session.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'focus_sessions', payload: payload);
   }
 
   Stream<List<FocusSessionData>> watchSessionsByPerson(String personId) {
@@ -5368,8 +6017,13 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
     return select(focusSessionsTable).watch();
   }
 
-  Future<int> deleteSession(String id) {
-    return (delete(focusSessionsTable)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteSession(String id) async {
+    await (delete(focusSessionsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'focus_sessions',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   Future<void> patchSession(
@@ -5379,6 +6033,17 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
     await (update(
       focusSessionsTable,
     )..where((t) => t.id.equals(id))).write(companion);
+
+    // Construct payload from companion + ID
+    final Map<String, dynamic> payload = {'id': id};
+    for (final col in focusSessionsTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    await db.pushToSupabase(table: 'focus_sessions', payload: payload);
   }
 }
 
@@ -5391,9 +6056,7 @@ class QuotesTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   // IntColumn get quoteID => integer().nullable().named('quote_id')();
-  TextColumn get personID => text()
-      .nullable()
-      .named('person_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get content => text()();
   TextColumn get author => text().nullable()();
   BoolColumn get isActive =>
@@ -5411,8 +6074,21 @@ class QuotesTable extends Table {
 class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
   QuoteDAO(super.db);
 
-  Future<int> insertQuote(QuotesTableCompanion entry) =>
-      into(quotesTable).insert(entry);
+  Future<void> insertQuote(QuotesTableCompanion entry) async {
+    await into(quotesTable).insert(entry);
+
+    // Convert companion to map with raw values
+    final Map<String, dynamic> payload = {};
+    for (final col in quotesTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+
+    // Direct push to Supabase
+    await db.pushToSupabase(table: 'quotes', payload: payload);
+  }
 
   Future<bool> updateQuote(QuoteData entry) =>
       update(quotesTable).replace(entry);
@@ -5422,28 +6098,32 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
 
   Future<List<QuoteData>> getAllQuotes() async {
     final rows = await customSelect('SELECT * FROM quotes').get();
-    return rows.map((row) {
-      DateTime? createdAt;
-      try {
-        final val = row.data['created_at'];
-        if (val is String) {
-          createdAt = DateTime.parse(val);
-        } else if (val is int) {
-          createdAt = DateTime.fromMillisecondsSinceEpoch(val);
-        }
-      } catch (_) {}
+    return rows
+        .map((row) {
+          DateTime? createdAt;
+          try {
+            final val = row.data['created_at'];
+            if (val is String) {
+              createdAt = DateTime.parse(val);
+            } else if (val is int) {
+              createdAt = DateTime.fromMillisecondsSinceEpoch(val);
+            }
+          } catch (_) {}
 
-      return QuoteData(
-        id: row.data['id'] as String,
-        personID: row.data['person_id'] as String,
-        content: row.data['content'] as String? ?? '',
-        author: row.data['author'] as String?,
-        isActive:
-            (row.data['is_active'] as int?) == 1 ||
-            (row.data['is_active'] as bool?) == true,
-        createdAt: createdAt ?? DateTime.now(),
-      );
-    }).toList();
+          return QuoteData(
+            id: row.data['id'] as String,
+            tenantID: row.data['tenant_id'] as String? ?? DEFAULT_TENANT_ID,
+            personID: row.data['person_id'] as String? ?? '',
+            content: row.data['content'] as String? ?? '',
+            author: row.data['author'] as String?,
+            isActive:
+                (row.data['is_active'] as int?) == 1 ||
+                (row.data['is_active'] as bool?) == true,
+            createdAt: createdAt ?? DateTime.now(),
+          );
+        })
+        .cast<QuoteData>()
+        .toList();
   }
 
   Stream<List<QuoteData>> watchActiveQuotes() {
@@ -5461,8 +6141,9 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
           .map(
             (row) => QuoteData(
               id: row.data['id'] as String,
-              personID: row.data['person_id'] as String?,
-              content: row.data['content'] as String,
+              tenantID: row.data['tenant_id'] as String? ?? DEFAULT_TENANT_ID,
+              personID: row.data['person_id'] as String? ?? '',
+              content: row.data['content'] as String? ?? '',
               author: row.data['author'] as String?,
               isActive:
                   (row.data['is_active'] as int?) == 1 ||
@@ -5470,6 +6151,7 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
               createdAt: _parseDate(row.data['created_at']),
             ),
           )
+          .cast<QuoteData>()
           .toList();
     });
   }
@@ -5527,8 +6209,9 @@ class CustomNotificationDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<int> watchEnabledNotificationsCount(String personId) {
-    return (select(customNotificationsTable)
-          ..where((t) => t.isEnabled.equals(true) & t.personID.equals(personId)))
+    return (select(
+          customNotificationsTable,
+        )..where((t) => t.isEnabled.equals(true) & t.personID.equals(personId)))
         .watch()
         .map((list) => list.length);
   }
@@ -5606,7 +6289,7 @@ class FeedbackDAO extends DatabaseAccessor<AppDatabase>
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   QuestDAO(super.db);
 
-  Future<int> insertQuest(QuestsTableCompanion entry) {
+  Future<void> insertQuest(QuestsTableCompanion entry) async {
     // Force category to lowercase if present
     var updatedEntry = entry;
     if (entry.category.present) {
@@ -5615,7 +6298,38 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
         category: Value(categoryValue?.toLowerCase()),
       );
     }
-    return into(questsTable).insert(updatedEntry);
+    await into(questsTable).insert(updatedEntry);
+
+    // Direct push to Supabase using shared helper
+    await db.pushToSupabase(
+      table: 'quests',
+      payload: db.companionToMap(updatedEntry, questsTable),
+    );
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    await into(questsTable).insert(
+      QuestsTableCompanion(
+        id: Value(record['id'] as String),
+        tenantID: Value(record['tenant_id'] as String?),
+        personID: Value(record['person_id'] as String?),
+        title: Value(record['title'] as String?),
+        description: Value(record['description'] as String?),
+        type: Value(record['type'] as String?),
+        targetValue: Value((record['target_value'] as num?)?.toDouble()),
+        currentValue: Value((record['current_value'] as num?)?.toDouble()),
+        category: Value(record['category'] as String?),
+        rewardExp: Value(record['reward_exp'] as int?),
+        isCompleted: Value(record['is_completed'] as bool?),
+        createdAt: Value(
+          record['created_at'] != null
+              ? DateTime.parse(record['created_at'].toString())
+              : DateTime.now(),
+        ),
+        penaltyScore: Value(record['penalty_score'] as int?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
   Future<bool> updateQuest(QuestData entry) {
@@ -5625,8 +6339,17 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
     return update(questsTable).replace(updatedEntry);
   }
 
-  Future<int> deleteQuest(String id) =>
-      (delete(questsTable)..where((t) => t.id.equals(id))).go();
+  Future<int> deleteQuest(String id) async {
+    final count = await (delete(questsTable)..where((t) => t.id.equals(id))).go();
+    if (count > 0) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': id},
+        isDelete: true,
+      );
+    }
+    return count;
+  }
 
   /// Clears stale auto-generated dailies before inserting a new day's batch.
   Future<int> deleteIncompleteDailyQuestsForPerson(String personId) {
@@ -5641,9 +6364,8 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
 
   /// Removes all secret quests for a person. Used to clean up mock mysterious quests.
   Future<int> deleteSecretQuestsForPerson(String personId) {
-    return (delete(questsTable)..where(
-          (t) => t.personID.equals(personId) & t.type.equals('secret'),
-        ))
+    return (delete(questsTable)
+          ..where((t) => t.personID.equals(personId) & t.type.equals('secret')))
         .go();
   }
 
@@ -5686,11 +6408,16 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
       final newValue = value;
       final target = existing.targetValue ?? 0.0;
       final isNowCompleted = newValue >= target;
-      await (update(questsTable)..where((t) => t.id.equals(id))).write(
-        QuestsTableCompanion(
-          currentValue: Value(newValue),
-          isCompleted: Value(isNowCompleted),
-        ),
+      final companion = QuestsTableCompanion(
+        id: Value(id),
+        currentValue: Value(newValue),
+        isCompleted: Value(isNowCompleted),
+      );
+      await (update(questsTable)..where((t) => t.id.equals(id))).write(companion);
+
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: db.companionToMap(companion, questsTable),
       );
     }
   }
@@ -5754,8 +6481,26 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   HealthLogsDAO(super.db);
 
   // Water Logs
-  Future<int> insertWaterLog(WaterLogsTableCompanion entry) =>
-      into(waterLogsTable).insert(entry);
+  Future<void> insertWaterLog(WaterLogsTableCompanion entry) async {
+    await into(waterLogsTable).insert(entry);
+    await db.pushToSupabase(
+      table: 'water_logs',
+      payload: db.companionToMap(entry, waterLogsTable),
+    );
+  }
+
+  Future<void> upsertFromSupabaseWater(Map<String, dynamic> record) async {
+    await into(waterLogsTable).insert(
+      WaterLogsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String?),
+        amount: Value((record['amount'] as num).toInt()),
+        timestamp: Value(DateTime.parse(record['timestamp'].toString())),
+        healthMetricID: Value(record['health_metric_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
   Stream<List<WaterLogData>> watchDailyWaterLogs(
     String personId,
     DateTime date,
@@ -5770,8 +6515,9 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
-  Future<int> deleteWaterLog(String id) {
-    return (delete(waterLogsTable)..where((t) => t.id.equals(id))).go();
+  Future<void> deleteWaterLog(String id) async {
+    await (delete(waterLogsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(table: 'water_logs', payload: {'id': id}, isDelete: true);
   }
 
   /// Sum all water log amounts (in ml) for a given person on a specific day.
@@ -5796,8 +6542,32 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   // Sleep Logs
-  Future<int> insertSleepLog(SleepLogsTableCompanion entry) =>
-      into(sleepLogsTable).insert(entry);
+  Future<void> insertSleepLog(SleepLogsTableCompanion entry) async {
+    await into(sleepLogsTable).insert(entry);
+    await db.pushToSupabase(
+      table: 'sleep_logs',
+      payload: db.companionToMap(entry, sleepLogsTable),
+    );
+  }
+
+  Future<void> upsertFromSupabaseSleep(Map<String, dynamic> record) async {
+    await into(sleepLogsTable).insert(
+      SleepLogsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String?),
+        startTime: Value(DateTime.parse(record['start_time'].toString())),
+        endTime: Value(DateTime.parse(record['end_time'].toString())),
+        quality: Value((record['quality'] as num?)?.toInt() ?? 3),
+        healthMetricID: Value(record['health_metric_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> deleteSleepLog(String id) async {
+    await (delete(sleepLogsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(table: 'sleep_logs', payload: {'id': id}, isDelete: true);
+  }
   Stream<List<SleepLogData>> watchSleepLogs(String personId) {
     return (select(
       sleepLogsTable,
@@ -5805,8 +6575,34 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   // Exercise Logs
-  Future<int> insertExerciseLog(ExerciseLogsTableCompanion entry) =>
-      into(exerciseLogsTable).insert(entry);
+  Future<void> insertExerciseLog(ExerciseLogsTableCompanion entry) async {
+    await into(exerciseLogsTable).insert(entry);
+    await db.pushToSupabase(
+      table: 'exercise_logs',
+      payload: db.companionToMap(entry, exerciseLogsTable),
+    );
+  }
+
+  Future<void> upsertFromSupabaseExercise(Map<String, dynamic> record) async {
+    await into(exerciseLogsTable).insert(
+      ExerciseLogsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String?),
+        type: Value(record['type'] as String),
+        durationMinutes: Value((record['duration_minutes'] as num).toInt()),
+        intensity: Value(record['intensity'] as String),
+        timestamp: Value(DateTime.parse(record['timestamp'].toString())),
+        focusSessionID: Value(record['focus_session_id'] as String?),
+        healthMetricID: Value(record['health_metric_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> deleteExerciseLog(String id) async {
+    await (delete(exerciseLogsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(table: 'exercise_logs', payload: {'id': id}, isDelete: true);
+  }
 
   Stream<List<ExerciseLogData>> watchDailyExerciseLogs(
     String personId,
@@ -5915,15 +6711,30 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   // Weight Logs
   Future<void> insertWeightLog(WeightLogsTableCompanion entry) async {
-    // Weight logging is simple append in PowerSync (CRUD transaction is sequential)
-    // but we use manual check as safety for local collisions
     final existing = await (select(
       weightLogsTable,
     )..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
 
     if (existing == null) {
       await into(weightLogsTable).insert(entry);
+      await db.pushToSupabase(
+        table: 'weight_logs',
+        payload: db.companionToMap(entry, weightLogsTable),
+      );
     }
+  }
+
+  Future<void> upsertFromSupabaseWeight(Map<String, dynamic> record) async {
+    await into(weightLogsTable).insert(
+      WeightLogsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String?),
+        weightKg: Value((record['weight_kg'] as num).toDouble()),
+        timestamp: Value(DateTime.parse(record['timestamp'].toString())),
+        healthMetricID: Value(record['health_metric_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 
   Stream<List<WeightLogData>> watchDailyWeightLogs(
@@ -5958,6 +6769,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> deleteWeightLog(String id) async {
     await (delete(weightLogsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(table: 'weight_logs', payload: {'id': id}, isDelete: true);
   }
 }
 
@@ -5990,29 +6802,56 @@ class AiPromptsDAO extends DatabaseAccessor<AppDatabase>
         .getSingleOrNull();
   }
 
-  Future<int> savePrompt(String personID, String model, String prompt) async {
+  Future<void> savePrompt(String personID, String model, String prompt) async {
     final existing = await getPrompt(personID, model);
     if (existing != null) {
-      return (update(aiPromptsTable)..where(
-            (t) => t.personID.equals(personID) & t.aiModel.equals(model),
+      final companion = AiPromptsTableCompanion(
+        id: Value(existing.id),
+        prompt: Value(prompt),
+        updatedAt: Value(DateTime.now()),
+      );
+      await (update(aiPromptsTable)..where(
+            (t) => t.id.equals(existing.id),
           ))
-          .write(
-            AiPromptsTableCompanion(
-              prompt: Value(prompt),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
+          .write(companion);
+
+      await db.pushToSupabase(
+        table: 'ai_prompts',
+        payload: db.companionToMap(companion, aiPromptsTable),
+      );
     } else {
-      return into(aiPromptsTable).insert(
-        AiPromptsTableCompanion.insert(
-          id: IDGen.UUIDV7(),
-          personID: Value(personID),
-          aiModel: model,
-          prompt: prompt,
-          updatedAt: Value(DateTime.now()),
-        ),
+      final id = IDGen.UUIDV7();
+      final companion = AiPromptsTableCompanion.insert(
+        id: id,
+        personID: Value(personID),
+        aiModel: model,
+        prompt: prompt,
+        updatedAt: Value(DateTime.now()),
+      );
+      await into(aiPromptsTable).insert(companion);
+
+      await db.pushToSupabase(
+        table: 'ai_prompts',
+        payload: db.companionToMap(companion, aiPromptsTable),
       );
     }
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    await into(aiPromptsTable).insert(
+      AiPromptsTableCompanion(
+        id: Value(record['id'] as String),
+        personID: Value(record['person_id'] as String),
+        aiModel: Value(record['ai_model'] as String),
+        prompt: Value(record['prompt'] as String),
+        updatedAt: Value(
+          record['updated_at'] != null
+              ? DateTime.parse(record['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
   }
 }
 
@@ -6123,7 +6962,8 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     return (select(achievementsTable)
           ..where((t) => t.personID.equals(personId))
           ..orderBy([
-            (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc)
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -6216,10 +7056,137 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
 )
 class AppDatabase extends _$AppDatabase {
   final PowerSyncDatabase? powerSync;
+  SupabaseService? supabaseSync;
 
   AppDatabase([QueryExecutor? executor, this.powerSync])
     : super(executor ?? _openConnection()) {
     print("OBVIOUS LOG: DATABASE VERSION IS 49");
+  }
+
+  /// Direct push to Supabase as requested for this branch (bypassing PowerSync upload queue)
+  Future<void> pushToSupabase({
+    required String table,
+    required Map<String, dynamic> payload,
+    bool isDelete = false,
+  }) async {
+    if (supabaseSync != null) {
+      await supabaseSync!.pushData(table: table, payload: payload, isDelete: isDelete);
+      return;
+    }
+    debugPrint(
+      "📡 [Supabase] pushToSupabase called for $table (isDelete: $isDelete)",
+    );
+    try {
+      final client = Supabase.instance.client;
+
+      // 1. Skip if Guest data
+      final idValue = payload['id']?.toString() ?? "";
+      if (_isGuest(idValue, payload)) {
+        debugPrint(
+          "⏭️ [Supabase] Skipping direct push for guest data in $table (ID: $idValue)",
+        );
+        return;
+      }
+
+      // 2. Transform payload (remove local-only columns)
+      final transformed = _transformOpData(table, payload);
+      final Map<String, dynamic> encodablePayload = Map.from(transformed).map((
+        key,
+        value,
+      ) {
+        if (value is DateTime) {
+          return MapEntry(key, value.toIso8601String());
+        }
+        return MapEntry(key, value);
+      });
+      if (isDelete) {
+        debugPrint(
+          "🗑️ [Supabase] Direct deleting ${payload['id']} from $table",
+        );
+        await client.from(table).delete().eq('id', payload['id']);
+      } else {
+        debugPrint(
+          "📤 [Supabase] Direct pushing to $table: ${transformed['id']}",
+        );
+
+        // Special handling for metrics tables (upsert with conflict targets)
+        final isMetricsTable = [
+          'health_metrics',
+          'financial_metrics',
+          'project_metrics',
+          'social_metrics',
+          'scores', // Unified scores
+        ].contains(table);
+
+        if (isMetricsTable) {
+          await client
+              .from(table)
+              .upsert(encodablePayload, onConflict: 'person_id,date,category');
+        } else {
+          await client.from(table).upsert(encodablePayload);
+        }
+        debugPrint(
+          "✅ [Supabase] Direct push SUCCESS for $table: ${transformed['id']}",
+        );
+      }
+    } catch (e) {
+      debugPrint("❌ [Supabase] Direct push FAILED for $table: $e");
+      rethrow;
+    }
+  }
+
+  // Helper to standardise companion mapping for DAOs
+  Map<String, dynamic> companionToMap(UpdateCompanion companion, TableInfo table) {
+    final Map<String, dynamic> payload = {};
+    for (final col in table.$columns) {
+      final val = companion.toColumns(true)[col.name];
+      if (val is Variable) {
+        payload[col.name] = val.value;
+      }
+    }
+    return payload;
+  }
+
+  // Helper logic migrated from PowerSync connector to support direct pushes
+  static const _globalLocalOnlyColumns = {
+    'avatar_local_path',
+    'cover_local_path',
+  };
+
+  static const _tableLocalOnlyColumns = <String, Set<String>>{
+    'persons': {'person_id'},
+    'quests': {'quest_type', 'image_url'},
+    'profiles': {'last_quest_generated_at'},
+    'health_metrics': {'created_at', 'updated_at'},
+    'water_logs': {'created_at', 'updated_at'},
+    'weight_logs': {'created_at', 'updated_at'},
+    'sleep_logs': {'created_at', 'updated_at'},
+    'exercise_logs': {'created_at', 'updated_at'},
+    'focus_sessions': {'created_at', 'updated_at'},
+    'mind_logs': {'created_at', 'updated_at'},
+    'feedbacks': {'status'},
+  };
+
+  Map<String, dynamic> _transformOpData(
+    String table,
+    Map<String, dynamic> data,
+  ) {
+    final result = Map<String, dynamic>.from(data);
+    result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
+    final tableSpecific = _tableLocalOnlyColumns[table];
+    if (tableSpecific != null) {
+      result.removeWhere((key, _) => tableSpecific.contains(key));
+    }
+    return result;
+  }
+
+  bool _isGuest(String id, Map<String, dynamic> opData) {
+    const guestId = DataSeeder.guestPersonId;
+    return id == guestId ||
+        opData['person_id']?.toString() == guestId ||
+        opData['author_id']?.toString() == guestId ||
+        opData['user_id']?.toString() == guestId ||
+        opData['owner_id']?.toString() == guestId;
   }
 
   factory AppDatabase.powersync(PowerSyncDatabase db) {
@@ -6734,8 +7701,35 @@ class PortfolioSnapshotsDAO extends DatabaseAccessor<AppDatabase>
     with _$PortfolioSnapshotsDAOMixin {
   PortfolioSnapshotsDAO(super.db);
 
-  Future<void> insertSnapshot(PortfolioSnapshotsTableCompanion entry) =>
-      into(portfolioSnapshotsTable).insert(entry);
+  Future<void> insertSnapshot(PortfolioSnapshotsTableCompanion snapshot) async {
+    await into(portfolioSnapshotsTable).insert(snapshot);
+    
+    // Map to Supabase
+    final Map<String, dynamic> payload = {};
+    for (final col in portfolioSnapshotsTable.$columns) {
+      final value = snapshot.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+    await db.pushToSupabase(table: 'portfolio_snapshots', payload: payload);
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    final id = record['id'] as String;
+    final personId = record['person_id'] as String;
+
+    await into(portfolioSnapshotsTable).insert(
+      PortfolioSnapshotsTableCompanion(
+        id: Value(id),
+        personID: Value(personId),
+        totalNetWorth: Value((record['total_net_worth'] as num).toDouble()),
+        athAtTime: Value((record['ath_at_time'] as num).toDouble()),
+        timestamp: Value(DateTime.parse(record['timestamp'].toString())),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
 
   Stream<PortfolioSnapshotData?> watchLatestSnapshot(String personId) {
     return (select(portfolioSnapshotsTable)

@@ -50,6 +50,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/RemoteControllerBlock.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -91,6 +93,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late LocaleBlock localeBlock;
   late ConfigBlock configBlock;
   late DocumentationBlock documentationBlock;
+  late RemoteControllerBlock remoteControllerBlock;
   DateTime? _lastPausedTime;
 
   Timer? _healthSyncTimer;
@@ -276,15 +279,17 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         dbPath = 'powersync48.db';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        dbPath = p.join(dir.path, 'powersync49.db');
+        dbPath = p.join(dir.path, 'powersync50.db');
       }
-      final powersync = PowerSyncDatabase(
-        schema: ps_schema.schema,
-        path: dbPath,
-      );
-      await powersync.initialize();
+      // final powersync = PowerSyncDatabase(
+      //   schema: ps_schema.schema,
+      //   path: dbPath,
+      // );
+      // // await powersync.initialize();
 
-      _databaseInstance ??= AppDatabase.powersync(powersync);
+      // _databaseInstance ??= AppDatabase.powersync(powersync);
+
+      _databaseInstance ??= AppDatabase();
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
@@ -320,6 +325,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       final passkeyService = PasskeyAuthService();
       final biometricService = BiometricAuthService();
       final secureStorage = SecureStorageService();
+
+      // NEW: Initialize SupabaseService
+      final supabaseService = SupabaseService(
+        database: database,
+        client: Supabase.instance.client,
+      );
+      database.supabaseSync = supabaseService;
 
       personBlock = PersonBlock(
         authService: authService,
@@ -370,6 +382,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         notificationService: notificationService,
       );
 
+      remoteControllerBlock = RemoteControllerBlock(
+        supabase: Supabase.instance.client,
+        authBlock: authBlock,
+        focusBlock: focusBlock,
+        musicBlock: musicBlock,
+      );
+
       _effectCleanups.add(
         effect(() {
           try {
@@ -412,6 +431,14 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 focusBlock.personId = personId;
                 focusBlock.fetchDailyStats();
                 notificationService.syncAllNotifications(personId);
+
+                // NEW: Trigger Cloud Sync
+                database.supabaseSync?.syncFullDown(personId).then((_) {
+                  debugPrint("📡 [CloudSync] Initial full sync completed.");
+                });
+
+                // Initialize Remote Controller
+                remoteControllerBlock.init();
 
                 internalWidgetBlock.refreshBlock(
                   database.internalWidgetsDAO,
@@ -686,6 +713,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<DocumentationBlock>.value(value: documentationBlock),
         Provider<ChallengeBlock>.value(value: challengeBlock),
         Provider<MindBlock>.value(value: mindBlock),
+        Provider<RemoteControllerBlock>.value(value: remoteControllerBlock),
       ],
       child: widget.childWidget,
     );

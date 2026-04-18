@@ -247,7 +247,7 @@ class FinanceBlock {
   /// Total billing for subscriptions and bills this month
   late final totalSubscriptionsBilling = computed(() {
     final now = DateTime.now();
-    
+
     // Sum from recorded transactions (actual payments)
     final actualPayments = transactions.value
         .where(
@@ -258,9 +258,9 @@ class FinanceBlock {
               t.transactionDate.year == now.year,
         )
         .fold(0.0, (sum, t) => sum + t.amount);
-        
+
     // Also include active subscriptions that might not have been paid yet this month
-    // if we want a "Burn Rate" view. For now, let's keep it to actual payments 
+    // if we want a "Burn Rate" view. For now, let's keep it to actual payments
     // but the user might want to see the "Total Committed" amount.
     return actualPayments;
   });
@@ -422,7 +422,9 @@ class FinanceBlock {
     });
 
     _subscriptionsSubscription?.cancel();
-    _subscriptionsSubscription = dao.watchSubscriptions(personId).listen((data) {
+    _subscriptionsSubscription = dao.watchSubscriptions(personId).listen((
+      data,
+    ) {
       subscriptions.value = data;
     });
   }
@@ -464,7 +466,7 @@ class FinanceBlock {
         name: name,
         amount: amount,
         billingDay: billingDay,
-        category: category,
+        category: Value(category),
         isActive: const Value(true),
         createdAt: Value(DateTime.now()),
       ),

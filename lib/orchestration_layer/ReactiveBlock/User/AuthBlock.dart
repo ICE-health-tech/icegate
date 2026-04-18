@@ -45,6 +45,9 @@ class AuthBlock {
   // Remembered user for "Identity Glance" on entry page
   final rememberedUser = signal<Map<String, String?>?> (null);
 
+  /// Resolved Person ID from current session or user signal
+  String? get personId => Supabase.instance.client.auth.currentUser?.id ?? user.value?['id'];
+
   AuthBlock({
     required CustomAuthService authService,
     required SessionDAO sessionDao,

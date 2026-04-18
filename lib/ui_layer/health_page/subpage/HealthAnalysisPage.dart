@@ -1,13 +1,17 @@
-import 'package:flutter/material.dart';
-import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
-import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:provider/provider.dart';
 import 'dart:math' as math;
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+
+import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HourlyActivityPage.dart';
 
 class HealthAnalysisPage extends StatelessWidget {
@@ -28,6 +32,7 @@ class HealthAnalysisPage extends StatelessWidget {
     }
 
     final healthMetricsDao = context.watch<HealthMetricsDAO>();
+    final healthBlock = context.watch<HealthBlock>();
 
     return SwipeablePage(
       direction: SwipeablePageDirection.leftToRight,
@@ -87,7 +92,6 @@ class HealthAnalysisPage extends StatelessWidget {
 
             // --- DATA ANALYSIS ---
             final now = DateTime.now();
-            // Find today's record (it should be first in DESC order, but let's be safe)
             final todayKey =
                 "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
             final todayMetric = allMetrics.firstWhere(
@@ -106,7 +110,8 @@ class HealthAnalysisPage extends StatelessWidget {
                 exerciseMinutes: 0,
                 focusMinutes: 0,
                 category: 'General',
-                updatedAt: now, createdAt: DateTime.now(),
+                updatedAt: now,
+                createdAt: DateTime.now(),
               ),
             );
 
@@ -114,30 +119,24 @@ class HealthAnalysisPage extends StatelessWidget {
             final last7Days = allMetrics.take(7).toList();
 
             // Efficiency (Steps vs Goal)
-            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
-              0.0,
-              1.0,
-            );
+            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(0.0, 1.0);
 
             // Consistency (Average variation in last 7 days)
             double avgSteps = last7Days.isEmpty
                 ? 0.0
                 : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
-                      last7Days.length;
+                    last7Days.length;
 
             double consistency = 0.0;
             if (last7Days.length > 1) {
-              double variance =
-                  last7Days.fold(
+              double variance = last7Days.fold(
                     0.0,
                     (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
                   ) /
                   last7Days.length;
-              consistency =
-                  (1.0 -
-                          (math.sqrt(variance) /
-                              (avgSteps > 0 ? avgSteps : 1.0)))
-                      .clamp(0.0, 1.0);
+              consistency = (1.0 -
+                      (math.sqrt(variance) / (avgSteps > 0 ? avgSteps : 1.0)))
+                  .clamp(0.0, 1.0);
             }
 
             return SingleChildScrollView(
@@ -153,12 +152,15 @@ class HealthAnalysisPage extends StatelessWidget {
                     textTheme,
                     efficiency: efficiency,
                     consistency: consistency,
-                    metabolism: (latest.caloriesBurned ?? 0) > 2000 ? AppLocalizations.of(context)!.health_metabolism_active : AppLocalizations.of(context)!.health_metabolism_normal,
-                    intensity: (latest.exerciseMinutes ?? 0) > 45 ? AppLocalizations.of(context)!.health_intensity_high : AppLocalizations.of(context)!.health_intensity_moderate,
+                    metabolism: (latest.caloriesBurned ?? 0) > 2000
+                        ? AppLocalizations.of(context)!.health_metabolism_active
+                        : AppLocalizations.of(context)!
+                            .health_metabolism_normal,
+                    intensity: (latest.exerciseMinutes ?? 0) > 45
+                        ? AppLocalizations.of(context)!.health_intensity_high
+                        : AppLocalizations.of(context)!
+                            .health_intensity_moderate,
                   ),
-
-                  const SizedBox(height: 24),
-                  _buildHourlyDrillDown(context, colorScheme, textTheme),
 
                   const SizedBox(height: 32),
                   // --- ACTIVITY BALANCE SECTION ---
@@ -176,6 +178,24 @@ class HealthAnalysisPage extends StatelessWidget {
                     colorScheme,
                     textTheme,
                     last7Days: last7Days,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- WEIGHT TREND SECTION ---
+                  _buildWeightTrendCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    healthBlock,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- WATER TREND SECTION ---
+                  _buildWaterTrendCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    healthBlock,
                   ),
                   const SizedBox(height: 24),
 
@@ -238,114 +258,82 @@ class HealthAnalysisPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer,
-                  shape: BoxShape.circle,
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
-                  Icons.auto_graph_rounded,
-                  color: colorScheme.onSecondaryContainer,
-                  size: 14,
+                child: Text(
+                  "${(efficiency * 100).toInt()}%",
+                  style: textTheme.labelSmall?.copyWith(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 24),
-          GridView.count(
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisCount: 2,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 1.6,
+          Row(
             children: [
-              _buildAnalysisGridItem(
-                context,
-                AppLocalizations.of(context)!.health_efficiency,
-                '${(efficiency * 100).toStringAsFixed(0)}%',
-                Icons.bolt_rounded,
-                Colors.amber,
+              Expanded(
+                child: _buildTrendStat(
+                  AppLocalizations.of(context)!.health_efficiency,
+                  "${(efficiency * 100).toInt()}%",
+                  colorScheme,
+                  textTheme,
+                ),
               ),
-              _buildAnalysisGridItem(
-                context,
-                AppLocalizations.of(context)!.health_consistency,
-                consistency > 0.8
-                    ? AppLocalizations.of(context)!.health_consistency_high
-                    : consistency > 0.5
-                    ? AppLocalizations.of(context)!.health_consistency_medium
-                    : AppLocalizations.of(context)!.health_consistency_low,
-                Icons.repeat_rounded,
-                Colors.green,
+              Container(
+                width: 1,
+                height: 30,
+                color: colorScheme.outlineVariant.withOpacity(0.5),
               ),
-              _buildAnalysisGridItem(
-                context,
-                AppLocalizations.of(context)!.health_metabolism,
-                metabolism,
-                Icons.speed_rounded,
-                Colors.orange,
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildTrendStat(
+                  AppLocalizations.of(context)!.health_consistency,
+                  consistency > 0.8
+                      ? AppLocalizations.of(context)!.health_consistency_high
+                      : consistency > 0.5
+                          ? AppLocalizations.of(context)!
+                              .health_consistency_medium
+                          : AppLocalizations.of(context)!
+                              .health_consistency_low,
+                  colorScheme,
+                  textTheme,
+                ),
               ),
-              _buildAnalysisGridItem(
-                context,
-                AppLocalizations.of(context)!.health_intensity,
-                intensity,
-                Icons.fitness_center_rounded,
-                Colors.blue,
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: _buildTrendStat(
+                  AppLocalizations.of(context)!.health_metabolism,
+                  metabolism,
+                  colorScheme,
+                  textTheme,
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 30,
+                color: colorScheme.outlineVariant.withOpacity(0.5),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: _buildTrendStat(
+                  AppLocalizations.of(context)!.health_intensity,
+                  intensity,
+                  colorScheme,
+                  textTheme,
+                ),
               ),
             ],
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildHourlyDrillDown(BuildContext context, ColorScheme colorScheme, TextTheme textTheme) {
-    return InkWell(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => const HourlyActivityPage()),
-      ),
-      borderRadius: BorderRadius.circular(24),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [colorScheme.secondaryContainer.withOpacity(0.5), colorScheme.surface],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colorScheme.secondary.withOpacity(0.1), width: 1),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: colorScheme.secondary.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(Icons.timer_outlined, color: colorScheme.secondary, size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Hourly Precision",
-                    style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900),
-                  ),
-                  Text(
-                    "Drill down into your activity patterns hour-by-hour.",
-                    style: textTheme.bodySmall?.copyWith(color: colorScheme.onSurfaceVariant),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: colorScheme.outline),
-          ],
-        ),
       ),
     );
   }
@@ -411,9 +399,12 @@ class HealthAnalysisPage extends StatelessWidget {
             children: [
               SimplePieChart(
                 data: {
-                  AppLocalizations.of(context)!.health_metrics_steps: stepsWeight.toDouble(),
-                  AppLocalizations.of(context)!.health_metrics_exercise: exerciseWeight.toDouble(),
-                  AppLocalizations.of(context)!.health_metrics_focus: focusPoints.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_steps:
+                      stepsWeight.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_exercise:
+                      exerciseWeight.toDouble(),
+                  AppLocalizations.of(context)!.health_metrics_focus:
+                      focusWeight.toDouble(),
                   'Other': otherWeight.toDouble(),
                 },
                 colors: [
@@ -429,41 +420,13 @@ class HealthAnalysisPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      AppLocalizations.of(context)!.health_activity_balance,
-                      style: textTheme.titleSmall?.copyWith(
-                        fontWeight: FontWeight.w900,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      stepsWeight > 60
+                      latest.steps! > 8000
                           ? AppLocalizations.of(context)!.health_balance_moving_much
                           : AppLocalizations.of(context)!.health_balance_optimal,
                       style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                        color: colorScheme.onSurface,
+                        height: 1.4,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _buildLegendRow(
-                      colorScheme.primary,
-                      AppLocalizations.of(context)!.health_metrics_steps,
-                      '$stepsWeight%',
-                      textTheme,
-                    ),
-                    const SizedBox(height: 4),
-                    _buildLegendRow(
-                      colorScheme.secondary,
-                      AppLocalizations.of(context)!.health_metrics_exercise,
-                      '$exerciseWeight%',
-                      textTheme,
-                    ),
-                    const SizedBox(height: 4),
-                    _buildLegendRow(
-                      colorScheme.tertiary,
-                      'Other',
-                      '$otherWeight%',
-                      textTheme,
                     ),
                   ],
                 ),
@@ -475,74 +438,26 @@ class HealthAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildLegendRow(
-    Color color,
-    String label,
-    String value,
-    TextTheme textTheme,
-  ) {
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          label,
-          style: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w600),
-        ),
-        const Spacer(),
-        Text(
-          value,
-          style: textTheme.labelSmall?.copyWith(fontWeight: FontWeight.w900),
-        ),
-      ],
-    );
-  }
-
   Widget _buildWeeklyTrendsCard(
     BuildContext context,
     ColorScheme colorScheme,
     TextTheme textTheme, {
     required List<HealthMetricsLocal> last7Days,
   }) {
-    final reversedList = last7Days.reversed.toList();
-    final maxSteps = last7Days.isEmpty
-        ? 1.0
-        : last7Days
-              .map((m) => m.steps ?? 0)
-              .reduce((a, b) => math.max(a, b))
-              .toDouble();
-
-    final avgSteps = last7Days.isEmpty
-        ? 0.0
-        : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
-              last7Days.length;
-    final avgSleep = last7Days.isEmpty
-        ? 0.0
-        : last7Days.fold(0.0, (sum, m) => sum + (m.sleepHours ?? 0.0)) /
-              last7Days.length;
-    final avgHR = last7Days.isEmpty
-        ? 0.0
-        : last7Days.fold(0.0, (sum, m) => sum + (m.heartRate ?? 0)) /
-              last7Days.length;
-
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.primaryContainer.withOpacity(0.3),
-            colorScheme.secondaryContainer.withOpacity(0.2),
-          ],
-        ),
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(32.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.15),
+          color: colorScheme.outlineVariant.withOpacity(0.2),
           width: 1.5,
         ),
       ),
@@ -557,48 +472,36 @@ class HealthAnalysisPage extends StatelessWidget {
               letterSpacing: 1.1,
             ),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: last7Days.take(7).toList().reversed.map((m) {
+              final dayLabel = DateFormat('E').format(m.date).substring(0, 1);
+              final height = (m.steps ?? 0) / STEP_GOAL;
+              return _buildBarDay(dayLabel, height.clamp(0.1, 1.0), colorScheme);
+            }).toList(),
+          ),
+          const SizedBox(height: 24),
+          Row(
             children: [
               _buildTrendStat(
                 AppLocalizations.of(context)!.health_avg_steps,
-                '${avgSteps.toInt()}',
+                NumberFormat('#,###').format(
+                  last7Days.fold<int>(0, (sum, m) => sum + (m.steps ?? 0)) /
+                      (last7Days.isEmpty ? 1 : last7Days.length),
+                ),
                 colorScheme,
                 textTheme,
               ),
+              const Spacer(),
               _buildTrendStat(
                 AppLocalizations.of(context)!.health_avg_sleep,
-                '${avgSleep.toStringAsFixed(1)}h',
-                colorScheme,
-                textTheme,
-              ),
-              _buildTrendStat(
-                AppLocalizations.of(context)!.health_avg_hr,
-                '${avgHR.toInt()} bpm',
+                "${(last7Days.fold<double>(0, (sum, m) => sum + (m.sleepHours ?? 0)) / (last7Days.isEmpty ? 1 : last7Days.length)).toStringAsFixed(1)}h",
                 colorScheme,
                 textTheme,
               ),
             ],
-          ),
-          const SizedBox(height: 20),
-          // Bar chart based on real data
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: reversedList.map((m) {
-              final label = [
-                'M',
-                'T',
-                'W',
-                'T',
-                'F',
-                'S',
-                'S',
-              ][m.date.weekday - 1];
-              final ratio = ((m.steps ?? 0) / maxSteps).clamp(0.1, 1.0);
-              return _buildBarDay(label, ratio, colorScheme);
-            }).toList(),
           ),
         ],
       ),
@@ -656,21 +559,15 @@ class HealthAnalysisPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.lightbulb_rounded, color: Colors.amber, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context)!.health_insights_title,
-                style: textTheme.labelSmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 1.1,
-                ),
-              ),
-            ],
+          Text(
+            AppLocalizations.of(context)!.health_insights_title,
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 24),
           _buildInsightItem(
             Icons.trending_up_rounded,
             Colors.green,
@@ -679,7 +576,8 @@ class HealthAnalysisPage extends StatelessWidget {
                 : AppLocalizations.of(context)!.health_insight_keep_pushing,
             (latest.steps ?? 0) > avgSteps
                 ? AppLocalizations.of(context)!.health_insight_activity_higher
-                : AppLocalizations.of(context)!.health_insight_activity_lower(avgSteps.toInt()),
+                : AppLocalizations.of(context)!
+                    .health_insight_activity_lower(avgSteps.toInt()),
             colorScheme,
             textTheme,
           ),
@@ -691,7 +589,8 @@ class HealthAnalysisPage extends StatelessWidget {
             (latest.steps ?? 0) >= STEP_GOAL
                 ? AppLocalizations.of(context)!.health_insight_goal_reached
                 : AppLocalizations.of(context)!.health_insight_goal_percent(
-                    ((latest.steps ?? 0) / STEP_GOAL * 100).toStringAsFixed(0)),
+                    ((latest.steps ?? 0) / STEP_GOAL * 100).toStringAsFixed(0),
+                  ),
             colorScheme,
             textTheme,
           ),
@@ -754,47 +653,194 @@ class HealthAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAnalysisGridItem(
+  Widget _buildWeightTrendCard(
     BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    HealthBlock healthBlock,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final weightHistory = healthBlock.dailyWeightLast30Days.watch(context);
+    final trend = healthBlock.weightTrend.watch(context);
+
+    if (weightHistory.isEmpty) return const SizedBox.shrink();
+
+    final dataPoints = weightHistory.values.toList();
 
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.1), width: 1),
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(32.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.2),
+          width: 1.5,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Row(
             children: [
-              Icon(icon, color: color, size: 16),
-              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.monitor_weight_rounded,
+                  color: colorScheme.primary,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: textTheme.labelSmall?.copyWith(
-                    color: color.withOpacity(0.7),
-                    fontWeight: FontWeight.w900,
-                    fontSize: 8,
-                    letterSpacing: 0.5,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.health_metrics_weight,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    Text(
+                      trend >= 0
+                          ? "+${trend.toStringAsFixed(1)} kg ↑"
+                          : "${trend.toStringAsFixed(1)} kg ↓",
+                      style: textTheme.bodySmall?.copyWith(
+                        color: trend <= 0 ? Colors.green : Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 100,
+            child: SimpleLineChart(
+              data: dataPoints,
+              color: colorScheme.primary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildWaterTrendCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    HealthBlock healthBlock,
+  ) {
+    final waterHistory = healthBlock.dailyWaterLast30Days.watch(context);
+    final avgWater = healthBlock.averageWater7d.watch(context);
+
+    if (waterHistory.isEmpty) return const SizedBox.shrink();
+
+    final dataPoints = waterHistory.values.map((v) => v.toDouble()).toList();
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(32.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: Colors.cyan.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(
+                  Icons.water_drop_rounded,
+                  color: Colors.cyan,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      AppLocalizations.of(context)!.health_metrics_water,
+                      style: textTheme.labelSmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    Text(
+                      "${AppLocalizations.of(context)!.health_avg}: ${avgWater.toStringAsFixed(0)} ml",
+                      style: textTheme.bodySmall?.copyWith(
+                        color: avgWater >= 2000 ? Colors.cyan : Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          SizedBox(
+            height: 100,
+            child: SimpleLineChart(
+              data: dataPoints,
+              color: Colors.cyan,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState(BuildContext context, String title, IconData icon) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            size: 64,
+            color: colorScheme.onSurfaceVariant.withOpacity(0.2),
+          ),
+          const SizedBox(height: 24),
           Text(
-            value,
+            title,
             style: textTheme.titleMedium?.copyWith(
               color: colorScheme.onSurface,
               fontWeight: FontWeight.w900,
@@ -832,32 +878,6 @@ class HealthAnalysisPage extends StatelessWidget {
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context, String title, IconData icon) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            size: 64,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.2),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            title,
-            style: textTheme.titleMedium?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w900,
-            ),
-          ),
-        ],
-      ),
     );
   }
 }
