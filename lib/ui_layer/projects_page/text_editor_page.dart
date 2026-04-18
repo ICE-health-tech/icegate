@@ -8,6 +8,7 @@ import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -50,6 +51,10 @@ class _TextEditorPageState extends State<TextEditorPage>
   Timer? _autoSaveTimer;
   DateTime? _lastSaved;
   File? _openedFile; // Track the currently opened local file
+
+  // Mood selection
+  String? _selectedMood;
+  static const List<String> _moodOptions = ['Awesome', 'Good', 'Meh', 'Bad', 'Awful'];
 
   // Undo/Redo State
   final List<String> _undoStack = [];
@@ -180,6 +185,11 @@ class _TextEditorPageState extends State<TextEditorPage>
       setState(() {
         _vaultPath = '${appDir.path}/${user.id}/user_markdown_documentation';
       });
+    }
+    
+    // Initialize selected mood from existing note if editing
+    if (widget.note != null && widget.note!.mood != null) {
+      _selectedMood = widget.note!.mood;
     }
   }
 
@@ -378,7 +388,7 @@ class _TextEditorPageState extends State<TextEditorPage>
       // 2. Database Sync
       if (widget.note != null) {
         await context.read<ProjectNoteDAO>().updateNote(
-          widget.note!.copyWith(title: title, content: content),
+          widget.note!.copyWith(title: title, content: content, mood: Value(_selectedMood)),
         );
       } else {
         // Only insert to DB if it's a new database note
@@ -387,7 +397,9 @@ class _TextEditorPageState extends State<TextEditorPage>
           title: title,
           content: content,
           personID: personBlock.currentPersonID.value,
+          tenantID: personBlock.currentTenantID.value,
           category: widget.initialCategory,
+          mood: _selectedMood,
         );
       }
 
@@ -1237,6 +1249,53 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
+  Widget _buildMoodSelector(ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: _selectedMood,
+          hint: Text(
+            'Mood',
+            style: TextStyle(
+              color: colorScheme.onSurface.withOpacity(0.7),
+              fontSize: 12,
+            ),
+          ),
+          icon: const Icon(Icons.mood, size: 20),
+          iconSize: 20,
+          elevation: 4,
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 12,
+          ),
+          underline: Container(
+            height: 1,
+            color: colorScheme.onSurface.withOpacity(0.2),
+          ),
+          onChanged: (String? newValue) {
+            setState(() {
+              _selectedMood = newValue;
+              _hasUnsavedChanges = true;
+            });
+          },
+          items: _moodOptions.map<DropdownMenuItem<String>>((String value) {
+            return DropdownMenuItem<String>(
+              value: value,
+              child: Text(
+                value,
+                style: TextStyle(
+                  color: colorScheme.onSurface,
+                  fontSize: 12,
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
   Widget _buildMarkdownToolbar(ColorScheme colorScheme) {
     return Positioned(
       bottom: 24,
@@ -1335,6 +1394,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                       _pickAndInsertImage,
                       color: colorScheme.secondary,
                     ),
+                    _toolbarDivider(colorScheme),
+                    // Mood selector
+                    _buildMoodSelector(colorScheme),
                     _toolbarDivider(colorScheme),
                     _toolbarBtn(Icons.terminal_rounded, 'AI Hub', () {
                       final plainText = _contentController.text;

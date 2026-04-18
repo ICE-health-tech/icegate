@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
@@ -20,65 +22,151 @@ class SocialAnalysisPage extends StatelessWidget {
     final personBlock = context.read<PersonBlock>();
     final healthBlock = context.read<HealthBlock>();
     final mindBlock = context.read<MindBlock>();
-    final personId = personBlock.information.value.profiles.id ?? "";
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
-      body: StreamBuilder<List<ProjectNoteData>>(
-        stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
-              personId,
-              'social',
-            ),
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Watch((context) {
+        final personId = personBlock.currentPersonID.value;
+        if (personId == null || personId.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          final notes = snapshot.data!;
-          
-          return CustomScrollView(
-            physics: const BouncingScrollPhysics(),
-            slivers: [
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.all(24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        "MIND INSIGHTS",
-                        style: textTheme.labelLarge?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w900,
-                          letterSpacing: 2,
+        return StreamBuilder<List<ProjectNoteData>>(
+          stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
+                personId,
+                'social',
+              ),
+          builder: (context, snapshot) {
+            final notes = snapshot.data ?? [];
+            
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          "MIND INSIGHTS",
+                          style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        "Analysis of your journal entries",
-                        style: textTheme.headlineSmall?.copyWith(
-                          fontWeight: FontWeight.w900,
+                        const SizedBox(height: 8),
+                        Text(
+                          "Analysis of your journal entries",
+                          style: textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 32),
-                      _buildMonthlyReflectionCard(context, personId),
-                      const SizedBox(height: 24),
-                      _buildSummaryCard(context, notes),
-                      const SizedBox(height: 24),
-                      _buildStepsDistribution(context, healthBlock),
-                      const SizedBox(height: 24),
-                      _buildMoodChart(context, mindBlock, personId),
-                      const SizedBox(height: 24),
-                      _buildWordCloud(context, mindBlock, personId),
-                    ],
+                        const SizedBox(height: 32),
+                        _buildMonthlyReflectionCard(context, personId),
+                        const SizedBox(height: 24),
+                        _buildSummaryCard(context, notes),
+                        const SizedBox(height: 24),
+                        _buildStepsDistribution(context, healthBlock),
+                        const SizedBox(height: 24),
+                        _buildMoodChart(context, mindBlock, personId),
+                        const SizedBox(height: 24),
+                        _buildWordCloud(context, mindBlock, personId),
+                        const SizedBox(height: 24),
+                        _buildRecentLogsList(context, mindBlock, personId),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-            ],
-          );
-        },
-      ),
+              ],
+            );
+          },
+        );
+      }),
     );
+  }
+
+  Widget _buildRecentLogsList(BuildContext context, MindBlock mindBlock, String personId) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+
+    return StreamBuilder<List<MindLogData>>(
+      stream: mindBlock.watchMindLogsByDay(personId, DateTime.now()),
+      builder: (context, snapshot) {
+        final logs = snapshot.data ?? [];
+        if (logs.isEmpty) return const SizedBox.shrink();
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "TODAY'S REFLECTIONS",
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            ),
+            const SizedBox(height: 16),
+            ...logs.take(5).map((log) {
+              return Container(
+                margin: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: colorScheme.surfaceContainerHigh.withOpacity(0.3),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Text(_getMoodEmoji(log.moodScore), style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                (jsonDecode(log.activities) as List).join(", "),
+                                style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                              ),
+                              Text(
+                                DateFormat('MMMM d, yyyy • HH:mm').format(log.logDate),
+                                style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (log.note != null && log.note!.isNotEmpty) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        log.note!,
+                        style: textTheme.bodyMedium?.copyWith(
+                          color: colorScheme.onSurface.withOpacity(0.8),
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              );
+            }).toList(),
+          ],
+        );
+      },
+    );
+  }
+
+  String _getMoodEmoji(int score) {
+    switch (score) {
+      case 1: return "😫";
+      case 2: return "😔";
+      case 3: return "😐";
+      case 4: return "😊";
+      case 5: return "🤩";
+      default: return "😐";
+    }
   }
 
   Widget _buildStepsDistribution(BuildContext context, HealthBlock healthBlock) {
@@ -224,7 +312,7 @@ class SocialAnalysisPage extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: StreamBuilder<List<MindLogData>>(
-              stream: mindBlock.watchMindLogs(personId),
+              stream: mindBlock.watchMindLogsByDay(personId, DateTime.now()),
               builder: (context, snapshot) {
                 final logs = snapshot.data ?? [];
                 if (logs.isEmpty) {

@@ -131,13 +131,20 @@ CREATE TABLE IF NOT EXISTS projects (
 );
 
 CREATE TABLE IF NOT EXISTS project_notes (
-    id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-    person_id integer,
-    title text,
-    content text,
-    created_at text,
-    updated_at text,
-    project_id integer
+    id uuid NOT NULL,
+    tenant_id uuid,
+    note_id text,
+    person_id uuid,
+    title text NOT NULL,
+    content text NOT NULL,
+    created_at timestamp with time zone DEFAULT now(),
+    updated_at timestamp with time zone DEFAULT now(),
+    project_id uuid,
+    category text DEFAULT 'projects',
+    CONSTRAINT project_notes_pkey PRIMARY KEY (id),
+    CONSTRAINT project_notes_person_id_fkey FOREIGN KEY (person_id) REFERENCES persons(id) ON DELETE CASCADE,
+    CONSTRAINT project_notes_project_id_fkey FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE,
+    CONSTRAINT project_notes_tenant_id_fkey FOREIGN KEY (tenant_id) REFERENCES organizations(id) ON DELETE CASCADE
 );
 
 -- ==========================================
@@ -249,7 +256,25 @@ CREATE TABLE IF NOT EXISTS exercise_logs (
 );
 
 -- ==========================================
--- 5. OTHER UTILITY TABLES
+-- 5. MENTAL HEALTH TABLES
+-- ==========================================
+
+CREATE TABLE IF NOT EXISTS mind_logs (
+    id uuid NOT NULL DEFAULT gen_random_uuid(),
+    tenant_id uuid,
+    person_id uuid,
+    mood_score integer NOT NULL,
+    mood_emoji text,
+    activities jsonb DEFAULT '[]'::jsonb,
+    note text,
+    log_date date DEFAULT CURRENT_DATE,
+    created_at timestamp with time zone DEFAULT now(),
+    CONSTRAINT mind_logs_pkey PRIMARY KEY (id),
+    CONSTRAINT mind_logs_person_id_fkey FOREIGN KEY (person_id) REFERENCES persons(id)
+) TABLESPACE pg_default;
+
+-- ==========================================
+-- 6. OTHER UTILITY TABLES
 -- ==========================================
 
 CREATE TABLE IF NOT EXISTS internal_widgets (

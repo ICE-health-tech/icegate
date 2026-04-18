@@ -10,6 +10,7 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class DataSeeder {
   static const String guestPersonId = '00000000-0000-4000-8000-000000000001';
+  static const String guestTenantId = '00000000-0000-0000-0000-000000000001';
 
   static Future<void> seed(AppDatabase db) async {
     // Check if any person exists
@@ -29,6 +30,7 @@ class DataSeeder {
     final personId = await db.personManagementDAO.createPerson(
       personProtocol,
       id: guestPersonId,
+      tenantId: guestTenantId,
     );
 
 

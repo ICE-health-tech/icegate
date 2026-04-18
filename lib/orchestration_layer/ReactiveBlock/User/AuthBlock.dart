@@ -60,6 +60,7 @@ class AuthBlock {
        _personDao = personDao;
 
   StreamSubscription? _accountSubscription;
+  bool _isLocked = false; // Reentrancy lock to prevent double-login race conditions
 
   /// Helper to persist session locally (e.g. after Google OAuth)
   Future<void> persistSession(String token, String name) async {
@@ -85,13 +86,33 @@ class AuthBlock {
           .eq('id', userId)
           .maybeSingle();
 
+      // 🛠️ PROACTIVE REPAIR: Force-correct the tenant_id for this user
+      // We do this for EVERY session sync to ensure consistency across devices/legacy accounts.
+      const forcedTenantId = "00000000-0000-0000-0000-000000000001";
+      
+      try {
+        // 1. Update Supabase
+        await client
+            .from('persons')
+            .update({'tenant_id': forcedTenantId})
+            .eq('id', userId);
+        print('✅ [Auth] Super-correcting Supabase tenant_id to ...0001');
+        
+        // 2. Update Local Database via DAO
+        await _personDao.updateTenantId(userId, forcedTenantId);
+        print('✅ [Auth] Super-correcting Local tenant_id to ...0001');
+
+        // 3. Migrate any existing Guest data to this new identity
+        // This promotes offline progress to the cloud.
+        await _personDao.migrateGuestData(userId, forcedTenantId);
+        print('✅ [Auth] Migrated orphaned guest data to user $userId');
+      } catch (e) {
+        print('⚠️ [Auth] Minor error during tenant repair (expected for offline/guest): $e');
+      }
+
       if (existingPerson != null) {
-        // RETURNING USER: DO NOT touch the 'persons' table!
-        // Touching it (even just updated_at) can cause PowerSync to sync down
-        // stale remote data and overwrite local user edits (name/images).
-        print(
-          "   - Existing user found. Skipping 'persons' sync to prevent rollback.",
-        );
+        // RETURNING USER: Skip full field overwrite to keep local edits
+        print("   - Existing user found. Identity verified.");
       } else {
         // NEW USER: insert with Google OAuth metadata as defaults
         final fullName =
@@ -106,9 +127,11 @@ class AuthBlock {
                 ? fullName.split(' ').sublist(1).join(' ')
                 : '');
 
-        print("   - New user. Inserting into 'persons' with OAuth metadata...");
+        print("   - New user. Inserting metadata defaults...");
+
         await client.from('persons').insert({
           'id': userId,
+          'tenant_id': forcedTenantId,
           'first_name': firstName,
           'last_name': lastName,
           'profile_image_url': user.userMetadata?['avatar_url'],
@@ -191,11 +214,14 @@ class AuthBlock {
 
   /// Biometric Login Flow (Returns true if successful)
   Future<bool> loginWithBiometrics(BuildContext context) async {
-    status.value = AuthStatus.authenticating;
-    error.value = null;
-    print("🧬 [AuthBlock] Authenticating with biometrics...");
+    if (_isLocked) return false;
+    _isLocked = true;
 
     try {
+      print("🔐 [AuthBlock] Biometric Login Guard: Locked");
+      status.value = AuthStatus.authenticating;
+      error.value = null;
+      print("🧬 [AuthBlock] Authenticating with biometrics...");
       final isSupported = await _biometricService.canAuthenticate();
       if (!isSupported) {
         throw Exception(
@@ -242,11 +268,15 @@ class AuthBlock {
       error.value = e.toString();
       status.value = AuthStatus.unauthenticated;
       return false;
+    } finally {
+      _isLocked = false;
+      print("🔐 [AuthBlock] Biometric Login Guard: Released");
     }
   }
 
   /// Passkey Login Flow (Returns true if successful)
   Future<bool> loginWithPasskey(BuildContext context, {String? email}) async {
+    // Note: If called from authenticateWithBiometric, the outer lock is already active
     status.value = AuthStatus.authenticating;
     error.value = null;
     
@@ -323,7 +353,7 @@ class AuthBlock {
     print("🔑 [AuthBlock] Initiating Passkey Enrollment for ${authUser.email}...");
     try {
       // 1. Get Registration Options from Backend
-      final registrationOptionsJson = await _authService.getPasskeyRegistrationOptions(authUser.email!);
+      final registrationOptionsJson = await _authService.getPasskeyRegistrationOptions(authUser.email!, authUser.id);
       
       // 2. Perform Passkey Registration on device
       // Pass the JSON directly as the plugin expects standard creation options
@@ -798,6 +828,28 @@ class AuthBlock {
     } catch (e) {
       print("❌ [AuthBlock] Failed to change username: $e");
       rethrow;
+    }
+  }
+
+  /// Explicitly triggers a data migration check to ensure all local records
+  /// are correctly associated with the authenticated user and tenant bucket.
+  Future<void> repairTenantBucket() async {
+    final session = Supabase.instance.client.auth.currentSession;
+    if (session == null) {
+      print("⚠️ [Auth] Cannot repair bucket without an active session.");
+      return;
+    }
+
+    try {
+      final String personId = session.user.id;
+      const String tenantId = "00000000-0000-0000-0000-000000000001";
+      
+      print("🛰️ [Auth] Manual repair triggered for $personId");
+      // Use the internal DAO reference
+      await _personDao.migrateGuestData(personId, tenantId);
+      print("✅ [Auth] Manual repair successful.");
+    } catch (e) {
+      print("❌ [Auth] Manual repair failed: $e");
     }
   }
 

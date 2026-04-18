@@ -43,6 +43,8 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
     }
 
     debugPrint("🔑 [PowerSync] Connecting with UserID: $userId");
+    // You can also add session parameters here if needed by your sync rules
+    // return PowerSyncCredentials(endpoint: powerSyncUrl, token: token, userId: userId, parameters: {'tenant_id': ...});
 
     return PowerSyncCredentials(
       endpoint: powerSyncUrl,
@@ -136,6 +138,7 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
             [id],
           );
           Map<String, dynamic> fullPayload = {'id': id, ...opData};
+          debugPrint('🔍 [PowerSync] Preparing $table: $fullPayload');
 
           if (localData != null) {
             // Compare completeness (number of non-null fields)
@@ -190,12 +193,21 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
           'social_metrics',
         ].contains(table);
 
-        if (isMetricsTable) {
-          await Supabase.instance.client
-              .from(table)
-              .upsert(data, onConflict: 'person_id,date,category');
-        } else {
-          await Supabase.instance.client.from(table).upsert(data);
+        try {
+          if (isMetricsTable) {
+            await Supabase.instance.client
+                .from(table)
+                .upsert(data, onConflict: 'person_id,date,category');
+          } else {
+            await Supabase.instance.client.from(table).upsert(data);
+          }
+        } catch (e) {
+          debugPrint('❌ [PowerSync] Failed to upsert $table batch of ${data.length} records');
+          // Log each record in the failed batch to find the specific problematic one
+          for (var i = 0; i < data.length; i++) {
+            debugPrint('   Record [$i]: ID=${data[i]['id']}, tenant_id=${data[i]['tenant_id']}, person_id=${data[i]['person_id']}');
+          }
+          rethrow;
         }
       }
 
@@ -222,9 +234,10 @@ class MyPowerSyncConnector extends PowerSyncBackendConnector {
           errorCode == '23505' ||
           errorCode == '23503' ||
           errorCode == '23502' ||
+          errorCode == '42501' ||
           errorCode == '22P02') {
         debugPrint(
-          '⚠️ PowerSync: Skipping unrecoverable error. Completing transaction.',
+          '⚠️ PowerSync: Skipping unrecoverable/RLS error. Completing transaction.',
         );
         await transaction.complete();
       } else {

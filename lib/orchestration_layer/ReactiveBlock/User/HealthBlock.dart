@@ -161,23 +161,23 @@ class HealthBlock {
             if (isTodayMatch) {
               if (steps > foundTodaySteps) foundTodaySteps = steps;
               if ((m.sleepHours ?? 0.0) > foundTodaySleep) {
-                foundTodaySleep = m.sleepHours!;
+                foundTodaySleep = m.sleepHours ?? 0.0;
               }
               if ((m.heartRate ?? 0) > foundTodayHeartRate) {
-                foundTodayHeartRate = m.heartRate!;
+                foundTodayHeartRate = m.heartRate ?? 0;
               }
               if ((m.caloriesBurned ?? 0) > foundTodayCaloriesBurned) {
-                foundTodayCaloriesBurned = m.caloriesBurned!;
+                foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
               }
               if ((m.caloriesConsumed ?? 0) > foundTodayCaloriesConsumed) {
-                foundTodayCaloriesConsumed = m.caloriesConsumed!;
+                foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
               }
-              if ((m.weightKg ?? 0.0) > 0) todayWeight.value = m.weightKg!;
+              if ((m.weightKg ?? 0.0) > 0) todayWeight.value = m.weightKg ?? 0.0;
               if ((m.exerciseMinutes ?? 0) > 0) {
-                foundTodayExerciseMinutes += m.exerciseMinutes!;
+                foundTodayExerciseMinutes += m.exerciseMinutes ?? 0;
               }
               if ((m.focusMinutes ?? 0) > 0) {
-                foundTodayFocusMinutes += m.focusMinutes!;
+                foundTodayFocusMinutes += m.focusMinutes ?? 0;
               }
             } else {
               totalHistorical += steps;

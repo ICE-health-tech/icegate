@@ -11,6 +11,7 @@ import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart'
 import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonalInformationProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/UserAccountProtocol.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/ProfileProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
@@ -27,6 +28,8 @@ import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.d
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
 part 'database.g.dart';
 // NOTE: I'm using 'app_database.g.dart' as the standard naming convention.
+
+const String DEFAULT_TENANT_ID = '00000000-0000-0000-0000-000000000001';
 
 // --- 3. Table Definitions ---
 
@@ -76,6 +79,7 @@ class InternalWidgetsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
   TextColumn get personID => text()
@@ -288,6 +292,7 @@ class ExternalWidgetsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get widgetID => text().nullable().named("widget_id")();
   TextColumn get personID => text()
@@ -337,6 +342,7 @@ class ProjectNotesTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get noteID => text().nullable().named('note_id')();
   TextColumn get personID => text()
@@ -373,6 +379,7 @@ class ProjectsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get projectID => text().nullable().named('project_id')();
   TextColumn get personID => text()
@@ -408,6 +415,7 @@ class SSHHostsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
   TextColumn get host => text().named('host')();
@@ -494,6 +502,7 @@ class PersonsTable extends Table {
   TextColumn get id => text()(); // PowerSync UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get firstName =>
       text().withLength(min: 1, max: 100).named('first_name')();
@@ -575,6 +584,7 @@ class EmailAddressesTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get emailAddressID =>
       text().nullable().named('email_address_id')();
@@ -610,6 +620,7 @@ class UserAccountsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get accountID => text().nullable().named('account_id')();
   TextColumn get personID => text()
@@ -708,6 +719,7 @@ class CVAddressesTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get cvAddressID => text().nullable().named('cv_address_id')();
   TextColumn get personID => text()
@@ -749,6 +761,7 @@ class SkillsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get skillID => text().nullable().named('skill_id')();
   TextColumn get personID => text()
@@ -784,6 +797,7 @@ class FinancialAccountsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get accountID => text().nullable().named('account_id')();
   TextColumn get personID => text()
@@ -821,6 +835,7 @@ class AssetsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get assetID => text().nullable().named('asset_id')();
   TextColumn get personID => text()
@@ -862,6 +877,7 @@ class TransactionsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get transactionID => text().nullable().named('transaction_id')();
   TextColumn get personID => text()
@@ -893,6 +909,7 @@ class SubscriptionsTable extends Table {
   @override
   String get tableName => 'subscriptions';
   TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text().nullable().named('tenant_id')();
   TextColumn get personID => text().named('person_id')();
   TextColumn get name => text().named('name')();
   RealColumn get amount => real().named('amount')();
@@ -915,6 +932,7 @@ class GoalsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get goalID => text().nullable().named('goal_id')();
   TextColumn get personID => text()
@@ -963,6 +981,7 @@ class ScoresTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get scoreID => text().named('score_id').nullable()();
   TextColumn get personID => text()
@@ -1010,6 +1029,7 @@ class HabitsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get habitID => text().nullable().named('habit_id')();
   TextColumn get personID => text()
@@ -1050,6 +1070,7 @@ class AiAnalysisTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1091,6 +1112,7 @@ class PersonWidgetsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   IntColumn get personWidgetID =>
       integer().nullable().named('person_widget_id')();
@@ -1127,6 +1149,7 @@ class HealthMetricsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
   TextColumn get personID => text()
@@ -1183,6 +1206,7 @@ class FinancialMetricsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
   TextColumn get personID => text()
@@ -1235,6 +1259,7 @@ class ProjectMetricsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
   TextColumn get personID => text()
@@ -1283,6 +1308,7 @@ class SocialMetricsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get metricID => text().nullable().named('metric_id')();
   TextColumn get personID => text()
@@ -1327,6 +1353,7 @@ class MealsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get mealID => text().nullable().named("meal_id")();
   TextColumn get personID => text()
@@ -1359,6 +1386,7 @@ class DaysTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   DateTimeColumn get dayID =>
       dateTime().map(const DateTimeUTCConverter()).named('day_id')();
@@ -1378,6 +1406,7 @@ class SessionTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get localID => text().nullable().named('local_id')();
   TextColumn get jwt => text().named('jwt')();
@@ -1398,6 +1427,7 @@ class WaterLogsTable extends Table {
   TextColumn get id => text()();
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1435,6 +1465,7 @@ class WeightLogsTable extends Table {
   TextColumn get id => text()();
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1472,6 +1503,7 @@ class SleepLogsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get logID => text().nullable().named('log_id')();
   TextColumn get personID => text()
@@ -1512,6 +1544,7 @@ class ExerciseLogsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get healthMetricID => text()
       .nullable()
@@ -1549,6 +1582,7 @@ class CustomNotificationsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get notificationID => text().nullable().named('notification_id')();
   TextColumn get title => text().withLength(min: 1, max: 200).named('title')();
@@ -1594,6 +1628,7 @@ class QuestsTable extends Table {
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1649,6 +1684,7 @@ class PortfolioSnapshotsTable extends Table {
   TextColumn get id => text()();
   TextColumn get tenantID => text()
       .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1670,7 +1706,7 @@ class AchievementsTable extends Table {
   String get tableName => 'achievements';
   TextColumn get id => text()(); // UUID Primary Key
   TextColumn get tenantID => text()
-      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -1758,6 +1794,26 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase> with _$MindLogsDAOMixin 
     return (select(mindLogsTable)
           ..where((tbl) => tbl.personID.equals(personId) & tbl.moodScore.equals(moodScore))
           ..orderBy([(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)]))
+        .watch();
+  }
+
+  Stream<List<MindLogData>> watchAllLogs(String personId) {
+    return (select(mindLogsTable)..where((tbl) => tbl.personID.equals(personId))).watch();
+  }
+
+  Stream<List<MindLogData>> watchLogsByDay(String personId, DateTime date) {
+    // We normalize to UTC to avoid timezone shifts during sync.
+    // If Supabase stores '2026-04-18', it's exactly what we want to find.
+    final startOfDay = DateTime.utc(date.year, date.month, date.day);
+    final endOfDay = startOfDay.add(const Duration(days: 1));
+    
+    return (select(mindLogsTable)
+          ..where((tbl) =>
+              tbl.personID.equals(personId) &
+              tbl.logDate.isBetweenValues(startOfDay, endOfDay))
+          ..orderBy(
+            [(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)],
+          ))
         .watch();
   }
 }
@@ -2015,7 +2071,11 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
-  Future<void> updateCareerScore(String personID, double score) async {
+  Future<void> updateCareerScore(
+    String personID,
+    double score, {
+    String? tenantId,
+  }) async {
     await transaction(() async {
       final existing = await getScoreByPersonID(personID);
       if (existing != null) {
@@ -2036,6 +2096,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             id: deterministicId,
             personID: Value(personID),
+            tenantID: Value(tenantId),
             careerGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
           ),
@@ -2079,6 +2140,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     String personID, {
     required int strategyNoteCount,
     required double questXP,
+    String? tenantId,
   }) async {
     if (personID.isEmpty) return;
 
@@ -2105,6 +2167,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             id: deterministicId,
             personID: Value(personID),
+            tenantID: Value(tenantId),
             socialGlobalScore: Value(finalScore),
             updatedAt: Value(DateTime.now()),
           ),
@@ -2113,7 +2176,11 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
-  Future<void> updateFinancialScore(String personID, double score) async {
+  Future<void> updateFinancialScore(
+    String personID,
+    double score, {
+    String? tenantId,
+  }) async {
     await transaction(() async {
       final existing = await getScoreByPersonID(personID);
       if (existing != null) {
@@ -2134,6 +2201,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             id: deterministicId,
             personID: Value(personID),
+            tenantID: Value(tenantId),
             financialGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
           ),
@@ -2142,7 +2210,11 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
-  Future<void> incrementHealthScore(String personID, double points) async {
+  Future<void> incrementHealthScore(
+    String personID,
+    double points, {
+    String? tenantId,
+  }) async {
     await transaction(() async {
       final existing = await getScoreByPersonID(personID);
       if (existing != null) {
@@ -2165,6 +2237,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             id: deterministicId,
             personID: Value(personID),
+            tenantID: Value(tenantId),
             healthGlobalScore: Value(points),
             updatedAt: Value(DateTime.now()),
           ),
@@ -2173,22 +2246,22 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
-  Future<void> updateHealthScore(String personID, double score) async {
+  Future<void> updateHealthScore(
+    String personID,
+    double score, {
+    String? tenantId,
+  }) async {
     await transaction(() async {
       final existing = await getScoreByPersonID(personID);
       if (existing != null) {
-        // Only update if the new score is higher or significantly different
-        // This prevents a device with stale/unsynced data from zeroing out the score
-        if (score > (existing.healthGlobalScore ?? 0.0)) {
-          await (update(
-            scoresTable,
-          )..where((t) => t.personID.equals(personID))).write(
-            ScoresTableCompanion(
-              healthGlobalScore: Value(score),
-              updatedAt: Value(DateTime.now()),
-            ),
-          );
-        }
+        await (update(
+          scoresTable,
+        )..where((t) => t.id.equals(existing.id))).write(
+          ScoresTableCompanion(
+            healthGlobalScore: Value(score),
+            updatedAt: Value(DateTime.now()),
+          ),
+        );
       } else {
         final deterministicId = IDGen.generateDeterministicUuid(
           personID,
@@ -2198,6 +2271,7 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
           ScoresTableCompanion.insert(
             id: deterministicId,
             personID: Value(personID),
+            tenantID: Value(tenantId),
             healthGlobalScore: Value(score),
             updatedAt: Value(DateTime.now()),
           ),
@@ -2357,17 +2431,21 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     required String content,
     String? projectID,
     String? personID,
+    String? tenantID,
     String? category,
+    String? mood,
   }) async {
     final uuid = IDGen.UUIDV7();
     into(projectNotesTable).insert(
       ProjectNotesTableCompanion.insert(
         id: uuid,
+        tenantID: Value(tenantID),
         title: title,
         content: content,
         projectID: Value(projectID),
         personID: Value(personID),
         category: Value(category ?? 'projects'),
+        mood: Value(mood),
         createdAt: Value(DateTime.now()),
         updatedAt: Value(DateTime.now()),
       ),
@@ -2523,11 +2601,13 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     PersonProtocol person, {
     String? id,
     String? relationship,
+    String? tenantId,
   }) async {
     final String newUuid = id ?? IDGen.UUIDV7();
 
     final companion = PersonsTableCompanion.insert(
       id: newUuid, // Use the provided or generated UUID
+      tenantID: Value(tenantId),
       firstName: person.firstName,
       lastName: Value(person.lastName),
       dateOfBirth: Value(person.dateOfBirth),
@@ -2588,6 +2668,53 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> updatePerson(PersonData person) =>
       update(personsTable).replace(person);
+
+  Future<void> updateTenantId(String personId, String tenantId) async {
+    await (update(personsTable)..where((t) => t.id.equals(personId))).write(
+      PersonsTableCompanion(
+        tenantID: Value(tenantId),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  /// Migrates all data from the guest user account to a new authenticated account.
+  /// This is called immediately after a real login to ensure "orphaned" local
+  /// progress is promoted to the cloud.
+  Future<void> migrateGuestData(String newPersonId, [String tenantId = DEFAULT_TENANT_ID]) async {
+    const guestId = DataSeeder.guestPersonId;
+    if (newPersonId == guestId) return; // No self-migration
+
+    print("🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...");
+
+    final tables = [
+      'scores', 'achievements', 'mind_logs', 'habits', 'goals',
+      'health_metrics', 'weight_logs', 'exercise_logs', 'sleep_logs', 'water_logs',
+      'financial_metrics', 'financial_accounts', 'assets', 'transactions', 'subscriptions', 'portfolio_snapshots',
+      'projects', 'project_notes', 'project_metrics', 'skills',
+      'focus_sessions', 'quests', 'feedbacks', 'ai_analysis', 'person_widgets',
+      'meals', 'custom_notifications', 'quotes', 'ai_prompts'
+    ];
+
+    await transaction(() async {
+      for (final table in tables) {
+        try {
+          // Use raw SQL for speed and to avoid Companion naming discrepancies
+          await customUpdate(
+            'UPDATE $table SET person_id = ?, tenant_id = ? WHERE person_id = ?',
+            variables: [
+              Variable(newPersonId),
+              Variable(tenantId),
+              Variable(guestId)
+            ],
+          );
+        } catch (e) {
+          print("⚠️ [Migration] Could not migrate table $table: $e");
+        }
+      }
+      print("✅ [Migration] Comprehensive Guest data migration complete.");
+    });
+  }
 
   Future<void> upsertPerson(
     PersonsTableCompanion entry, {
@@ -5177,7 +5304,7 @@ class FocusSessionsTable extends Table {
   String get tableName => 'focus_sessions';
   TextColumn get id => text()();
   TextColumn get tenantID => text()
-      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get personID => text()
       .nullable()
@@ -5261,7 +5388,7 @@ class QuotesTable extends Table {
   String get tableName => 'quotes';
   TextColumn get id => text()();
   TextColumn get tenantID => text()
-      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   // IntColumn get quoteID => integer().nullable().named('quote_id')();
   TextColumn get personID => text()

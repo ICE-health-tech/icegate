@@ -89,7 +89,7 @@ class CustomAuthService {
   }
 
   /// Get passkey registration options from backend
-  Future<String> getPasskeyRegistrationOptions(String email) async {
+  Future<String> getPasskeyRegistrationOptions(String email, String userId) async {
     const authHubUrl = "https://passkey.duylong.art/v1";
     final url = Uri.parse('$authHubUrl/register/begin');
     try {
@@ -97,7 +97,10 @@ class CustomAuthService {
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': email})
+        body: jsonEncode({
+          'email': email,
+          'user_id': userId,
+        }),
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
@@ -128,7 +131,7 @@ class CustomAuthService {
       final Map<String, dynamic> credentialMap = jsonDecode(credential);
       final Map<String, dynamic> body = {
         'email': email,
-        ...credentialMap,
+        'data': credentialMap,
       };
 
       final response = await http.post(
@@ -163,7 +166,7 @@ class CustomAuthService {
       final Map<String, dynamic> body = {
         'email': email,
         'user_id': userId,
-        ...credentialMap,
+        'data': credentialMap,
       };
 
       final response = await http.post(

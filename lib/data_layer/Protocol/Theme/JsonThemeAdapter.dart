@@ -193,27 +193,44 @@ class JsonThemeAdapter {
     final Map<String, dynamic> textThemeJson = jsonMap['text_theme'] ?? {};
     final String fontFamily = textThemeJson['fontFamily'] ?? 'Roboto';
 
-    // Helper to create a TextStyle from a JSON key
-    TextStyle createTextStyle(Map<String, dynamic> styleJson) {
-      if (styleJson.isEmpty) return const TextStyle();
+    // Helper to create a TextStyle from a JSON key with smart fallbacks
+    TextStyle createTextStyle(String key, {
+      double? defaultSize,
+      FontWeight? defaultWeight,
+      Color? overrideColor,
+    }) {
+      final styleJson = textThemeJson[key] ?? {};
       return TextStyle(
         fontFamily: fontFamily,
-        fontSize: (styleJson['size'] as num?)?.toDouble(),
-        fontWeight: _parseFontWeight(styleJson['weight'] ?? 'normal'),
+        fontSize: (styleJson['size'] as num?)?.toDouble() ?? defaultSize,
+        fontWeight: _parseFontWeight(styleJson['weight'] ?? '') ?? defaultWeight,
         color: styleJson['color'] != null
             ? _parseColor(styleJson['color'])
-            : null,
+            : (overrideColor ?? colorScheme.onSurface),
       );
     }
 
-    // Create the final TextTheme (simplified to include only defined keys)
+    // Comprehensive Material 3 TextTheme
     final TextTheme textTheme = TextTheme(
-      headlineLarge: createTextStyle(textThemeJson['headlineLarge'] ?? {}),
-      bodyMedium: createTextStyle(textThemeJson['bodyMedium'] ?? {}),
-      labelLarge: createTextStyle(
-        textThemeJson['labelLarge'] ?? {},
-      ), // Used for buttons
-      // Add other required text styles here (titleLarge, bodySmall, etc.)
+      displayLarge: createTextStyle('displayLarge', defaultSize: 57, defaultWeight: FontWeight.w400),
+      displayMedium: createTextStyle('displayMedium', defaultSize: 45, defaultWeight: FontWeight.w400),
+      displaySmall: createTextStyle('displaySmall', defaultSize: 36, defaultWeight: FontWeight.w400),
+      
+      headlineLarge: createTextStyle('headlineLarge', defaultSize: 32, defaultWeight: FontWeight.w400),
+      headlineMedium: createTextStyle('headlineMedium', defaultSize: 28, defaultWeight: FontWeight.w400),
+      headlineSmall: createTextStyle('headlineSmall', defaultSize: 24, defaultWeight: FontWeight.w400),
+      
+      titleLarge: createTextStyle('titleLarge', defaultSize: 22, defaultWeight: FontWeight.w500),
+      titleMedium: createTextStyle('titleMedium', defaultSize: 16, defaultWeight: FontWeight.w500),
+      titleSmall: createTextStyle('titleSmall', defaultSize: 14, defaultWeight: FontWeight.w500),
+      
+      bodyLarge: createTextStyle('bodyLarge', defaultSize: 16, defaultWeight: FontWeight.w400),
+      bodyMedium: createTextStyle('bodyMedium', defaultSize: 14, defaultWeight: FontWeight.w400),
+      bodySmall: createTextStyle('bodySmall', defaultSize: 12, defaultWeight: FontWeight.w400, overrideColor: colorScheme.onSurfaceVariant),
+      
+      labelLarge: createTextStyle('labelLarge', defaultSize: 14, defaultWeight: FontWeight.w500),
+      labelMedium: createTextStyle('labelMedium', defaultSize: 12, defaultWeight: FontWeight.w500),
+      labelSmall: createTextStyle('labelSmall', defaultSize: 11, defaultWeight: FontWeight.w500),
     );
 
     // --- 3. Parse Component Themes ---

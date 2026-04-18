@@ -122,14 +122,14 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void _precalculateGeometry() {
     final random = math.Random(42);
 
-    // 1. Glass Cracks - High Fidelity Spiderweb (Center Epicenter)
-    const int crackCount = 12; // Increased for more detail
+    // 1. Glass Cracks - High Fidelity Spiderweb (Fractal Branching)
+    const int crackCount = 18; // Massive increase for anime intensity
     final List<List<Offset>> allRadialPoints = [];
     
     // A. Primary Radial Fractures (Natural, jagged paths)
     for (int i = 0; i < crackCount; i++) {
       // Shifted origin to avoid the "face" (center logo)
-      final impactOrigin = Offset(-0.3, -0.5); 
+      final impactOrigin = Offset.zero; 
       final double baseAngle = (i / crackCount) * 2 * math.pi;
       final List<Offset> mainPoints = [impactOrigin];
       
@@ -157,7 +157,9 @@ class _PrismEntryPageState extends State<PrismEntryPage>
       _cachedGlassCracks.add(GlassCrackData(points: mainPoints));
     }
 
-    // B. Systematic Spiderweb Connections (Concentric circular stress)
+    // B. Destructive Aura Logic (Managed in Painter via pulse/shatterProgress)
+
+    // C. Systematic Spiderweb Connections (Concentric circular stress)
     for (int layer = 1; layer < 6; layer++) {
       final double radiusFactor = (layer / 6.0); // Used to scale jaggedness
       for (int i = 0; i < crackCount; i++) {
@@ -176,7 +178,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     }
 
     // 2. Massive Splinter Shards
-    const int largeParticleCount = 70;
+    const int largeParticleCount = 120; // Dopamine booster: More shards
     for (int i = 0; i < largeParticleCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
       // Start away from the origin to avoid the "face"
@@ -253,12 +255,10 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     await _chargeController.forward();
 
     HapticFeedback.heavyImpact();
+    await Future.delayed(const Duration(milliseconds: 50));
+    HapticFeedback.vibrate();
+    
     _crackController.forward();
-
-    Future.delayed(
-      const Duration(milliseconds: 150),
-      () => HapticFeedback.vibrate(),
-    );
 
     await Future.delayed(const Duration(milliseconds: 1200));
     if (mounted) {
@@ -301,9 +301,26 @@ class _PrismEntryPageState extends State<PrismEntryPage>
               AnimatedBuilder(
                 animation: _crackController,
                 builder: (context, child) {
+                  final double crackVal = _crackController.value;
                   final double bgOpacity =
-                      (1.0 - (_crackController.value * 1.5)).clamp(0.0, 1.0);
-                  return Opacity(opacity: bgOpacity, child: child);
+                      (1.0 - (crackVal * 1.5)).clamp(0.0, 1.0);
+                  
+                  // SCREEN SHAKE PHYSICS: High-frequency displacement for impact
+                  double shakeX = 0;
+                  double shakeY = 0;
+                  if (crackVal > 0 && crackVal < 0.25) {
+                    final double intensity = (1.0 - (crackVal / 0.25)) * 18;
+                    shakeX = (math.sin(crackVal * 100) * intensity);
+                    shakeY = (math.cos(crackVal * 120) * intensity);
+                  }
+
+                  return Opacity(
+                    opacity: bgOpacity, 
+                    child: Transform.translate(
+                      offset: Offset(shakeX, shakeY),
+                      child: child,
+                    ),
+                  );
                 },
                 child: Stack(
                   children: [

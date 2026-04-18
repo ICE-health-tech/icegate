@@ -162,50 +162,35 @@ class SymmetricPetalPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..strokeWidth = 2.0;
 
+    // Draw branching arms
     for (int i = 0; i < 6; i++) {
-      final double angle = (i * 60) * math.pi / 180;
-      final double x = center.dx + math.cos(angle) * size;
-      final double y = center.dy + math.sin(angle) * size;
+        final double angle = (i * 60) * math.pi / 180;
+        final double x = center.dx + math.cos(angle) * size;
+        final double y = center.dy + math.sin(angle) * size;
+        canvas.drawLine(center, Offset(x, y), paint);
 
-      canvas.drawLine(center, Offset(x, y), paint);
+        // Sub-branches
+        final double branchSize = size * 0.4;
+        final double branchAngle1 = angle + math.pi / 4;
+        final double branchAngle2 = angle - math.pi / 4;
 
-      // Branching
-      final double branchSize = size * 0.4;
-      final double branchAngle1 = angle + math.pi / 4;
-      final double branchAngle2 = angle - math.pi / 4;
+        final branchOrigin = Offset(
+            center.dx + math.cos(angle) * size * 0.6,
+            center.dy + math.sin(angle) * size * 0.6,
+        );
 
-      canvas.drawLine(
-        Offset(
-          center.dx + math.cos(angle) * size * 0.6,
-          center.dy + math.sin(angle) * size * 0.6,
-        ),
-        Offset(
-          center.dx +
-              math.cos(angle) * size * 0.6 +
-              math.cos(branchAngle1) * branchSize,
-          center.dy +
-              math.sin(angle) * size * 0.6 +
-              math.sin(branchAngle1) * branchSize,
-        ),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(
-          center.dx + math.cos(angle) * size * 0.6,
-          center.dy + math.sin(angle) * size * 0.6,
-        ),
-        Offset(
-          center.dx +
-              math.cos(angle) * size * 0.6 +
-              math.cos(branchAngle2) * branchSize,
-          center.dy +
-              math.sin(angle) * size * 0.6 +
-              math.sin(branchAngle2) * branchSize,
-        ),
-        paint,
-      );
+        canvas.drawLine(
+            branchOrigin,
+            branchOrigin + Offset(math.cos(branchAngle1) * branchSize, math.sin(branchAngle1) * branchSize),
+            paint,
+        );
+        canvas.drawLine(
+            branchOrigin,
+            branchOrigin + Offset(math.cos(branchAngle2) * branchSize, math.sin(branchAngle2) * branchSize),
+            paint,
+        );
     }
-  }
+}
 
   @override
   bool shouldRepaint(covariant SymmetricPetalPainter oldDelegate) =>
@@ -328,9 +313,9 @@ class FlowerPainter extends CustomPainter {
       final double bloomT = ((progress - startT) / 0.25).clamp(0.0, 1.0);
       if (bloomT <= 0) continue;
 
-      final double fadeT = ((progress - 0.7) / 0.15).clamp(0.0, 1.0);
       final double easeBloom = Curves.easeOutBack.transform(bloomT);
-      final double opacity = (1.0 - fadeT).clamp(0.0, 1.0);
+      final double shatterFade = ((progress - 0.7) / 0.15).clamp(0.0, 1.0);
+      final double opacity = (1.0 - shatterFade).clamp(0.0, 1.0);
 
       final paint = Paint()
         ..color = petal.color.withValues(alpha: petal.opacity * opacity)
@@ -383,8 +368,8 @@ class GlassCrackPainter extends CustomPainter {
     if (progress < 0.3 || progress > 0.85) return;
 
     final center = Offset(
-      size.width / 2 + pointerOffset.dx * 18,
-      size.height / 2 + pointerOffset.dy * 18,
+      size.width / 2 + pointerOffset.dx * 15,
+      size.height / 2 + pointerOffset.dy * 15,
     );
 
     final double crackOpacity =
@@ -401,40 +386,77 @@ class GlassCrackPainter extends CustomPainter {
         final pos = center + Offset(p.dx * size.width * 0.5, p.dy * size.height * 0.5);
         
         if (first) {
-          path.moveTo(pos.dx, pos.dy);
+          // Tightened center: Start 2px out with a tiny random jagged offset for realism
+          if (p.dx == 0 && p.dy == 0) {
+            if (crack.points.length > 1) {
+              final nextP = crack.points[1];
+              final dir = Offset(nextP.dx, nextP.dy);
+              final mag = math.sqrt(dir.dx * dir.dx + dir.dy * dir.dy);
+              if (mag > 0) {
+                // Crunchy origin: push 2px out
+                final push = Offset(dir.dx / mag * 2, dir.dy / mag * 2);
+                path.moveTo(pos.dx + push.dx, pos.dy + push.dy);
+              } else {
+                path.moveTo(pos.dx, pos.dy);
+              }
+            } else {
+              path.moveTo(pos.dx, pos.dy);
+            }
+          } else {
+            path.moveTo(pos.dx, pos.dy);
+          }
           first = false;
         } else {
           path.lineTo(pos.dx, pos.dy);
         }
       }
 
-      // Pass 1: Outer frost/stress fracture (wider, lower opacity)
+      // Pass 1: Chromatic Aberration (Glitch Effect - Cyan/Magenta Offset)
+      final double glitchOffset = crackOpacity * 2.5;
+      
+      // Deep Silver Offset
+      canvas.save();
+      canvas.translate(glitchOffset, -glitchOffset * 0.5);
       canvas.drawPath(
         path,
         Paint()
-          ..color = const Color(0xFFC7C7CC).withValues(alpha: crackOpacity * 0.25)
-          ..strokeWidth = 4.5
-          ..style = PaintingStyle.stroke
-          ..strokeCap = StrokeCap.round
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
-      );
-
-      // Pass 2: Main crack structure
-      canvas.drawPath(
-        path,
-        Paint()
-          ..color = Colors.white.withValues(alpha: crackOpacity * 0.7)
-          ..strokeWidth = 1.2
+          ..color = EntryColors.darkSilver.withValues(alpha: crackOpacity * 0.4)
+          ..strokeWidth = 1.8
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round,
+      );
+      canvas.restore();
+
+      // Mid Silver Offset
+      canvas.save();
+      canvas.translate(-glitchOffset, glitchOffset * 0.5);
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = EntryColors.midSilver.withValues(alpha: crackOpacity * 0.4)
+          ..strokeWidth = 1.8
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.restore();
+
+      // Pass 2: Outer frost/stress fracture
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFFC7C7CC).withValues(alpha: crackOpacity * 0.3)
+          ..strokeWidth = 4.8
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
       );
 
       // Pass 3: Specular Core (The sharpest part)
       canvas.drawPath(
         path,
         Paint()
-          ..color = Colors.white.withValues(alpha: crackOpacity)
-          ..strokeWidth = 0.5
+          ..color = EntryColors.arcticSilver.withValues(alpha: crackOpacity)
+          ..strokeWidth = 0.8
           ..style = PaintingStyle.stroke
           ..strokeCap = StrokeCap.round,
       );
@@ -463,17 +485,33 @@ class GlassCrackPainter extends CustomPainter {
       }
     }
 
-    // Pass 5: Center Epicenter Glow (More intense impact zone)
-    final epicenterPaint = Paint()
-      ..shader = RadialGradient(
-        colors: [
-          Colors.white.withValues(alpha: crackOpacity * 0.6),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromCircle(center: center, radius: 40))
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
-    
-    canvas.drawCircle(center, 40, epicenterPaint);
+    // PASS 7: Destructive Aura (Shockwave Bloom)
+    if (crackOpacity > 0.3) {
+      final double auraPulse = (math.sin(progress * 30) * 0.1) + 1.0;
+      final double auraSize = (40 + (progress * 60)) * auraPulse;
+      
+      final auraPaint = Paint()
+        ..shader = RadialGradient(
+          colors: [
+            EntryColors.arcticSilver.withValues(alpha: crackOpacity * 0.5),
+            EntryColors.midSilver.withValues(alpha: crackOpacity * 0.2),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.4, 1.0],
+        ).createShader(Rect.fromCircle(center: center, radius: auraSize))
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 15 + (progress * 10));
+      
+      // Draw the expanding shockwave aura
+       canvas.drawCircle(center, auraSize, auraPaint);
+
+       // Delicate energy rings
+       final ringPaint = Paint()
+         ..color = EntryColors.arcticSilver.withValues(alpha: crackOpacity * 0.3)
+         ..style = PaintingStyle.stroke
+         ..strokeWidth = 0.5;
+       
+       canvas.drawCircle(center, auraSize * 0.8, ringPaint);
+    }
   }
 
   @override
@@ -510,11 +548,16 @@ class GlassShatterPainter extends CustomPainter {
       if (t <= 0) continue;
 
       final double ease = Curves.easeOutQuart.transform(t);
-      final double distance = particle.initialDistance + particle.velocity * ease;
-      final double opacity = (1.0 - ease).clamp(0.0, 1.0);
+      
+      // PERSPECTIVE DEPTH: Shards move outward and "backwards" by dividing by zDepth
+      final double zDepth = 1.0 + (ease * 3.0); 
+      final double distance = (particle.initialDistance + particle.velocity * ease) / zDepth;
+      
+      final double shatterProgress = ((progress - 0.7) / 0.3).clamp(0.0, 1.0);
+      final double opacity = (1.0 - (shatterProgress * 1.1)).clamp(0.0, 1.0);
 
       // Chromatic aberration / glitch effect
-      final double glitchOffset = (1.0 - ease) * 8.0;
+      final double glitchOffset = (1.0 - ease) * 12.0;
       final abPaint = Paint()
         ..style = PaintingStyle.fill
         ..color = EntryColors.midSilver.withValues(alpha: opacity * 0.4);
@@ -530,21 +573,18 @@ class GlassShatterPainter extends CustomPainter {
       );
 
       canvas.translate(particleCenter.dx, particleCenter.dy);
-      // More dynamic 3D-like rotation by scaling non-uniformly based on sine of rotation
-      final double currentRot = particle.rotationSpeed * ease;
+      
+      // Intense 3D tumbling rotation
+      final double currentRot = (particle.rotationSpeed * ease * 10) + (particle.rotationSpeed * 0.2);
       canvas.rotate(currentRot);
 
-      final double scaleY = particle.tier == ParticleTier.large
-          ? math
-                .cos(currentRot * 2)
-                .abs()
-                .clamp(0.2, 1.0) // Simulate flipping in 3D space
-          : 1.0;
-
-      final double scale = (particle.tier == ParticleTier.dust ? 0.4 + ease * 0.2 : 1.0 - ease * 0.4);
+      // Perspective Scale: Shrink as they retreat. Larger shards last longer.
+      final double baseScale = (particle.tier == ParticleTier.dust ? 0.4 + ease : 1.0 - ease * 0.9);
+      final double flipY = math.cos(currentRot * 1.8).abs().clamp(0.1, 1.0);
+      
       canvas.scale(
-        scale,
-        scale * scaleY,
+        baseScale.clamp(0.05, 1.5), 
+        baseScale * flipY,
       );
 
       final path = Path();
@@ -611,24 +651,34 @@ class GlassShatterPainter extends CustomPainter {
         canvas.drawPath(path, glowPaint);
 
         // Directional 'glint' (a bright streak across the shard)
-        if (i % 3 == 0) {
-          // Only some shards catch the light perfectly
+        if (i % 2 == 0) { 
+          // More frequent glints for that anime sparkle
           final bounds = path.getBounds();
           final glintPath = Path()
-            ..moveTo(bounds.left, bounds.top + bounds.height * 0.3)
-            ..lineTo(bounds.right, bounds.bottom - bounds.height * 0.3);
+            ..moveTo(bounds.left - bounds.width, bounds.top + bounds.height * 0.5)
+            ..lineTo(bounds.right + bounds.width, bounds.bottom - bounds.height * 0.5);
 
           final glintStroke = Paint()
             ..color = Colors.white.withValues(alpha: opacity * 0.9)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 2.0
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+            ..strokeWidth = 3.0
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3);
 
-          // Use clipPath to only draw the glint inside the shard
           canvas.save();
           canvas.clipPath(path);
           canvas.drawPath(glintPath, glintStroke);
           canvas.restore();
+        }
+        
+        // SPEED LINES (Anime trail effect)
+        if (t < 0.3) {
+          final trailPaint = Paint()
+            ..color = Colors.white.withValues(alpha: opacity * 0.3)
+            ..strokeWidth = 0.5
+            ..style = PaintingStyle.stroke;
+          
+          final Offset trailEnd = Offset(-math.cos(particle.angle) * 60 * t, -math.sin(particle.angle) * 60 * t);
+          canvas.drawLine(Offset.zero, trailEnd, trailPaint);
         }
       }
 

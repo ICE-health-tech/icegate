@@ -11,6 +11,7 @@ import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialNotesDashboard extends StatefulWidget {
   const SocialNotesDashboard({super.key});
@@ -24,109 +25,129 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final personBlock = context.read<PersonBlock>();
-    final personId = personBlock.information.value.profiles.id ?? "";
+    return Watch((context) {
+      final personBlock = context.read<PersonBlock>();
+      final personId = personBlock.currentPersonID.value;
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            colorScheme.surface,
-            colorScheme.surfaceContainerLowest,
-          ],
+      if (personId == null || personId.isEmpty) {
+        return const Center(child: CircularProgressIndicator());
+      }
+
+      return Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              colorScheme.surface,
+              colorScheme.surfaceContainerLowest,
+            ],
+          ),
         ),
-      ),
-      child: Column(
-        children: [
-          _buildQuickEntryBar(context, colorScheme, textTheme),
-          const Divider(height: 1, thickness: 0.2),
-          // --- MOOD TRENDS SECTION ---
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: StreamBuilder<List<MindLogData>>(
-              stream: context.read<MindBlock>().watchMindLogs(personId),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return const SizedBox.shrink();
-                }
-                return Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      "MOOD TRENDS",
-                      style: textTheme.labelSmall?.copyWith(
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    MoodTrendsChart(logs: snapshot.data!),
-                    const SizedBox(height: 24),
-                    // Adding Recent entries preview
-                    _buildRecentLogsPreview(context, snapshot.data!),
-                    const SizedBox(height: 24),
-                    Text(
-                      "SOCIAL NOTES",
-                      style: textTheme.labelSmall?.copyWith(
-                        letterSpacing: 2,
-                        fontWeight: FontWeight.bold,
-                        color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  ],
-                );
-              },
+        child: CustomScrollView(
+        physics: const BouncingScrollPhysics(),
+        slivers: [
+          SliverToBoxAdapter(
+            child: Column(
+              children: [
+                _buildQuickEntryBar(context, colorScheme, textTheme),
+                const Divider(height: 1, thickness: 0.2),
+                Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: StreamBuilder<List<MindLogData>>(
+                    stream: context.read<MindBlock>().watchMindLogsByDay(personId, DateTime.now()),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                        return const SizedBox.shrink();
+                      }
+                      return Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            "MOOD TRENDS",
+                            style: textTheme.labelSmall?.copyWith(
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          MoodTrendsChart(logs: snapshot.data!),
+                          const SizedBox(height: 24),
+                          _buildRecentLogsPreview(context, snapshot.data!),
+                          const SizedBox(height: 24),
+                          Text(
+                            "SOCIAL NOTES",
+                            style: textTheme.labelSmall?.copyWith(
+                              letterSpacing: 2,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
             ),
           ),
-          Expanded(
-            child: StreamBuilder<List<ProjectNoteData>>(
-              stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
-                    personId,
-                    'social',
-                  ),
-              builder: (context, snapshot) {
-                if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+          StreamBuilder<List<ProjectNoteData>>(
+            stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
+              personId,
+              'social',
+            ),
+            builder: (context, snapshot) {
+              if (snapshot.hasError) {
+                return SliverFillRemaining(
+                  child: Center(child: Text('Error: ${snapshot.error}')),
+                );
+              }
 
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+              if (!snapshot.hasData) {
+                return const SliverFillRemaining(
+                  child: Center(child: CircularProgressIndicator()),
+                );
+              }
 
-                final notes = snapshot.data!;
+              final notes = snapshot.data!;
 
-                if (notes.isEmpty) {
-                  return _buildEmptyState(context, colorScheme, textTheme);
-                }
+              if (notes.isEmpty) {
+                return SliverFillRemaining(
+                  child: _buildEmptyState(context, colorScheme, textTheme),
+                );
+              }
 
-                // Sort by updatedAt descending
-                final sortedNotes = List<ProjectNoteData>.from(notes)
-                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+              // Sort by updatedAt descending
+              final sortedNotes = List<ProjectNoteData>.from(notes)
+                ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
-                return GridView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
+                sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
                     childAspectRatio: 0.75,
                   ),
-                  itemCount: sortedNotes.length,
-                  itemBuilder: (context, index) {
-                    final note = sortedNotes[index];
-                    return _SocialNoteCard(note: note);
-                  },
-                );
-              },
-            ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) => _SocialNoteCard(note: sortedNotes[index]),
+                    childCount: sortedNotes.length,
+                  ),
+                ),
+              );
+            },
           ),
         ],
       ),
     );
+      });
   }
 
   Widget _buildQuickEntryBar(
@@ -192,50 +213,49 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     TextTheme textTheme,
   ) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.05),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              Icons.auto_stories_rounded,
-              size: 80,
-              color: colorScheme.primary.withValues(alpha: 0.15),
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            'Your story begins here',
-            style: textTheme.headlineSmall?.copyWith(
-              color: colorScheme.onSurface,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Capture moments, thoughts, and ideas.',
-            style: textTheme.bodyMedium?.copyWith(
-              color: colorScheme.onSurfaceVariant,
-            ),
-          ),
-          const SizedBox(height: 32),
-          FilledButton.icon(
-            onPressed: () => _createNewNote(context),
-            icon: const Icon(Icons.add_rounded),
-            label: const Text('START JOURNAL'),
-            style: FilledButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withValues(alpha: 0.05),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.auto_stories_rounded,
+                size: 80,
+                color: colorScheme.primary.withValues(alpha: 0.15),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'Your story begins here',
+              textAlign: TextAlign.center,
+              style: textTheme.headlineSmall?.copyWith(
+                color: colorScheme.onSurface,
+                fontWeight: FontWeight.w900,
+                letterSpacing: -0.5,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Capture moments, thoughts, and ideas.',
+              textAlign: TextAlign.center,
+              style: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 32),
+            FilledButton.icon(
+              onPressed: () => _createNewNote(context),
+              icon: const Icon(Icons.add_rounded),
+              label: const Text('New Reflection'),
+            ),
+          ],
+        ),
       ),
     );
   }

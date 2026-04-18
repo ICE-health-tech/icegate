@@ -468,7 +468,7 @@ class ScoreBlock {
     final questXP = _totalFinanceQuestPoints.value;
     finalScore += questXP;
 
-    _dao.updateFinancialScore(_personID, finalScore);
+    _dao.updateFinancialScore(_personID, finalScore, tenantId: _tenantID);
   }
 
   Future<void> _updateMindScore(
@@ -483,6 +483,7 @@ class ScoreBlock {
       _personID,
       strategyNoteCount: notes.length,
       questXP: questXP,
+      tenantId: _tenantID,
     );
   }
 
@@ -543,7 +544,7 @@ class ScoreBlock {
     final historicalXP = _historicalHealthMetricPoints.value;
     final finalScore = baseHealthScore + questXP + historicalXP;
 
-    await _dao.updateHealthScore(_personID, finalScore);
+    await _dao.updateHealthScore(_personID, finalScore, tenantId: _tenantID);
   }
 
   Future<void> manualMindIncrement(double points, {String? label}) async {
@@ -587,7 +588,7 @@ class ScoreBlock {
     if (!isBootstrap && !isReady.value) return;
     if (_personID.isEmpty) return;
     // FIX: questXP is already the sum of all categorized points in DB.
-    await _dao.updateCareerScore(_personID, questXP);
+    await _dao.updateCareerScore(_personID, questXP, tenantId: _tenantID);
   }
 
   void dispose() {

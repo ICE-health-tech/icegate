@@ -243,6 +243,7 @@ class PersonBlock {
 
   // Computed currentPersonID avoids stale state during login transitions
   late final currentPersonID = computed(() => information.value.profiles.id);
+  late final currentTenantID = computed(() => information.value.profiles.tenantId);
 
   final PersonManagementDAO personDao;
 
@@ -380,19 +381,21 @@ class PersonBlock {
       );
 
       // 4. Persist Remote URLs to LOCAL DB for future offline/instant access
-      if (remotePerson?['profile_image_url'] != null) {
+      final String? avatarUrl = remotePerson?['profile_image_url'];
+      if (avatarUrl != null) {
         unawaited(
           personDao.updateAvatarImageUrl(
             user.id,
-            remotePerson!['profile_image_url'],
+            avatarUrl,
           ),
         );
       }
-      if (remoteDetails?['cover_image_url'] != null) {
+      final String? coverUrl = remoteDetails?['cover_image_url'];
+      if (coverUrl != null) {
         unawaited(
           personDao.updateCoverImageUrl(
             user.id,
-            remoteDetails!['cover_image_url'],
+            coverUrl,
           ),
         );
       }
@@ -412,95 +415,94 @@ class PersonBlock {
     Map<String, dynamic>? remoteProfile,
     Map<String, dynamic>? remoteDetails,
   }) {
-    // 1. Construct Details (Prioritize Local > Remote > Auth)
+    // 1. Construct Details (Prioritize Remote/Auth > Local)
     final details = UserDetails(
       bio:
-          localDetails?.bio ??
-          localProfile?.bio ??
           remoteProfile?['bio'] ??
           remoteDetails?['bio'] ??
+          localDetails?.bio ??
+          localProfile?.bio ??
           '',
       occupation:
-          localDetails?.occupation ??
-          localProfile?.occupation ??
           remoteProfile?['occupation'] ??
           remoteDetails?['occupation'] ??
+          localDetails?.occupation ??
+          localProfile?.occupation ??
           '',
       location:
-          localDetails?.location ??
-          localProfile?.location ??
           remoteProfile?['location'] ??
           remoteDetails?['location'] ??
+          localDetails?.location ??
+          localProfile?.location ??
           '',
-      company: localDetails?.company ?? remoteDetails?['company'] ?? '',
-      university:
-          localDetails?.university ?? remoteDetails?['university'] ?? '',
-      country: localDetails?.country ?? remoteDetails?['country'] ?? '',
+      company: remoteDetails?['company'] ?? localDetails?.company ?? '',
+      university: remoteDetails?['university'] ?? localDetails?.university ?? '',
+      country: remoteDetails?['country'] ?? localDetails?.country ?? '',
       githubUrl:
-          localDetails?.githubUrl ??
-          localProfile?.githubUrl ??
           remoteProfile?['github_url'] ??
           remoteDetails?['github_url'] ??
+          localDetails?.githubUrl ??
+          localProfile?.githubUrl ??
           '',
       linkedinUrl:
-          localDetails?.linkedinUrl ??
-          localProfile?.linkedinUrl ??
           remoteProfile?['linkedin_url'] ??
           remoteDetails?['linkedin_url'] ??
+          localDetails?.linkedinUrl ??
+          localProfile?.linkedinUrl ??
           '',
       educationLevel:
-          localDetails?.educationLevel ??
-          localProfile?.educationLevel ??
           remoteProfile?['education_level'] ??
           remoteDetails?['education_level'] ??
+          localDetails?.educationLevel ??
+          localProfile?.educationLevel ??
           '',
       websiteUrl:
-          localDetails?.websiteUrl ??
-          localProfile?.websiteUrl ??
           remoteProfile?['website_url'] ??
           remoteDetails?['website_url'] ??
+          localDetails?.websiteUrl ??
+          localProfile?.websiteUrl ??
           '',
       email: user.email ?? '',
     );
 
-    // 2. Construct Profile (Prioritize Local > Remote > Metadata)
+    // 2. Construct Profile (Prioritize Remote/Auth > Local)
     final profile = UserProfile(
-      id: localPerson?.id ?? remotePerson?['id'] ?? user.id,
+      id: user.id, // Auth User ID is the ultimate PK truth
       firstName:
-          localPerson?.firstName ??
           remotePerson?['first_name'] ??
           user.userMetadata?['first_name'] ??
+          localPerson?.firstName ??
           'User',
       lastName:
-          localPerson?.lastName ??
           remotePerson?['last_name'] ??
           user.userMetadata?['last_name'] ??
+          localPerson?.lastName ??
           '',
       username:
           remotePerson?['username'] ??
           user.userMetadata?['user_name'] ??
           'user',
       profileImageUrl:
-          localPerson?.profileImageUrl ??
           remotePerson?['profile_image_url'] ??
           user.userMetadata?['avatar_url'] ??
+          localPerson?.profileImageUrl ??
           '',
       coverImageUrl:
-          localDetails?.coverImageUrl ??
-          localPerson?.coverImageUrl ??
-          localProfile?.coverImageUrl ??
           remoteDetails?['cover_image_url'] ??
           remotePerson?['cover_image_url'] ??
           remoteProfile?['cover_image_url'] ??
+          localDetails?.coverImageUrl ??
+          localPerson?.coverImageUrl ??
+          localProfile?.coverImageUrl ??
           '',
       avatarLocalPath:
           localPerson?.avatarLocalPath ?? localProfile?.avatarLocalPath ?? '',
       coverLocalPath:
           localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
       tenantId:
-          localPerson?.tenantID ??
           remotePerson?['tenant_id'] ??
-          remoteProfile?['tenant_id'],
+          remoteProfile?['tenant_id'] ??
+          localPerson?.tenantID,
     );
 
     batch(() {
@@ -514,6 +516,7 @@ class PersonBlock {
       information.value = UserInformation(
         profiles: const UserProfile(
           id: DataSeeder.guestPersonId,
+          tenantId: DataSeeder.guestTenantId,
           firstName: 'Guest',
           lastName: 'DuyLongArt',
           username: 'Guest',

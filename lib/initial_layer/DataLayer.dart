@@ -121,7 +121,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     // They receive real sensor data passively via PowerSync from the phone.
     // Skip HealthKit polling to prevent writing steps=0 and corrupting
     // the source-of-truth data from iPhone.
-    final isDesktop = kIsWeb ||
+    final isDesktop =
+        kIsWeb ||
         defaultTargetPlatform == TargetPlatform.macOS ||
         defaultTargetPlatform == TargetPlatform.linux ||
         defaultTargetPlatform == TargetPlatform.windows;
@@ -275,7 +276,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         dbPath = 'powersync48.db';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        dbPath = p.join(dir.path, 'powersync48.db');
+        dbPath = p.join(dir.path, 'powersync49.db');
       }
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
@@ -433,7 +434,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         ..growthBlock = growthBlock
         ..scoreBlock = scoreBlock;
       await socialBlockerBlock.init(focusBlock);
-      
+
       await focusBlock.init();
 
       widgetManagerBlock = WidgetManagerBlock(

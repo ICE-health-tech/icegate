@@ -7,6 +7,8 @@ import 'package:ice_gate/ui_layer/ReusableWidget/SnowfallOverlay.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/utils/l10n_extensions.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 
 class SyncEnginePage extends StatefulWidget {
   const SyncEnginePage({super.key});
@@ -65,6 +67,8 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
                         _buildMetricsGrid(context, l10n, uptime, health),
                         const SizedBox(height: 24),
                         _buildPrimaryActions(context, l10n),
+                        const SizedBox(height: 16),
+                        _buildAdvancedActions(context, l10n),
                         const SizedBox(height: 32),
                         _buildActivityLog(context, l10n, history),
                         const SizedBox(height: 100), // Bottom padding
@@ -287,6 +291,71 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
             const Color(0xFF8B5CF6),
             () {}, // Test Connection Logic
           ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAdvancedActions(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Text(
+            "MAINTENANCE & REPAIR",
+            style: TextStyle(
+              color: Colors.white.withValues(alpha: 0.4),
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              letterSpacing: 1.0,
+            ),
+          ),
+        ),
+        _buildActionButton(
+          "REPAIR DATA BUCKET",
+          Icons.rebase_edit,
+          Colors.orangeAccent,
+          () async {
+            // Show confirmation dialog
+            final confirm = await showDialog<bool>(
+              context: context,
+              builder: (ctx) => AlertDialog(
+                backgroundColor: const Color(0xFF1E293B),
+                title: const Text("Repair Local Data?", style: TextStyle(color: Colors.white)),
+                content: const Text(
+                  "This will scan your local database and re-associate orphaned records with your current account and the correct tenant bucket. This can resolve 'Checkpoints' or 'Missing Records' issues.",
+                  style: TextStyle(color: Colors.white70),
+                ),
+                actions: [
+                  TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("CANCEL")),
+                  TextButton(
+                    onPressed: () => Navigator.pop(ctx, true),
+                    child: const Text("REPAIR", style: TextStyle(color: Colors.orangeAccent)),
+                  ),
+                ],
+              ),
+            );
+
+            if (confirm == true) {
+              // Trigger repair logic
+              try {
+                final authBlock = Provider.of<AuthBlock>(context, listen: false);
+                await authBlock.repairTenantBucket();
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text("Repair complete. Please wait for sync to finish.")),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text("Repair failed: $e")),
+                  );
+                }
+              }
+            }
+          },
         ),
       ],
     );

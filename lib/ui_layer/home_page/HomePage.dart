@@ -354,12 +354,12 @@ class _HomePageState extends State<HomePage> {
                           style: TextStyle(
                             fontWeight: FontWeight.w900,
                             fontSize: 20,
-
+                            color: colorScheme.onSurface,
                             shadows: [
                               Shadow(
-                                color: Colors.black54,
+                                color: colorScheme.shadow.withOpacity(0.3),
                                 blurRadius: 4,
-                                offset: Offset(0, 2),
+                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),

@@ -8,7 +8,9 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'dart:convert';
-import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart'; // For TacticalGridPainter if exported, but we'll re-declare for isolation or move to reusable
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 
 class MindAnalysisPage extends StatelessWidget {
   const MindAnalysisPage({super.key});
@@ -20,220 +22,295 @@ class MindAnalysisPage extends StatelessWidget {
 
     final scoreBlock = context.watch<ScoreBlock>();
     final noteDAO = context.watch<ProjectNoteDAO>();
-    final personBlock = context.watch<PersonBlock>();
-    final personId = personBlock.information.value.profiles.id ?? "";
+    final personBlock = context.read<PersonBlock>();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBodyBehindAppBar: true,
-      body: Stack(
-        children: [
-          // 1. Deep Base Background
-          Container(
-            color: isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5),
-          ),
+      body: Watch((context) {
+        final personId = personBlock.currentPersonID.value;
+        if (personId == null || personId.isEmpty) {
+          return const Center(child: CircularProgressIndicator());
+        }
 
-          // 2. Tactical Grid Background
-          Positioned.fill(
-            child: Opacity(
-              opacity: isDark ? 0.3 : 0.1,
-              child: CustomPaint(
-                painter: TacticalGridPainter(
-                  color: colorScheme.primary,
-                  isDark: isDark,
+        return Stack(
+          children: [
+            // 1. Deep Base Background
+            Container(color: isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5)),
+
+            // 2. Tactical Grid Background
+            Positioned.fill(
+              child: Opacity(
+                opacity: isDark ? 0.3 : 0.1,
+                child: CustomPaint(
+                  painter: TacticalGridPainter(
+                    color: colorScheme.primary,
+                    isDark: isDark,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // 3. Ambient Glows
-          Positioned(
-            top: -100,
-            right: -100,
-            child: _buildAmbientGlow(colorScheme.primary, 300),
-          ),
-          Positioned(
-            bottom: -50,
-            left: -50,
-            child: _buildAmbientGlow(colorScheme.secondary, 250),
-          ),
+            // 3. Ambient Glows
+            Positioned(
+              top: -100,
+              right: -100,
+              child: _buildAmbientGlow(colorScheme.primary, 300),
+            ),
+            Positioned(
+              bottom: -50,
+              left: -50,
+              child: _buildAmbientGlow(colorScheme.secondary, 250),
+            ),
 
-          // 4. Main Content
-          SafeArea(
-            child: CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverAppBar(
-                  floating: true,
-                  backgroundColor: Colors.transparent,
-                  elevation: 0,
-                  leading: IconButton(
-                    icon: Icon(
-                      Icons.arrow_back_ios_rounded,
-                      color: colorScheme.onSurface,
-                      size: 22,
+            // 4. Main Content
+            SafeArea(
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(),
+                slivers: [
+                  SliverAppBar(
+                    floating: true,
+                    backgroundColor: Colors.transparent,
+                    elevation: 0,
+                    leading: IconButton(
+                      icon: Icon(Icons.arrow_back_ios_rounded, color: colorScheme.onSurface, size: 22),
+                      onPressed: () => WidgetNavigatorAction.smartPop(context),
                     ),
-                    onPressed: () => WidgetNavigatorAction.smartPop(context),
-                  ),
-                  expandedHeight: 120,
-                  flexibleSpace: FlexibleSpaceBar(
-                    titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
-                    centerTitle: false,
-                    title: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'COGNITIVE LAYER'.toUpperCase(),
-                          style: TextStyle(
+                    expandedHeight: 120,
+                    flexibleSpace: FlexibleSpaceBar(
+                      titlePadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      centerTitle: false,
+                      title: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('COGNITIVE LAYER'.toUpperCase(),
+                              style: TextStyle(
                             color: colorScheme.onSurface.withOpacity(0.5),
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 4,
-                          ),
-                        ),
-                        Text(
-                          'STRATEGY JOURNAL',
-                          style: TextStyle(
+                          )),
+                          Text('STRATEGY JOURNAL',
+                              style: TextStyle(
                             color: colorScheme.onSurface,
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
                             letterSpacing: -1,
+                          )),
+                        ],
+                      ),
+                    ),
+                  ),
+                  StreamBuilder<List<ProjectNoteData>>(
+                    stream: noteDAO.watchAllNotes(personId),
+                    builder: (context, snapshot) {
+                      if (!snapshot.hasData) {
+                        return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+                      }
+
+                      final notes = snapshot.data!;
+                      final strategyNotesCount = notes.length;
+                      final breakdown = scoreBlock.socialBreakdown.value;
+                      final mentalPoints = breakdown['Mental'] ?? 0.0;
+                      final strategyPoints = breakdown['Strategy'] ?? 0.0;
+                      final questPoints = breakdown['Quests'] ?? 0.0;
+                      final totalPoints = mentalPoints + strategyPoints + questPoints;
+
+                      return SliverToBoxAdapter(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                          child: Column(
+                            children: [
+                              _buildGlassCard(
+                                context,
+                                title: 'SYSTEM TELEMETRY',
+                                icon: Icons.hub_rounded,
+                                child: GridView.count(
+                                  shrinkWrap: true,
+                                  physics: const NeverScrollableScrollPhysics(),
+                                  crossAxisCount: 2,
+                                  mainAxisSpacing: 16,
+                                  crossAxisSpacing: 16,
+                                  childAspectRatio: 1.6,
+                                  children: [
+                                    _buildTacticalMetric(context, 'STABILITY INDEX', 'OPTIMAL', Icons.psychology_rounded, colorScheme.primary),
+                                    _buildTacticalMetric(context, 'STRATEGY DEPTH', '$strategyNotesCount ENTRIES', Icons.auto_awesome_mosaic_rounded, const Color(0xFF00B2FF)),
+                                    _buildTacticalMetric(context, 'NEURAL LOAD', '${(questPoints % 100).toInt()}%', Icons.self_improvement_rounded, const Color(0xFFFF2D55)),
+                                    _buildTacticalMetric(context, 'COGNITIVE GAIN', '+${mentalPoints.toInt()} XP', Icons.lightbulb_rounded, const Color(0xFFFFD600)),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _buildGlassCard(
+                                context,
+                                title: 'COGNITIVE BALANCE',
+                                icon: Icons.pie_chart_rounded,
+                                child: Column(
+                                  children: [
+                                    Row(
+                                      children: [
+                                        SizedBox(
+                                          width: 100,
+                                          height: 100,
+                                          child: SimplePieChart(
+                                            data: {'Core': mentalPoints, 'Strategy': strategyPoints, 'Quests': questPoints},
+                                            colors: [colorScheme.primary, const Color(0xFF00B2FF), const Color(0xFFFFD600)],
+                                            size: 100,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 24),
+                                        Expanded(
+                                          child: Column(
+                                            children: [
+                                              _buildLegendRow(context, colorScheme.primary, 'Core Mental', mentalPoints, totalPoints),
+                                              const SizedBox(height: 8),
+                                              _buildLegendRow(context, const Color(0xFF00B2FF), 'Strategy', strategyPoints, totalPoints),
+                                              const SizedBox(height: 8),
+                                              _buildLegendRow(context, const Color(0xFFFFD600), 'Quests', questPoints, totalPoints),
+                                            ],
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 32),
+                                    _buildStabilityGauge(context, 'Processing Fidelity', 0.92),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 20),
+                              _buildMindJournalCard(context),
+                              const SizedBox(height: 20),
+                              _buildMoodTelemetry(context, personId),
+                              const SizedBox(height: 100),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        );
+      }),
+    );
+  }
+
+  Widget _buildMoodTelemetry(BuildContext context, String personId) {
+    final mindBlock = context.read<MindBlock>();
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return StreamBuilder<List<MindLogData>>(
+      stream: mindBlock.watchMindLogsByDay(personId, DateTime.now()),
+      builder: (context, snapshot) {
+        final logs = snapshot.data ?? [];
+        if (logs.isEmpty) return const SizedBox.shrink();
+
+        final recentLog = logs.first;
+        final moodValue = recentLog.moodScore.toDouble();
+        
+        return _buildGlassCard(
+          context,
+          title: 'COGNITIVE VITALITY',
+          icon: Icons.monitor_heart_rounded,
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      _getMoodEmoji(recentLog.moodScore),
+                      style: const TextStyle(fontSize: 24),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'CURRENT COGNITIVE POLARITY',
+                          style: TextStyle(
+                            color: colorScheme.onSurface.withOpacity(0.5),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                        Text(
+                          _getMoodLabel(recentLog.moodScore).toUpperCase(),
+                          style: TextStyle(
+                            color: colorScheme.onSurface,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  actions: [
-                    const SizedBox(width: 12),
-                  ],
-                ),
-                StreamBuilder<List<ProjectNoteData>>(
-                  stream: noteDAO.watchAllNotes(personId),
-                  builder: (context, snapshot) {
-                    if (!snapshot.hasData) {
-                      return const SliverFillRemaining(
-                        child: Center(child: CircularProgressIndicator()),
-                      );
-                    }
-
-                    final notes = snapshot.data!;
-                    final strategyNotesCount = notes.length;
-
-                    final breakdown = scoreBlock.socialBreakdown.value;
-                    final mentalPoints = breakdown['Mental'] ?? 0.0;
-                    final strategyPoints = breakdown['Strategy'] ?? 0.0;
-                    final questPoints = breakdown['Quests'] ?? 0.0;
-                    final totalPoints = mentalPoints + strategyPoints + questPoints;
-
-                    return SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-                        child: Column(
-                          children: [
-                            _buildGlassCard(
-                              context,
-                              title: 'SYSTEM TELEMETRY',
-                              icon: Icons.hub_rounded,
-                              child: GridView.count(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                crossAxisCount: 2,
-                                mainAxisSpacing: 16,
-                                crossAxisSpacing: 16,
-                                childAspectRatio: 1.6,
-                                children: [
-                                  _buildTacticalMetric(
-                                    context,
-                                    'STABILITY INDEX',
-                                    'OPTIMAL',
-                                    Icons.psychology_rounded,
-                                    colorScheme.primary,
-                                  ),
-                                  _buildTacticalMetric(
-                                    context,
-                                    'STRATEGY DEPTH',
-                                    '$strategyNotesCount ENTRIES',
-                                    Icons.auto_awesome_mosaic_rounded,
-                                    const Color(0xFF00B2FF),
-                                  ),
-                                  _buildTacticalMetric(
-                                    context,
-                                    'NEURAL LOAD',
-                                    '${(questPoints % 100).toInt()}%',
-                                    Icons.self_improvement_rounded,
-                                    const Color(0xFFFF2D55),
-                                  ),
-                                  _buildTacticalMetric(
-                                    context,
-                                    'COGNITIVE GAIN',
-                                    '+${mentalPoints.toInt()} XP',
-                                    Icons.lightbulb_rounded,
-                                    const Color(0xFFFFD600),
-                                  ),
-                                ],
+                ],
+              ),
+              const SizedBox(height: 24),
+              _buildStabilityGauge(context, 'Stability Deviation', moodValue / 5.0),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: (jsonDecode(recentLog.activities) as List)
+                        .map((a) => Container(
+                              margin: const EdgeInsets.only(right: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: colorScheme.onSurface.withOpacity(0.05),
+                                borderRadius: BorderRadius.circular(8),
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildGlassCard(
-                              context,
-                              title: 'COGNITIVE BALANCE',
-                              icon: Icons.pie_chart_rounded,
-                              child: Column(
-                                children: [
-                                  Row(
-                                    children: [
-                                      SizedBox(
-                                        width: 100,
-                                        height: 100,
-                                        child: SimplePieChart(
-                                          data: {
-                                            'Core': mentalPoints,
-                                            'Strategy': strategyPoints,
-                                            'Quests': questPoints,
-                                          },
-                                          colors: [
-                                            colorScheme.primary,
-                                            const Color(0xFF00B2FF),
-                                            const Color(0xFFFFD600),
-                                          ],
-                                          size: 100,
-                                        ),
-                                      ),
-                                      const SizedBox(width: 24),
-                                      Expanded(
-                                        child: Column(
-                                          children: [
-                                            _buildLegendRow(context, colorScheme.primary, 'Core Mental', mentalPoints, totalPoints),
-                                            const SizedBox(height: 8),
-                                            _buildLegendRow(context, const Color(0xFF00B2FF), 'Strategy', strategyPoints, totalPoints),
-                                            const SizedBox(height: 8),
-                                            _buildLegendRow(context, const Color(0xFFFFD600), 'Quests', questPoints, totalPoints),
-                                          ],
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                  const SizedBox(height: 32),
-                                  _buildStabilityGauge(context, 'Processing Fidelity', 0.92),
-                                ],
+                              child: Text(
+                                a.toString().toUpperCase(),
+                                style: TextStyle(
+                                  color: colorScheme.onSurface.withOpacity(0.6),
+                                  fontSize: 8,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 20),
-                            _buildMindJournalCard(context),
-                            const SizedBox(height: 100),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
+                            ))
+                        .toList(),
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
+  }
+
+  String _getMoodEmoji(int score) {
+    switch (score) {
+      case 1: return '😫';
+      case 2: return '😔';
+      case 3: return '😐';
+      case 4: return '😊';
+      case 5: return '🔥';
+      default: return '😐';
+    }
+  }
+
+  String _getMoodLabel(int score) {
+    switch (score) {
+      case 1: return 'Critically Low';
+      case 2: return 'Below Nominal';
+      case 3: return 'Stable';
+      case 4: return 'Optimal';
+      case 5: return 'Peak Performance';
+      default: return 'Neutral';
+    }
   }
 
   Widget _buildStabilityGauge(BuildContext context, String label, double value) {
