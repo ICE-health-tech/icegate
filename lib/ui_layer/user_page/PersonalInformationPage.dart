@@ -828,16 +828,17 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
                       // Danger Zone / Logout
                       SizedBox(
-                        width: MediaQuery.of(context).size.width / 2,
+                        width: MediaQuery.of(context).size.width / 1.5,
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(
-                              color: EntryColors.midSilver.withValues(alpha: 0.1),
+                              color: Colors.red.withValues(alpha: 0.5),
+                              width: 1.5,
                             ),
-                            backgroundColor: EntryColors.obsidianBase.withValues(alpha: 0.3),
+                            backgroundColor: Colors.transparent,
                             padding: const EdgeInsets.symmetric(vertical: 16),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                              borderRadius: BorderRadius.circular(24),
                             ),
                           ),
                           onPressed: () {
@@ -847,20 +848,19 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(
-                                Icons.power_settings_new_rounded,
-                                color: EntryColors.midSilver,
+                              const Icon(
+                                Icons.logout_rounded,
+                                color: Colors.red,
+                                size: 20,
                               ),
                               const SizedBox(width: 12),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                child: Text(
-                                  AppLocalizations.of(context)!.logout,
-                                  style: const TextStyle(
-                                    color: EntryColors.midSilver,
-                                    fontWeight: FontWeight.w400,
-                                    letterSpacing: 2,
-                                  ),
+                              Text(
+                                AppLocalizations.of(context)!.logout.toUpperCase(),
+                                style: const TextStyle(
+                                  color: Colors.red,
+                                  fontWeight: FontWeight.w900,
+                                  fontSize: 13,
+                                  letterSpacing: 2,
                                 ),
                               ),
                             ],

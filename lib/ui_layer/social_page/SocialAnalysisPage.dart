@@ -6,6 +6,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart
 import 'package:ice_gate/ui_layer/UIConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 
 class SocialAnalysisPage extends StatelessWidget {
   const SocialAnalysisPage({super.key});
@@ -16,6 +19,7 @@ class SocialAnalysisPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
     final personBlock = context.read<PersonBlock>();
     final healthBlock = context.read<HealthBlock>();
+    final mindBlock = context.read<MindBlock>();
     final personId = personBlock.information.value.profiles.id ?? "";
 
     return Scaffold(
@@ -63,9 +67,9 @@ class SocialAnalysisPage extends StatelessWidget {
                       const SizedBox(height: 24),
                       _buildStepsDistribution(context, healthBlock),
                       const SizedBox(height: 24),
-                      _buildMoodChart(context),
+                      _buildMoodChart(context, mindBlock, personId),
                       const SizedBox(height: 24),
-                      _buildWordCloudPlaceholder(context),
+                      _buildWordCloud(context, mindBlock, personId),
                     ],
                   ),
                 ),
@@ -199,10 +203,10 @@ class SocialAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMoodChart(BuildContext context) {
+  Widget _buildMoodChart(BuildContext context, MindBlock mindBlock, String personId) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 200,
+      height: 220,
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -214,41 +218,38 @@ class SocialAnalysisPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "MOOD TREND",
+            "WEEKLY MOOD TREND",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
-          const Spacer(),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: List.generate(7, (index) {
-              final height = 40.0 + (index * 15 % 80);
-              return Container(
-                width: 20,
-                height: height,
-                decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.6),
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              );
-            }),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: ["M", "T", "W", "T", "F", "S", "S"]
-                .map((d) => Text(d, style: TextStyle(fontSize: 10)))
-                .toList(),
+          const SizedBox(height: 16),
+          Expanded(
+            child: StreamBuilder<List<MindLogData>>(
+              stream: mindBlock.watchMindLogs(personId),
+              builder: (context, snapshot) {
+                final logs = snapshot.data ?? [];
+                if (logs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      "No records yet",
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                      ),
+                    ),
+                  );
+                }
+                return MoodTrendsChart(logs: logs);
+              },
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWordCloudPlaceholder(BuildContext context) {
+  Widget _buildWordCloud(BuildContext context, MindBlock mindBlock, String personId) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 150,
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -260,23 +261,30 @@ class SocialAnalysisPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            "TOP KEYWORDS",
+            "FREQUENT ACTIVITIES",
             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
-          const Expanded(
-            child: Center(
-              child: Wrap(
+          const SizedBox(height: 16),
+          FutureBuilder<Map<String, int>>(
+            future: mindBlock.getTopActivitiesForMood(personId, 5), // High energy activities
+            builder: (context, snapshot) {
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return Text("Track more logs to see patterns", 
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant.withOpacity(0.5)));
+              }
+              final activities = snapshot.data!.entries.toList()
+                ..sort((a, b) => b.value.compareTo(a.value));
+              
+              return Wrap(
                 spacing: 8,
                 runSpacing: 8,
-                children: [
-                  Chip(label: Text("Health")),
-                  Chip(label: Text("Productivity")),
-                  Chip(label: Text("Social")),
-                  Chip(label: Text("Coding")),
-                  Chip(label: Text("Peace")),
-                ],
-              ),
-            ),
+                children: activities.take(6).map((e) => Chip(
+                  label: Text("${e.key} (${e.value})"),
+                  backgroundColor: colorScheme.primaryContainer.withOpacity(0.3),
+                  side: BorderSide.none,
+                )).toList(),
+              );
+            },
           ),
         ],
       ),

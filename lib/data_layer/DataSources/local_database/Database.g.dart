@@ -11,6 +11,9 @@ mixin _$HourlyActivityLogDAOMixin on DatabaseAccessor<AppDatabase> {
   $HourlyActivityLogTableTable get hourlyActivityLogTable =>
       attachedDatabase.hourlyActivityLogTable;
 }
+mixin _$MindLogsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $MindLogsTableTable get mindLogsTable => attachedDatabase.mindLogsTable;
+}
 mixin _$PersonDAOMixin on DatabaseAccessor<AppDatabase> {
   $PersonsTableTable get personsTable => attachedDatabase.personsTable;
 }
@@ -31021,6 +31024,569 @@ class AchievementsTableCompanion extends UpdateCompanion<AchievementData> {
   }
 }
 
+class $MindLogsTableTable extends MindLogsTable
+    with TableInfo<$MindLogsTableTable, MindLogData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $MindLogsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _moodScoreMeta = const VerificationMeta(
+    'moodScore',
+  );
+  @override
+  late final GeneratedColumn<int> moodScore = GeneratedColumn<int>(
+    'mood_score',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _moodEmojiMeta = const VerificationMeta(
+    'moodEmoji',
+  );
+  @override
+  late final GeneratedColumn<String> moodEmoji = GeneratedColumn<String>(
+    'mood_emoji',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _activitiesMeta = const VerificationMeta(
+    'activities',
+  );
+  @override
+  late final GeneratedColumn<String> activities = GeneratedColumn<String>(
+    'activities',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> logDate =
+      GeneratedColumn<DateTime>(
+        'log_date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($MindLogsTableTable.$converterlogDate);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($MindLogsTableTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    personID,
+    moodScore,
+    moodEmoji,
+    activities,
+    note,
+    logDate,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'mind_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<MindLogData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('mood_score')) {
+      context.handle(
+        _moodScoreMeta,
+        moodScore.isAcceptableOrUnknown(data['mood_score']!, _moodScoreMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_moodScoreMeta);
+    }
+    if (data.containsKey('mood_emoji')) {
+      context.handle(
+        _moodEmojiMeta,
+        moodEmoji.isAcceptableOrUnknown(data['mood_emoji']!, _moodEmojiMeta),
+      );
+    }
+    if (data.containsKey('activities')) {
+      context.handle(
+        _activitiesMeta,
+        activities.isAcceptableOrUnknown(data['activities']!, _activitiesMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_activitiesMeta);
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  MindLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return MindLogData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      moodScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mood_score'],
+      )!,
+      moodEmoji: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}mood_emoji'],
+      ),
+      activities: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}activities'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      logDate: $MindLogsTableTable.$converterlogDate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}log_date'],
+        )!,
+      ),
+      createdAt: $MindLogsTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $MindLogsTableTable createAlias(String alias) {
+    return $MindLogsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterlogDate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+}
+
+class MindLogData extends DataClass implements Insertable<MindLogData> {
+  final String id;
+  final String? tenantID;
+  final String? personID;
+  final int moodScore;
+  final String? moodEmoji;
+  final String activities;
+  final String? note;
+  final DateTime logDate;
+  final DateTime createdAt;
+  const MindLogData({
+    required this.id,
+    this.tenantID,
+    this.personID,
+    required this.moodScore,
+    this.moodEmoji,
+    required this.activities,
+    this.note,
+    required this.logDate,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['mood_score'] = Variable<int>(moodScore);
+    if (!nullToAbsent || moodEmoji != null) {
+      map['mood_emoji'] = Variable<String>(moodEmoji);
+    }
+    map['activities'] = Variable<String>(activities);
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    {
+      map['log_date'] = Variable<DateTime>(
+        $MindLogsTableTable.$converterlogDate.toSql(logDate),
+      );
+    }
+    {
+      map['created_at'] = Variable<DateTime>(
+        $MindLogsTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  MindLogsTableCompanion toCompanion(bool nullToAbsent) {
+    return MindLogsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      moodScore: Value(moodScore),
+      moodEmoji: moodEmoji == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodEmoji),
+      activities: Value(activities),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      logDate: Value(logDate),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory MindLogData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return MindLogData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      moodScore: serializer.fromJson<int>(json['moodScore']),
+      moodEmoji: serializer.fromJson<String?>(json['moodEmoji']),
+      activities: serializer.fromJson<String>(json['activities']),
+      note: serializer.fromJson<String?>(json['note']),
+      logDate: serializer.fromJson<DateTime>(json['logDate']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'personID': serializer.toJson<String?>(personID),
+      'moodScore': serializer.toJson<int>(moodScore),
+      'moodEmoji': serializer.toJson<String?>(moodEmoji),
+      'activities': serializer.toJson<String>(activities),
+      'note': serializer.toJson<String?>(note),
+      'logDate': serializer.toJson<DateTime>(logDate),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  MindLogData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    int? moodScore,
+    Value<String?> moodEmoji = const Value.absent(),
+    String? activities,
+    Value<String?> note = const Value.absent(),
+    DateTime? logDate,
+    DateTime? createdAt,
+  }) => MindLogData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    personID: personID.present ? personID.value : this.personID,
+    moodScore: moodScore ?? this.moodScore,
+    moodEmoji: moodEmoji.present ? moodEmoji.value : this.moodEmoji,
+    activities: activities ?? this.activities,
+    note: note.present ? note.value : this.note,
+    logDate: logDate ?? this.logDate,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  MindLogData copyWithCompanion(MindLogsTableCompanion data) {
+    return MindLogData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      moodScore: data.moodScore.present ? data.moodScore.value : this.moodScore,
+      moodEmoji: data.moodEmoji.present ? data.moodEmoji.value : this.moodEmoji,
+      activities: data.activities.present
+          ? data.activities.value
+          : this.activities,
+      note: data.note.present ? data.note.value : this.note,
+      logDate: data.logDate.present ? data.logDate.value : this.logDate,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindLogData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('moodScore: $moodScore, ')
+          ..write('moodEmoji: $moodEmoji, ')
+          ..write('activities: $activities, ')
+          ..write('note: $note, ')
+          ..write('logDate: $logDate, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    personID,
+    moodScore,
+    moodEmoji,
+    activities,
+    note,
+    logDate,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is MindLogData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.personID == this.personID &&
+          other.moodScore == this.moodScore &&
+          other.moodEmoji == this.moodEmoji &&
+          other.activities == this.activities &&
+          other.note == this.note &&
+          other.logDate == this.logDate &&
+          other.createdAt == this.createdAt);
+}
+
+class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> personID;
+  final Value<int> moodScore;
+  final Value<String?> moodEmoji;
+  final Value<String> activities;
+  final Value<String?> note;
+  final Value<DateTime> logDate;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const MindLogsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.moodScore = const Value.absent(),
+    this.moodEmoji = const Value.absent(),
+    this.activities = const Value.absent(),
+    this.note = const Value.absent(),
+    this.logDate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  MindLogsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required int moodScore,
+    this.moodEmoji = const Value.absent(),
+    required String activities,
+    this.note = const Value.absent(),
+    this.logDate = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       moodScore = Value(moodScore),
+       activities = Value(activities);
+  static Insertable<MindLogData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? personID,
+    Expression<int>? moodScore,
+    Expression<String>? moodEmoji,
+    Expression<String>? activities,
+    Expression<String>? note,
+    Expression<DateTime>? logDate,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (personID != null) 'person_id': personID,
+      if (moodScore != null) 'mood_score': moodScore,
+      if (moodEmoji != null) 'mood_emoji': moodEmoji,
+      if (activities != null) 'activities': activities,
+      if (note != null) 'note': note,
+      if (logDate != null) 'log_date': logDate,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  MindLogsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? personID,
+    Value<int>? moodScore,
+    Value<String?>? moodEmoji,
+    Value<String>? activities,
+    Value<String?>? note,
+    Value<DateTime>? logDate,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return MindLogsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      personID: personID ?? this.personID,
+      moodScore: moodScore ?? this.moodScore,
+      moodEmoji: moodEmoji ?? this.moodEmoji,
+      activities: activities ?? this.activities,
+      note: note ?? this.note,
+      logDate: logDate ?? this.logDate,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (moodScore.present) {
+      map['mood_score'] = Variable<int>(moodScore.value);
+    }
+    if (moodEmoji.present) {
+      map['mood_emoji'] = Variable<String>(moodEmoji.value);
+    }
+    if (activities.present) {
+      map['activities'] = Variable<String>(activities.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (logDate.present) {
+      map['log_date'] = Variable<DateTime>(
+        $MindLogsTableTable.$converterlogDate.toSql(logDate.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $MindLogsTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('MindLogsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('moodScore: $moodScore, ')
+          ..write('moodEmoji: $moodEmoji, ')
+          ..write('activities: $activities, ')
+          ..write('note: $note, ')
+          ..write('logDate: $logDate, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -31098,6 +31664,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $PortfolioSnapshotsTableTable(this);
   late final $AchievementsTableTable achievementsTable =
       $AchievementsTableTable(this);
+  late final $MindLogsTableTable mindLogsTable = $MindLogsTableTable(this);
   late final ThemesTableDAO themesTableDAO = ThemesTableDAO(
     this as AppDatabase,
   );
@@ -31149,6 +31716,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final AchievementsDAO achievementsDAO = AchievementsDAO(
     this as AppDatabase,
   );
+  late final MindLogsDAO mindLogsDAO = MindLogsDAO(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -31199,6 +31767,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     hourlyActivityLogTable,
     portfolioSnapshotsTable,
     achievementsTable,
+    mindLogsTable,
   ];
 }
 
@@ -46083,6 +46652,286 @@ typedef $$AchievementsTableTableProcessedTableManager =
       AchievementData,
       PrefetchHooks Function()
     >;
+typedef $$MindLogsTableTableCreateCompanionBuilder =
+    MindLogsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      required int moodScore,
+      Value<String?> moodEmoji,
+      required String activities,
+      Value<String?> note,
+      Value<DateTime> logDate,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$MindLogsTableTableUpdateCompanionBuilder =
+    MindLogsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      Value<int> moodScore,
+      Value<String?> moodEmoji,
+      Value<String> activities,
+      Value<String?> note,
+      Value<DateTime> logDate,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$MindLogsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $MindLogsTableTable> {
+  $$MindLogsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get moodEmoji => $composableBuilder(
+    column: $table.moodEmoji,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get activities => $composableBuilder(
+    column: $table.activities,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get logDate =>
+      $composableBuilder(
+        column: $table.logDate,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$MindLogsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $MindLogsTableTable> {
+  $$MindLogsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get moodEmoji => $composableBuilder(
+    column: $table.moodEmoji,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get activities => $composableBuilder(
+    column: $table.activities,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get logDate => $composableBuilder(
+    column: $table.logDate,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$MindLogsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $MindLogsTableTable> {
+  $$MindLogsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<int> get moodScore =>
+      $composableBuilder(column: $table.moodScore, builder: (column) => column);
+
+  GeneratedColumn<String> get moodEmoji =>
+      $composableBuilder(column: $table.moodEmoji, builder: (column) => column);
+
+  GeneratedColumn<String> get activities => $composableBuilder(
+    column: $table.activities,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get logDate =>
+      $composableBuilder(column: $table.logDate, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$MindLogsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $MindLogsTableTable,
+          MindLogData,
+          $$MindLogsTableTableFilterComposer,
+          $$MindLogsTableTableOrderingComposer,
+          $$MindLogsTableTableAnnotationComposer,
+          $$MindLogsTableTableCreateCompanionBuilder,
+          $$MindLogsTableTableUpdateCompanionBuilder,
+          (
+            MindLogData,
+            BaseReferences<_$AppDatabase, $MindLogsTableTable, MindLogData>,
+          ),
+          MindLogData,
+          PrefetchHooks Function()
+        > {
+  $$MindLogsTableTableTableManager(_$AppDatabase db, $MindLogsTableTable table)
+    : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$MindLogsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$MindLogsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$MindLogsTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<int> moodScore = const Value.absent(),
+                Value<String?> moodEmoji = const Value.absent(),
+                Value<String> activities = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> logDate = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindLogsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                moodScore: moodScore,
+                moodEmoji: moodEmoji,
+                activities: activities,
+                note: note,
+                logDate: logDate,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required int moodScore,
+                Value<String?> moodEmoji = const Value.absent(),
+                required String activities,
+                Value<String?> note = const Value.absent(),
+                Value<DateTime> logDate = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => MindLogsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                moodScore: moodScore,
+                moodEmoji: moodEmoji,
+                activities: activities,
+                note: note,
+                logDate: logDate,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$MindLogsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $MindLogsTableTable,
+      MindLogData,
+      $$MindLogsTableTableFilterComposer,
+      $$MindLogsTableTableOrderingComposer,
+      $$MindLogsTableTableAnnotationComposer,
+      $$MindLogsTableTableCreateCompanionBuilder,
+      $$MindLogsTableTableUpdateCompanionBuilder,
+      (
+        MindLogData,
+        BaseReferences<_$AppDatabase, $MindLogsTableTable, MindLogData>,
+      ),
+      MindLogData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -46189,6 +47038,8 @@ class $AppDatabaseManager {
       );
   $$AchievementsTableTableTableManager get achievementsTable =>
       $$AchievementsTableTableTableManager(_db, _db.achievementsTable);
+  $$MindLogsTableTableTableManager get mindLogsTable =>
+      $$MindLogsTableTableTableManager(_db, _db.mindLogsTable);
 }
 
 mixin _$PortfolioSnapshotsDAOMixin on DatabaseAccessor<AppDatabase> {

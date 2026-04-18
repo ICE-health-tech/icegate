@@ -10,9 +10,14 @@ class WidgetNavigatorAction {
   }
 
   static void smartPop(BuildContext context, [String route = "/"]) {
-    if (context.canPop()) {
-      context.pop();
-    } else {
+    try {
+      if (context.canPop()) {
+        context.pop();
+      } else {
+        context.go(route);
+      }
+    } catch (e) {
+      debugPrint("Navigator Pop Error: $e");
       context.go(route);
     }
   }

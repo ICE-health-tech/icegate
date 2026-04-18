@@ -9,6 +9,8 @@ import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 
 class SocialNotesDashboard extends StatefulWidget {
   const SocialNotesDashboard({super.key});
@@ -40,6 +42,45 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         children: [
           _buildQuickEntryBar(context, colorScheme, textTheme),
           const Divider(height: 1, thickness: 0.2),
+          // --- MOOD TRENDS SECTION ---
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: StreamBuilder<List<MindLogData>>(
+              stream: context.read<MindBlock>().watchMindLogs(personId),
+              builder: (context, snapshot) {
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return const SizedBox.shrink();
+                }
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "MOOD TRENDS",
+                      style: textTheme.labelSmall?.copyWith(
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    MoodTrendsChart(logs: snapshot.data!),
+                    const SizedBox(height: 24),
+                    // Adding Recent entries preview
+                    _buildRecentLogsPreview(context, snapshot.data!),
+                    const SizedBox(height: 24),
+                    Text(
+                      "SOCIAL NOTES",
+                      style: textTheme.labelSmall?.copyWith(
+                        letterSpacing: 2,
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
           Expanded(
             child: StreamBuilder<List<ProjectNoteData>>(
               stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
@@ -110,10 +151,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withOpacity(0.5),
+                  color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.3),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                   ),
                 ),
                 child: Row(
@@ -122,7 +163,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     Text(
                       "What's on your mind?",
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -136,7 +177,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             onPressed: () => _pickAndCreateImageNote(context),
             icon: const Icon(Icons.add_photo_alternate_rounded, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.secondaryContainer.withOpacity(0.4),
+              backgroundColor: colorScheme.secondaryContainer.withValues(alpha: 0.4),
               foregroundColor: colorScheme.secondary,
             ),
           ),
@@ -157,13 +198,13 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.05),
+              color: colorScheme.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.auto_stories_rounded,
               size: 80,
-              color: colorScheme.primary.withOpacity(0.15),
+              color: colorScheme.primary.withValues(alpha: 0.15),
             ),
           ),
           const SizedBox(height: 24),
@@ -197,6 +238,82 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         ],
       ),
     );
+  }
+
+  Widget _buildRecentLogsPreview(BuildContext context, List<MindLogData> logs) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    
+    // Sort by logDate descending
+    final sortedLogs = List<MindLogData>.from(logs)
+      ..sort((a, b) => b.logDate.compareTo(a.logDate));
+      
+    return SizedBox(
+      height: 100,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: sortedLogs.length.clamp(0, 10),
+        itemBuilder: (context, index) {
+          final log = sortedLogs[index];
+          final activities = jsonDecode(log.activities) as List;
+          
+          return Container(
+            width: 160,
+            margin: const EdgeInsets.only(right: 12),
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      _getMoodEmoji(log.moodScore),
+                      style: const TextStyle(fontSize: 20),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        DateFormat('MMM d, HH:mm').format(log.logDate),
+                        style: textTheme.labelSmall?.copyWith(fontSize: 9),
+                        maxLines: 1,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  activities.join(", "),
+                  style: textTheme.bodySmall?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontSize: 10,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  String _getMoodEmoji(int score) {
+    switch (score) {
+      case 1: return "😫";
+      case 2: return "😔";
+      case 3: return "😐";
+      case 4: return "😊";
+      case 5: return "🤩";
+      default: return "😐";
+    }
   }
 
   void _createNewNote(BuildContext context) {
@@ -250,7 +367,7 @@ class _SocialNoteCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -261,7 +378,7 @@ class _SocialNoteCard extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: Material(
-              color: colorScheme.surfaceContainerLow.withOpacity(0.7),
+              color: colorScheme.surfaceContainerLow.withValues(alpha: 0.7),
               child: InkWell(
                 onTap: () => context.push('/projects/editor', extra: note),
                 child: Column(
@@ -287,14 +404,14 @@ class _SocialNoteCard extends StatelessWidget {
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    colorScheme.primaryContainer.withOpacity(0.3),
-                                    colorScheme.secondaryContainer.withOpacity(0.1),
+                                    colorScheme.primaryContainer.withValues(alpha: 0.3),
+                                    colorScheme.secondaryContainer.withValues(alpha: 0.1),
                                   ],
                                 ),
                               ),
                               child: Icon(
                                 Icons.auto_awesome_rounded,
-                                color: colorScheme.primary.withOpacity(0.2),
+                                color: colorScheme.primary.withValues(alpha: 0.2),
                                 size: 40,
                               ),
                             ),
@@ -306,9 +423,9 @@ class _SocialNoteCard extends StatelessWidget {
                                   begin: Alignment.topCenter,
                                   end: Alignment.bottomCenter,
                                   colors: [
-                                    Colors.black.withOpacity(0.1),
+                                    Colors.black.withValues(alpha: 0.1),
                                     Colors.transparent,
-                                    Colors.black.withOpacity(0.3),
+                                    Colors.black.withValues(alpha: 0.3),
                                   ],
                                   stops: const [0.0, 0.5, 1.0],
                                 ),
@@ -373,7 +490,7 @@ class _SocialNoteCard extends StatelessWidget {
                               child: Text(
                                 previewText,
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                                   height: 1.4,
                                   fontSize: 11,
                                 ),

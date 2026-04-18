@@ -252,17 +252,22 @@ class AuthBlock {
     
     // Use provided email, fallback to remembered, or default test
     final targetEmail = email ?? rememberedUser.value?['username'] ?? "duylong.art@gmail.com";
-    print("🔑 Authenticating with Passkey for: $targetEmail...");
+    print("--------------------------------------------------");
+    print("🔑 PASSKEY AUTHENTICATION INITIATED");
+    print("📧 Target Identity: $targetEmail");
+    print("--------------------------------------------------");
 
     try {
-      // 1. Get Challenge - pass the identifier (email/username)
-      final challenge = await _authService.getPasskeyChallenge(email: targetEmail);
+      // 1. Get Challenge / Options - pass the identifier (email/username)
+      // CustomAuthService now returns the full publicKey JSON options string
+      final optionsJson = await _authService.getPasskeyChallenge(email: targetEmail);
       // print("🔑 Challenge received: $challenge");
 
       // 2. Perform Passkey Assertion
-      // Call the platform passkey service to sign the challenge
+      // Call the platform passkey service with the full options
       final credential = await _passkeyService.loginRequest(
-        challenge: challenge,
+        challenge: "", // Not used as challenge is inside optionsJson now
+        optionsJson: optionsJson,
       );
 
       if (credential == null) {

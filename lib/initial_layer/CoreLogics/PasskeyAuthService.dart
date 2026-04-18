@@ -103,39 +103,48 @@ class PasskeyAuthService {
   /// Sign in with an existing passkey.
   ///
   /// [challenge] The challenge string from the Relying Party (your backend).
+  /// [optionsJson] Full publicKey JSON from server
   Future<String?> loginRequest({
     required String challenge, // Base64 encoded challenge from server
+    String? optionsJson, // Full publicKey assertion options from Hub
   }) async {
     try {
       if (!await isSupported()) {
         throw Exception('Passkeys are not supported on this device.');
       }
-
+ 
       // Increase delay to 1250ms to ensure the UI/Window/Scene is fully ready and Key status is gained
       await Future.delayed(const Duration(milliseconds: 1250));
-
+ 
       // Standard WebAuthn PublicKeyCredentialRequestOptions
-      final authOptions = {
-        "challenge": challenge,
-        "rpId": "passkey.duylong.art", // MUST match registration and Associated Domains
-        "timeout": 60000,
-        "userVerification": "required",
-      };
-
-      final String optionsJson = jsonEncode(authOptions);
-
-      _logger.info('Starting passkey login with options: $optionsJson');
-
+      final String finalOptionsJson;
+      
+      if (optionsJson != null && optionsJson.isNotEmpty) {
+        _logger.info('Using provided login options from Hub');
+        finalOptionsJson = optionsJson;
+      } else {
+        _logger.info('Constructing manual login options');
+        final authOptions = {
+          "challenge": challenge,
+          "rpId": "passkey.duylong.art", // MUST match registration and Associated Domains
+          "timeout": 60000,
+          "userVerification": "required",
+        };
+        finalOptionsJson = jsonEncode(authOptions);
+      }
+ 
+      _logger.info('Starting passkey login with options: $finalOptionsJson');
+ 
       // 2. Invoke the platform passkey authentication with a retry loop
       // to handle any transient "Root view controller not found" window issues on iPad.
       int attempts = 0;
       const int maxAttempts = 2;
       String? result;
-
+ 
       while (attempts < maxAttempts) {
         try {
           attempts++;
-          result = await _flutterPasskey.getCredential(optionsJson);
+          result = await _flutterPasskey.getCredential(finalOptionsJson);
           break; // Success!
         } catch (e) {
           if (e.toString().contains('Root view controller') && attempts < maxAttempts) {
@@ -146,7 +155,7 @@ class PasskeyAuthService {
           }
         }
       }
-
+ 
       _logger.info('Passkey login result: $result');
       return result; // This is the assertion to be sent back to the backend for verification
     } catch (e) {

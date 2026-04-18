@@ -167,8 +167,8 @@ class CanvasDynamicIsland extends StatelessWidget {
             color: isFocusRunning
                 ? focusColor.withValues(alpha: 0.5)
                 : (useTmux
-                      ? Colors.greenAccent.withOpacity(0.5)
-                      : colorScheme.outlineVariant.withOpacity(0.5)),
+                      ? Colors.greenAccent.withValues(alpha: 0.5)
+                      : colorScheme.outlineVariant.withValues(alpha: 0.5)),
             width: (isFocusRunning || useTmux) ? 1.5 : 1.2,
           ),
           boxShadow: [
@@ -177,7 +177,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                   (isFocusRunning
                           ? focusColor
                           : (useTmux ? Colors.greenAccent : colorScheme.shadow))
-                      .withOpacity(0.3),
+                      .withValues(alpha: 0.3),
               blurRadius: (isFocusRunning || useTmux) ? 20 : 16,
               offset: Offset(0, 6 * scalingFactor),
               spreadRadius: 2,
@@ -208,7 +208,7 @@ class CanvasDynamicIsland extends StatelessWidget {
               child: Container(
                 padding: EdgeInsets.all(4 * scalingFactor),
                 decoration: BoxDecoration(
-                  color: colorScheme.onSurface.withOpacity(0.1),
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -292,7 +292,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ),
                           child: Icon(
                             Icons.timer_outlined,
-                            color: colorScheme.onSurfaceVariant.withOpacity(
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 
                               0.8,
                             ),
                             size: 20 * scalingFactor,
@@ -315,7 +315,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ),
                           child: Icon(
                             Icons.settings_rounded,
-                            color: colorScheme.onSurfaceVariant.withOpacity(
+                            color: colorScheme.onSurfaceVariant.withValues(alpha: 
                               0.8,
                             ),
                             size: 20 * scalingFactor,
@@ -410,7 +410,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                     child: Container(
                       padding: EdgeInsets.all(6 * scalingFactor),
                       decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withOpacity(0.05),
+                        color: colorScheme.onSurface.withValues(alpha: 0.05),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -491,7 +491,7 @@ class CanvasDynamicIsland extends StatelessWidget {
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: focusColor.withOpacity(0.5),
+                  color: focusColor.withValues(alpha: 0.5),
                   blurRadius: 4,
                   spreadRadius: 1,
                 ),
@@ -839,7 +839,7 @@ class CanvasDynamicIsland extends StatelessWidget {
         Icon(
           icon,
           size: 10 * scalingFactor,
-          color: colorScheme.onSurface.withOpacity(0.5),
+          color: colorScheme.onSurface.withValues(alpha: 0.5),
         ),
         const SizedBox(width: 2),
         Text(

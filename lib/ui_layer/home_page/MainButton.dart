@@ -350,7 +350,7 @@ class _MainButtonState extends State<MainButton>
               color: widget.backgroundColor ?? Theme.of(context).primaryColor,
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

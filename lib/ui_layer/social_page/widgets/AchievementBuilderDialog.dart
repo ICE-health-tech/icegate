@@ -94,12 +94,14 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
       padding: const EdgeInsets.only(top: 16, bottom: 8),
       child: Row(
         children: [
-          Text(
-            title,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.onSurface,
+                fontWeight: FontWeight.bold,
+                fontSize: 16,
+              ),
             ),
           ),
           if (isMandatory) ...[

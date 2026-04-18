@@ -23,7 +23,7 @@ class CustomAuthService {
       );
 
       // TESTING
-      if (response.statusCode != 200) {
+      if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         _logger.info('Login successful');
         return data;
@@ -73,9 +73,11 @@ class CustomAuthService {
       
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
-        final challenge = data['publicKey']['challenge'];
-        _logger.info('Successfully received challenge from Hub: $challenge');
-        return challenge;
+        // The Hub returns { "publicKey": { ... options ... } }
+        // We return the inner publicKey object as a string for the plugin
+        final options = data['publicKey'];
+        _logger.info('Successfully received login options from Hub');
+        return jsonEncode(options);
       } else {
         _logger.warning('Passkey Hub returned ${response.statusCode} for challenge');
         throw Exception('Passkey Hub rejected request (Status: ${response.statusCode})');
@@ -99,8 +101,10 @@ class CustomAuthService {
       ).timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
-        // Return the full publicKey options for registration
-        return response.body;
+        final data = jsonDecode(response.body);
+        // Unwrap the publicKey object
+        final options = data['publicKey'];
+        return jsonEncode(options);
       } else {
         throw Exception('Hub returned ${response.statusCode} for registration options');
       }
@@ -119,13 +123,18 @@ class CustomAuthService {
     const authHubUrl = "https://passkey.duylong.art/v1";
     final url = Uri.parse('$authHubUrl/login/finish');
     try {
+      // Flatten the credential data into the root of the request body
+      // This is required so go-webauthn can parse the credential from the raw request
+      final Map<String, dynamic> credentialMap = jsonDecode(credential);
+      final Map<String, dynamic> body = {
+        'email': email,
+        ...credentialMap,
+      };
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'data': jsonDecode(credential)
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode == 200) {
@@ -149,19 +158,25 @@ class CustomAuthService {
     const authHubUrl = "https://passkey.duylong.art/v1";
     final url = Uri.parse('$authHubUrl/register/finish');
     try {
+      // Flatten the credential data into the root of the request body
+      final Map<String, dynamic> credentialMap = jsonDecode(credential);
+      final Map<String, dynamic> body = {
+        'email': email,
+        'user_id': userId,
+        ...credentialMap,
+      };
+
       final response = await http.post(
         url,
         headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'user_id': userId,
-          'data': jsonDecode(credential)
-        }),
+        body: jsonEncode(body),
       );
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body);
-        throw Exception(error['error'] ?? 'Registration verification failed');
+        final details = error['details'] ?? 'No extra details';
+        _logger.severe('Registration verification failed: $details');
+        throw Exception(error['error'] ?? 'Registration verification failed: $details');
       }
     } catch (e) {
       _logger.severe('Error verifying passkey registration: $e');

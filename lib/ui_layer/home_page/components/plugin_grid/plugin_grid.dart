@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
@@ -107,11 +106,6 @@ class _PluginGridState extends State<PluginGrid> {
     await block.deleteWidget(dao, name);
   }
 
-  void _handleDeleteExternal(BuildContext context, String id) async {
-    final dao = context.read<ExternalWidgetsDAO>();
-    final block = context.read<ExternalWidgetBlock>();
-    await block.deleteWidget(dao, id);
-  }
 
   void _showRenameDialog(BuildContext context, ExternalWidgetData widgetData) {
     if (widget.isEditMode) return;

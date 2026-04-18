@@ -99,6 +99,27 @@ class PasskeySetupCard extends StatelessWidget {
                         height: 1.4,
                       ),
                     ),
+                    const SizedBox(height: 16),
+                    TextButton.icon(
+                      onPressed: () => _handleSetup(context, authBlock),
+                      icon: const Icon(Icons.refresh_rounded, size: 16, color: Colors.green),
+                      label: const Text(
+                        "RE-REGISTER IDENTITY",
+                        style: TextStyle(
+                          color: Colors.green,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        backgroundColor: Colors.green.withOpacity(0.1),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                    ),
                   ] else ...[
                     Row(
                       children: [

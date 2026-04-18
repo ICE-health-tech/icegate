@@ -28,6 +28,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart'
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/cloud_database/powersync_connector.dart';
 import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
@@ -85,6 +86,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late QuestBlock questBlock;
   late SocialBlockerBlock socialBlockerBlock;
   late SocialBlock socialBlock;
+  late MindBlock mindBlock;
   late ChallengeBlock challengeBlock;
   late LocaleBlock localeBlock;
   late ConfigBlock configBlock;
@@ -269,11 +271,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         debugPrint(
           "🌐 [Boot] Web platform detected. Initializing PowerSync with IndexedDB.",
         );
-        // Bumped to powersync42.db to apply the stripped drift schemas cleanly.
-        dbPath = 'powersync42.db';
+        // Bumped to powersync48.db to finalize transactions and activity logs.
+        dbPath = 'powersync48.db';
       } else {
         final dir = await getApplicationDocumentsDirectory();
-        dbPath = p.join(dir.path, 'powersync42.db');
+        dbPath = p.join(dir.path, 'powersync48.db');
       }
       final powersync = PowerSyncDatabase(
         schema: ps_schema.schema,
@@ -348,6 +350,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       quoteBlock = QuoteBlock();
       questBlock = QuestBlock();
       socialBlock = SocialBlock();
+      mindBlock = MindBlock(database.mindLogsDAO);
       contentBlock = ContentBlock();
       widgetSettingsBlock = WidgetSettingsBlock();
       objectDatabaseBlock = ObjectDatabaseBlock();
@@ -657,6 +660,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<HourlyActivityLogDAO>.value(
           value: database.hourlyActivityLogDAO,
         ),
+        Provider<MindLogsDAO>.value(value: database.mindLogsDAO),
         Provider<PersonBlock>.value(value: personBlock),
         Provider<AuthBlock>.value(value: authBlock),
         Provider<ObjectDatabaseBlock>.value(value: objectDatabaseBlock),
@@ -680,6 +684,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<ConfigBlock>.value(value: configBlock),
         Provider<DocumentationBlock>.value(value: documentationBlock),
         Provider<ChallengeBlock>.value(value: challengeBlock),
+        Provider<MindBlock>.value(value: mindBlock),
       ],
       child: widget.childWidget,
     );

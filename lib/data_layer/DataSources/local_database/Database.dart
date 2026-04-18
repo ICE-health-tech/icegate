@@ -1709,6 +1709,59 @@ class AchievementsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+@DataClassName('MindLogData')
+class MindLogsTable extends Table {
+  @override
+  String get tableName => 'mind_logs';
+  TextColumn get id => text()(); // UUID Primary Key
+  TextColumn get tenantID => text().nullable().named('tenant_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+
+  // 1=Awful, 2=Bad, 3=Meh, 4=Good, 5=Rad
+  IntColumn get moodScore => integer().named('mood_score')();
+  TextColumn get moodEmoji => text().nullable().named('mood_emoji')();
+  
+  // JSON array of strings: ["Deep Work", "Exercise", "Family"]
+  TextColumn get activities => text().named('activities')();
+  TextColumn get note => text().nullable().named('note')();
+
+  DateTimeColumn get logDate => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('log_date')();
+      
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DriftAccessor(tables: [MindLogsTable])
+class MindLogsDAO extends DatabaseAccessor<AppDatabase> with _$MindLogsDAOMixin {
+  MindLogsDAO(super.db);
+
+  Stream<List<MindLogData>> watchLogsByPerson(String personId) {
+    return (select(mindLogsTable)
+          ..where((tbl) => tbl.personID.equals(personId))
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)]))
+        .watch();
+  }
+
+  Future<void> insertLog(MindLogsTableCompanion entry) => into(mindLogsTable).insert(entry);
+  
+  Future<void> deleteLog(String id) => (delete(mindLogsTable)..where((tbl) => tbl.id.equals(id))).go();
+
+  Stream<List<MindLogData>> watchLogsByMood(String personId, int moodScore) {
+    return (select(mindLogsTable)
+          ..where((tbl) => tbl.personID.equals(personId) & tbl.moodScore.equals(moodScore))
+          ..orderBy([(tbl) => OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc)]))
+        .watch();
+  }
+}
+
 @DataClassName('FeedbackLocalData')
 class FeedbacksTable extends Table {
   @override
@@ -5998,6 +6051,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     HourlyActivityLogTable,
     PortfolioSnapshotsTable,
     AchievementsTable,
+    MindLogsTable,
   ],
   daos: [
     ThemesTableDAO,
@@ -6030,6 +6084,7 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     FeedbackDAO,
     HourlyActivityLogDAO,
     AchievementsDAO,
+    MindLogsDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -6051,6 +6106,7 @@ class AppDatabase extends _$AppDatabase {
   SSHSessionsDAO get sshSessionsDAO => SSHSessionsDAO(this);
   @override
   ConfigsDAO get configsDAO => ConfigsDAO(this);
+  MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
 
   @override
   DriftDatabaseOptions get options => const DriftDatabaseOptions(
@@ -6062,7 +6118,8 @@ class AppDatabase extends _$AppDatabase {
   // v52 → adds focus_session_id to exercise_logs so logs JOIN to their parent focus session
   // v53 → adds categories on focus_sessions (e.g. health-exercise for exercise timer sessions)
   // v54 → repair focus_sessions.task_id when v51 was skipped (PowerSync / legacy taskID only)
-  int get schemaVersion => 56;
+  // v57 → adds mind_logs table for mental health tracking
+  int get schemaVersion => 57;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -6514,6 +6571,9 @@ class AppDatabase extends _$AppDatabase {
               'ALTER TABLE focus_sessions ADD COLUMN categories TEXT;',
             );
           } catch (_) {}
+        }
+        if (from < 57) {
+          await m.createTable(mindLogsTable);
         }
       },
       beforeOpen: (details) async {

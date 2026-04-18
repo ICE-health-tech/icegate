@@ -122,40 +122,54 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void _precalculateGeometry() {
     final random = math.Random(42);
 
-    // 1. Glass Cracks - Minimal & Cinematic (Center Epicenter)
-    const int crackCount = 9; 
+    // 1. Glass Cracks - High Fidelity Spiderweb (Center Epicenter)
+    const int crackCount = 12; // Increased for more detail
     final List<List<Offset>> allRadialPoints = [];
     
-    // A. Main radial fractures
+    // A. Primary Radial Fractures (Natural, jagged paths)
     for (int i = 0; i < crackCount; i++) {
-      final impactOrigin = Offset.zero;
-      final double angle = (i / crackCount) * 2 * math.pi + random.nextDouble() * 0.2;
+      // Shifted origin to avoid the "face" (center logo)
+      final impactOrigin = Offset(-0.3, -0.5); 
+      final double baseAngle = (i / crackCount) * 2 * math.pi;
       final List<Offset> mainPoints = [impactOrigin];
+      
       double currentDist = 0;
-      double currentAngle = angle;
+      double currentAngle = baseAngle;
 
       while (currentDist < 5.0) {
-        currentAngle += (random.nextDouble() - 0.5) * 0.15;
-        currentDist += 0.3 + random.nextDouble() * 0.6; 
+        // High-frequency jitter
+        currentAngle += (random.nextDouble() - 0.5) * 0.25;
+        currentDist += 0.2 + random.nextDouble() * 0.4; 
+        
         final p = impactOrigin +
             Offset(math.cos(currentAngle) * currentDist,
                 math.sin(currentAngle) * currentDist);
         mainPoints.add(p);
+        
+        // Occasional branch out
+        if (random.nextDouble() > 0.85 && currentDist < 3.0) {
+          final branchAngle = currentAngle + (random.nextBool() ? 0.4 : -0.4);
+          final branchPoint = p + Offset(math.cos(branchAngle) * 0.5, math.sin(branchAngle) * 0.5);
+          _cachedGlassCracks.add(GlassCrackData(points: [p, branchPoint]));
+        }
       }
       allRadialPoints.add(mainPoints);
       _cachedGlassCracks.add(GlassCrackData(points: mainPoints));
     }
 
-    // B. Connecting spiderweb web lines
-    for (int i = 0; i < crackCount; i++) {
-      final List<Offset> currentRadial = allRadialPoints[i];
-      final List<Offset> nextRadial = allRadialPoints[(i + 1) % crackCount];
-      for (int j = 1; j < currentRadial.length && j < nextRadial.length; j += 2) {
-        if (random.nextDouble() > 0.4) {
-           final Offset p1 = currentRadial[j];
-           final Offset p2 = nextRadial[j];
-           final Offset mid = Offset.lerp(p1, p2, 0.5 + (random.nextDouble() - 0.5) * 0.4)!;
-           final Offset jaggedMid = mid + Offset((random.nextDouble() - 0.5) * 0.1, (random.nextDouble() - 0.5) * 0.1);
+    // B. Systematic Spiderweb Connections (Concentric circular stress)
+    for (int layer = 1; layer < 6; layer++) {
+      final double radiusFactor = (layer / 6.0); // Used to scale jaggedness
+      for (int i = 0; i < crackCount; i++) {
+        if (random.nextDouble() > 0.3) {
+           final Offset p1 = allRadialPoints[i][layer.clamp(0, allRadialPoints[i].length - 1)];
+           final Offset p2 = allRadialPoints[(i + 1) % crackCount][layer.clamp(0, allRadialPoints[(i + 1) % crackCount].length - 1)];
+           
+           // Jagged arc with displacement scaled by distance from center
+           final Offset mid = Offset.lerp(p1, p2, 0.5)!;
+           final Offset normal = Offset(-(p2.dy - p1.dy), p2.dx - p1.dx);
+           final Offset jaggedMid = mid + normal * (random.nextDouble() - 0.5) * 0.2 * radiusFactor;
+           
            _cachedGlassCracks.add(GlassCrackData(points: [p1, jaggedMid, p2]));
         }
       }
@@ -165,7 +179,9 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     const int largeParticleCount = 70;
     for (int i = 0; i < largeParticleCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
-      final double velocity = 1800 + random.nextDouble() * 3200;
+      // Start away from the origin to avoid the "face"
+      final double startDist = 150 + random.nextDouble() * 300;
+      final double velocity = 1500 + random.nextDouble() * 2000;
 
       final double length = 180 + random.nextDouble() * 220;
       final double width = 30 + random.nextDouble() * 70;
@@ -185,7 +201,8 @@ class _PrismEntryPageState extends State<PrismEntryPage>
           points: points,
           rotationSpeed: (random.nextDouble() - 0.5) * 35,
           color: Colors.white.withValues(alpha: 0.85 + random.nextDouble() * 0.15),
-          delay: random.nextDouble() * 0.2,
+          delay: random.nextDouble() * 0.1,
+          initialDistance: startDist,
           tier: ParticleTier.large,
         ),
       );
@@ -195,7 +212,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     const int dustCount = 120;
     for (int i = 0; i < dustCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
-      final double velocity = 1000 + random.nextDouble() * 4000;
+      final double velocity = 800 + random.nextDouble() * 1200;
       final double w = 4 + random.nextDouble() * 6;
       final double l = 15 + random.nextDouble() * 25;
       _cachedParticles.add(

@@ -3,6 +3,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 
 import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
+import 'package:ice_gate/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/AchievementTimeline.dart';
@@ -37,9 +38,7 @@ class SocialPage extends StatefulWidget {
       switch (index) {
         case 0: // Journal
           iconData = Icons.edit_note_rounded;
-          action = () => context.push('/projects/editor', extra: {
-                'category': 'social',
-              });
+          action = () => MindLogEntryDialog.show(context);
           break;
         case 1: // Achievements
           iconData = Icons.spa_rounded;
@@ -292,14 +291,14 @@ class _SocialPageState extends State<SocialPage>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.05),
+              color: colorScheme.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
-              border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
             ),
             child: Icon(
               icon,
               size: 48,
-              color: colorScheme.primary.withOpacity(0.5),
+              color: colorScheme.primary.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 16),

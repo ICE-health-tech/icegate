@@ -57,6 +57,7 @@ class ScatteringParticleData {
   final double rotationSpeed;
   final Color color;
   final double delay;
+  final double initialDistance;
   final ParticleTier tier;
 
   ScatteringParticleData({
@@ -66,6 +67,7 @@ class ScatteringParticleData {
     required this.rotationSpeed,
     required this.color,
     required this.delay,
+    this.initialDistance = 0.0,
     this.tier = ParticleTier.large,
   });
 }
@@ -378,44 +380,26 @@ class GlassCrackPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress < 0.4 || progress > 0.85) return;
+    if (progress < 0.3 || progress > 0.85) return;
 
     final center = Offset(
-      size.width / 2 + pointerOffset.dx * 15,
-      size.height / 2 + pointerOffset.dy * 15,
+      size.width / 2 + pointerOffset.dx * 18,
+      size.height / 2 + pointerOffset.dy * 18,
     );
+
     final double crackOpacity =
-        ((progress - 0.4) / 0.15).clamp(0.0, 1.0) *
-        (1.0 - ((progress - 0.75) / 0.1).clamp(0.0, 1.0));
-
-    // Outer frost/stress fracture (wider, lower opacity)
-    final frostPaint = Paint()
-      ..color = const Color(0xFFC7C7CC).withValues(alpha: crackOpacity * 0.3)
-      ..strokeWidth = 3.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-
-    // Main crack structure
-    final mainPaint = Paint()
-      ..color = Colors.white.withValues(alpha: crackOpacity * 0.8)
-      ..strokeWidth = 1.0
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
-
-    // Inner bright edge (the actual cut reflecting light)
-    final corePaint = Paint()
-      ..color = Colors.white.withValues(alpha: crackOpacity)
-      ..strokeWidth = 0.3
-      ..style = PaintingStyle.stroke
-      ..strokeCap = StrokeCap.round;
+        ((progress - 0.3) / 0.15).clamp(0.0, 1.0) *
+        (1.0 - ((progress - 0.78) / 0.07).clamp(0.0, 1.0));
 
     for (var crack in cracks) {
       final path = Path();
       bool first = true;
-      for (var p in crack.points) {
-        final pos =
-            center + Offset(p.dx * size.width * 0.5, p.dy * size.height * 0.5);
+      
+      // We'll iterate through points to draw with variable thickness
+      for (int i = 0; i < crack.points.length; i++) {
+        final p = crack.points[i];
+        final pos = center + Offset(p.dx * size.width * 0.5, p.dy * size.height * 0.5);
+        
         if (first) {
           path.moveTo(pos.dx, pos.dy);
           first = false;
@@ -424,25 +408,72 @@ class GlassCrackPainter extends CustomPainter {
         }
       }
 
-      // Draw layered crack for depth
-      canvas.drawPath(path, frostPaint);
-      canvas.drawPath(path, mainPaint);
-      canvas.drawPath(path, corePaint);
+      // Pass 1: Outer frost/stress fracture (wider, lower opacity)
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = const Color(0xFFC7C7CC).withValues(alpha: crackOpacity * 0.25)
+          ..strokeWidth = 4.5
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 3),
+      );
 
-      // Add jagged, sharp intersections (stress points)
-      for (var p in crack.points) {
-        if (math.Random().nextDouble() > 0.7) {
-          final pos =
-              center +
-              Offset(p.dx * size.width * 0.5, p.dy * size.height * 0.5);
-          canvas.drawCircle(
-            pos,
-            1.5,
-            Paint()..color = Colors.white.withValues(alpha: crackOpacity),
-          );
+      // Pass 2: Main crack structure
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white.withValues(alpha: crackOpacity * 0.7)
+          ..strokeWidth = 1.2
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
+
+      // Pass 3: Specular Core (The sharpest part)
+      canvas.drawPath(
+        path,
+        Paint()
+          ..color = Colors.white.withValues(alpha: crackOpacity)
+          ..strokeWidth = 0.5
+          ..style = PaintingStyle.stroke
+          ..strokeCap = StrokeCap.round,
+      );
+
+      // Pass 4: Sharp Glints (Reflections at jagged intersections)
+      final glintPaint = Paint()
+        ..color = Colors.white.withValues(alpha: crackOpacity)
+        ..style = PaintingStyle.fill
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1);
+
+      for (int i = 1; i < crack.points.length - 1; i++) {
+        // Add glints at sharp turns (intersections)
+        if (math.Random(i).nextDouble() > 0.7) {
+          final p = crack.points[i];
+          final pos = center + Offset(p.dx * size.width * 0.5, p.dy * size.height * 0.5);
+          
+          // Tiny diamond-shaped glint
+          final glintPath = Path();
+          glintPath.moveTo(pos.dx, pos.dy - 1.5);
+          glintPath.lineTo(pos.dx + 1.5, pos.dy);
+          glintPath.lineTo(pos.dx, pos.dy + 1.5);
+          glintPath.lineTo(pos.dx - 1.5, pos.dy);
+          glintPath.close();
+          canvas.drawPath(glintPath, glintPaint);
         }
       }
     }
+
+    // Pass 5: Center Epicenter Glow (More intense impact zone)
+    final epicenterPaint = Paint()
+      ..shader = RadialGradient(
+        colors: [
+          Colors.white.withValues(alpha: crackOpacity * 0.6),
+          Colors.transparent,
+        ],
+      ).createShader(Rect.fromCircle(center: center, radius: 40))
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 15);
+    
+    canvas.drawCircle(center, 40, epicenterPaint);
   }
 
   @override
@@ -479,7 +510,7 @@ class GlassShatterPainter extends CustomPainter {
       if (t <= 0) continue;
 
       final double ease = Curves.easeOutQuart.transform(t);
-      final double distance = particle.velocity * ease;
+      final double distance = particle.initialDistance + particle.velocity * ease;
       final double opacity = (1.0 - ease).clamp(0.0, 1.0);
 
       // Chromatic aberration / glitch effect
@@ -510,10 +541,10 @@ class GlassShatterPainter extends CustomPainter {
                 .clamp(0.2, 1.0) // Simulate flipping in 3D space
           : 1.0;
 
+      final double scale = (particle.tier == ParticleTier.dust ? 0.4 + ease * 0.2 : 1.0 - ease * 0.4);
       canvas.scale(
-        particle.tier == ParticleTier.dust ? 0.5 + ease : 1.0 + ease * 1.5,
-        (particle.tier == ParticleTier.dust ? 0.5 + ease : 1.0 + ease * 1.5) *
-            scaleY,
+        scale,
+        scale * scaleY,
       );
 
       final path = Path();
