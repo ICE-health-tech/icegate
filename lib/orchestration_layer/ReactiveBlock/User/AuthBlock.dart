@@ -213,12 +213,20 @@ class AuthBlock {
       );
 
       if (authenticated) {
+        // HARDENING: Check if we should use the Passkey Hub instead of legacy passwords
+        final isPasskeyRegistered = await _secureStorage.isBiometricEnabled(); // Re-using this flag for passkey context
         final credentials = await _secureStorage.getCredentials();
         final email = credentials['username'];
-        final password = credentials['password'];
 
+        if (isPasskeyRegistered && email != null) {
+          print("🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...");
+          return await loginWithPasskey(context, email: email);
+        }
+
+        // Fallback for users who haven't migrated to Passkey yet
+        final password = credentials['password'];
         if (email != null && password != null) {
-          print("✅ [AuthBlock] Biometrics authenticated. Attempting login...");
+          print("⚠️ [AuthBlock] Legacy Flow: Using stored password...");
           await login(email, password, context);
           return status.value == AuthStatus.authenticated;
         } else {

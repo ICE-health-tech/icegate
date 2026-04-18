@@ -7,7 +7,7 @@ class EntryColors {
   static const Color frostedWhite = Color(0xFFF2F2F7);
   static const Color iceBlue = Color(0xFF8E8E93); // Muted Silver/Grey
   static const Color deepGlacier = Color(0xFF1C1C1E); // Dark Graphite
-  
+
   // Accents
   static const Color neonSilver = Color(0xFFFFFFFF);
   static const Color glassBorder = Color(0x33FFFFFF); // 20% Silver
@@ -16,6 +16,8 @@ class EntryColors {
   // Secondary Silvers
   static const Color darkSilver = Color(0xFF3A3A3C);
   static const Color midSilver = Color(0xFF636366);
+
+  static Color? get electricViolet => null;
 }
 
 class EntryStyles {
