@@ -151,7 +151,7 @@ class SocialAnalysisPage extends StatelessWidget {
                   ],
                 ),
               );
-            }).toList(),
+            }),
           ],
         );
       },

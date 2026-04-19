@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
@@ -16,6 +17,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/ui_layer/identity_page/widgets/PasskeySetupCard.dart';
 import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/RadialPremiumBackground.dart';
 
 class PersonalInformationPage extends StatefulWidget {
   const PersonalInformationPage({super.key});
@@ -32,13 +34,13 @@ class PersonalInformationPage extends StatefulWidget {
         context.push("/settings");
       },
       onSwipeRight: () {
-        WidgetNavigatorAction.smartPop(context);
+        WidgetNavigatorAction.smartPop(context, "/settings");
       },
       onSwipeLeft: () {
-        WidgetNavigatorAction.smartPop(context);
+        WidgetNavigatorAction.smartPop(context, "/settings");
       },
       onSwipeUp: () {
-        WidgetNavigatorAction.smartPop(context);
+        WidgetNavigatorAction.smartPop(context, "/settings");
       },
     );
   }
@@ -129,9 +131,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 decoration: BoxDecoration(
                   color: EntryColors.obsidianBase.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: EntryColors.glassBorder,
-                  ),
+                  border: Border.all(color: EntryColors.glassBorder),
                 ),
                 child: const Column(
                   mainAxisSize: MainAxisSize.min,
@@ -445,433 +445,435 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Show loading indicator is no longer needed as much if we have default state,
-    // but if we want to show global loading we can check async state.
-    // For now we assume signal has initial data.
-
-    // ... rest of build method
-
-    return Scaffold(
-      key: ValueKey(info.profiles.id),
-      backgroundColor: colorScheme.surface,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        toolbarHeight: 70,
-        // title: Text(AppLocalizations.of(context)!.personal_info_title),
-        leadingWidth: 0,
-        // leading: IconButton(
-        //   icon: const Icon(Icons.arrow_back_ios_new_rounded),
-        //   onPressed: () => context.pop(),
-        //   style: IconButton.styleFrom(
-        //     backgroundColor: Theme.of(
-        //       context,
-        //     ).colorScheme.surface.withOpacity(0.1),
-        //   ),
-        // ),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: Colors.white,
-        actions: [
-          Container(
-            margin: const EdgeInsets.only(right: 8),
-            decoration: const BoxDecoration(
-              color: Colors.black12,
-              shape: BoxShape.circle,
-            ),
-            child: _isEditing
-                ? IconButton(
-                    icon: const Icon(
-                      Icons.check_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: _isSaving ? null : () => _saveChanges(false),
-                    tooltip: 'Save',
-                  )
-                : IconButton(
-                    icon: const Icon(
-                      Icons.edit_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                    onPressed: () {
-                      setState(() {
-                        _isEditing = true;
-                      });
-                    },
-                    tooltip: 'Edit',
-                  ),
-          ),
-          const SizedBox(width: 8),
-        ],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.light,
+        systemNavigationBarColor: EntryColors.obsidianBase,
+        systemNavigationBarIconBrightness: Brightness.light,
       ),
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: SingleChildScrollView(
-          child: Form(
-            key: _formKey,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                // Premium High-Tech Header
-                _buildModernHeader(
-                  context,
-                  colorScheme,
-                  textTheme,
-                  _usernameController,
-                  objectResource,
-                  info,
+      child: RadialPremiumBackground(
+        child: Scaffold(
+          key: ValueKey(info.profiles.id),
+          // backgroundColor: Colors.transparent,
+          extendBodyBehindAppBar: true,
+          appBar: AppBar(
+            toolbarHeight: 70,
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            foregroundColor: Colors.white,
+            actions: [
+              Container(
+                margin: const EdgeInsets.only(right: 8),
+                decoration: const BoxDecoration(
+                  color: Colors.black12,
+                  shape: BoxShape.circle,
                 ),
-
-                // IDENTITY EVOLUTION BANNER
-                Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    children: [
-                      // Bio Summary (Quick View)
-                      if (!_isEditing && info.details.bio.isNotEmpty)
-                        Container(
-                          margin: const EdgeInsets.only(bottom: 12),
-                          padding: const EdgeInsets.all(6),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primaryContainer.withOpacity(
-                              0.05,
-                            ),
-                            borderRadius: BorderRadius.circular(24),
-                            border: Border.all(
-                              color: colorScheme.primary.withOpacity(0.1),
-                            ),
-                          ),
-                          child: Text(
-                            info.details.bio,
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyLarge?.copyWith(
-                              fontStyle: FontStyle.italic,
-                              color: colorScheme.onSurfaceVariant,
-                            ),
-                          ),
+                child: _isEditing
+                    ? IconButton(
+                        icon: const Icon(
+                          Icons.check_rounded,
+                          color: Colors.white,
+                          size: 30,
                         ),
-
-                      // Bio (Edit Mode)
-                      if (_isEditing)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildModernTextField(
-                            controller: _bioController,
-                            label: AppLocalizations.of(context)!.bio,
-                            icon: Icons.notes_rounded,
-                            enabled: true,
-                            maxLines: 5,
-                            minLines: 3,
-                          ),
+                        onPressed: _isSaving ? null : () => _saveChanges(false),
+                        tooltip: 'Save',
+                      )
+                    : IconButton(
+                        icon: const Icon(
+                          Icons.edit_rounded,
+                          color: Colors.white,
+                          size: 30,
                         ),
-
-                      // Information Groups
-                      _buildInfoGroup(
-                        title: AppLocalizations.of(
-                          context,
-                        )!.personal_info_identification,
-                        icon: Icons.fingerprint_rounded,
-                        children: [
-                          _buildModernTextField(
-                            controller: _firstNameController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.first_name_label,
-                            icon: Icons.badge_outlined,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _lastNameController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.last_name_label,
-                            icon: Icons.badge_outlined,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _emailController,
-                            label: AppLocalizations.of(context)!.email_label,
-                            icon: Icons.alternate_email_rounded,
-                            enabled: _isEditing,
-                            keyboardType: TextInputType.emailAddress,
-                          ),
-                          _buildModernTextField(
-                            controller: _phoneController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.phone_number_label,
-                            icon: Icons.sensors_rounded,
-                            enabled: _isEditing,
-                          ),
-                        ],
+                        onPressed: () {
+                          setState(() {
+                            _isEditing = true;
+                          });
+                        },
+                        tooltip: 'Edit',
                       ),
+              ),
+              const SizedBox(width: 8),
+            ],
+          ),
+          body: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SingleChildScrollView(
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Premium High-Tech Header
+                    _buildModernHeader(
+                      context,
+                      colorScheme,
+                      textTheme,
+                      _usernameController,
+                      objectResource,
+                      info,
+                    ),
 
-                      const SizedBox(height: 24),
-
-                      _buildInfoGroup(
-                        title: AppLocalizations.of(
-                          context,
-                        )!.personal_info_professional_matrix,
-                        icon: Icons.lan_rounded,
+                    // IDENTITY EVOLUTION BANNER
+                    Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
                         children: [
-                          _buildModernTextField(
-                            controller: _occupationController,
-                            label: AppLocalizations.of(context)!.role_label,
-                            icon: Icons.terminal_rounded,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _companyController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.organization_label,
-                            icon: Icons.corporate_fare_rounded,
-                            enabled: _isEditing,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      _buildInfoGroup(
-                        title: AppLocalizations.of(
-                          context,
-                        )!.personal_info_education_node,
-                        icon: Icons.hub_rounded,
-                        children: [
-                          _buildModernTextField(
-                            controller: _universityController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.institution_label,
-                            icon: Icons.account_balance_rounded,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _educationController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.education_level_label,
-                            icon: Icons.verified_user_rounded,
-                            enabled: _isEditing,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      _buildInfoGroup(
-                        title: AppLocalizations.of(
-                          context,
-                        )!.personal_info_location,
-                        icon: Icons.public_rounded,
-                        children: [
-                          _buildModernTextField(
-                            controller: _countryController,
-                            label: AppLocalizations.of(context)!.country_label,
-                            icon: Icons.flag_rounded,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _cityController,
-                            label: AppLocalizations.of(context)!.city_label,
-                            icon: Icons.map_rounded,
-                            enabled: _isEditing,
-                          ),
-                        ],
-                      ),
-
-                      const SizedBox(height: 24),
-
-                      _buildInfoGroup(
-                        title: AppLocalizations.of(
-                          context,
-                        )!.personal_info_digital,
-                        icon: Icons.alternate_email_rounded,
-                        children: [
-                          _buildModernTextField(
-                            controller: _githubController,
-                            label: AppLocalizations.of(context)!.github_label,
-                            icon: Icons.code_rounded,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _linkedinController,
-                            label: AppLocalizations.of(context)!.linkedin_label,
-                            icon: Icons.link_rounded,
-                            enabled: _isEditing,
-                          ),
-                          _buildModernTextField(
-                            controller: _websiteController,
-                            label: AppLocalizations.of(
-                              context,
-                            )!.personal_web_label,
-                            icon: Icons.language_rounded,
-                            enabled: _isEditing,
-                          ),
-                        ],
-                      ),
-                      Watch((context) {
-                        final hasPassword = _authBlock.hasLocalPassword.value;
-                        if (hasPassword) return const SizedBox.shrink();
-
-                        return Container(
-                          margin: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 8,
-                          ),
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                colorScheme.primary.withValues(alpha: 0.1),
-                                colorScheme.secondary.withValues(alpha: 0.05),
-                              ],
-                            ),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(
-                              color: colorScheme.primary.withValues(alpha: 0.2),
-                              width: 1,
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.auto_awesome_rounded,
-                                color: colorScheme.primary,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      "IDENTITY EVOLUTION",
-                                      style: TextStyle(
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 12,
-                                        letterSpacing: 2,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      "Level 1: Google. Set a local password to upgrade your security tier.",
-                                      style: textTheme.bodySmall?.copyWith(
-                                        color: colorScheme.onSurfaceVariant,
-                                      ),
-                                    ),
-                                  ],
+                          // Bio Summary (Quick View)
+                          if (!_isEditing && info.details.bio.isNotEmpty)
+                            Container(
+                              margin: const EdgeInsets.only(bottom: 12),
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primaryContainer.withOpacity(
+                                  0.05,
+                                ),
+                                borderRadius: BorderRadius.circular(24),
+                                border: Border.all(
+                                  color: colorScheme.primary.withOpacity(0.1),
                                 ),
                               ),
-                              TextButton(
-                                onPressed: () =>
-                                    context.push('/change-password'),
-                                child: const Text("SET"),
+                              child: Text(
+                                info.details.bio,
+                                textAlign: TextAlign.center,
+                                style: textTheme.bodyLarge?.copyWith(
+                                  fontStyle: FontStyle.italic,
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
+                              ),
+                            ),
+
+                          // Bio (Edit Mode)
+                          if (_isEditing)
+                            Padding(
+                              padding: const EdgeInsets.only(bottom: 12),
+                              child: _buildModernTextField(
+                                controller: _bioController,
+                                label: AppLocalizations.of(context)!.bio,
+                                icon: Icons.notes_rounded,
+                                enabled: true,
+                                maxLines: 5,
+                                minLines: 3,
+                              ),
+                            ),
+
+                          // Information Groups
+                          _buildInfoGroup(
+                            title: AppLocalizations.of(
+                              context,
+                            )!.personal_info_identification,
+                            icon: Icons.fingerprint_rounded,
+                            children: [
+                              _buildModernTextField(
+                                controller: _firstNameController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.first_name_label,
+                                icon: Icons.badge_outlined,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _lastNameController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.last_name_label,
+                                icon: Icons.badge_outlined,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _emailController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.email_label,
+                                icon: Icons.alternate_email_rounded,
+                                enabled: _isEditing,
+                                keyboardType: TextInputType.emailAddress,
+                              ),
+                              _buildModernTextField(
+                                controller: _phoneController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.phone_number_label,
+                                icon: Icons.sensors_rounded,
+                                enabled: _isEditing,
                               ),
                             ],
                           ),
-                        );
-                      }),
 
-                      // SECURITY & PRIVACY SECTION
-                      Watch((context) {
-                        final colorScheme = Theme.of(context).colorScheme;
+                          const SizedBox(height: 24),
 
-                        return _buildInfoGroup(
-                          title: "Security & Accuracy",
-                          icon: Icons.security_rounded,
-                          children: [
-                            _buildSecurityItem(
-                              context: context,
-                              title: "Passkey Settings",
-                              subtitle: _authBlock.isPasskeyEnrolled.value
-                                  ? "Fast-Track Active (Secure)"
-                                  : "Upgrade to Biometric Fast-Track",
-                              icon: Icons.fingerprint_rounded,
-                              trailing: Icon(
-                                _authBlock.isPasskeyEnrolled.value
-                                    ? Icons.verified_user_rounded
-                                    : Icons.chevron_right_rounded,
-                                color: _authBlock.isPasskeyEnrolled.value
-                                    ? Colors.green
-                                    : colorScheme.primary.withValues(
-                                        alpha: 0.5,
-                                      ),
+                          _buildInfoGroup(
+                            title: AppLocalizations.of(
+                              context,
+                            )!.personal_info_professional_matrix,
+                            icon: Icons.lan_rounded,
+                            children: [
+                              _buildModernTextField(
+                                controller: _occupationController,
+                                label: AppLocalizations.of(context)!.role_label,
+                                icon: Icons.terminal_rounded,
+                                enabled: _isEditing,
                               ),
-                              onTap: () => _showPasskeySetupDialog(),
-                            ),
-                            _buildSecurityItem(
-                              context: context,
-                              title: "Encryption Key",
-                              subtitle: "Managed by Ice Gate Protocol",
-                              icon: Icons.vpn_key_rounded,
-                              trailing: const Icon(
-                                Icons.lock_rounded,
-                                size: 16,
-                                color: Colors.grey,
+                              _buildModernTextField(
+                                controller: _companyController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.organization_label,
+                                icon: Icons.corporate_fare_rounded,
+                                enabled: _isEditing,
                               ),
-                              onTap: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text(
-                                      "Key rotations are handled automatically by the neural engine.",
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          _buildInfoGroup(
+                            title: AppLocalizations.of(
+                              context,
+                            )!.personal_info_education_node,
+                            icon: Icons.hub_rounded,
+                            children: [
+                              _buildModernTextField(
+                                controller: _universityController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.institution_label,
+                                icon: Icons.account_balance_rounded,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _educationController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.education_level_label,
+                                icon: Icons.verified_user_rounded,
+                                enabled: _isEditing,
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          _buildInfoGroup(
+                            title: AppLocalizations.of(
+                              context,
+                            )!.personal_info_location,
+                            icon: Icons.public_rounded,
+                            children: [
+                              _buildModernTextField(
+                                controller: _countryController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.country_label,
+                                icon: Icons.flag_rounded,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _cityController,
+                                label: AppLocalizations.of(context)!.city_label,
+                                icon: Icons.map_rounded,
+                                enabled: _isEditing,
+                              ),
+                            ],
+                          ),
+
+                          const SizedBox(height: 24),
+
+                          _buildInfoGroup(
+                            title: AppLocalizations.of(
+                              context,
+                            )!.personal_info_digital,
+                            icon: Icons.alternate_email_rounded,
+                            children: [
+                              _buildModernTextField(
+                                controller: _githubController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.github_label,
+                                icon: Icons.code_rounded,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _linkedinController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.linkedin_label,
+                                icon: Icons.link_rounded,
+                                enabled: _isEditing,
+                              ),
+                              _buildModernTextField(
+                                controller: _websiteController,
+                                label: AppLocalizations.of(
+                                  context,
+                                )!.personal_web_label,
+                                icon: Icons.language_rounded,
+                                enabled: _isEditing,
+                              ),
+                            ],
+                          ),
+                          Watch((context) {
+                            final hasPassword =
+                                _authBlock.hasLocalPassword.value;
+                            if (hasPassword) return const SizedBox.shrink();
+
+                            return Container(
+                              margin: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withOpacity(0.03),
+                                borderRadius: BorderRadius.circular(20),
+                                border: Border.all(
+                                  color: colorScheme.primary.withOpacity(0.2),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.auto_awesome_rounded,
+                                    color: colorScheme.primary,
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        const Text(
+                                          "IDENTITY EVOLUTION",
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.w900,
+                                            fontSize: 12,
+                                            letterSpacing: 2,
+                                          ),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Level 1: Google. Set a local password to upgrade your security tier.",
+                                          style: textTheme.bodySmall?.copyWith(
+                                            color: colorScheme.onSurfaceVariant,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
-                                );
-                              },
-                            ),
-                          ],
-                        );
-                      }),
-                      const SizedBox(height: 48),
-
-                      // Danger Zone / Logout
-                      SizedBox(
-                        width: MediaQuery.of(context).size.width / 1.5,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: BorderSide(
-                              color: Colors.red.withValues(alpha: 0.5),
-                              width: 1.5,
-                            ),
-                            backgroundColor: Colors.transparent,
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(24),
-                            ),
-                          ),
-                          onPressed: () {
-                            _authBlock.logout();
-                            context.go("/login");
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Icon(
-                                Icons.logout_rounded,
-                                color: Colors.red,
-                                size: 20,
+                                  TextButton(
+                                    onPressed: () =>
+                                        context.push('/change-password'),
+                                    child: const Text("SET"),
+                                  ),
+                                ],
                               ),
-                              const SizedBox(width: 12),
-                              Text(
-                                AppLocalizations.of(context)!.logout.toUpperCase(),
-                                style: const TextStyle(
-                                  color: Colors.red,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 13,
-                                  letterSpacing: 2,
+                            );
+                          }),
+
+                          // SECURITY & PRIVACY SECTION
+                          Watch((context) {
+                            final colorScheme = Theme.of(context).colorScheme;
+
+                            return _buildInfoGroup(
+                              title: "Security & Accuracy",
+                              icon: Icons.security_rounded,
+                              children: [
+                                _buildSecurityItem(
+                                  context: context,
+                                  title: "Passkey Settings",
+                                  subtitle: _authBlock.isPasskeyEnrolled.value
+                                      ? "Fast-Track Active (Secure)"
+                                      : "Upgrade to Biometric Fast-Track",
+                                  icon: Icons.fingerprint_rounded,
+                                  trailing: Icon(
+                                    _authBlock.isPasskeyEnrolled.value
+                                        ? Icons.verified_user_rounded
+                                        : Icons.chevron_right_rounded,
+                                    color: _authBlock.isPasskeyEnrolled.value
+                                        ? Colors.green
+                                        : colorScheme.primary.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                  ),
+                                  onTap: () => _showPasskeySetupDialog(),
+                                ),
+                                _buildSecurityItem(
+                                  context: context,
+                                  title: "Encryption Key",
+                                  subtitle: "Managed by Ice Gate Protocol",
+                                  icon: Icons.vpn_key_rounded,
+                                  trailing: const Icon(
+                                    Icons.lock_rounded,
+                                    size: 16,
+                                    color: Colors.grey,
+                                  ),
+                                  onTap: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          "Key rotations are handled automatically by the neural engine.",
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ],
+                            );
+                          }),
+                          const SizedBox(height: 48),
+
+                          // Danger Zone / Logout
+                          SizedBox(
+                            width: MediaQuery.of(context).size.width / 1.5,
+                            child: OutlinedButton(
+                              style: OutlinedButton.styleFrom(
+                                side: BorderSide(
+                                  color: Colors.red.withValues(alpha: 0.5),
+                                  width: 1.5,
+                                ),
+                                backgroundColor: Colors.transparent,
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(24),
                                 ),
                               ),
-                            ],
+                              onPressed: () {
+                                _authBlock.logout();
+                                context.go("/login");
+                              },
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(
+                                    Icons.logout_rounded,
+                                    color: Colors.red,
+                                    size: 20,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    )!.logout.toUpperCase(),
+                                    style: const TextStyle(
+                                      color: Colors.red,
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 13,
+                                      letterSpacing: 2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
+                          const SizedBox(height: 64),
+                        ],
                       ),
-                      const SizedBox(height: 64),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
+              ),
             ),
           ),
         ),

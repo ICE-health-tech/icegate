@@ -102,7 +102,7 @@ class DomainAnalysisChart extends StatelessWidget {
                 ],
               ),
             );
-          }).toList(),
+          }),
         ],
       ),
     );

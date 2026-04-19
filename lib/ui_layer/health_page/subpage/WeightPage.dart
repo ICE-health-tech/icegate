@@ -6,7 +6,6 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/ui_layer/health_page/subpage/WeightInputPage.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 
 class WeightPage extends StatefulWidget {

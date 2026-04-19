@@ -38,7 +38,7 @@ class SocialBlock {
     final avgImpact = recent.fold<double>(0, (sum, a) => sum + a.impactScore) / recent.length;
 
     String reflection = "You logged ${recent.length} wins this month! ";
-    reflection += "Your main focus was '$topDomain' (${maxCount} wins). ";
+    reflection += "Your main focus was '$topDomain' ($maxCount wins). ";
 
     if (avgMeaning >= 8) {
       reflection += "You felt highly fulfilled by these efforts. ";

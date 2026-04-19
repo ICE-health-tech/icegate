@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 
 class SnowSilverBackground extends StatefulWidget {
   final Widget? child;
@@ -61,21 +62,11 @@ class _SnowSilverBackgroundState extends State<SnowSilverBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 1. Silver and Black Gradient (Deep Metallic)
+        // 1. Silver and Black Gradient (Deep Metallic) - Synced with Entry Architecture
         Positioned.fill(
           child: Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF030303), // Obsidian Black
-                  Color(0xFF0A0A0B), // Deep Charcoal
-                  Color(0xFF1C1C1E), // Dark Metallic Silver
-                  Color(0xFF2C2C2E), // Mid Silver/Graphite
-                ],
-                stops: [0.0, 0.4, 0.8, 1.0],
-              ),
+            decoration: BoxDecoration(
+              gradient: EntryColors.obsidianGradient,
             ),
           ),
         ),

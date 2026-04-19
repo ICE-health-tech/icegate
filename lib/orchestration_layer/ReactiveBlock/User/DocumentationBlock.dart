@@ -887,7 +887,8 @@ class DocumentationBlock {
               await fileSink.addStream(media.stream);
               await fileSink.close();
               
-              // Re-stamp local file to match remote modified time to prevent immediate re-upload
+              // CRITICAL: Re-stamp local file to match remote modified time 
+              // This prevents the sync engine from thinking the file was "just edited" locally
               if (remoteItem.modifiedTime != null) {
                 await localFile.setLastModified(remoteItem.modifiedTime!.toLocal());
               }
@@ -912,14 +913,14 @@ class DocumentationBlock {
 
       if (entity is Directory) {
         try {
-          // MIRROR DELETE: If missing from both Active and Trash, or explicitly in Trash
-          if (matchedTrashed.id != null || (matchedRemote.id == null)) {
+          // MIRROR DELETE: Only sync deletion if explicitly found in Cloud Trash
+          if (matchedTrashed.id != null) {
             syncStatus.value = "🗑️ Cloud deletion detected: $name, syncing local...";
             await entity.delete(recursive: true);
             continue; 
           }
 
-          // If directory doesn't exist on remote at all, create it and recurse
+          // UPLOAD NEW FOLDER: If missing from both Active and Trash, it's new locally
           if (matchedRemote.id == null) {
             try {
               syncStatus.value = "Creating Cloud Folder $name...";
@@ -937,8 +938,8 @@ class DocumentationBlock {
           print("Error processing local directory $name: $e");
         }
       } else if (entity is File) {
-        if (matchedTrashed.id != null || (matchedRemote.id == null)) {
-          // Synchronize deletion
+        // MIRROR DELETE: Only sync deletion if explicitly found in Cloud Trash
+        if (matchedTrashed.id != null) {
           syncStatus.value = "🗑️ Cloud deletion detected: $name, syncing local...";
           await entity.delete();
           continue;

@@ -154,8 +154,9 @@ class FinanceBlock {
         .where((t) => t.transactionDate.isAfter(todayStart))
         .fold(0.0, (sum, t) {
           if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
-          if (t.type == 'expense' || t.type == 'investment')
+          if (t.type == 'expense' || t.type == 'investment') {
             return sum - t.amount;
+          }
           return sum;
         });
 
@@ -199,10 +200,12 @@ class FinanceBlock {
       final futureTxs = txs
           .where((t) => t.transactionDate.isAfter(dateThreshold))
           .fold(0.0, (sum, t) {
-            if (t.type == 'income' || t.type == 'savings')
+            if (t.type == 'income' || t.type == 'savings') {
               return sum + t.amount;
-            if (t.type == 'expense' || t.type == 'investment')
+            }
+            if (t.type == 'expense' || t.type == 'investment') {
               return sum - t.amount;
+            }
             return sum;
           });
       series.add(currentNW - futureTxs);
@@ -319,9 +322,9 @@ class FinanceBlock {
   });
 
   /// Currency toggle (true for VND, false for USD)
-  late final useVnd = computed(() => _configBlock?.currency.value == 'VND');
+  late final useVnd = computed(() => _configBlock.value?.currency.value == 'VND');
 
-  ConfigBlock? _configBlock;
+  final _configBlock = signal<ConfigBlock?>(null);
   void Function()? _snapshotDisposer;
 
   void init(
@@ -337,7 +340,7 @@ class FinanceBlock {
     _dao = dao;
     _snapshotDao = snapshotDao;
     _personId = personId;
-    _configBlock = configBlock;
+    _configBlock.value = configBlock;
 
     // Load persistent ATH and latest timestamp
     DateTime? lastSnapshotTime;
@@ -473,6 +476,28 @@ class FinanceBlock {
     );
   }
 
+  Future<void> updateSubscription({
+    required String id,
+    required String name,
+    required double amount,
+    required int billingDay,
+    String category = 'subscriptions',
+    bool isActive = true,
+  }) async {
+    if (_personId.isEmpty) return;
+    await _dao.updateSubscription(
+      SubscriptionsTableCompanion(
+        id: Value(id),
+        personID: Value(_personId),
+        name: Value(name),
+        amount: Value(amount),
+        billingDay: Value(billingDay),
+        category: Value(category),
+        isActive: Value(isActive),
+      ),
+    );
+  }
+
   Future<void> deleteSubscription(String id) async {
     await _dao.deleteSubscription(id);
   }
@@ -482,7 +507,7 @@ class FinanceBlock {
   }
 
   Future<void> toggleCurrency() async {
-    await _configBlock?.toggleCurrency();
+    await _configBlock.value?.toggleCurrency();
   }
 
   static final NumberFormat _usdFormat = NumberFormat.currency(
@@ -495,19 +520,50 @@ class FinanceBlock {
     locale: 'vi_VN',
   );
 
-  /// Normalizes an amount from the current UI currency (USD or VND) to the base USD currency.
-  double normalizeAmount(double amount) {
+  /// Converts a base amount (USD) to the current display currency (VND or USD).
+  double convertToDisplay(double amount) {
+    if (useVnd.value) {
+      return amount * USD_TO_VND_RATE;
+    }
+    return amount;
+  }
+
+  /// Converts a display amount (VND or USD) back to the base currency (USD).
+  double convertToBase(double amount) {
     if (useVnd.value) {
       return amount / USD_TO_VND_RATE;
     }
     return amount;
   }
 
-  String formatCurrency(double amount) {
+  String formatCurrency(double amount, {bool compact = false}) {
+    final displayAmount = convertToDisplay(amount);
+    final absDisplayAmount = displayAmount.abs();
+    final sign = displayAmount < 0 ? '-' : '';
+
     if (useVnd.value) {
-      return _vndFormat.format(amount * USD_TO_VND_RATE);
+      if (compact) {
+        if (absDisplayAmount >= 1000000000) {
+          return '$sign${(absDisplayAmount / 1000000000).toStringAsFixed(1)} Tỉ ₫';
+        } else if (absDisplayAmount >= 1000000) {
+          return '$sign${(absDisplayAmount / 1000000).toStringAsFixed(1)} Tr ₫';
+        } else if (absDisplayAmount >= 1000) {
+          return '$sign${(absDisplayAmount / 1000).toStringAsFixed(1)}k ₫';
+        }
+      }
+      return _vndFormat.format(displayAmount);
+    } else {
+      if (compact) {
+        if (absDisplayAmount >= 1000000000) {
+          return '$sign\$${(absDisplayAmount / 1000000000).toStringAsFixed(1)}B';
+        } else if (absDisplayAmount >= 1000000) {
+          return '$sign\$${(absDisplayAmount / 1000000).toStringAsFixed(1)}M';
+        } else if (absDisplayAmount >= 1000) {
+          return '$sign\$${(absDisplayAmount / 1000).toStringAsFixed(1)}k';
+        }
+      }
+      return _usdFormat.format(displayAmount);
     }
-    return _usdFormat.format(amount);
   }
 
   Future<void> _saveSnapshot() async {

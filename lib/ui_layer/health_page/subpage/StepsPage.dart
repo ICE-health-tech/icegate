@@ -495,7 +495,7 @@ class _StepsPageState extends State<StepsPage> with SingleTickerProviderStateMix
                             Icon(Icons.timer_rounded, color: colorScheme.primary, size: 14),
                             const SizedBox(width: 8),
                             Text(
-                              "${_selectedHour}:00 - ${hourly[_selectedHour] ?? 0}",
+                              "$_selectedHour:00 - ${hourly[_selectedHour] ?? 0}",
                               style: TextStyle(
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.w900,

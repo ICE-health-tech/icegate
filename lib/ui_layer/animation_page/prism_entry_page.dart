@@ -25,11 +25,12 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   late AnimationController _scanController;
   late AnimationController _auroraController;
   late AnimationController _chargeController;
+  late AnimationController _spinController;
 
   final ValueNotifier<Offset> _pointerOffset = ValueNotifier(Offset.zero);
 
   final List<PrismShard> _shards = [];
-  final int _shardCount = 80;
+  final int _shardCount = 150; // Balanced count for cleaner crystalline bloom
   final math.Random _random = math.Random();
 
   final List<ScatteringParticleData> _cachedParticles = [];
@@ -76,6 +77,11 @@ class _PrismEntryPageState extends State<PrismEntryPage>
       duration: const Duration(milliseconds: 900),
     );
 
+    _spinController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 4),
+    )..repeat();
+
     _initShards();
 
     _assemblyController.forward().then((_) {
@@ -98,7 +104,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void _initShards() {
     for (int i = 0; i < _shardCount; i++) {
       final double angle = _random.nextDouble() * 2 * math.pi;
-      final double distance = 400 + _random.nextDouble() * 700;
+      final double distance = 600 + _random.nextDouble() * 700;
 
       _shards.add(
         PrismShard(
@@ -122,87 +128,126 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void _precalculateGeometry() {
     final random = math.Random(42);
 
-    // 1. Glass Cracks - High Fidelity Spiderweb (Fractal Branching)
-    const int crackCount = 18; // Massive increase for anime intensity
+    // 1. Glass Cracks - High Fidelity Shattered Web (Destructive Fragmentation)
+    const int crackCount =
+        10; // Reduced density for cleaner, more dramatic shatter
     final List<List<Offset>> allRadialPoints = [];
-    
-    // A. Primary Radial Fractures (Natural, jagged paths)
+
+    // A. Primary Radial Fractures (Jagged, branching paths)
     for (int i = 0; i < crackCount; i++) {
-      // Shifted origin to avoid the "face" (center logo)
-      final impactOrigin = Offset.zero; 
+      final impactOrigin = Offset.zero;
       final double baseAngle = (i / crackCount) * 2 * math.pi;
-      final List<Offset> mainPoints = [impactOrigin];
-      
-      double currentDist = 0;
-      double currentAngle = baseAngle;
+      // FRACTAL FROST: Growing crystalline branches
+      void growBranch(
+        Offset start,
+        double angle,
+        double dist,
+        int depth, {
+        bool isMain = false,
+      }) {
+        if (depth > 4 || dist > 6.0) return;
 
-      while (currentDist < 5.0) {
-        // High-frequency jitter
-        currentAngle += (random.nextDouble() - 0.5) * 0.25;
-        currentDist += 0.2 + random.nextDouble() * 0.4; 
-        
-        final p = impactOrigin +
-            Offset(math.cos(currentAngle) * currentDist,
-                math.sin(currentAngle) * currentDist);
-        mainPoints.add(p);
-        
-        // Occasional branch out
-        if (random.nextDouble() > 0.85 && currentDist < 3.0) {
-          final branchAngle = currentAngle + (random.nextBool() ? 0.4 : -0.4);
-          final branchPoint = p + Offset(math.cos(branchAngle) * 0.5, math.sin(branchAngle) * 0.5);
-          _cachedGlassCracks.add(GlassCrackData(points: [p, branchPoint]));
+        final List<Offset> branchPoints = [start];
+        double bDist = dist;
+        double bAngle = angle;
+
+        for (int j = 0; j < 6; j++) {
+          final double jitter = 0.2 + (bDist * 0.1);
+          bAngle += (random.nextDouble() - 0.5) * jitter;
+          bDist += 0.2 + random.nextDouble() * 0.4;
+
+          final nextPoint =
+              impactOrigin +
+              Offset(math.cos(bAngle) * bDist, math.sin(bAngle) * bDist);
+          branchPoints.add(nextPoint);
+
+          // RECURSIVE BRANCHING: split chance
+          if (random.nextDouble() > 0.75 - (depth * 0.1)) {
+            growBranch(
+              nextPoint,
+              bAngle + (random.nextBool() ? 0.35 : -0.35),
+              bDist,
+              depth + 1,
+            );
+          }
+          if (bDist > 6.0) break;
         }
+
+        if (isMain) allRadialPoints.add(branchPoints);
+        _cachedGlassCracks.add(GlassCrackData(points: branchPoints));
       }
-      allRadialPoints.add(mainPoints);
-      _cachedGlassCracks.add(GlassCrackData(points: mainPoints));
+
+      growBranch(impactOrigin, baseAngle, 0.0, 0, isMain: true);
     }
 
-    // B. Destructive Aura Logic (Managed in Painter via pulse/shatterProgress)
+    // B. Impact Point Micro-Shatter (Central Crunch)
+    for (int i = 0; i < 15; i++) {
+      final angle = random.nextDouble() * 2 * math.pi;
+      final dist = 0.05 + random.nextDouble() * 0.15;
+      final p1 = Offset(math.cos(angle) * dist, math.sin(angle) * dist);
+      final p2 = Offset(
+        math.cos(angle + 0.5) * (dist + 0.1),
+        math.sin(angle + 0.5) * (dist + 0.1),
+      );
+      _cachedGlassCracks.add(GlassCrackData(points: [p1, p2]));
+    }
 
-    // C. Systematic Spiderweb Connections (Concentric circular stress)
-    for (int layer = 1; layer < 6; layer++) {
-      final double radiusFactor = (layer / 6.0); // Used to scale jaggedness
+    // C. Concentric Stress Rings (Spiderweb Connections)
+    for (int layer = 1; layer < 9; layer++) {
+      final double radiusFactor = (layer / 9.0);
       for (int i = 0; i < crackCount; i++) {
-        if (random.nextDouble() > 0.3) {
-           final Offset p1 = allRadialPoints[i][layer.clamp(0, allRadialPoints[i].length - 1)];
-           final Offset p2 = allRadialPoints[(i + 1) % crackCount][layer.clamp(0, allRadialPoints[(i + 1) % crackCount].length - 1)];
-           
-           // Jagged arc with displacement scaled by distance from center
-           final Offset mid = Offset.lerp(p1, p2, 0.5)!;
-           final Offset normal = Offset(-(p2.dy - p1.dy), p2.dx - p1.dx);
-           final Offset jaggedMid = mid + normal * (random.nextDouble() - 0.5) * 0.2 * radiusFactor;
-           
-           _cachedGlassCracks.add(GlassCrackData(points: [p1, jaggedMid, p2]));
+        if (random.nextDouble() > 0.25) {
+          final Offset p1 =
+              allRadialPoints[i][layer.clamp(0, allRadialPoints[i].length - 1)];
+          final Offset p2 =
+              allRadialPoints[(i + 1) % crackCount][layer.clamp(
+                0,
+                allRadialPoints[(i + 1) % crackCount].length - 1,
+              )];
+
+          // Jagged arc between radials
+          final Offset mid = Offset.lerp(p1, p2, 0.5)!;
+          final Offset normal = Offset(-(p2.dy - p1.dy), p2.dx - p1.dx);
+          final Offset jaggedMid =
+              mid + normal * (random.nextDouble() - 0.5) * 0.3 * radiusFactor;
+
+          _cachedGlassCracks.add(GlassCrackData(points: [p1, jaggedMid, p2]));
         }
       }
     }
 
-    // 2. Massive Splinter Shards
-    const int largeParticleCount = 120; // Dopamine booster: More shards
+    // 2. Massive Splinter Shards (Explosive Volume)
+    const int largeParticleCount = 280;
     for (int i = 0; i < largeParticleCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
       // Start away from the origin to avoid the "face"
-      final double startDist = 150 + random.nextDouble() * 300;
-      final double velocity = 1500 + random.nextDouble() * 2000;
+      // Explosive force: Start further and move faster
+      final double startDist = 100 + random.nextDouble() * 300;
+      final double velocity = 2800 + random.nextDouble() * 3500;
 
       final double length = 180 + random.nextDouble() * 220;
       final double width = 30 + random.nextDouble() * 70;
-      
+
       final List<Offset> points = [
         Offset(-width / 2, -length / 2),
         Offset(width / 2, -length / 2 + random.nextDouble() * 50),
         Offset(random.nextDouble() * width - width / 2, length / 2),
       ];
-      
-      if (random.nextBool()) points.add(Offset(-width / 2 - random.nextDouble() * 30, 0));
+
+      if (random.nextBool()) {
+        points.add(Offset(-width / 2 - random.nextDouble() * 30, 0));
+      }
 
       _cachedParticles.add(
         ScatteringParticleData(
           angle: angle,
           velocity: velocity,
           points: points,
-          rotationSpeed: (random.nextDouble() - 0.5) * 35,
-          color: Colors.white.withValues(alpha: 0.85 + random.nextDouble() * 0.15),
+          rotationSpeed:
+              (random.nextDouble() - 0.5) * 65, // More aggressive tumbling
+          color: Colors.white.withValues(
+            alpha: 0.85 + random.nextDouble() * 0.15,
+          ),
           delay: random.nextDouble() * 0.1,
           initialDistance: startDist,
           tier: ParticleTier.large,
@@ -210,18 +255,22 @@ class _PrismEntryPageState extends State<PrismEntryPage>
       );
     }
 
-    // Tier 2: Frost/Dust splinters
-    const int dustCount = 120;
+    // Tier 2: Frost/Dust splinters (Particle Storm)
+    const int dustCount = 450;
     for (int i = 0; i < dustCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
-      final double velocity = 800 + random.nextDouble() * 1200;
+      final double velocity = 1400 + random.nextDouble() * 2200;
       final double w = 4 + random.nextDouble() * 6;
       final double l = 15 + random.nextDouble() * 25;
       _cachedParticles.add(
         ScatteringParticleData(
           angle: angle,
           velocity: velocity,
-          points: [Offset(-w/2, -l/2), Offset(w/2, -l/2), Offset(0, l/2)],
+          points: [
+            Offset(-w / 2, -l / 2),
+            Offset(w / 2, -l / 2),
+            Offset(0, l / 2),
+          ],
           rotationSpeed: 120,
           color: Colors.white.withValues(alpha: 0.25),
           delay: random.nextDouble() * 0.4,
@@ -257,7 +306,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     HapticFeedback.heavyImpact();
     await Future.delayed(const Duration(milliseconds: 50));
     HapticFeedback.vibrate();
-    
+
     _crackController.forward();
 
     await Future.delayed(const Duration(milliseconds: 1200));
@@ -279,6 +328,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     _scanController.dispose();
     _auroraController.dispose();
     _chargeController.dispose();
+    _spinController.dispose();
     _pointerOffset.dispose();
     super.dispose();
   }
@@ -286,204 +336,229 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntryColors.obsidianBase,
-      body: Listener(
-        onPointerMove: (event) {
-          final size = MediaQuery.of(context).size;
-          _pointerOffset.value = Offset(
-            (event.localPosition.dx / size.width) - 0.5,
-            (event.localPosition.dy / size.height) - 0.5,
-          );
-        },
-        child: MouseRegion(
-          child: Stack(
-            children: [
-              AnimatedBuilder(
-                animation: _crackController,
-                builder: (context, child) {
-                  final double crackVal = _crackController.value;
-                  final double bgOpacity =
-                      (1.0 - (crackVal * 1.5)).clamp(0.0, 1.0);
-                  
-                  // SCREEN SHAKE PHYSICS: High-frequency displacement for impact
-                  double shakeX = 0;
-                  double shakeY = 0;
-                  if (crackVal > 0 && crackVal < 0.25) {
-                    final double intensity = (1.0 - (crackVal / 0.25)) * 18;
-                    shakeX = (math.sin(crackVal * 100) * intensity);
-                    shakeY = (math.cos(crackVal * 120) * intensity);
-                  }
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(gradient: EntryColors.obsidianGradient),
+        child: Listener(
+          onPointerMove: (event) {
+            final size = MediaQuery.of(context).size;
+            _pointerOffset.value = Offset(
+              (event.localPosition.dx / size.width) - 0.5,
+              (event.localPosition.dy / size.height) - 0.5,
+            );
+          },
+          child: MouseRegion(
+            child: Stack(
+              children: [
+                AnimatedBuilder(
+                  animation: _crackController,
+                  builder: (context, child) {
+                    final double crackVal = _crackController.value;
+                    final double bgOpacity = (1.0 - (crackVal * 1.5)).clamp(
+                      0.0,
+                      1.0,
+                    );
 
-                  return Opacity(
-                    opacity: bgOpacity, 
-                    child: Transform.translate(
-                      offset: Offset(shakeX, shakeY),
-                      child: child,
-                    ),
-                  );
-                },
-                child: Stack(
-                  children: [
-                    Positioned.fill(
-                      child: ValueListenableBuilder<Offset>(
+                    // SCREEN SHAKE PHYSICS: High-frequency displacement for impact
+                    double shakeX = 0;
+                    double shakeY = 0;
+                    if (crackVal > 0 && crackVal < 0.25) {
+                      final double intensity = (1.0 - (crackVal / 0.25)) * 18;
+                      shakeX = (math.sin(crackVal * 100) * intensity);
+                      shakeY = (math.cos(crackVal * 120) * intensity);
+                    }
+
+                    return Opacity(
+                      opacity: bgOpacity,
+                      child: Transform.translate(
+                        offset: Offset(shakeX, shakeY),
+                        child: child,
+                      ),
+                    );
+                  },
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ValueListenableBuilder<Offset>(
+                          valueListenable: _pointerOffset,
+                          builder: (context, pOffset, child) {
+                            return RepaintBoundary(
+                              child: AnimatedBuilder(
+                                animation: Listenable.merge([
+                                  _auroraController,
+                                  _scanController,
+                                ]),
+                                builder: (context, child) {
+                                  return CustomPaint(
+                                    painter: TacticalGridPainter(
+                                      scanProgress: _scanController.value,
+                                      auroraProgress: _auroraController.value,
+                                      pointerOffset: pOffset,
+                                    ),
+                                  );
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+
+                      const Positioned.fill(
+                        child: SnowfallOverlay(snowCount: 60, opacity: 0.4),
+                      ),
+
+                      ValueListenableBuilder<Offset>(
                         valueListenable: _pointerOffset,
                         builder: (context, pOffset, child) {
                           return RepaintBoundary(
                             child: AnimatedBuilder(
-                              animation: Listenable.merge([
-                                _auroraController,
-                                _scanController,
-                              ]),
+                              animation: _assemblyController,
                               builder: (context, child) {
                                 return CustomPaint(
-                                  painter: TacticalGridPainter(
-                                    scanProgress: _scanController.value,
-                                    auroraProgress: _auroraController.value,
+                                  painter: PrismPainter(
+                                    shards: _shards,
+                                    progress: _assemblyController.value,
                                     pointerOffset: pOffset,
                                   ),
+                                  size: Size.infinite,
                                 );
                               },
                             ),
                           );
                         },
                       ),
-                    ),
 
-                    const Positioned.fill(
-                      child: SnowfallOverlay(snowCount: 60, opacity: 0.4),
-                    ),
-
-                    ValueListenableBuilder<Offset>(
-                      valueListenable: _pointerOffset,
-                      builder: (context, pOffset, child) {
-                        return RepaintBoundary(
+                      Center(
+                        child: RepaintBoundary(
                           child: AnimatedBuilder(
                             animation: _assemblyController,
                             builder: (context, child) {
-                              return CustomPaint(
-                                painter: PrismPainter(
-                                  shards: _shards,
-                                  progress: _assemblyController.value,
-                                  pointerOffset: pOffset,
+                              const double opacity =
+                                  1.0; // EMERGENCY FORCE VISIBILITY
+                              return Opacity(
+                                opacity: opacity,
+                                child: GestureDetector(
+                                  onTap: _triggerCrackAndNavigate,
+                                  behavior: HitTestBehavior.opaque,
+                                  child: _buildPremiumLogo(),
                                 ),
-                                size: Size.infinite,
                               );
                             },
                           ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // 3. Scanning Status Overlay
+                Positioned(
+                  bottom: 80,
+                  left: 0,
+                  right: 0,
+                  child: Center(
+                    child: AnimatedBuilder(
+                      animation: _assemblyController,
+                      builder: (context, child) {
+                        final double opacity = Curves.easeIn.transform(
+                          (_assemblyController.value / 0.5).clamp(0.0, 1.0),
+                        );
+                        return Opacity(
+                          opacity: opacity,
+                          child: const AuthStatusPulse(),
                         );
                       },
                     ),
-
-                    Center(
-                      child: RepaintBoundary(
-                        child: AnimatedBuilder(
-                          animation: _assemblyController,
-                          builder: (context, child) {
-                            final double opacity = Curves.easeInQuint.transform(
-                              ((_assemblyController.value - 0.7) / 0.3).clamp(
-                                0.0,
-                                1.0,
-                              ),
-                            );
-                            return Opacity(
-                              opacity: opacity,
-                              child: GestureDetector(
-                                onTap: _triggerCrackAndNavigate,
-                                behavior: HitTestBehavior.opaque,
-                                child: _buildPremiumLogo(),
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              IgnorePointer(
-                child: ValueListenableBuilder<Offset>(
-                  valueListenable: _pointerOffset,
-                  builder: (context, pOffset, child) {
-                    return Stack(
-                      children: [
-                        RepaintBoundary(
-                          child: AnimatedBuilder(
-                            animation: _crackController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: GlassCrackPainter(
-                                  progress: _crackController.value,
-                                  cracks: _cachedGlassCracks,
-                                  pointerOffset: pOffset,
-                                ),
-                                size: Size.infinite,
-                              );
-                            },
-                          ),
-                        ),
-                        RepaintBoundary(
-                          child: AnimatedBuilder(
-                            animation: _crackController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: ShockwavePainter(
-                                  progress: _crackController.value,
-                                ),
-                                size: Size.infinite,
-                              );
-                            },
-                          ),
-                        ),
-                        RepaintBoundary(
-                          child: AnimatedBuilder(
-                            animation: _crackController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: IceFlashPainter(
-                                  progress: _crackController.value,
-                                ),
-                                size: Size.infinite,
-                              );
-                            },
-                          ),
-                        ),
-                        RepaintBoundary(
-                          child: AnimatedBuilder(
-                            animation: _crackController,
-                            builder: (context, child) {
-                              return CustomPaint(
-                                painter: GlassShatterPainter(
-                                  progress: _crackController.value,
-                                  particles: _cachedParticles,
-                                  pointerOffset: pOffset,
-                                ),
-                                size: Size.infinite,
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-
-              if (_isCracking)
-                AnimatedBuilder(
-                  animation: _crackController,
-                  builder: (context, child) {
-                    final double flashOpacity = Curves.easeInQuint.transform(
-                      ((_crackController.value - 0.85) / 0.15).clamp(0.0, 1.0),
-                    );
-                    return Container(
-                      color: Colors.white.withValues(alpha: flashOpacity),
-                    );
-                  },
+                  ),
                 ),
 
-              _buildAuthUI(),
-            ],
+                IgnorePointer(
+                  child: ValueListenableBuilder<Offset>(
+                    valueListenable: _pointerOffset,
+                    builder: (context, pOffset, child) {
+                      return Stack(
+                        children: [
+                          RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _crackController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: GlassCrackPainter(
+                                    progress: _crackController.value,
+                                    cracks: _cachedGlassCracks,
+                                    pointerOffset: pOffset,
+                                  ),
+                                  size: Size.infinite,
+                                );
+                              },
+                            ),
+                          ),
+                          RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _crackController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: ShockwavePainter(
+                                    progress: _crackController.value,
+                                  ),
+                                  size: Size.infinite,
+                                );
+                              },
+                            ),
+                          ),
+                          RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _crackController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: IceFlashPainter(
+                                    progress: _crackController.value,
+                                  ),
+                                  size: Size.infinite,
+                                );
+                              },
+                            ),
+                          ),
+                          RepaintBoundary(
+                            child: AnimatedBuilder(
+                              animation: _crackController,
+                              builder: (context, child) {
+                                return CustomPaint(
+                                  painter: GlassShatterPainter(
+                                    progress: _crackController.value,
+                                    particles: _cachedParticles,
+                                    pointerOffset: pOffset,
+                                  ),
+                                  size: Size.infinite,
+                                );
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+
+                if (_isCracking)
+                  AnimatedBuilder(
+                    animation: _crackController,
+                    builder: (context, child) {
+                      final double flashOpacity = Curves.easeInQuint.transform(
+                        ((_crackController.value - 0.85) / 0.15).clamp(
+                          0.0,
+                          1.0,
+                        ),
+                      );
+                      return Container(
+                        color: Colors.white.withValues(alpha: flashOpacity),
+                      );
+                    },
+                  ),
+
+                _buildAuthUI(),
+              ],
+            ),
           ),
         ),
       ),
@@ -496,6 +571,9 @@ class _PrismEntryPageState extends State<PrismEntryPage>
         _pulseController,
         _crackController,
         _chargeController,
+        _spinController,
+        _auroraController,
+        _assemblyController, // Ensure we respond to the fade-in threshold
         _pointerOffset,
       ]),
       builder: (context, child) {
@@ -503,8 +581,8 @@ class _PrismEntryPageState extends State<PrismEntryPage>
         final double chargeVal = _chargeController.value;
         final Offset pOffset = _pointerOffset.value;
 
-        final double snapScale = (crackVal > 0 && crackVal < 0.2) 
-            ? (1.0 - math.sin(crackVal * math.pi * 5) * 0.1) 
+        final double snapScale = (crackVal > 0 && crackVal < 0.2)
+            ? (1.0 - math.sin(crackVal * math.pi * 5) * 0.1)
             : 1.0;
 
         final double scale =
@@ -529,37 +607,45 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                 alignment: Alignment.center,
                 children: [
                   Transform.rotate(
-                    angle: (_auroraController.value * 2 * math.pi) +
+                    angle:
+                        (_spinController.value * 2 * math.pi) +
+                        (_auroraController.value * 0.5 * math.pi) +
                         (chargeVal * 2 * math.pi) +
                         (crackVal * math.pi),
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          // Background Glow
-                          Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: EntryColors.arcticSilver.withValues(alpha: 0.3),
-                                  blurRadius: 40,
-                                  spreadRadius: 10,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        // Background Glow
+                        Container(
+                          width: 100,
+                          height: 100,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: EntryColors.arcticSilver.withValues(
+                                  alpha: 0.3,
                                 ),
-                              ],
-                            ),
+                                blurRadius: 40,
+                                spreadRadius: 10,
+                              ),
+                            ],
                           ),
-                          CustomPaint(
-                            size: const Size(130, 130),
-                            painter: SymmetricPetalPainter(
-                              color: EntryColors.arcticSilver,
-                              pulse: _pulseController.value,
-                              transformProgress: crackVal.clamp(0.0, 1.0),
-                            ),
+                        ),
+                        CustomPaint(
+                          size: const Size(
+                            400,
+                            400,
+                          ), // Larger viewbox to prevent clipping
+                          painter: SymmetricPetalPainter(
+                            color: EntryColors
+                                .arcticSilver, // Restoring premium color
+                            pulse: _pulseController.value,
+                            transformProgress: crackVal.clamp(0.0, 1.0),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -591,8 +677,8 @@ class _PrismEntryPageState extends State<PrismEntryPage>
             children: [
               if (isUnauthed) ...[
                 _buildPremiumGmailButton(),
-                const SizedBox(height: 24),
-                if (remembered == null) _buildLegacyTextButton(),
+                const SizedBox(height: 32),
+                if (remembered == null) _buildLegacyIconButton(),
               ],
 
               if (status == AuthStatus.authenticating ||
@@ -627,20 +713,10 @@ class _PrismEntryPageState extends State<PrismEntryPage>
           children: [
             Image.network(
               'https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_"G"_logo.svg',
-              height: 22,
-              width: 22,
+              height: 28,
+              width: 28,
               errorBuilder: (_, __, ___) =>
-                  const Icon(Icons.g_mobiledata, color: Colors.black),
-            ),
-            const SizedBox(width: 16),
-            const Text(
-              "GMAIL FAST TRACK",
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 13,
-                letterSpacing: 2.5,
-                fontWeight: FontWeight.w700,
-              ),
+                  const Icon(Icons.g_mobiledata, color: Colors.black, size: 32),
             ),
           ],
         ),
@@ -648,16 +724,13 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     );
   }
 
-  Widget _buildLegacyTextButton() {
-    return TextButton(
+  Widget _buildLegacyIconButton() {
+    return IconButton(
       onPressed: () => context.push('/login'),
-      child: Text(
-        "LEGACY PROTOCOL",
-        style: TextStyle(
-          color: EntryColors.midSilver.withValues(alpha: 0.4),
-          fontSize: 10,
-          letterSpacing: 3,
-        ),
+      icon: Icon(
+        Icons.vpn_key_outlined,
+        color: EntryColors.midSilver.withValues(alpha: 0.3),
+        size: 20,
       ),
     );
   }
@@ -693,9 +766,15 @@ class _AuthStatusPulseState extends State<AuthStatusPulse>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _controller,
-      child: Container(
-        padding: const EdgeInsets.all(12),
-        child: const Text("SCANNING...", style: EntryStyles.authStatus),
+      child: Center(
+        child: Container(
+          width: 4,
+          height: 4,
+          decoration: const BoxDecoration(
+            color: Color(0xFF00B4D8),
+            shape: BoxShape.circle,
+          ),
+        ),
       ),
     );
   }

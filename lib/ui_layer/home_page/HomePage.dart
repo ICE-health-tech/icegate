@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/services.dart';
@@ -32,6 +33,7 @@ import 'package:ice_gate/ui_layer/ReusableWidget/ScoreAnimations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/RadialPremiumBackground.dart';
 
 class HomePage extends StatefulWidget {
   // final String title;
@@ -229,14 +231,16 @@ class _HomePageState extends State<HomePage> {
 
     // Also cleanup by alias if they exist
     final oldSsh = await dao.getInternalWidgetByAlias('ice_gate_ssh');
-    if (oldSsh != null && oldSsh.name != null)
+    if (oldSsh != null && oldSsh.name != null) {
       await dao.deleteInternalWidget(oldSsh.name!);
+    }
 
     final oldAiController = await dao.getInternalWidgetByAlias(
       'ssh_ai_controller',
     );
-    if (oldAiController != null && oldAiController.name != null)
+    if (oldAiController != null && oldAiController.name != null) {
       await dao.deleteInternalWidget(oldAiController.name!);
+    }
 
     // UPLINK (The single unified terminal)
     // Use the refactored DAO which now safely handles duplicates via limit(1)
@@ -304,357 +308,404 @@ class _HomePageState extends State<HomePage> {
     final personBlock = context.read<PersonBlock>();
     final double sizeOfDepartment = UIConstants.getSizeOfDepartment(context);
     final double sizeOfWidget = UIConstants.getSizeOfWidget(context);
-    return SwipeablePage(
-      onSwipe: () => Navigator.maybePop(context), // Use maybePop for safety
-      direction: SwipeablePageDirection.leftToRight,
-      child: Scaffold(
-        backgroundColor: colorScheme.surface,
-        appBar: AppBar(
-          toolbarHeight: 70,
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          centerTitle: true,
-          leadingWidth: 0,
-          leading: const SizedBox.shrink(),
-          actions: [const SizedBox(width: 8)],
-        ),
-        floatingActionButton: Watch((context) {
-          final level = _levelUpToShow.value;
-          if (level == null) return const SizedBox.shrink();
-          return LevelUpCelebration(
-            level: level,
-            onFinished: () => _levelUpToShow.value = null,
-          );
-        }),
-        floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-        body: Watch((context) {
-          final internalWidgets =
-              internalWidgetBlock.listInternalWidgetHomePage.value;
-          final externalWidgets = externalWidgetBlock.listExternalWidgets.value;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        // statusBarColor: Colors.transparent,
+        // statusBarIconBrightness: Brightness.light,
+        // systemNavigationBarColor: Colors.transparent,
+        systemNavigationBarIconBrightness: Brightness.light,
+      ),
+      child: RadialPremiumBackground(
+        child: SwipeablePage(
+          onSwipe: () => Navigator.maybePop(context), // Use maybePop for safety
+          direction: SwipeablePageDirection.leftToRight,
+          child: Scaffold(
+            // backgroundColor: Colors.transparent,
+            appBar: AppBar(
+              toolbarHeight: 70,
+              backgroundColor: Colors.transparent,
+              elevation: 0,
+              centerTitle: true,
+              leadingWidth: 0,
+              leading: const SizedBox.shrink(),
+              actions: [const SizedBox(width: 8)],
+            ),
+            floatingActionButton: Watch((context) {
+              final level = _levelUpToShow.value;
+              if (level == null) return const SizedBox.shrink();
+              return LevelUpCelebration(
+                level: level,
+                onFinished: () => _levelUpToShow.value = null,
+              );
+            }),
+            floatingActionButtonLocation:
+                FloatingActionButtonLocation.centerDocked,
+            body: Watch((context) {
+              final internalWidgets =
+                  internalWidgetBlock.listInternalWidgetHomePage.value;
+              final externalWidgets =
+                  externalWidgetBlock.listExternalWidgets.value;
 
-          return SwipeablePage(
-            direction: SwipeablePageDirection.leftToRight,
-            onSwipe: () => context.pop(),
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 20.0,
-                // vertical: 10,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- SECTION: USER HEADER (Row 2) ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+              return SwipeablePage(
+                direction: SwipeablePageDirection.leftToRight,
+                onSwipe: () => context.pop(),
+                child: SingleChildScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 20.0,
+                    // vertical: 10,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      TextButton(
-                        child: Text(
-                          "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            fontSize: 20,
-                            color: colorScheme.onSurface,
-                            shadows: [
-                              Shadow(
-                                color: colorScheme.shadow.withOpacity(0.3),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
+                      // --- SECTION: USER HEADER (Row 2) ---
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.end,
+                        children: [
+                          TextButton(
+                            child: Text(
+                              "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
+                              style: TextStyle(
+                                fontWeight: FontWeight.w900,
+                                fontSize: 20,
+                                color: colorScheme.onSurface,
+                                shadows: [
+                                  Shadow(
+                                    color: colorScheme.shadow.withOpacity(0.3),
+                                    blurRadius: 4,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
                               ),
-                            ],
+                            ),
+                            onPressed: () {
+                              context.go("/personal-info");
+                            },
                           ),
-                        ),
-                        onPressed: () {
-                          context.go("/personal-info");
-                        },
+                        ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  // // --- SECTION: GAMIFIED HEADER ---
-                  // _buildGamifiedHeader(context),
-                  // const SizedBox(height: 16),
-                  _buildQuotesSection(context),
-                  const SizedBox(height: 16),
-                  // --- SECTION: 4 life elements ---
-                  _buildSectionHeader(
-                    context,
-                    AppLocalizations.of(context)!.homepage_four_life_elements,
-                    '/profile',
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    height: sizeOfDepartment,
-                    child: ListView(
-                      scrollDirection: Axis.horizontal,
-                      physics: const BouncingScrollPhysics(),
-                      children: [
-                        Watch((context) {
-                          final steps = healthBlock.todaySteps.value;
-                          final kcal = healthBlock.todayCaloriesConsumed.value;
-                          final sleep = healthBlock.todaySleep.value;
-                          final hr = healthBlock.todayHeartRate.value;
-                          return _buildQuickAccessCard(
-                            context,
-                            AppLocalizations.of(context)!.health,
-                            Icons.favorite_rounded,
-                            Colors.green,
-                            metrics: [
-                              {
-                                'label': AppLocalizations.of(context)!.steps,
-                                'value': '$steps',
-                              },
-                              {
-                                'label': AppLocalizations.of(
-                                  context,
-                                )!.kcal_consume,
-                                'value': '$kcal',
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.sleep,
-                                'value': '${sleep.toStringAsFixed(1)}h',
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.hr,
-                                'value': hr > 0 ? '$hr bpm' : '--',
-                              },
-                            ],
-                            route: '/health',
-                            scoreData: scoreBlock.score.healthGlobalScore,
-                          );
-                        }),
-                        Watch((context) {
-                          final balance = financeBlock.totalBalance.value;
-                          final spending = financeBlock.monthlySpending.value;
-                          final income = financeBlock.monthlyIncome.value;
-                          final savings = financeBlock.totalSavings.value;
-                          return _buildQuickAccessCard(
-                            context,
-                            AppLocalizations.of(context)!.finance,
-                            Icons.account_balance_wallet_rounded,
-                            Colors.blue,
-                            metrics: [
-                              {
-                                'label': AppLocalizations.of(context)!.balance,
-                                'value': financeBlock.formatCurrency(balance),
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.spent,
-                                'value': financeBlock.formatCurrency(spending),
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.income,
-                                'value': financeBlock.formatCurrency(income),
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.savings,
-                                'value': financeBlock.formatCurrency(savings),
-                              },
-                            ],
-                            route: '/finance',
-                            scoreData: scoreBlock.score.financialGlobalScore,
-                          );
-                        }),
-                        Watch((context) {
-                          final info = personBlock.information.value;
-                          return StreamBuilder<List<PersonData>>(
-                            stream: database.personDAO.getAllPersons(),
-                            builder: (context, snapshot) {
-                              final count = snapshot.data?.length ?? 0;
+                      const SizedBox(height: 10),
+                      // // --- SECTION: GAMIFIED HEADER ---
+                      // _buildGamifiedHeader(context),
+                      // const SizedBox(height: 16),
+                      _buildQuotesSection(context),
+                      const SizedBox(height: 16),
+                      // --- SECTION: 4 life elements ---
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(
+                          context,
+                        )!.homepage_four_life_elements,
+                        '/profile',
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        height: sizeOfDepartment,
+                        child: ListView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          children: [
+                            Watch((context) {
+                              final steps = healthBlock.todaySteps.value;
+                              final kcal =
+                                  healthBlock.todayCaloriesConsumed.value;
+                              final sleep = healthBlock.todaySleep.value;
+                              final hr = healthBlock.todayHeartRate.value;
                               return _buildQuickAccessCard(
                                 context,
-                                AppLocalizations.of(context)!.social,
-                                Icons.psychology_rounded,
-                                Colors.purple,
+                                AppLocalizations.of(context)!.health,
+                                Icons.favorite_rounded,
+                                Colors.green,
                                 metrics: [
                                   {
                                     'label': AppLocalizations.of(
                                       context,
-                                    )!.total_users,
-                                    'value': '$count',
+                                    )!.steps,
+                                    'value': '$steps',
                                   },
                                   {
                                     'label': AppLocalizations.of(
                                       context,
-                                    )!.friends,
-                                    'value': '${info.profiles.friends}',
+                                    )!.kcal_consume,
+                                    'value': '$kcal',
                                   },
                                   {
                                     'label': AppLocalizations.of(
                                       context,
-                                    )!.mutual,
-                                    'value': '${info.profiles.mutual}',
+                                    )!.sleep,
+                                    'value': '${sleep.toStringAsFixed(1)}h',
                                   },
                                   {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.username,
-                                    'value':
-                                        authBlock.username.value ??
-                                        info.profiles.username,
+                                    'label': AppLocalizations.of(context)!.hr,
+                                    'value': hr > 0 ? '$hr bpm' : '--',
                                   },
                                 ],
-                                route: '/social',
-                                scoreData: scoreBlock.score.socialGlobalScore,
+                                route: '/health',
+                                scoreData: scoreBlock.score.healthGlobalScore,
                               );
+                            }),
+                            Watch((context) {
+                              final balance = financeBlock.totalBalance.value;
+                              final spending =
+                                  financeBlock.monthlySpending.value;
+                              final income = financeBlock.monthlyIncome.value;
+                              final savings = financeBlock.totalSavings.value;
+                              return _buildQuickAccessCard(
+                                context,
+                                AppLocalizations.of(context)!.finance,
+                                Icons.account_balance_wallet_rounded,
+                                Colors.blue,
+                                metrics: [
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.balance,
+                                    'value': financeBlock.formatCurrency(
+                                      balance,
+                                    ),
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.spent,
+                                    'value': financeBlock.formatCurrency(
+                                      spending,
+                                    ),
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.income,
+                                    'value': financeBlock.formatCurrency(
+                                      income,
+                                    ),
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.savings,
+                                    'value': financeBlock.formatCurrency(
+                                      savings,
+                                    ),
+                                  },
+                                ],
+                                route: '/finance',
+                                scoreData:
+                                    scoreBlock.score.financialGlobalScore,
+                              );
+                            }),
+                            Watch((context) {
+                              final info = personBlock.information.value;
+                              return StreamBuilder<List<PersonData>>(
+                                stream: database.personDAO.getAllPersons(),
+                                builder: (context, snapshot) {
+                                  final count = snapshot.data?.length ?? 0;
+                                  return _buildQuickAccessCard(
+                                    context,
+                                    AppLocalizations.of(context)!.social,
+                                    Icons.psychology_rounded,
+                                    Colors.purple,
+                                    metrics: [
+                                      {
+                                        'label': AppLocalizations.of(
+                                          context,
+                                        )!.total_users,
+                                        'value': '$count',
+                                      },
+                                      {
+                                        'label': AppLocalizations.of(
+                                          context,
+                                        )!.friends,
+                                        'value': '${info.profiles.friends}',
+                                      },
+                                      {
+                                        'label': AppLocalizations.of(
+                                          context,
+                                        )!.mutual,
+                                        'value': '${info.profiles.mutual}',
+                                      },
+                                      {
+                                        'label': AppLocalizations.of(
+                                          context,
+                                        )!.username,
+                                        'value':
+                                            authBlock.username.value ??
+                                            info.profiles.username,
+                                      },
+                                    ],
+                                    route: '/social',
+                                    scoreData:
+                                        scoreBlock.score.socialGlobalScore,
+                                  );
+                                },
+                              );
+                            }),
+                            Watch((context) {
+                              final projectGoals = growthBlock.goals.value
+                                  .where((g) => g.category == 'project')
+                                  .toList();
+                              final tasksRemaining = projectGoals
+                                  .where((g) => g.status != 'done')
+                                  .length;
+                              final tasksDone = projectGoals
+                                  .where((g) => g.status == 'done')
+                                  .length;
+
+                              final allProjects = projectBlock.projects.value;
+                              final projectsDone = allProjects
+                                  .where((p) => p.status == 1)
+                                  .length;
+                              final projectsRemaining = allProjects
+                                  .where((p) => p.status == 0)
+                                  .length;
+
+                              return _buildQuickAccessCard(
+                                context,
+                                AppLocalizations.of(context)!.projects,
+                                Icons.rocket_launch_rounded,
+                                Colors.orange,
+                                metrics: [
+                                  {
+                                    'label': AppLocalizations.of(context)!.done,
+                                    'value':
+                                        '$projectsDone ${AppLocalizations.of(context)!.projs}',
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.active,
+                                    'value':
+                                        '$projectsRemaining ${AppLocalizations.of(context)!.projs}',
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(context)!.done,
+                                    'value':
+                                        '$tasksDone ${AppLocalizations.of(context)!.tasks}',
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(
+                                      context,
+                                    )!.active,
+                                    'value':
+                                        '$tasksRemaining ${AppLocalizations.of(context)!.tasks}',
+                                  },
+                                ],
+                                route: '/projects',
+                                scoreData: scoreBlock.score.careerGlobalScore,
+                              );
+                            }),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 32),
+
+                      // --- SECTION: QUICK ACCESS GRID ---
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          AutoSizeText(
+                            AppLocalizations.of(context)!.homepage_plugin,
+                            style: textTheme.titleLarge?.copyWith(
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.5,
+                            ),
+                            maxLines: 1,
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              setState(() {
+                                _isEditMode = !_isEditMode;
+                              });
+                            },
+                            child: Text(
+                              _isEditMode
+                                  ? AppLocalizations.of(context)!.done
+                                  : AppLocalizations.of(context)!.edit,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      SizedBox(
+                        height: sizeOfWidget,
+                        child: Watch((context) {
+                          final sortedInternal =
+                              List<InternalWidgetProtocol>.from(
+                                internalWidgets,
+                              );
+                          sortedInternal.sort(
+                            (a, b) => b.dateAdded.compareTo(a.dateAdded),
+                          );
+
+                          final itemCount =
+                              sortedInternal.length +
+                              externalWidgets.length +
+                              1;
+
+                          return ListView.builder(
+                            scrollDirection: Axis.horizontal,
+                            physics: const BouncingScrollPhysics(),
+                            padding: const EdgeInsets.only(right: 20),
+                            itemCount: itemCount,
+                            itemBuilder: (context, index) {
+                              // Show Add Button at the END
+                              if (index == itemCount - 1) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(left: 4),
+                                  child: SizedBox(
+                                    width: sizeOfWidget,
+                                    height: sizeOfWidget,
+                                    child: _buildAddButton(context),
+                                  ),
+                                );
+                              }
+
+                              if (index < sortedInternal.length) {
+                                final widget = sortedInternal[index];
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: sizeOfWidget,
+                                    height: sizeOfWidget,
+                                    child: _buildInternalWidget(
+                                      context,
+                                      widget,
+                                    ),
+                                  ),
+                                );
+                              }
+
+                              final extIndex = index - sortedInternal.length;
+                              if (extIndex < externalWidgets.length) {
+                                final ext = externalWidgets[extIndex];
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: sizeOfWidget,
+                                    child: _buildExternalWidget(context, ext),
+                                  ),
+                                );
+                              }
+
+                              return const SizedBox.shrink();
                             },
                           );
                         }),
-                        Watch((context) {
-                          final projectGoals = growthBlock.goals.value
-                              .where((g) => g.category == 'project')
-                              .toList();
-                          final tasksRemaining = projectGoals
-                              .where((g) => g.status != 'done')
-                              .length;
-                          final tasksDone = projectGoals
-                              .where((g) => g.status == 'done')
-                              .length;
-
-                          final allProjects = projectBlock.projects.value;
-                          final projectsDone = allProjects
-                              .where((p) => p.status == 1)
-                              .length;
-                          final projectsRemaining = allProjects
-                              .where((p) => p.status == 0)
-                              .length;
-
-                          return _buildQuickAccessCard(
-                            context,
-                            AppLocalizations.of(context)!.projects,
-                            Icons.rocket_launch_rounded,
-                            Colors.orange,
-                            metrics: [
-                              {
-                                'label': AppLocalizations.of(context)!.done,
-                                'value':
-                                    '$projectsDone ${AppLocalizations.of(context)!.projs}',
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.active,
-                                'value':
-                                    '$projectsRemaining ${AppLocalizations.of(context)!.projs}',
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.done,
-                                'value':
-                                    '$tasksDone ${AppLocalizations.of(context)!.tasks}',
-                              },
-                              {
-                                'label': AppLocalizations.of(context)!.active,
-                                'value':
-                                    '$tasksRemaining ${AppLocalizations.of(context)!.tasks}',
-                              },
-                            ],
-                            route: '/projects',
-                            scoreData: scoreBlock.score.careerGlobalScore,
-                          );
-                        }),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // --- SECTION: QUICK ACCESS GRID ---
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      AutoSizeText(
-                        AppLocalizations.of(context)!.homepage_plugin,
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: -0.5,
-                        ),
-                        maxLines: 1,
                       ),
-                      TextButton(
-                        onPressed: () {
-                          setState(() {
-                            _isEditMode = !_isEditMode;
-                          });
-                        },
-                        child: Text(
-                          _isEditMode
-                              ? AppLocalizations.of(context)!.done
-                              : AppLocalizations.of(context)!.edit,
-                        ),
-                      ),
+
+                      const SizedBox(height: 32),
+
+                      // --- SECTION: QUOTES ---
+                      const SizedBox(height: 40),
                     ],
                   ),
-                  const SizedBox(height: 12),
-
-                  SizedBox(
-                    height: sizeOfWidget,
-                    child: Watch((context) {
-                      final sortedInternal = List<InternalWidgetProtocol>.from(
-                        internalWidgets,
-                      );
-                      sortedInternal.sort(
-                        (a, b) => b.dateAdded.compareTo(a.dateAdded),
-                      );
-
-                      final itemCount =
-                          sortedInternal.length + externalWidgets.length + 1;
-
-                      return ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        padding: const EdgeInsets.only(right: 20),
-                        itemCount: itemCount,
-                        itemBuilder: (context, index) {
-                          // Show Add Button at the END
-                          if (index == itemCount - 1) {
-                            return Padding(
-                              padding: const EdgeInsets.only(left: 4),
-                              child: SizedBox(
-                                width: sizeOfWidget,
-                                height: sizeOfWidget,
-                                child: _buildAddButton(context),
-                              ),
-                            );
-                          }
-
-                          if (index < sortedInternal.length) {
-                            final widget = sortedInternal[index];
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 16),
-                              child: SizedBox(
-                                width: sizeOfWidget,
-                                height: sizeOfWidget,
-                                child: _buildInternalWidget(context, widget),
-                              ),
-                            );
-                          }
-
-                          final extIndex = index - sortedInternal.length;
-                          if (extIndex < externalWidgets.length) {
-                            final ext = externalWidgets[extIndex];
-                            return Padding(
-                              padding: const EdgeInsets.only(right: 16),
-                              child: SizedBox(
-                                width: sizeOfWidget,
-                                child: _buildExternalWidget(context, ext),
-                              ),
-                            );
-                          }
-
-                          return const SizedBox.shrink();
-                        },
-                      );
-                    }),
-                  ),
-
-                  const SizedBox(height: 32),
-
-                  // --- SECTION: QUOTES ---
-                  const SizedBox(height: 40),
-                ],
-              ),
-            ),
-          );
-        }),
-        // Duplicate FAB removed from here
+                ),
+              );
+            }),
+          ),
+        ),
       ),
     );
   }
@@ -739,7 +790,7 @@ class _HomePageState extends State<HomePage> {
       margin: const EdgeInsets.only(right: 12),
       child: Card(
         elevation: 0,
-        color: Colors.transparent,
+        color: colorScheme.onPrimary,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
           side: BorderSide(color: color.withValues(alpha: 0.12)),

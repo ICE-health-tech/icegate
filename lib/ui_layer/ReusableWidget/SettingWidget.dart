@@ -7,7 +7,6 @@ import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
-import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -219,7 +218,7 @@ class SettingsWidget extends StatelessWidget {
             // _buildProfileHeader(context),
 
             // 1. Account Settings
-            SizedBox(height: 20),
+            SizedBox(height: 40),
             _buildSettingSection(
               context: context,
               title: AppLocalizations.of(context)!.account_section,
@@ -317,8 +316,6 @@ class SettingsWidget extends StatelessWidget {
                 }),
               ],
             ),
-
-
 
             // 4. Modality Settings: Social, Projects
 

@@ -73,7 +73,7 @@ class ActivitySelector extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: isSelected
                           ? colorScheme.primary.withValues(alpha: 0.15)
-                          : colorScheme.surfaceVariant.withValues(alpha: 0.3),
+                          : colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
                         color: isSelected

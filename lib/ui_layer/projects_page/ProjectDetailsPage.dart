@@ -442,10 +442,12 @@ class ProjectDetailsPage extends StatelessWidget {
                         // Sort: active tasks first, completed tasks last
                         final sortedTasks = List<GoalProtocol>.from(tasks);
                         sortedTasks.sort((a, b) {
-                          if (a.status == 'done' && b.status != 'done')
+                          if (a.status == 'done' && b.status != 'done') {
                             return 1;
-                          if (a.status != 'done' && b.status == 'done')
+                          }
+                          if (a.status != 'done' && b.status == 'done') {
                             return -1;
+                          }
                           return 0;
                         });
 

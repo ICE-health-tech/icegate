@@ -27,8 +27,6 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
   final _descriptionController = TextEditingController();
   final _impactWhoController = TextEditingController();
   final _impactHowController = TextEditingController();
-  final _moodPreController = TextEditingController();
-  final _moodPostController = TextEditingController();
 
   String _selectedDomain = 'project';
   int _meaningScore = 5;
@@ -67,8 +65,6 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
       impactScore: drift.Value(_impactScore),
       impactDescWho: drift.Value(_impactWhoController.text.trim()),
       impactDescHow: drift.Value(_impactHowController.text.trim()),
-      moodPre: drift.Value(_moodPreController.text.trim().isEmpty ? null : _moodPreController.text.trim()),
-      moodPost: drift.Value(_moodPostController.text.trim().isEmpty ? null : _moodPostController.text.trim()),
     );
 
     await context.read<AchievementsDAO>().insertAchievement(entry);
@@ -84,8 +80,6 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
     _descriptionController.dispose();
     _impactWhoController.dispose();
     _impactHowController.dispose();
-    _moodPreController.dispose();
-    _moodPostController.dispose();
     super.dispose();
   }
 
@@ -184,62 +178,13 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
               onChanged: (val) => setState(() => _meaningScore = val.toInt()),
             ),
             
-            // PSYCHOLOGICAL IMPACT SECTION
-            Container(
-              margin: const EdgeInsets.symmetric(vertical: 8),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.secondaryContainer.withOpacity(0.3),
-                border: Border.all(color: Theme.of(context).colorScheme.secondary),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(Icons.psychology, color: Theme.of(context).colorScheme.secondary),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          "Psychological Impact",
-                          style: TextStyle(
-                            color: Theme.of(context).colorScheme.secondary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 16,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _moodPreController,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: const InputDecoration(
-                      labelText: "How did you feel BEFORE this? (Optional)",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _moodPostController,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: const InputDecoration(
-                      labelText: "How do you feel AFTER achieving this? (Optional)",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
             
             // MANDATORY PHILOSOPHY SECTION
             Container(
               margin: const EdgeInsets.symmetric(vertical: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primaryContainer.withOpacity(0.3),
+                color: Theme.of(context).colorScheme.primaryContainer.withValues(alpha: 0.3),
                 border: Border.all(color: Theme.of(context).colorScheme.primary),
                 borderRadius: BorderRadius.circular(12),
               ),

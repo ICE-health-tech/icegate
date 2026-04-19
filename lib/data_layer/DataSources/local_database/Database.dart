@@ -123,6 +123,7 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
       ),
     );
   }
+
   Future<InternalWidgetData?> getInternalWidgetByName(String name) {
     // return (select(internalWidgetsTable)..where((table)=>table.name.equals(_name)).getSingleOrNull());
     return (select(internalWidgetsTable)
@@ -179,36 +180,90 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     required String url,
     String? imageUrl,
     String? scope,
-  }) {
-    return into(internalWidgetsTable).insert(
+  }) async {
+    final idToUse = id ?? IDGen.UUIDV7();
+    final widgetIdToUse = widgetID ?? IDGen.UUIDV7();
+    final img = imageUrl ?? "assets/internalwidget/default_plugin.png";
+    final now = DateTime.now().toIso8601String();
+
+    final res = await into(internalWidgetsTable).insert(
       InternalWidgetsTableCompanion.insert(
-        id: id ?? IDGen.UUIDV7(),
-        widgetID: Value(widgetID),
+        id: idToUse,
+        widgetID: Value(widgetIdToUse),
         personID: Value(personID),
         name: Value(name),
         alias: Value(alias),
         url: Value(url),
-        imageUrl: Value(imageUrl ?? "assets/internalwidget/default_plugin.png"),
+        imageUrl: Value(img),
         scope: Value(scope),
-        dateAdded: Value(DateTime.now().toIso8601String()),
+        dateAdded: Value(now),
       ),
     );
+
+    attachedDatabase.pushToSupabase(
+      table: 'internal_widgets',
+      payload: {
+        'id': idToUse,
+        'widget_id': widgetIdToUse,
+        'person_id': personID,
+        'name': name,
+        'alias': alias,
+        'url': url,
+        'image_url': img,
+        'scope': scope,
+        'date_added': now,
+      },
+    );
+
+    return res;
   }
 
-  Future<int> deleteInternalWidget(String name) {
-    return (delete(
+  Future<int> deleteInternalWidget(String name) async {
+    final widget = await getInternalWidgetByName(name);
+    final res = await (delete(
       internalWidgetsTable,
     )..where((t) => t.name.equals(name))).go();
+
+    if (widget != null) {
+      attachedDatabase.pushToSupabase(
+        table: 'internal_widgets',
+        payload: {'id': widget.id},
+        isDelete: true,
+      );
+    }
+    return res;
   }
 
-  Future<int> renameInternalWidget(String oldName, String newName) {
-    return (update(internalWidgetsTable)..where((t) => t.name.equals(oldName)))
-        .write(InternalWidgetsTableCompanion(name: Value(newName)));
+  Future<int> renameInternalWidget(String oldName, String newName) async {
+    final widget = await getInternalWidgetByName(oldName);
+    final res =
+        await (update(internalWidgetsTable)
+              ..where((t) => t.name.equals(oldName)))
+            .write(InternalWidgetsTableCompanion(name: Value(newName)));
+
+    if (widget != null) {
+      attachedDatabase.pushToSupabase(
+        table: 'internal_widgets',
+        payload: {'id': widget.id, 'name': newName},
+      );
+    }
+    return res;
   }
 
-  Future<int> updateInternalWidgetUrl(String alias, String newUrl) {
-    return (update(internalWidgetsTable)..where((t) => t.alias.equals(alias)))
-        .write(InternalWidgetsTableCompanion(url: Value(newUrl)));
+  Future<int> updateInternalWidgetUrl(String alias, String newUrl) async {
+    final widget = await getInternalWidgetByAlias(alias);
+    final res =
+        await (update(internalWidgetsTable)
+              ..where((t) => t.alias.equals(alias)))
+            .write(InternalWidgetsTableCompanion(url: Value(newUrl)));
+
+    if (widget != null) {
+      attachedDatabase.pushToSupabase(
+        table: 'internal_widgets',
+        payload: {'id': widget.id, 'url': newUrl},
+      );
+    }
+    return res;
   }
 
   Future<InternalWidgetData?> getInternalWidgetByAlias(String alias) {
@@ -287,7 +342,9 @@ class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase>
     )..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
 
     if (existing != null) {
-      final currentSteps = entry.stepsCount.present ? entry.stepsCount.value : 0;
+      final currentSteps = entry.stepsCount.present
+          ? entry.stepsCount.value
+          : 0;
       final existingSteps = existing.stepsCount;
       if (currentSteps > existingSteps) {
         await (update(
@@ -314,13 +371,17 @@ class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase>
       id: Value(r['id'] as String),
       personID: Value(r['person_id'] as String),
       startTime: Value(DateTime.parse(r['start_time'] as String)),
-      endTime: Value(r['end_time'] != null ? DateTime.parse(r['end_time'] as String) : null),
+      endTime: Value(
+        r['end_time'] != null ? DateTime.parse(r['end_time'] as String) : null,
+      ),
       logDate: Value(DateTime.parse(r['log_date'] as String)),
       stepsCount: Value(r['steps_count'] as int? ?? 0),
       distanceKm: Value((r['distance_km'] as num?)?.toDouble() ?? 0.0),
       caloriesBurned: Value(r['calories_burned'] as int? ?? 0),
     );
-    await into(hourlyActivityLogTable).insert(companion, mode: InsertMode.insertOrReplace);
+    await into(
+      hourlyActivityLogTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 }
 
@@ -1846,10 +1907,9 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
       logDate: Value(DateTime.parse(r['log_date'] as String)),
       createdAt: Value(DateTime.parse(r['created_at'] as String)),
     );
-    await into(mindLogsTable).insert(
-      companion,
-      mode: InsertMode.insertOrReplace,
-    );
+    await into(
+      mindLogsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 }
 
@@ -2071,10 +2131,11 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
         careerGlobalScore: Value(career),
         updatedAt: Value(DateTime.now()),
       );
-      await (update(scoresTable)..where((t) => t.id.equals(existing.id)))
-          .write(companion);
+      await (update(
+        scoresTable,
+      )..where((t) => t.id.equals(existing.id))).write(companion);
     }
-    
+
     _pushScoreToSupabase(companion);
   }
 
@@ -2084,11 +2145,21 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
       ScoresTableCompanion(
         id: Value(record['id'] as String),
         personID: Value(personId),
-        healthGlobalScore: Value((record['health_global_score'] as num?)?.toDouble() ?? 0.0),
-        socialGlobalScore: Value((record['social_global_score'] as num?)?.toDouble() ?? 0.0),
-        financialGlobalScore: Value((record['financial_global_score'] as num?)?.toDouble() ?? 0.0),
-        careerGlobalScore: Value((record['career_global_score'] as num?)?.toDouble() ?? 0.0),
-        penaltyScore: Value((record['penalty_score'] as num?)?.toDouble() ?? 0.0),
+        healthGlobalScore: Value(
+          (record['health_global_score'] as num?)?.toDouble() ?? 0.0,
+        ),
+        socialGlobalScore: Value(
+          (record['social_global_score'] as num?)?.toDouble() ?? 0.0,
+        ),
+        financialGlobalScore: Value(
+          (record['financial_global_score'] as num?)?.toDouble() ?? 0.0,
+        ),
+        careerGlobalScore: Value(
+          (record['career_global_score'] as num?)?.toDouble() ?? 0.0,
+        ),
+        penaltyScore: Value(
+          (record['penalty_score'] as num?)?.toDouble() ?? 0.0,
+        ),
         updatedAt: Value(
           record['updated_at'] != null
               ? DateTime.parse(record['updated_at'].toString())
@@ -2395,52 +2466,84 @@ class ExternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
   Future<int> insertNewWidget({
     required ExternalWidgetProtocol externalWidgetProtocol,
     required String personID,
-  }) {
+  }) async {
+    final id = IDGen.UUIDV7();
+    final widgetID = IDGen.UUIDV7();
+    final alias = _generateRandomAlias(8);
+    final now = DateTime.now().toIso8601String();
+
     final entry = ExternalWidgetsTableCompanion.insert(
-      id: IDGen.UUIDV7(),
+      id: id,
       personID: Value(personID),
       name: Value(
         externalWidgetProtocol.name.isEmpty
             ? 'Unnamed Widget'
             : externalWidgetProtocol.name,
       ),
-      alias: Value(_generateRandomAlias(8)),
-      widgetID: Value(IDGen.UUIDV7()),
+      alias: Value(alias),
+      widgetID: Value(widgetID),
       host: Value(externalWidgetProtocol.host),
       protocol: Value(externalWidgetProtocol.protocol),
-      dateAdded: Value(DateTime.now().toString()),
+      dateAdded: Value(now),
       url: Value(externalWidgetProtocol.url),
       imageUrl: Value(externalWidgetProtocol.imageUrl),
     );
 
-    return into(externalWidgetsTable).insert(entry);
+    final res = await into(attachedDatabase.externalWidgetsTable).insert(entry);
 
-    //      IntColumn get widgetID => integer().autoIncrement().named("widget_id")();
-    // TextColumn get name => text().withLength(min: 1, max: 100).named("name")();
-    // TextColumn get alias => text()
-    //     .withLength(min: 1, max: 100)
-    //     .named("alias")
-    //     .nullable()(); // Added .nullable() as it can be generated
-    // TextColumn get protocol => text().named("protocol")();
-    // TextColumn get host => text().named("host")();
-    // TextColumn get url => text().named("url")();
-    // TextColumn get imageUrl => text().nullable().named("image_url")();
-    // TextColumn get dateAdded => text().named("date_added")();
-    // );
+    attachedDatabase.pushToSupabase(
+      table: 'external_widgets',
+      payload: {
+        'id': id,
+        'person_id': personID,
+        'widget_id': widgetID,
+        'name': externalWidgetProtocol.name.isEmpty
+            ? 'Unnamed Widget'
+            : externalWidgetProtocol.name,
+        'alias': alias,
+        'host': externalWidgetProtocol.host,
+        'protocol': externalWidgetProtocol.protocol,
+        'url': externalWidgetProtocol.url,
+        'image_url': externalWidgetProtocol.imageUrl,
+        'date_added': now,
+      },
+    );
 
-    // return into(externalWidgetsTable).insert(entry);
+    return res;
   }
 
   Future<int> deleteWidget(String id) async {
-    return (delete(
-      externalWidgetsTable,
+    final res = await (delete(
+      attachedDatabase.externalWidgetsTable,
     )..where((tbl) => tbl.id.equals(id))).go();
+
+    attachedDatabase.pushToSupabase(
+      table: 'external_widgets',
+      payload: {'id': id},
+      isDelete: true,
+    );
+
+    return res;
   }
 
-  Future<int> renameExternalWidget(String widgetID, String newName) {
-    return (update(externalWidgetsTable)
-          ..where((tbl) => tbl.widgetID.equals(widgetID)))
-        .write(ExternalWidgetsTableCompanion(name: Value(newName)));
+  Future<int> renameExternalWidget(String widgetID, String newName) async {
+    final widgetQuery = select(externalWidgetsTable)
+      ..where((tbl) => tbl.widgetID.equals(widgetID));
+    final widget = await widgetQuery.getSingleOrNull();
+
+    final res =
+        await (update(externalWidgetsTable)
+              ..where((tbl) => tbl.widgetID.equals(widgetID)))
+            .write(ExternalWidgetsTableCompanion(name: Value(newName)));
+
+    if (widget != null) {
+      attachedDatabase.pushToSupabase(
+        table: 'external_widgets',
+        payload: {'id': widget.id, 'name': newName},
+      );
+    }
+
+    return res;
   }
 
   Stream<List<ExternalWidgetData>> watchAllWidgets(String personID) {
@@ -2589,7 +2692,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Future<int> deleteNote(String id) async {
-    final count = await (delete(projectNotesTable)..where((tbl) => tbl.id.equals(id))).go();
+    final count = await (delete(
+      projectNotesTable,
+    )..where((tbl) => tbl.id.equals(id))).go();
     if (count > 0) {
       await db.pushToSupabase(
         table: 'project_notes',
@@ -2675,7 +2780,9 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
       createdAt: Value(DateTime.parse(r['created_at'] as String)),
       updatedAt: Value(DateTime.parse(r['updated_at'] as String)),
     );
-    await into(projectsTable).insert(companion, mode: InsertMode.insertOrReplace);
+    await into(
+      projectsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 
   Future<void> insertProject(ProjectsTableCompanion project) async {
@@ -3808,7 +3915,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     );
   }
 
-  Future<void> upsertFromSupabaseSubscription(Map<String, dynamic> record) async {
+  Future<void> upsertFromSupabaseSubscription(
+    Map<String, dynamic> record,
+  ) async {
     await into(subscriptionsTable).insert(
       SubscriptionsTableCompanion(
         id: Value(record['id'] as String),
@@ -3817,7 +3926,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
         amount: Value((record['amount'] as num).toDouble()),
         billingDay: Value((record['billing_day'] as num).toInt()),
         category: Value(record['category'] as String?),
-        isActive: Value(record['is_active'] == true || record['is_active'] == 1),
+        isActive: Value(
+          record['is_active'] == true || record['is_active'] == 1,
+        ),
         createdAt: Value(
           record['created_at'] != null
               ? DateTime.parse(record['created_at'].toString())
@@ -3861,7 +3972,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
       id: Value(id),
       accountID: Value(record['account_id'] as String?),
       personID: Value(personId),
-      accountName: Value(record['account_name'] as String? ?? 'Untitled Account'),
+      accountName: Value(
+        record['account_name'] as String? ?? 'Untitled Account',
+      ),
       accountType: Value(record['account_type'] as String? ?? 'checking'),
       balance: Value((record['balance'] as num?)?.toDouble() ?? 0.0),
       currency: Value(
@@ -3870,7 +3983,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
           orElse: () => CurrencyType.USD,
         ),
       ),
-      isPrimary: Value(record['is_primary'] == true || record['is_primary'] == 1),
+      isPrimary: Value(
+        record['is_primary'] == true || record['is_primary'] == 1,
+      ),
       isActive: Value(record['is_active'] == true || record['is_active'] == 1),
       createdAt: Value(
         record['created_at'] != null
@@ -3884,10 +3999,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
       ),
     );
 
-    await into(financialAccountsTable).insert(
-      companion,
-      mode: InsertMode.insertOrReplace,
-    );
+    await into(
+      financialAccountsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 
   Stream<List<FinancialAccountData>> watchAccounts(String personId) {
@@ -3977,7 +4091,9 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
         condition: Value(record['condition'] as String? ?? 'good'),
         location: Value(record['location'] as String?),
         notes: Value(record['notes'] as String?),
-        isInsured: Value(record['is_insured'] == true || record['is_insured'] == 1),
+        isInsured: Value(
+          record['is_insured'] == true || record['is_insured'] == 1,
+        ),
         createdAt: Value(
           record['created_at'] != null
               ? DateTime.parse(record['created_at'].toString())
@@ -4043,12 +4159,14 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
   Future<void> insertTransaction(TransactionsTableCompanion txn) async {
     await into(transactionsTable).insert(txn);
     await db.pushToSupabase(
-      table: 'financial_transactions',
+      table: 'transactions',
       payload: db.companionToMap(txn, transactionsTable),
     );
   }
 
-  Future<void> upsertFromSupabaseTransaction(Map<String, dynamic> record) async {
+  Future<void> upsertFromSupabaseTransaction(
+    Map<String, dynamic> record,
+  ) async {
     final id = record['id'] as String;
     final personId = record['person_id'] as String;
 
@@ -4419,16 +4537,22 @@ class WidgetDAO extends DatabaseAccessor<AppDatabase> with _$WidgetDAOMixin {
         configuration: Value(r['configuration'] as String),
         displayOrder: Value(r['display_order'] as int),
         isActive: Value(r['is_active'] as bool),
-        role: Value(UserRole.values.firstWhere(
-          (e) => e.name == r['role'],
-          orElse: () => UserRole.admin,
-        )),
-        createdAt: Value(r['created_at'] != null
-            ? DateTime.tryParse(r['created_at'].toString())
-            : null),
-        updatedAt: Value(r['updated_at'] != null
-            ? DateTime.tryParse(r['updated_at'].toString())
-            : null),
+        role: Value(
+          UserRole.values.firstWhere(
+            (e) => e.name == r['role'],
+            orElse: () => UserRole.admin,
+          ),
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.tryParse(r['created_at'].toString())
+              : null,
+        ),
+        updatedAt: Value(
+          r['updated_at'] != null
+              ? DateTime.tryParse(r['updated_at'].toString())
+              : null,
+        ),
       ),
     );
   }
@@ -4507,35 +4631,84 @@ class WidgetDAO extends DatabaseAccessor<AppDatabase> with _$WidgetDAOMixin {
         .toList();
   }
 
-  Future<void> updateWidgetConfig(int id, String newConfig) =>
-      (update(personWidgetsTable)..where((t) => t.personWidgetID.equals(id)))
-          .write(PersonWidgetsTableCompanion(configuration: Value(newConfig)));
+  Future<void> updateWidgetConfig(int id, String newConfig) async {
+    final widgetQuery = select(attachedDatabase.personWidgetsTable)
+      ..where((t) => t.personWidgetID.equals(id));
+    final widget = await widgetQuery.getSingleOrNull();
+
+    await (update(attachedDatabase.personWidgetsTable)
+          ..where((t) => t.personWidgetID.equals(id)))
+        .write(PersonWidgetsTableCompanion(configuration: Value(newConfig)));
+
+    if (widget != null) {
+      attachedDatabase.pushToSupabase(
+        table: 'person_widgets',
+        payload: {
+          'id': widget.id,
+          'configuration': newConfig,
+          'updated_at': DateTime.now().toIso8601String(),
+        },
+      );
+    }
+  }
 
   Future<void> saveAllWidgets(
     String personId,
     List<InternalWidgetDragProtocol> widgets,
-  ) {
-    return transaction(() async {
-      // 1. Delete all existing widgets for this person
+  ) async {
+    // 1. Get current widgets to identify what to delete in cloud
+    final currentWidgets = await getAllWidgets(personId);
+
+    await transaction(() async {
+      // 2. Delete all existing widgets for this person locally
       await (delete(
-        personWidgetsTable,
+        attachedDatabase.personWidgetsTable,
       )..where((t) => t.personID.equals(personId))).go();
 
-      // 2. Insert non-empty ones with their index
+      // 3. Clear cloud widgets for this person
+      // Since we don't have a bulk delete by person_id in pushToSupabase yet,
+      // we push individual deletions for simplicity and consistency with the "delete-then-reinsert" reorder pattern.
+      for (var oldWidget in currentWidgets) {
+        attachedDatabase.pushToSupabase(
+          table: 'person_widgets',
+          payload: {'id': oldWidget.id},
+          isDelete: true,
+        );
+      }
+
+      // 4. Insert non-empty ones locally and push to cloud
       for (int i = 0; i < widgets.length; i++) {
         final widget = widgets[i];
         if (widget.isEmpty) continue;
 
-        await into(personWidgetsTable).insert(
+        final newId = IDGen.UUIDV7();
+        final now = DateTime.now();
+
+        await into(attachedDatabase.personWidgetsTable).insert(
           PersonWidgetsTableCompanion.insert(
-            id: IDGen.UUIDV7(),
+            id: newId,
             personID: Value(personId),
             widgetName: widget.name,
             widgetType: widget.alias,
             displayOrder: Value(i),
             configuration: Value(jsonEncode(widget.toJson())),
-            updatedAt: Value(DateTime.now()),
+            updatedAt: Value(now),
           ),
+        );
+
+        attachedDatabase.pushToSupabase(
+          table: 'person_widgets',
+          payload: {
+            'id': newId,
+            'person_id': personId,
+            'widget_name': widget.name,
+            'widget_type': widget.alias,
+            'display_order': i,
+            'configuration': jsonEncode(widget.toJson()),
+            'updated_at': now.toIso8601String(),
+            'is_active': true,
+            'role': 'admin',
+          },
         );
       }
     });
@@ -4872,10 +5045,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       ),
       category: Value(r['category'] as String?),
     );
-    await into(healthMetricsTable).insert(
-      companion,
-      mode: InsertMode.insertOrReplace,
-    );
+    await into(
+      healthMetricsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 
   Future<int> deleteMetricsForPerson(String personID) {
@@ -5971,7 +6143,9 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
   Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
     final companion = FocusSessionsTableCompanion(
       id: Value(r['id'] as String),
-      tenantID: Value(r['tenant_id'] as String? ?? '00000000-0000-0000-0000-000000000000'),
+      tenantID: Value(
+        r['tenant_id'] as String? ?? '00000000-0000-0000-0000-000000000000',
+      ),
       personID: Value(r['person_id'] as String?),
       projectID: Value(r['project_id'] as String?),
       taskID: Value(r['task_id'] as String?),
@@ -5983,12 +6157,15 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
       status: Value(r['status'] as String? ?? 'completed'),
       sessionType: Value(r['session_type'] as String? ?? 'Focus'),
       createdAt: Value(DateTime.parse(r['created_at'] as String)),
-      updatedAt: Value(r['updated_at'] != null ? DateTime.parse(r['updated_at'] as String) : DateTime.now()),
+      updatedAt: Value(
+        r['updated_at'] != null
+            ? DateTime.parse(r['updated_at'] as String)
+            : DateTime.now(),
+      ),
     );
-    await into(focusSessionsTable).insert(
-      companion,
-      mode: InsertMode.insertOrReplace,
-    );
+    await into(
+      focusSessionsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
   }
 
   Future<void> insertSession(FocusSessionsTableCompanion session) async {
@@ -6340,7 +6517,9 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   }
 
   Future<int> deleteQuest(String id) async {
-    final count = await (delete(questsTable)..where((t) => t.id.equals(id))).go();
+    final count = await (delete(
+      questsTable,
+    )..where((t) => t.id.equals(id))).go();
     if (count > 0) {
       await db.pushToSupabase(
         table: 'quests',
@@ -6413,7 +6592,9 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
         currentValue: Value(newValue),
         isCompleted: Value(isNowCompleted),
       );
-      await (update(questsTable)..where((t) => t.id.equals(id))).write(companion);
+      await (update(
+        questsTable,
+      )..where((t) => t.id.equals(id))).write(companion);
 
       await db.pushToSupabase(
         table: 'quests',
@@ -6501,6 +6682,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
       mode: InsertMode.insertOrReplace,
     );
   }
+
   Stream<List<WaterLogData>> watchDailyWaterLogs(
     String personId,
     DateTime date,
@@ -6517,7 +6699,11 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> deleteWaterLog(String id) async {
     await (delete(waterLogsTable)..where((t) => t.id.equals(id))).go();
-    await db.pushToSupabase(table: 'water_logs', payload: {'id': id}, isDelete: true);
+    await db.pushToSupabase(
+      table: 'water_logs',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   /// Sum all water log amounts (in ml) for a given person on a specific day.
@@ -6566,8 +6752,13 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> deleteSleepLog(String id) async {
     await (delete(sleepLogsTable)..where((t) => t.id.equals(id))).go();
-    await db.pushToSupabase(table: 'sleep_logs', payload: {'id': id}, isDelete: true);
+    await db.pushToSupabase(
+      table: 'sleep_logs',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
+
   Stream<List<SleepLogData>> watchSleepLogs(String personId) {
     return (select(
       sleepLogsTable,
@@ -6601,7 +6792,11 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> deleteExerciseLog(String id) async {
     await (delete(exerciseLogsTable)..where((t) => t.id.equals(id))).go();
-    await db.pushToSupabase(table: 'exercise_logs', payload: {'id': id}, isDelete: true);
+    await db.pushToSupabase(
+      table: 'exercise_logs',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   Stream<List<ExerciseLogData>> watchDailyExerciseLogs(
@@ -6769,7 +6964,11 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> deleteWeightLog(String id) async {
     await (delete(weightLogsTable)..where((t) => t.id.equals(id))).go();
-    await db.pushToSupabase(table: 'weight_logs', payload: {'id': id}, isDelete: true);
+    await db.pushToSupabase(
+      table: 'weight_logs',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 }
 
@@ -6810,10 +7009,9 @@ class AiPromptsDAO extends DatabaseAccessor<AppDatabase>
         prompt: Value(prompt),
         updatedAt: Value(DateTime.now()),
       );
-      await (update(aiPromptsTable)..where(
-            (t) => t.id.equals(existing.id),
-          ))
-          .write(companion);
+      await (update(
+        aiPromptsTable,
+      )..where((t) => t.id.equals(existing.id))).write(companion);
 
       await db.pushToSupabase(
         table: 'ai_prompts',
@@ -7070,7 +7268,11 @@ class AppDatabase extends _$AppDatabase {
     bool isDelete = false,
   }) async {
     if (supabaseSync != null) {
-      await supabaseSync!.pushData(table: table, payload: payload, isDelete: isDelete);
+      await supabaseSync!.pushData(
+        table: table,
+        payload: payload,
+        isDelete: isDelete,
+      );
       return;
     }
     debugPrint(
@@ -7136,7 +7338,10 @@ class AppDatabase extends _$AppDatabase {
   }
 
   // Helper to standardise companion mapping for DAOs
-  Map<String, dynamic> companionToMap(UpdateCompanion companion, TableInfo table) {
+  Map<String, dynamic> companionToMap(
+    UpdateCompanion companion,
+    TableInfo table,
+  ) {
     final Map<String, dynamic> payload = {};
     for (final col in table.$columns) {
       final val = companion.toColumns(true)[col.name];
@@ -7200,6 +7405,7 @@ class AppDatabase extends _$AppDatabase {
   SSHSessionsDAO get sshSessionsDAO => SSHSessionsDAO(this);
   @override
   ConfigsDAO get configsDAO => ConfigsDAO(this);
+  @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
 
   @override
@@ -7703,7 +7909,7 @@ class PortfolioSnapshotsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> insertSnapshot(PortfolioSnapshotsTableCompanion snapshot) async {
     await into(portfolioSnapshotsTable).insert(snapshot);
-    
+
     // Map to Supabase
     final Map<String, dynamic> payload = {};
     for (final col in portfolioSnapshotsTable.$columns) {

@@ -85,6 +85,7 @@ abstract class InternalWidgetDragProtocol extends InternalWidgetProtocol
   String get dateAdded => (this as _Item).dateAdded;
   @override
   String get widgetID => (this as _Item).widgetID;
+  @override
   String get color => (this as _Item).color;
 
   bool get isEmpty => name == 'Empty';

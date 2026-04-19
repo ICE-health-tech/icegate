@@ -17,7 +17,6 @@ import 'package:ice_gate/ui_layer/health_page/widgets/QuickActionButton.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
-import 'package:ice_gate/ui_layer/health_page/widgets/HabitCircularItem.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:drift/drift.dart' hide Column;
 
@@ -350,7 +349,7 @@ class _HealthPageState extends State<HealthPage>
                           final currentHR = healthBlock.todayHeartRate.value;
 
                           final currentWeight = healthBlock.latestWeight.value;
-                          print("current weight: " + currentWeight.toString());
+                          print("current weight: $currentWeight");
                           final currentWaterMl = healthBlock.todayWater.value;
 
                           // todayExerciseMinutes is the SUM of exercise_logs.duration_minutes for today.

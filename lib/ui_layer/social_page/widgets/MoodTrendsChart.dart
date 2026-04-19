@@ -27,7 +27,7 @@ class MoodTrendsChart extends StatelessWidget {
       height: 180, // Provide finite constraints for fl_chart
       padding: const EdgeInsets.fromLTRB(16, 24, 24, 8),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withValues(alpha: 0.2),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
           color: colorScheme.outlineVariant.withValues(alpha: 0.3),

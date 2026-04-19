@@ -213,7 +213,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               turns: _hudRotationController,
               child: _CoolerHUD(
                 size: 400,
-                color: EntryColors.arcticSilver.withValues(alpha: 0.1),
+                color: const Color.fromARGB(
+                  255,
+                  30,
+                  30,
+                  175,
+                ).withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -267,7 +272,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               child: Column(
                 children: [
-                  _buildLogoSection(),
+                  // _buildLogoSection(),
+                  Text(
+                    "ICE Gate",
+                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                  ),
                   const SizedBox(height: 48),
                   if (error != null) _buildError(error),
                   _buildModernField(
@@ -343,14 +352,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             builder: (context, child) {
               final double glow =
                   20 + math.sin(_logoPulseController.value * math.pi) * 15;
+              final double scale =
+                  1.0 + math.sin(_logoPulseController.value * math.pi) * 0.05;
+
               return Container(
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(
+                  12,
+                ), // Reduced for better image fit
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: EntryColors.arcticSilver.withValues(alpha: 0.05),
                   boxShadow: [
                     BoxShadow(
-                      color: EntryColors.arcticSilver.withValues(alpha: 0.2),
+                      color: EntryColors.arcticSilver.withValues(alpha: 0.15),
                       blurRadius: glow,
                       spreadRadius: 2,
                     ),
@@ -360,33 +374,14 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     width: 1,
                   ),
                 ),
-                child: AnimatedBuilder(
-                  animation: _logoPulseController,
-                  builder: (context, child) {
-                    return ShaderMask(
-                      shaderCallback: (bounds) {
-                        return LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [
-                            EntryColors.arcticSilver.withValues(alpha: 0.8),
-                            Colors.white,
-                            EntryColors.arcticSilver.withValues(alpha: 0.8),
-                          ],
-                          stops: [
-                            (_logoPulseController.value - 0.2).clamp(0.0, 1.0),
-                            _logoPulseController.value,
-                            (_logoPulseController.value + 0.2).clamp(0.0, 1.0),
-                          ],
-                        ).createShader(bounds);
-                      },
-                      child: Icon(
-                        Icons.ac_unit_rounded,
-                        size: 48,
-                        color: EntryColors.arcticSilver,
-                      ),
-                    );
-                  },
+                child: Transform.scale(
+                  scale: scale,
+                  child: Image.asset(
+                    'assets/images/app_logo.png',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.contain,
+                  ),
                 ),
               );
             },
@@ -841,12 +836,10 @@ class _SpinningRing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      child: CustomPaint(
-        painter: _RingPainter(opacity: opacity),
-      ),
+      child: CustomPaint(painter: _RingPainter(opacity: opacity)),
     );
   }
 }
@@ -861,28 +854,26 @@ class _RingPainter extends CustomPainter {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
 
-    final paint =
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 1.0
-          ..shader = LinearGradient(
-            colors: [
-              Colors.white.withValues(alpha: opacity),
-              Colors.white.withValues(alpha: opacity * 0.2),
-              Colors.white.withValues(alpha: opacity * 0.8),
-            ],
-            stops: const [0.0, 0.5, 1.0],
-          ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
+    final paint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0
+      ..shader = LinearGradient(
+        colors: [
+          Colors.white.withValues(alpha: opacity),
+          Colors.white.withValues(alpha: opacity * 0.2),
+          Colors.white.withValues(alpha: opacity * 0.8),
+        ],
+        stops: const [0.0, 0.5, 1.0],
+      ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     // Draw main ring
     canvas.drawCircle(center, radius, paint);
 
     // Draw dashed outer ring
-    final dashedPaint =
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 3.0
-          ..color = Colors.white.withValues(alpha: opacity * 1.5);
+    final dashedPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..color = Colors.white.withValues(alpha: opacity * 1.5);
 
     const int dashes = 8;
     const double dashAngle = 2 * math.pi / dashes;
@@ -898,11 +889,10 @@ class _RingPainter extends CustomPainter {
     }
 
     // Draw notches
-    final notchPaint =
-        Paint()
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 10.0
-          ..color = Colors.white.withValues(alpha: opacity * 2);
+    final notchPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 10.0
+      ..color = Colors.white.withValues(alpha: opacity * 2);
 
     const int notches = 4;
     const double notchAngle = 2 * math.pi / notches;

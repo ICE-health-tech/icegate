@@ -91,7 +91,7 @@ final GoRouter router = GoRouter(
     }
 
     if (showIntroNotifier.value == true && state.uri.path != '/intro') {
-      showIntroNotifier.value = false; 
+      showIntroNotifier.value = false;
       return '/intro';
     }
     print("Current Location: ${state.matchedLocation}");
@@ -199,6 +199,12 @@ final GoRouter router = GoRouter(
       routes: [
         GoRoute(
           path: '/',
+          // pageBuilder: (context, state) => CustomTransitionPage(
+          //   key: state.pageKey,
+          //   transitionDuration: const Duration(milliseconds: 1400),
+          //   reverseTransitionDuration: const Duration(milliseconds: 800),
+          //   child: const HomePage(),
+          // ),
           builder: (context, state) => const HomePage(),
         ),
         GoRoute(
@@ -386,9 +392,8 @@ final GoRouter router = GoRouter(
               routes: [
                 GoRoute(
                   path: 'folder',
-                  builder: (context, state) => FolderDetailsPage(
-                    directory: state.extra as Directory,
-                  ),
+                  builder: (context, state) =>
+                      FolderDetailsPage(directory: state.extra as Directory),
                 ),
               ],
             ),
@@ -401,9 +406,8 @@ final GoRouter router = GoRouter(
                 // GoRouter to throw "no routes for location".
                 GoRoute(
                   path: 'folder',
-                  builder: (context, state) => FolderDetailsPage(
-                    directory: state.extra as Directory,
-                  ),
+                  builder: (context, state) =>
+                      FolderDetailsPage(directory: state.extra as Directory),
                 ),
               ],
             ),

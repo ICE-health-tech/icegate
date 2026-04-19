@@ -5,7 +5,6 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.d
 import 'package:ice_gate/ui_layer/social_page/blocker/widgets/ChallengeDialog.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:go_router/go_router.dart';
 
 class SocialBlockerPage extends StatelessWidget {
   const SocialBlockerPage({super.key});
@@ -88,61 +87,61 @@ class SocialBlockerPage extends StatelessWidget {
               ),
             ),
           ),
-          SliverToBoxAdapter(
-            child: _buildSection(context, [
-              Watch((context) {
-                final isEnabled = blocker.isAppBlacklistEnabled.watch(context);
+          // SliverToBoxAdapter(
+          //   child: _buildSection(context, [
+          //     Watch((context) {
+          //       final isEnabled = blocker.isAppBlacklistEnabled.watch(context);
 
-                return _buildTile(
-                  context,
-                  title: "System Shield Master",
-                  subtitle: "Master switch for all app blocking rules.",
-                  icon: Icons.shield_rounded,
-                  color: orangeAccent,
-                  trailing: Switch.adaptive(
-                    value: isEnabled,
-                    activeColor: orangeAccent,
-                    onChanged: (val) async {
-                      if (!val) {
-                        // Turning OFF -> check for challenge
-                        final challenge = blocker.getRequiredChallengeForMaster(
-                          false,
-                        );
-                        if (challenge != null) {
-                          challengeBlock.generateChallenge(
-                            challenge.type,
-                            challenge.level,
-                          );
-                          ChallengeDialog.show(context, challengeBlock, () {
-                            blocker.toggleBlacklist(false);
-                          });
-                          return;
-                        }
-                      }
-                      blocker.toggleBlacklist(val);
-                    },
-                  ),
-                );
-              }),
-              _buildDivider(context),
-              _buildTile(
-                context,
-                title: "Select Blocked Apps",
-                subtitle: "Choose which apps or categories to restrict.",
-                icon: Icons.apps_rounded,
-                color: Colors.purple,
-                onTap: () {
-                  if (!blocker.isSystemAuthGranted.value) {
-                    blocker.requestAuth();
-                  } else {
-                    blocker.openAppPicker();
-                  }
-                },
-              ),
-            ]),
-          ),
+          //       return _buildTile(
+          //         context,
+          //         title: "System Shield Master",
+          //         subtitle: "Master switch for all app blocking rules.",
+          //         icon: Icons.shield_rounded,
+          //         color: orangeAccent,
+          //         trailing: Switch.adaptive(
+          //           value: isEnabled,
+          //           activeColor: orangeAccent,
+          //           onChanged: (val) async {
+          //             if (!val) {
+          //               // Turning OFF -> check for challenge
+          //               final challenge = blocker.getRequiredChallengeForMaster(
+          //                 false,
+          //               );
+          //               if (challenge != null) {
+          //                 challengeBlock.generateChallenge(
+          //                   challenge.type,
+          //                   challenge.level,
+          //                 );
+          //                 ChallengeDialog.show(context, challengeBlock, () {
+          //                   blocker.toggleBlacklist(false);
+          //                 });
+          //                 return;
+          //               }
+          //             }
+          //             blocker.toggleBlacklist(val);
+          //           },
+          //         ),
+          //       );
+          //     }),
+          //     _buildDivider(context),
+          //     _buildTile(
+          //       context,
+          //       title: "Select Blocked Apps",
+          //       subtitle: "Choose which apps or categories to restrict.",
+          //       icon: Icons.apps_rounded,
+          //       color: Colors.purple,
+          //       onTap: () {
+          //         if (!blocker.isSystemAuthGranted.value) {
+          //           blocker.requestAuth();
+          //         } else {
+          //           blocker.openAppPicker();
+          //         }
+          //       },
+          //     ),
+          //   ]),
+          // ),
 
-          const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          // const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
           // Schedules & Rules Section
           _buildHeader(
@@ -168,15 +167,22 @@ class SocialBlockerPage extends StatelessWidget {
                           style: TextStyle(fontSize: 14),
                         ),
                         SizedBox(height: 16),
-                        Text("• Math: Solve equations to verify focus.",
-                            style: TextStyle(fontSize: 13)),
-                        Text("• Typing: Type mindfulness phrases.",
-                            style: TextStyle(fontSize: 13)),
+                        Text(
+                          "• Math: Solve equations to verify focus.",
+                          style: TextStyle(fontSize: 13),
+                        ),
+                        Text(
+                          "• Typing: Type mindfulness phrases.",
+                          style: TextStyle(fontSize: 13),
+                        ),
                         SizedBox(height: 16),
                         Text(
-                            "Success rate tracks your discipline across sessions.",
-                            style: TextStyle(
-                                fontSize: 13, fontWeight: FontWeight.bold)),
+                          "Success rate tracks your discipline across sessions.",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ],
                     ),
                     actions: [
@@ -295,7 +301,8 @@ class SocialBlockerPage extends StatelessWidget {
                                     color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
-                                if (rule.challengeType != ChallengeType.none) ...[
+                                if (rule.challengeType !=
+                                    ChallengeType.none) ...[
                                   const SizedBox(height: 6),
                                   Row(
                                     children: [
@@ -408,8 +415,8 @@ class SocialBlockerPage extends StatelessWidget {
                                 onPressed: () {
                                   if (rule.challengeType !=
                                       ChallengeType.none) {
-                                    final challengeBlock =
-                                        context.read<ChallengeBlock>();
+                                    final challengeBlock = context
+                                        .read<ChallengeBlock>();
                                     challengeBlock.generateChallenge(
                                       rule.challengeType,
                                       rule.challengeLevel,
@@ -445,8 +452,9 @@ class SocialBlockerPage extends StatelessWidget {
           // Add Rule Button (if not empty)
           Watch((context) {
             final rules = blocker.rules.watch(context);
-            if (rules.isEmpty)
+            if (rules.isEmpty) {
               return const SliverToBoxAdapter(child: SizedBox.shrink());
+            }
             return SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.all(24),
@@ -465,21 +473,20 @@ class SocialBlockerPage extends StatelessWidget {
           const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
           // Notifications Section
-          _buildHeader(context, "System Notifications"),
-          SliverToBoxAdapter(
-            child: _buildSection(context, [
-              _buildTile(
-                context,
-                title: "All Notifications",
-                subtitle:
-                    "Manage reminders, live activities, and wisdom board.",
-                icon: Icons.notifications_active_rounded,
-                color: Colors.blueAccent,
-                onTap: () => context.push('/notifications'),
-              ),
-            ]),
-          ),
-
+          // _buildHeader(context, "System Notifications"),
+          // SliverToBoxAdapter(
+          //   child: _buildSection(context, [
+          //     _buildTile(
+          //       context,
+          //       title: "All Notifications",
+          //       subtitle:
+          //           "Manage reminders, live activities, and wisdom board.",
+          //       icon: Icons.notifications_active_rounded,
+          //       color: Colors.blueAccent,
+          //       onTap: () => context.push('/notifications'),
+          //     ),
+          //   ]),
+          // ),
           const SliverToBoxAdapter(child: SizedBox(height: 100)),
         ],
       ),
@@ -947,7 +954,11 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
               const SizedBox(height: 8),
               Center(
                 child: Text(
-                  "Level: ${selectedLevel == ChallengeLevel.easy ? "Short & simple" : selectedLevel == ChallengeLevel.normal ? "Balanced friction" : "Significant effort"}",
+                  "Level: ${selectedLevel == ChallengeLevel.easy
+                      ? "Short & simple"
+                      : selectedLevel == ChallengeLevel.normal
+                      ? "Balanced friction"
+                      : "Significant effort"}",
                   style: TextStyle(
                     fontSize: 9,
                     color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),

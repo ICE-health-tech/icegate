@@ -79,7 +79,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         logDate: drift.Value(DateTime.now()),
         createdAt: drift.Value(DateTime.now()),
       );
-      print("entry oke: " + entry.toString());
+      print("entry oke: $entry");
       await context.read<MindLogsDAO>().insertLog(entry);
 
       if (mounted) {
@@ -175,7 +175,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                     hintText: "Add a note (optional)",
                     hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                     filled: true,
-                    fillColor: colorScheme.surfaceVariant.withValues(
+                    fillColor: colorScheme.surfaceContainerHighest.withValues(
                       alpha: 0.3,
                     ),
                     border: OutlineInputBorder(

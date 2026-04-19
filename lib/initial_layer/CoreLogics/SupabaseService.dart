@@ -56,8 +56,9 @@ class SupabaseService {
         key,
         value,
       ) {
-        if (value is DateTime)
+        if (value is DateTime) {
           return MapEntry(key, value.toUtc().toIso8601String());
+        }
         return MapEntry(key, value);
       });
 
@@ -114,23 +115,17 @@ class SupabaseService {
           .select()
           .eq('person_id', personId);
 
-      if (response is List) {
-        debugPrint(
-          "📦 [SupabaseSync] Received ${response.length} records for $table",
-        );
-        if (response.isNotEmpty) {
-          // Delegate to specific DAO upserts based on table name
-          await _upsertToLocal(
-            table,
-            List<Map<String, dynamic>>.from(response),
-          );
-        }
-      } else {
-        debugPrint(
-          "⚠️ [SupabaseSync] No records or null response for $table (personId: $personId)",
+      debugPrint(
+        "📦 [SupabaseSync] Received ${response.length} records for $table",
+      );
+      if (response.isNotEmpty) {
+        // Delegate to specific DAO upserts based on table name
+        await _upsertToLocal(
+          table,
+          List<Map<String, dynamic>>.from(response),
         );
       }
-    } catch (e) {
+        } catch (e) {
       debugPrint("❌ [SupabaseService] Failed to sync $table: $e");
     }
   }

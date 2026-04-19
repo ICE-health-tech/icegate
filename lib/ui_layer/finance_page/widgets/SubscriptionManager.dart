@@ -4,6 +4,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';
+import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 
 class SubscriptionManager extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -49,17 +50,24 @@ class SubscriptionManager extends StatelessWidget {
                   ],
                 ),
                 GestureDetector(
-                  onTap: () => _showAddSubscriptionBottomSheet(context),
+                  onTap: () => _showSubscriptionSheet(context),
                   child: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      gradient: LinearGradient(
+                      gradient: const LinearGradient(
                         colors: [
-                          Colors.deepPurple.shade400,
-                          Colors.blueAccent.shade400,
+                          EntryColors.financeYellow,
+                          Color(0xFFFFB703),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: EntryColors.financeYellow.withOpacity(0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     child: const Icon(Icons.add_rounded, color: Colors.white),
                   ),
@@ -71,7 +79,7 @@ class SubscriptionManager extends StatelessWidget {
             _buildEmptyState(context)
           else
             SizedBox(
-              height: 140,
+              height: 150,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
@@ -126,92 +134,147 @@ class SubscriptionManager extends StatelessWidget {
     final nextBillingDay = sub.billingDay;
 
     return Container(
-      width: 120,
-      margin: const EdgeInsets.only(right: 8, bottom: 8),
+      width: 135,
+      margin: const EdgeInsets.only(right: 12, bottom: 8),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.15),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(24),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(10),
+          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+          child: InkWell(
+            onTap: () => _showSubscriptionSheet(context, subscription: sub),
+            borderRadius: BorderRadius.circular(24),
+            child: Padding(
+              padding: const EdgeInsets.all(14),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: EntryColors.financeYellow.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          _getCategoryIcon(sub.category ?? 'software'),
+                          color: EntryColors.financeYellow,
+                          size: 14,
+                        ),
                       ),
-                      child: Icon(
-                        _getCategoryIcon(sub.category ?? 'software'),
-                        color: Colors.blueAccent.shade100,
-                        size: 16,
+                      IconButton(
+                        visualDensity: VisualDensity.compact,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        onPressed: () {
+                          _showDeleteConfirmation(context, sub);
+                        },
+                        icon: Icon(
+                          Icons.more_vert_rounded,
+                          color: Colors.white.withOpacity(0.3),
+                          size: 16,
+                        ),
                       ),
-                    ),
-                    IconButton(
-                      visualDensity: VisualDensity.compact,
-                      onPressed: () => financeBlock.deleteSubscription(sub.id),
-                      icon: Icon(
-                        Icons.close_rounded,
-                        color: Colors.white.withOpacity(0.2),
-                        size: 18,
-                      ),
-                    ),
-                  ],
-                ),
-                const Spacer(),
-                Text(
-                  sub.name,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 12,
+                    ],
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  financeBlock.formatCurrency(sub.amount),
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    "DAY $nextBillingDay",
+                  const Spacer(),
+                  Text(
+                    sub.name,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.5),
-                      fontSize: 7,
+                      color: Colors.white.withOpacity(0.9),
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
+                      fontSize: 13,
+                      letterSpacing: 0.2,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    financeBlock.formatCurrency(sub.amount),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.03)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.calendar_today_rounded,
+                          size: 8,
+                          color: Colors.white.withOpacity(0.4),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          "DAY $nextBillingDay",
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 8,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  void _showDeleteConfirmation(BuildContext context, SubscriptionData sub) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1A1A24),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text("Delete Subscription", style: TextStyle(color: Colors.white)),
+        content: Text("Are you sure you want to remove ${sub.name}?", 
+          style: TextStyle(color: Colors.white.withOpacity(0.7))),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text("CANCEL"),
+          ),
+          TextButton(
+            onPressed: () {
+              financeBlock.deleteSubscription(sub.id);
+              Navigator.pop(ctx);
+            },
+            child: const Text("DELETE", style: TextStyle(color: Colors.redAccent)),
+          ),
+        ],
       ),
     );
   }
@@ -235,11 +298,22 @@ class SubscriptionManager extends StatelessWidget {
     }
   }
 
-  void _showAddSubscriptionBottomSheet(BuildContext context) {
-    final nameController = TextEditingController();
-    final amountController = TextEditingController();
-    int billingDay = DateTime.now().day;
-    String selectedCategory = 'software';
+  void _showSubscriptionSheet(BuildContext context, {SubscriptionData? subscription}) {
+    final isEdit = subscription != null;
+    final nameController = TextEditingController(text: subscription?.name ?? "");
+    
+    // Amount display logic
+    String initialAmount = "";
+    if (subscription != null) {
+      initialAmount = financeBlock.convertToDisplay(subscription.amount).toStringAsFixed(
+        financeBlock.useVnd.value ? 0 : 2,
+      );
+    }
+    
+    final amountController = TextEditingController(text: initialAmount);
+
+    int billingDay = subscription?.billingDay ?? DateTime.now().day;
+    String selectedCategory = subscription?.category ?? 'software';
 
     showModalBottomSheet(
       context: context,
@@ -247,6 +321,8 @@ class SubscriptionManager extends StatelessWidget {
       backgroundColor: Colors.transparent,
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
+          final primaryColor = Theme.of(context).colorScheme.primary;
+          
           return Container(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
@@ -260,14 +336,32 @@ class SubscriptionManager extends StatelessWidget {
                 top: Radius.circular(32),
               ),
               border: Border.all(color: Colors.white.withOpacity(0.1)),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.5),
+                  blurRadius: 40,
+                  offset: const Offset(0, -10),
+                ),
+              ],
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  "NEW SUBSCRIPTION",
-                  style: TextStyle(
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(2),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 24),
+                Text(
+                  isEdit ? "EDIT SUBSCRIPTION" : "NEW SUBSCRIPTION",
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 10,
                     fontWeight: FontWeight.w900,
@@ -277,6 +371,7 @@ class SubscriptionManager extends StatelessWidget {
                 const SizedBox(height: 24),
                 TextField(
                   controller: nameController,
+                  autofocus: !isEdit,
                   style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -291,9 +386,13 @@ class SubscriptionManager extends StatelessWidget {
                     ),
                     filled: true,
                     fillColor: Colors.white.withOpacity(0.05),
-                    border: OutlineInputBorder(
+                    enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide.none,
+                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(20),
+                      borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
                     ),
                   ),
                 ),
@@ -304,7 +403,7 @@ class SubscriptionManager extends StatelessWidget {
                       flex: 2,
                       child: TextField(
                         controller: amountController,
-                        keyboardType: TextInputType.number,
+                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -316,15 +415,20 @@ class SubscriptionManager extends StatelessWidget {
                             color: Colors.white.withOpacity(0.2),
                           ),
                           prefixText: financeBlock.useVnd.value ? '₫ ' : '\$ ',
+                          prefixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                           prefixIcon: const Icon(
                             Icons.attach_money_rounded,
                             color: Colors.white24,
                           ),
                           filled: true,
                           fillColor: Colors.white.withOpacity(0.05),
-                          border: OutlineInputBorder(
+                          enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide.none,
+                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(20),
+                            borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
                           ),
                         ),
                       ),
@@ -336,6 +440,7 @@ class SubscriptionManager extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: Colors.white.withOpacity(0.05)),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
@@ -397,14 +502,12 @@ class SubscriptionManager extends StatelessWidget {
                               ),
                               decoration: BoxDecoration(
                                 color: isSelected
-                                    ? Colors.deepPurple.shade900.withOpacity(
-                                        0.5,
-                                      )
+                                    ? primaryColor.withOpacity(0.15)
                                     : Colors.white.withOpacity(0.03),
                                 borderRadius: BorderRadius.circular(16),
                                 border: Border.all(
                                   color: isSelected
-                                      ? Colors.deepPurple.shade400
+                                      ? primaryColor.withOpacity(0.5)
                                       : Colors.white.withOpacity(0.05),
                                 ),
                               ),
@@ -430,31 +533,44 @@ class SubscriptionManager extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () async {
-                      final rawAmount = double.tryParse(amountController.text);
+                      final rawAmount = double.tryParse(amountController.text.replaceFirst(',', '.'));
                       if (nameController.text.isEmpty || rawAmount == null) return;
 
-                      final amount = financeBlock.normalizeAmount(rawAmount);
+                      final amount = financeBlock.convertToBase(rawAmount);
 
-                      await financeBlock.addSubscription(
-                        name: nameController.text,
-                        amount: amount,
-                        billingDay: billingDay,
-                        category: selectedCategory,
-                      );
+                      if (isEdit) {
+                        await financeBlock.updateSubscription(
+                          id: subscription.id,
+                          name: nameController.text,
+                          amount: amount,
+                          billingDay: billingDay,
+                          category: selectedCategory,
+                        );
+                      } else {
+                        await financeBlock.addSubscription(
+                          name: nameController.text,
+                          amount: amount,
+                          billingDay: billingDay,
+                          category: selectedCategory,
+                        );
+                      }
                       if (ctx.mounted) Navigator.pop(ctx);
                     },
                     style: FilledButton.styleFrom(
                       padding: const EdgeInsets.symmetric(vertical: 20),
-                      backgroundColor: Colors.deepPurple.shade500,
+                      backgroundColor: primaryColor,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(20),
                       ),
+                      elevation: 10,
+                      shadowColor: primaryColor.withOpacity(0.3),
                     ),
-                    child: const Text(
-                      "SAVE SUBSCRIPTION",
-                      style: TextStyle(
+                    child: Text(
+                      isEdit ? "UPDATE SUBSCRIPTION" : "SAVE SUBSCRIPTION",
+                      style: const TextStyle(
                         fontWeight: FontWeight.w900,
                         fontSize: 14,
+                        letterSpacing: 1,
                       ),
                     ),
                   ),

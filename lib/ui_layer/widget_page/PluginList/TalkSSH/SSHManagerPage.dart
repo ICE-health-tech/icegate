@@ -2,13 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHHostModel.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:provider/provider.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 
 class SSHManagerPage extends StatefulWidget {
   final String? initialPrompt;

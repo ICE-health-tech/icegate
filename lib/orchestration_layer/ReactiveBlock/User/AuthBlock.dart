@@ -249,7 +249,7 @@ class AuthBlock {
 
         if (isPasskeyRegistered && email != null) {
           print("🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...");
-          return await loginWithPasskey(context, email: email);
+          return await loginWithPasskey(context, email: email, isInternal: true);
         }
 
         // Fallback for users who haven't migrated to Passkey yet
@@ -278,19 +278,39 @@ class AuthBlock {
   }
 
   /// Passkey Login Flow (Returns true if successful)
-  Future<bool> loginWithPasskey(BuildContext context, {String? email}) async {
-    // Note: If called from authenticateWithBiometric, the outer lock is already active
-    status.value = AuthStatus.authenticating;
-    error.value = null;
-    
-    // Use provided email, fallback to remembered, or default test
-    final targetEmail = email ?? rememberedUser.value?['username'] ?? "duylong.art@gmail.com";
-    print("--------------------------------------------------");
-    print("🔑 PASSKEY AUTHENTICATION INITIATED");
-    print("📧 Target Identity: $targetEmail");
-    print("--------------------------------------------------");
+  Future<bool> loginWithPasskey(
+    BuildContext context, {
+    String? email,
+    bool isInternal = false,
+  }) async {
+    // Only apply lock if not an internal redirect (e.g. from Biometrics)
+    if (!isInternal) {
+      if (_isLocked) {
+        print("🔐 [AuthBlock] Passkey Login blocked: Another auth process in progress.");
+        return false;
+      }
+      _isLocked = true;
+    }
 
     try {
+      // Small 'Native Reset' delay to allow previous UI/Dialog context to fully clear
+      if (isInternal) {
+        await Future.delayed(const Duration(milliseconds: 500));
+      } else {
+        await Future.delayed(const Duration(milliseconds: 300));
+      }
+
+      status.value = AuthStatus.authenticating;
+      error.value = null;
+
+      // Use provided email, fallback to remembered, or default test
+      final targetEmail =
+          email ?? rememberedUser.value?['username'] ?? "duylong.art@gmail.com";
+      print("--------------------------------------------------");
+      print("🔑 PASSKEY AUTHENTICATION INITIATED");
+      print("📧 Target Identity: $targetEmail");
+      print("--------------------------------------------------");
+
       // 1. Get Challenge / Options - pass the identifier (email/username)
       // CustomAuthService now returns the full publicKey JSON options string
       final optionsJson = await _authService.getPasskeyChallenge(email: targetEmail);
@@ -344,6 +364,11 @@ class AuthBlock {
       
       status.value = AuthStatus.unauthenticated;
       return false;
+    } finally {
+      if (!isInternal) {
+        _isLocked = false;
+        print("🔐 [AuthBlock] Passkey Login Guard: Released");
+      }
     }
   }
 
