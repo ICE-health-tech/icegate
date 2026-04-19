@@ -1,10 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';
-import 'package:intl/intl.dart';
 
 class SubscriptionManager extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -72,7 +71,7 @@ class SubscriptionManager extends StatelessWidget {
             _buildEmptyState(context)
           else
             SizedBox(
-              height: 200,
+              height: 140,
               child: ListView.builder(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 scrollDirection: Axis.horizontal,
@@ -127,19 +126,19 @@ class SubscriptionManager extends StatelessWidget {
     final nextBillingDay = sub.billingDay;
 
     return Container(
-      width: 170,
-      margin: const EdgeInsets.only(right: 12, bottom: 8),
+      width: 120,
+      margin: const EdgeInsets.only(right: 8, bottom: 8),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(color: Colors.white.withOpacity(0.1)),
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(20),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
           child: Padding(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.all(12),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -147,15 +146,15 @@ class SubscriptionManager extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
                         color: Colors.white.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(10),
                       ),
                       child: Icon(
                         _getCategoryIcon(sub.category ?? 'software'),
                         color: Colors.blueAccent.shade100,
-                        size: 24,
+                        size: 16,
                       ),
                     ),
                     IconButton(
@@ -175,17 +174,17 @@ class SubscriptionManager extends StatelessWidget {
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w900,
-                    fontSize: 15,
+                    fontSize: 12,
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   financeBlock.formatCurrency(sub.amount),
                   style: const TextStyle(
                     color: Colors.white,
-                    fontSize: 20,
+                    fontSize: 16,
                     fontWeight: FontWeight.w900,
                   ),
                 ),
@@ -203,7 +202,7 @@ class SubscriptionManager extends StatelessWidget {
                     "DAY $nextBillingDay",
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.5),
-                      fontSize: 9,
+                      fontSize: 7,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 0.5,
                     ),
@@ -316,6 +315,7 @@ class SubscriptionManager extends StatelessWidget {
                           hintStyle: TextStyle(
                             color: Colors.white.withOpacity(0.2),
                           ),
+                          prefixText: financeBlock.useVnd.value ? '₫ ' : '\$ ',
                           prefixIcon: const Icon(
                             Icons.attach_money_rounded,
                             color: Colors.white24,
@@ -430,8 +430,10 @@ class SubscriptionManager extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () async {
-                      final amount = double.tryParse(amountController.text);
-                      if (nameController.text.isEmpty || amount == null) return;
+                      final rawAmount = double.tryParse(amountController.text);
+                      if (nameController.text.isEmpty || rawAmount == null) return;
+
+                      final amount = financeBlock.normalizeAmount(rawAmount);
 
                       await financeBlock.addSubscription(
                         name: nameController.text,

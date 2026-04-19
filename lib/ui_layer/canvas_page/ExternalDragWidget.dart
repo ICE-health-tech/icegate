@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:http/http.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:signals_flutter/signals_flutter.dart';
 // Required for context.read
@@ -11,7 +11,7 @@ import '../../initial_layer/FireAPI/UrlNavigate.dart';
 import '../../data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import '../../orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import '../widget_page/PluginList/IOTTracker/CompactOSMMapWidget.dart';
+// import '../widget_page/PluginList/IOTTracker/CompactOSMMapWidget.dart';
 import '../../orchestration_layer/Action/WebView/WebViewWidget.dart';
 // import '../../data_layer/Protocol/Widget/InternalWidgetDragProtocol.dart';
 // import '../../data_layer/Protocol/Widget/WidgetManagerBlock.dart';
@@ -343,10 +343,10 @@ class _BuildCard extends StatelessWidget {
             ),
           ],
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: const CompactOSMMapWidget(showControls: true),
-        ),
+        // child: ClipRRect(
+        //   borderRadius: BorderRadius.circular(16),
+        //   child: const CompactOSMMapWidget(showControls: true),
+        // ),
       ),
     );
   }

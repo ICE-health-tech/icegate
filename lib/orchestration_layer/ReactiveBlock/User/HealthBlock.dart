@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     show
         HealthLogsDAO,
         HealthMealDAO,

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'; // Import generated code
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'; // Import generated code
 import 'package:signals/signals.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';

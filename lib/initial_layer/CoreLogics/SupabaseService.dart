@@ -11,10 +11,7 @@ class SupabaseService {
   final SupabaseClient client;
   final AppDatabase database;
 
-  SupabaseService({
-    required this.client,
-    required this.database,
-  });
+  SupabaseService({required this.client, required this.database});
 
   // Columns that exist in local DB but should not be sent to Supabase
   final Set<String> _globalLocalOnlyColumns = {
@@ -42,26 +39,38 @@ class SupabaseService {
     required Map<String, dynamic> payload,
     bool isDelete = false,
   }) async {
-    debugPrint("📡 [SupabaseService] pushData for $table (isDelete: $isDelete)");
+    debugPrint(
+      "📡 [SupabaseService] pushData for $table (isDelete: $isDelete)",
+    );
     try {
       final idValue = payload['id']?.toString() ?? "";
       if (_isGuest(idValue, payload)) {
-        debugPrint("⏭️ [SupabaseService] Skipping push for guest data in $table (ID: $idValue)");
+        debugPrint(
+          "⏭️ [SupabaseService] Skipping push for guest data in $table (ID: $idValue)",
+        );
         return;
       }
 
       final transformed = _transformOpData(table, payload);
-      final Map<String, dynamic> encodablePayload = Map.from(transformed).map((key, value) {
-        if (value is DateTime) return MapEntry(key, value.toUtc().toIso8601String());
+      final Map<String, dynamic> encodablePayload = Map.from(transformed).map((
+        key,
+        value,
+      ) {
+        if (value is DateTime)
+          return MapEntry(key, value.toUtc().toIso8601String());
         return MapEntry(key, value);
       });
 
       if (isDelete) {
-        debugPrint("🗑️ [SupabaseService] Deleting ${payload['id']} from $table");
+        debugPrint(
+          "🗑️ [SupabaseService] Deleting ${payload['id']} from $table",
+        );
         await client.from(table).delete().eq('id', payload['id']);
       } else {
-        debugPrint("📤 [SupabaseService] Pushing to $table: ${transformed['id']}");
-        
+        debugPrint(
+          "📤 [SupabaseService] Pushing to $table: ${transformed['id']}",
+        );
+
         // Use upsert to handle both insert and update scenarios
         await client.from(table).upsert(encodablePayload);
       }
@@ -75,7 +84,7 @@ class SupabaseService {
     if (personId.isEmpty || personId == DataSeeder.guestPersonId) return;
 
     debugPrint("🔄 [SupabaseService] Starting full sync down for $personId...");
-    
+
     final tablesToSync = [
       'mind_logs',
       'projects',
@@ -85,24 +94,13 @@ class SupabaseService {
       'scores',
       'financial_accounts',
       'assets',
-      'financial_transactions',
-      'subscriptions',
-      'quests',
-      'ai_prompts',
-      'project_notes',
-      'water_logs',
-      'sleep_logs',
-      'exercise_logs',
-      'weight_logs',
-      'internal_widgets',
-      'external_widgets',
-      'person_widgets',
+      'transactions',
     ];
 
     for (final table in tablesToSync) {
       await syncTableDown(table, personId);
     }
-    
+
     debugPrint("✅ [SupabaseService] Full sync down completed.");
   }
 
@@ -110,17 +108,27 @@ class SupabaseService {
   Future<void> syncTableDown(String table, String personId) async {
     try {
       debugPrint("📥 [SupabaseService] Syncing $table down...");
-      
-      final response = await client.from(table).select().eq('person_id', personId);
-      
+
+      final response = await client
+          .from(table)
+          .select()
+          .eq('person_id', personId);
+
       if (response is List) {
-        debugPrint("📦 [SupabaseSync] Received ${response.length} records for $table");
+        debugPrint(
+          "📦 [SupabaseSync] Received ${response.length} records for $table",
+        );
         if (response.isNotEmpty) {
           // Delegate to specific DAO upserts based on table name
-          await _upsertToLocal(table, List<Map<String, dynamic>>.from(response));
+          await _upsertToLocal(
+            table,
+            List<Map<String, dynamic>>.from(response),
+          );
         }
       } else {
-        debugPrint("⚠️ [SupabaseSync] No records or null response for $table (personId: $personId)");
+        debugPrint(
+          "⚠️ [SupabaseSync] No records or null response for $table (personId: $personId)",
+        );
       }
     } catch (e) {
       debugPrint("❌ [SupabaseService] Failed to sync $table: $e");
@@ -128,74 +136,48 @@ class SupabaseService {
   }
 
   /// Map Supabase records back to Drift companions and upsert.
-  Future<void> _upsertToLocal(String table, List<Map<String, dynamic>> records) async {
+  Future<void> _upsertToLocal(
+    String table,
+    List<Map<String, dynamic>> records,
+  ) async {
     switch (table) {
       case 'mind_logs':
-        for (final r in records) await database.mindLogsDAO.upsertFromSupabase(r);
+        for (final r in records) {
+          await database.mindLogsDAO.upsertFromSupabase(r);
+        }
         break;
       case 'projects':
-        for (final r in records) await database.projectsDAO.upsertFromSupabase(r);
+        for (final r in records) {
+          await database.projectsDAO.upsertFromSupabase(r);
+        }
         break;
       case 'focus_sessions':
-        for (final r in records) await database.focusSessionsDAO.upsertFromSupabase(r);
+        for (final r in records) {
+          await database.focusSessionsDAO.upsertFromSupabase(r);
+        }
         break;
       case 'health_metrics':
-        for (final r in records) await database.healthMetricsDAO.upsertFromSupabase(r);
+        for (final r in records) {
+          await database.healthMetricsDAO.upsertFromSupabase(r);
+        }
         break;
       case 'hourly_activity_log':
-        for (final r in records) await database.hourlyActivityLogDAO.upsertFromSupabase(r);
+        for (final r in records) {
+          await database.hourlyActivityLogDAO.upsertFromSupabase(r);
+        }
         break;
-      case 'scores':
-        for (final r in records) await database.scoreDAO.upsertFromSupabase(r);
-        break;
-      case 'financial_accounts':
-        for (final r in records) await database.financeDAO.upsertFromSupabaseAccount(r);
-        break;
-      case 'assets':
-        for (final r in records) await database.financeDAO.upsertFromSupabaseAsset(r);
-        break;
-      case 'financial_transactions':
-        for (final r in records) await database.financeDAO.upsertFromSupabaseTransaction(r);
-        break;
-      case 'subscriptions':
-        for (final r in records) await database.financeDAO.upsertFromSupabaseSubscription(r);
-        break;
-      case 'quests':
-        for (final r in records) await database.questDAO.upsertFromSupabase(r);
-        break;
-      case 'ai_prompts':
-        for (final r in records) await database.aiPromptsDAO.upsertFromSupabase(r);
-        break;
-      case 'project_notes':
-        for (final r in records) await database.projectNoteDAO.upsertFromSupabase(r);
-        break;
-      case 'water_logs':
-        for (final r in records) await database.healthLogsDAO.upsertFromSupabaseWater(r);
-        break;
-      case 'sleep_logs':
-        for (final r in records) await database.healthLogsDAO.upsertFromSupabaseSleep(r);
-        break;
-      case 'exercise_logs':
-        for (final r in records) await database.healthLogsDAO.upsertFromSupabaseExercise(r);
-        break;
-      case 'weight_logs':
-        for (final r in records) await database.healthLogsDAO.upsertFromSupabaseWeight(r);
-        break;
-      case 'internal_widgets':
-        for (final r in records) await database.internalWidgetsDAO.upsertFromSupabase(r);
-        break;
-      case 'external_widgets':
-        for (final r in records) await database.externalWidgetsDAO.upsertFromSupabase(r);
-        break;
-      case 'person_widgets':
-        for (final r in records) await database.widgetDAO.upsertFromSupabase(r);
-        break;
+      // Add more cases as needed
       default:
-        debugPrint("⚠️ [SupabaseService] No local upsert logic defined for table: $table");
+        debugPrint(
+          "⚠️ [SupabaseService] No local upsert logic defined for table: $table",
+        );
     }
   }
 
-  Map<String, dynamic> _transformOpData(String table, Map<String, dynamic> data) {
+  Map<String, dynamic> _transformOpData(
+    String table,
+    Map<String, dynamic> data,
+  ) {
     final result = Map<String, dynamic>.from(data);
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];

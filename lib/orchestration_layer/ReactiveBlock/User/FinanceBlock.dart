@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
@@ -494,6 +494,14 @@ class FinanceBlock {
     decimalDigits: 0,
     locale: 'vi_VN',
   );
+
+  /// Normalizes an amount from the current UI currency (USD or VND) to the base USD currency.
+  double normalizeAmount(double amount) {
+    if (useVnd.value) {
+      return amount / USD_TO_VND_RATE;
+    }
+    return amount;
+  }
 
   String formatCurrency(double amount) {
     if (useVnd.value) {

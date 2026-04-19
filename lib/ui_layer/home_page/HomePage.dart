@@ -18,7 +18,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';

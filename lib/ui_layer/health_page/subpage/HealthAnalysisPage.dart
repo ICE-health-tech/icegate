@@ -11,7 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/HourlyActivityPage.dart';
 
 class HealthAnalysisPage extends StatelessWidget {

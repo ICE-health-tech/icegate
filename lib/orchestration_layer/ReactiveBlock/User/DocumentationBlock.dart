@@ -41,12 +41,29 @@ class DocumentationBlock {
   final notionSecret = signal<String?>(null); // Notion Phase 4
   final obsidianFolderName = signal<String?>(null); // Custom Obsidian Folder Name
   
+  // Connection State
+  final isGoogleDriveConnected = signal<bool>(false);
+  
+  // Stats
+  final int totalServicesAvailable = 4;
+  late final activeConnectionsCount = computed(() {
+    int count = 1; // Internal Notes is always active
+    if (isGoogleDriveConnected.value) count++;
+    if (notionSecret.value != null) count++;
+    // Slack is placeholder for now
+    return count;
+  });
+
   // Editor State
   final activeEditingFile = signal<File?>(null);
   final selectedDirectory = signal<Directory?>(null);
 
   StreamSubscription<WatchEvent>? _watcherSubscription;
   Directory? _docDir;
+  Directory? _googleDriveDir;
+
+  Directory? get rootDir => _docDir;
+  Directory? get googleDriveRootDir => _googleDriveDir;
 
   DocumentationBlock() {
     _init();
@@ -67,6 +84,11 @@ class DocumentationBlock {
 
     if (!await _docDir!.exists()) {
       await _docDir!.create(recursive: true);
+    }
+
+    _googleDriveDir = Directory(p.join(_docDir!.path, 'GoogleDrive'));
+    if (!await _googleDriveDir!.exists()) {
+      await _googleDriveDir!.create(recursive: true);
     }
 
     _loadFiles();
@@ -570,8 +592,10 @@ class DocumentationBlock {
       if (!success) {
         logActivity("Auth Failed", details: "Google Drive sign-in unsuccessful", isError: true);
         syncStatus.value = "❌ Sign-in failed";
+        isGoogleDriveConnected.value = false;
         return;
       }
+      isGoogleDriveConnected.value = true;
 
       final driveApi = driveService.driveApi!;
 
@@ -604,7 +628,7 @@ class DocumentationBlock {
       if (rootFolderId == null) throw Exception("Could not resolve Google Drive folder.");
 
       // 2. Start Recursive Sync
-      await _syncRecursive(rootFolderId, _docDir!.path);
+      await _syncRecursive(rootFolderId, _googleDriveDir!.path);
 
       logActivity("Sync Complete", details: "Two-way mirroring finished successfully");
       systemHealth.value = 100.0;
@@ -733,7 +757,7 @@ class DocumentationBlock {
       final rootFolderId = folderList.files!.first.id!;
 
       // 2. Start Recursive Download in a dedicated sub-folder
-      final targetPath = p.join(_docDir!.path, targetLocalName);
+      final targetPath = p.join(_googleDriveDir!.path, targetLocalName);
       await _downloadRecursive(rootFolderId, targetPath);
 
       logActivity("Fetch Success", details: "Downloaded folder '$targetRemoteName'");
@@ -809,55 +833,71 @@ class DocumentationBlock {
       includeItemsFromAllDrives: true,
     );
     final List<drive.File> remoteItems = remoteFilesList.files ?? [];
+    
+    // 1.1 Fetch Trashed Items (to detect deletions)
+    final trashedFilesList = await driveApi.files.list(
+      q: "'$remoteParentId' in parents and trashed = true",
+      $fields: "files(id, name)",
+      supportsAllDrives: true,
+      includeItemsFromAllDrives: true,
+    );
+    final List<drive.File> trashedItems = trashedFilesList.files ?? [];
+
+    syncStatus.value = "Scanning ${p.basename(localDirPath)}... (${remoteItems.length} cloud items)";
+    print("DEBUG: Syncing $localDirPath. Remote count: ${remoteItems.length}, Trashed count: ${trashedItems.length}");
 
     // 2. Local Inventory
     final localItems = localDir.listSync();
 
     // --- Part A: Sync Remote items to Local ---
     for (var remoteItem in remoteItems) {
-      final name = remoteItem.name!;
-      if (_shouldIgnore(name)) continue;
+      try {
+        final name = remoteItem.name!;
+        if (_shouldIgnore(name)) continue;
 
-      final localPath = p.join(localDirPath, name);
-      
-      if (remoteItem.mimeType == 'application/vnd.google-apps.folder') {
-        // Enforce local folder existence and recurse
-        final subDir = Directory(localPath);
-        if (!await subDir.exists()) await subDir.create(recursive: true);
-        await _syncRecursive(remoteItem.id!, localPath);
-      } else {
-        // It's a file - Robust Sync
-        final localFile = File(localPath);
-        bool shouldDownload = false;
+        final localPath = p.join(localDirPath, name);
         
-        if (!await localFile.exists()) {
-          shouldDownload = true;
-        } else if (remoteItem.modifiedTime != null) {
-          final localModified = (await localFile.lastModified()).toUtc();
-          final remoteModified = remoteItem.modifiedTime!.toUtc();
+        if (remoteItem.mimeType == 'application/vnd.google-apps.folder') {
+          // Enforce local folder existence and recurse
+          final subDir = Directory(localPath);
+          if (!await subDir.exists()) await subDir.create(recursive: true);
+          await _syncRecursive(remoteItem.id!, localPath);
+        } else {
+          // It's a file - Robust Sync
+          final localFile = File(localPath);
+          bool shouldDownload = false;
           
-          // Download only if remote is significantly newer (2s buffer for FAT/SMB/Clock skew)
-          if (remoteModified.isAfter(localModified.add(const Duration(seconds: 2)))) {
+          if (!await localFile.exists()) {
             shouldDownload = true;
-          }
-        }
-
-        if (shouldDownload) {
-          try {
-            syncStatus.value = "Downloading $name...";
-            final media = await driveApi.files.get(remoteItem.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
-            final fileSink = localFile.openWrite();
-            await fileSink.addStream(media.stream);
-            await fileSink.close();
+          } else if (remoteItem.modifiedTime != null) {
+            final localModified = (await localFile.lastModified()).toUtc();
+            final remoteModified = remoteItem.modifiedTime!.toUtc();
             
-            // Re-stamp local file to match remote modified time to prevent immediate re-upload
-            if (remoteItem.modifiedTime != null) {
-              await localFile.setLastModified(remoteItem.modifiedTime!.toLocal());
+            // Download only if remote is significantly newer (2s buffer for FAT/SMB/Clock skew)
+            if (remoteModified.isAfter(localModified.add(const Duration(seconds: 2)))) {
+              shouldDownload = true;
             }
-          } catch (e) {
-            print("Failed to download $name: $e");
+          }
+
+          if (shouldDownload) {
+            try {
+              syncStatus.value = "Downloading $name...";
+              final media = await driveApi.files.get(remoteItem.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
+              final fileSink = localFile.openWrite();
+              await fileSink.addStream(media.stream);
+              await fileSink.close();
+              
+              // Re-stamp local file to match remote modified time to prevent immediate re-upload
+              if (remoteItem.modifiedTime != null) {
+                await localFile.setLastModified(remoteItem.modifiedTime!.toLocal());
+              }
+            } catch (e) {
+              print("Failed to download $name: $e");
+            }
           }
         }
+      } catch (e) {
+        print("Error processing remote item ${remoteItem.name}: $e");
       }
     }
 
@@ -866,26 +906,44 @@ class DocumentationBlock {
       final name = p.basename(entity.path);
       if (_shouldIgnore(name)) continue;
 
-      // Check if this local item exists on remote
+      // Check if this local item exists on remote (Active OR Trash)
       final matchedRemote = remoteItems.firstWhere((f) => f.name == name, orElse: () => drive.File());
+      final matchedTrashed = trashedItems.firstWhere((f) => f.name == name, orElse: () => drive.File());
 
       if (entity is Directory) {
-        // If directory doesn't exist on remote at all, create it and recurse
-        if (matchedRemote.id == null) {
-          try {
-            syncStatus.value = "Creating Cloud Folder $name...";
-            final newFolder = drive.File()
-              ..name = name
-              ..mimeType = 'application/vnd.google-apps.folder'
-              ..parents = [remoteParentId];
-            final created = await driveApi.files.create(newFolder);
-            await _syncRecursive(created.id!, entity.path);
-          } catch (e) {
-            print("Failed to create remote folder $name: $e");
+        try {
+          // MIRROR DELETE: If missing from both Active and Trash, or explicitly in Trash
+          if (matchedTrashed.id != null || (matchedRemote.id == null)) {
+            syncStatus.value = "🗑️ Cloud deletion detected: $name, syncing local...";
+            await entity.delete(recursive: true);
+            continue; 
           }
+
+          // If directory doesn't exist on remote at all, create it and recurse
+          if (matchedRemote.id == null) {
+            try {
+              syncStatus.value = "Creating Cloud Folder $name...";
+              final newFolder = drive.File()
+                ..name = name
+                ..mimeType = 'application/vnd.google-apps.folder'
+                ..parents = [remoteParentId];
+              final created = await driveApi.files.create(newFolder);
+              await _syncRecursive(created.id!, entity.path);
+            } catch (e) {
+              print("Failed to create remote folder $name: $e");
+            }
+          }
+        } catch (e) {
+          print("Error processing local directory $name: $e");
         }
-        // Subfolders that already exist on remote were already recursed in Part A
       } else if (entity is File) {
+        if (matchedTrashed.id != null || (matchedRemote.id == null)) {
+          // Synchronize deletion
+          syncStatus.value = "🗑️ Cloud deletion detected: $name, syncing local...";
+          await entity.delete();
+          continue;
+        }
+
         final localModified = (await entity.lastModified()).toUtc();
         bool shouldUpload = false;
 

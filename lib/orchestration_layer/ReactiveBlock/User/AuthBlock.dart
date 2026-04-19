@@ -6,7 +6,7 @@ import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/BiometricAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';

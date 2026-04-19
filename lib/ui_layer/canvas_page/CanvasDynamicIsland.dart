@@ -143,7 +143,7 @@ class CanvasDynamicIsland extends StatelessWidget {
           ? 320
           : (currentRoute.startsWith('/widgets/ssh')
                 ? 340
-                : (isSyncing
+                : ((isSyncing || syncStatus != null)
                       ? 320
                       : (isFocusRunning ? 280 : (useTmux ? 260 : 240))));
       final double width = (targetWidth * scalingFactor).clamp(
@@ -246,10 +246,11 @@ class CanvasDynamicIsland extends StatelessWidget {
                         )
                       : useTmux
                       ? _buildTmuxStatus(context, scalingFactor, colorScheme)
-                      : isSyncing
+                      : (isSyncing || syncStatus != null)
                       ? _buildSyncStatus(
                           context,
                           syncStatus,
+                          isSyncing,
                           scalingFactor,
                           colorScheme,
                         )
@@ -525,6 +526,7 @@ class CanvasDynamicIsland extends StatelessWidget {
   Widget _buildSyncStatus(
     BuildContext context,
     String? status,
+    bool isSyncing,
     double scalingFactor,
     ColorScheme colorScheme,
   ) {
@@ -532,10 +534,17 @@ class CanvasDynamicIsland extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         const SizedBox(width: 8),
-        _RotatingSyncIcon(
-          scalingFactor: scalingFactor,
-          colorScheme: colorScheme,
-        ),
+        if (isSyncing)
+          _RotatingSyncIcon(
+            scalingFactor: scalingFactor,
+            colorScheme: colorScheme,
+          )
+        else
+          Icon(
+            Icons.check_circle_rounded,
+            size: 16 * scalingFactor,
+            color: colorScheme.primary,
+          ),
         const SizedBox(width: 10),
         Flexible(
           child: AutoSizeText(

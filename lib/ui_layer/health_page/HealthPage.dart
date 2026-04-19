@@ -8,7 +8,7 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthMetricCard.dart';
 import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';

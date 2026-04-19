@@ -1,5 +1,5 @@
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class ConfigBlock {
   late ConfigsDAO _dao;

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationInboxPage.dart';

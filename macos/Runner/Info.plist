@@ -18,54 +18,6 @@
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
 	<string>$(FLUTTER_BUILD_NAME)</string>
-	<key>CFBundleVersion</key>
-	<string>$(FLUTTER_BUILD_NUMBER)</string>
-	<key>LSMinimumSystemVersion</key>
-	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-	<key>NSHumanReadableCopyright</key>
-	<string>$(PRODUCT_COPYRIGHT)</string>
-	<key>NSMainNibFile</key>
-	<string>MainMenu</string>
-	<key>NSCameraUsageDescription</key>
-	<string>We need camera access to let you take photos of your food for calorie tracking</string>
-	<key>NSPhotoLibraryUsageDescription</key>
-	<string>We need photo library access to let you select food photos for calorie tracking</string>
-	<key>NSPrincipalClass</key>
-	<string>NSApplication</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to track your running distance and movement quests in the real world.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location to track your running distance and movement quests in the real world.</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>io.supabase.icegate</string>
-			</array>
-		</dict>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>https</string>
-		<string>http</string>
-	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_ssh._tcp</string>
-	</array>
-	<key>GIDClientID</key>
-	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>
@@ -78,5 +30,42 @@
 			</array>
 		</dict>
 	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
+	<key>LSMinimumSystemVersion</key>
+	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ssh._tcp</string>
+	</array>
+	<key>NSCameraUsageDescription</key>
+	<string>We need camera access to let you take photos of your food for calorie tracking</string>
+	<key>NSHumanReadableCopyright</key>
+	<string>$(PRODUCT_COPYRIGHT)</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>We need your location to track your running distance and movement quests in the real world.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>We need your location to track your running distance and movement quests in the real world.</string>
+	<key>NSMainNibFile</key>
+	<string>MainMenu</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>We need photo library access to let you select food photos for calorie tracking</string>
+	<key>NSPrincipalClass</key>
+	<string>NSApplication</string>
 </dict>
 </plist>

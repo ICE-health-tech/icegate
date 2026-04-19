@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:ice_gate/initial_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:provider/provider.dart';

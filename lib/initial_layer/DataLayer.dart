@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
     as DatabaseAgent;
@@ -34,9 +34,6 @@ import 'package:ice_gate/data_layer/DataSources/cloud_database/powersync_connect
 import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_service/audio_service.dart';
-import 'package:powersync/powersync.dart' hide Column;
-import 'package:ice_gate/data_layer/DataSources/cloud_database/powersync_schema.dart'
-    as ps_schema;
 import 'package:path_provider/path_provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
@@ -596,6 +593,14 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       cleanup();
     }
     _effectCleanups.clear();
+
+    // Dispose all blocks to stop background activities
+    documentationBlock.dispose();
+    focusBlock.dispose();
+    musicBlock.dispose();
+    remoteControllerBlock.dispose();
+    socialBlockerBlock.dispose();
+    
     super.dispose();
   }
 
