@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -20,7 +21,13 @@ import 'package:provider/provider.dart';
 class CanvasDynamicIsland extends StatelessWidget {
   final int? socialIndex;
   final int? documentIndex;
-  const CanvasDynamicIsland({super.key, this.socialIndex, this.documentIndex});
+  final PersonBlock personBlock;
+  const CanvasDynamicIsland({
+    super.key,
+    this.socialIndex,
+    this.documentIndex,
+    required this.personBlock,
+  });
 
   String _getTitle(
     BuildContext context,
@@ -33,9 +40,31 @@ class CanvasDynamicIsland extends StatelessWidget {
     if (l10n == null) return "ICE GATE";
 
     if (path == '/social/blocker') return "APP BLOCKER";
-    if (path == '/') return "ICE GATE";
+    // if (path == '/') return "ICE GATE";
     if (path.startsWith('/canvas')) return "CANVAS";
     if (path.startsWith('/profile')) return "ANALYSIS";
+    if (path == '/')
+      return "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}";
+    //  TextButton(
+    //                     child: Text(
+    //                       "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
+    //                       style: TextStyle(
+    //                         fontWeight: FontWeight.w900,
+    //                         fontSize: 20,
+    //                         color: colorScheme.onSurface,
+    //                         shadows: [
+    //                           Shadow(
+    //                             color: colorScheme.shadow.withOpacity(0.3),
+    //                             blurRadius: 4,
+    //                             offset: const Offset(0, 2),
+    //                           ),
+    //                         ],
+    //                       ),
+    //                     ),
+    //                     onPressed: () {
+    //                       context.go("/personal-info");
+    //                     },
+    //                   ),
 
     if (path.startsWith('/social')) {
       final index = socialIndex ?? socialBlock.activeTab.value;
@@ -293,8 +322,8 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ),
                           child: Icon(
                             Icons.timer_outlined,
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 
-                              0.8,
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.8,
                             ),
                             size: 20 * scalingFactor,
                           ),
@@ -316,8 +345,8 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ),
                           child: Icon(
                             Icons.settings_rounded,
-                            color: colorScheme.onSurfaceVariant.withValues(alpha: 
-                              0.8,
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.8,
                             ),
                             size: 20 * scalingFactor,
                           ),
@@ -621,6 +650,9 @@ class CanvasDynamicIsland extends StatelessWidget {
           HapticFeedback.mediumImpact();
           final currentIdx = socialBlock.activeTab.value;
           socialBlock.activeTab.value = (currentIdx + 1) % 3;
+        } else if (currentRoute == '/') {
+          HapticFeedback.mediumImpact();
+          context.go("/personal-info");
         }
       },
       child: AutoSizeText(
@@ -639,9 +671,9 @@ class CanvasDynamicIsland extends StatelessWidget {
         ),
         style: TextStyle(
           color: colorScheme.onSurface,
-          fontSize: 11 * scalingFactor,
+          fontSize: 12 * scalingFactor,
           fontWeight: FontWeight.w900,
-          letterSpacing: 1.2 * scalingFactor,
+          letterSpacing: 1.1 * scalingFactor,
         ),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,

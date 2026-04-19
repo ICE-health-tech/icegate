@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodConsumePage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/FoodInputPage.dart';
@@ -18,6 +19,7 @@ import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/ui_layer/health_page/subpage/WeightInputPage.dart';
+import 'package:provider/provider.dart';
 
 class MainShell extends StatelessWidget {
   final Widget child;
@@ -194,7 +196,9 @@ class MainShell extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Align(
                       alignment: Alignment.centerLeft,
-                      child: CanvasDynamicIsland(),
+                      child: CanvasDynamicIsland(
+                        personBlock: context.watch<PersonBlock>(),
+                      ),
                     ),
                   ),
                 ),

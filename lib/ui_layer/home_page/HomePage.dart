@@ -361,28 +361,7 @@ class _HomePageState extends State<HomePage> {
                       // --- SECTION: USER HEADER (Row 2) ---
                       Row(
                         mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          TextButton(
-                            child: Text(
-                              "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}",
-                              style: TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 20,
-                                color: colorScheme.onSurface,
-                                shadows: [
-                                  Shadow(
-                                    color: colorScheme.shadow.withOpacity(0.3),
-                                    blurRadius: 4,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            onPressed: () {
-                              context.go("/personal-info");
-                            },
-                          ),
-                        ],
+                        children: [],
                       ),
                       const SizedBox(height: 10),
                       // // --- SECTION: GAMIFIED HEADER ---
