@@ -647,6 +647,40 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get err_invalid_credentials =>
+      'Incorrect email or password. Please try again.';
+
+  @override
+  String get err_email_not_confirmed =>
+      'Please check your inbox to verify your email.';
+
+  @override
+  String get err_user_not_found =>
+      'We couldn\'t find an account with that email.';
+
+  @override
+  String get err_network_fail =>
+      'Unable to connect to the server. Check your internet.';
+
+  @override
+  String get err_passkey_canceled => 'Passkey login was canceled.';
+
+  @override
+  String get err_passkey_failed => 'Security check failed. Please try again.';
+
+  @override
+  String get err_biometric_unsupported =>
+      'Biometric login is not available on this device.';
+
+  @override
+  String get err_biometric_disabled =>
+      'Biometric login is not enabled for this account.';
+
+  @override
+  String get err_too_many_attempts =>
+      'Too many failed attempts. Please try again later.';
+
+  @override
   String get msg_enter_credentials => 'Please enter your credentials';
 
   @override
@@ -763,6 +797,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get change_password => 'Change Password';
 
   @override
+  String get btn_enter => 'ENTER';
+
+  @override
+  String google_signin_error(String error) {
+    return 'Google Sign-In Error: $error';
+  }
+
+  @override
   String get personal_info_title => 'Personal Info';
 
   @override
@@ -824,6 +866,40 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get logout => 'Logout';
+
+  @override
+  String get identity_evolution => 'IDENTITY EVOLUTION';
+
+  @override
+  String get identity_evolution_desc =>
+      'Level 1: Google. Set a local password to upgrade your security tier.';
+
+  @override
+  String get btn_set => 'SET';
+
+  @override
+  String get security_accuracy => 'Security & Accuracy';
+
+  @override
+  String get passkey_settings => 'Passkey Settings';
+
+  @override
+  String get fast_track_active => 'Fast-Track Active (Secure)';
+
+  @override
+  String get upgrade_biometric => 'Upgrade to Biometric Fast-Track';
+
+  @override
+  String get hint_enter_your => 'Enter your...';
+
+  @override
+  String get user_default => 'User';
+
+  @override
+  String get tooltip_save => 'Save';
+
+  @override
+  String get tooltip_edit => 'Edit';
 
   @override
   String get msg_err_not_authenticated => 'Not authenticated';
@@ -1579,6 +1655,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get project_note_no_content => 'No content';
 
   @override
+  String get focus_select_project => 'TAP TO SELECT PROJECT';
+
+  @override
+  String get focus_select_task => 'SELECT TASK';
+
+  @override
+  String focus_active_exercise(String type) {
+    return 'ACTIVE EXERCISE: $type';
+  }
+
+  @override
+  String get focus_flow_active => 'FLOW STATE ACTIVE';
+
+  @override
+  String get focus_breathing => 'BREATHING';
+
+  @override
+  String get focus_fetching_audio => 'FETCHING AUDIO...';
+
+  @override
+  String get entry_scanning => 'SCANNING';
+
+  @override
+  String get entry_assembling => 'ASSEMBLING';
+
+  @override
   String get calorie_tracker => 'Calorie Tracker';
 
   @override
@@ -2109,4 +2211,42 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get database_schema_id => 'DATABASE SCHEMA ID';
+
+  @override
+  String get add_widget => 'Add Widget';
+
+  @override
+  String get app_shortcut => 'App Shortcut';
+
+  @override
+  String get web_widget => 'Web Widget';
+
+  @override
+  String get please_select_app_page => 'Please select an app page';
+
+  @override
+  String get widget_added_success => 'Widget added successfully';
+
+  @override
+  String error_adding_widget(String error) {
+    return 'Error adding widget: $error';
+  }
+
+  @override
+  String get please_select_plugin => 'Please select a plugin';
+
+  @override
+  String get please_fill_all_fields => 'Please fill in all fields';
+
+  @override
+  String get widget_name_hint => 'Widget Name (e.g. Facebook)';
+
+  @override
+  String get url_hint => 'URL (e.g. facebook.com)';
+
+  @override
+  String get plugins => 'Plugins';
+
+  @override
+  String get custom_url => 'Custom URL';
 }

@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'Database.dart';
+part of 'database.dart';
 
 // ignore_for_file: type=lint
 mixin _$InternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -2429,6 +2429,18 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _extensionMeta = const VerificationMeta(
+    'extension',
+  );
+  @override
+  late final GeneratedColumn<String> extension = GeneratedColumn<String>(
+    'extension',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('.md'),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -2442,6 +2454,7 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     projectID,
     category,
     mood,
+    extension,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -2512,6 +2525,12 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         mood.isAcceptableOrUnknown(data['mood']!, _moodMeta),
       );
     }
+    if (data.containsKey('extension')) {
+      context.handle(
+        _extensionMeta,
+        extension.isAcceptableOrUnknown(data['extension']!, _extensionMeta),
+      );
+    }
     return context;
   }
 
@@ -2569,6 +2588,10 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         DriftSqlType.string,
         data['${effectivePrefix}mood'],
       ),
+      extension: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}extension'],
+      )!,
     );
   }
 
@@ -2595,6 +2618,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
   final String? projectID;
   final String category;
   final String? mood;
+  final String extension;
   const ProjectNoteData({
     required this.id,
     this.tenantID,
@@ -2607,6 +2631,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     this.projectID,
     required this.category,
     this.mood,
+    required this.extension,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -2640,6 +2665,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     if (!nullToAbsent || mood != null) {
       map['mood'] = Variable<String>(mood);
     }
+    map['extension'] = Variable<String>(extension);
     return map;
   }
 
@@ -2664,6 +2690,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           : Value(projectID),
       category: Value(category),
       mood: mood == null && nullToAbsent ? const Value.absent() : Value(mood),
+      extension: Value(extension),
     );
   }
 
@@ -2684,6 +2711,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       projectID: serializer.fromJson<String?>(json['projectID']),
       category: serializer.fromJson<String>(json['category']),
       mood: serializer.fromJson<String?>(json['mood']),
+      extension: serializer.fromJson<String>(json['extension']),
     );
   }
   @override
@@ -2701,6 +2729,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       'projectID': serializer.toJson<String?>(projectID),
       'category': serializer.toJson<String>(category),
       'mood': serializer.toJson<String?>(mood),
+      'extension': serializer.toJson<String>(extension),
     };
   }
 
@@ -2716,6 +2745,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     Value<String?> projectID = const Value.absent(),
     String? category,
     Value<String?> mood = const Value.absent(),
+    String? extension,
   }) => ProjectNoteData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -2728,6 +2758,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     projectID: projectID.present ? projectID.value : this.projectID,
     category: category ?? this.category,
     mood: mood.present ? mood.value : this.mood,
+    extension: extension ?? this.extension,
   );
   ProjectNoteData copyWithCompanion(ProjectNotesTableCompanion data) {
     return ProjectNoteData(
@@ -2742,6 +2773,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       projectID: data.projectID.present ? data.projectID.value : this.projectID,
       category: data.category.present ? data.category.value : this.category,
       mood: data.mood.present ? data.mood.value : this.mood,
+      extension: data.extension.present ? data.extension.value : this.extension,
     );
   }
 
@@ -2758,7 +2790,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           ..write('updatedAt: $updatedAt, ')
           ..write('projectID: $projectID, ')
           ..write('category: $category, ')
-          ..write('mood: $mood')
+          ..write('mood: $mood, ')
+          ..write('extension: $extension')
           ..write(')'))
         .toString();
   }
@@ -2776,6 +2809,7 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     projectID,
     category,
     mood,
+    extension,
   );
   @override
   bool operator ==(Object other) =>
@@ -2791,7 +2825,8 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           other.updatedAt == this.updatedAt &&
           other.projectID == this.projectID &&
           other.category == this.category &&
-          other.mood == this.mood);
+          other.mood == this.mood &&
+          other.extension == this.extension);
 }
 
 class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
@@ -2806,6 +2841,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
   final Value<String?> projectID;
   final Value<String> category;
   final Value<String?> mood;
+  final Value<String> extension;
   final Value<int> rowid;
   const ProjectNotesTableCompanion({
     this.id = const Value.absent(),
@@ -2819,6 +2855,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.projectID = const Value.absent(),
     this.category = const Value.absent(),
     this.mood = const Value.absent(),
+    this.extension = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNotesTableCompanion.insert({
@@ -2833,6 +2870,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.projectID = const Value.absent(),
     this.category = const Value.absent(),
     this.mood = const Value.absent(),
+    this.extension = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -2849,6 +2887,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Expression<String>? projectID,
     Expression<String>? category,
     Expression<String>? mood,
+    Expression<String>? extension,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -2863,6 +2902,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       if (projectID != null) 'project_id': projectID,
       if (category != null) 'category': category,
       if (mood != null) 'mood': mood,
+      if (extension != null) 'extension': extension,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -2879,6 +2919,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Value<String?>? projectID,
     Value<String>? category,
     Value<String?>? mood,
+    Value<String>? extension,
     Value<int>? rowid,
   }) {
     return ProjectNotesTableCompanion(
@@ -2893,6 +2934,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       projectID: projectID ?? this.projectID,
       category: category ?? this.category,
       mood: mood ?? this.mood,
+      extension: extension ?? this.extension,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -2937,6 +2979,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     if (mood.present) {
       map['mood'] = Variable<String>(mood.value);
     }
+    if (extension.present) {
+      map['extension'] = Variable<String>(extension.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -2957,6 +3002,7 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
           ..write('projectID: $projectID, ')
           ..write('category: $category, ')
           ..write('mood: $mood, ')
+          ..write('extension: $extension, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -32973,6 +33019,7 @@ typedef $$ProjectNotesTableTableCreateCompanionBuilder =
       Value<String?> projectID,
       Value<String> category,
       Value<String?> mood,
+      Value<String> extension,
       Value<int> rowid,
     });
 typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
@@ -32988,6 +33035,7 @@ typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
       Value<String?> projectID,
       Value<String> category,
       Value<String?> mood,
+      Value<String> extension,
       Value<int> rowid,
     });
 
@@ -33056,6 +33104,11 @@ class $$ProjectNotesTableTableFilterComposer
     column: $table.mood,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get extension => $composableBuilder(
+    column: $table.extension,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectNotesTableTableOrderingComposer
@@ -33121,6 +33174,11 @@ class $$ProjectNotesTableTableOrderingComposer
     column: $table.mood,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get extension => $composableBuilder(
+    column: $table.extension,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectNotesTableTableAnnotationComposer
@@ -33164,6 +33222,9 @@ class $$ProjectNotesTableTableAnnotationComposer
 
   GeneratedColumn<String> get mood =>
       $composableBuilder(column: $table.mood, builder: (column) => column);
+
+  GeneratedColumn<String> get extension =>
+      $composableBuilder(column: $table.extension, builder: (column) => column);
 }
 
 class $$ProjectNotesTableTableTableManager
@@ -33217,6 +33278,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<String?> projectID = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<String?> mood = const Value.absent(),
+                Value<String> extension = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion(
                 id: id,
@@ -33230,6 +33292,7 @@ class $$ProjectNotesTableTableTableManager
                 projectID: projectID,
                 category: category,
                 mood: mood,
+                extension: extension,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -33245,6 +33308,7 @@ class $$ProjectNotesTableTableTableManager
                 Value<String?> projectID = const Value.absent(),
                 Value<String> category = const Value.absent(),
                 Value<String?> mood = const Value.absent(),
+                Value<String> extension = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion.insert(
                 id: id,
@@ -33258,6 +33322,7 @@ class $$ProjectNotesTableTableTableManager
                 projectID: projectID,
                 category: category,
                 mood: mood,
+                extension: extension,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

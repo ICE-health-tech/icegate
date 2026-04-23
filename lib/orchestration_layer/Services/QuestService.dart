@@ -1,6 +1,5 @@
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:drift/drift.dart';
-import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:flutter/foundation.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 class QuestService {
   final AppDatabase _db;
@@ -21,27 +20,11 @@ class QuestService {
     }
   }
 
-  Future<void> _insertQuestFromTemplate(
-    String personId,
-    _QuestTemplate template,
-    String category,
-  ) async {
-    await _db.questDAO.insertQuest(
-      QuestsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        personID: Value(personId),
-        title: Value(template.title),
-        description: Value(template.description),
-        type: const Value('daily'),
-        questType: Value(template.questType),
-        category: Value(category),
-        targetValue: Value(template.targetValue),
-        currentValue: const Value(0.0),
-        rewardExp: Value(template.rewardExp),
-        isCompleted: const Value(false),
-        createdAt: Value(DateTime.now()),
-      ),
-    );
+  /// Nuclear reset: wipes all quests, achievements, and resets the daily generation timer.
+  Future<void> clearAllQuestData(String personId) async {
+    await _db.questDAO.deleteAllQuestsForPerson(personId);
+    await _db.achievementsDAO.deleteAllAchievementsForPerson(personId);
+    await _db.personManagementDAO.updateLastQuestGeneratedAt(personId, null);
   }
 
   bool _isSameDay(DateTime d1, DateTime d2) {
@@ -49,93 +32,8 @@ class QuestService {
   }
 
   Future<void> _generateNewDailyQuests(String personId) async {
-    await _db.questDAO.deleteIncompleteDailyQuestsForPerson(personId);
-
-    
-    // Generate 3 random Health Quests
-    final healthQuestPool = [
-      _QuestTemplate(
-        title: "Morning Run",
-        description: "Run for 30 minutes to boost your stamina.",
-        questType: "running",
-        targetValue: 30.0,
-        rewardExp: 50,
-      ),
-      _QuestTemplate(
-        title: "Walking Master",
-        description: "Walk 10,000 steps today.",
-        questType: "walking",
-        targetValue: 10000.0,
-        rewardExp: 30,
-      ),
-      _QuestTemplate(
-        title: "Swimming Session",
-        description: "Swim for 45 minutes to improve full-body strength.",
-        questType: "swimming",
-        targetValue: 45.0,
-        rewardExp: 60,
-      ),
-      _QuestTemplate(
-        title: "Pushup Challenge",
-        description: "Complete 50 pushups throughout the day.",
-        questType: "pushups",
-        targetValue: 50.0,
-        rewardExp: 40,
-      ),
-    ];
-
-    // Shuffle and pick 2
-    healthQuestPool.shuffle();
-    final selectedHealth = healthQuestPool.take(2).toList();
-
-    for (var template in selectedHealth) {
-      await _insertQuestFromTemplate(personId, template, 'health');
-    }
-
-    // Generate 1 Finance or Career Quest
-    final businessQuestPool = [
-      _QuestTemplate(
-        title: "Virtual Office Budget",
-        description: "Set aside 650,000 VND for your virtual office (Green Office).",
-        questType: "budgeting",
-        targetValue: 650000.0,
-        rewardExp: 40,
-      ),
-      _QuestTemplate(
-        title: "Finance Review",
-        description: "Review your transactions for the last 7 days.",
-        questType: "review",
-        targetValue: 1.0,
-        rewardExp: 30,
-      ),
-      _QuestTemplate(
-        title: "Deep Work",
-        description: "Complete 2 focus sessions of 25 minutes each.",
-        questType: "focus",
-        targetValue: 2.0,
-        rewardExp: 50,
-      ),
-    ];
-
-    businessQuestPool.shuffle();
-    final selectedBusiness = businessQuestPool.first;
-    await _insertQuestFromTemplate(personId, selectedBusiness, 'finance');
-
+    // Random daily quest generation has been disabled per user request.
+    // Quests should now be managed manually or through specific triggers.
+    debugPrint("Daily quest generation skipped for $personId");
   }
-}
-
-class _QuestTemplate {
-  final String title;
-  final String description;
-  final String questType;
-  final double targetValue;
-  final int rewardExp;
-
-  _QuestTemplate({
-    required this.title,
-    required this.description,
-    required this.questType,
-    required this.targetValue,
-    required this.rewardExp,
-  });
 }

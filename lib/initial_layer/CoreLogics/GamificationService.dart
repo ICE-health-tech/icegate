@@ -1,4 +1,4 @@
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';

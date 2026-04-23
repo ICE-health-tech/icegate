@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [SkillsTable])
 class SkillDAO extends DatabaseAccessor<AppDatabase> with _$SkillDAOMixin {

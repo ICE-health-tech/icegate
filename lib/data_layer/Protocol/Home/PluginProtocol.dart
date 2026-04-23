@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 /// Plugin categories for organization and filtering
 enum PluginCategory {

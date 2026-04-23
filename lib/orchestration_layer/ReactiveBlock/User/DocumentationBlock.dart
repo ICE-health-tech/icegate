@@ -36,6 +36,7 @@ class DocumentationBlock {
   final directories = signal<List<Directory>>([]);
   final isSyncing = signal<bool>(false);
   final syncStatus = signal<String?>(null);
+  final syncType = signal<String?>(null); // 'notion' or 'drive'
   final activeDocumentTab = signal<int>(0); // Syncs with NoteManagerPage PageView
 
   final notionSecret = signal<String?>(null); // Notion Phase 4
@@ -58,6 +59,7 @@ class DocumentationBlock {
   final activeEditingFile = signal<File?>(null);
   final selectedDirectory = signal<Directory?>(null);
 
+  Map<String, String> _syncInventory = {}; // Absolute local path -> remoteId
   StreamSubscription<WatchEvent>? _watcherSubscription;
   Directory? _docDir;
   Directory? _googleDriveDir;
@@ -92,6 +94,7 @@ class DocumentationBlock {
     }
 
     _loadFiles();
+    await _loadInventory();
     _startWatching();
     _startUptimeCounter();
   }
@@ -139,6 +142,25 @@ class DocumentationBlock {
     }
   }
 
+  Future<void> _loadInventory() async {
+    if (_docDir == null) return;
+    final file = File(p.join(_docDir!.path, '.sync_inventory.json'));
+    if (await file.exists()) {
+      try {
+        final content = await file.readAsString();
+        _syncInventory = Map<String, String>.from(jsonDecode(content));
+      } catch (e) {
+        print("Error loading sync inventory: $e");
+      }
+    }
+  }
+
+  Future<void> _saveInventory() async {
+    if (_docDir == null) return;
+    final file = File(p.join(_docDir!.path, '.sync_inventory.json'));
+    await file.writeAsString(jsonEncode(_syncInventory));
+  }
+
   /// Import files from local device storage (Phase 1)
   Future<void> importFromDevice() async {
     try {
@@ -173,8 +195,18 @@ class DocumentationBlock {
   /// Deletes a file.
   Future<void> deleteFile(File file) async {
     try {
+      final localPath = file.path;
       if (await file.exists()) {
-        syncStatus.value = "Deleting ${p.basename(file.path)}...";
+        syncStatus.value = "Deleting ${p.basename(localPath)}...";
+        
+        // Proactive Cloud Trash: If we have a mapping, trash it now
+        if (_syncInventory.containsKey(localPath)) {
+          final remoteId = _syncInventory[localPath]!;
+          await _deleteRemote(remoteId);
+          _syncInventory.remove(localPath);
+          await _saveInventory();
+        }
+
         await file.delete();
         syncStatus.value = "✅ File deleted!";
         _loadFiles();
@@ -190,8 +222,18 @@ class DocumentationBlock {
   /// Deletes a folder and all its contents recursively.
   Future<void> deleteFolder(Directory directory) async {
     try {
+      final localPath = directory.path;
       if (await directory.exists()) {
-        syncStatus.value = "Deleting folder ${p.basename(directory.path)}...";
+        syncStatus.value = "Deleting folder ${p.basename(localPath)}...";
+        
+        // Proactive Cloud Trash: If this folder is in inventory, trash it
+        if (_syncInventory.containsKey(localPath)) {
+          final remoteId = _syncInventory[localPath]!;
+          await _deleteRemote(remoteId);
+          _syncInventory.remove(localPath);
+          await _saveInventory();
+        }
+
         await directory.delete(recursive: true);
         syncStatus.value = "✅ Folder deleted!";
         
@@ -298,6 +340,7 @@ class DocumentationBlock {
     }
 
     isSyncing.value = true;
+    syncType.value = 'notion';
     syncStatus.value = "Searching Notion for shared content...";
 
     try {
@@ -350,6 +393,7 @@ class DocumentationBlock {
       syncStatus.value = "❌ Ingestion failed: $e";
     } finally {
       isSyncing.value = false;
+      syncType.value = null;
       _loadFiles(); // Refresh UI to show the new 'Notion' folder and files
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
     }
@@ -584,6 +628,7 @@ class DocumentationBlock {
   /// Two-Way Recursive Sync Logic
   Future<void> syncWithGoogleDrive() async {
     isSyncing.value = true;
+    syncType.value = 'drive';
     syncStatus.value = "Initiating Recursive Sync...";
     logActivity("Sync Start", details: "Two-way mirroring initiated");
 
@@ -640,6 +685,8 @@ class DocumentationBlock {
       syncStatus.value = "❌ Sync failed: $e";
     } finally {
       isSyncing.value = false;
+      syncType.value = null;
+      await _saveInventory();
       _loadFiles();
       Future.delayed(const Duration(seconds: 3), () => syncStatus.value = null);
     }
@@ -807,12 +854,7 @@ class DocumentationBlock {
         if (shouldDownload) {
           logActivity("Downloading", details: file.name);
           syncStatus.value = "Downloading ${file.name}...";
-          final media = await driveApi.files.get(file.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
-          final bytes = <int>[];
-          await for (var chunk in media.stream) {
-            bytes.addAll(chunk);
-          }
-          await localFile.writeAsBytes(bytes);
+          await driveService.downloadFile(file.id!, localFile, mimeType: file.mimeType);
         }
       }
     }
@@ -861,6 +903,10 @@ class DocumentationBlock {
           // Enforce local folder existence and recurse
           final subDir = Directory(localPath);
           if (!await subDir.exists()) await subDir.create(recursive: true);
+          
+          // Ensure folder is in inventory for deletion tracking
+          _syncInventory[localPath] = remoteItem.id!;
+          
           await _syncRecursive(remoteItem.id!, localPath);
         } else {
           // It's a file - Robust Sync
@@ -868,6 +914,13 @@ class DocumentationBlock {
           bool shouldDownload = false;
           
           if (!await localFile.exists()) {
+            // DELETION DETECTION: If it was in inventory but is gone locally, trash it on cloud
+            if (_syncInventory.containsKey(localPath)) {
+              syncStatus.value = "🗑️ Local deletion detected: $name, trashing cloud...";
+              await _deleteRemote(remoteItem.id!);
+              _syncInventory.remove(localPath);
+              continue;
+            }
             shouldDownload = true;
           } else if (remoteItem.modifiedTime != null) {
             final localModified = (await localFile.lastModified()).toUtc();
@@ -882,16 +935,14 @@ class DocumentationBlock {
           if (shouldDownload) {
             try {
               syncStatus.value = "Downloading $name...";
-              final media = await driveApi.files.get(remoteItem.id!, downloadOptions: drive.DownloadOptions.fullMedia) as drive.Media;
-              final fileSink = localFile.openWrite();
-              await fileSink.addStream(media.stream);
-              await fileSink.close();
+              await driveService.downloadFile(remoteItem.id!, localFile, mimeType: remoteItem.mimeType);
               
               // CRITICAL: Re-stamp local file to match remote modified time 
               // This prevents the sync engine from thinking the file was "just edited" locally
               if (remoteItem.modifiedTime != null) {
                 await localFile.setLastModified(remoteItem.modifiedTime!.toLocal());
               }
+              _syncInventory[localPath] = remoteItem.id!;
             } catch (e) {
               print("Failed to download $name: $e");
             }
@@ -929,6 +980,7 @@ class DocumentationBlock {
                 ..mimeType = 'application/vnd.google-apps.folder'
                 ..parents = [remoteParentId];
               final created = await driveApi.files.create(newFolder);
+              _syncInventory[entity.path] = created.id!; // Track folder in inventory
               await _syncRecursive(created.id!, entity.path);
             } catch (e) {
               print("Failed to create remote folder $name: $e");
@@ -971,13 +1023,24 @@ class DocumentationBlock {
               await driveApi.files.update(driveFile, matchedRemote.id!, uploadMedia: media);
             } else {
               driveFile.parents = [remoteParentId];
-              await driveApi.files.create(driveFile, uploadMedia: media);
+              final created = await driveApi.files.create(driveFile, uploadMedia: media);
+          _syncInventory[entity.path] = created.id!;
             }
           } catch (e) {
             print("Failed to upload $name: $e");
           }
         }
       }
+    }
+  }
+
+  Future<void> _deleteRemote(String fileId) async {
+    try {
+      final driveApi = driveService.driveApi!;
+      final file = drive.File()..trashed = true;
+      await driveApi.files.update(file, fileId);
+    } catch (e) {
+      print("Failed to trash remote item: $e");
     }
   }
 

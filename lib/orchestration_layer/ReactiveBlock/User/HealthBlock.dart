@@ -3,7 +3,7 @@ import 'dart:io' show Platform;
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     show
         HealthLogsDAO,
         HealthMealDAO,
@@ -51,12 +51,16 @@ class HealthBlock {
   );
 
   late final weeklySteps = computed(() {
-    return dailyStepsLast7Days.value.values
-        .fold<int>(0, (sum, val) => sum + val);
+    return dailyStepsLast7Days.value.values.fold<int>(
+      0,
+      (sum, val) => sum + val,
+    );
   });
 
   late final weightTrend = computed(() {
-    final weights = dailyWeightLast30Days.value.values.where((w) => w > 0).toList();
+    final weights = dailyWeightLast30Days.value.values
+        .where((w) => w < 0)
+        .toList();
     if (weights.length < 2) return 0.0;
     return weights.last - weights.first;
   });
@@ -64,7 +68,9 @@ class HealthBlock {
   late final averageWater7d = computed(() {
     final waters = dailyWaterLast30Days.value.values.toList();
     if (waters.isEmpty) return 0.0;
-    final last7 = waters.length > 7 ? waters.sublist(waters.length - 7) : waters;
+    final last7 = waters.length > 7
+        ? waters.sublist(waters.length - 7)
+        : waters;
     return last7.fold<int>(0, (sum, val) => sum + val) / 7;
   });
 
@@ -87,7 +93,8 @@ class HealthBlock {
   final HealthMealDAO _healthMealDao;
   StreamSubscription? _waterSubscription;
   StreamSubscription? _mealSubscription;
-  StreamSubscription? _exerciseSubscription; // watches exercise_logs → sums durationMinutes → health_metrics
+  StreamSubscription?
+  _exerciseSubscription; // watches exercise_logs → sums durationMinutes → health_metrics
   StreamSubscription? _weightSubscription;
 
   String? _initializedPersonId;
@@ -148,10 +155,12 @@ class HealthBlock {
           final yesterday = today.subtract(const Duration(days: 1));
           final yesterdayStr =
               "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
-          
-          final sevenDaysAgo =
-              DateTime(today.year, today.month, today.day)
-                  .subtract(const Duration(days: 7));
+
+          final sevenDaysAgo = DateTime(
+            today.year,
+            today.month,
+            today.day,
+          ).subtract(const Duration(days: 7));
 
           int totalHistorical = 0;
           int foundTodaySteps = 0;
@@ -165,9 +174,9 @@ class HealthBlock {
           final Map<String, double> weightHistory = {};
           final Map<String, int> waterHistory = {};
 
-          debugPrint(
-            "HealthBlock: 📊 Received ${metrics.length} metrics from DB. Today: $todayStr, Yesterday: $yesterdayStr",
-          );
+          // debugPrint(
+          //   "HealthBlock: 📊 Received ${metrics.length} metrics from DB. Today: $todayStr, Yesterday: $yesterdayStr",
+          // );
 
           for (var m in metrics) {
             final dateStr =
@@ -189,7 +198,8 @@ class HealthBlock {
               if ((m.caloriesConsumed ?? 0) > foundTodayCaloriesConsumed) {
                 foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
               }
-              if ((m.weightKg ?? 0.0) > 0) todayWeight.value = m.weightKg ?? 0.0;
+              if ((m.weightKg ?? 0.0) > 0)
+                todayWeight.value = m.weightKg ?? 0.0;
               if ((m.exerciseMinutes ?? 0) > 0) {
                 foundTodayExerciseMinutes += m.exerciseMinutes ?? 0;
               }
@@ -201,8 +211,11 @@ class HealthBlock {
             }
 
             // Fill last 7 days map
-            final normalizedDate =
-                DateTime(m.date.year, m.date.month, m.date.day);
+            final normalizedDate = DateTime(
+              m.date.year,
+              m.date.month,
+              m.date.day,
+            );
             if (normalizedDate.isAfter(sevenDaysAgo) ||
                 normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
               stepsLast7Days[dateStr] = (stepsLast7Days[dateStr] ?? 0) + steps;
@@ -212,7 +225,8 @@ class HealthBlock {
             final thirtyDaysAgo = today.subtract(const Duration(days: 30));
             if (m.date.isAfter(thirtyDaysAgo)) {
               if ((m.weightKg ?? 0) > 0) weightHistory[dateStr] = m.weightKg!;
-              if ((m.waterGlasses ?? 0) > 0) waterHistory[dateStr] = m.waterGlasses!;
+              if ((m.waterGlasses ?? 0) > 0)
+                waterHistory[dateStr] = m.waterGlasses!;
             }
           }
 
@@ -234,16 +248,17 @@ class HealthBlock {
           if (foundTodayCaloriesConsumed > todayCaloriesConsumed.value) {
             todayCaloriesConsumed.value = foundTodayCaloriesConsumed;
           }
-          
+
           todayExerciseMinutes.value = foundTodayExerciseMinutes;
           todayFocusMinutes.value = foundTodayFocusMinutes;
 
           // Ensure today's entry in weekly map also reflects the best data (signal or DB)
-          final bestTodaySteps = (stepsLast7Days[todayStr] ?? 0) > todaySteps.value 
-              ? (stepsLast7Days[todayStr] ?? 0) 
+          final bestTodaySteps =
+              (stepsLast7Days[todayStr] ?? 0) > todaySteps.value
+              ? (stepsLast7Days[todayStr] ?? 0)
               : todaySteps.value;
           stepsLast7Days[todayStr] = bestTodaySteps;
-          
+
           dailyStepsLast7Days.value = Map.from(stepsLast7Days);
           dailyWeightLast30Days.value = Map.from(weightHistory);
           dailyWaterLast30Days.value = Map.from(waterHistory);
@@ -253,41 +268,48 @@ class HealthBlock {
             debugPrint("HealthBlock: ✅ Initial DB sync complete.");
             hasInitialSync.value = true;
           }
-          
+
           final yesterdayVal = stepsLast7Days[yesterdayStr] ?? 0;
-          debugPrint("📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical");
+          debugPrint(
+            "📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical",
+          );
         },
         onError: (e) =>
             debugPrint("HealthBlock: Error watching health metrics: $e"),
       );
 
       // Watch hourly logs for today
-      _hourlyLogsSubscription = _hourlyLogDao.watchHourlyLogs(personId, DateTime.now()).listen(
-        (logs) {
-          final Map<int, int> hourlyMap = {for (var i = 0; i < 24; i++) i: 0};
-          for (var log in logs) {
-            final hour = log.startTime.hour;
-            hourlyMap[hour] = (hourlyMap[hour] ?? 0) + log.stepsCount;
-          }
-          
-          // Merge strategy: only update signal if DB has more data OR if it's a new hour
-          // This prevents DB downloads from downgrading current session data.
-          final currentMap = Map<int, int>.from(hourlySteps.value);
-          bool changed = false;
-          
-          hourlyMap.forEach((hour, steps) {
-            if (steps > (currentMap[hour] ?? 0)) {
-              currentMap[hour] = steps;
-              changed = true;
-            }
-          });
-          
-          if (changed || hourlySteps.value.isEmpty) {
-            hourlySteps.value = currentMap;
-          }
-        },
-        onError: (e) => debugPrint("HealthBlock: Error watching hourly logs: $e"),
-      );
+      _hourlyLogsSubscription = _hourlyLogDao
+          .watchHourlyLogs(personId, DateTime.now())
+          .listen(
+            (logs) {
+              final Map<int, int> hourlyMap = {
+                for (var i = 0; i < 24; i++) i: 0,
+              };
+              for (var log in logs) {
+                final hour = log.startTime.hour;
+                hourlyMap[hour] = (hourlyMap[hour] ?? 0) + log.stepsCount;
+              }
+
+              // Merge strategy: only update signal if DB has more data OR if it's a new hour
+              // This prevents DB downloads from downgrading current session data.
+              final currentMap = Map<int, int>.from(hourlySteps.value);
+              bool changed = false;
+
+              hourlyMap.forEach((hour, steps) {
+                if (steps > (currentMap[hour] ?? 0)) {
+                  currentMap[hour] = steps;
+                  changed = true;
+                }
+              });
+
+              if (changed || hourlySteps.value.isEmpty) {
+                hourlySteps.value = currentMap;
+              }
+            },
+            onError: (e) =>
+                debugPrint("HealthBlock: Error watching hourly logs: $e"),
+          );
     });
 
     _waterSubscription = _healthLogsDao
@@ -333,19 +355,17 @@ class HealthBlock {
               debugPrint("HealthBlock: Error watching exercise logs: $e"),
         );
 
-    _weightSubscription = _healthLogsDao
-        .watchLatestWeightLog(personId)
-        .listen(
-          (log) {
-            if (log != null) {
-              latestWeight.value = log.weightKg;
-            } else {
-              latestWeight.value = 0.0;
-            }
-          },
-          onError: (e) =>
-              debugPrint("HealthBlock: Error watching latest weight logs: $e"),
-        );
+    _weightSubscription = _healthLogsDao.watchLatestWeightLog(personId).listen(
+      (log) {
+        if (log != null) {
+          latestWeight.value = log.weightKg;
+        } else {
+          latestWeight.value = 0.0;
+        }
+      },
+      onError: (e) =>
+          debugPrint("HealthBlock: Error watching latest weight logs: $e"),
+    );
 
     // Watch goals and save to SharedPreferences
     effect(() => _saveGoal('dailyStepGoal', dailyStepGoal.value));
@@ -356,11 +376,13 @@ class HealthBlock {
     effect(() => _saveGoal('dailySleepGoal', dailySleepGoal.value));
 
     // 1. Silent Sync today's data on init (non-blocking)
-    syncTodaySteps(() => HealthService.fetchStepCount()).then((_) {
-      debugPrint("HealthBlock: 🔄 Silent sync of today's steps completed.");
-    }).catchError((e) {
-      debugPrint("HealthBlock: ⚠️ Silent sync failed: $e");
-    });
+    syncTodaySteps(() => HealthService.fetchStepCount())
+        .then((_) {
+          debugPrint("HealthBlock: 🔄 Silent sync of today's steps completed.");
+        })
+        .catchError((e) {
+          debugPrint("HealthBlock: ⚠️ Silent sync failed: $e");
+        });
   }
 
   Future<void> _loadGoals() async {
@@ -395,18 +417,21 @@ class HealthBlock {
   void updateSteps(int steps, {DateTime? date, bool force = false}) {
     final targetDate = date ?? DateTime.now();
     final now = DateTime.now();
-    final isToday = targetDate.year == now.year &&
+    final isToday =
+        targetDate.year == now.year &&
         targetDate.month == now.month &&
         targetDate.day == now.day;
 
     if (force) {
-      debugPrint("🔄 [HealthBlock] Forcing Step Update for $targetDate: $steps steps");
+      debugPrint(
+        "🔄 [HealthBlock] Forcing Step Update for $targetDate: $steps steps",
+      );
     }
 
     debugPrint(
       "HealthBlock: updateSteps called with $steps steps for $targetDate (force: $force)",
     );
-    
+
     if (isToday) {
       if (force || steps > todaySteps.value) {
         print("TODAY STEP DUYLONG: $steps");
@@ -419,10 +444,7 @@ class HealthBlock {
   }
 
   bool get _isDesktop =>
-      kIsWeb ||
-      Platform.isMacOS ||
-      Platform.isWindows ||
-      Platform.isLinux;
+      kIsWeb || Platform.isMacOS || Platform.isWindows || Platform.isLinux;
 
   Future<void> syncHistory(Future<int> Function(DateTime) fetcher) async {
     if (_isDesktop) {
@@ -435,12 +457,14 @@ class HealthBlock {
     final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
 
     // Sync last 30 days
-    debugPrint("🚀 [HealthBlock] Starting History Sync for 30 days. Baseline: $todayStart");
+    debugPrint(
+      "🚀 [HealthBlock] Starting History Sync for 30 days. Baseline: $todayStart",
+    );
 
     for (int i = 0; i <= 30; i++) {
       final day = todayStart.subtract(Duration(days: i));
       final steps = await fetcher(day);
-      
+
       final isYesterday = i == 1;
       if (isYesterday) {
         debugPrint("📅 [HealthBlock] Yesterday ($day) Steps: $steps");
@@ -453,7 +477,9 @@ class HealthBlock {
     debugPrint("HealthBlock: ✅ History sync complete.");
   }
 
-  Future<void> syncWeightHistory(Future<double> Function(DateTime) fetcher) async {
+  Future<void> syncWeightHistory(
+    Future<double> Function(DateTime) fetcher,
+  ) async {
     if (_isDesktop) {
       debugPrint("HealthBlock: ⏭️ Skipping weight history sync on desktop.");
       return;
@@ -465,7 +491,7 @@ class HealthBlock {
     for (int i = 0; i <= 30; i++) {
       final day = todayStart.subtract(Duration(days: i));
       final weight = await fetcher(day);
-      
+
       if (weight > 0) {
         updateWeight(weight, date: day, force: true);
       }
@@ -486,7 +512,10 @@ class HealthBlock {
     for (int i = 0; i <= 30; i++) {
       final day = todayStart.subtract(Duration(days: i));
       // SUM(duration_minutes) from exercise_logs for this day
-      final totalMinutes = await _healthLogsDao.getDailyExerciseTotal(personId, day);
+      final totalMinutes = await _healthLogsDao.getDailyExerciseTotal(
+        personId,
+        day,
+      );
 
       if (totalMinutes > 0) {
         final normalizedDay = DateTime(day.year, day.month, day.day, 12);
@@ -509,17 +538,23 @@ class HealthBlock {
       debugPrint("HealthBlock: ⏭️ Skipping today's steps sync on desktop.");
       return;
     }
-    debugPrint("HealthBlock: 🔄 [SYNC] Fetching today's steps from platform...");
+    debugPrint(
+      "HealthBlock: 🔄 [SYNC] Fetching today's steps from platform...",
+    );
     final steps = await fetcher();
-    debugPrint("HealthBlock: 🔄 [SYNC] Platform returned $steps steps for today.");
+    debugPrint(
+      "HealthBlock: 🔄 [SYNC] Platform returned $steps steps for today.",
+    );
     updateSteps(steps, force: true); // Force update to match platform exactly
     debugPrint("HealthBlock: ✅ [SYNC] Today's steps synced: $steps");
   }
 
   void updateHourlySteps(Map<int, int> hourly, {DateTime? date}) {
     final targetDate = date ?? DateTime.now();
-    debugPrint("HealthBlock: updateHourlySteps called with ${hourly.length} hours for $targetDate");
-    
+    debugPrint(
+      "HealthBlock: updateHourlySteps called with ${hourly.length} hours for $targetDate",
+    );
+
     // Optimistically update the signal first (Phone wins)
     final currentMap = Map<int, int>.from(hourlySteps.value);
     hourly.forEach((hour, steps) {
@@ -534,17 +569,22 @@ class HealthBlock {
   Future<void> _saveHourlyStep(int hour, int steps, {DateTime? date}) async {
     if (personId.isEmpty) return;
     final targetDate = date ?? DateTime.now();
-    final startTime = DateTime(targetDate.year, targetDate.month, targetDate.day, hour);
+    final startTime = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+      hour,
+    );
     final endTime = startTime.add(const Duration(hours: 1));
-    
+
     // Calculate related metrics
     final distanceKm = steps * 0.0008; // Roughly 0.8m per step
     final caloriesBurned = (steps * 0.04).round(); // Roughly 0.04 kcal per step
-    
+
     // Deterministic ID for hourly log
     final logId = IDGen.generateDeterministicUuid(
-      personId, 
-      "hourly_steps:${targetDate.year}-${targetDate.month}-${targetDate.day}:$hour"
+      personId,
+      "hourly_steps:${targetDate.year}-${targetDate.month}-${targetDate.day}:$hour",
     );
 
     await _hourlyLogDao.upsertHourlyLog(
@@ -581,17 +621,22 @@ class HealthBlock {
     }
   }
 
-  Future<void> updateWeight(double weight, {DateTime? date, bool force = false}) async {
+  Future<void> updateWeight(
+    double weight, {
+    DateTime? date,
+    bool force = false,
+  }) async {
     final targetDate = date ?? DateTime.now();
     final now = DateTime.now();
-    final isToday = targetDate.year == now.year &&
+    final isToday =
+        targetDate.year == now.year &&
         targetDate.month == now.month &&
         targetDate.day == now.day;
 
     debugPrint(
       "HealthBlock: updateWeight called with $weight kg for $targetDate (force: $force)",
     );
-    
+
     if (isToday) {
       if (force || weight > 0) {
         todayWeight.value = weight;
@@ -616,12 +661,9 @@ class HealthBlock {
     // Standardize date format to match Database DAO (YYYY-MM-DD)
     final dateStr =
         "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
-        
+
     // Use IDGen matching HealthMetricsDAO fallback check
-    return IDGen.generateDeterministicUuid(
-      personId,
-      "$dateStr:General",
-    );
+    return IDGen.generateDeterministicUuid(personId, "$dateStr:General");
   }
 
   Future<void> _saveCaloriesConsumed(int calories, {bool force = false}) async {
@@ -662,17 +704,27 @@ class HealthBlock {
     );
   }
 
-  Future<void> _saveSteps(int steps, {DateTime? date, bool force = false}) async {
+  Future<void> _saveSteps(
+    int steps, {
+    DateTime? date,
+    bool force = false,
+  }) async {
     if (personId.isEmpty) {
       debugPrint("HealthBlock: Cannot save steps, personId is empty");
       return;
     }
     final targetDate = date ?? DateTime.now();
     // Normalize to noon to match DAO lookup logic exactly
-    final normalizedDate =
-        DateTime(targetDate.year, targetDate.month, targetDate.day, 12);
+    final normalizedDate = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+      12,
+    );
 
-    debugPrint("HealthBlock: Saving $steps steps to DB for $normalizedDate (force: $force)");
+    debugPrint(
+      "HealthBlock: Saving $steps steps to DB for $normalizedDate (force: $force)",
+    );
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion.insert(
         id: _getDeterministicId(targetDate),
@@ -718,7 +770,9 @@ class HealthBlock {
         id: _getDeterministicId(today),
         personID: Value(personId),
         date: normalizedToday,
-        waterGlasses: Value(ml), // Store ml directly (SUM of water_logs.amount for the day)
+        waterGlasses: Value(
+          ml,
+        ), // Store ml directly (SUM of water_logs.amount for the day)
       ),
       force: force,
     );
@@ -733,7 +787,9 @@ class HealthBlock {
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
 
-    debugPrint("HealthBlock: Saving $minutes exercise minutes to DB for $normalizedToday");
+    debugPrint(
+      "HealthBlock: Saving $minutes exercise minutes to DB for $normalizedToday",
+    );
 
     // Write SUM(duration_minutes) of today's exercise_logs to health_metrics.exercise_minutes.
     await _healthDao.insertOrUpdateMetrics(
@@ -741,22 +797,37 @@ class HealthBlock {
         id: _getDeterministicId(today),
         personID: Value(personId),
         date: normalizedToday,
-        exerciseMinutes: Value(minutes), // SUM(exercise_logs.duration_minutes) for the day
+        exerciseMinutes: Value(
+          minutes,
+        ), // SUM(exercise_logs.duration_minutes) for the day
       ),
       force: force,
     );
   }
 
-  Future<void> _saveWeight(double kg, {DateTime? date, bool force = false}) async {
+  Future<void> _saveWeight(
+    double kg, {
+    DateTime? date,
+    bool force = false,
+  }) async {
     if (personId.isEmpty || personId == DataSeeder.guestPersonId) {
-      debugPrint("HealthBlock: ⚠️ Skipping weight save for Guest or Empty ID ($personId)");
+      debugPrint(
+        "HealthBlock: ⚠️ Skipping weight save for Guest or Empty ID ($personId)",
+      );
       return;
     }
     final targetDate = date ?? DateTime.now();
-    final normalizedTarget = DateTime(targetDate.year, targetDate.month, targetDate.day, 12);
+    final normalizedTarget = DateTime(
+      targetDate.year,
+      targetDate.month,
+      targetDate.day,
+      12,
+    );
 
-    debugPrint("HealthBlock: Saving $kg kg weight to DB for $normalizedTarget (force: $force)");
-    
+    debugPrint(
+      "HealthBlock: Saving $kg kg weight to DB for $normalizedTarget (force: $force)",
+    );
+
     // 1. Update daily summary
     await _healthDao.insertOrUpdateMetrics(
       HealthMetricsTableCompanion.insert(
@@ -827,12 +898,12 @@ class HealthBlock {
   /// Reference: https://en.wikipedia.org/wiki/Metabolic_equivalent_of_task
   int estimateCalories(String type, int minutes, String intensity) {
     if (minutes <= 0) return 0;
-    
+
     // Default weight if todayWeight is not set
     final weight = todayWeight.value > 0 ? todayWeight.value : 70.0;
-    
+
     double met = 3.0; // Baseline for low intensity activity
-    
+
     final lowerType = type.toLowerCase();
     if (lowerType.contains('run')) {
       met = intensity == 'high' ? 12.0 : (intensity == 'medium' ? 10.0 : 8.0);
@@ -849,7 +920,7 @@ class HealthBlock {
     } else if (intensity == 'medium') {
       met = 5.0;
     }
-    
+
     // Formula: (MET * 3.5 * weight) / 200 * minutes
     return ((met * 3.5 * weight) / 200 * minutes).round();
   }

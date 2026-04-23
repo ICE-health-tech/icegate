@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [OrganizationsTable])
 class OrganizationDAO extends DatabaseAccessor<AppDatabase>

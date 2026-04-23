@@ -647,6 +647,40 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get err_invalid_credentials =>
+      'Sai email hoặc mật khẩu. Vui lòng thử lại.';
+
+  @override
+  String get err_email_not_confirmed =>
+      'Vui lòng kiểm tra hộp thư để xác nhận email của bạn.';
+
+  @override
+  String get err_user_not_found => 'Không tìm thấy tài khoản với email này.';
+
+  @override
+  String get err_network_fail =>
+      'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.';
+
+  @override
+  String get err_passkey_canceled => 'Đã hủy đăng nhập bằng Passkey.';
+
+  @override
+  String get err_passkey_failed =>
+      'Xác thực bảo mật thất bại. Vui lòng thử lại.';
+
+  @override
+  String get err_biometric_unsupported =>
+      'Thiết bị không hỗ trợ đăng nhập sinh trắc học.';
+
+  @override
+  String get err_biometric_disabled =>
+      'Đăng nhập sinh trắc học chưa được bật cho tài khoản này.';
+
+  @override
+  String get err_too_many_attempts =>
+      'Quá nhiều lần thử thất bại. Vui lòng thử lại sau.';
+
+  @override
   String get msg_enter_credentials => 'Vui lòng nhập thông tin đăng nhập';
 
   @override
@@ -763,6 +797,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get change_password => 'Thay đổi mật khẩu';
 
   @override
+  String get btn_enter => 'VÀO';
+
+  @override
+  String google_signin_error(String error) {
+    return 'Lỗi đăng nhập Google: $error';
+  }
+
+  @override
   String get personal_info_title => 'Thông tin cá nhân';
 
   @override
@@ -824,6 +866,40 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get logout => 'Đăng xuất';
+
+  @override
+  String get identity_evolution => 'TIẾN HÓA ĐỊNH DANH';
+
+  @override
+  String get identity_evolution_desc =>
+      'Cấp 1: Google. Thiết lập mật khẩu cục bộ để nâng cấp bậc bảo mật.';
+
+  @override
+  String get btn_set => 'THIẾT LẬP';
+
+  @override
+  String get security_accuracy => 'Bảo mật & Chính xác';
+
+  @override
+  String get passkey_settings => 'Cài đặt Passkey';
+
+  @override
+  String get fast_track_active => 'Truy cập nhanh đang hoạt động (Bảo mật)';
+
+  @override
+  String get upgrade_biometric => 'Nâng cấp lên Truy cập nhanh Sinh trắc học';
+
+  @override
+  String get hint_enter_your => 'Nhập vào...';
+
+  @override
+  String get user_default => 'Người dùng';
+
+  @override
+  String get tooltip_save => 'Lưu';
+
+  @override
+  String get tooltip_edit => 'Chỉnh sửa';
 
   @override
   String get msg_err_not_authenticated => 'Chưa xác thực';
@@ -1580,6 +1656,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get project_note_no_content => 'Không có nội dung';
 
   @override
+  String get focus_select_project => 'CHẠM ĐỂ CHỌN DỰ ÁN';
+
+  @override
+  String get focus_select_task => 'CHỌN NHIỆM VỤ';
+
+  @override
+  String focus_active_exercise(String type) {
+    return 'BÀI TẬP ĐANG HOẠT ĐỘNG: $type';
+  }
+
+  @override
+  String get focus_flow_active => 'TRẠNG THÁI TẬP TRUNG';
+
+  @override
+  String get focus_breathing => 'ĐANG THỞ';
+
+  @override
+  String get focus_fetching_audio => 'ĐANG TẢI ÂM THANH...';
+
+  @override
+  String get entry_scanning => 'ĐANG QUÉT';
+
+  @override
+  String get entry_assembling => 'ĐANG LẮP RÁP';
+
+  @override
   String get calorie_tracker => 'Theo dõi Calo';
 
   @override
@@ -2109,5 +2211,43 @@ class AppLocalizationsVi extends AppLocalizations {
   String get internal_integration_token => 'MÃ TÍCH HỢP NỘI BỘ';
 
   @override
-  String get database_schema_id => 'ID SCHEMA CƠ SỞ DỮ LIỆU';
+  String get database_schema_id => 'ID SƠ ĐỒ CƠ SỞ DỮ LIỆU';
+
+  @override
+  String get add_widget => 'Thêm Widget';
+
+  @override
+  String get app_shortcut => 'Lối tắt ứng dụng';
+
+  @override
+  String get web_widget => 'Web Widget';
+
+  @override
+  String get please_select_app_page => 'Vui lòng chọn một trang ứng dụng';
+
+  @override
+  String get widget_added_success => 'Đã thêm widget thành công';
+
+  @override
+  String error_adding_widget(String error) {
+    return 'Lỗi khi thêm widget: $error';
+  }
+
+  @override
+  String get please_select_plugin => 'Vui lòng chọn một plugin';
+
+  @override
+  String get please_fill_all_fields => 'Vui lòng điền đầy đủ các trường';
+
+  @override
+  String get widget_name_hint => 'Tên Widget (ví dụ: Facebook)';
+
+  @override
+  String get url_hint => 'URL (ví dụ: facebook.com)';
+
+  @override
+  String get plugins => 'Plugins';
+
+  @override
+  String get custom_url => 'URL tùy chỉnh';
 }

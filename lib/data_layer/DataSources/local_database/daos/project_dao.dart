@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [ProjectsTable])
 class ProjectDAO extends DatabaseAccessor<AppDatabase> with _$ProjectDAOMixin {

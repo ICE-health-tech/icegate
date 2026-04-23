@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [GoalsTable])
 class GoalDAO extends DatabaseAccessor<AppDatabase> with _$GoalDAOMixin {

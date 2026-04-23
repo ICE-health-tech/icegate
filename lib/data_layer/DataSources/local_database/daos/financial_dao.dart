@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [FinancialAccountsTable])
 class FinancialAccountDAO extends DatabaseAccessor<AppDatabase>

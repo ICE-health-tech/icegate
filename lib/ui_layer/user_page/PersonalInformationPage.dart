@@ -289,7 +289,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     if (token == null || token.isEmpty || userId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Error: Not authenticated')));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.msg_err_not_authenticated)));
       return;
     }
 
@@ -361,7 +361,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     if (token == null || token.isEmpty || userId == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(const SnackBar(content: Text('Error: Not authenticated')));
+      ).showSnackBar(SnackBar(content: Text(AppLocalizations.of(context)!.msg_err_not_authenticated)));
       return;
     }
 
@@ -477,7 +477,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           size: 30,
                         ),
                         onPressed: _isSaving ? null : () => _saveChanges(false),
-                        tooltip: 'Save',
+                        tooltip: AppLocalizations.of(context)!.tooltip_save,
                       )
                     : IconButton(
                         icon: const Icon(
@@ -490,7 +490,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             _isEditing = true;
                           });
                         },
-                        tooltip: 'Edit',
+                        tooltip: AppLocalizations.of(context)!.tooltip_edit,
                       ),
               ),
               const SizedBox(width: 8),
@@ -742,9 +742,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                       crossAxisAlignment:
                                           CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          "IDENTITY EVOLUTION",
-                                          style: TextStyle(
+                                        Text(
+                                          AppLocalizations.of(context)!.identity_evolution,
+                                          style: const TextStyle(
                                             fontWeight: FontWeight.w900,
                                             fontSize: 12,
                                             letterSpacing: 2,
@@ -752,7 +752,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          "Level 1: Google. Set a local password to upgrade your security tier.",
+                                          AppLocalizations.of(context)!.identity_evolution_desc,
                                           style: textTheme.bodySmall?.copyWith(
                                             color: colorScheme.onSurfaceVariant,
                                           ),
@@ -763,7 +763,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                   TextButton(
                                     onPressed: () =>
                                         context.push('/change-password'),
-                                    child: const Text("SET"),
+                                    child: Text(AppLocalizations.of(context)!.btn_set),
                                   ),
                                 ],
                               ),
@@ -775,15 +775,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             final colorScheme = Theme.of(context).colorScheme;
 
                             return _buildInfoGroup(
-                              title: "Security & Accuracy",
+                              title: AppLocalizations.of(context)!.security_accuracy,
                               icon: Icons.security_rounded,
                               children: [
                                 _buildSecurityItem(
                                   context: context,
-                                  title: "Passkey Settings",
+                                  title: AppLocalizations.of(context)!.passkey_settings,
                                   subtitle: _authBlock.isPasskeyEnrolled.value
-                                      ? "Fast-Track Active (Secure)"
-                                      : "Upgrade to Biometric Fast-Track",
+                                      ? AppLocalizations.of(context)!.fast_track_active
+                                      : AppLocalizations.of(context)!.upgrade_biometric,
                                   icon: Icons.fingerprint_rounded,
                                   trailing: Icon(
                                     _authBlock.isPasskeyEnrolled.value
@@ -797,26 +797,26 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                   ),
                                   onTap: () => _showPasskeySetupDialog(),
                                 ),
-                                _buildSecurityItem(
-                                  context: context,
-                                  title: "Encryption Key",
-                                  subtitle: "Managed by Ice Gate Protocol",
-                                  icon: Icons.vpn_key_rounded,
-                                  trailing: const Icon(
-                                    Icons.lock_rounded,
-                                    size: 16,
-                                    color: Colors.grey,
-                                  ),
-                                  onTap: () {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          "Key rotations are handled automatically by the neural engine.",
-                                        ),
-                                      ),
-                                    );
-                                  },
-                                ),
+                                // _buildSecurityItem(
+                                //   context: context,
+                                //   title: "Encryption Key",
+                                //   subtitle: "Managed by Ice Gate Protocol",
+                                //   icon: Icons.vpn_key_rounded,
+                                //   trailing: const Icon(
+                                //     Icons.lock_rounded,
+                                //     size: 16,
+                                //     color: Colors.grey,
+                                //   ),
+                                //   onTap: () {
+                                //     ScaffoldMessenger.of(context).showSnackBar(
+                                //       const SnackBar(
+                                //         content: Text(
+                                //           "Key rotations are handled automatically by the neural engine.",
+                                //         ),
+                                //       ),
+                                //     );
+                                //   },
+                                // ),
                               ],
                             );
                           }),
@@ -825,15 +825,33 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           // Danger Zone / Logout
                           SizedBox(
                             width: MediaQuery.of(context).size.width / 1.5,
+
                             child: OutlinedButton(
                               style: OutlinedButton.styleFrom(
-                                side: BorderSide(
-                                  color: Colors.red.withValues(alpha: 0.5),
-                                  width: 1.5,
-                                ),
-                                backgroundColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 16,
+                                backgroundBuilder: (context, states, child) =>
+                                    Container(
+                                      decoration: BoxDecoration(
+                                        color: Colors.red.withValues(
+                                          alpha: 0.1,
+                                        ),
+                                        borderRadius: BorderRadius.circular(24),
+                                        border: Border.all(
+                                          color: Colors.red.withValues(
+                                            alpha: 0.5,
+                                          ),
+                                          width: 1.1,
+                                        ),
+                                      ),
+                                      child: child,
+                                    ),
+                                // side: BorderSide(
+                                //   color: Colors.red.withValues(alpha: 0.5),
+                                //   width: 1.1,
+                                // ),
+                                // backgroundColor: Colors.transparent,
+                                padding: EdgeInsets.symmetric(
+                                  // horizontal: 20,
+                                  vertical: 25,
                                 ),
                                 shape: RoundedRectangleBorder(
                                   borderRadius: BorderRadius.circular(24),
@@ -848,7 +866,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                 children: [
                                   const Icon(
                                     Icons.logout_rounded,
-                                    color: Colors.red,
+                                    color: Color.fromARGB(255, 255, 255, 255),
                                     size: 20,
                                   ),
                                   const SizedBox(width: 12),
@@ -857,7 +875,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                       context,
                                     )!.logout.toUpperCase(),
                                     style: const TextStyle(
-                                      color: Colors.red,
+                                      color: Color.fromARGB(255, 255, 255, 255),
                                       fontWeight: FontWeight.w900,
                                       fontSize: 13,
                                       letterSpacing: 2,
@@ -1133,7 +1151,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                       child: Text(
                         info.profiles.firstName.isNotEmpty
                             ? "${info.profiles.firstName} ${info.profiles.lastName}"
-                            : "User",
+                            : AppLocalizations.of(context)!.user_default,
                         style: textTheme.headlineSmall?.copyWith(
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
@@ -1281,7 +1299,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                   Text(
                     controller.text.isNotEmpty
                         ? controller.text
-                        : 'Enter your...',
+                        : AppLocalizations.of(context)!.hint_enter_your,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,

@@ -307,7 +307,9 @@ class _BlockReminderPageState extends State<BlockReminderPage>
                 child: Text(
                   isRunning ? "ENGAGED" : "INITIATE",
                   style: TextStyle(
-                    color: isRunning ? primaryColor : Colors.white38,
+                    color: isRunning 
+                      ? primaryColor 
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                     fontWeight: FontWeight.w900,
                     fontSize: 10,
                     letterSpacing: 2,
@@ -415,10 +417,10 @@ class _BlockReminderPageState extends State<BlockReminderPage>
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       "PULSE INTENSITY",
                       style: TextStyle(
-                        color: Colors.white38,
+                        color: Theme.of(context).colorScheme.onSurfaceVariant,
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1,
@@ -535,11 +537,7 @@ class _BlockReminderPageState extends State<BlockReminderPage>
             Text(
               title,
               style: TextStyle(
-                color:
-                    Theme.of(
-                      context,
-                    ).textTheme.bodySmall?.color?.withOpacity(0.5) ??
-                    Colors.white38,
+                color: Theme.of(context).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 fontSize: 8,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,

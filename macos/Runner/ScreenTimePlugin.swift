@@ -99,6 +99,7 @@ class ProcessMonitor {
     private var blockedBundleIds: [String] = []
     private var timer: Timer?
     private var isBlocking = false
+    private var observation: NSObjectProtocol?
     
     private init() {}
     
@@ -106,13 +107,30 @@ class ProcessMonitor {
         self.blockedBundleIds = bundleIds
         self.isBlocking = true
         
-        // Check immediately
+        // 1. Proactive check
         checkAndKill()
         
-        // Start timer
+        // 2. Continuous check (Safety net)
         timer?.invalidate()
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.checkAndKill()
+        }
+        
+        // 3. Real-time launch detection
+        if observation == nil {
+            observation = NSWorkspace.shared.notificationCenter.addObserver(
+                forName: NSWorkspace.didLaunchApplicationNotification,
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard let self = self, self.isBlocking else { return }
+                if let app = notification.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication,
+                   let bundleId = app.bundleIdentifier,
+                   self.blockedBundleIds.contains(bundleId) {
+                    print("ScreenTimePlugin: Intercepted app launch: \(bundleId)")
+                    app.forceTerminate()
+                }
+            }
         }
     }
     
@@ -120,6 +138,10 @@ class ProcessMonitor {
         isBlocking = false
         timer?.invalidate()
         timer = nil
+        if let obs = observation {
+            NSWorkspace.shared.notificationCenter.removeObserver(obs)
+            observation = nil
+        }
     }
     
     private func checkAndKill() {
@@ -128,9 +150,8 @@ class ProcessMonitor {
         let runningApps = NSWorkspace.shared.runningApplications
         for app in runningApps {
             if let bundleId = app.bundleIdentifier, blockedBundleIds.contains(bundleId) {
-                print("ScreenTimePlugin: Blocking active app: \(bundleId)")
-                app.terminate() // Graceful termination
-                // If it persists, could use app.forceTerminate()
+                print("ScreenTimePlugin: Killing active app: \(bundleId)")
+                app.forceTerminate()
             }
         }
     }

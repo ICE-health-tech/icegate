@@ -1304,6 +1304,60 @@ abstract class AppLocalizations {
   /// **'Secure login failed: {error}'**
   String msg_secure_login_failed(String error);
 
+  /// No description provided for @err_invalid_credentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Incorrect email or password. Please try again.'**
+  String get err_invalid_credentials;
+
+  /// No description provided for @err_email_not_confirmed.
+  ///
+  /// In en, this message translates to:
+  /// **'Please check your inbox to verify your email.'**
+  String get err_email_not_confirmed;
+
+  /// No description provided for @err_user_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'We couldn\'t find an account with that email.'**
+  String get err_user_not_found;
+
+  /// No description provided for @err_network_fail.
+  ///
+  /// In en, this message translates to:
+  /// **'Unable to connect to the server. Check your internet.'**
+  String get err_network_fail;
+
+  /// No description provided for @err_passkey_canceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey login was canceled.'**
+  String get err_passkey_canceled;
+
+  /// No description provided for @err_passkey_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Security check failed. Please try again.'**
+  String get err_passkey_failed;
+
+  /// No description provided for @err_biometric_unsupported.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric login is not available on this device.'**
+  String get err_biometric_unsupported;
+
+  /// No description provided for @err_biometric_disabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Biometric login is not enabled for this account.'**
+  String get err_biometric_disabled;
+
+  /// No description provided for @err_too_many_attempts.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many failed attempts. Please try again later.'**
+  String get err_too_many_attempts;
+
   /// No description provided for @msg_enter_credentials.
   ///
   /// In en, this message translates to:
@@ -1514,6 +1568,18 @@ abstract class AppLocalizations {
   /// **'Change Password'**
   String get change_password;
 
+  /// No description provided for @btn_enter.
+  ///
+  /// In en, this message translates to:
+  /// **'ENTER'**
+  String get btn_enter;
+
+  /// No description provided for @google_signin_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Google Sign-In Error: {error}'**
+  String google_signin_error(String error);
+
   /// No description provided for @personal_info_title.
   ///
   /// In en, this message translates to:
@@ -1639,6 +1705,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Logout'**
   String get logout;
+
+  /// No description provided for @identity_evolution.
+  ///
+  /// In en, this message translates to:
+  /// **'IDENTITY EVOLUTION'**
+  String get identity_evolution;
+
+  /// No description provided for @identity_evolution_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Level 1: Google. Set a local password to upgrade your security tier.'**
+  String get identity_evolution_desc;
+
+  /// No description provided for @btn_set.
+  ///
+  /// In en, this message translates to:
+  /// **'SET'**
+  String get btn_set;
+
+  /// No description provided for @security_accuracy.
+  ///
+  /// In en, this message translates to:
+  /// **'Security & Accuracy'**
+  String get security_accuracy;
+
+  /// No description provided for @passkey_settings.
+  ///
+  /// In en, this message translates to:
+  /// **'Passkey Settings'**
+  String get passkey_settings;
+
+  /// No description provided for @fast_track_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Fast-Track Active (Secure)'**
+  String get fast_track_active;
+
+  /// No description provided for @upgrade_biometric.
+  ///
+  /// In en, this message translates to:
+  /// **'Upgrade to Biometric Fast-Track'**
+  String get upgrade_biometric;
+
+  /// No description provided for @hint_enter_your.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your...'**
+  String get hint_enter_your;
+
+  /// No description provided for @user_default.
+  ///
+  /// In en, this message translates to:
+  /// **'User'**
+  String get user_default;
+
+  /// No description provided for @tooltip_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get tooltip_save;
+
+  /// No description provided for @tooltip_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit'**
+  String get tooltip_edit;
 
   /// No description provided for @msg_err_not_authenticated.
   ///
@@ -3032,6 +3164,54 @@ abstract class AppLocalizations {
   /// **'No content'**
   String get project_note_no_content;
 
+  /// No description provided for @focus_select_project.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP TO SELECT PROJECT'**
+  String get focus_select_project;
+
+  /// No description provided for @focus_select_task.
+  ///
+  /// In en, this message translates to:
+  /// **'SELECT TASK'**
+  String get focus_select_task;
+
+  /// No description provided for @focus_active_exercise.
+  ///
+  /// In en, this message translates to:
+  /// **'ACTIVE EXERCISE: {type}'**
+  String focus_active_exercise(String type);
+
+  /// No description provided for @focus_flow_active.
+  ///
+  /// In en, this message translates to:
+  /// **'FLOW STATE ACTIVE'**
+  String get focus_flow_active;
+
+  /// No description provided for @focus_breathing.
+  ///
+  /// In en, this message translates to:
+  /// **'BREATHING'**
+  String get focus_breathing;
+
+  /// No description provided for @focus_fetching_audio.
+  ///
+  /// In en, this message translates to:
+  /// **'FETCHING AUDIO...'**
+  String get focus_fetching_audio;
+
+  /// No description provided for @entry_scanning.
+  ///
+  /// In en, this message translates to:
+  /// **'SCANNING'**
+  String get entry_scanning;
+
+  /// No description provided for @entry_assembling.
+  ///
+  /// In en, this message translates to:
+  /// **'ASSEMBLING'**
+  String get entry_assembling;
+
   /// No description provided for @calorie_tracker.
   ///
   /// In en, this message translates to:
@@ -4051,6 +4231,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'DATABASE SCHEMA ID'**
   String get database_schema_id;
+
+  /// No description provided for @add_widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Widget'**
+  String get add_widget;
+
+  /// No description provided for @app_shortcut.
+  ///
+  /// In en, this message translates to:
+  /// **'App Shortcut'**
+  String get app_shortcut;
+
+  /// No description provided for @web_widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Web Widget'**
+  String get web_widget;
+
+  /// No description provided for @please_select_app_page.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select an app page'**
+  String get please_select_app_page;
+
+  /// No description provided for @widget_added_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget added successfully'**
+  String get widget_added_success;
+
+  /// No description provided for @error_adding_widget.
+  ///
+  /// In en, this message translates to:
+  /// **'Error adding widget: {error}'**
+  String error_adding_widget(String error);
+
+  /// No description provided for @please_select_plugin.
+  ///
+  /// In en, this message translates to:
+  /// **'Please select a plugin'**
+  String get please_select_plugin;
+
+  /// No description provided for @please_fill_all_fields.
+  ///
+  /// In en, this message translates to:
+  /// **'Please fill in all fields'**
+  String get please_fill_all_fields;
+
+  /// No description provided for @widget_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Widget Name (e.g. Facebook)'**
+  String get widget_name_hint;
+
+  /// No description provided for @url_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'URL (e.g. facebook.com)'**
+  String get url_hint;
+
+  /// No description provided for @plugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get plugins;
+
+  /// No description provided for @custom_url.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom URL'**
+  String get custom_url;
 }
 
 class _AppLocalizationsDelegate

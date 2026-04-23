@@ -11,7 +11,7 @@ import 'package:ice_gate/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
-import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_gate/ui_layer/finance_page/finance_page.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/projects_page/projects_page.dart';
 import 'package:ice_gate/ui_layer/canvas_page/CanvasDynamicIsland.dart';

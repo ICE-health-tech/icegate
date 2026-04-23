@@ -135,7 +135,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                           icon: Icons.add_to_drive_rounded,
                           color: Colors.green,
                           isConnected: block.isGoogleDriveConnected.value,
-                          isLoading: block.isSyncing.value,
+                          isLoading: block.isSyncing.value && block.syncType.value == 'drive',
                           onCardTap: () {
                             if (block.isGoogleDriveConnected.value) {
                               _navigateToGoogleDriveExplorer(context);
@@ -155,6 +155,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                           icon: Icons.grid_view_rounded,
                           color: Colors.indigo,
                           isConnected: block.notionSecret.value != null,
+                          isLoading: block.isSyncing.value && block.syncType.value == 'notion',
                           onCardTap: () => _showNotionDialog(context, block),
                           onAction: () {
                             if (block.notionSecret.value != null) {

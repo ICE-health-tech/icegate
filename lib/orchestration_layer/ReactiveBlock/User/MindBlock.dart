@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class MindBlock {
@@ -27,6 +27,18 @@ class MindBlock {
   Stream<List<MindLogData>> watchMindLogsByDay(String personId, DateTime date) {
     return dao.watchLogsByDay(personId, date).map((logs) {
       debugPrint('📊 [MindBlock] Found ${logs.length} logs for $personId on ${date.toIso8601String().split('T')[0]}');
+      return logs;
+    });
+  }
+
+  /// Watch logs for a specific range of days
+  Stream<List<MindLogData>> watchMindLogsRange(String personId, int days) {
+    final now = DateTime.now();
+    final start = DateTime(now.year, now.month, now.day).subtract(Duration(days: days));
+    final end = DateTime(now.year, now.month, now.day).add(const Duration(days: 1));
+    
+    return dao.watchLogsByRange(personId, start, end).map((logs) {
+      debugPrint('📊 [MindBlock] Found ${logs.length} logs for $personId in last $days days');
       return logs;
     });
   }

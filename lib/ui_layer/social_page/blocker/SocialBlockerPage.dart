@@ -14,13 +14,13 @@ class SocialBlockerPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final blocker = context.watch<SocialBlockerBlock>();
     final challengeBlock = context.watch<ChallengeBlock>();
-    final orangeAccent = const Color(0xFFE37E63);
+    final orangeAccent = const Color.fromARGB(255, 143, 254, 52);
 
     return Scaffold(
       backgroundColor: colorScheme.surface,
       body: CustomScrollView(
         slivers: [
-          const SliverToBoxAdapter(child: SizedBox(height: 60)),
+          const SliverToBoxAdapter(child: SizedBox(height: 120)),
 
           // App Blocker Section
           SliverToBoxAdapter(
@@ -37,6 +37,7 @@ class SocialBlockerPage extends StatelessWidget {
                   //     color: colorScheme.onSurface,
                   //   ),
                   // ),
+                  SizedBox(width: 60),
                   Watch((context) {
                     final isActive = blocker.isAnyBlockActive.watch(context);
                     if (!isActive) return const SizedBox.shrink();
@@ -87,113 +88,130 @@ class SocialBlockerPage extends StatelessWidget {
               ),
             ),
           ),
-          // SliverToBoxAdapter(
-          //   child: _buildSection(context, [
-          //     Watch((context) {
-          //       final isEnabled = blocker.isAppBlacklistEnabled.watch(context);
+          SliverToBoxAdapter(
+            child: _buildSection(context, [
+              Watch((context) {
+                final isEnabled = blocker.isAppBlacklistEnabled.watch(context);
 
-          //       return _buildTile(
-          //         context,
-          //         title: "System Shield Master",
-          //         subtitle: "Master switch for all app blocking rules.",
-          //         icon: Icons.shield_rounded,
-          //         color: orangeAccent,
-          //         trailing: Switch.adaptive(
-          //           value: isEnabled,
-          //           activeColor: orangeAccent,
-          //           onChanged: (val) async {
-          //             if (!val) {
-          //               // Turning OFF -> check for challenge
-          //               final challenge = blocker.getRequiredChallengeForMaster(
-          //                 false,
-          //               );
-          //               if (challenge != null) {
-          //                 challengeBlock.generateChallenge(
-          //                   challenge.type,
-          //                   challenge.level,
-          //                 );
-          //                 ChallengeDialog.show(context, challengeBlock, () {
-          //                   blocker.toggleBlacklist(false);
-          //                 });
-          //                 return;
-          //               }
-          //             }
-          //             blocker.toggleBlacklist(val);
-          //           },
-          //         ),
-          //       );
-          //     }),
-          //     _buildDivider(context),
-          //     _buildTile(
-          //       context,
-          //       title: "Select Blocked Apps",
-          //       subtitle: "Choose which apps or categories to restrict.",
-          //       icon: Icons.apps_rounded,
-          //       color: Colors.purple,
-          //       onTap: () {
-          //         if (!blocker.isSystemAuthGranted.value) {
-          //           blocker.requestAuth();
-          //         } else {
-          //           blocker.openAppPicker();
-          //         }
-          //       },
-          //     ),
-          //   ]),
-          // ),
+                return _buildTile(
+                  context,
+                  title: "System Shield Master",
+                  subtitle: !blocker.isSystemAuthGranted.watch(context)
+                      ? "Grant System Permissions to start"
+                      : (blocker.appSelectionJson.watch(context) == null
+                            ? "Setup Required: Tap to select apps"
+                            : "Shielding is active. Tap to change apps."),
+                  icon: Icons.shield_rounded,
+                  color:
+                      !blocker.isSystemAuthGranted.watch(context) ||
+                          blocker.appSelectionJson.watch(context) == null
+                      ? Colors.red
+                      : orangeAccent,
+                  onTap: () {
+                    if (!blocker.isSystemAuthGranted.value) {
+                      blocker.requestAuth();
+                    } else {
+                      blocker.openAppPicker();
+                    }
+                  },
+                  trailing: Switch.adaptive(
+                    value: isEnabled,
+                    activeColor: orangeAccent,
+                    onChanged: (val) async {
+                      if (!val) {
+                        // Turning OFF -> check for challenge
+                        final challenge = blocker.getRequiredChallengeForMaster(
+                          false,
+                        );
+                        if (challenge != null) {
+                          challengeBlock.generateChallenge(
+                            challenge.type,
+                            challenge.level,
+                          );
+                          ChallengeDialog.show(context, challengeBlock, () {
+                            blocker.toggleBlacklist(false);
+                          });
+                          return;
+                        }
+                      }
+                      blocker.toggleBlacklist(val);
+                    },
+                  ),
+                );
+              }),
+              _buildDivider(context),
+            ]),
+          ),
 
-          // const SliverToBoxAdapter(child: SizedBox(height: 32)),
+          const SliverToBoxAdapter(child: SizedBox(height: 32)),
 
           // Schedules & Rules Section
           _buildHeader(
             context,
             "Rules",
-            trailing: IconButton(
-              icon: Icon(
-                Icons.info_outline_rounded,
-                size: 20,
-                color: Theme.of(context).colorScheme.onSurfaceVariant,
-              ),
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    title: const Text("Challenge System"),
-                    content: const Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Challenges add friction when you try to disable a block during focus sessions or schedules.",
-                          style: TextStyle(fontSize: 14),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          "• Math: Solve equations to verify focus.",
-                          style: TextStyle(fontSize: 13),
-                        ),
-                        Text(
-                          "• Typing: Type mindfulness phrases.",
-                          style: TextStyle(fontSize: 13),
-                        ),
-                        SizedBox(height: 16),
-                        Text(
-                          "Success rate tracks your discipline across sessions.",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextButton(
+                  onPressed: () => blocker.disableAllRules(),
+                  child: Text(
+                    "Disable All",
+                    style: TextStyle(
+                      color: orangeAccent,
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
                     ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context),
-                        child: const Text("Got it"),
-                      ),
-                    ],
                   ),
-                );
-              },
+                ),
+                IconButton(
+                  icon: Icon(
+                    Icons.info_outline_rounded,
+                    size: 20,
+                    color: Theme.of(context).colorScheme.onSurfaceVariant,
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: const Text("Challenge System"),
+                        content: const Column(
+                          mainAxisSize: MainAxisSize.min,
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Challenges add friction when you try to disable a block during focus sessions or schedules.",
+                              style: TextStyle(fontSize: 14),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              "• Math: Solve equations to verify focus.",
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            Text(
+                              "• Typing: Type mindfulness phrases.",
+                              style: TextStyle(fontSize: 13),
+                            ),
+                            SizedBox(height: 16),
+                            Text(
+                              "Success rate tracks your discipline across sessions.",
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: const Text("Got it"),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
           ),
           Watch((context) {
@@ -261,7 +279,7 @@ class SocialBlockerPage extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 20,
-                        vertical: 12,
+                        vertical: 16,
                       ),
                       child: Row(
                         children: [
@@ -297,8 +315,8 @@ class SocialBlockerPage extends StatelessWidget {
                                       ? "${rule.scheduleStart!.format(context)} - ${rule.scheduleEnd!.format(context)}"
                                       : "During Focus Sessions",
                                   style: TextStyle(
+                                    color: colorScheme.onSurface,
                                     fontSize: 12,
-                                    color: colorScheme.onSurfaceVariant,
                                   ),
                                 ),
                                 if (rule.challengeType !=
@@ -788,65 +806,67 @@ class _AddRuleSheetState extends State<_AddRuleSheet> {
               ),
             ),
 
-            const SizedBox(height: 32),
-            _buildLabel(colorScheme, "Target Content"),
-            const SizedBox(height: 12),
-            GestureDetector(
-              onTap: () => widget.blocker.openAppPicker(),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: orangeAccent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: orangeAccent, width: 2),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: orangeAccent,
-                        borderRadius: BorderRadius.circular(12),
+            if (selectedPlatform == SocialPlatform.custom) ...[
+              const SizedBox(height: 32),
+              _buildLabel(colorScheme, "Target Content"),
+              const SizedBox(height: 12),
+              GestureDetector(
+                onTap: () => widget.blocker.openAppPicker(),
+                child: Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: orangeAccent.withValues(alpha: 0.1),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: orangeAccent, width: 2),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          color: orangeAccent,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.apps_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                       ),
-                      child: const Icon(
-                        Icons.apps_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "Choose Apps to Block",
-                            style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              color: colorScheme.onSurface,
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "Choose Apps to Block",
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface,
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            "Select categories or specific apps from iOS",
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: colorScheme.onSurfaceVariant,
+                            const SizedBox(height: 2),
+                            Text(
+                              "Select categories or specific apps from iOS",
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: colorScheme.onSurfaceVariant,
+                              ),
                             ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
-                    ),
-                    Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                  ],
+                      Icon(
+                        Icons.arrow_forward_ios_rounded,
+                        size: 14,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
+            ],
 
             const SizedBox(height: 32),
             _buildLabel(colorScheme, "Challenge Friction"),

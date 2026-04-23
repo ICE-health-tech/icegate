@@ -11,7 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/AnalysisCharts.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 class HealthAnalysisPage extends StatelessWidget {
   const HealthAnalysisPage({super.key});
@@ -118,24 +118,30 @@ class HealthAnalysisPage extends StatelessWidget {
             final last7Days = allMetrics.take(7).toList();
 
             // Efficiency (Steps vs Goal)
-            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(0.0, 1.0);
+            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
+              0.0,
+              1.0,
+            );
 
             // Consistency (Average variation in last 7 days)
             double avgSteps = last7Days.isEmpty
                 ? 0.0
                 : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
-                    last7Days.length;
+                      last7Days.length;
 
             double consistency = 0.0;
             if (last7Days.length > 1) {
-              double variance = last7Days.fold(
+              double variance =
+                  last7Days.fold(
                     0.0,
                     (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
                   ) /
                   last7Days.length;
-              consistency = (1.0 -
-                      (math.sqrt(variance) / (avgSteps > 0 ? avgSteps : 1.0)))
-                  .clamp(0.0, 1.0);
+              consistency =
+                  (1.0 -
+                          (math.sqrt(variance) /
+                              (avgSteps > 0 ? avgSteps : 1.0)))
+                      .clamp(0.0, 1.0);
             }
 
             return SingleChildScrollView(
@@ -153,17 +159,37 @@ class HealthAnalysisPage extends StatelessWidget {
                     consistency: consistency,
                     metabolism: (latest.caloriesBurned ?? 0) > 2000
                         ? AppLocalizations.of(context)!.health_metabolism_active
-                        : AppLocalizations.of(context)!
-                            .health_metabolism_normal,
+                        : AppLocalizations.of(
+                            context,
+                          )!.health_metabolism_normal,
                     intensity: (latest.exerciseMinutes ?? 0) > 45
                         ? AppLocalizations.of(context)!.health_intensity_high
-                        : AppLocalizations.of(context)!
-                            .health_intensity_moderate,
+                        : AppLocalizations.of(
+                            context,
+                          )!.health_intensity_moderate,
                   ),
 
                   const SizedBox(height: 32),
                   // --- ACTIVITY BALANCE SECTION ---
                   _buildActivityBalanceCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    latest: latest,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- CALORIE & ENERGY SECTION ---
+                  _buildCalorieBalanceCard(
+                    context,
+                    colorScheme,
+                    textTheme,
+                    latest: latest,
+                  ),
+                  const SizedBox(height: 24),
+
+                  // --- HEART RATE SECTION ---
+                  _buildHeartRateCard(
                     context,
                     colorScheme,
                     textTheme,
@@ -205,6 +231,7 @@ class HealthAnalysisPage extends StatelessWidget {
                     textTheme,
                     latest: latest,
                     avgSteps: avgSteps,
+                    last7Days: last7Days,
                   ),
                   const SizedBox(height: 40),
                 ],
@@ -257,7 +284,10 @@ class HealthAnalysisPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -295,10 +325,8 @@ class HealthAnalysisPage extends StatelessWidget {
                   consistency > 0.8
                       ? AppLocalizations.of(context)!.health_consistency_high
                       : consistency > 0.5
-                          ? AppLocalizations.of(context)!
-                              .health_consistency_medium
-                          : AppLocalizations.of(context)!
-                              .health_consistency_low,
+                      ? AppLocalizations.of(context)!.health_consistency_medium
+                      : AppLocalizations.of(context)!.health_consistency_low,
                   colorScheme,
                   textTheme,
                 ),
@@ -420,8 +448,12 @@ class HealthAnalysisPage extends StatelessWidget {
                   children: [
                     Text(
                       latest.steps! > 8000
-                          ? AppLocalizations.of(context)!.health_balance_moving_much
-                          : AppLocalizations.of(context)!.health_balance_optimal,
+                          ? AppLocalizations.of(
+                              context,
+                            )!.health_balance_moving_much
+                          : AppLocalizations.of(
+                              context,
+                            )!.health_balance_optimal,
                       style: textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurface,
                         height: 1.4,
@@ -431,6 +463,265 @@ class HealthAnalysisPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHeartRateCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme, {
+    required HealthMetricsLocal latest,
+  }) {
+    final hr = latest.heartRate ?? 0;
+    String status = "NORMAL";
+    Color hrColor = Colors.green;
+
+    if (hr > 100) {
+      status = "ELEVATED";
+      hrColor = Colors.orange;
+    } else if (hr > 140) {
+      status = "HIGH";
+      hrColor = Colors.red;
+    } else if (hr < 50 && hr > 0) {
+      status = "LOW";
+      hrColor = Colors.blue;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(32.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                "HEART RATE ANALYSIS",
+                style: textTheme.labelSmall?.copyWith(
+                  color: colorScheme.onSurfaceVariant,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 1.1,
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: hrColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  status,
+                  style: textTheme.labelSmall?.copyWith(
+                    color: hrColor,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                hr > 0 ? "$hr" : "--",
+                style: textTheme.displayMedium?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  color: colorScheme.onSurface,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: Text(
+                  "BPM",
+                  style: textTheme.labelMedium?.copyWith(
+                    color: colorScheme.onSurfaceVariant,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              const Spacer(),
+              _HeartPulseIcon(color: hrColor),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Text(
+            hr > 0
+                ? "Your current heart rate is $status for your age and activity level."
+                : "No heart rate data recorded for today.",
+            style: textTheme.bodySmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              height: 1.4,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCalorieBalanceCard(
+    BuildContext context,
+    ColorScheme colorScheme,
+    TextTheme textTheme, {
+    required HealthMetricsLocal latest,
+  }) {
+    final burned = latest.caloriesBurned ?? 0;
+    final consumed = latest.caloriesConsumed ?? 0;
+    final balance = consumed - burned;
+
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(32.0),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+          ),
+        ],
+        border: Border.all(
+          color: colorScheme.outlineVariant.withOpacity(0.2),
+          width: 1.5,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "ENERGY BALANCE",
+            style: textTheme.labelSmall?.copyWith(
+              color: colorScheme.onSurfaceVariant,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.1,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "BURNED",
+                      style: textTheme.labelSmall?.copyWith(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "$burned kcal",
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                width: 1,
+                height: 40,
+                color: colorScheme.outlineVariant.withOpacity(0.5),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "CONSUMED",
+                      style: textTheme.labelSmall?.copyWith(
+                        color: Colors.green,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      "$consumed kcal",
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Stack(
+            children: [
+              Container(
+                height: 12,
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+              ),
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  final total = (burned + consumed).toDouble();
+                  if (total == 0) return const SizedBox.shrink();
+                  final burnedWidth = (burned / total) * constraints.maxWidth;
+                  return Row(
+                    children: [
+                      Container(
+                        height: 12,
+                        width: burnedWidth,
+                        decoration: BoxDecoration(
+                          color: Colors.orange,
+                          borderRadius: const BorderRadius.only(
+                            topLeft: Radius.circular(6),
+                            bottomLeft: Radius.circular(6),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 12,
+                        width: constraints.maxWidth - burnedWidth,
+                        decoration: BoxDecoration(
+                          color: Colors.green,
+                          borderRadius: const BorderRadius.only(
+                            topRight: Radius.circular(6),
+                            bottomRight: Radius.circular(6),
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            balance <= 0
+                ? "Deficit: ${balance.abs()} kcal. Great for weight management!"
+                : "Surplus: $balance kcal. Focus on activity to balance.",
+            style: textTheme.bodySmall?.copyWith(
+              color: balance <= 0 ? Colors.green : Colors.orange,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
@@ -478,7 +769,11 @@ class HealthAnalysisPage extends StatelessWidget {
             children: last7Days.take(7).toList().reversed.map((m) {
               final dayLabel = DateFormat('E').format(m.date).substring(0, 1);
               final height = (m.steps ?? 0) / STEP_GOAL;
-              return _buildBarDay(dayLabel, height.clamp(0.1, 1.0), colorScheme);
+              return _buildBarDay(
+                dayLabel,
+                height.clamp(0.1, 1.0),
+                colorScheme,
+              );
             }).toList(),
           ),
           const SizedBox(height: 24),
@@ -490,6 +785,13 @@ class HealthAnalysisPage extends StatelessWidget {
                   last7Days.fold<int>(0, (sum, m) => sum + (m.steps ?? 0)) /
                       (last7Days.isEmpty ? 1 : last7Days.length),
                 ),
+                colorScheme,
+                textTheme,
+              ),
+              const SizedBox(width: 20),
+              _buildTrendStat(
+                "STREAK",
+                "${_calculateStreak(last7Days)} DAYS",
                 colorScheme,
                 textTheme,
               ),
@@ -505,6 +807,18 @@ class HealthAnalysisPage extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  int _calculateStreak(List<HealthMetricsLocal> metrics) {
+    int streak = 0;
+    for (var m in metrics) {
+      if ((m.steps ?? 0) >= STEP_GOAL) {
+        streak++;
+      } else {
+        break;
+      }
+    }
+    return streak;
   }
 
   Widget _buildBarDay(String label, double height, ColorScheme colorScheme) {
@@ -537,7 +851,12 @@ class HealthAnalysisPage extends StatelessWidget {
     TextTheme textTheme, {
     required HealthMetricsLocal latest,
     required double avgSteps,
+    required List<HealthMetricsLocal> last7Days,
   }) {
+    final avgSleep = last7Days.isEmpty
+        ? 0.0
+        : last7Days.fold(0.0, (sum, m) => sum + (m.sleepHours ?? 0)) /
+            last7Days.length;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -575,8 +894,9 @@ class HealthAnalysisPage extends StatelessWidget {
                 : AppLocalizations.of(context)!.health_insight_keep_pushing,
             (latest.steps ?? 0) > avgSteps
                 ? AppLocalizations.of(context)!.health_insight_activity_higher
-                : AppLocalizations.of(context)!
-                    .health_insight_activity_lower(avgSteps.toInt()),
+                : AppLocalizations.of(
+                    context,
+                  )!.health_insight_activity_lower(avgSteps.toInt()),
             colorScheme,
             textTheme,
           ),
@@ -598,7 +918,20 @@ class HealthAnalysisPage extends StatelessWidget {
             Icons.water_drop_rounded,
             Colors.cyan,
             AppLocalizations.of(context)!.health_hydration_title,
-            AppLocalizations.of(context)!.health_hydration_track_msg,
+            (latest.waterGlasses ?? 0) >= WATER_GOAL / 250
+                ? "Hydration goal reached! Excellent work."
+                : "Drink ${(WATER_GOAL / 250 - (latest.waterGlasses ?? 0)).toInt()} more glasses to reach your goal.",
+            colorScheme,
+            textTheme,
+          ),
+          const SizedBox(height: 12),
+          _buildInsightItem(
+            Icons.bedtime_rounded,
+            Colors.deepPurpleAccent,
+            "SLEEP QUALITY",
+            avgSleep < 7
+                ? "Your weekly average is under 7h. Try to rest earlier tonight."
+                : "Consistent sleep detected. Your recovery is optimal.",
             colorScheme,
             textTheme,
           ),
@@ -663,7 +996,7 @@ class HealthAnalysisPage extends StatelessWidget {
 
     if (weightHistory.isEmpty) return const SizedBox.shrink();
 
-    final dataPoints = weightHistory.values.toList();
+    final dataPoints = weightHistory.values.toList().reversed.toList();
 
     return Container(
       padding: const EdgeInsets.all(24),
@@ -814,10 +1147,7 @@ class HealthAnalysisPage extends StatelessWidget {
           const SizedBox(height: 24),
           SizedBox(
             height: 100,
-            child: SimpleLineChart(
-              data: dataPoints,
-              color: Colors.cyan,
-            ),
+            child: SimpleLineChart(data: dataPoints, color: Colors.cyan),
           ),
         ],
       ),
@@ -877,6 +1207,46 @@ class HealthAnalysisPage extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _HeartPulseIcon extends StatefulWidget {
+  final Color color;
+  const _HeartPulseIcon({required this.color});
+
+  @override
+  _HeartPulseIconState createState() => _HeartPulseIconState();
+}
+
+class _HeartPulseIconState extends State<_HeartPulseIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 1000),
+      vsync: this,
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: Icon(Icons.favorite_rounded, color: widget.color, size: 24),
     );
   }
 }

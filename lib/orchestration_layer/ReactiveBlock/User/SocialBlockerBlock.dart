@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/Protocol/Social/SocialBlockProtocol.dart';
@@ -17,7 +18,10 @@ class SocialBlockerBlock {
   final isAppBlacklistEnabled = signal<bool>(false);
   final isAnyBlockActive = signal<bool>(false);
   final isSystemAuthGranted = signal<bool>(false);
+  final appSelectionJson = signal<String?>(null);
   final _currentTime = signal<DateTime>(DateTime.now());
+  
+  static const _appSelectionKey = 'ice_gate_social_app_selection';
 
   FocusBlock? _focusBlock;
   late final void Function() _disposeEvaluation;
@@ -36,6 +40,7 @@ class SocialBlockerBlock {
       final blacklistEnabled = isAppBlacklistEnabled.value;
       final now = _currentTime.value;
       final currentRules = rules.value;
+      appSelectionJson.value; // Track selection changes for reactive updates
       
       // Evaluation logic: 
       // Block is active IF (Blacklist is ON) AND ( (Focus is Running and rule allows it) OR (Schedule is Active) )
@@ -73,6 +78,7 @@ class SocialBlockerBlock {
         shouldBeActive = scheduleActive || focusActive;
       }
       
+      // Update the active state signal and trigger native sync ONLY on state change
       if (shouldBeActive != isAnyBlockActive.value) {
         untracked(() {
           isAnyBlockActive.value = shouldBeActive;
@@ -81,8 +87,10 @@ class SocialBlockerBlock {
       }
     });
 
-    // Tick current time every minute to evaluate schedules
-    _timerSubscription = Stream.periodic(const Duration(minutes: 1)).listen((_) {
+    _currentTime.value = DateTime.now();
+
+    // Tick current time every 30 seconds to evaluate schedules precisely
+    _timerSubscription = Stream.periodic(const Duration(seconds: 30)).listen((_) {
       _currentTime.value = DateTime.now();
     });
   }
@@ -95,28 +103,36 @@ class SocialBlockerBlock {
   // --- Actions ---
 
   Future<void> addRule(SocialBlockRule rule) async {
-    rules.add(rule);
+    rules.value = [...rules.value, rule];
     await _persist();
+    _toggleSystemShield(isAnyBlockActive.value);
   }
 
   Future<void> removeRule(String id) async {
-    rules.removeWhere((r) => r.id == id);
+    rules.value = rules.value.where((r) => r.id != id).toList();
     await _persist();
+    _toggleSystemShield(isAnyBlockActive.value);
   }
 
   Future<void> updateRule(SocialBlockRule rule) async {
-    final index = rules.indexWhere((r) => r.id == rule.id);
+    final index = rules.value.indexWhere((r) => r.id == rule.id);
     if (index != -1) {
-      rules[index] = rule;
+      final newList = [...rules.value];
+      newList[index] = rule;
+      rules.value = newList;
       await _persist();
+      _toggleSystemShield(isAnyBlockActive.value);
     }
   }
 
   Future<void> toggleRule(String id, bool enabled) async {
-    final index = rules.indexWhere((r) => r.id == id);
+    final index = rules.value.indexWhere((r) => r.id == id);
     if (index != -1) {
-      rules[index] = rules[index].copyWith(isEnabled: enabled);
+      final newList = [...rules.value];
+      newList[index] = newList[index].copyWith(isEnabled: enabled);
+      rules.value = newList;
       await _persist();
+      _toggleSystemShield(isAnyBlockActive.value);
     }
   }
 
@@ -172,29 +188,46 @@ class SocialBlockerBlock {
     try {
       final bool granted = await _channel.invokeMethod('requestAuthorization');
       isSystemAuthGranted.value = granted;
+    } on PlatformException catch (e) {
+      if (e.code == 'AUTH_DENIED') {
+        debugPrint("SocialBlockerBlock: Auth denied. User needs to enable in Settings.");
+        // We can throw here to be caught by the UI or handle it with a signal
+      }
+      debugPrint("SocialBlockerBlock: Error requesting auth: ${e.message}");
     } catch (e) {
-      debugPrint("SocialBlockerBlock: Error requesting auth: $e");
+      debugPrint("SocialBlockerBlock: Unexpected error requesting auth: $e");
     }
   }
 
   Future<void> openAppPicker() async {
     try {
-      final bool changed = await _channel.invokeMethod('showAppPicker');
-      if (changed) {
-        debugPrint("SocialBlockerBlock: App selection changed");
-        // Re-toggle shield if active to apply new tokens
-        if (isAnyBlockActive.value) {
-          _toggleSystemShield(true);
-        }
+      final String? result = await _channel.invokeMethod('showAppPicker', {
+        'initialSelection': appSelectionJson.value,
+      });
+      
+      if (result != null) {
+        debugPrint("SocialBlockerBlock: App selection updated");
+        appSelectionJson.value = result;
+        await _persist();
+        
+        _toggleSystemShield(isAnyBlockActive.value);
       }
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error opening app picker: $e");
     }
   }
 
-  void toggleBlacklist(bool value) {
-    isAppBlacklistEnabled.value = value;
+  void toggleBlacklist(bool enabled) {
+    isAppBlacklistEnabled.value = enabled;
     _persist();
+    _toggleSystemShield(isAnyBlockActive.value);
+  }
+
+  void disableAllRules() {
+    final newList = rules.value.map((r) => r.copyWith(isEnabled: false)).toList();
+    rules.value = newList;
+    _persist();
+    _toggleSystemShield(isAnyBlockActive.value);
   }
 
   // --- Persistence ---
@@ -209,6 +242,8 @@ class SocialBlockerBlock {
           .map((j) => SocialBlockRule.fromJson(jsonDecode(j)))
           .toList();
     }
+
+    appSelectionJson.value = prefs.getString(_appSelectionKey);
   }
 
   Future<void> _persist() async {
@@ -219,6 +254,12 @@ class SocialBlockerBlock {
         .map((r) => jsonEncode(r.toJson()))
         .toList();
     await prefs.setStringList(_storageKey, rulesJson);
+
+    if (appSelectionJson.value != null) {
+      await prefs.setString(_appSelectionKey, appSelectionJson.value!);
+    } else {
+      await prefs.remove(_appSelectionKey);
+    }
   }
 
   // --- Native Communication ---
@@ -232,7 +273,15 @@ class SocialBlockerBlock {
     if (!isSystemAuthGranted.value) return;
 
     try {
-      await _channel.invokeMethod('toggleShield', {'active': active});
+      final selections = <String>[];
+      if (appSelectionJson.value != null) {
+        selections.add(appSelectionJson.value!);
+      }
+
+      await _channel.invokeMethod('toggleShield', {
+        'active': active,
+        'selections': selections,
+      });
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error toggling shield: $e");
     }

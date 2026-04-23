@@ -18,15 +18,13 @@ class SyncEnginePage extends StatefulWidget {
 }
 
 class _SyncEnginePageState extends State<SyncEnginePage> {
-  final DocumentationBlock docBlock = DocumentationBlock(); // This should be a singleton ideally, check instantiation
   int _activeTab = 0;
 
   @override
   Widget build(BuildContext context) {
+    final docBlock = context.read<DocumentationBlock>();
     final l10n = context.l10n;
-    final uptime = docBlock.uptimeSeconds.watch(context);
     final health = docBlock.systemHealth.watch(context);
-    final history = docBlock.syncHistory.watch(context);
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A), // Deep Slate
@@ -59,22 +57,34 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
               children: [
                 _buildHeader(context, l10n, health),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Column(
-                      children: [
-                        const SizedBox(height: 20),
-                        _buildMetricsGrid(context, l10n, uptime, health),
-                        const SizedBox(height: 24),
-                        _buildPrimaryActions(context, l10n),
-                        const SizedBox(height: 16),
-                        _buildAdvancedActions(context, l10n),
-                        const SizedBox(height: 32),
-                        _buildActivityLog(context, l10n, history),
-                        const SizedBox(height: 100), // Bottom padding
-                      ],
-                    ),
-                  ),
+                  child: Watch((context) {
+                    final history = docBlock.syncHistory.value;
+                    final uptime = docBlock.uptimeSeconds.value;
+                    final health = docBlock.systemHealth.value;
+
+                    return SingleChildScrollView(
+                      padding: const EdgeInsets.symmetric(horizontal: 20),
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 20),
+                          if (_activeTab == 0) ...[
+                            _buildMetricsGrid(context, docBlock, l10n, uptime, health),
+                            const SizedBox(height: 24),
+                            _buildPrimaryActions(context, docBlock, l10n),
+                            const SizedBox(height: 16),
+                            _buildAdvancedActions(context, l10n),
+                          ] else if (_activeTab == 1) ...[
+                            _buildNotionSyncSection(context, docBlock, l10n),
+                          ] else if (_activeTab == 2) ...[
+                            _buildActivityLog(context, l10n, history),
+                          ] else ...[
+                            _buildSettingsSection(context, l10n),
+                          ],
+                          const SizedBox(height: 100), // Bottom padding
+                        ],
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),
@@ -156,7 +166,7 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
     );
   }
 
-  Widget _buildMetricsGrid(BuildContext context, AppLocalizations l10n, int uptime, double health) {
+  Widget _buildMetricsGrid(BuildContext context, DocumentationBlock block, AppLocalizations l10n, int uptime, double health) {
     return GridView.count(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
@@ -181,14 +191,14 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
         ),
         _buildGlassCard(
           l10n.sync_method,
-          docBlock.syncMethod.value,
+          block.syncMethod.value,
           subtitle: "Bidirectional",
           icon: Icons.sync_alt,
           accentColor: Colors.orangeAccent,
         ),
         _buildGlassCard(
           l10n.refresh_rate,
-          "${docBlock.refreshRate.value.inMinutes}m",
+          "${block.refreshRate.value.inMinutes}m",
           subtitle: "Real-time Priority",
           icon: Icons.refresh,
           accentColor: Colors.greenAccent,
@@ -256,7 +266,7 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
     );
   }
 
-  Widget _buildPrimaryActions(BuildContext context, AppLocalizations l10n) {
+  Widget _buildPrimaryActions(BuildContext context, DocumentationBlock block, AppLocalizations l10n) {
     return Row(
       children: [
         Expanded(
@@ -274,8 +284,8 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
                   child: GoogleDriveFolderPickerPage(
                     onFolderSelected: (id, name) async {
                       Navigator.pop(ctx);
-                      docBlock.obsidianFolderName.value = name;
-                      await docBlock.syncWithGoogleDrive();
+                      block.obsidianFolderName.value = name;
+                      await block.syncWithGoogleDrive();
                     },
                   ),
                 ),
@@ -361,9 +371,9 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
     );
   }
 
-  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap) {
+  Widget _buildActionButton(String label, IconData icon, Color color, VoidCallback onTap, {bool isLoading = false}) {
     return InkWell(
-      onTap: onTap,
+      onTap: isLoading ? null : onTap,
       borderRadius: BorderRadius.circular(16),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 16),
@@ -375,10 +385,20 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 18),
+            if (isLoading)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: color,
+                ),
+              )
+            else
+              Icon(icon, color: color, size: 18),
             const SizedBox(width: 8),
             Text(
-              label,
+              isLoading ? "SYNCING..." : label,
               style: TextStyle(
                 color: color,
                 fontWeight: FontWeight.bold,
@@ -388,6 +408,58 @@ class _SyncEnginePageState extends State<SyncEnginePage> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildNotionSyncSection(BuildContext context, DocumentationBlock block, AppLocalizations l10n) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildGlassCard(
+          "NOTION PIPELINE",
+          block.notionSecret.value != null ? "CONFIGURED" : "NOT SET",
+          subtitle: "Auto-ingestion active",
+          icon: Icons.grid_view_rounded,
+          accentColor: Colors.indigoAccent,
+        ),
+        const SizedBox(height: 24),
+        Watch((context) {
+          final isSyncing = block.isSyncing.value;
+          final syncType = block.syncType.value;
+          final isNotionSyncing = isSyncing && syncType == 'notion';
+
+          return _buildActionButton(
+            "FETCH FROM NOTION",
+            Icons.download_rounded,
+            Colors.indigoAccent,
+            () => block.fetchFromNotionAuto(),
+            isLoading: isNotionSyncing,
+          );
+        }),
+        const SizedBox(height: 16),
+        Text(
+          "Fetch will scan all shared databases and convert them to local markdown files. This process is incremental.",
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.4),
+            fontSize: 11,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSettingsSection(BuildContext context, AppLocalizations l10n) {
+    return Column(
+      children: [
+        _buildActionButton(
+          "RESET SYNC INVENTORY",
+          Icons.restart_alt,
+          Colors.redAccent,
+          () {
+            // Logic to clear .sync_inventory.json
+          },
+        ),
+      ],
     );
   }
 

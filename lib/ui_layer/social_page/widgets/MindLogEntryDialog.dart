@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/MoodSelector.dart';
@@ -81,6 +81,23 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
       );
       print("entry oke: $entry");
       await context.read<MindLogsDAO>().insertLog(entry);
+      
+      // Double insert into project_notes for Journal visibility
+      final activitiesStr = _selectedActivities.isNotEmpty 
+          ? _selectedActivities.join(", ") 
+          : "Logged mood";
+      final emoji = _getMoodEmoji(_selectedMood);
+      
+      await context.read<ProjectNoteDAO>().insertNote(
+        title: "$emoji $activitiesStr",
+        content: _noteController.text.trim().isEmpty 
+            ? "I'm feeling $emoji today." 
+            : _noteController.text.trim(),
+        personID: personId,
+        tenantID: tenantId,
+        category: 'social',
+        mood: emoji,
+      );
 
       if (mounted) {
         Navigator.of(context).pop();
@@ -96,6 +113,17 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
       }
     } finally {
       if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  String _getMoodEmoji(int score) {
+    switch (score) {
+      case 1: return "😫";
+      case 2: return "😔";
+      case 3: return "😐";
+      case 4: return "😊";
+      case 5: return "🤩";
+      default: return "😐";
     }
   }
 

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
@@ -11,6 +11,7 @@ import 'package:ice_gate/ui_layer/finance_page/utils/QuantMath.dart';
 import 'package:intl/intl.dart';
 
 class FinanceBlock {
+  final activeTab = signal(0);
   final accounts = listSignal<FinancialAccountProtocol>([]);
   final assets = listSignal<AssetProtocol>([]);
   final transactions = listSignal<TransactionData>([]);
@@ -454,6 +455,31 @@ class FinanceBlock {
       ),
     );
   }
+
+  Future<void> updateTransaction({
+    required String id,
+    required String category,
+    required String type,
+    required double amount,
+    String? description,
+    DateTime? date,
+    String? projectID,
+  }) async {
+    if (_personId.isEmpty) return;
+    await _dao.updateTransaction(
+      TransactionsTableCompanion(
+        id: Value(id),
+        personID: Value(_personId),
+        category: Value(category),
+        type: Value(type),
+        amount: Value(amount),
+        description: Value(description),
+        transactionDate: Value(date ?? DateTime.now()),
+        projectID: Value(projectID),
+      ),
+    );
+  }
+
 
   Future<void> addSubscription({
     required String name,

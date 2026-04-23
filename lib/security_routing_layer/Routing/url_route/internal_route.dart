@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_gate/ui_layer/notification_page/NotificationInboxPage.dart';
@@ -20,6 +20,7 @@ import 'package:ice_gate/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/ui_layer/home_page/MainShell.dart';
 import 'package:ice_gate/ui_layer/home_page/HomePage.dart';
 import 'package:ice_gate/ui_layer/projects_page/FocusHistoryPage.dart';
+import 'package:ice_gate/ui_layer/health_page/HealthIntegrationPage.dart';
 import 'package:ice_gate/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/ui_layer/user_page/LoginPage.dart';
@@ -49,8 +50,8 @@ import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
 import 'package:ice_gate/ui_layer/info_page/ScoringRulesPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart';
-import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
-import 'package:ice_gate/ui_layer/finance_page/FinanceDashboardPage.dart';
+import 'package:ice_gate/ui_layer/finance_page/finance_page.dart';
+import 'package:ice_gate/ui_layer/finance_page/finance_dashboard_page.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
@@ -185,6 +186,7 @@ final GoRouter router = GoRouter(
             initialFile: data['file'] as File?,
             initialImage: data['initialImage'] as String?,
             initialDirectory: data['initialDirectory'] as Directory?,
+            initialExtension: data['extension'] as String?,
           );
         }
         return const TextEditorPage();
@@ -199,13 +201,25 @@ final GoRouter router = GoRouter(
       routes: [
         GoRoute(
           path: '/',
-          // pageBuilder: (context, state) => CustomTransitionPage(
-          //   key: state.pageKey,
-          //   transitionDuration: const Duration(milliseconds: 1400),
-          //   reverseTransitionDuration: const Duration(milliseconds: 800),
-          //   child: const HomePage(),
-          // ),
-          builder: (context, state) => const HomePage(),
+          pageBuilder: (context, state) {
+            final fromEntry = state.extra == 'from_entry';
+            if (fromEntry) {
+              return CustomTransitionPage(
+                key: state.pageKey,
+                transitionDuration: const Duration(milliseconds: 800),
+                transitionsBuilder:
+                    (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
+                child: const HomePage(),
+              );
+            }
+            // Default Material/Cupertino slide for other entries
+            return MaterialPage(
+              key: state.pageKey,
+              child: const HomePage(),
+            );
+          },
         ),
         GoRoute(
           path: '/canvas',
@@ -252,6 +266,10 @@ final GoRouter router = GoRouter(
           path: '/health',
           builder: (context, state) => const HealthPage(),
           routes: [
+            GoRoute(
+              path: 'integrations',
+              builder: (context, state) => const HealthIntegrationPage(),
+            ),
             GoRoute(
               path: 'dashboard',
               builder: (context, state) => const HealthAnalysisPage(),

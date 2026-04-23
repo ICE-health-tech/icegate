@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'dart:ui';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'dart:io';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
@@ -15,10 +16,9 @@ import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/utils/l10n_extensions.dart';
-import 'package:ice_gate/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_gate/ui_layer/finance_page/finance_page.dart';
 import 'TaskItem.dart';
-import 'package:ice_gate/ui_layer/widget_page/PluginList/TalkSSH/SSHStorageService.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/SSHService.dart';
+import 'ProjectNoteItem.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SnowfallOverlay.dart';
 
@@ -492,7 +492,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                   .take(3)
                                   .map(
                                     (note) =>
-                                        _NoteItem(note: note, project: project),
+                                        ProjectNoteItem(note: note, project: project),
                                   ),
                             ],
                           );
@@ -817,253 +817,180 @@ class ProjectDetailsPage extends StatelessWidget {
     String projectID,
   ) async {
     final personBlock = context.read<PersonBlock>();
+    final docBlock = context.read<DocumentationBlock>();
+    
+    // 1. Ensure a project-specific folder exists
+    final folderName = project.name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+    await docBlock.createLocalFolder(folderName);
+    
+    // Show a quick dialog to choose type
+    if (!context.mounted) return;
+    
+    final type = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => _DocumentTypePicker(),
+    );
+
+    if (type == null) return;
+
+    String content = '';
+    String title = AppLocalizations.of(context)!.project_new_note_title;
+
+    if (type == 'tech_doc') {
+      title = 'Technical Documentation';
+      content = '# Technical Documentation\n\n## Overview\n\n## Architecture\n\n## Implementation Details\n';
+    } else if (type == 'api_spec') {
+      title = 'API Specification';
+      content = '# API Specification\n\n## Endpoints\n\n### GET /v1/...\n';
+    }
+    
+    // 2. Resolve the directory for the editor
+    final projectDir = Directory('${docBlock.rootDir?.path}/$folderName');
+
     final noteID = await dao.insertNote(
-      title: AppLocalizations.of(context)!.project_new_note_title,
-      content: '',
+      title: title,
+      content: content,
       projectID: projectID,
       personID: personBlock.currentPersonID.value,
     );
 
     final note = await dao.getNoteById(noteID);
     if (note != null && context.mounted) {
-      context.push('/projects/editor', extra: note);
+      await context.push(
+        '/projects/editor', 
+        extra: {
+          'note': note,
+          'initialDirectory': projectDir,
+        }
+      );
+      // No setState needed here as it's a StatelessWidget, 
+      // but the StreamBuilder will catch the DB change.
     }
   }
 }
 
-class _NoteItem extends StatelessWidget {
-  final ProjectNoteData note;
-  final ProjectProtocol project;
-
-  const _NoteItem({required this.note, required this.project});
-
-  Future<void> _sendToAI(BuildContext context) async {
-    if (project.sshHostId == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('No SSH host linked to this project')),
-        );
-      }
-      return;
-    }
-
-    final sshService = SSHService();
-    final storage = SSHStorageService();
-
-    final hosts = await storage.loadHosts();
-    final host = hosts.where((h) => h.id == project.sshHostId).firstOrNull;
-
-    if (host == null) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('SSH host not found')));
-      }
-      return;
-    }
-
-    try {
-      await sshService.connect(
-        host: host.host,
-        port: host.port,
-        username: host.user,
-        password: host.password ?? '',
-        useTmux: true,
-      );
-
-      final remotePath = project.remotePath ?? '';
-      final aiMode = project.aiModel ?? 'gemini';
-      final content = note.content;
-
-      if (remotePath.isNotEmpty) {
-        sshService.write('cd $remotePath\r');
-        await Future.delayed(const Duration(milliseconds: 500));
-      }
-
-      String command;
-      if (aiMode == 'opencode') {
-        command = 'opencode "$content"\r';
-      } else {
-        command = 'gemini "$content"\r';
-      }
-
-      sshService.write(command);
-
-      if (context.mounted) {
-        context.push(
-          '/widgets/ssh',
-          extra: {
-            'hostId': project.sshHostId,
-            'remotePath': project.remotePath,
-          },
-        );
-      }
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Failed to connect: $e')));
-      }
-    }
-  }
-
+class _DocumentTypePicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.1),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(20),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Material(
-              color:
-                  (isDark
-                          ? colorScheme.surfaceContainerHighest
-                          : colorScheme.surface)
-                      .withValues(alpha: 0.5),
-              child: InkWell(
-                onTap: () {
-                  context.push('/projects/editor', extra: note);
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: colorScheme.primary.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.description_rounded,
-                          color: const Color(0xFFB2EBF2), // Icy Blue
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              note.title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w900,
-                                fontSize: 15,
-                                letterSpacing: -0.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              AppLocalizations.of(
-                                context,
-                              )!.project_last_edited_msg(
-                                DateFormat(
-                                  'MMM d, yyyy',
-                                ).format(note.updatedAt),
-                              ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.4,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      if (project.sshHostId != null)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: _getAiColor(
-                              project.aiModel,
-                            ).withValues(alpha: 0.15),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: _getAiColor(
-                                project.aiModel,
-                              ).withValues(alpha: 0.3),
-                              width: 1,
-                            ),
-                          ),
-                          child: Text(
-                            (project.aiModel ?? 'gemini').toUpperCase(),
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w900,
-                              color: _getAiColor(project.aiModel),
-                              letterSpacing: 0.5,
-                            ),
-                          ),
-                        ),
-                      const SizedBox(width: 8),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: colorScheme.onSurface.withValues(alpha: 0.3),
-                      ),
-                      const SizedBox(width: 8),
-                      Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: () => _sendToAI(context),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: colorScheme.primary.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Icon(
-                              Icons.psychology_rounded,
-                              color: colorScheme.primary,
-                              size: 20,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: colorScheme.onSurface.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(2),
             ),
           ),
-        ),
+          const SizedBox(height: 24),
+          Text(
+            'Choose Document Type',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: colorScheme.onSurface,
+            ),
+          ),
+          const SizedBox(height: 24),
+          _buildTypeOption(
+            context,
+            'note',
+            'Blank Note',
+            'Start with a clean slate',
+            Icons.edit_note_rounded,
+            Colors.blue,
+          ),
+          const SizedBox(height: 12),
+          _buildTypeOption(
+            context,
+            'tech_doc',
+            'Technical Doc',
+            'Architecture & implementation template',
+            Icons.account_tree_rounded,
+            Colors.purple,
+          ),
+          const SizedBox(height: 12),
+          _buildTypeOption(
+            context,
+            'api_spec',
+            'API Specification',
+            'Endpoints and schema template',
+            Icons.api_rounded,
+            Colors.orange,
+          ),
+          const SizedBox(height: 32),
+        ],
       ),
     );
   }
 
-  Color _getAiColor(String? mode) {
-    switch (mode?.toLowerCase()) {
-      case 'gemini':
-        return Colors.blue;
-      case 'opencode':
-        return Colors.purple;
-      case 'openclaw':
-        return Colors.orange;
-      default:
-        return Colors.blue;
-    }
+  Widget _buildTypeOption(
+    BuildContext context,
+    String value,
+    String title,
+    String subtitle,
+    IconData icon,
+    Color color,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InkWell(
+      onTap: () => Navigator.pop(context, value),
+      borderRadius: BorderRadius.circular(20),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: color.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color.withOpacity(0.1)),
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: color.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 24),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurface.withOpacity(0.5),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Icon(
+              Icons.add_circle_outline_rounded,
+              color: colorScheme.onSurface.withOpacity(0.2),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

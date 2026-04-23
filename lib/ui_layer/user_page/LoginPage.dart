@@ -7,7 +7,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/ui_layer/ReusableWidget/SnowSilverBackground.dart';
+import 'package:ice_gate/ui_layer/ReusableWidget/IceDiamondBackground.dart';
 import 'package:ice_gate/ui_layer/animation_page/components/entry_constants.dart';
 
 class LoginPage extends StatefulWidget {
@@ -116,12 +116,10 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: EntryColors.obsidianBase,
-        body: SnowSilverBackground(
-          // Note: We can tint this with the ornaments
+        backgroundColor: EntryColors.glacierBase,
+        body: IceDiamondBackground(
           child: Stack(
             children: [
-              // 1. Floating Tech Ornaments
               _buildTechOrnaments(),
 
               // 2. Main Content
@@ -213,12 +211,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               turns: _hudRotationController,
               child: _CoolerHUD(
                 size: 400,
-                color: const Color.fromARGB(
-                  255,
-                  30,
-                  30,
-                  175,
-                ).withValues(alpha: 0.1),
+                color: EntryColors.iceCyan.withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -234,7 +227,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ).animate(_hudRotationController),
               child: _CoolerHUD(
                 size: 500,
-                color: EntryColors.arcticSilver.withValues(alpha: 0.1),
+                color: const Color.fromARGB(
+                  255,
+                  102,
+                  121,
+                  190,
+                ).withValues(alpha: 0.1),
               ),
             ),
           ),
@@ -254,17 +252,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               width: double.infinity,
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(
-                  0.03,
-                ), // Ultra-frosted silver glass
+                color: EntryColors.glacierBlue.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(32),
                 border: Border.all(
-                  color: Colors.white.withOpacity(0.15), // Silver Glass Border
+                  color: EntryColors.iceCyan.withValues(alpha: 0.3),
                   width: 1.5,
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: EntryColors.arcticSilver.withValues(alpha: 0.1),
+                    color: const Color.fromARGB(
+                      255,
+                      127,
+                      158,
+                      225,
+                    ).withValues(alpha: 0.5),
                     blurRadius: 40,
                     spreadRadius: -10,
                   ),
@@ -272,12 +273,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
               child: Column(
                 children: [
-                  // _buildLogoSection(),
+                  _buildIceLogoSection(),
+                  const SizedBox(height: 5),
                   Text(
-                    "ICE Gate",
-                    style: TextStyle(fontSize: 40, fontWeight: FontWeight.bold),
+                    AppLocalizations.of(context)!.app_title.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 8.0,
+                      color: EntryColors.diamondWhite,
+                      shadows: [
+                        Shadow(
+                          color: const Color.fromARGB(
+                            255,
+                            127,
+                            158,
+                            225,
+                          ).withValues(alpha: 0.5),
+                          blurRadius: 10,
+                        ),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 48),
+                  const SizedBox(height: 10),
                   if (error != null) _buildError(error),
                   _buildModernField(
                     controller: _emailController,
@@ -343,7 +361,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
-  Widget _buildLogoSection() {
+  Widget _buildIceLogoSection() {
     return Column(
       children: [
         RepaintBoundary(
@@ -351,57 +369,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             animation: _logoPulseController,
             builder: (context, child) {
               final double glow =
-                  20 + math.sin(_logoPulseController.value * math.pi) * 15;
+                  30 + math.sin(_logoPulseController.value * math.pi) * 20;
               final double scale =
-                  1.0 + math.sin(_logoPulseController.value * math.pi) * 0.05;
+                  1.0 + math.sin(_logoPulseController.value * math.pi) * 0.08;
 
               return Container(
-                padding: const EdgeInsets.all(
-                  12,
-                ), // Reduced for better image fit
+                width: 200,
+                height: 200,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: EntryColors.arcticSilver.withValues(alpha: 0.05),
                   boxShadow: [
                     BoxShadow(
-                      color: EntryColors.arcticSilver.withValues(alpha: 0.15),
+                      color: EntryColors.iceCyan.withValues(alpha: 0.2),
                       blurRadius: glow,
-                      spreadRadius: 2,
+                      spreadRadius: 5,
                     ),
                   ],
-                  border: Border.all(
-                    color: EntryColors.arcticSilver.withValues(alpha: 0.2),
-                    width: 1,
-                  ),
                 ),
                 child: Transform.scale(
                   scale: scale,
                   child: Image.asset(
-                    'assets/images/app_logo.png',
-                    width: 80,
-                    height: 80,
+                    'assets/images/crystal_logo.png',
+                    width: 200,
+                    height: 200,
                     fit: BoxFit.contain,
                   ),
                 ),
               );
             },
-          ),
-        ),
-        const SizedBox(height: 24),
-        ShaderMask(
-          shaderCallback: (bounds) => const LinearGradient(
-            colors: [Color(0xFFE5E5EA), Colors.white],
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-          ).createShader(bounds),
-          child: const Text(
-            'ICE GATE',
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 10.0,
-              color: Colors.white,
-            ),
           ),
         ),
       ],
@@ -450,7 +445,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              error,
+              _getLocalizedError(context, error),
               style: const TextStyle(
                 color: Colors.redAccent,
                 fontSize: 12,
@@ -463,6 +458,34 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     );
   }
 
+  String _getLocalizedError(BuildContext context, String key) {
+    final l10n = AppLocalizations.of(context)!;
+    switch (key) {
+      case "err_invalid_credentials":
+        return l10n.err_invalid_credentials;
+      case "err_email_not_confirmed":
+        return l10n.err_email_not_confirmed;
+      case "err_user_not_found":
+        return l10n.err_user_not_found;
+      case "err_network_fail":
+        return l10n.err_network_fail;
+      case "err_passkey_canceled":
+        return l10n.err_passkey_canceled;
+      case "err_passkey_failed":
+        return l10n.err_passkey_failed;
+      case "err_biometric_unsupported":
+        return l10n.err_biometric_unsupported;
+      case "err_biometric_disabled":
+        return l10n.err_biometric_disabled;
+      case "err_too_many_attempts":
+        return l10n.err_too_many_attempts;
+      case "err_unexpected":
+        return l10n.err_unexpected("System Error");
+      default:
+        return key; // Fallback to raw string if not a known key
+    }
+  }
+
   Widget _buildLoginButton(bool isLoading, BuildContext context) {
     return Container(
       width: double.infinity,
@@ -470,18 +493,20 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(16),
         gradient: LinearGradient(
-          colors: [
-            Color(0xFFE5E5EA), // Light Silver
-            Color(0xFFA1A1A6), // Metallic Silver
-          ],
+          colors: [EntryColors.iceCyan, EntryColors.glacierBlue],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
         boxShadow: [
           BoxShadow(
-            color: EntryColors.arcticSilver.withValues(alpha: 0.3),
-            blurRadius: 15,
-            offset: const Offset(-2, -2),
+            color: const Color.fromARGB(
+              255,
+              37,
+              92,
+              230,
+            ).withValues(alpha: 0.4),
+            blurRadius: 20,
+            offset: const Offset(0, 4),
           ),
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.4),
@@ -518,9 +543,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   strokeWidth: 3,
                 ),
               )
-            : const Text(
-                'ENTER THE GATE',
-                style: TextStyle(
+            : Text(
+                AppLocalizations.of(context)!.btn_enter,
+                style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 4.0,
@@ -676,7 +701,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(16),
               borderSide: const BorderSide(
-                color: EntryColors.arcticSilver,
+                color: EntryColors.iceCyan,
                 width: 1.5,
               ),
             ),
@@ -733,9 +758,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       await _authBlock.signInWithGoogle();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(SnackBar(content: Text('Google Sign-In Error: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.google_signin_error(e.toString()),
+            ),
+          ),
+        );
       }
     }
   }
@@ -970,9 +999,9 @@ class _ScanlinePainter extends CustomPainter {
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          EntryColors.arcticSilver.withValues(alpha: 0.0),
-          EntryColors.arcticSilver.withValues(alpha: 0.2),
-          EntryColors.arcticSilver.withValues(alpha: 0.0),
+          EntryColors.iceCyan.withValues(alpha: 0.0),
+          EntryColors.iceCyan.withValues(alpha: 0.2),
+          EntryColors.iceCyan.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, y - 40, size.width, 80));

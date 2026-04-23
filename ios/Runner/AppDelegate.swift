@@ -7,7 +7,6 @@ import SwiftUI
 
 @main
 @objc class AppDelegate: FlutterAppDelegate {
-  private var screenTimePlugin: ScreenTimePlugin?
 
   override func application(
     _ application: UIApplication,
@@ -15,89 +14,96 @@ import SwiftUI
   ) -> Bool {
     let result = super.application(application, didFinishLaunchingWithOptions: launchOptions)
     
-    // Ensure the window is accessible to plugins
-    if let window = self.window {
-        let controller : FlutterViewController = window.rootViewController as! FlutterViewController
-        screenTimePlugin = ScreenTimePlugin(messenger: controller.binaryMessenger)
-    } else {
-        // Fallback for SceneDelegate scenarios where window might be nil at this point
-        if #available(iOS 13.0, *) {
-            // Scene connection will handle this later
-        }
-    }
+    // Register custom Screen Time plugin
+    ScreenTimePlugin.register(with: self.registrar(forPlugin: "ScreenTimePlugin")!)
     
     GeneratedPluginRegistrant.register(with: self)
     return result
   }
 }
 
-@objc public class ScreenTimePlugin: NSObject {
-    private let channel: FlutterMethodChannel
-    private let store = ManagedSettingsStore()
-    private var selection = FamilyActivitySelection()
+// MARK: - ScreenTimePlugin Implementation
+// This is moved here because the separate ScreenTimePlugin.swift was not correctly linked in the Xcode project.
+@objc public class ScreenTimePlugin: NSObject, FlutterPlugin {
+    private var channel: FlutterMethodChannel?
+    private lazy var store: ManagedSettingsStore = {
+        if #available(iOS 16.0, *) {
+            return ManagedSettingsStore(named: .init(containerId))
+        } else {
+            return ManagedSettingsStore()
+        }
+    }()
     
     // Shared user defaults key for tokens
-    private let containerId = "group.duylong.art.iceshield"
+    private let containerId = "group.duylong.art.icegate"
     private let selectionKey = "ice_gate_selection_tokens"
     
-    @objc public init(messenger: FlutterBinaryMessenger) {
-        self.channel = FlutterMethodChannel(name: "duylong.art/screentime", binaryMessenger: messenger)
-        super.init()
-        self.loadSelection()
-        self.channel.setMethodCallHandler(self.handle)
+    public static func register(with registrar: FlutterPluginRegistrar) {
+        let channel = FlutterMethodChannel(name: "duylong.art/screentime", binaryMessenger: registrar.messenger())
+        let instance = ScreenTimePlugin()
+        instance.channel = channel
+        registrar.addMethodCallDelegate(instance, channel: channel)
     }
     
-    private func loadSelection() {
-        if let defaults = UserDefaults(suiteName: containerId),
-           let data = defaults.data(forKey: selectionKey) {
-            do {
-                let decoder = JSONDecoder()
-                self.selection = try decoder.decode(FamilyActivitySelection.self, from: data)
-                print("ScreenTimePlugin: Loaded persistent selection")
-            } catch {
-                print("ScreenTimePlugin: Failed to decode selection: \(error)")
-            }
-        }
-    }
-    
-    private func saveSelection() {
-        if let defaults = UserDefaults(suiteName: containerId) {
-            do {
-                let encoder = JSONEncoder()
-                let data = try encoder.encode(self.selection)
-                defaults.set(data, forKey: selectionKey)
-                print("ScreenTimePlugin: Saved selection to persistent storage")
-            } catch {
-                print("ScreenTimePlugin: Failed to encode selection: \(error)")
-            }
-        }
-    }
-    
-    private func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
+    public func handle(_ call: FlutterMethodCall, result: @escaping FlutterResult) {
         switch call.method {
         case "requestAuthorization":
             requestAuthorization(result: result)
         case "checkAuthorization":
             checkAuthorization(result: result)
         case "showAppPicker":
-            showAppPicker(result: result)
+            let args = call.arguments as? [String: Any]
+            let initialJson = args?["initialSelection"] as? String
+            showAppPicker(initialJson: initialJson, result: result)
         case "toggleShield":
             let args = call.arguments as? [String: Any]
             let active = args?["active"] as? Bool ?? false
-            toggleShield(active: active, result: result)
+            let selectionJsons = args?["selections"] as? [String] ?? []
+            toggleShield(active: active, selections: selectionJsons, result: result)
         default:
             result(FlutterMethodNotImplemented)
         }
     }
     
     private func requestAuthorization(result: @escaping FlutterResult) {
-        if #available(iOS 16.0, *) {
-            Task {
+        if #available(iOS 15.0, *) {
+            let status = AuthorizationCenter.shared.authorizationStatus
+            if status == .approved {
+                print("ScreenTimePlugin: Already approved")
+                result(true)
+                return
+            }
+            
+            Task { @MainActor in
                 do {
-                    try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
-                    result(true)
+                    print("ScreenTimePlugin: Requesting authorization...")
+                    try await Task.sleep(nanoseconds: 500_000_000) // 0.5s
+                    
+                    if #available(iOS 16.0, *) {
+                        try await AuthorizationCenter.shared.requestAuthorization(for: .individual)
+                    } else {
+                        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                            AuthorizationCenter.shared.requestAuthorization { authResult in
+                                switch authResult {
+                                case .success: continuation.resume()
+                                case .failure(let error): continuation.resume(throwing: error)
+                                }
+                            }
+                        }
+                    }
+                    
+                    let finalStatus = AuthorizationCenter.shared.authorizationStatus
+                    print("ScreenTimePlugin: Auth request completed. Status: \(finalStatus)")
+                    if finalStatus == .approved {
+                        result(true)
+                    } else if finalStatus == .denied {
+                        result(FlutterError(code: "AUTH_DENIED", message: "Authorization denied. Please enable in Settings.", details: nil))
+                    } else {
+                        result(false)
+                    }
                 } catch {
-                    result(FlutterError(code: "AUTH_FAILED", message: "Failed to request screen time auth: \(error.localizedDescription)", details: nil))
+                    print("ScreenTimePlugin: Auth request failed: \(error)")
+                    result(FlutterError(code: "AUTH_FAILED", message: error.localizedDescription, details: nil))
                 }
             }
         } else {
@@ -106,7 +112,7 @@ import SwiftUI
     }
     
     private func checkAuthorization(result: @escaping FlutterResult) {
-        if #available(iOS 16.0, *) {
+        if #available(iOS 15.0, *) {
             let status = AuthorizationCenter.shared.authorizationStatus
             result(status == .approved)
         } else {
@@ -114,18 +120,27 @@ import SwiftUI
         }
     }
     
-    private func showAppPicker(result: @escaping FlutterResult) {
-        guard let rootViewController = UIApplication.shared.delegate?.window??.rootViewController else {
+    private func showAppPicker(initialJson: String?, result: @escaping FlutterResult) {
+        guard let rootViewController = UIApplication.shared.customKeyWindow?.rootViewController else {
             result(FlutterError(code: "NO_ROOT_VC", message: "Root view controller not found", details: nil))
             return
         }
         
-        if #available(iOS 16.0, *) {
-            // SwiftUI view for the picker
-            let pickerView = AppPickerView(selection: selection) { newSelection in
-                self.selection = newSelection
-                self.saveSelection()
-                result(true)
+        if #available(iOS 15.0, *) {
+            var initialSelection = FamilyActivitySelection()
+            if let json = initialJson, let data = json.data(using: .utf8) {
+                if let decoded = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                    initialSelection = decoded
+                }
+            }
+            
+            let pickerView = AppPickerView(selection: initialSelection) { newSelection in
+                if let data = try? JSONEncoder().encode(newSelection),
+                   let jsonString = String(data: data, encoding: .utf8) {
+                    result(jsonString)
+                } else {
+                    result(FlutterError(code: "ENCODE_ERROR", message: "Failed to encode selection", details: nil))
+                }
             }
             
             let hostingController = UIHostingController(rootView: pickerView)
@@ -135,18 +150,28 @@ import SwiftUI
         }
     }
     
-    private func toggleShield(active: Bool, result: @escaping FlutterResult) {
-        if #available(iOS 16.0, *) {
+    private func toggleShield(active: Bool, selections: [String], result: @escaping FlutterResult) {
+        if #available(iOS 15.0, *) {
             if active {
-                // Apply shielding to selected apps
-                print("ScreenTimePlugin: Toggling shield ON for \(selection.applicationTokens.count) apps")
-                store.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-                store.shield.applicationCategories = selection.categoryTokens.isEmpty ? nil : .specific(selection.categoryTokens)
+                var mergedSelection = FamilyActivitySelection()
+                for json in selections {
+                    if let data = json.data(using: .utf8),
+                       let decoded = try? JSONDecoder().decode(FamilyActivitySelection.self, from: data) {
+                        mergedSelection.applicationTokens.formUnion(decoded.applicationTokens)
+                        mergedSelection.categoryTokens.formUnion(decoded.categoryTokens)
+                        mergedSelection.webDomainTokens.formUnion(decoded.webDomainTokens)
+                    }
+                }
+                
+                print("ScreenTimePlugin: Shielding \(mergedSelection.applicationTokens.count) apps")
+                store.shield.applications = mergedSelection.applicationTokens.isEmpty ? nil : mergedSelection.applicationTokens
+                store.shield.applicationCategories = mergedSelection.categoryTokens.isEmpty ? nil : .specific(mergedSelection.categoryTokens)
+                store.shield.webDomains = mergedSelection.webDomainTokens.isEmpty ? nil : mergedSelection.webDomainTokens
             } else {
-                // Remove all shields
-                print("ScreenTimePlugin: Toggling shield OFF")
+                print("ScreenTimePlugin: Clearing all shields")
                 store.shield.applications = nil
                 store.shield.applicationCategories = nil
+                store.shield.webDomains = nil
             }
             result(true)
         } else {
@@ -155,7 +180,7 @@ import SwiftUI
     }
 }
 
-@available(iOS 16.0, *)
+@available(iOS 15.0, *)
 struct AppPickerView: View {
     @State var selection: FamilyActivitySelection
     var onComplete: (FamilyActivitySelection) -> Void
@@ -178,9 +203,10 @@ struct AppPickerView: View {
         }
     }
 }
+
 @available(iOS 13.0, *)
 extension UIApplication {
-    @objc var customKeyWindow: UIWindow? {
+    var customKeyWindow: UIWindow? {
         return connectedScenes
             .compactMap { $0 as? UIWindowScene }
             .flatMap { $0.windows }

@@ -146,15 +146,26 @@ class _DocumentationPageState extends State<DocumentationPage> {
                 ),
               ),
               const SizedBox(width: 12),
-              ElevatedButton.icon(
-                onPressed: () {
-                  block.setNotionSecret(_notionSecretController.text.trim());
-                  block.fetchFromNotionAuto();
-                  setState(() => _showConfig = false);
-                },
-                icon: const Icon(Icons.download_for_offline),
-                label: const Text('Ingest'),
-              ),
+              Watch((context) {
+                final isSyncing = block.isSyncing.value;
+                final syncType = block.syncType.value;
+                final isNotionSyncing = isSyncing && syncType == 'notion';
+
+                return ElevatedButton.icon(
+                  onPressed: isSyncing ? null : () {
+                    block.setNotionSecret(_notionSecretController.text.trim());
+                    block.fetchFromNotionAuto();
+                  },
+                  icon: isNotionSyncing
+                      ? const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                        )
+                      : const Icon(Icons.download_for_offline),
+                  label: Text(isNotionSyncing ? 'Fetching...' : 'Ingest'),
+                );
+              }),
             ],
           ),
           const Divider(height: 32),
@@ -170,33 +181,41 @@ class _DocumentationPageState extends State<DocumentationPage> {
   Widget _buildSyncButton(DocumentationBlock block, ColorScheme colorScheme) {
     return Watch((context) {
       final isSyncing = block.isSyncing.value;
+      final syncType = block.syncType.value;
 
-      return Padding(
-        padding: const EdgeInsets.only(right: 8.0),
-        child: isSyncing
-            ? const Center(
-                child: Padding(
-                  padding: EdgeInsets.all(12.0),
-                  child: SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              )
-            : IconButton(
-                icon: const Icon(Icons.cloud_sync),
-                onPressed: () async {
-                  try {
-                    await block.syncWithGoogleDrive();
-                  } catch (e) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text('Sync Error: $e')),
-                    );
-                  }
-                },
-                tooltip: 'Sync with Google Drive',
+      if (isSyncing) {
+        return Padding(
+          padding: const EdgeInsets.only(right: 8.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(strokeWidth: 2),
               ),
+              const SizedBox(height: 4),
+              Text(
+                syncType == 'notion' ? 'Notion' : 'Drive',
+                style: const TextStyle(fontSize: 8),
+              ),
+            ],
+          ),
+        );
+      }
+
+      return IconButton(
+        icon: const Icon(Icons.cloud_sync),
+        onPressed: () async {
+          try {
+            await block.syncWithGoogleDrive();
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Sync Error: $e')),
+            );
+          }
+        },
+        tooltip: 'Sync with Google Drive',
       );
     });
   }

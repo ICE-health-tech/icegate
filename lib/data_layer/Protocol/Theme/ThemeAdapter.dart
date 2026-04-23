@@ -19,12 +19,20 @@ class ThemeAdapter {
   static ThemeData get lightTheme {
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: primaryColor,
+        seedColor: const Color(0xFF1B5E20), // Deeper green for better contrast
         brightness: Brightness.light,
+        surface: const Color(0xFFFCFDFC), // Slightly cleaner white
+        onSurface: const Color(0xFF1A1C1A), // Near black for text
+        onSurfaceVariant: const Color(0xFF424942), // Darker secondary text
       ),
-      scaffoldBackgroundColor: Colors.white,
+      scaffoldBackgroundColor: const Color(0xFFFCFDFC),
       useMaterial3: true,
-      // ... rest of lightTheme implementation ...
+      textTheme: const TextTheme(
+        displayLarge: TextStyle(color: Color(0xFF1A1C1A)),
+        bodyLarge: TextStyle(color: Color(0xFF1A1C1A)),
+        bodyMedium: TextStyle(color: Color(0xFF1A1C1A)),
+        bodySmall: TextStyle(color: Color(0xFF424942)),
+      ),
     );
   }
 

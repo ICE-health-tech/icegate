@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 /// Agent responsible for checking the health and integrity of the live database.
 class DatabaseVerificationAgent {

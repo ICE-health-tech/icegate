@@ -7,7 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/ui_layer/UIConstants.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
@@ -17,6 +17,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 class TimerThemeInfo {
   final String name;
@@ -160,13 +161,18 @@ class FocusPage extends StatefulWidget {
   State<FocusPage> createState() => _FocusPageState();
 }
 
-class _FocusPageState extends State<FocusPage> {
+class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
+  late AnimationController _breathingController;
   StreamSubscription? _audioSubscription;
   bool _hasSetupListeners = false;
 
   @override
   void initState() {
     super.initState();
+    _breathingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat(reverse: true);
     // Sync logic has been moved to FocusBlock and FocusAudioHandler
     // to prevent infinite loops and state fighting.
   }
@@ -175,6 +181,7 @@ class _FocusPageState extends State<FocusPage> {
   void dispose() {
     _audioSubscription?.cancel();
     _summaryEffectDispose?.call();
+    _breathingController.dispose();
     super.dispose();
   }
 
@@ -396,6 +403,7 @@ class _FocusPageState extends State<FocusPage> {
                           themeName: themeName,
                           isExerciseMode: isExerciseMode,
                           exerciseType: exerciseType,
+                          pulse: isRunning ? _breathingController : null,
                         ),
                         const Spacer(),
 
@@ -662,6 +670,7 @@ class _ActiveSessionContext extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final isRunning = focusBlock.isRunning.watch(context);
     final selectedProjId = focusBlock.selectedProjectId.watch(context);
     final selectedTaskId = focusBlock.selectedTaskId.watch(context);
@@ -695,7 +704,7 @@ class _ActiveSessionContext extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
-                "TAP TO SELECT PROJECT",
+                l10n.focus_select_project,
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
@@ -769,7 +778,7 @@ class _ActiveSessionContext extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  selectedTask?.title ?? "SELECT TASK",
+                  selectedTask?.title ?? l10n.focus_select_task,
                   style: TextStyle(
                     fontSize: isRunning ? 12 : 16,
                     fontWeight: isRunning ? FontWeight.w500 : FontWeight.w700,
@@ -1015,6 +1024,7 @@ class _TimerCircle extends StatelessWidget {
   final String themeName;
   final bool isExerciseMode;
   final String exerciseType;
+  final Animation<double>? pulse;
 
   const _TimerCircle({
     required this.progress,
@@ -1027,10 +1037,12 @@ class _TimerCircle extends StatelessWidget {
     required this.themeName,
     required this.isExerciseMode,
     required this.exerciseType,
+    this.pulse,
   });
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final musicBlock = context.watch<MusicBlock>();
     final colorScheme = Theme.of(context).colorScheme;
     final trackSize = UIConstants.getTimerTrackSize(context);
@@ -1143,127 +1155,142 @@ class _TimerCircle extends StatelessWidget {
           ),
 
           // Content Layer
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 10),
-              Text(
-                timeStr,
-                style: TextStyle(
-                  fontSize: 60,
-                  fontWeight: FontWeight.w900, // Even bolder
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                  color: _getContrastColor(modeColor, colorScheme.surface),
-                  letterSpacing: -2,
-                  shadows: [
-                    Shadow(color: modeColor.withOpacity(0.2), blurRadius: 20),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 4),
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    isExerciseMode
-                        ? Icons.bolt_rounded
-                        : (isRunning ? Icons.bolt_rounded : Icons.spa_rounded),
-                    size: 14,
-                    color: _getContrastColor(
-                      modeColor,
-                      colorScheme.surface,
-                    ).withOpacity(0.8),
+          AnimatedBuilder(
+            animation: pulse ?? kAlwaysCompleteAnimation,
+            builder: (context, child) {
+              final double effectiveOpacity = pulse != null
+                  ? (0.6 + (pulse!.value * 0.4))
+                  : 1.0;
+              return Opacity(opacity: effectiveOpacity, child: child);
+            },
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 10),
+                Text(
+                  timeStr,
+                  style: TextStyle(
+                    fontSize: 60,
+                    fontWeight: FontWeight.w900, // Even bolder
+                    fontFeatures: const [FontFeature.tabularFigures()],
+                    color: _getContrastColor(modeColor, colorScheme.surface),
+                    letterSpacing: -2,
+                    shadows: [
+                      Shadow(color: modeColor.withOpacity(0.2), blurRadius: 20),
+                    ],
                   ),
-                  const SizedBox(width: 6),
-                  Text(
-                    isExerciseMode
-                        ? "ACTIVE EXERCISE: ${exerciseType.toUpperCase()}"
-                        : (isRunning ? "FLOW STATE ACTIVE" : "BREATHING"),
-                    style: TextStyle(
-                      fontSize: 11,
-                      letterSpacing: 2,
+                ),
+                const SizedBox(height: 4),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      isExerciseMode
+                          ? Icons.bolt_rounded
+                          : (isRunning
+                                ? Icons.bolt_rounded
+                                : Icons.spa_rounded),
+                      size: 14,
                       color: _getContrastColor(
                         modeColor,
                         colorScheme.surface,
-                      ).withOpacity(0.9),
-                      fontWeight: FontWeight.w900,
+                      ).withOpacity(0.8),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      isExerciseMode
+                          ? l10n.focus_active_exercise(
+                              exerciseType.toUpperCase(),
+                            )
+                          : (isRunning
+                                ? l10n.focus_flow_active
+                                : l10n.focus_breathing),
+                      style: TextStyle(
+                        fontSize: 11,
+                        letterSpacing: 2,
+                        color: _getContrastColor(
+                          modeColor,
+                          colorScheme.surface,
+                        ).withOpacity(0.9),
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+                if (musicBlock.isDownloading.watch(context)) ...[
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: 120,
+                    child: Column(
+                      children: [
+                        LinearProgressIndicator(
+                          value: musicBlock.downloadProgress.watch(context),
+                          backgroundColor: modeColor.withOpacity(0.1),
+                          valueColor: AlwaysStoppedAnimation<Color>(modeColor),
+                          borderRadius: BorderRadius.circular(2),
+                          minHeight: 2,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          l10n.focus_fetching_audio,
+                          style: TextStyle(
+                            fontSize: 8,
+                            fontWeight: FontWeight.bold,
+                            color: modeColor.withOpacity(0.7),
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ] else if (musicBlock.currentTrackTitle.watch(context) !=
+                    null) ...[
+                  const SizedBox(height: 12),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: modeColor.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.music_note_rounded,
+                          size: 14,
+                          color: modeColor,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            musicBlock.currentTrackTitle.value!.toUpperCase(),
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: modeColor,
+                              letterSpacing: 1,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
-              ),
-              if (musicBlock.isDownloading.watch(context)) ...[
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: 120,
-                  child: Column(
-                    children: [
-                      LinearProgressIndicator(
-                        value: musicBlock.downloadProgress.watch(context),
-                        backgroundColor: modeColor.withOpacity(0.1),
-                        valueColor: AlwaysStoppedAnimation<Color>(modeColor),
-                        borderRadius: BorderRadius.circular(2),
-                        minHeight: 2,
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "FETCHING AUDIO...",
-                        style: TextStyle(
-                          fontSize: 8,
-                          fontWeight: FontWeight.bold,
-                          color: modeColor.withOpacity(0.7),
-                          letterSpacing: 1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ] else if (musicBlock.currentTrackTitle.watch(context) !=
-                  null) ...[
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 6,
-                  ),
-                  decoration: BoxDecoration(
-                    color: modeColor.withOpacity(0.1),
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        Icons.music_note_rounded,
-                        size: 14,
-                        color: modeColor,
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          musicBlock.currentTrackTitle.value!.toUpperCase(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                            color: modeColor,
-                            letterSpacing: 1,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 24),
+                _TimerControls(
+                  focusBlock: focusBlock,
+                  isRunning: isRunning,
+                  totalDuration: totalDuration,
+                  modeColor: modeColor,
+                  isExerciseMode: isExerciseMode,
                 ),
               ],
-              const SizedBox(height: 24),
-              _TimerControls(
-                focusBlock: focusBlock,
-                isRunning: isRunning,
-                totalDuration: totalDuration,
-                modeColor: modeColor,
-                isExerciseMode: isExerciseMode,
-              ),
-            ],
+            ),
           ),
         ],
       ),

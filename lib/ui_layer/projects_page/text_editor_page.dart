@@ -7,7 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:intl/intl.dart';
@@ -23,6 +23,7 @@ class TextEditorPage extends StatefulWidget {
   final File? initialFile;
   final String? initialImage;
   final Directory? initialDirectory; // Directory to save new files into
+  final String? initialExtension;
 
   const TextEditorPage({
     super.key,
@@ -31,6 +32,7 @@ class TextEditorPage extends StatefulWidget {
     this.initialFile,
     this.initialImage,
     this.initialDirectory,
+    this.initialExtension,
   });
 
   @override
@@ -54,7 +56,13 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   // Mood selection
   String? _selectedMood;
-  static const List<String> _moodOptions = ['Awesome', 'Good', 'Meh', 'Bad', 'Awful'];
+  static const List<String> _moodOptions = [
+    'Awesome',
+    'Good',
+    'Meh',
+    'Bad',
+    'Awful',
+  ];
 
   // Undo/Redo State
   final List<String> _undoStack = [];
@@ -179,6 +187,13 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Future<void> _initVaultPath() async {
+    if (widget.initialDirectory != null) {
+      setState(() {
+        _vaultPath = widget.initialDirectory!.path;
+      });
+      return;
+    }
+
     final user = Supabase.instance.client.auth.currentUser;
     if (user != null) {
       final appDir = await getApplicationDocumentsDirectory();
@@ -186,7 +201,7 @@ class _TextEditorPageState extends State<TextEditorPage>
         _vaultPath = '${appDir.path}/${user.id}/user_markdown_documentation';
       });
     }
-    
+
     // Initialize selected mood from existing note if editing
     if (widget.note != null && widget.note!.mood != null) {
       _selectedMood = widget.note!.mood;
@@ -360,27 +375,36 @@ class _TextEditorPageState extends State<TextEditorPage>
     setState(() => _isSaving = true);
 
     try {
+      print("📝 [Editor] Starting save process for title: '$title'");
       final String? userAlias = Supabase.instance.client.auth.currentUser?.id;
       final fileName = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
+      
       // 1. Automatic Save to user_markdown_documentation
       final appDir = await getApplicationDocumentsDirectory();
+      print("📂 [Editor] App documents directory: ${appDir.path}");
 
       late final Directory docDir;
       if (widget.initialDirectory != null) {
         docDir = widget.initialDirectory!;
+        print("📁 [Editor] Using initialDirectory: ${docDir.path}");
       } else {
         docDir = Directory(
           '${appDir.path}/${userAlias ?? "unknown_user"}/user_markdown_documentation',
         );
+        print("📁 [Editor] No initialDirectory, using default vault: ${docDir.path}");
       }
 
       if (!await docDir.exists()) {
+        print("🔨 [Editor] Creating directory: ${docDir.path}");
         await docDir.create(recursive: true);
       }
 
-      final String savingPath = p.join(docDir.path, "$fileName.md");
+      final extension = widget.note?.extension ?? widget.initialExtension ?? '.md';
+      final String savingPath = p.join(docDir.path, "$fileName$extension");
+      print("💾 [Editor] Saving file to: $savingPath");
       final localFile = File(savingPath);
       await localFile.writeAsString(content);
+      print("✅ [Editor] File written successfully");
 
       // If we didn't have a file opened manually, track this auto-saved one
       _openedFile ??= localFile;
@@ -388,7 +412,11 @@ class _TextEditorPageState extends State<TextEditorPage>
       // 2. Database Sync
       if (widget.note != null) {
         await context.read<ProjectNoteDAO>().updateNote(
-          widget.note!.copyWith(title: title, content: content, mood: Value(_selectedMood)),
+          widget.note!.copyWith(
+            title: title,
+            content: content,
+            mood: Value(_selectedMood),
+          ),
         );
       } else {
         // Only insert to DB if it's a new database note
@@ -400,6 +428,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           tenantID: personBlock.currentTenantID.value,
           category: widget.initialCategory,
           mood: _selectedMood,
+          extension: extension,
         );
       }
 
@@ -1265,10 +1294,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           icon: const Icon(Icons.mood, size: 20),
           iconSize: 20,
           elevation: 4,
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 12,
-          ),
+          style: TextStyle(color: colorScheme.onSurface, fontSize: 12),
           underline: Container(
             height: 1,
             color: colorScheme.onSurface.withOpacity(0.2),
@@ -1284,10 +1310,7 @@ class _TextEditorPageState extends State<TextEditorPage>
               value: value,
               child: Text(
                 value,
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: colorScheme.onSurface, fontSize: 12),
               ),
             );
           }).toList(),

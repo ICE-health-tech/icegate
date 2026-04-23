@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'package:drift/drift.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/CVAddressProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/EmailAddressProtocol.dart';
@@ -32,7 +32,6 @@ class DataSeeder {
       id: guestPersonId,
       tenantId: guestTenantId,
     );
-
 
     // 2. Create Email using EmailAddressProtocol
     final emailProtocol = EmailAddressProtocol.create(
@@ -142,7 +141,9 @@ class DataSeeder {
         id: Value(IDGen.UUIDV7()),
         personID: Value(personId),
         title: const Value('Sample analysis'),
-        detailedAnalysis: const Value('Placeholder content for local seed data.'),
+        detailedAnalysis: const Value(
+          'Placeholder content for local seed data.',
+        ),
         status: const Value('published'),
         category: const Value('Overall'),
         aiModel: const Value('system'),
@@ -193,26 +194,6 @@ class DataSeeder {
     // );
 
     // 13. Seed External Widgets
-    await db.externalWidgetsDAO.insertNewWidget(
-      externalWidgetProtocol: const ExternalWidgetProtocol(
-        name: 'Sample widget A',
-        protocol: 'https',
-        host: 'example.com',
-        url: '/placeholder/a',
-        imageUrl: 'https://example.com/placeholder.png',
-      ),
-      personID: personId,
-    );
-    await db.externalWidgetsDAO.insertNewWidget(
-      externalWidgetProtocol: const ExternalWidgetProtocol(
-        name: 'Sample widget B',
-        protocol: 'https',
-        host: 'example.com',
-        url: '/placeholder/b',
-        imageUrl: 'https://example.com/placeholder.png',
-      ),
-      personID: personId,
-    );
 
     // // 14. Seed Reminders
     // await db.customNotificationDAO.insertNotification(

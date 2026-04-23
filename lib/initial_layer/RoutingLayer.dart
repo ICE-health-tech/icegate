@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 // NOTE: Please ensure these imports are correct for your project structure
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     hide ThemeData;
 // import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
@@ -43,71 +43,6 @@ class _adapterState extends State<Adapter> {
     themeStore.loadTheme(savedTheme.themePath);
 
     final personId = personBlock.information.value.profiles.id ?? "";
-
-    final existingWidgets = await dao.getInternaListWidgetByListName([
-      "WidgetPage",
-      "Health Department",
-      "Block Reminder",
-      "ICE GATE SSH",
-      "Social Blocker"
-    ]);
-
-    final existingNames = existingWidgets.map((e) => e.name).toSet();
-
-    if (!existingNames.contains("WidgetPage")) {
-      await dao.insertInternalWidget(
-        name: "WidgetPage",
-        personID: personId,
-        imageUrl: "assets/internalwidget/defaul.png",
-        url: "/canvas",
-        alias: "WidgetPage",
-        scope: 'home',
-      );
-    }
-
-    if (!existingNames.contains("Health Department")) {
-      await dao.insertInternalWidget(
-        name: "Health Department",
-        personID: personId,
-        imageUrl: "assets/internalwidget/defaul.png",
-        url: "/health",
-        alias: "HealthPage",
-        scope: 'home',
-      );
-    }
-
-    if (!existingNames.contains("Block Reminder")) {
-      await dao.insertInternalWidget(
-        name: "Block Reminder",
-        personID: personId,
-        imageUrl: "assets/internalwidget/defaul.png",
-        url: "/health/block-reminder",
-        alias: "BlockReminder",
-        scope: 'home',
-      );
-    }
-
-    if (!existingNames.contains("Social Blocker")) {
-      await dao.insertInternalWidget(
-        name: "Social Blocker",
-        personID: personId,
-        imageUrl: "assets/internalwidget/defaul.png",
-        url: "/social/blocker",
-        alias: "SocialBlocker",
-        scope: 'home',
-      );
-    }
-
-    if (!existingNames.contains("ICE GATE SSH")) {
-      await dao.insertInternalWidget(
-        name: "ICE GATE SSH",
-        personID: personId,
-        imageUrl: "assets/internalwidget/defaul.png",
-        url: "/widgets/ssh",
-        alias: "SSHTerminal",
-        scope: 'home',
-      );
-    }
 
     internalWidgetBlock.refreshBlock(dao, personId, 'home');
     externalWidgetBlock.refreshBlock(externalDao, personId);

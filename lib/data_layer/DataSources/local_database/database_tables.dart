@@ -1,4 +1,4 @@
-part of 'Database.dart';
+part of 'database.dart';
 
 // --- 3. Table Definitions ---
 

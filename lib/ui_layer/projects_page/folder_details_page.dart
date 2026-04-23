@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'dart:ui';
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
@@ -8,6 +9,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'dart:math' as math;
+import 'package:signals_flutter/signals_flutter.dart';
 
 class FolderDetailsPage extends StatefulWidget {
   final Directory directory;
@@ -38,28 +40,53 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: colorScheme.surface,
-      floatingActionButton: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: colorScheme.primary.withValues(alpha: 0.3),
-              blurRadius: 20,
-              offset: const Offset(0, 10),
-            ),
-          ],
-        ),
-        child: FloatingActionButton(
-          onPressed: () => context.push(
-            '/projects/editor',
-            extra: {'initialDirectory': widget.directory},
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _buildFab(
+            context,
+            icon: Icons.sync_rounded,
+            onTap: () =>
+                context.read<DocumentationBlock>().syncWithGoogleDrive(),
+            color: colorScheme.secondary,
+            tooltip: 'Sync with Cloud',
           ),
-          backgroundColor: colorScheme.primary,
-          foregroundColor: colorScheme.onPrimary,
-          elevation: 0,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: const Icon(Icons.add_comment_rounded, size: 24),
-        ),
+          const SizedBox(height: 12),
+          _buildFab(
+            context,
+            icon: Icons.add_comment_rounded,
+            onTap: () async {
+              final ext = await showDialog<String>(
+                context: context,
+                builder: (context) => SimpleDialog(
+                  title: const Text('Choose Note Type'),
+                  children: [
+                    SimpleDialogOption(
+                      onPressed: () => Navigator.pop(context, '.md'),
+                      child: const Text('Markdown (.md)'),
+                    ),
+                    SimpleDialogOption(
+                      onPressed: () => Navigator.pop(context, '.txt'),
+                      child: const Text('Plain Text (.txt)'),
+                    ),
+                  ],
+                ),
+              );
+              if (ext != null && context.mounted) {
+                await context.push(
+                  '/projects/editor',
+                  extra: {
+                    'initialDirectory': widget.directory,
+                    'extension': ext,
+                  },
+                );
+                if (mounted) setState(() {});
+              }
+            },
+            color: colorScheme.primary,
+            tooltip: 'New Note',
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -88,7 +115,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
               ),
             ),
           ),
-          
+
           CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
@@ -108,9 +135,13 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     );
   }
 
-  Widget _buildSliverAppBar(BuildContext context, String title, ColorScheme colorScheme) {
+  Widget _buildSliverAppBar(
+    BuildContext context,
+    String title,
+    ColorScheme colorScheme,
+  ) {
     return SliverAppBar(
-      expandedHeight: 140,
+      expandedHeight: 90,
       floating: false,
       pinned: true,
       stretch: true,
@@ -151,12 +182,12 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
             ),
           ],
         ),
-        title: Text(
+        title: AutoSizeText(
           title,
           style: TextStyle(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
-            fontSize: 24,
+            fontSize: 14,
             letterSpacing: -0.5,
           ),
         ),
@@ -205,7 +236,9 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
               style: TextStyle(color: colorScheme.onSurface),
               decoration: InputDecoration(
                 hintText: 'Search files...',
-                hintStyle: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
+                hintStyle: TextStyle(
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
                 border: InputBorder.none,
                 icon: Icon(Icons.search, size: 20, color: colorScheme.primary),
               ),
@@ -267,7 +300,8 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
 
     return InkWell(
       onTap: () => _handleTap(entity),
-      onLongPress: () => _handleMenuAction('delete', entity), // Quick delete on long press
+      onLongPress: () =>
+          _handleMenuAction('delete', entity), // Quick delete on long press
       borderRadius: BorderRadius.circular(20),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(20),
@@ -287,9 +321,15 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
               children: [
                 ShaderMask(
                   shaderCallback: (bounds) => LinearGradient(
-                    colors: isDir 
-                      ? [colorScheme.primary, colorScheme.primary.withValues(alpha: 0.7)]
-                      : [colorScheme.secondary, colorScheme.secondary.withValues(alpha: 0.7)],
+                    colors: isDir
+                        ? [
+                            colorScheme.primary,
+                            colorScheme.primary.withValues(alpha: 0.7),
+                          ]
+                        : [
+                            colorScheme.secondary,
+                            colorScheme.secondary.withValues(alpha: 0.7),
+                          ],
                   ).createShader(bounds),
                   child: Icon(
                     isDir ? Icons.folder_rounded : _getFileIcon(name),
@@ -339,7 +379,8 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: (isDir ? colorScheme.primary : colorScheme.secondary).withValues(alpha: 0.1),
+            color: (isDir ? colorScheme.primary : colorScheme.secondary)
+                .withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(
@@ -364,25 +405,72 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
         ),
         trailing: PopupMenuButton<String>(
           onSelected: (val) => _handleMenuAction(val, entity),
-          icon: Icon(Icons.more_vert_rounded, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          icon: Icon(
+            Icons.more_vert_rounded,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          ),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           itemBuilder: (context) => [
-            const PopupMenuItem(value: 'move', child: Row(children: [Icon(Icons.move_to_inbox_rounded, size: 18), SizedBox(width: 12), Text('Move to...')])),
-            const PopupMenuItem(value: 'copy', child: Row(children: [Icon(Icons.copy_rounded, size: 18), SizedBox(width: 12), Text('Copy to...')])),
-            const PopupMenuItem(value: 'rename', child: Row(children: [Icon(Icons.edit_rounded, size: 18), SizedBox(width: 12), Text('Rename')])),
+            const PopupMenuItem(
+              value: 'move',
+              child: Row(
+                children: [
+                  Icon(Icons.move_to_inbox_rounded, size: 18),
+                  SizedBox(width: 12),
+                  Text('Move to...'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'copy',
+              child: Row(
+                children: [
+                  Icon(Icons.copy_rounded, size: 18),
+                  SizedBox(width: 12),
+                  Text('Copy to...'),
+                ],
+              ),
+            ),
+            const PopupMenuItem(
+              value: 'rename',
+              child: Row(
+                children: [
+                  Icon(Icons.edit_rounded, size: 18),
+                  SizedBox(width: 12),
+                  Text('Rename'),
+                ],
+              ),
+            ),
             const PopupMenuDivider(),
-            const PopupMenuItem(value: 'delete', child: Row(children: [Icon(Icons.delete_outline_rounded, size: 18, color: Colors.red), SizedBox(width: 12), Text('Delete', style: TextStyle(color: Colors.red))])),
+            const PopupMenuItem(
+              value: 'delete',
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.delete_outline_rounded,
+                    size: 18,
+                    color: Colors.red,
+                  ),
+                  SizedBox(width: 12),
+                  Text('Delete', style: TextStyle(color: Colors.red)),
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
 
-  void _handleTap(FileSystemEntity entity) {
+  void _handleTap(FileSystemEntity entity) async {
     if (entity is Directory) {
-      context.push('/projects/documents/folder', extra: entity);
+      await context.push('/projects/documents/folder', extra: entity);
+      if (mounted) setState(() {});
     } else {
-      context.push('/projects/editor', extra: entity as File);
+      await context.push('/projects/editor', extra: entity as File);
+      if (mounted) setState(() {});
     }
   }
 
@@ -395,7 +483,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     } else if (action == 'copy') {
       _showFolderPicker(entity, isMove: false);
     } else if (action == 'rename') {
-       // Future: Rename implementation
+      // Future: Rename implementation
     }
   }
 
@@ -434,11 +522,16 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         backgroundColor: Theme.of(context).colorScheme.surface,
         title: const Text('Delete permanently?'),
-        content: Text('Are you sure you want to delete "${p.basename(entity.path)}"? This action cannot be undone.'),
+        content: Text(
+          'Are you sure you want to delete "${p.basename(entity.path)}"? This action cannot be undone.',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context), 
-            child: Text('CANCEL', style: TextStyle(color: Theme.of(context).colorScheme.primary)),
+            onPressed: () => Navigator.pop(context),
+            child: Text(
+              'CANCEL',
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
+            ),
           ),
           TextButton(
             onPressed: () {
@@ -450,7 +543,10 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
               Navigator.pop(context);
               setState(() {});
             },
-            child: const Text('DELETE', style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold)),
+            child: const Text(
+              'DELETE',
+              style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+            ),
           ),
         ],
       ),
@@ -460,11 +556,16 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
   IconData _getFileIcon(String name) {
     final ext = p.extension(name).toLowerCase();
     switch (ext) {
-      case '.md': return Icons.article_rounded;
-      case '.pdf': return Icons.picture_as_pdf_rounded;
-      case '.json': return Icons.code_rounded;
-      case '.docx': return Icons.description_rounded;
-      default: return Icons.insert_drive_file_rounded;
+      case '.md':
+        return Icons.article_rounded;
+      case '.pdf':
+        return Icons.picture_as_pdf_rounded;
+      case '.json':
+        return Icons.code_rounded;
+      case '.docx':
+        return Icons.description_rounded;
+      default:
+        return Icons.insert_drive_file_rounded;
     }
   }
 
@@ -473,6 +574,55 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     const suffixes = ["B", "KB", "MB", "GB", "TB"];
     var i = (math.log(bytes) / math.log(1024)).floor();
     return "${(bytes / math.pow(1024, i)).toStringAsFixed(1)} ${suffixes[i]}";
+  }
+
+  Widget _buildFab(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onTap,
+    required Color color,
+    String? tooltip,
+  }) {
+    final block = context.read<DocumentationBlock>();
+    
+    return Watch((context) {
+      final isSyncingDrive = block.isSyncing.value && 
+                             block.syncType.value == 'drive' && 
+                             icon == Icons.sync_rounded;
+
+      return Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: [
+            BoxShadow(
+              color: color.withValues(alpha: 0.3),
+              blurRadius: 20,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: FloatingActionButton(
+          heroTag: 'fab_${icon.hashCode}',
+          onPressed: isSyncingDrive ? null : onTap,
+          backgroundColor: color,
+          foregroundColor: Colors.white,
+          elevation: 0,
+          tooltip: tooltip,
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          child: isSyncingDrive
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Colors.white,
+                  ),
+                )
+              : Icon(icon, size: 24),
+        ),
+      );
+    });
   }
 }
 
@@ -535,12 +685,15 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
               itemBuilder: (context, index) {
                 if (index == 0) {
                   return ListTile(
-                    leading: Icon(Icons.home_work_rounded, color: colorScheme.primary),
+                    leading: Icon(
+                      Icons.home_work_rounded,
+                      color: colorScheme.primary,
+                    ),
                     title: const Text('Documentation Root'),
                     onTap: () {
                       // Navigate to the root (the parent of all user docs)
                       // For now, we'll just use the first item in the list's parent if available
-                      if(allDirs.isNotEmpty) {
+                      if (allDirs.isNotEmpty) {
                         widget.onFolderSelected(allDirs.first.parent);
                       }
                     },
@@ -549,7 +702,10 @@ class _FolderPickerSheetState extends State<_FolderPickerSheet> {
                 final dir = allDirs[index - 1];
                 final name = p.basename(dir.path);
                 return ListTile(
-                  leading: Icon(Icons.folder_rounded, color: colorScheme.primary),
+                  leading: Icon(
+                    Icons.folder_rounded,
+                    color: colorScheme.primary,
+                  ),
                   title: Text(name),
                   onTap: () => widget.onFolderSelected(dir),
                 );

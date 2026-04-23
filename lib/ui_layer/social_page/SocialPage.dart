@@ -5,7 +5,7 @@ import 'package:ice_gate/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/AchievementTimeline.dart';
 import 'package:ice_gate/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
 import 'package:ice_gate/ui_layer/ReusableWidget/SwipeablePage.dart';
@@ -37,7 +37,7 @@ class SocialPage extends StatefulWidget {
       // 3 tabs: 0=Journal, 1=Achievements, 2=Analysis
       switch (index) {
         case 0: // Journal
-          iconData = Icons.edit_note_rounded;
+          iconData = Icons.sentiment_satisfied_rounded;
           action = () => MindLogEntryDialog.show(context);
           break;
         case 1: // Achievements
@@ -103,8 +103,6 @@ class SocialPage extends StatefulWidget {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     );
   }
-
-
 
   @override
   State<SocialPage> createState() => _SocialPageState();
@@ -185,16 +183,14 @@ class _SocialPageState extends State<SocialPage>
     try {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;
-      _activityId = await _liveActivities.createActivity(
-        'group.duylong.art.iceshield',
-        {
-          'title': l10n.social_dashboard,
-          'songName': _getTabName(context, _tabController.index),
-          'artist': "ICE GATE",
-          'cover': "social_cover",
-          'progress': 0.0,
-        },
-      );
+      _activityId = await _liveActivities
+          .createActivity('group.duylong.art.iceshield', {
+            'title': l10n.social_dashboard,
+            'songName': _getTabName(context, _tabController.index),
+            'artist': "ICE GATE",
+            'cover': "social_cover",
+            'progress': 0.0,
+          });
     } catch (e) {
       debugPrint("Social Live Activity Creation Error: $e");
     }
@@ -211,7 +207,9 @@ class _SocialPageState extends State<SocialPage>
           'cover': "social_cover",
           'progress': 0.0,
         });
-        print("✅ [SOCIAL] Dynamic Island Updated to: ${_getTabName(context, index)}");
+        print(
+          "✅ [SOCIAL] Dynamic Island Updated to: ${_getTabName(context, index)}",
+        );
       } catch (e) {
         debugPrint("Social Live Activity Update Error: $e");
       }
@@ -232,8 +230,6 @@ class _SocialPageState extends State<SocialPage>
         return l10n.social;
     }
   }
-
-
 
   @override
   void dispose() {
@@ -266,12 +262,18 @@ class _SocialPageState extends State<SocialPage>
               child: Watch((context) {
                 // Accessing activeTab.value ensures this widget rebuilds when the signal changes
                 final _ = _socialBlock.activeTab.value;
-                return TabBarView(
-                  controller: _tabController,
+
+                return Stack(
                   children: [
-                    const SocialNotesDashboard(),
-                    _buildAchievementsDashboard(context),
-                    const SocialAnalysisPage(),
+                    // Main content – swipe disabled so navigation is button-only
+                    TabBarView(
+                      controller: _tabController,
+                      children: [
+                        const SocialNotesDashboard(),
+                        _buildAchievementsDashboard(context),
+                        const SocialAnalysisPage(),
+                      ],
+                    ),
                   ],
                 );
               }),
@@ -293,7 +295,9 @@ class _SocialPageState extends State<SocialPage>
             decoration: BoxDecoration(
               color: colorScheme.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
-              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
+              border: Border.all(
+                color: colorScheme.primary.withValues(alpha: 0.1),
+              ),
             ),
             child: Icon(
               icon,
@@ -334,7 +338,7 @@ class _SocialPageState extends State<SocialPage>
           if (achievements.isEmpty) {
             return _buildEmptyState(
               context,
-              "No achievements logged yet. Log a win to start reflection.",
+              "No achievements logged yet.",
               Icons.emoji_events_outlined,
             );
           }
@@ -344,9 +348,7 @@ class _SocialPageState extends State<SocialPage>
               SliverToBoxAdapter(
                 child: DomainAnalysisChart(achievements: achievements),
               ),
-              const SliverToBoxAdapter(
-                child: SizedBox(height: 16),
-              ),
+              const SliverToBoxAdapter(child: SizedBox(height: 16)),
               SliverToBoxAdapter(
                 child: AchievementTimeline(achievements: achievements),
               ),

@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
     as DatabaseAgent;
@@ -92,6 +92,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late DocumentationBlock documentationBlock;
   late RemoteControllerBlock remoteControllerBlock;
   DateTime? _lastPausedTime;
+  String? _lastInitializedPersonId; // Guard for redundant re-inits
 
   Timer? _healthSyncTimer;
 
@@ -393,6 +394,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
             final personId = profile.id;
 
             if (personId != null && personId.isNotEmpty) {
+              if (personId == _lastInitializedPersonId) {
+                return;
+              }
+              _lastInitializedPersonId = personId;
+
               untracked(() {
                 print(
                   "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
@@ -432,6 +438,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 // NEW: Trigger Cloud Sync
                 database.supabaseSync?.syncFullDown(personId).then((_) {
                   debugPrint("📡 [CloudSync] Initial full sync completed.");
+                  // Reschedule notifications once cloud data is local
+                  notificationService.syncAllNotifications(personId);
                 });
 
                 // Initialize Remote Controller
@@ -441,6 +449,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   database.internalWidgetsDAO,
                   personId,
                   'home',
+                );
+                internalWidgetBlock.refreshBlock(
+                  database.internalWidgetsDAO,
+                  personId,
+                  'projects',
                 );
                 externalWidgetBlock.refreshBlock(
                   database.externalWidgetsDAO,

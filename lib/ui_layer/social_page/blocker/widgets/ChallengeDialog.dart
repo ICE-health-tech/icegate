@@ -173,6 +173,16 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                       ),
                       textAlign: TextAlign.center,
                     )
+                  else if (challenge.type == ChallengeType.japanese)
+                    Text(
+                      challenge.question.split(": ").last,
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        fontFamily: 'Noto Sans JP', // Standard Japanese font if available
+                      ),
+                      textAlign: TextAlign.center,
+                    )
                   else if (challenge.phrase != null)
                     Container(
                       padding: const EdgeInsets.all(12),
@@ -214,7 +224,9 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
                 hintText:
                     challenge.type == ChallengeType.math
                         ? "Enter answer"
-                        : "Type phrase exactly",
+                        : challenge.type == ChallengeType.japanese
+                            ? "Type in Romaji"
+                            : "Type phrase exactly",
                 errorText: error,
                 filled: true,
                 fillColor: colorScheme.surfaceContainerHigh,
@@ -253,7 +265,7 @@ class _ChallengeDialogState extends State<ChallengeDialog> {
               "Complete the challenge to disable the block",
               style: TextStyle(
                 fontSize: 11,
-                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                color: colorScheme.onSurfaceVariant,
               ),
             ),
           ],

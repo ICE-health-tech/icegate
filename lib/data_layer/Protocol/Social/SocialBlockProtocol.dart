@@ -18,8 +18,9 @@ enum SocialPlatform {
 
 enum ChallengeType {
   none('None', Icons.block_rounded),
-  math('Math Problem', Icons.calculate_rounded),
-  typing('Typing Phrase', Icons.keyboard_rounded);
+  math('Math', Icons.calculate_rounded),
+  typing('Typing', Icons.keyboard_rounded),
+  japanese('Japanese', Icons.translate_rounded);
 
   final String name;
   final IconData icon;
@@ -66,12 +67,13 @@ class SocialBlockRule {
     this.challengeLevel = ChallengeLevel.normal,
     int totalChallenges = 0,
     int challengesPassed = 0,
-  })  : _totalChallenges = totalChallenges,
-        _challengesPassed = challengesPassed;
+  }) : _totalChallenges = totalChallenges,
+       _challengesPassed = challengesPassed;
 
   String get displayName => ruleName.isNotEmpty ? ruleName : platform.name;
 
-  double get successRate => totalChallenges > 0 ? (challengesPassed / totalChallenges) : 0.0;
+  double get successRate =>
+      totalChallenges > 0 ? (challengesPassed / totalChallenges) : 0.0;
 
   SocialBlockRule copyWith({
     String? id,
@@ -110,14 +112,12 @@ class SocialBlockRule {
       'platform': platform.name,
       'isEnabled': isEnabled,
       'blockDuringFocus': blockDuringFocus,
-      'scheduleStart':
-          scheduleStart != null
-              ? '${scheduleStart!.hour}:${scheduleStart!.minute}'
-              : null,
-      'scheduleEnd':
-          scheduleEnd != null
-              ? '${scheduleEnd!.hour}:${scheduleEnd!.minute}'
-              : null,
+      'scheduleStart': scheduleStart != null
+          ? '${scheduleStart!.hour}:${scheduleStart!.minute}'
+          : null,
+      'scheduleEnd': scheduleEnd != null
+          ? '${scheduleEnd!.hour}:${scheduleEnd!.minute}'
+          : null,
       'blockedDays': blockedDays,
       'challengeType': challengeType.name,
       'challengeLevel': challengeLevel.name,
@@ -128,7 +128,9 @@ class SocialBlockRule {
 
   factory SocialBlockRule.fromJson(Map<String, dynamic> json) {
     return SocialBlockRule(
-      id: json['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
+      id:
+          json['id'] as String? ??
+          DateTime.now().millisecondsSinceEpoch.toString(),
       ruleName: json['ruleName'] ?? '',
       platform: SocialPlatform.values.firstWhere(
         (e) => e.name == json['platform'],
@@ -136,10 +138,12 @@ class SocialBlockRule {
       ),
       isEnabled: json['isEnabled'] ?? true,
       blockDuringFocus: json['blockDuringFocus'] ?? true,
-      scheduleStart:
-          json['scheduleStart'] != null ? _parseTime(json['scheduleStart']) : null,
-      scheduleEnd:
-          json['scheduleEnd'] != null ? _parseTime(json['scheduleEnd']) : null,
+      scheduleStart: json['scheduleStart'] != null
+          ? _parseTime(json['scheduleStart'])
+          : null,
+      scheduleEnd: json['scheduleEnd'] != null
+          ? _parseTime(json['scheduleEnd'])
+          : null,
       blockedDays: List<int>.from(json['blockedDays'] ?? [1, 2, 3, 4, 5, 6, 7]),
       challengeType: ChallengeType.values.firstWhere(
         (e) => e.name == json['challengeType'],

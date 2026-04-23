@@ -6,7 +6,7 @@ import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/BiometricAuthService.dart';
 import 'package:ice_gate/initial_layer/CoreLogics/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'dart:async';
@@ -210,9 +210,24 @@ class AuthBlock {
       print("✅ Guest login successful with mock data.");
     } catch (e) {
       print("❌ Guest login failed: $e");
-      error.value = "Guest Access Error: ${e.toString()}";
+      error.value = "err_unexpected";
       status.value = AuthStatus.unauthenticated;
     }
+  }
+
+  String _mapError(Object e) {
+    final str = e.toString().toLowerCase();
+    if (str.contains("invalid login credentials")) return "err_invalid_credentials";
+    if (str.contains("email not confirmed")) return "err_email_not_confirmed";
+    if (str.contains("user not found")) return "err_user_not_found";
+    if (str.contains("network") || str.contains("connection")) return "err_network_fail";
+    if (str.contains("too many requests") || str.contains("rate limit")) return "err_too_many_attempts";
+    if (str.contains("biometric") && (str.contains("not supported") || str.contains("available"))) return "err_biometric_unsupported";
+    if (str.contains("biometric") && str.contains("not enabled")) return "err_biometric_disabled";
+    if (str.contains("passkey") && (str.contains("canceled") || str.contains("dismissed") || str.contains("1001"))) return "err_passkey_canceled";
+    if (str.contains("passkey") || str.contains("assertion")) return "err_passkey_failed";
+    
+    return "err_unexpected";
   }
 
   /// Biometric Login Flow (Returns true if successful)
@@ -268,7 +283,7 @@ class AuthBlock {
       }
     } catch (e) {
       print("❌ [AuthBlock] Biometric Login failed: $e");
-      error.value = e.toString();
+      error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       return false;
     } finally {
@@ -356,12 +371,7 @@ class AuthBlock {
     } catch (e) {
       final errorStr = e.toString();
       print("❌ Passkey Authentication failed: $errorStr");
-      
-      // Don't show scary error if user simply canceled or dismissed the prompt
-      if (!errorStr.contains('1001') && !errorStr.contains('canceled') && !errorStr.contains('dismissed')) {
-        error.value = "Auth Error: $errorStr";
-      }
-      
+      error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       return false;
     } finally {
@@ -418,8 +428,9 @@ class AuthBlock {
         return "canceled";
       }
       
-      error.value = "Enrollment Error: $errorStr";
-      return errorStr;
+      final mappedError = _mapError(e);
+      error.value = mappedError;
+      return mappedError;
     }
   }
   // --- Actions ---
@@ -571,7 +582,7 @@ class AuthBlock {
       }
     } catch (e) {
       print("❌ [AuthBlock] Authentication failed: $e");
-      error.value = e.toString();
+      error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     }
   }
@@ -621,7 +632,7 @@ class AuthBlock {
       );
     } catch (e) {
       print("❌ [AuthBlock] Google Sign-In initiation failed: $e");
-      error.value = e.toString();
+      error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     }
   }
@@ -671,7 +682,7 @@ class AuthBlock {
       }
     } catch (e) {
       print("❌ [AuthBlock] Registration failed: $e");
-      error.value = e.toString();
+      error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     }
   }

@@ -9,7 +9,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/ui_layer/ReusableWidget/ThemeManager.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
@@ -346,7 +346,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '2.6.0',
+                  subtitle: '3.1.0',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

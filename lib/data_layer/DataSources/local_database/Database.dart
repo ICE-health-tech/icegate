@@ -461,6 +461,8 @@ class ProjectNotesTable extends Table {
       text().withDefault(const Constant('projects')).named('category')();
 
   TextColumn get mood => text().nullable().named('mood')();
+  TextColumn get extension =>
+      text().withDefault(const Constant('.md')).named('extension')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1827,6 +1829,25 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  Stream<List<MindLogData>> watchLogsByRange(
+    String personId,
+    DateTime start,
+    DateTime end,
+  ) {
+    return (select(mindLogsTable)
+          ..where(
+            (tbl) =>
+                tbl.personID.equals(personId) &
+                tbl.logDate.isBiggerOrEqualValue(start) &
+                tbl.logDate.isSmallerThanValue(end),
+          )
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
   Future<void> insertLog(MindLogsTableCompanion entry) async {
     await into(mindLogsTable).insert(entry);
 
@@ -2630,6 +2651,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     String? tenantID,
     String? category,
     String? mood,
+    String extension = '.md',
   }) async {
     final uuid = IDGen.UUIDV7();
     final companion = ProjectNotesTableCompanion.insert(
@@ -2641,6 +2663,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
       personID: Value(personID),
       category: Value(category ?? 'projects'),
       mood: Value(mood),
+      extension: Value(extension),
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
@@ -2664,6 +2687,7 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
         projectID: Value(record['project_id'] as String?),
         category: Value(record['category'] as String? ?? 'projects'),
         mood: Value(record['mood'] as String?),
+        extension: Value(record['extension'] as String? ?? '.md'),
         createdAt: Value(
           record['created_at'] != null
               ? DateTime.parse(record['created_at'].toString())
@@ -3066,7 +3090,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       'meals',
       'custom_notifications',
       'quotes',
-      'ai_prompts',
+      // 'ai_prompts',
     ];
 
     await transaction(() async {
@@ -3861,7 +3885,10 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     });
   }
 
-  Future<void> updateLastQuestGeneratedAt(String personID, DateTime timestamp) {
+  Future<void> updateLastQuestGeneratedAt(
+    String personID,
+    DateTime? timestamp,
+  ) {
     return (update(profilesTable)..where((t) => t.personID.equals(personID)))
         .write(ProfilesTableCompanion(lastQuestGeneratedAt: Value(timestamp)));
   }
@@ -4161,6 +4188,19 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     await db.pushToSupabase(
       table: 'transactions',
       payload: db.companionToMap(txn, transactionsTable),
+    );
+  }
+
+  Future<void> updateTransaction(TransactionsTableCompanion entry) async {
+    final id = entry.id.value;
+    await (update(
+      transactionsTable,
+    )..where((t) => t.id.equals(id))).write(entry);
+
+    // Sync to Supabase
+    await db.pushToSupabase(
+      table: 'transactions',
+      payload: db.companionToMap(entry, transactionsTable),
     );
   }
 
@@ -4921,7 +4961,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
           : Value(existing.weightKg);
 
       final updatedHeartRate = entry.heartRate.present
-          ? (entry.heartRate.value != null && entry.heartRate.value! > 0
+          ? (entry.heartRate.value != null &&
+                    (force ||
+                        entry.heartRate.value! > (existing.heartRate ?? 0))
                 ? entry.heartRate
                 : Value(existing.heartRate))
           : Value(existing.heartRate);
@@ -4956,6 +4998,26 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         questPoints: updatedQuestPoints,
         updatedAt: Value(DateTime.now()),
       );
+
+      // Calculate if anything actually changed to avoid triggering unnecessary stream emissions
+      bool hasChanges = false;
+      if (updatedSteps.value != existing.steps) hasChanges = true;
+      if (updatedCaloriesBurned.value != existing.caloriesBurned)
+        hasChanges = true;
+      if (updatedCaloriesConsumed.value != existing.caloriesConsumed)
+        hasChanges = true;
+      if (updatedSleep.value != existing.sleepHours) hasChanges = true;
+      if (updatedWater.value != existing.waterGlasses) hasChanges = true;
+      if (updatedExercise.value != existing.exerciseMinutes) hasChanges = true;
+      if (updatedFocus.value != existing.focusMinutes) hasChanges = true;
+      if (updatedWeight.value != existing.weightKg) hasChanges = true;
+      if (updatedHeartRate.value != existing.heartRate) hasChanges = true;
+      if (updatedQuestPoints.value != existing.questPoints) hasChanges = true;
+
+      // If nothing changed and we already have a record with the correct ID, skip
+      if (!hasChanges && !force && existingRecord != null) {
+        return;
+      }
 
       HealthMetricsTableCompanion finalCompanion;
 
@@ -6149,14 +6211,22 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
       personID: Value(r['person_id'] as String?),
       projectID: Value(r['project_id'] as String?),
       taskID: Value(r['task_id'] as String?),
-      startTime: Value(DateTime.parse(r['start_time'] as String)),
+      startTime: Value(
+        r['start_time'] != null
+            ? DateTime.parse(r['start_time'] as String)
+            : DateTime.now(),
+      ),
       endTime: Value(
         r['end_time'] != null ? DateTime.parse(r['end_time'] as String) : null,
       ),
       durationSeconds: Value(r['duration_seconds'] as int? ?? 0),
       status: Value(r['status'] as String? ?? 'completed'),
       sessionType: Value(r['session_type'] as String? ?? 'Focus'),
-      createdAt: Value(DateTime.parse(r['created_at'] as String)),
+      createdAt: Value(
+        r['created_at'] != null
+            ? DateTime.parse(r['created_at'] as String)
+            : DateTime.now(),
+      ),
       updatedAt: Value(
         r['updated_at'] != null
             ? DateTime.parse(r['updated_at'] as String)
@@ -6350,18 +6420,42 @@ class CustomNotificationDAO extends DatabaseAccessor<AppDatabase>
     with _$CustomNotificationDAOMixin {
   CustomNotificationDAO(super.db);
 
-  Future<int> insertNotification(CustomNotificationsTableCompanion entry) {
-    return into(customNotificationsTable).insert(entry);
+  Future<int> insertNotification(
+    CustomNotificationsTableCompanion entry,
+  ) async {
+    final res = await into(customNotificationsTable).insert(entry);
+    final row = await (select(
+      customNotificationsTable,
+    )..where((t) => t.id.equals(entry.id.value))).getSingle();
+
+    // Push to Supabase
+    attachedDatabase.supabaseSync?.pushData(
+      table: 'custom_notifications',
+      payload: _toMap(row),
+    );
+    return res;
   }
 
-  Future<bool> updateNotification(CustomNotificationData entry) {
-    return update(customNotificationsTable).replace(entry);
+  Future<bool> updateNotification(CustomNotificationData entry) async {
+    final updatedEntry = entry.copyWith(updatedAt: DateTime.now());
+    final res = await update(customNotificationsTable).replace(updatedEntry);
+    attachedDatabase.supabaseSync?.pushData(
+      table: 'custom_notifications',
+      payload: _toMap(updatedEntry),
+    );
+    return res;
   }
 
-  Future<int> deleteNotification(String id) {
-    return (delete(
+  Future<int> deleteNotification(String id) async {
+    final res = await (delete(
       customNotificationsTable,
     )..where((t) => t.id.equals(id))).go();
+    attachedDatabase.supabaseSync?.pushData(
+      table: 'custom_notifications',
+      payload: {'id': id},
+      isDelete: true,
+    );
+    return res;
   }
 
   Stream<List<CustomNotificationData>> watchAllNotifications(String personId) {
@@ -6396,10 +6490,75 @@ class CustomNotificationDAO extends DatabaseAccessor<AppDatabase>
   Future<void> patchNotification(
     String id,
     CustomNotificationsTableCompanion companion,
-  ) {
-    return (update(
+  ) async {
+    final updatedCompanion = companion.copyWith(
+      updatedAt: Value(DateTime.now()),
+    );
+    await (update(
       customNotificationsTable,
-    )..where((t) => t.id.equals(id))).write(companion);
+    )..where((t) => t.id.equals(id))).write(updatedCompanion);
+
+    final updated = await (select(
+      customNotificationsTable,
+    )..where((t) => t.id.equals(id))).getSingle();
+    attachedDatabase.supabaseSync?.pushData(
+      table: 'custom_notifications',
+      payload: _toMap(updated),
+    );
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = CustomNotificationsTableCompanion(
+      id: Value(r['id'] as String),
+      tenantID: Value(
+        r['tenant_id'] as String? ?? '00000000-0000-0000-0000-000000000000',
+      ),
+      notificationID: Value(r['notification_id'] as String?),
+      title: Value(r['title'] as String),
+      content: Value(r['content'] as String),
+      scheduledTime: Value(DateTime.parse(r['scheduled_time'] as String)),
+      repeatFrequency: Value(r['repeat_frequency'] as String?),
+      repeatDays: Value(r['repeat_days'] as String?),
+      category: Value(r['category'] as String? ?? 'General'),
+      priority: Value(r['priority'] as String? ?? 'Normal'),
+      personID: Value(r['person_id'] as String?),
+      icon: Value(r['icon'] as String?),
+      isEnabled: Value(r['is_enabled'] as bool? ?? true),
+      createdAt: Value(
+        DateTime.parse(
+          r['created_at'] as String? ?? DateTime.now().toIso8601String(),
+        ),
+      ),
+      updatedAt: Value(
+        DateTime.parse(
+          r['updated_at'] as String? ?? DateTime.now().toIso8601String(),
+        ),
+      ),
+    );
+
+    await into(
+      customNotificationsTable,
+    ).insert(companion, mode: InsertMode.insertOrReplace);
+  }
+
+  Map<String, dynamic> _toMap(CustomNotificationData d) {
+    return {
+      'id': d.id,
+      'tenant_id': d.tenantID,
+      'notification_id': d.notificationID,
+      'title': d.title,
+      'content': d.content,
+      'scheduled_time': d.scheduledTime.toIso8601String(),
+      'repeat_frequency': d.repeatFrequency,
+      'repeat_days': d.repeatDays,
+      'category': d.category,
+      'priority': d.priority,
+      'person_id': d.personID,
+      'icon': d.icon,
+      'is_enabled': d.isEnabled,
+      'created_at': d.createdAt.toIso8601String(),
+      'updated_at': d.updatedAt.toIso8601String(),
+    };
   }
 }
 
@@ -6531,21 +6690,72 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   }
 
   /// Clears stale auto-generated dailies before inserting a new day's batch.
-  Future<int> deleteIncompleteDailyQuestsForPerson(String personId) {
-    return (delete(questsTable)..where(
+  Future<void> deleteIncompleteDailyQuestsForPerson(String personId) async {
+    final toDelete =
+        await (select(questsTable)..where(
+              (t) =>
+                  t.personID.equals(personId) &
+                  t.isCompleted.equals(false) &
+                  t.type.equals('daily'),
+            ))
+            .get();
+
+    await (delete(questsTable)..where(
           (t) =>
               t.personID.equals(personId) &
               t.isCompleted.equals(false) &
               t.type.equals('daily'),
         ))
         .go();
+
+    for (final q in toDelete) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': q.id},
+        isDelete: true,
+      );
+    }
+  }
+
+  /// Permanently removes all quests for a person (both active and completed).
+  Future<void> deleteAllQuestsForPerson(String personId) async {
+    // 1. Get all local quests for this person first to sync deletion
+    final localQuests = await (select(
+      questsTable,
+    )..where((t) => t.personID.equals(personId))).get();
+
+    // 2. Delete locally
+    await (delete(questsTable)..where((t) => t.personID.equals(personId))).go();
+
+    // 3. Sync deletions to Supabase
+    for (final quest in localQuests) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': quest.id},
+        isDelete: true,
+      );
+    }
   }
 
   /// Removes all secret quests for a person. Used to clean up mock mysterious quests.
-  Future<int> deleteSecretQuestsForPerson(String personId) {
-    return (delete(questsTable)
+  Future<void> deleteSecretQuestsForPerson(String personId) async {
+    final toDelete =
+        await (select(questsTable)..where(
+              (t) => t.personID.equals(personId) & t.type.equals('secret'),
+            ))
+            .get();
+
+    await (delete(questsTable)
           ..where((t) => t.personID.equals(personId) & t.type.equals('secret')))
         .go();
+
+    for (final q in toDelete) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': q.id},
+        isDelete: true,
+      );
+    }
   }
 
   Stream<List<QuestData>> watchActiveQuests(String personId) {
@@ -7152,8 +7362,68 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     with _$AchievementsDAOMixin {
   AchievementsDAO(super.db);
 
-  Future<int> insertAchievement(AchievementsTableCompanion entry) {
-    return into(achievementsTable).insert(entry);
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(achievementsTable).insertOnConflictUpdate(
+      AchievementsTableCompanion.insert(
+        id: (r['id'] as String?) ?? '',
+        tenantID: Value((r['tenant_id'] as String?) ?? DEFAULT_TENANT_ID),
+        personID: Value(r['person_id'] as String?),
+        title: (r['title'] as String?) ?? 'Untitled Achievement',
+        description: Value(r['description'] as String?),
+        domain: Value((r['domain'] as String?) ?? 'project'),
+        meaningScore: Value(r['meaning_score'] as int?),
+        impactScore: (r['impact_score'] as int?) ?? 0,
+        moodPre: Value(r['mood_pre'] as String?),
+        moodPost: Value(r['mood_post'] as String?),
+        impactDescWho: (r['impact_desc_who'] as String?) ?? '',
+        impactDescHow: (r['impact_desc_how'] as String?) ?? '',
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'] as String)
+              : DateTime.now(),
+        ),
+      ),
+    );
+  }
+
+  Future<int> insertAchievement(AchievementsTableCompanion entry) async {
+    final res = await into(achievementsTable).insert(entry);
+
+    // Sync to Supabase
+    final payload = <String, dynamic>{};
+    for (final col in achievementsTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+    await db.pushToSupabase(table: 'achievements', payload: payload);
+
+    return res;
+  }
+
+  Future<bool> updateAchievement(AchievementData entry) async {
+    final res = await update(achievementsTable).replace(entry);
+
+    // Sync to Supabase
+    final payload = <String, dynamic>{};
+    payload['id'] = entry.id;
+    payload['tenant_id'] = entry.tenantID;
+    payload['person_id'] = entry.personID;
+    payload['title'] = entry.title;
+    payload['description'] = entry.description;
+    payload['domain'] = entry.domain;
+    payload['meaning_score'] = entry.meaningScore;
+    payload['impact_score'] = entry.impactScore;
+    payload['mood_pre'] = entry.moodPre;
+    payload['mood_post'] = entry.moodPost;
+    payload['impact_desc_who'] = entry.impactDescWho;
+    payload['impact_desc_how'] = entry.impactDescHow;
+    payload['created_at'] = entry.createdAt.toIso8601String();
+
+    await db.pushToSupabase(table: 'achievements', payload: payload);
+
+    return res;
   }
 
   Stream<List<AchievementData>> watchAchievementsByPerson(String personId) {
@@ -7164,6 +7434,27 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
                 OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
           ]))
         .watch();
+  }
+
+  Future<void> deleteAllAchievementsForPerson(String personId) async {
+    // 1. Get all local achievements for this person first to sync deletion
+    final localAchievements = await (select(
+      achievementsTable,
+    )..where((t) => t.personID.equals(personId))).get();
+
+    // 2. Delete locally
+    await (delete(
+      achievementsTable,
+    )..where((t) => t.personID.equals(personId))).go();
+
+    // 3. Sync deletions to Supabase
+    for (final achievement in localAchievements) {
+      await db.pushToSupabase(
+        table: 'achievements',
+        payload: {'id': achievement.id},
+        isDelete: true,
+      );
+    }
   }
 }
 
@@ -7419,7 +7710,8 @@ class AppDatabase extends _$AppDatabase {
   // v53 → adds categories on focus_sessions (e.g. health-exercise for exercise timer sessions)
   // v54 → repair focus_sessions.task_id when v51 was skipped (PowerSync / legacy taskID only)
   // v57 → adds mind_logs table for mental health tracking
-  int get schemaVersion => 57;
+  // v58 → adds extension column to project_notes for .txt support
+  int get schemaVersion => 58;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7481,9 +7773,12 @@ class AppDatabase extends _$AppDatabase {
         await m.createAll();
       },
       onUpgrade: (Migrator m, int from, int to) async {
-        if (from < 55) {
-          // focus_session_id is added to PowerSync schema for exercise_logs.
-          // Since it's a view, we must NOT use m.addColumn here.
+        if (from < 58) {
+          try {
+            await customStatement(
+              'ALTER TABLE project_notes ADD COLUMN extension TEXT DEFAULT ".md";',
+            );
+          } catch (_) {}
         }
         if (from < 50) {
           // Version 50: Originally removed PowerSync-managed tables (weight_logs, hourly_activity_log).

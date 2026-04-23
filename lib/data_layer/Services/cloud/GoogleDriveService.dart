@@ -128,19 +128,41 @@ class GoogleDriveService {
     return await _driveApi!.files.get(fileId, $fields: 'id, name, modifiedTime, size, mimeType') as drive.File;
   }
 
-  Future<void> downloadFile(String fileId, File localFile) async {
+  Future<void> downloadFile(String fileId, File localFile, {String? mimeType}) async {
     if (_driveApi == null) throw Exception('Not signed in');
-    
-    final response = await _driveApi!.files.get(
-      fileId,
-      downloadOptions: drive.DownloadOptions.metadata,
-    ) as drive.Media;
 
-    final List<int> dataStore = [];
-    await for (final data in response.stream) {
-      dataStore.addAll(data);
+    drive.Media response;
+
+    // Handle Google Docs Editors files (Doc, Sheet, Slide) which require 'export'
+    if (mimeType != null && mimeType.startsWith('application/vnd.google-apps.')) {
+      String exportMimeType = 'text/plain'; // Default for documents
+      if (mimeType == 'application/vnd.google-apps.spreadsheet') {
+        exportMimeType = 'text/csv';
+      } else if (mimeType == 'application/vnd.google-apps.presentation') {
+        exportMimeType = 'application/pdf';
+      }
+
+      try {
+        response = await _driveApi!.files.export(
+          fileId,
+          exportMimeType,
+          downloadOptions: drive.DownloadOptions.fullMedia,
+        ) as drive.Media;
+      } catch (e) {
+        debugPrint('Failed to export Google Doc ($mimeType): $e');
+        rethrow;
+      }
+    } else {
+      // Regular binary files
+      response = await _driveApi!.files.get(
+        fileId,
+        downloadOptions: drive.DownloadOptions.fullMedia,
+      ) as drive.Media;
     }
-    await localFile.writeAsBytes(dataStore);
+
+    final fileSink = localFile.openWrite();
+    await fileSink.addStream(response.stream);
+    await fileSink.close();
   }
 
   Future<void> uploadFile(File localFile, String fileName, {String? parentId, String? fileId}) async {
@@ -150,15 +172,15 @@ class GoogleDriveService {
       ..name = fileName
       ..modifiedTime = localFile.lastModifiedSync().toUtc();
     
-    if (parentId != null) {
-      driveFile.parents = [parentId];
-    }
-
     final media = drive.Media(localFile.openRead(), localFile.lengthSync());
 
     if (fileId != null) {
+      // Rule: 'parents' field is not writable in update requests.
       await _driveApi!.files.update(driveFile, fileId, uploadMedia: media);
     } else {
+      if (parentId != null) {
+        driveFile.parents = [parentId];
+      }
       await _driveApi!.files.create(driveFile, uploadMedia: media);
     }
   }

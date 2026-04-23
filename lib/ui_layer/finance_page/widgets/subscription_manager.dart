@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';
@@ -22,7 +22,7 @@ class SubscriptionManager extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -55,10 +55,7 @@ class SubscriptionManager extends StatelessWidget {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
                       gradient: const LinearGradient(
-                        colors: [
-                          EntryColors.financeYellow,
-                          Color(0xFFFFB703),
-                        ],
+                        colors: [EntryColors.financeYellow, Color(0xFFFFB703)],
                       ),
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
@@ -259,9 +256,14 @@ class SubscriptionManager extends StatelessWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: const Color(0xFF1A1A24),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: const Text("Delete Subscription", style: TextStyle(color: Colors.white)),
-        content: Text("Are you sure you want to remove ${sub.name}?", 
-          style: TextStyle(color: Colors.white.withOpacity(0.7))),
+        title: const Text(
+          "Delete Subscription",
+          style: TextStyle(color: Colors.white),
+        ),
+        content: Text(
+          "Are you sure you want to remove ${sub.name}?",
+          style: TextStyle(color: Colors.white.withOpacity(0.7)),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
@@ -272,7 +274,10 @@ class SubscriptionManager extends StatelessWidget {
               financeBlock.deleteSubscription(sub.id);
               Navigator.pop(ctx);
             },
-            child: const Text("DELETE", style: TextStyle(color: Colors.redAccent)),
+            child: const Text(
+              "DELETE",
+              style: TextStyle(color: Colors.redAccent),
+            ),
           ),
         ],
       ),
@@ -298,18 +303,23 @@ class SubscriptionManager extends StatelessWidget {
     }
   }
 
-  void _showSubscriptionSheet(BuildContext context, {SubscriptionData? subscription}) {
+  void _showSubscriptionSheet(
+    BuildContext context, {
+    SubscriptionData? subscription,
+  }) {
     final isEdit = subscription != null;
-    final nameController = TextEditingController(text: subscription?.name ?? "");
-    
+    final nameController = TextEditingController(
+      text: subscription?.name ?? "",
+    );
+
     // Amount display logic
     String initialAmount = "";
     if (subscription != null) {
-      initialAmount = financeBlock.convertToDisplay(subscription.amount).toStringAsFixed(
-        financeBlock.useVnd.value ? 0 : 2,
-      );
+      initialAmount = financeBlock
+          .convertToDisplay(subscription.amount)
+          .toStringAsFixed(financeBlock.useVnd.value ? 0 : 2);
     }
-    
+
     final amountController = TextEditingController(text: initialAmount);
 
     int billingDay = subscription?.billingDay ?? DateTime.now().day;
@@ -322,7 +332,7 @@ class SubscriptionManager extends StatelessWidget {
       builder: (ctx) => StatefulBuilder(
         builder: (ctx, setState) {
           final primaryColor = Theme.of(context).colorScheme.primary;
-          
+
           return Container(
             padding: EdgeInsets.only(
               bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
@@ -388,11 +398,15 @@ class SubscriptionManager extends StatelessWidget {
                     fillColor: Colors.white.withOpacity(0.05),
                     enabledBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                      borderSide: BorderSide(
+                        color: Colors.white.withOpacity(0.05),
+                      ),
                     ),
                     focusedBorder: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(20),
-                      borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
+                      borderSide: BorderSide(
+                        color: primaryColor.withOpacity(0.3),
+                      ),
                     ),
                   ),
                 ),
@@ -403,7 +417,9 @@ class SubscriptionManager extends StatelessWidget {
                       flex: 2,
                       child: TextField(
                         controller: amountController,
-                        keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                        keyboardType: const TextInputType.numberWithOptions(
+                          decimal: true,
+                        ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -415,7 +431,10 @@ class SubscriptionManager extends StatelessWidget {
                             color: Colors.white.withOpacity(0.2),
                           ),
                           prefixText: financeBlock.useVnd.value ? '₫ ' : '\$ ',
-                          prefixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                          prefixStyle: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
                           prefixIcon: const Icon(
                             Icons.attach_money_rounded,
                             color: Colors.white24,
@@ -424,11 +443,15 @@ class SubscriptionManager extends StatelessWidget {
                           fillColor: Colors.white.withOpacity(0.05),
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+                            borderSide: BorderSide(
+                              color: Colors.white.withOpacity(0.05),
+                            ),
                           ),
                           focusedBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(20),
-                            borderSide: BorderSide(color: primaryColor.withOpacity(0.3)),
+                            borderSide: BorderSide(
+                              color: primaryColor.withOpacity(0.3),
+                            ),
                           ),
                         ),
                       ),
@@ -440,7 +463,9 @@ class SubscriptionManager extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: Colors.white.withOpacity(0.05),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: Colors.white.withOpacity(0.05)),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.05),
+                          ),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<int>(
@@ -533,8 +558,11 @@ class SubscriptionManager extends StatelessWidget {
                   width: double.infinity,
                   child: FilledButton(
                     onPressed: () async {
-                      final rawAmount = double.tryParse(amountController.text.replaceFirst(',', '.'));
-                      if (nameController.text.isEmpty || rawAmount == null) return;
+                      final rawAmount = double.tryParse(
+                        amountController.text.replaceFirst(',', '.'),
+                      );
+                      if (nameController.text.isEmpty || rawAmount == null)
+                        return;
 
                       final amount = financeBlock.convertToBase(rawAmount);
 

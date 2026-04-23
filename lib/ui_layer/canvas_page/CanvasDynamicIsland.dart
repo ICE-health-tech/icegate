@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +35,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     BuildContext context,
     String path,
     SocialBlock socialBlock,
+    FinanceBlock financeBlock,
     int? socialIndex,
     int? documentIndex,
   ) {
@@ -93,7 +96,19 @@ class CanvasDynamicIsland extends StatelessWidget {
       return "HEALTH";
     }
 
-    if (path.startsWith('/finance')) return "FINANCE";
+    if (path.startsWith('/finance')) {
+      final index = financeBlock.activeTab.value;
+      switch (index) {
+        case 0:
+          return "OVERVIEW";
+        case 1:
+          return "HISTORY";
+        case 2:
+          return "BILLING";
+        default:
+          return "FINANCE";
+      }
+    }
     if (path.startsWith('/projects/documents')) {
       final docBlock = context.read<DocumentationBlock>();
       final index = documentIndex ?? docBlock.activeDocumentTab.value;
@@ -153,6 +168,12 @@ class CanvasDynamicIsland extends StatelessWidget {
       final numberOfEnabledNotifications =
           notificationService.numberOfEnabledNotifications.value;
       final totalNotifications = numberOfQuests + numberOfEnabledNotifications;
+
+      if (kDebugMode) {
+        debugPrint(
+          "🏝️ [CanvasDynamicIsland] Badge Update: quests=$numberOfQuests, notifications=$numberOfEnabledNotifications, total=$totalNotifications",
+        );
+      }
       final isFocusRunning = focusBlock.isRunning.value;
       final isSyncing = docBlock.isSyncing.value;
       final syncStatus = docBlock.syncStatus.value;
@@ -285,10 +306,12 @@ class CanvasDynamicIsland extends StatelessWidget {
                         )
                       : Watch((context) {
                           final socialBlock = context.read<SocialBlock>();
+                          final financeBlock = context.read<FinanceBlock>();
                           return _buildDefaultTitle(
                             context,
                             currentRoute,
                             socialBlock,
+                            financeBlock,
                             socialIndex,
                             documentIndex,
                             scalingFactor,
@@ -559,36 +582,42 @@ class CanvasDynamicIsland extends StatelessWidget {
     double scalingFactor,
     ColorScheme colorScheme,
   ) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        const SizedBox(width: 8),
-        if (isSyncing)
-          _RotatingSyncIcon(
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          )
-        else
-          Icon(
-            Icons.check_circle_rounded,
-            size: 16 * scalingFactor,
-            color: colorScheme.primary,
-          ),
-        const SizedBox(width: 10),
-        Flexible(
-          child: AutoSizeText(
-            (status ?? "SYNCING...").toUpperCase(),
-            style: TextStyle(
+    return GestureDetector(
+      onTap: () {
+        HapticFeedback.mediumImpact();
+        context.push('/projects/notes');
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 8),
+          if (isSyncing)
+            _RotatingSyncIcon(
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            )
+          else
+            Icon(
+              Icons.check_circle_rounded,
+              size: 16 * scalingFactor,
               color: colorScheme.primary,
-              fontSize: 9 * scalingFactor,
-              fontWeight: FontWeight.w900,
-              letterSpacing: 1.0,
             ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 10),
+          Flexible(
+            child: AutoSizeText(
+              (status ?? "SYNCING...").toUpperCase(),
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontSize: 9 * scalingFactor,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -639,6 +668,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     BuildContext context,
     String currentRoute,
     SocialBlock socialBlock,
+    FinanceBlock financeBlock,
     int? socialIndex,
     int? documentIndex,
     double scalingFactor,
@@ -660,6 +690,7 @@ class CanvasDynamicIsland extends StatelessWidget {
           context,
           currentRoute,
           socialBlock,
+          financeBlock,
           socialIndex ??
               (currentRoute.startsWith('/social')
                   ? socialBlock.activeTab.value

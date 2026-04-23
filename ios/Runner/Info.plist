@@ -34,10 +34,17 @@
 			</array>
 		</dict>
 	</array>
-	<key>GIDClientID</key>
-	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>https</string>
+		<string>http</string>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
@@ -48,6 +55,10 @@
 	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	<key>NSBonjourServices</key>
+	<array>
+		<string>_ssh._tcp</string>
+	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
 	<key>NSContactsUsageDescription</key>
@@ -58,6 +69,8 @@
 	<string>We need access to your health data to track your daily steps and metrics.</string>
 	<key>NSHealthUpdateUsageDescription</key>
 	<string>We would like to write health data to help you track your progress.</string>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>We need your location to track your running distance and movement quests in the real world both when the app is in use and in the background.</string>
 	<key>NSLocationAlwaysUsageDescription</key>
@@ -65,7 +78,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>We need your location to track your running distance and movement quests in the real world.</string>
 	<key>NSMotionUsageDescription</key>
-	<string>We need to track your steps for the ice_gate dashboard.</string>
+	<string>We need to track your steps for the Ice Gate.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>We need photo library access to let you select files and media for calorie tracking and background sounds</string>
 	<key>NSSupportsLiveActivities</key>
@@ -95,19 +108,6 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>https</string>
-		<string>http</string>
-	</array>
-	<key>ITSAppUsesNonExemptEncryption</key>
-	<false/>
-	<key>NSLocalNetworkUsageDescription</key>
-	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
-	<key>NSBonjourServices</key>
-	<array>
-		<string>_ssh._tcp</string>
 	</array>
 </dict>
 </plist>

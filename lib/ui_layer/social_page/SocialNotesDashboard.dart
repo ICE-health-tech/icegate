@@ -5,7 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
@@ -38,116 +38,120 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              colorScheme.surface,
-              colorScheme.surfaceContainerLowest,
-            ],
+            colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
           ),
         ),
         child: CustomScrollView(
-        physics: const BouncingScrollPhysics(),
-        slivers: [
-          SliverToBoxAdapter(
-            child: Column(
-              children: [
-                _buildQuickEntryBar(context, colorScheme, textTheme),
-                const Divider(height: 1, thickness: 0.2),
-                Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: StreamBuilder<List<MindLogData>>(
-                    stream: context.read<MindBlock>().watchMindLogsByDay(personId, DateTime.now()),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                        return const SizedBox.shrink();
-                      }
-                      return Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            "MOOD TRENDS",
-                            style: textTheme.labelSmall?.copyWith(
-                              letterSpacing: 2,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  colorScheme.onSurface.withValues(alpha: 0.5),
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(
+              child: Column(
+                children: [
+                  _buildQuickEntryBar(context, colorScheme, textTheme),
+                  const Divider(height: 1, thickness: 0.2),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: StreamBuilder<List<MindLogData>>(
+                      stream: context.read<MindBlock>().watchMindLogsByDay(
+                        personId,
+                        DateTime.now(),
+                      ),
+                      builder: (context, snapshot) {
+                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                          return const SizedBox.shrink();
+                        }
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "MOOD TRENDS",
+                              style: textTheme.labelSmall?.copyWith(
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          MoodTrendsChart(logs: snapshot.data!),
-                          const SizedBox(height: 24),
-                          _buildRecentLogsPreview(context, snapshot.data!),
-                          const SizedBox(height: 24),
-                          Text(
-                            "SOCIAL NOTES",
-                            style: textTheme.labelSmall?.copyWith(
-                              letterSpacing: 2,
-                              fontWeight: FontWeight.bold,
-                              color:
-                                  colorScheme.onSurface.withValues(alpha: 0.5),
+                            const SizedBox(height: 12),
+                            MoodTrendsChart(logs: snapshot.data!),
+                            const SizedBox(height: 24),
+                            _buildRecentLogsPreview(context, snapshot.data!),
+                            const SizedBox(height: 24),
+                            Text(
+                              "SOCIAL NOTES",
+                              style: textTheme.labelSmall?.copyWith(
+                                letterSpacing: 2,
+                                fontWeight: FontWeight.bold,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.5,
+                                ),
+                              ),
                             ),
-                          ),
-                        ],
-                      );
-                    },
+                          ],
+                        );
+                      },
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
-          ),
-          StreamBuilder<List<ProjectNoteData>>(
-            stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
-              personId,
-              'social',
+            StreamBuilder<List<ProjectNoteData>>(
+              stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
+                personId,
+                'social',
+              ),
+              builder: (context, snapshot) {
+                if (snapshot.hasError) {
+                  return SliverFillRemaining(
+                    child: Center(child: Text('Error: ${snapshot.error}')),
+                  );
+                }
+
+                if (!snapshot.hasData) {
+                  return const SliverFillRemaining(
+                    child: Center(child: CircularProgressIndicator()),
+                  );
+                }
+
+                final notes = snapshot.data!;
+
+                if (notes.isEmpty) {
+                  return SliverFillRemaining(
+                    child: _buildEmptyState(context, colorScheme, textTheme),
+                  );
+                }
+
+                // Sort by updatedAt descending
+                final sortedNotes = List<ProjectNoteData>.from(notes)
+                  ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
+
+                return SliverPadding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 0.75,
+                        ),
+                    delegate: SliverChildBuilderDelegate(
+                      (context, index) =>
+                          _SocialNoteCard(note: sortedNotes[index]),
+                      childCount: sortedNotes.length,
+                    ),
+                  ),
+                );
+              },
             ),
-            builder: (context, snapshot) {
-              if (snapshot.hasError) {
-                return SliverFillRemaining(
-                  child: Center(child: Text('Error: ${snapshot.error}')),
-                );
-              }
-
-              if (!snapshot.hasData) {
-                return const SliverFillRemaining(
-                  child: Center(child: CircularProgressIndicator()),
-                );
-              }
-
-              final notes = snapshot.data!;
-
-              if (notes.isEmpty) {
-                return SliverFillRemaining(
-                  child: _buildEmptyState(context, colorScheme, textTheme),
-                );
-              }
-
-              // Sort by updatedAt descending
-              final sortedNotes = List<ProjectNoteData>.from(notes)
-                ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
-
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 0.75,
-                  ),
-                  delegate: SliverChildBuilderDelegate(
-                    (context, index) => _SocialNoteCard(note: sortedNotes[index]),
-                    childCount: sortedNotes.length,
-                  ),
-                ),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-      });
+          ],
+        ),
+      );
+    });
   }
 
   Widget _buildQuickEntryBar(
@@ -162,7 +166,6 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Row(
         children: [
-          
           Expanded(
             child: GestureDetector(
               onTap: () => _createNewNote(context),
@@ -172,7 +175,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
+                  color: colorScheme.surfaceContainerHigh.withValues(
+                    alpha: 0.5,
+                  ),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
                     color: colorScheme.outlineVariant.withValues(alpha: 0.3),
@@ -180,11 +185,18 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                 ),
                 child: Row(
                   children: [
-                
+                    Icon(
+                      Icons.sentiment_satisfied_alt_rounded,
+                      size: 20,
+                      color: colorScheme.primary.withValues(alpha: 0.7),
+                    ),
+                    const SizedBox(width: 12),
                     Text(
                       "What's on your mind?",
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.8,
+                        ),
                         fontWeight: FontWeight.w500,
                       ),
                     ),
@@ -198,7 +210,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             onPressed: () => _pickAndCreateImageNote(context),
             icon: const Icon(Icons.add_photo_alternate_rounded, size: 22),
             style: IconButton.styleFrom(
-              backgroundColor: colorScheme.secondaryContainer.withValues(alpha: 0.4),
+              backgroundColor: colorScheme.secondaryContainer.withValues(
+                alpha: 0.4,
+              ),
               foregroundColor: colorScheme.secondary,
             ),
           ),
@@ -263,11 +277,11 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   Widget _buildRecentLogsPreview(BuildContext context, List<MindLogData> logs) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    
+
     // Sort by logDate descending
     final sortedLogs = List<MindLogData>.from(logs)
       ..sort((a, b) => b.logDate.compareTo(a.logDate));
-      
+
     return SizedBox(
       height: 100,
       child: ListView.builder(
@@ -277,7 +291,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         itemBuilder: (context, index) {
           final log = sortedLogs[index];
           final activities = jsonDecode(log.activities) as List;
-          
+
           return Container(
             width: 160,
             margin: const EdgeInsets.only(right: 12),
@@ -285,7 +299,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             decoration: BoxDecoration(
               color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+              border: Border.all(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+              ),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -327,12 +343,18 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
 
   String _getMoodEmoji(int score) {
     switch (score) {
-      case 1: return "😫";
-      case 2: return "😔";
-      case 3: return "😐";
-      case 4: return "😊";
-      case 5: return "🤩";
-      default: return "😐";
+      case 1:
+        return "😫";
+      case 2:
+        return "😔";
+      case 3:
+        return "😐";
+      case 4:
+        return "😊";
+      case 5:
+        return "🤩";
+      default:
+        return "😐";
     }
   }
 
@@ -359,10 +381,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       );
 
       if (context.mounted) {
-        context.push('/projects/editor', extra: {
-          'category': 'social',
-          'initialImage': savedPath,
-        });
+        context.push(
+          '/projects/editor',
+          extra: {'category': 'social', 'initialImage': savedPath},
+        );
       }
     }
   }
@@ -424,14 +446,20 @@ class _SocialNoteCard extends StatelessWidget {
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
                                   colors: [
-                                    colorScheme.primaryContainer.withValues(alpha: 0.3),
-                                    colorScheme.secondaryContainer.withValues(alpha: 0.1),
+                                    colorScheme.primaryContainer.withValues(
+                                      alpha: 0.3,
+                                    ),
+                                    colorScheme.secondaryContainer.withValues(
+                                      alpha: 0.1,
+                                    ),
                                   ],
                                 ),
                               ),
                               child: Icon(
                                 Icons.auto_awesome_rounded,
-                                color: colorScheme.primary.withValues(alpha: 0.2),
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.2,
+                                ),
                                 size: 40,
                               ),
                             ),
@@ -470,7 +498,10 @@ class _SocialNoteCard extends StatelessWidget {
                               bottom: 12,
                               right: 12,
                               child: Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: colorScheme.primary,
                                   borderRadius: BorderRadius.circular(4),
@@ -510,7 +541,8 @@ class _SocialNoteCard extends StatelessWidget {
                               child: Text(
                                 previewText,
                                 style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
+                                  color: colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.7),
                                   height: 1.4,
                                   fontSize: 11,
                                 ),
@@ -534,9 +566,9 @@ class _SocialNoteCard extends StatelessWidget {
 
   String _getPreviewText(String content) {
     if (content.isEmpty) return "";
-    
+
     String plainText = content;
-    
+
     // 1. Handle JSON (Quill Delta)
     try {
       final decoded = jsonDecode(content);
@@ -558,13 +590,19 @@ class _SocialNoteCard extends StatelessWidget {
     // Strip images: ![alt](url)
     plainText = plainText.replaceAll(RegExp(r'!\[.*?\]\((.*?)\)'), '');
     // Strip links: [text](url) -> text
-    plainText = plainText.replaceAllMapped(RegExp(r'\[(.*?)\]\(.*?\文明\)'), (match) => match.group(1) ?? '');
+    plainText = plainText.replaceAllMapped(
+      RegExp(r'\[(.*?)\]\(.*?\文明\)'),
+      (match) => match.group(1) ?? '',
+    );
     // Strip bold/italic: **bold**, __bold__, *italic*, _italic_
     plainText = plainText.replaceAll(RegExp(r'(\*\*|__|\*|_|~~)'), '');
     // Strip headers: # Header
     plainText = plainText.replaceAll(RegExp(r'^#+\s+', multiLine: true), '');
     // Strip horizontal rules
-    plainText = plainText.replaceAll(RegExp(r'^\s*([-*_])\s*\1\s*\1\s*$', multiLine: true), '');
+    plainText = plainText.replaceAll(
+      RegExp(r'^\s*([-*_])\s*\1\s*\1\s*$', multiLine: true),
+      '',
+    );
     // Strip multiple newlines
     plainText = plainText.replaceAll(RegExp(r'\n+'), ' ');
 
@@ -573,7 +611,7 @@ class _SocialNoteCard extends StatelessWidget {
 
   String? _getPreviewImage(String content) {
     if (content.isEmpty) return null;
-    
+
     String textToSearch = content;
 
     // 1. Handle JSON (Quill Delta)
@@ -584,12 +622,12 @@ class _SocialNoteCard extends StatelessWidget {
         for (final op in decoded) {
           if (op is Map && op.containsKey('insert')) {
             final insert = op['insert'];
-            
+
             // Check for direct image map
             if (insert is Map && insert.containsKey('image')) {
               return insert['image'] as String;
             }
-            
+
             if (insert is String) {
               buffer.write(insert);
             }
@@ -606,8 +644,7 @@ class _SocialNoteCard extends StatelessWidget {
     if (match != null && match.groupCount >= 1) {
       return match.group(1);
     }
-    
+
     return null;
   }
 }
-

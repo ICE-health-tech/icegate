@@ -32,6 +32,8 @@ class ChallengeBlock {
       activeChallenge.value = _generateMath(level);
     } else if (type == ChallengeType.typing) {
       activeChallenge.value = _generateTyping(level);
+    } else if (type == ChallengeType.japanese) {
+      activeChallenge.value = _generateJapanese(level);
     } else {
       activeChallenge.value = null;
     }
@@ -113,6 +115,67 @@ class ChallengeBlock {
     );
   }
 
+  ChallengeState _generateJapanese(ChallengeLevel level) {
+    // [Kanji/Hiragana, Romaji/Answer]
+    final easy = [
+      ["こんにちは", "konnichiwa"],
+      ["ありがとう", "arigatou"],
+      ["はい", "hai"],
+      ["いいえ", "iie"],
+      ["すみません", "sumimasen"],
+      ["おねがいします", "onegaishimasu"],
+      ["ごめん", "gomen"],
+      ["もしもし", "moshimoshi"],
+      ["またね", "matane"],
+      ["だめ", "dame"],
+    ];
+    final normal = [
+      ["おはようございます", "ohayou gozaimasu"],
+      ["おやすみなさい", "oyasumi nasai"],
+      ["いただきます", "itadakimasu"],
+      ["ごちそうさまでした", "gochisousama deshita"],
+      ["はじめまして", "hajimemashite"],
+      ["おつかれさまでした", "otsukaresama deshita"],
+      ["おめでとうございます", "omedetou gozaimasu"],
+      ["いってきます", "ittekimasu"],
+      ["いってらっしゃい", "itterasshai"],
+      ["おかえりなさい", "okaerinasai"],
+    ];
+    final hard = [
+      ["一生懸命", "isshoukenmei"],
+      ["一期一会", "ichigo ichie"],
+      ["切磋琢磨", "sessatukuma"],
+      ["温故知新", "onkouchishin"],
+      ["試行錯誤", "shikousakugo"],
+      ["自業自得", "jigoujitoku"],
+      ["不言実行", "fugenjikkou"],
+      ["弱肉強食", "jyakunikukyouzhoku"],
+      ["七転八起", "nanakorobi yaoki"],
+      ["油断大敵", "yudan taiteki"],
+    ];
+
+    final rand = Random();
+    List<String> selected;
+    switch (level) {
+      case ChallengeLevel.easy:
+        selected = easy[rand.nextInt(easy.length)];
+        break;
+      case ChallengeLevel.normal:
+        selected = normal[rand.nextInt(normal.length)];
+        break;
+      case ChallengeLevel.hard:
+        selected = hard[rand.nextInt(hard.length)];
+        break;
+    }
+
+    return ChallengeState(
+      question: "Type the Romaji for: ${selected[0]}",
+      answer: selected[1],
+      type: ChallengeType.japanese,
+      level: level,
+    );
+  }
+
   bool verify(String input) {
     final challenge = activeChallenge.value;
     if (challenge == null) return true;
@@ -122,6 +185,8 @@ class ChallengeBlock {
       success = input.trim() == challenge.answer;
     } else if (challenge.type == ChallengeType.typing) {
       success = input.trim() == challenge.phrase?.trim();
+    } else if (challenge.type == ChallengeType.japanese) {
+      success = input.trim().toLowerCase() == challenge.answer?.toLowerCase();
     }
 
     if (success) {

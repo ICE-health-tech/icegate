@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -48,8 +48,23 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
     final colorScheme = Theme.of(context).colorScheme;
 
+    final tabs = [
+      {
+        'title': AppLocalizations.of(context)!.notification_tab_active,
+        'view': _buildActiveHunterTab(context, isEnabled),
+      },
+      {
+        'title': AppLocalizations.of(context)!.notification_tab_reminders,
+        'view': _buildRemindersTab(context, isEnabled),
+      },
+      {
+        'title': AppLocalizations.of(context)!.notification_tab_wisdom,
+        'view': _buildWisdomBoardTab(context),
+      },
+    ];
+
     return DefaultTabController(
-      length: 3,
+      length: tabs.length,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         body: Stack(
@@ -91,7 +106,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         const SizedBox(height: 16),
                         _buildPremiumHeader(context),
                         const SizedBox(height: 24),
-                        _buildTabBar(context),
+                        _buildTabBar(context, tabs),
                       ],
                     ),
                   ),
@@ -99,11 +114,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   Expanded(
                     child: TabBarView(
                       physics: const BouncingScrollPhysics(),
-                      children: [
-                        _buildActiveHunterTab(context, isEnabled),
-                        _buildRemindersTab(context, isEnabled),
-                        _buildWisdomBoardTab(context),
-                      ],
+                      children: tabs.map((t) => t['view'] as Widget).toList(),
                     ),
                   ),
                 ],
@@ -188,14 +199,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     );
   }
 
-  Widget _buildTabBar(BuildContext context) {
+  Widget _buildTabBar(BuildContext context, List<Map<String, dynamic>> tabs) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
-      height: 48,
+      padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colorScheme.onSurface.withOpacity(0.05),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.1)),
+        color: colorScheme.surface.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
       ),
       child: TabBar(
         indicator: BoxDecoration(
@@ -216,11 +227,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         dividerColor: Colors.transparent,
-        tabs: [
-          Tab(text: AppLocalizations.of(context)!.notification_tab_active),
-          Tab(text: AppLocalizations.of(context)!.notification_tab_reminders),
-          Tab(text: AppLocalizations.of(context)!.notification_tab_wisdom),
-        ],
+        tabs: tabs.map((t) => Tab(text: t['title'] as String)).toList(),
       ),
     );
   }

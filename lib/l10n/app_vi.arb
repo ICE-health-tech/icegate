@@ -285,6 +285,15 @@
       }
     }
   },
+  "err_invalid_credentials": "Sai email hoặc mật khẩu. Vui lòng thử lại.",
+  "err_email_not_confirmed": "Vui lòng kiểm tra hộp thư để xác nhận email của bạn.",
+  "err_user_not_found": "Không tìm thấy tài khoản với email này.",
+  "err_network_fail": "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.",
+  "err_passkey_canceled": "Đã hủy đăng nhập bằng Passkey.",
+  "err_passkey_failed": "Xác thực bảo mật thất bại. Vui lòng thử lại.",
+  "err_biometric_unsupported": "Thiết bị không hỗ trợ đăng nhập sinh trắc học.",
+  "err_biometric_disabled": "Đăng nhập sinh trắc học chưa được bật cho tài khoản này.",
+  "err_too_many_attempts": "Quá nhiều lần thử thất bại. Vui lòng thử lại sau.",
   "msg_enter_credentials": "Vui lòng nhập thông tin đăng nhập",
   "analysis_user_title": "Phân tích của {name}",
   "@analysis_user_title": {
@@ -358,6 +367,15 @@
   "msg_password_requirement": "Vui lòng nhập mật khẩu hiện tại để tiếp tục.",
   "security_title": "Bảo mật",
   "change_password": "Thay đổi mật khẩu",
+  "btn_enter": "VÀO",
+  "google_signin_error": "Lỗi đăng nhập Google: {error}",
+  "@google_signin_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "personal_info_title": "Thông tin cá nhân",
   "bio": "Tiểu sử",
   "personal_info_identification": "Định danh",
@@ -379,6 +397,17 @@
   "linkedin_label": "LinkedIn",
   "personal_web_label": "Website",
   "logout": "Đăng xuất",
+  "identity_evolution": "TIẾN HÓA ĐỊNH DANH",
+  "identity_evolution_desc": "Cấp 1: Google. Thiết lập mật khẩu cục bộ để nâng cấp bậc bảo mật.",
+  "btn_set": "THIẾT LẬP",
+  "security_accuracy": "Bảo mật & Chính xác",
+  "passkey_settings": "Cài đặt Passkey",
+  "fast_track_active": "Truy cập nhanh đang hoạt động (Bảo mật)",
+  "upgrade_biometric": "Nâng cấp lên Truy cập nhanh Sinh trắc học",
+  "hint_enter_your": "Nhập vào...",
+  "user_default": "Người dùng",
+  "tooltip_save": "Lưu",
+  "tooltip_edit": "Chỉnh sửa",
   "msg_err_not_authenticated": "Chưa xác thực",
   "msg_personal_info_saved": "Đã lưu thông tin cá nhân",
   "msg_err_save_failed": "Lưu thay đổi thất bại: {error}",
@@ -777,6 +806,21 @@
   "project_delete_note_title": "Xóa ghi chú",
   "project_delete_note_msg": "Bạn có chắc chắn muốn xóa ghi chú này không?",
   "project_note_no_content": "Không có nội dung",
+  "focus_select_project": "CHẠM ĐỂ CHỌN DỰ ÁN",
+  "focus_select_task": "CHỌN NHIỆM VỤ",
+  "focus_active_exercise": "BÀI TẬP ĐANG HOẠT ĐỘNG: {type}",
+  "@focus_active_exercise": {
+    "placeholders": {
+      "type": {
+        "type": "String"
+      }
+    }
+  },
+  "focus_flow_active": "TRẠNG THÁI TẬP TRUNG",
+  "focus_breathing": "ĐANG THỞ",
+  "focus_fetching_audio": "ĐANG TẢI ÂM THANH...",
+  "entry_scanning": "ĐANG QUÉT",
+  "entry_assembling": "ĐANG LẮP RÁP",
   "calorie_tracker": "Theo dõi Calo",
   "net_calories": "CALO THỰC",
   "under_goal": "Dưới mục tiêu",
@@ -1015,5 +1059,24 @@
   "standby": "CHỜ",
   "target_folder_id": "ID THƯ MỤC MỤC TIÊU",
   "internal_integration_token": "MÃ TÍCH HỢP NỘI BỘ",
-  "database_schema_id": "ID SCHEMA CƠ SỞ DỮ LIỆU"
+  "database_schema_id": "ID SƠ ĐỒ CƠ SỞ DỮ LIỆU",
+  "add_widget": "Thêm Widget",
+  "app_shortcut": "Lối tắt ứng dụng",
+  "web_widget": "Web Widget",
+  "please_select_app_page": "Vui lòng chọn một trang ứng dụng",
+  "widget_added_success": "Đã thêm widget thành công",
+  "error_adding_widget": "Lỗi khi thêm widget: {error}",
+  "@error_adding_widget": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "please_select_plugin": "Vui lòng chọn một plugin",
+  "please_fill_all_fields": "Vui lòng điền đầy đủ các trường",
+  "widget_name_hint": "Tên Widget (ví dụ: Facebook)",
+  "url_hint": "URL (ví dụ: facebook.com)",
+  "plugins": "Plugins",
+  "custom_url": "URL tùy chỉnh"
 }

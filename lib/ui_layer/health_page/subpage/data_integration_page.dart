@@ -28,7 +28,7 @@ class _DataIntegrationPageState extends State<DataIntegrationPage>
     )..repeat();
   }
 
-  @override
+  @override 
   void dispose() {
     _pipelineController.dispose();
     _logTimer?.cancel();

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -243,7 +243,9 @@ class PersonBlock {
 
   // Computed currentPersonID avoids stale state during login transitions
   late final currentPersonID = computed(() => information.value.profiles.id);
-  late final currentTenantID = computed(() => information.value.profiles.tenantId);
+  late final currentTenantID = computed(
+    () => information.value.profiles.tenantId,
+  );
 
   final PersonManagementDAO personDao;
 
@@ -271,7 +273,7 @@ class PersonBlock {
         },
       );
 
-      if (response.statusCode == 200) {  
+      if (response.statusCode == 200) {
         final data = json.decode(response.body);
         debugPrint('✅ [PersonBlock] app_sync success: $data');
 
@@ -383,21 +385,11 @@ class PersonBlock {
       // 4. Persist Remote URLs to LOCAL DB for future offline/instant access
       final String? avatarUrl = remotePerson?['profile_image_url'];
       if (avatarUrl != null) {
-        unawaited(
-          personDao.updateAvatarImageUrl(
-            user.id,
-            avatarUrl,
-          ),
-        );
+        unawaited(personDao.updateAvatarImageUrl(user.id, avatarUrl));
       }
       final String? coverUrl = remoteDetails?['cover_image_url'];
       if (coverUrl != null) {
-        unawaited(
-          personDao.updateCoverImageUrl(
-            user.id,
-            coverUrl,
-          ),
-        );
+        unawaited(personDao.updateCoverImageUrl(user.id, coverUrl));
       }
 
       print("✅ [PersonBlock] Remote sync completed.");
@@ -436,7 +428,8 @@ class PersonBlock {
           localProfile?.location ??
           '',
       company: remoteDetails?['company'] ?? localDetails?.company ?? '',
-      university: remoteDetails?['university'] ?? localDetails?.university ?? '',
+      university:
+          remoteDetails?['university'] ?? localDetails?.university ?? '',
       country: remoteDetails?['country'] ?? localDetails?.country ?? '',
       githubUrl:
           remoteProfile?['github_url'] ??
@@ -518,7 +511,7 @@ class PersonBlock {
           id: DataSeeder.guestPersonId,
           tenantId: DataSeeder.guestTenantId,
           firstName: 'Guest',
-          lastName: 'DuyLongArt',
+          lastName: '',
           username: 'Guest',
           profileImageUrl:
               'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',

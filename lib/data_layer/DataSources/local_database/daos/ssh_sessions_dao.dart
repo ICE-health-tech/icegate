@@ -1,4 +1,4 @@
-part of '../Database.dart';
+part of '../database.dart';
 
 @DriftAccessor(tables: [SSHSessionsTable])
 class SSHSessionDAO extends DatabaseAccessor<AppDatabase>

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 // import 'package:http/http.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:signals_flutter/signals_flutter.dart';
 // Required for context.read

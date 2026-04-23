@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/ui_layer/UIConstants.dart';
@@ -36,50 +36,64 @@ class SocialAnalysisPage extends StatelessWidget {
                 personId,
                 'social',
               ),
-          builder: (context, snapshot) {
-            final notes = snapshot.data ?? [];
+          builder: (context, noteSnapshot) {
+            final notes = noteSnapshot.data ?? [];
             
-            return CustomScrollView(
-              physics: const BouncingScrollPhysics(),
-              slivers: [
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "MIND INSIGHTS",
-                          style: textTheme.labelLarge?.copyWith(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 2,
-                          ),
+            return StreamBuilder<List<MindLogData>>(
+              stream: mindBlock.watchMindLogsRange(personId, 30),
+              builder: (context, logSnapshot) {
+                final logs = logSnapshot.data ?? [];
+                
+                // Calculate average sentiment (1 to 5) and convert to % (0% to 100%)
+                double sentiment = 0.0;
+                if (logs.isNotEmpty) {
+                  final avgScore = logs.fold<double>(0.0, (sum, log) => sum + log.moodScore) / logs.length;
+                  sentiment = ((avgScore - 1) / 4) * 100;
+                }
+
+                return CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    SliverToBoxAdapter(
+                      child: Padding(
+                        padding: const EdgeInsets.all(24.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              "MIND INSIGHTS",
+                              style: textTheme.labelLarge?.copyWith(
+                                color: colorScheme.primary,
+                                fontWeight: FontWeight.w900,
+                                letterSpacing: 2,
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              "Analysis of your journal entries",
+                              style: textTheme.headlineSmall?.copyWith(
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            const SizedBox(height: 32),
+                            _buildMonthlyReflectionCard(context, personId),
+                            const SizedBox(height: 24),
+                            _buildSummaryCard(context, notes, sentiment),
+                            const SizedBox(height: 24),
+                            _buildStepsDistribution(context, healthBlock),
+                            const SizedBox(height: 24),
+                            _buildMoodChart(context, mindBlock, personId),
+                            const SizedBox(height: 24),
+                            _buildWordCloud(context, mindBlock, personId),
+                            const SizedBox(height: 24),
+                            _buildRecentLogsList(context, mindBlock, personId),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "Analysis of your journal entries",
-                          style: textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.w900,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        _buildMonthlyReflectionCard(context, personId),
-                        const SizedBox(height: 24),
-                        _buildSummaryCard(context, notes),
-                        const SizedBox(height: 24),
-                        _buildStepsDistribution(context, healthBlock),
-                        const SizedBox(height: 24),
-                        _buildMoodChart(context, mindBlock, personId),
-                        const SizedBox(height: 24),
-                        _buildWordCloud(context, mindBlock, personId),
-                        const SizedBox(height: 24),
-                        _buildRecentLogsList(context, mindBlock, personId),
-                      ],
+                      ),
                     ),
-                  ),
-                ),
-              ],
+                  ],
+                );
+              },
             );
           },
         );
@@ -92,7 +106,7 @@ class SocialAnalysisPage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return StreamBuilder<List<MindLogData>>(
-      stream: mindBlock.watchMindLogsByDay(personId, DateTime.now()),
+      stream: mindBlock.watchMindLogsRange(personId, 3), // Show last 3 days
       builder: (context, snapshot) {
         final logs = snapshot.data ?? [];
         if (logs.isEmpty) return const SizedBox.shrink();
@@ -246,7 +260,7 @@ class SocialAnalysisPage extends StatelessWidget {
     });
   }
 
-  Widget _buildSummaryCard(BuildContext context, List<ProjectNoteData> notes) {
+  Widget _buildSummaryCard(BuildContext context, List<ProjectNoteData> notes, double sentiment) {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(20),
@@ -260,7 +274,7 @@ class SocialAnalysisPage extends StatelessWidget {
         children: [
           _buildStatItem(context, notes.length.toString(), "ENTRIES"),
           _buildStatItem(context, _countImages(notes).toString(), "IMAGES"),
-          _buildStatItem(context, "85%", "SENTIMENT"),
+          _buildStatItem(context, "${sentiment.toStringAsFixed(0)}%", "SENTIMENT"),
         ],
       ),
     );
@@ -312,13 +326,13 @@ class SocialAnalysisPage extends StatelessWidget {
           const SizedBox(height: 16),
           Expanded(
             child: StreamBuilder<List<MindLogData>>(
-              stream: mindBlock.watchMindLogsByDay(personId, DateTime.now()),
+              stream: mindBlock.watchMindLogsRange(personId, 7),
               builder: (context, snapshot) {
                 final logs = snapshot.data ?? [];
                 if (logs.isEmpty) {
                   return Center(
                     child: Text(
-                      "No records yet",
+                      "No records for the last 7 days",
                       style: TextStyle(
                         fontSize: 10,
                         color: colorScheme.onSurfaceVariant.withOpacity(0.5),
@@ -380,8 +394,14 @@ class SocialAnalysisPage extends StatelessWidget {
   }
 
   int _countImages(List<ProjectNoteData> notes) {
-    // Basic placeholder logic
-    return notes.length; 
+    int imageCount = 0;
+    for (final note in notes) {
+      if (note.content.contains('![')) {
+        // Count how many ![ occurrences are in the text
+        imageCount += '!['.allMatches(note.content).length;
+      }
+    }
+    return imageCount;
   }
 
   Widget _buildMonthlyReflectionCard(BuildContext context, String personId) {
@@ -416,17 +436,23 @@ class SocialAnalysisPage extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          FutureBuilder<String>(
-            future: socialBlock.getMonthlyReflection(achievementsDao, personId),
+          StreamBuilder<List<AchievementData>>(
+            stream: achievementsDao.watchAchievementsByPerson(personId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return const Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(16.0),
+                    child: CircularProgressIndicator(),
+                  ),
+                );
               }
-              if (snapshot.hasError) {
-                return Text("Error generating reflection: \${snapshot.error}");
-              }
+              
+              final achievements = snapshot.data ?? [];
+              final reflection = socialBlock.generateReflection(achievements);
+              
               return Text(
-                snapshot.data ?? "No reflection generated.",
+                reflection,
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   height: 1.5,

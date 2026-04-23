@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
@@ -169,7 +169,17 @@ class LocalNotificationService {
 
   /// Sync all custom notifications from DB for a specific person
   Future<void> syncAllNotifications(String personId) async {
-    if (!notificationsEnabled.value || personId.isEmpty) return;
+    if (personId.isEmpty) return;
+
+    // First, clear all existing schedules to prevent "ghost" notifications from deleted records
+    debugPrint("🧹 Clearing all scheduled notifications before sync...");
+    await _notificationsPlugin.cancelAll();
+
+    // If global toggle is off, stop here after clearing
+    if (!notificationsEnabled.value) {
+      debugPrint("🔕 Notifications are disabled globally. Sync aborted.");
+      return;
+    }
 
     // Custom notifications from database
     if (_database != null) {

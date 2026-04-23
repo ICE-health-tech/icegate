@@ -1,5 +1,5 @@
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 class SocialBlock {
   final activeTab = signal(0);
@@ -7,14 +7,22 @@ class SocialBlock {
 
   SocialBlock();
 
-  Future<String> getMonthlyReflection(AchievementsDAO dao, String personId) async {
-    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+  Future<String> getMonthlyReflection(
+    AchievementsDAO dao,
+    String personId,
+  ) async {
     final stream = dao.watchAchievementsByPerson(personId);
     final allAchievements = await stream.first;
-    
-    final recent = allAchievements.where((a) {
-      return a.createdAt.isAfter(thirtyDaysAgo);
-    }).toList();
+    return generateReflection(allAchievements);
+  }
+
+  String generateReflection(List<AchievementData> allAchievements) {
+    final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+
+    final recent =
+        allAchievements.where((a) {
+          return a.createdAt.isAfter(thirtyDaysAgo);
+        }).toList();
 
     if (recent.isEmpty) {
       return "No wins logged this month. Start logging to get reflection insights!";
@@ -34,8 +42,11 @@ class SocialBlock {
       }
     });
 
-    final avgMeaning = recent.fold<double>(0, (sum, a) => sum + (a.meaningScore ?? 5)) / recent.length;
-    final avgImpact = recent.fold<double>(0, (sum, a) => sum + a.impactScore) / recent.length;
+    final avgMeaning =
+        recent.fold<double>(0, (sum, a) => sum + (a.meaningScore ?? 5)) /
+        recent.length;
+    final avgImpact =
+        recent.fold<double>(0, (sum, a) => sum + a.impactScore) / recent.length;
 
     String reflection = "You logged ${recent.length} wins this month! ";
     reflection += "Your main focus was '$topDomain' ($maxCount wins). ";
@@ -43,7 +54,8 @@ class SocialBlock {
     if (avgMeaning >= 8) {
       reflection += "You felt highly fulfilled by these efforts. ";
     } else if (avgMeaning < 5) {
-      reflection += "Consider doing things that bring you more personal meaning next month. ";
+      reflection +=
+          "Consider doing things that bring you more personal meaning next month. ";
     }
 
     if (avgImpact >= 8) {
@@ -53,13 +65,23 @@ class SocialBlock {
     }
 
     // Level up suggestion
-    final allDomains = ['health', 'finance', 'good social impact', 'relationship', 'project', 'knowledge'];
-    final unusedDomains = allDomains.where((d) => !domainCounts.containsKey(d)).toList();
-    
+    final allDomains = [
+      'health',
+      'finance',
+      'good social impact',
+      'relationship',
+      'project',
+      'knowledge',
+    ];
+    final unusedDomains =
+        allDomains.where((d) => !domainCounts.containsKey(d)).toList();
+
     if (unusedDomains.isNotEmpty) {
-      reflection += "\n\n**Next Level Goal:** Try focusing on '${unusedDomains.first}' next month to balance your growth.";
+      reflection +=
+          "\n\n**Next Level Goal:** Try focusing on '${unusedDomains.first}' next month to balance your growth.";
     } else {
-      reflection += "\n\n**Next Level Goal:** You've achieved cross-domain success! Try deepening your expertise in your favorite area.";
+      reflection +=
+          "\n\n**Next Level Goal:** You've achieved cross-domain success! Try deepening your expertise in your favorite area.";
     }
 
     return reflection;

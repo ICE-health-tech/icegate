@@ -19,7 +19,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     hide ThemeData;
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
@@ -200,7 +200,6 @@ class _HomePageState extends State<HomePage> {
         personIdToUse,
         'home',
       );
-      _seedPlugins(personIdToUse);
       externalWidgetBlock.refreshBlock(
         database.externalWidgetsDAO,
         personIdToUse,
@@ -221,41 +220,6 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
-  Future<void> _seedPlugins(String personId) async {
-    final dao = database.internalWidgetsDAO;
-
-    // Cleanup legacy separate plugins
-    await dao.deleteInternalWidget('Gemini AI SSH');
-    await dao.deleteInternalWidget('OpenCode AI SSH');
-    await dao.deleteInternalWidget('ICE GATE SSH'); // Cleanup old name
-
-    // Also cleanup by alias if they exist
-    final oldSsh = await dao.getInternalWidgetByAlias('ice_gate_ssh');
-    if (oldSsh != null && oldSsh.name != null) {
-      await dao.deleteInternalWidget(oldSsh.name!);
-    }
-
-    final oldAiController = await dao.getInternalWidgetByAlias(
-      'ssh_ai_controller',
-    );
-    if (oldAiController != null && oldAiController.name != null) {
-      await dao.deleteInternalWidget(oldAiController.name!);
-    }
-
-    // UPLINK (The single unified terminal)
-    // Use the refactored DAO which now safely handles duplicates via limit(1)
-    final uplinkExists = await dao.getInternalWidgetByAlias('ssh_uplink');
-    if (uplinkExists == null) {
-      await dao.insertInternalWidget(
-        personID: personId,
-        name: 'UPLINK',
-        alias: 'ssh_uplink',
-        url: '/widgets/ssh', // Default to standard SSH, mode selectable inside
-        imageUrl: 'assets/internalwidget/ssh_uplink.png',
-        scope: 'home',
-      );
-    }
-  }
 
   @override
   void dispose() {
@@ -610,10 +574,10 @@ class _HomePageState extends State<HomePage> {
                       SizedBox(
                         height: sizeOfWidget,
                         child: Watch((context) {
-                          final sortedInternal =
-                              List<InternalWidgetProtocol>.from(
-                                internalWidgets,
-                              );
+                          final uniqueNames = <String>{};
+                          final sortedInternal = internalWidgets
+                              .where((w) => uniqueNames.add(w.name))
+                              .toList();
                           sortedInternal.sort(
                             (a, b) => b.dateAdded.compareTo(a.dateAdded),
                           );

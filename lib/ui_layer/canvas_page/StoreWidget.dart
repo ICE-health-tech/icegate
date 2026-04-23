@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 // --- IMPORTS ---
 // Update these paths to match your actual project structure
-import '../../../data_layer/DataSources/local_database/Database.dart';
+import '../../../data_layer/DataSources/local_database/database.dart';
 // import '../../../data_layer/Protocol/Widget/InternalWidgetDragProtocol.dart';
 // import '../../../data_layer/Protocol/Widget/WidgetManagerBlock.dart';
 import '../../data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
@@ -24,7 +24,7 @@ import '../UIConstants.dart';
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../finance_page/services/FinanceService.dart';
+import '../finance_page/services/finance_service.dart';
 
 class StoreWidget extends StatelessWidget {
   const StoreWidget({super.key});

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 import 'package:ice_gate/orchestration_layer/Services/QuestService.dart';
 
@@ -23,7 +23,7 @@ class QuestBlock {
     }
 
     // Generate daily quests if needed
-    _questService.generateDailyQuestsIfNeeded(personId);
+    // _questService.generateDailyQuestsIfNeeded(personId);
     
     // Cleanup mysterious quests if any were already seeded
     dao.deleteSecretQuestsForPerson(personId);

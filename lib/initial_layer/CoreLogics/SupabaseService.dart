@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 
 /// SupabaseService handles data synchronization between the local Drift database
@@ -96,6 +96,8 @@ class SupabaseService {
       'financial_accounts',
       'assets',
       'transactions',
+      'custom_notifications',
+      'project_notes',
     ];
 
     for (final table in tablesToSync) {
@@ -115,9 +117,9 @@ class SupabaseService {
           .select()
           .eq('person_id', personId);
 
-      debugPrint(
-        "📦 [SupabaseSync] Received ${response.length} records for $table",
-      );
+      // debugPrint(
+      //   "📦 [SupabaseSync] Received ${response.length} records for $table",
+      // );
       if (response.isNotEmpty) {
         // Delegate to specific DAO upserts based on table name
         await _upsertToLocal(
@@ -159,6 +161,16 @@ class SupabaseService {
       case 'hourly_activity_log':
         for (final r in records) {
           await database.hourlyActivityLogDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'custom_notifications':
+        for (final r in records) {
+          await database.customNotificationDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'project_notes':
+        for (final r in records) {
+          await database.projectNoteDAO.upsertFromSupabase(r);
         }
         break;
       // Add more cases as needed

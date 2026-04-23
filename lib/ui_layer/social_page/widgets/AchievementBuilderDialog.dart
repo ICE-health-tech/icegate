@@ -1,19 +1,20 @@
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class AchievementBuilderDialog extends StatefulWidget {
   final BuildContext parentContext;
+  final AchievementData? initialData;
 
-  const AchievementBuilderDialog({super.key, required this.parentContext});
+  const AchievementBuilderDialog({super.key, required this.parentContext, this.initialData});
 
-  static Future<void> show(BuildContext context) {
+  static Future<void> show(BuildContext context, {AchievementData? initialData}) {
     return showDialog(
       context: context,
-      builder: (ctx) => AchievementBuilderDialog(parentContext: context),
+      builder: (ctx) => AchievementBuilderDialog(parentContext: context, initialData: initialData),
     );
   }
 
@@ -41,6 +42,21 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
     'knowledge'
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    if (widget.initialData != null) {
+      final a = widget.initialData!;
+      _titleController.text = a.title;
+      _descriptionController.text = a.description ?? "";
+      _selectedDomain = a.domain;
+      _meaningScore = a.meaningScore ?? 5;
+      _impactScore = a.impactScore;
+      _impactWhoController.text = a.impactDescWho;
+      _impactHowController.text = a.impactDescHow;
+    }
+  }
+
   bool get _isValid {
     if (_titleController.text.trim().isEmpty) return false;
     if (_impactScore == 0) return false; // Mandatory Impact Score
@@ -54,20 +70,35 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
 
     final personBlock = context.read<PersonBlock>();
     final personId = personBlock.currentPersonID.value;
+    final dao = context.read<AchievementsDAO>();
 
-    final entry = AchievementsTableCompanion(
-      id: drift.Value(IDGen.UUIDV7()),
-      personID: drift.Value(personId),
-      title: drift.Value(_titleController.text.trim()),
-      description: drift.Value(_descriptionController.text.trim()),
-      domain: drift.Value(_selectedDomain),
-      meaningScore: drift.Value(_meaningScore),
-      impactScore: drift.Value(_impactScore),
-      impactDescWho: drift.Value(_impactWhoController.text.trim()),
-      impactDescHow: drift.Value(_impactHowController.text.trim()),
-    );
-
-    await context.read<AchievementsDAO>().insertAchievement(entry);
+    if (widget.initialData != null) {
+      // Edit mode
+      final updated = widget.initialData!.copyWith(
+        title: _titleController.text.trim(),
+        description: drift.Value(_descriptionController.text.trim()),
+        domain: _selectedDomain,
+        meaningScore: drift.Value(_meaningScore),
+        impactScore: _impactScore,
+        impactDescWho: _impactWhoController.text.trim(),
+        impactDescHow: _impactHowController.text.trim(),
+      );
+      await dao.updateAchievement(updated);
+    } else {
+      // Create mode
+      final entry = AchievementsTableCompanion(
+        id: drift.Value(IDGen.UUIDV7()),
+        personID: drift.Value(personId),
+        title: drift.Value(_titleController.text.trim()),
+        description: drift.Value(_descriptionController.text.trim()),
+        domain: drift.Value(_selectedDomain),
+        meaningScore: drift.Value(_meaningScore),
+        impactScore: drift.Value(_impactScore),
+        impactDescWho: drift.Value(_impactWhoController.text.trim()),
+        impactDescHow: drift.Value(_impactHowController.text.trim()),
+      );
+      await dao.insertAchievement(entry);
+    }
 
     if (mounted) {
       Navigator.of(context).pop();
@@ -122,7 +153,7 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
         side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       title: Text(
-        "Log Achievement",
+        widget.initialData != null ? "Edit Achievement" : "Log Achievement",
         style: TextStyle(
           color: Theme.of(context).colorScheme.onSurface,
           fontWeight: FontWeight.w900,
@@ -266,7 +297,7 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,
           ),
-          child: const Text("Log Win"),
+          child: Text(widget.initialData != null ? "Save Changes" : "Log Win"),
         ),
       ],
     );

@@ -10,7 +10,7 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -212,9 +212,13 @@ class ProjectsPage extends StatelessWidget {
                     _buildSectionTitle(context, context.l10n.quick_actions),
                     const SizedBox(height: 16),
                     Watch((context) {
-                      final apps = internalWidgetBlock
+                      final allApps = internalWidgetBlock
                           .listInternalWidgetProjectsPage
                           .value;
+                      final uniqueNames = <String>{};
+                      final apps = allApps
+                          .where((w) => uniqueNames.add(w.name))
+                          .toList();
 
                       return SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -222,13 +226,38 @@ class ProjectsPage extends StatelessWidget {
                         child: Row(
                           children: [
                             _ActionCard(
-                              width: 100,
+                              width: 120,
                               icon: Icons.note_add_rounded,
                               label: context.l10n.new_label,
                               color: Colors.orange,
-                              onTap: () => context.push('/projects/editor'),
+                              onTap: () async {
+                                final ext = await showDialog<String>(
+                                  context: context,
+                                  builder: (context) => SimpleDialog(
+                                    title: const Text('Choose Note Type'),
+                                    children: [
+                                      SimpleDialogOption(
+                                        onPressed: () =>
+                                            Navigator.pop(context, '.md'),
+                                        child: const Text('Markdown (.md)'),
+                                      ),
+                                      SimpleDialogOption(
+                                        onPressed: () =>
+                                            Navigator.pop(context, '.txt'),
+                                        child: const Text('Plain Text (.txt)'),
+                                      ),
+                                    ],
+                                  ),
+                                );
+                                if (ext != null && context.mounted) {
+                                  context.push(
+                                    '/projects/editor',
+                                    extra: {'extension': ext},
+                                  );
+                                }
+                              },
                             ),
-                            const SizedBox(width: 12),
+                            const SizedBox(width: 10),
                             _ActionCard(
                               width: 150,
                               icon: Icons.edit_note_rounded,
@@ -250,31 +279,24 @@ class ProjectsPage extends StatelessWidget {
                                   _showAddPluginDialog(context);
                                 },
                               )
-                            else ...[
-                              (() {
-                                final sortedApps =
-                                    List<InternalWidgetProtocol>.from(apps);
-                                sortedApps.sort((a, b) {
-                                  final dateA = a.dateAdded;
-                                  final dateB = b.dateAdded;
-                                  return dateB.compareTo(dateA);
-                                });
-                                final latestApp = sortedApps.first;
-
-                                return _ActionCard(
-                                  width: 130,
-                                  icon: _getAppIcon(latestApp.name),
-                                  label: latestApp.name,
-                                  color: Colors.teal,
-                                  onTap: () {
-                                    context.push(latestApp.url);
-                                  },
-                                  onLongPress: () {
-                                    _showDeletePluginDialog(context, latestApp);
-                                  },
+                            else
+                              ...apps.map((latestApp) {
+                                return Padding(
+                                  padding: const EdgeInsets.only(right: 12),
+                                  child: _ActionCard(
+                                    width: 130,
+                                    icon: _getAppIcon(latestApp.name),
+                                    label: latestApp.name,
+                                    color: Colors.teal,
+                                    onTap: () {
+                                      context.push(latestApp.url);
+                                    },
+                                    onLongPress: () {
+                                      _showDeletePluginDialog(context, latestApp);
+                                    },
+                                  ),
                                 );
-                              })(),
-                            ],
+                              }),
                           ],
                         ),
                       );
@@ -307,7 +329,13 @@ class ProjectsPage extends StatelessWidget {
 
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList(
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                  ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = projectList[index];
                     return _ProjectCard(project: project);
@@ -346,7 +374,13 @@ class ProjectsPage extends StatelessWidget {
 
               return SliverPadding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverList(
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: 1.4,
+                  ),
                   delegate: SliverChildBuilderDelegate((context, index) {
                     final project = completedList[index];
                     return Opacity(
@@ -746,14 +780,14 @@ class _ActionCard extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, color: color, size: 32),
+              Icon(icon, color: color, size: 24),
               const SizedBox(height: 12),
               Text(
                 label,
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   fontWeight: FontWeight.bold,
-                  fontSize: 16,
+                  fontSize: 12,
                 ),
               ),
             ],
@@ -884,116 +918,101 @@ class _ProjectCard extends StatelessWidget {
         ? Color(int.parse(project.color!))
         : colorScheme.primary;
 
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: InkWell(
-        onTap: () {
-          context.push('/projects/${project.projectID}');
-        },
-        onLongPress: () async {
-          final confirm = await showDialog<bool>(
-            context: context,
-            builder: (ctx) => AlertDialog(
-              title: const Text('Delete Project?'),
-              content: Text(
-                'Are you sure you want to delete "${project.name}"?',
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, false),
-                  child: const Text('Cancel'),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(ctx, true),
-                  child: const Text(
-                    'Delete',
-                    style: TextStyle(color: Colors.red),
-                  ),
-                ),
-              ],
+    return InkWell(
+      onTap: () {
+        context.push('/projects/${project.projectID}');
+      },
+      onLongPress: () async {
+        final confirm = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Delete Project?'),
+            content: Text(
+              'Are you sure you want to delete "${project.name}"?',
             ),
-          );
-          if (confirm == true && context.mounted) {
-            final projectBlock = context.read<ProjectBlock>();
-            await projectBlock.deleteProject(project.id);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Project deleted.'),
-                  duration: Duration(seconds: 1),
-                ),
-              );
-            }
-          }
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: projectColor.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: projectColor.withOpacity(0.2)),
-          ),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: projectColor.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(
-                  Icons.folder_rounded,
-                  color: projectColor,
-                  size: 24,
-                ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Cancel'),
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      project.name,
-                      style: TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: colorScheme.onSurface,
-                      ),
-                    ),
-                    if (project.description != null &&
-                        project.description!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 4),
-                        child: Text(
-                          project.description!,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.6),
-                            fontSize: 13,
-                          ),
-                        ),
-                      ),
-                    Padding(
-                      padding: const EdgeInsets.only(top: 4),
-                      child: Text(
-                        'Created ${DateFormat.MMMd().format(project.createdAt)}',
-                        style: TextStyle(
-                          color: colorScheme.onSurface.withOpacity(0.4),
-                          fontSize: 11,
-                        ),
-                      ),
-                    ),
-                  ],
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text(
+                  'Delete',
+                  style: TextStyle(color: Colors.red),
                 ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                color: colorScheme.onSurface.withOpacity(0.4),
               ),
             ],
           ),
+        );
+        if (confirm == true && context.mounted) {
+          final projectBlock = context.read<ProjectBlock>();
+          await projectBlock.deleteProject(project.id);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Project deleted.'),
+                duration: Duration(seconds: 1),
+              ),
+            );
+          }
+        }
+      },
+      borderRadius: BorderRadius.circular(24),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: projectColor.withOpacity(0.08),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: projectColor.withOpacity(0.2)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: projectColor.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.folder_rounded,
+                    color: projectColor,
+                    size: 24,
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_rounded,
+                  color: colorScheme.onSurface.withOpacity(0.3),
+                  size: 16,
+                ),
+              ],
+            ),
+            const Spacer(),
+            Text(
+              project.name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: 15,
+                color: colorScheme.onSurface,
+                letterSpacing: -0.3,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Created ${DateFormat.MMMd().format(project.createdAt)}',
+              style: TextStyle(
+                color: colorScheme.onSurface.withOpacity(0.4),
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
         ),
       ),
     );

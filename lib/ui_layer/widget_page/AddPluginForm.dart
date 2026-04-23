@@ -3,7 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/ExternalWidgetProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart';
 import 'package:provider/provider.dart';
-import '../../data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import '../../data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'PluginList/AvailablePlugins.dart';
 import '../../data_layer/Protocol/Plugin/BasePluginProtocol.dart';
@@ -23,7 +24,7 @@ class _InternalPlugin extends BasePluginProtocol {
     required super.name,
     required super.url,
     required super.icon,
-    required super.description,
+    super.description = '',
     super.category = PluginCategory.other,
   }) : super(protocol: 'internal', host: 'app');
 }
@@ -81,21 +82,18 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Future<void> _handleSubmit() async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       if (_selectedTab == 0) {
         // --- INTERNAL MODE ---
         if (_selectedPlugin == null) {
-          _showError("Please select an app page");
+          _showError(l10n.please_select_app_page);
           return;
         }
 
+        // Allow multiple widgets in all scopes now that UI supports list rendering
         final personId =
             context.read<PersonBlock>().information.value.profiles.id ?? "";
-
-        // Enforce "limit to 1" for specific scopes (like 'projects')
-        if (widget.scope != 'home') {
-          await internalWidgetsDAO.deleteScopedWidgets(personId, widget.scope);
-        }
 
         await internalWidgetsDAO.insertInternalWidget(
           personID: personId,
@@ -111,7 +109,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         // --- EXTERNAL MODE ---
         if (_isPluginMode) {
           if (_selectedPlugin == null) {
-            _showError("Please select a plugin");
+            _showError(l10n.please_select_plugin);
             return;
           }
 
@@ -133,7 +131,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
           final String urlText = _urlController.text.trim();
 
           if (name.isEmpty || urlText.isEmpty) {
-            _showError("Please fill in all fields");
+            _showError(l10n.please_fill_all_fields);
             return;
           }
 
@@ -167,11 +165,11 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         // }
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Widget added successfully")),
+          SnackBar(content: Text(l10n.widget_added_success)),
         );
       }
     } catch (e) {
-      _showError("Error adding widget: $e");
+      _showError(l10n.error_adding_widget(e.toString()));
     }
   }
 
@@ -245,6 +243,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildHeader() {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -256,27 +255,24 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                 widget.data.title,
                 style: TextStyle(
                   color: Theme.of(context).colorScheme.primary,
-                  fontSize: 22,
+                  fontSize: 18,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -0.5,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
-              if (widget.data.description != null)
-                Text(
-                  widget.data.description!,
-                  style: TextStyle(color: Colors.grey[600], fontSize: 13),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+
             ],
           ),
         ),
         const SizedBox(width: 8),
         IconButton(
           onPressed: () => Navigator.of(context).pop(),
-          icon: const Icon(Icons.close_rounded, color: Colors.black),
+          icon: Icon(
+            Icons.close_rounded,
+            color: Theme.of(context).colorScheme.onSurface,
+          ),
           style: IconButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.surface,
           ),
@@ -286,6 +282,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildMainTabs() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -294,8 +291,8 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       ),
       child: Row(
         children: [
-          _buildTabButton(0, 'App Shortcut', Icons.dashboard_rounded),
-          _buildTabButton(1, 'Web Widget', Icons.language_rounded),
+          _buildTabButton(0, l10n.app_shortcut, Icons.dashboard_rounded),
+          _buildTabButton(1, l10n.web_widget, Icons.language_rounded),
         ],
       ),
     );
@@ -322,7 +319,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
             children: [
               Icon(
                 icon,
-                size: 18,
+                size: 16,
                 color: isSelected
                     ? colorScheme.onPrimary
                     : colorScheme.onSurface,
@@ -332,7 +329,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                 label,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  fontSize: 13,
+                  fontSize: 11,
                   color: isSelected
                       ? colorScheme.onPrimary
                       : colorScheme.onSurface,
@@ -351,77 +348,66 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         name: 'Health',
         url: '/health',
         icon: Icons.favorite_rounded,
-        description: 'Track activity and health metrics.',
         category: PluginCategory.fitness,
       ),
       _InternalPlugin(
         name: 'Finance',
         url: '/finance',
         icon: Icons.account_balance_wallet_rounded,
-        description: 'Manage accounts and assets.',
         category: PluginCategory.finance,
       ),
       _InternalPlugin(
         name: 'Projects',
         url: '/projects',
         icon: Icons.rocket_launch_rounded,
-        description: 'Organize tasks and notes.',
         category: PluginCategory.productivity,
       ),
       _InternalPlugin(
         name: 'Focus',
         url: '/health/focus',
         icon: Icons.timer_rounded,
-        description: 'Immersive focus mode.',
         category: PluginCategory.productivity,
       ),
       _InternalPlugin(
         name: 'Social',
         url: '/social',
         icon: Icons.people_alt_rounded,
-        description: 'View social insights.',
         category: PluginCategory.social,
       ),
       _InternalPlugin(
         name: 'Profile',
         url: '/profile',
         icon: Icons.person_rounded,
-        description: 'View user achievements.',
         category: PluginCategory.other,
       ),
       _InternalPlugin(
         name: 'Notes',
         url: '/projects/editor',
         icon: Icons.edit_note_rounded,
-        description: 'Quick notes capturing.',
         category: PluginCategory.productivity,
       ),
       _InternalPlugin(
         name: 'Location Tracker',
         url: '/gps',
         icon: Icons.location_on_rounded,
-        description: 'Live location tracking.',
         category: PluginCategory.other,
       ),
       _InternalPlugin(
         name: 'Block Reminder',
         url: '/health/block-reminder',
         icon: Icons.timer_rounded,
-        description: 'Immersive focus block reminder.',
         category: PluginCategory.productivity,
       ),
       _InternalPlugin(
         name: 'Settings',
         url: '/settings',
         icon: Icons.settings_rounded,
-        description: 'Customize application.',
         category: PluginCategory.other,
       ),
       _InternalPlugin(
         name: 'UPLINK',
         url: '/widgets/ssh',
         icon: Icons.terminal_rounded,
-        description: 'Secure terminal with AI capabilities.',
         category: PluginCategory.other,
       ),
       // Digital wellbeing — block social media apps via Screen Time API
@@ -429,7 +415,6 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         name: 'Social Blocker',
         url: '/social/blocker',
         icon: Icons.shield_moon_rounded,
-        description: 'Block social media apps.',
         category: PluginCategory.productivity,
       ),
     ];
@@ -438,6 +423,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildExternalToggle() {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       decoration: BoxDecoration(
         color: Theme.of(
@@ -447,8 +433,8 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       ),
       child: Row(
         children: [
-          _buildSubToggle(true, 'Plugins', Icons.apps),
-          _buildSubToggle(false, 'Custom URL', Icons.link),
+          _buildSubToggle(true, l10n.plugins, Icons.apps),
+          _buildSubToggle(false, l10n.custom_url, Icons.link),
         ],
       ),
     );
@@ -475,7 +461,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
             children: [
               Icon(
                 icon,
-                size: 16,
+                size: 14,
                 color: isSelected
                     ? colorScheme.onPrimary
                     : colorScheme.onSurface,
@@ -484,7 +470,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
               Text(
                 label,
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 11,
                   fontWeight: FontWeight.bold,
                   color: isSelected
                       ? colorScheme.onPrimary
@@ -536,7 +522,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
               children: [
                 Icon(
                   plugin.icon,
-                  size: 24,
+                  size: 18,
                   color: isSelected
                       ? colorScheme.primary
                       : colorScheme.onSurface,
@@ -546,25 +532,10 @@ class _WidgetFormDataState extends State<AddPluginForm> {
                   plugin.name,
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 14,
+                    fontSize: 12,
                     color: isSelected
                         ? colorScheme.primary
                         : colorScheme.onSurface,
-                  ),
-                ),
-                Flexible(
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(
-                      plugin.description,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurfaceVariant,
-                      ),
-                      textAlign: TextAlign.center,
-                      maxLines: 2, // Allowed 2 lines
-                      overflow: TextOverflow.ellipsis,
-                    ),
                   ),
                 ),
               ],
@@ -576,25 +547,27 @@ class _WidgetFormDataState extends State<AddPluginForm> {
   }
 
   Widget _buildCustomUrlForm() {
+    final l10n = AppLocalizations.of(context)!;
     return Column(
       children: [
         TextField(
           controller: _nameController,
           decoration: _inputDecoration(
-            'Widget Name (e.g. Facebook)',
+            l10n.widget_name_hint,
             Icons.label_outline,
           ),
         ),
         const SizedBox(height: 16),
         TextField(
           controller: _urlController,
-          decoration: _inputDecoration('URL (e.g. facebook.com)', Icons.link),
+          decoration: _inputDecoration(l10n.url_hint, Icons.link),
         ),
       ],
     );
   }
 
   Widget _buildSubmitButton() {
+    final l10n = AppLocalizations.of(context)!;
     return ElevatedButton(
       onPressed: _handleSubmit,
       style: ElevatedButton.styleFrom(
@@ -605,9 +578,9 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         elevation: 8,
         shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
       ),
-      child: const Text(
-        "Add Widget",
-        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+      child: Text(
+        l10n.add_widget,
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
       ),
     );
   }
