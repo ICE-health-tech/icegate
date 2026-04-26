@@ -8,7 +8,7 @@
 PRODUCT_NAME = ice_gate
 
 // The application's bundle identifier
-PRODUCT_BUNDLE_IDENTIFIER = duylong.art.ice_gate
+PRODUCT_BUNDLE_IDENTIFIER = duylong.art.icegate
 
 // The copyright displayed in application information
 PRODUCT_COPYRIGHT = Copyright © 2025 duylong.art. All rights reserved.

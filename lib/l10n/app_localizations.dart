@@ -920,6 +920,48 @@ abstract class AppLocalizations {
   /// **'Consumed'**
   String get health_metrics_calories_consumed;
 
+  /// No description provided for @health_metrics_oxygen_saturation.
+  ///
+  /// In en, this message translates to:
+  /// **'Oxygen'**
+  String get health_metrics_oxygen_saturation;
+
+  /// No description provided for @health_metrics_air_quality.
+  ///
+  /// In en, this message translates to:
+  /// **'Air Quality'**
+  String get health_metrics_air_quality;
+
+  /// No description provided for @health_metrics_weather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get health_metrics_weather;
+
+  /// No description provided for @health_air_quality.
+  ///
+  /// In en, this message translates to:
+  /// **'Air Quality'**
+  String get health_air_quality;
+
+  /// No description provided for @health_weather.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather'**
+  String get health_weather;
+
+  /// No description provided for @health_temperature_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Temperature'**
+  String get health_temperature_subtitle;
+
+  /// No description provided for @health_aqi_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'AQI'**
+  String get health_aqi_unit;
+
   /// No description provided for @health_metrics_detail_coming_soon.
   ///
   /// In en, this message translates to:
@@ -1292,6 +1334,12 @@ abstract class AppLocalizations {
   /// **'GUEST ACCESS'**
   String get guest_access;
 
+  /// No description provided for @apple_login.
+  ///
+  /// In en, this message translates to:
+  /// **'APPLE'**
+  String get apple_login;
+
   /// No description provided for @enroll_hub.
   ///
   /// In en, this message translates to:
@@ -1526,6 +1574,18 @@ abstract class AppLocalizations {
   /// **'System'**
   String get breakdown_system;
 
+  /// No description provided for @breakdown_screentime.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen Time'**
+  String get breakdown_screentime;
+
+  /// No description provided for @date_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get date_today;
+
   /// No description provided for @score_balance.
   ///
   /// In en, this message translates to:
@@ -1573,6 +1633,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'ENTER'**
   String get btn_enter;
+
+  /// No description provided for @apple_signin_error.
+  ///
+  /// In en, this message translates to:
+  /// **'Apple Sign-In Error: {error}'**
+  String apple_signin_error(String error);
 
   /// No description provided for @google_signin_error.
   ///
@@ -4303,6 +4369,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Custom URL'**
   String get custom_url;
+
+  /// No description provided for @settings_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Settings'**
+  String get settings_title;
+
+  /// No description provided for @common_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done'**
+  String get common_done;
 }
 
 class _AppLocalizationsDelegate

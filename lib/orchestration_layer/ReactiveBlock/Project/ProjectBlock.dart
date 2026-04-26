@@ -7,7 +7,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.da
 import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/ProjectPoint.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class ProjectBlock {

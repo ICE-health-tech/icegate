@@ -1,0 +1,76 @@
+import 'package:flutter/material.dart';
+// NOTE: Please ensure these imports are correct for your project structure
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+    hide ThemeData;
+// import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBlock.dart';
+import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
+// import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:provider/provider.dart';
+
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FeedbackBlock.dart';
+
+class Adapter extends StatefulWidget {
+  final Widget childWidget;
+
+  const Adapter({super.key, required this.childWidget});
+
+  @override
+  State<Adapter> createState() => _adapterState();
+}
+
+class _adapterState extends State<Adapter> {
+  ThemeData? themeData;
+  late ThemeStore themeStore;
+
+  InternalWidgetBlock internalWidgetBlock = InternalWidgetBlock();
+  ExternalWidgetBlock externalWidgetBlock = ExternalWidgetBlock();
+  late AuthBlock authBlock;
+  late PersonBlock personBlock;
+  late AppDatabase appDatabase;
+  FeedbackBlock feedbackBlock = FeedbackBlock();
+
+  void _initAsyncDatabaseLink() async {
+    final dao = appDatabase.internalWidgetsDAO;
+    final externalDao = appDatabase.externalWidgetsDAO;
+    final themeDao = appDatabase.themeDAO;
+
+    // Load the saved theme from SharedPreferences (local-only, never synced).
+    final savedTheme = await themeDao.getCurrentTheme();
+    themeStore.loadTheme(savedTheme.themePath);
+
+    final personId = personBlock.information.value.profiles.id ?? "";
+
+    internalWidgetBlock.refreshBlock(dao, personId, 'home');
+    externalWidgetBlock.refreshBlock(externalDao, personId);
+    feedbackBlock.init(appDatabase.feedbackDAO, personId);
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    appDatabase = context.read<AppDatabase>();
+    themeStore = context.read<ThemeStore>();
+    authBlock = context.read<AuthBlock>();
+    personBlock = context.read<PersonBlock>();
+    _initAsyncDatabaseLink();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MultiProvider(
+      providers: [
+        Provider<InternalWidgetBlock>.value(value: internalWidgetBlock),
+        Provider<ExternalWidgetBlock>.value(value: externalWidgetBlock),
+
+        Provider<AuthBlock>.value(value: authBlock),
+        Provider<PersonBlock>.value(value: personBlock),
+        Provider<FeedbackBlock>.value(value: feedbackBlock),
+      ],
+      child: widget.childWidget,
+    );
+  }
+}

@@ -8,11 +8,12 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
-import 'package:ice_gate/initial_layer/Notification/NotificationInit.dart';
+import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
+import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:live_activities/live_activities.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
+import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 
 enum FocusStatus { idle, running, paused, completed }
 
@@ -715,6 +716,35 @@ class FocusBlock {
       );
       await _healthLogsDao.insertExerciseLog(exerciseLog);
       print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
+
+      // --- Sync to Apple Health / Google Fit ---
+      try {
+        final activityType = HealthService.mapStringToActivityType(exerciseType.value);
+        final endTime = DateTime.now();
+        final startTime = endTime.subtract(Duration(seconds: duration));
+
+        // Use a simple calorie estimation if a HealthBlock reference isn't handy,
+        // or just pass null if you prefer Apple Health to calculate it (if possible).
+        // For now, we'll do a simple estimation if duration is significant.
+        int? estimatedKcal;
+        if (duration > 60) {
+           // Basic estimation: 5-10 kcal per minute depending on intensity
+           estimatedKcal = (exerciseMinutesLogged * 7.0).round();
+        }
+
+        HealthService.writeWorkoutData(
+          activityType: activityType,
+          start: startTime,
+          end: endTime,
+          totalEnergyBurned: estimatedKcal,
+        ).then((success) {
+          if (success) {
+            print("🚀 [FocusBlock] Workout synced to Platform Health.");
+          }
+        });
+      } catch (e) {
+        print("⚠️ [FocusBlock] Failed to sync workout to platform: $e");
+      }
 
       // Auto-increase points for exercise bonus
       if (scoreBlock != null) {

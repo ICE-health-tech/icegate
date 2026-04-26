@@ -39,19 +39,31 @@ class GoogleDriveService {
 
   drive.DriveApi? get driveApi => _driveApi;
 
-  Future<bool> signIn() async {
+  /// Try to sign in silently first, then fallback to interactive sign-in if [interactive] is true.
+  Future<bool> signIn({bool interactive = true}) async {
     try {
-      _account = await _googleSignIn.signIn();
+      // 1. Try silent sign-in first (no UI)
+      _account = await _googleSignIn.signInSilently();
+      
+      // 2. If silent failed and interactive is allowed, show UI
+      if (_account == null && interactive) {
+        _account = await _googleSignIn.signIn();
+      }
+      
       if (_account == null) return false;
 
-      final authHeaders = await _account!.authHeaders;
-      final authenticateClient = _GoogleAuthClient(authHeaders);
-      _driveApi = drive.DriveApi(authenticateClient);
+      // Initialize API with a client that fetches fresh headers for every request
+      _driveApi = drive.DriveApi(_GoogleAuthClient(_account!));
       return true;
     } catch (e) {
       debugPrint('Drive Sign-In Error: $e');
       return false;
     }
+  }
+
+  /// Explicitly check if the user is already signed in and restore session
+  Future<void> restoreSession() async {
+    await signIn(interactive: false);
   }
 
   Future<void> signOut() async {
@@ -187,14 +199,17 @@ class GoogleDriveService {
 }
 
 class _GoogleAuthClient extends http.BaseClient {
-  final Map<String, String> _headers;
+  final GoogleSignInAccount _account;
   final http.Client _client = http.Client();
 
-  _GoogleAuthClient(this._headers);
+  _GoogleAuthClient(this._account);
 
   @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    request.headers.addAll(_headers);
+  Future<http.StreamedResponse> send(http.BaseRequest request) async {
+    // Dynamically fetch fresh headers for every single request.
+    // google_sign_in package handles token refreshing internally here.
+    final headers = await _account.authHeaders;
+    request.headers.addAll(headers);
     return _client.send(request);
   }
 }

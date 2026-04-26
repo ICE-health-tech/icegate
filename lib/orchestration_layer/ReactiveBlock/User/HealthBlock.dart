@@ -1,7 +1,10 @@
 import 'dart:async';
 import 'dart:io' show Platform;
+import 'package:health/health.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
+import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
+import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
     show
@@ -12,9 +15,13 @@ import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
         HourlyActivityLogDAO,
         HourlyActivityLogTableCompanion,
         WaterLogsTableCompanion,
-        WeightLogsTableCompanion;
+        WeightLogsTableCompanion,
+        HeartRateLogsTableCompanion,
+        OxygenSaturationLogsTableCompanion,
+        OxygenSaturationLogData,
+        SleepLogsTableCompanion;
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/ui_layer/health_page/services/HealthService.dart';
+import 'package:rxdart/rxdart.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
@@ -29,6 +36,7 @@ class HealthBlock {
   final dailyStepsLast7Days = signal<Map<String, int>>({});
   final todaySleep = signal<double>(0.0);
   final todayHeartRate = signal<int>(0);
+  final todayOxygenSaturation = signal<double>(0.0);
   final todayCaloriesBurned = signal<int>(0);
   final dailyStepGoal = signal<int>(10000);
   final dailyKcalGoal = signal<int>(2500);
@@ -45,6 +53,17 @@ class HealthBlock {
   final dailyWeightLast30Days = signal<Map<String, double>>({});
   final dailyWaterLast30Days = signal<Map<String, int>>({});
   final hasInitialSync = signal<bool>(false);
+  final isSyncing = signal<bool>(false);
+
+  final isStepsLoading = signal<bool>(false);
+  final isSleepLoading = signal<bool>(false);
+  final isHeartRateLoading = signal<bool>(false);
+  final isOxygenLoading = signal<bool>(false);
+  final isWaterLoading = signal<bool>(false);
+  final isExerciseLoading = signal<bool>(false);
+  final isWeightLoading = signal<bool>(false);
+  final isCaloriesBurnedLoading = signal<bool>(false);
+  final isCaloriesConsumedLoading = signal<bool>(false);
 
   late final totalSteps = computed(
     () => todaySteps.value + historicalSteps.value,
@@ -76,6 +95,7 @@ class HealthBlock {
 
   StreamSubscription? _metricsSubscription;
   StreamSubscription? _hourlyLogsSubscription;
+  Timer? _realtimeSyncTimer;
 
   HealthBlock({
     required String personId,
@@ -94,7 +114,7 @@ class HealthBlock {
   StreamSubscription? _waterSubscription;
   StreamSubscription? _mealSubscription;
   StreamSubscription?
-  _exerciseSubscription; // watches exercise_logs → sums durationMinutes → health_metrics
+  _exerciseSubscription;
   StreamSubscription? _weightSubscription;
 
   String? _initializedPersonId;
@@ -114,7 +134,6 @@ class HealthBlock {
     debugPrint("HealthBlock: 🚀 Initializing for $personId");
     _initializedPersonId = personId;
 
-    // Cleanup old subscriptions
     _metricsSubscription?.cancel();
     _hourlyLogsSubscription?.cancel();
     _waterSubscription?.cancel();
@@ -122,7 +141,6 @@ class HealthBlock {
     _exerciseSubscription?.cancel();
     _weightSubscription?.cancel();
 
-    // Reset signals for new user
     batch(() {
       todaySteps.value = 0;
       hourlySteps.value = {};
@@ -130,6 +148,7 @@ class HealthBlock {
       dailyStepsLast7Days.value = {};
       todaySleep.value = 0.0;
       todayHeartRate.value = 0;
+      todayOxygenSaturation.value = 0.0;
       todayCaloriesBurned.value = 0;
       todayCaloriesConsumed.value = 0;
       todayWater.value = 0;
@@ -140,147 +159,150 @@ class HealthBlock {
       hasInitialSync.value = false;
     });
 
-    // 0. Cleanup duplicates before starting watch to prevent sync conflicts
     _healthDao.cleanupDuplicates(personId).then((_) {
       if (_initializedPersonId != personId) {
-        return; // Guard against race condition
+        return;
       }
 
-      // Watch all metrics to calculate historical steps (excluding today)
-      _metricsSubscription = _healthDao.watchAllMetrics(personId).listen(
-        (metrics) {
-          final today = DateTime.now();
-          final todayStr =
-              "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-          final yesterday = today.subtract(const Duration(days: 1));
-          final yesterdayStr =
-              "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+      _metricsSubscription = _healthDao
+          .watchAllMetrics(personId)
+          .debounceTime(const Duration(milliseconds: 500))
+          .listen(
+            (metrics) {
+              final today = DateTime.now();
+              final todayStr =
+                  "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+              final yesterday = today.subtract(const Duration(days: 1));
+              final yesterdayStr =
+                  "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
 
-          final sevenDaysAgo = DateTime(
-            today.year,
-            today.month,
-            today.day,
-          ).subtract(const Duration(days: 7));
+              final sevenDaysAgo = DateTime(
+                today.year,
+                today.month,
+                today.day,
+              ).subtract(const Duration(days: 7));
 
-          int totalHistorical = 0;
-          int foundTodaySteps = 0;
-          double foundTodaySleep = 0.0;
-          int foundTodayHeartRate = 0;
-          int foundTodayCaloriesBurned = 0;
-          int foundTodayCaloriesConsumed = 0;
-          int foundTodayExerciseMinutes = 0;
-          int foundTodayFocusMinutes = 0;
-          final Map<String, int> stepsLast7Days = {};
-          final Map<String, double> weightHistory = {};
-          final Map<String, int> waterHistory = {};
+              int totalHistorical = 0;
+              int foundTodaySteps = 0;
+              double foundTodaySleep = 0.0;
+              int foundTodayHeartRate = 0;
+              double foundTodayOxygenSaturation = 0.0;
+              int foundTodayCaloriesBurned = 0;
+              int foundTodayCaloriesConsumed = 0;
+              int foundTodayExerciseMinutes = 0;
+              int foundTodayFocusMinutes = 0;
+              final Map<String, int> stepsLast7Days = {};
+              final Map<String, double> weightHistory = {};
+              final Map<String, int> waterHistory = {};
 
-          // debugPrint(
-          //   "HealthBlock: 📊 Received ${metrics.length} metrics from DB. Today: $todayStr, Yesterday: $yesterdayStr",
-          // );
+              for (var m in metrics) {
+                final dateStr =
+                    "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}";
+                final isTodayMatch = dateStr == todayStr;
+                final steps = m.steps ?? 0;
 
-          for (var m in metrics) {
-            final dateStr =
-                "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}";
-            final isTodayMatch = dateStr == todayStr;
-            final steps = m.steps ?? 0;
+                if (isTodayMatch) {
+                  if (steps > foundTodaySteps) foundTodaySteps = steps;
+                  if ((m.sleepHours ?? 0.0) > foundTodaySleep) {
+                    foundTodaySleep = m.sleepHours ?? 0.0;
+                  }
+                  if ((m.heartRate ?? 0) > foundTodayHeartRate) {
+                    foundTodayHeartRate = m.heartRate ?? 0;
+                  }
+                  if ((m.oxygenSaturation ?? 0.0) >
+                      foundTodayOxygenSaturation) {
+                    foundTodayOxygenSaturation = m.oxygenSaturation ?? 0.0;
+                  }
+                  if ((m.caloriesBurned ?? 0) > foundTodayCaloriesBurned) {
+                    foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+                  }
+                  if ((m.caloriesConsumed ?? 0) > foundTodayCaloriesConsumed) {
+                    foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
+                  }
+                  if ((m.weightKg ?? 0.0) > 0)
+                    todayWeight.value = m.weightKg ?? 0.0;
+                  if ((m.exerciseMinutes ?? 0) > 0) {
+                    foundTodayExerciseMinutes += (m.exerciseMinutes ?? 0)
+                        .toInt();
+                  }
+                  if ((m.focusMinutes ?? 0) > 0) {
+                    foundTodayFocusMinutes += (m.focusMinutes ?? 0).toInt();
+                  }
+                } else {
+                  totalHistorical += steps.toInt();
+                }
 
-            if (isTodayMatch) {
-              if (steps > foundTodaySteps) foundTodaySteps = steps;
-              if ((m.sleepHours ?? 0.0) > foundTodaySleep) {
-                foundTodaySleep = m.sleepHours ?? 0.0;
+                final normalizedDate = DateTime(
+                  m.date.year,
+                  m.date.month,
+                  m.date.day,
+                );
+                if (normalizedDate.isAfter(sevenDaysAgo) ||
+                    normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
+                  stepsLast7Days[dateStr] =
+                      (stepsLast7Days[dateStr] ?? 0) + steps.toInt();
+                }
+
+                final thirtyDaysAgo = today.subtract(const Duration(days: 30));
+                if (m.date.isAfter(thirtyDaysAgo)) {
+                  if ((m.weightKg ?? 0) > 0)
+                    weightHistory[dateStr] = m.weightKg!;
+                  if ((m.waterGlasses ?? 0) > 0)
+                    waterHistory[dateStr] = m.waterGlasses!;
+                }
               }
-              if ((m.heartRate ?? 0) > foundTodayHeartRate) {
-                foundTodayHeartRate = m.heartRate ?? 0;
+
+              historicalSteps.value = totalHistorical;
+
+              if (foundTodaySteps > todaySteps.value) {
+                todaySteps.value = foundTodaySteps;
               }
-              if ((m.caloriesBurned ?? 0) > foundTodayCaloriesBurned) {
-                foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+              if (foundTodaySleep > todaySleep.value) {
+                todaySleep.value = foundTodaySleep;
               }
-              if ((m.caloriesConsumed ?? 0) > foundTodayCaloriesConsumed) {
-                foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
+              if (foundTodayHeartRate > todayHeartRate.value) {
+                todayHeartRate.value = foundTodayHeartRate;
               }
-              if ((m.weightKg ?? 0.0) > 0)
-                todayWeight.value = m.weightKg ?? 0.0;
-              if ((m.exerciseMinutes ?? 0) > 0) {
-                foundTodayExerciseMinutes += m.exerciseMinutes ?? 0;
+              if (foundTodayOxygenSaturation > todayOxygenSaturation.value) {
+                todayOxygenSaturation.value = foundTodayOxygenSaturation;
               }
-              if ((m.focusMinutes ?? 0) > 0) {
-                foundTodayFocusMinutes += m.focusMinutes ?? 0;
+              if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
+                todayCaloriesBurned.value = foundTodayCaloriesBurned;
               }
-            } else {
-              totalHistorical += steps;
-            }
+              if (foundTodayCaloriesConsumed > todayCaloriesConsumed.value) {
+                todayCaloriesConsumed.value = foundTodayCaloriesConsumed;
+              }
 
-            // Fill last 7 days map
-            final normalizedDate = DateTime(
-              m.date.year,
-              m.date.month,
-              m.date.day,
-            );
-            if (normalizedDate.isAfter(sevenDaysAgo) ||
-                normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
-              stepsLast7Days[dateStr] = (stepsLast7Days[dateStr] ?? 0) + steps;
-            }
+              todayExerciseMinutes.value = foundTodayExerciseMinutes;
+              todayFocusMinutes.value = foundTodayFocusMinutes;
 
-            // Track weight and water for trend analysis (last 30 days)
-            final thirtyDaysAgo = today.subtract(const Duration(days: 30));
-            if (m.date.isAfter(thirtyDaysAgo)) {
-              if ((m.weightKg ?? 0) > 0) weightHistory[dateStr] = m.weightKg!;
-              if ((m.waterGlasses ?? 0) > 0)
-                waterHistory[dateStr] = m.waterGlasses!;
-            }
-          }
+              final bestTodaySteps =
+                  (stepsLast7Days[todayStr] ?? 0) > todaySteps.value
+                  ? (stepsLast7Days[todayStr] ?? 0)
+                  : todaySteps.value;
+              stepsLast7Days[todayStr] = bestTodaySteps;
 
-          historicalSteps.value = totalHistorical;
+              dailyStepsLast7Days.value = Map.from(stepsLast7Days);
+              dailyWeightLast30Days.value = Map.from(weightHistory);
+              dailyWaterLast30Days.value = Map.from(waterHistory);
 
-          // Update signals from aggregated DB data (Phone-wins: only update if DB has MORE data than current signal)
-          if (foundTodaySteps > todaySteps.value) {
-            todaySteps.value = foundTodaySteps;
-          }
-          if (foundTodaySleep > todaySleep.value) {
-            todaySleep.value = foundTodaySleep;
-          }
-          if (foundTodayHeartRate > todayHeartRate.value) {
-            todayHeartRate.value = foundTodayHeartRate;
-          }
-          if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
-            todayCaloriesBurned.value = foundTodayCaloriesBurned;
-          }
-          if (foundTodayCaloriesConsumed > todayCaloriesConsumed.value) {
-            todayCaloriesConsumed.value = foundTodayCaloriesConsumed;
-          }
+              if (!hasInitialSync.value) {
+                debugPrint("HealthBlock: ✅ Initial DB sync complete.");
+                hasInitialSync.value = true;
+              }
 
-          todayExerciseMinutes.value = foundTodayExerciseMinutes;
-          todayFocusMinutes.value = foundTodayFocusMinutes;
-
-          // Ensure today's entry in weekly map also reflects the best data (signal or DB)
-          final bestTodaySteps =
-              (stepsLast7Days[todayStr] ?? 0) > todaySteps.value
-              ? (stepsLast7Days[todayStr] ?? 0)
-              : todaySteps.value;
-          stepsLast7Days[todayStr] = bestTodaySteps;
-
-          dailyStepsLast7Days.value = Map.from(stepsLast7Days);
-          dailyWeightLast30Days.value = Map.from(weightHistory);
-          dailyWaterLast30Days.value = Map.from(waterHistory);
-
-          // Mark initial sync complete
-          if (!hasInitialSync.value) {
-            debugPrint("HealthBlock: ✅ Initial DB sync complete.");
-            hasInitialSync.value = true;
-          }
-
-          final yesterdayVal = stepsLast7Days[yesterdayStr] ?? 0;
-          debugPrint(
-            "📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical",
+              final yesterdayVal = stepsLast7Days[yesterdayStr] ?? 0;
+              debugPrint(
+                "📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical",
+              );
+            },
+            onError: (e) =>
+                debugPrint("HealthBlock: Error watching health metrics: $e"),
           );
-        },
-        onError: (e) =>
-            debugPrint("HealthBlock: Error watching health metrics: $e"),
-      );
 
-      // Watch hourly logs for today
       _hourlyLogsSubscription = _hourlyLogDao
           .watchHourlyLogs(personId, DateTime.now())
+          .debounceTime(const Duration(milliseconds: 500))
           .listen(
             (logs) {
               final Map<int, int> hourlyMap = {
@@ -288,11 +310,10 @@ class HealthBlock {
               };
               for (var log in logs) {
                 final hour = log.startTime.hour;
-                hourlyMap[hour] = (hourlyMap[hour] ?? 0) + log.stepsCount;
+                hourlyMap[hour] =
+                    (hourlyMap[hour] ?? 0) + log.stepsCount.toInt();
               }
 
-              // Merge strategy: only update signal if DB has more data OR if it's a new hour
-              // This prevents DB downloads from downgrading current session data.
               final currentMap = Map<int, int>.from(hourlySteps.value);
               bool changed = false;
 
@@ -320,7 +341,7 @@ class HealthBlock {
               0,
               (sum, log) => sum + log.amount,
             );
-            _saveWater(todayWater.value);
+            _saveWater(todayWater.value, source: HealthSourceService.sourceManual);
           },
           onError: (e) =>
               debugPrint("HealthBlock: Error watching water logs: $e"),
@@ -337,19 +358,16 @@ class HealthBlock {
               debugPrint("HealthBlock: Error watching meal calories: $e"),
         );
 
-    // Watch exercise_logs daily stream → SUM(duration_minutes) → health_metrics.exercise_minutes.
-    // This gives immediate reactivity when exercises are logged, without waiting for _metricsSubscription.
     _exerciseSubscription = _healthLogsDao
         .watchDailyExerciseLogs(personId, DateTime.now())
         .listen(
           (logs) {
-            // SUM(duration_minutes) for today — all exercise sessions aggregated by day
             final totalMinutes = logs.fold<int>(
               0,
               (sum, log) => sum + log.durationMinutes,
             );
             todayExerciseMinutes.value = totalMinutes;
-            _saveExercise(totalMinutes); // persist to health_metrics
+            _saveExercise(totalMinutes, source: HealthSourceService.sourceGT6);
           },
           onError: (e) =>
               debugPrint("HealthBlock: Error watching exercise logs: $e"),
@@ -367,7 +385,6 @@ class HealthBlock {
           debugPrint("HealthBlock: Error watching latest weight logs: $e"),
     );
 
-    // Watch goals and save to SharedPreferences
     effect(() => _saveGoal('dailyStepGoal', dailyStepGoal.value));
     effect(() => _saveGoal('dailyKcalGoal', dailyKcalGoal.value));
     effect(() => _saveGoal('dailyWaterGoal', dailyWaterGoal.value));
@@ -375,7 +392,6 @@ class HealthBlock {
     effect(() => _saveGoal('dailyExerciseGoal', dailyExerciseGoal.value));
     effect(() => _saveGoal('dailySleepGoal', dailySleepGoal.value));
 
-    // 1. Silent Sync today's data on init (non-blocking)
     syncTodaySteps(() => HealthService.fetchStepCount())
         .then((_) {
           debugPrint("HealthBlock: 🔄 Silent sync of today's steps completed.");
@@ -383,6 +399,53 @@ class HealthBlock {
         .catchError((e) {
           debugPrint("HealthBlock: ⚠️ Silent sync failed: $e");
         });
+
+    syncTodayHeartRate(() => HealthService.fetchLatestHeartRate())
+        .then((_) {
+          debugPrint("HealthBlock: 🔄 Silent sync of heart rate completed.");
+        })
+        .catchError((e) {
+          debugPrint("HealthBlock: ⚠️ Silent sync heart rate failed: $e");
+        });
+
+    syncTodayOxygenSaturation(() => HealthService.fetchLatestOxygenSaturation())
+        .then((_) {
+          debugPrint(
+            "HealthBlock: 🔄 Silent sync of oxygen saturation completed.",
+          );
+        })
+        .catchError((e) {
+          debugPrint("HealthBlock: ⚠️ Silent sync oxygen saturation failed: $e",
+          );
+        });
+
+    syncTodaySleep(() => HealthService.fetchSleepData())
+        .then((_) {
+          debugPrint("HealthBlock: 🔄 Silent sync of sleep data completed.");
+        })
+        .catchError((e) {
+          debugPrint("HealthBlock: ⚠️ Silent sync sleep data failed: $e");
+        });
+  }
+
+  void startRealtimeSync({Duration interval = const Duration(seconds: 30)}) {
+    if (_realtimeSyncTimer?.isActive ?? false) return;
+
+    debugPrint(
+      "HealthBlock: ⚡ Starting realtime sync every ${interval.inSeconds}s",
+    );
+    _realtimeSyncTimer = Timer.periodic(interval, (_) async {
+      debugPrint("HealthBlock: ⚡ Realtime sync pulse...");
+      await syncAllFromPlatform();
+    });
+  }
+
+  void stopRealtimeSync() {
+    if (_realtimeSyncTimer != null) {
+      debugPrint("HealthBlock: 🛑 Stopping realtime sync timer.");
+      _realtimeSyncTimer?.cancel();
+      _realtimeSyncTimer = null;
+    }
   }
 
   Future<void> _loadGoals() async {
@@ -415,32 +478,16 @@ class HealthBlock {
   }
 
   void updateSteps(int steps, {DateTime? date, bool force = false}) {
-    final targetDate = date ?? DateTime.now();
+    final day = date ?? DateTime.now();
     final now = DateTime.now();
     final isToday =
-        targetDate.year == now.year &&
-        targetDate.month == now.month &&
-        targetDate.day == now.day;
-
-    if (force) {
-      debugPrint(
-        "🔄 [HealthBlock] Forcing Step Update for $targetDate: $steps steps",
-      );
-    }
-
-    debugPrint(
-      "HealthBlock: updateSteps called with $steps steps for $targetDate (force: $force)",
-    );
+        day.year == now.year && day.month == now.month && day.day == now.day;
 
     if (isToday) {
-      if (force || steps > todaySteps.value) {
-        print("TODAY STEP DUYLONG: $steps");
-        todaySteps.value = steps;
-        _saveSteps(steps, date: targetDate, force: force);
-      }
-    } else {
-      _saveSteps(steps, date: targetDate, force: force);
+      todaySteps.value = steps;
     }
+
+    _saveSteps(steps, date: day, force: force, source: HealthSourceService.sourceAppleHealth);
   }
 
   bool get _isDesktop =>
@@ -452,11 +499,9 @@ class HealthBlock {
       return;
     }
     debugPrint("HealthBlock: 🔄 Starting history sync...");
-    // Use a fixed baseline for 'now' to ensure consistent date subtraction throughout the loop
     final baseline = DateTime.now();
     final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
 
-    // Sync last 30 days
     debugPrint(
       "🚀 [HealthBlock] Starting History Sync for 30 days. Baseline: $todayStart",
     );
@@ -470,7 +515,6 @@ class HealthBlock {
         debugPrint("📅 [HealthBlock] Yesterday ($day) Steps: $steps");
       }
 
-      // We sync even if steps are 0 to ensure local cache is accurate
       updateSteps(steps, date: day, force: true);
     }
     debugPrint("✅ [HealthBlock] History Sync Completed");
@@ -484,53 +528,58 @@ class HealthBlock {
       debugPrint("HealthBlock: ⏭️ Skipping weight history sync on desktop.");
       return;
     }
-    debugPrint("HealthBlock: ⚖️ Starting weight history sync...");
-    final baseline = DateTime.now();
-    final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
+    isWeightLoading.value = true;
+    try {
+      debugPrint("HealthBlock: ⚖️ Starting weight history sync...");
+      final baseline = DateTime.now();
+      final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
 
-    for (int i = 0; i <= 30; i++) {
-      final day = todayStart.subtract(Duration(days: i));
-      final weight = await fetcher(day);
+      for (int i = 0; i <= 30; i++) {
+        final day = todayStart.subtract(Duration(days: i));
+        final weight = await fetcher(day);
 
-      if (weight > 0) {
-        updateWeight(weight, date: day, force: true);
+        if (weight > 0) {
+          updateWeight(weight, date: day, force: true);
+        }
       }
+      debugPrint("✅ [HealthBlock] Weight History Sync Completed");
+    } finally {
+      isWeightLoading.value = false;
     }
-    debugPrint("✅ [HealthBlock] Weight History Sync Completed");
   }
 
-  /// Re-aggregates exercise_logs into health_metrics.exercise_minutes
-  /// for the last 30 days. Source of truth is exercise_logs (Supabase/PowerSync),
-  /// not Apple HealthKit. This runs on ALL platforms (including macOS)
-  /// since it reads from the local DB populated by PowerSync.
   Future<void> syncExerciseHistory() async {
     if (personId.isEmpty) return;
-    debugPrint("HealthBlock: 🏋️ Starting exercise history sync...");
-    final baseline = DateTime.now();
-    final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
+    isExerciseLoading.value = true;
+    try {
+      debugPrint("HealthBlock: 🏋️ Starting exercise history sync...");
+      final baseline = DateTime.now();
+      final todayStart = DateTime(baseline.year, baseline.month, baseline.day);
 
-    for (int i = 0; i <= 30; i++) {
-      final day = todayStart.subtract(Duration(days: i));
-      // SUM(duration_minutes) from exercise_logs for this day
-      final totalMinutes = await _healthLogsDao.getDailyExerciseTotal(
-        personId,
-        day,
-      );
-
-      if (totalMinutes > 0) {
-        final normalizedDay = DateTime(day.year, day.month, day.day, 12);
-        await _healthDao.insertOrUpdateMetrics(
-          HealthMetricsTableCompanion.insert(
-            id: _getDeterministicId(day),
-            personID: Value(personId),
-            date: normalizedDay,
-            exerciseMinutes: Value(totalMinutes),
-          ),
-          force: true,
+      for (int i = 0; i <= 30; i++) {
+        final day = todayStart.subtract(Duration(days: i));
+        final totalMinutes = await _healthLogsDao.getDailyExerciseTotal(
+          personId,
+          day,
         );
+
+        if (totalMinutes > 0) {
+          final normalizedDay = DateTime(day.year, day.month, day.day, 12);
+          await _healthDao.insertOrUpdateMetrics(
+            HealthMetricsTableCompanion.insert(
+              id: _getDeterministicId(day),
+              personID: Value(personId),
+              date: normalizedDay,
+              exerciseMinutes: Value(totalMinutes),
+            ),
+            force: true,
+          );
+        }
       }
+      debugPrint("✅ [HealthBlock] Exercise History Sync Completed");
+    } finally {
+      isExerciseLoading.value = false;
     }
-    debugPrint("✅ [HealthBlock] Exercise History Sync Completed");
   }
 
   Future<void> syncTodaySteps(Future<int> Function() fetcher) async {
@@ -541,12 +590,118 @@ class HealthBlock {
     debugPrint(
       "HealthBlock: 🔄 [SYNC] Fetching today's steps from platform...",
     );
-    final steps = await fetcher();
-    debugPrint(
-      "HealthBlock: 🔄 [SYNC] Platform returned $steps steps for today.",
-    );
-    updateSteps(steps, force: true); // Force update to match platform exactly
-    debugPrint("HealthBlock: ✅ [SYNC] Today's steps synced: $steps");
+    isStepsLoading.value = true;
+    try {
+      final steps = await fetcher();
+      debugPrint(
+        "HealthBlock: 🔄 [SYNC] Platform returned $steps steps for today.",
+      );
+      updateSteps(steps, force: true);
+      debugPrint("HealthBlock: ✅ [SYNC] Today's steps synced: $steps");
+    } finally {
+      isStepsLoading.value = false;
+    }
+  }
+
+  Future<void> syncTodayHeartRate(Future<int> Function() fetcher) async {
+    isHeartRateLoading.value = true;
+    try {
+      final bpm = await fetcher();
+      if (bpm > 0) {
+        updateHeartRate(bpm);
+        
+        syncHeartRateSamples(DateTime.now()).catchError((e) => debugPrint("Background HR sync error: $e"));
+      }
+    } finally {
+      isHeartRateLoading.value = false;
+    }
+  }
+
+  Future<void> syncTodayOxygenSaturation(
+    Future<double> Function() fetcher,
+  ) async {
+    isOxygenLoading.value = true;
+    try {
+      final saturation = await fetcher();
+      if (saturation > 0) {
+        updateOxygenSaturation(saturation);
+        
+        syncOxygenSamples(DateTime.now()).catchError((e) => debugPrint("Background SpO2 sync error: $e"));
+      }
+    } finally {
+      isOxygenLoading.value = false;
+    }
+  }
+
+  Future<void> syncTodaySleep(Future<double> Function() fetcher) async {
+    isSleepLoading.value = true;
+    try {
+      final hours = await fetcher();
+      if (hours > 0) {
+        updateSleep(hours);
+      }
+      await syncSleepSessions(DateTime.now());
+    } finally {
+      isSleepLoading.value = false;
+    }
+  }
+
+  Future<void> syncSleepSessions(DateTime day) async {
+    if (_isDesktop) return;
+
+    final sessions = await HealthService.fetchSleepSessions(day);
+    if (sessions.isEmpty) return;
+
+    for (var session in sessions) {
+      final startTime = session['startTime'] as DateTime;
+      final endTime = session['endTime'] as DateTime;
+
+      try {
+        await _healthLogsDao.insertSleepLog(
+          SleepLogsTableCompanion.insert(
+            id: IDGen.UUIDV7(),
+            personID: Value(personId),
+            startTime: startTime,
+            endTime: Value(endTime),
+            quality: const Value(4),
+            source: Value(session['sourceName'] as String?),
+          ),
+        );
+      } catch (e) {
+        debugPrint("HealthBlock: Skip duplicate sleep session: $e");
+      }
+    }
+  }
+
+  Future<void> syncAllFromPlatform() async {
+    if (_isDesktop) {
+      debugPrint("HealthBlock: ⏭️ Skipping platform sync on desktop.");
+      return;
+    }
+    if (isSyncing.value) return;
+    isSyncing.value = true;
+
+    try {
+      debugPrint("HealthBlock: 🔄 Starting global platform sync...");
+
+      await Future.wait([
+        syncTodaySteps(HealthService.fetchStepCount),
+        syncTodayHeartRate(HealthService.fetchLatestHeartRate),
+        syncTodayOxygenSaturation(HealthService.fetchLatestOxygenSaturation),
+        syncTodaySleep(HealthService.fetchSleepData),
+        syncSleepSessions(DateTime.now()),
+        HealthService.fetchHourlyStepsForDay(DateTime.now()).then((hourly) {
+          updateHourlySteps(hourly);
+        }),
+        syncHeartRateSamples(DateTime.now()),
+      ]);
+
+      debugPrint("HealthBlock: ✅ Global platform sync complete.");
+    } catch (e) {
+      debugPrint("HealthBlock: ❌ Global platform sync failed: $e");
+    } finally {
+      isSyncing.value = false;
+    }
   }
 
   void updateHourlySteps(Map<int, int> hourly, {DateTime? date}) {
@@ -555,7 +710,6 @@ class HealthBlock {
       "HealthBlock: updateHourlySteps called with ${hourly.length} hours for $targetDate",
     );
 
-    // Optimistically update the signal first (Phone wins)
     final currentMap = Map<int, int>.from(hourlySteps.value);
     hourly.forEach((hour, steps) {
       if (steps > (currentMap[hour] ?? 0)) {
@@ -577,11 +731,9 @@ class HealthBlock {
     );
     final endTime = startTime.add(const Duration(hours: 1));
 
-    // Calculate related metrics
-    final distanceKm = steps * 0.0008; // Roughly 0.8m per step
-    final caloriesBurned = (steps * 0.04).round(); // Roughly 0.04 kcal per step
+    final distanceKm = steps * 0.0008;
+    final caloriesBurned = (steps * 0.04).round();
 
-    // Deterministic ID for hourly log
     final logId = IDGen.generateDeterministicUuid(
       personId,
       "hourly_steps:${targetDate.year}-${targetDate.month}-${targetDate.day}:$hour",
@@ -602,22 +754,106 @@ class HealthBlock {
   }
 
   void updateSleep(double hours) {
-    debugPrint(
-      "HealthBlock: updateSleep called with $hours hours (current: ${todaySleep.value})",
-    );
-    if (hours > todaySleep.value) {
-      todaySleep.value = hours;
-      _saveSleep(hours);
-    }
+    todaySleep.value = hours;
+
+    _saveSleep(hours, source: HealthSourceService.sourceGT6);
   }
 
   void updateHeartRate(int bpm) {
-    debugPrint(
-      "HealthBlock: updateHeartRate called with $bpm bpm (current: ${todayHeartRate.value})",
-    );
     if (bpm > 0) {
       todayHeartRate.value = bpm;
-      _saveHeartRate(bpm);
+
+      _saveHeartRate(bpm, source: HealthSourceService.sourceGT6);
+    }
+  }
+
+  Future<void> syncHeartRateSamples(DateTime date) async {
+    if (_isDesktop) return;
+    final samples = await HealthService.fetchHeartRateSamplesForDay(date);
+    debugPrint(
+      "HealthBlock: 🫀 Syncing ${samples.length} heart rate samples...",
+    );
+    for (var sample in samples) {
+      try {
+        final value = sample.value;
+        if (value is NumericHealthValue) {
+          await _saveHeartRateLog(value.numericValue.round(), sample.dateFrom);
+        }
+      } catch (e) {
+        debugPrint("HealthBlock: Error syncing individual HR sample: $e");
+      }
+    }
+  }
+
+  Future<void> _saveHeartRateLog(int bpm, DateTime timestamp) async {
+    if (personId.isEmpty) return;
+    final id = IDGen.generateDeterministicUuid(
+      personId,
+      "hr_log:${timestamp.toIso8601String()}",
+    );
+
+    await _healthLogsDao.insertHeartRateLog(
+      HeartRateLogsTableCompanion.insert(
+        id: id,
+        personID: Value(personId),
+        bpm: bpm,
+        timestamp: timestamp,
+        createdAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Future<void> syncOxygenSamples(DateTime date) async {
+    if (_isDesktop) return;
+    final samples = await HealthService.fetchOxygenSaturationSamplesForDay(
+      date,
+    );
+    debugPrint("HealthBlock: 🫁 Syncing ${samples.length} oxygen samples...");
+    for (var sample in samples) {
+      try {
+        final value = sample.value;
+        if (value is NumericHealthValue) {
+          double val = value.numericValue.toDouble();
+          if (val <= 1.0 && val > 0) val *= 100.0;
+          debugPrint(
+            "HealthBlock: Syncing SpO2: $val% (Raw: ${value.numericValue})",
+          );
+          await _saveOxygenLog(val, sample.dateFrom);
+        }
+      } catch (e) {
+        debugPrint("HealthBlock: Error syncing individual Oxygen sample: $e");
+      }
+    }
+  }
+
+  Future<void> _saveOxygenLog(double saturation, DateTime timestamp) async {
+    if (personId.isEmpty) return;
+    final id = IDGen.generateDeterministicUuid(
+      personId,
+      "oxygen_log:${timestamp.toIso8601String()}",
+    );
+
+    await _healthLogsDao.insertOxygenSaturationLog(
+      OxygenSaturationLogsTableCompanion.insert(
+        id: id,
+        personID: Value(personId),
+        saturation: saturation,
+        timestamp: timestamp,
+        createdAt: Value(DateTime.now()),
+      ),
+    );
+  }
+
+  Stream<List<OxygenSaturationLogData>> watchOxygenLogs(DateTime date) {
+    if (personId.isEmpty) return Stream.value([]);
+    return _healthLogsDao.watchDailyOxygenLogs(personId, date);
+  }
+
+  void updateOxygenSaturation(double saturation) {
+    if (saturation > 0) {
+      todayOxygenSaturation.value = saturation;
+
+      _saveOxygenSaturation(saturation, source: HealthSourceService.sourceGT6);
     }
   }
 
@@ -640,10 +876,10 @@ class HealthBlock {
     if (isToday) {
       if (force || weight > 0) {
         todayWeight.value = weight;
-        _saveWeight(weight, date: targetDate, force: force);
+        _saveWeight(weight, date: targetDate, force: force, source: HealthSourceService.sourceManual);
       }
     } else {
-      _saveWeight(weight, date: targetDate, force: force);
+      _saveWeight(weight, date: targetDate, force: force, source: HealthSourceService.sourceManual);
     }
   }
 
@@ -708,6 +944,7 @@ class HealthBlock {
     int steps, {
     DateTime? date,
     bool force = false,
+    String? source,
   }) async {
     if (personId.isEmpty) {
       debugPrint("HealthBlock: Cannot save steps, personId is empty");
@@ -731,12 +968,13 @@ class HealthBlock {
         personID: Value(personId),
         date: normalizedDate,
         steps: Value(steps),
+        source: Value(source),
       ),
       force: force,
     );
   }
 
-  Future<void> _saveSleep(double hours, {bool force = false}) async {
+  Future<void> _saveSleep(double hours, {bool force = false, String? source}) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -750,12 +988,13 @@ class HealthBlock {
         personID: Value(personId),
         date: normalizedToday,
         sleepHours: Value(hours),
+        source: Value(source),
       ),
       force: force,
     );
   }
 
-  Future<void> _saveWater(int ml, {bool force = false}) async {
+  Future<void> _saveWater(int ml, {bool force = false, String? source}) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -773,6 +1012,7 @@ class HealthBlock {
         waterGlasses: Value(
           ml,
         ), // Store ml directly (SUM of water_logs.amount for the day)
+        source: Value(source),
       ),
       force: force,
     );
@@ -782,7 +1022,7 @@ class HealthBlock {
   /// health_metrics.exercise_minutes. Called by _exerciseSubscription on every
   /// stream update (i.e. whenever a new exercise log is inserted or deleted).
   /// Strong data wins: insertOrUpdateMetrics only updates when minutes > existing value.
-  Future<void> _saveExercise(int minutes, {bool force = false}) async {
+  Future<void> _saveExercise(int minutes, {bool force = false, String? source}) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -800,6 +1040,7 @@ class HealthBlock {
         exerciseMinutes: Value(
           minutes,
         ), // SUM(exercise_logs.duration_minutes) for the day
+        source: Value(source),
       ),
       force: force,
     );
@@ -809,6 +1050,7 @@ class HealthBlock {
     double kg, {
     DateTime? date,
     bool force = false,
+    String? source,
   }) async {
     if (personId.isEmpty || personId == DataSeeder.guestPersonId) {
       debugPrint(
@@ -835,6 +1077,7 @@ class HealthBlock {
         personID: Value(personId),
         date: normalizedTarget,
         weightKg: Value(kg),
+        source: Value(source ?? HealthSourceService.sourceGT6),
       ),
       force: force,
     );
@@ -869,7 +1112,7 @@ class HealthBlock {
     await _healthLogsDao.deleteWaterLog(id);
   }
 
-  Future<void> _saveHeartRate(int bpm, {bool force = false}) async {
+  Future<void> _saveHeartRate(int bpm, {bool force = false, String? source}) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -883,6 +1126,31 @@ class HealthBlock {
         personID: Value(personId),
         date: normalizedToday,
         heartRate: Value(bpm),
+        source: Value(source),
+      ),
+      force: force,
+    );
+  }
+
+  Future<void> _saveOxygenSaturation(
+    double saturation, {
+    bool force = false,
+    String? source,
+  }) async {
+    if (personId.isEmpty) return;
+    final today = DateTime.now();
+    final normalizedToday = DateTime(today.year, today.month, today.day, 12);
+
+    debugPrint(
+      "HealthBlock: Saving $saturation% oxygen saturation to DB for $normalizedToday",
+    );
+    await _healthDao.insertOrUpdateMetrics(
+      HealthMetricsTableCompanion.insert(
+        id: _getDeterministicId(today),
+        personID: Value(personId),
+        date: normalizedToday,
+        oxygenSaturation: Value(saturation),
+        source: Value(source),
       ),
       force: force,
     );
@@ -926,6 +1194,7 @@ class HealthBlock {
   }
 
   void dispose() {
+    stopRealtimeSync();
     _metricsSubscription?.cancel();
     _hourlyLogsSubscription?.cancel();
     _waterSubscription?.cancel();

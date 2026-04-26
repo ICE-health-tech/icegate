@@ -437,6 +437,27 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_metrics_calories_consumed => 'Consumed';
 
   @override
+  String get health_metrics_oxygen_saturation => 'Oxygen';
+
+  @override
+  String get health_metrics_air_quality => 'Air Quality';
+
+  @override
+  String get health_metrics_weather => 'Weather';
+
+  @override
+  String get health_air_quality => 'Air Quality';
+
+  @override
+  String get health_weather => 'Weather';
+
+  @override
+  String get health_temperature_subtitle => 'Current Temperature';
+
+  @override
+  String get health_aqi_unit => 'AQI';
+
+  @override
   String health_metrics_detail_coming_soon(String name) {
     return 'Detail page for $name coming soon!';
   }
@@ -639,6 +660,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get guest_access => 'GUEST ACCESS';
 
   @override
+  String get apple_login => 'APPLE';
+
+  @override
   String get enroll_hub => 'ENROLL';
 
   @override
@@ -773,6 +797,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get breakdown_system => 'System';
 
   @override
+  String get breakdown_screentime => 'Screen Time';
+
+  @override
+  String get date_today => 'Today';
+
+  @override
   String get score_balance => 'SCORE BALANCE';
 
   @override
@@ -798,6 +828,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get btn_enter => 'ENTER';
+
+  @override
+  String apple_signin_error(String error) {
+    return 'Apple Sign-In Error: $error';
+  }
 
   @override
   String google_signin_error(String error) {
@@ -2249,4 +2284,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get custom_url => 'Custom URL';
+
+  @override
+  String get settings_title => 'Settings';
+
+  @override
+  String get common_done => 'Done';
 }

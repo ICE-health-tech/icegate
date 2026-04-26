@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/GamificationService.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/orchestration_layer/Services/GamificationService.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
@@ -80,6 +80,7 @@ class ScoreBlock {
   final globalLevel = signal<int>(1);
   final levelProgress = signal<double>(0);
   final rankTitle = signal<String>("Novice");
+  final usageHistory = signal<List<AppUsageHistoryData>>([], debugLabel: 'usageHistory');
 
   ScoreBlock({ScoreData? initialScore}) {
     if (initialScore != null) {
@@ -295,6 +296,12 @@ class ScoreBlock {
       mealDAO.watchDaysWithMeals(personID).listen(
         (meals) => _latestMeals.value = meals,
       ),
+    );
+    
+    _subscriptions.add(
+      _metricsDAO.watchLastNDaysUsage(personID, 3).listen((data) {
+        usageHistory.value = data;
+      }),
     );
 
     // 4. Reactive Effects (Calculations)
@@ -575,6 +582,23 @@ class ScoreBlock {
       category: label ?? 'Quests',
       tenantId: _tenantID,
     );
+  }
+
+  Future<void> persistentFinanceIncrement(double points, {String? label}) async {
+    if (!isReady.value || _personID.isEmpty) return;
+    await _metricsDAO.incrementFinancialQuestPoints(
+      _personID,
+      points,
+      category: label ?? 'General',
+      tenantId: _tenantID,
+    );
+  }
+
+  Future<void> trackAppUsage(double minutes,
+      {required String sector, String? pagePath}) async {
+    if (!isReady.value || _personID.isEmpty) return;
+    await _metricsDAO.incrementAppUsage(_personID, minutes,
+        sector: sector, pagePath: pagePath);
   }
 
   void addPoints(double points, {String? label}) {

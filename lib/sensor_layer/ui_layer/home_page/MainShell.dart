@@ -1,0 +1,203 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, TargetPlatform;
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/ActivityTrackerService.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodConsumePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodDashboardPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodInputPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectAnalysisPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/projects_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/CanvasDynamicIsland.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightInputPage.dart';
+import 'package:provider/provider.dart';
+
+class MainShell extends StatefulWidget {
+  final Widget child;
+
+  const MainShell({super.key, required this.child});
+
+  @override
+  State<MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<MainShell> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final scoreBlock = context.read<ScoreBlock>();
+      final authBlock = context.read<AuthBlock>();
+      ActivityTrackerService().init(scoreBlock, authBlock);
+    });
+  }
+
+  /// Laptop / desktop window: smaller FAB and dock to the right (not centered).
+  static bool _wideChromeLayout(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    if (defaultTargetPlatform == TargetPlatform.macOS) {
+      return width >= 560;
+    }
+    return width >= 720;
+  }
+
+  Widget _getMainButtonForRoute(
+    BuildContext context,
+    String route,
+    double responsiveSize,
+  ) {
+    // Determine which page's icon to show based on the route
+    Widget pageIcon;
+    switch (route) {
+      case '/':
+        pageIcon = HomePage.icon(context, size: responsiveSize);
+        break;
+      case '/canvas':
+        pageIcon = DragCanvasGrid.icon(context, size: responsiveSize);
+        break;
+      case '/profile':
+        pageIcon = AnalysisDashboardPage.icon(context, size: responsiveSize);
+        break;
+      case '/health':
+        pageIcon = HealthPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/food/consume':
+        pageIcon = FoodConsumePage.icon(context, size: responsiveSize);
+        break;
+      case '/health/food':
+        pageIcon = FoodInputPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/weight':
+        pageIcon = WeightPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/weight/log':
+        pageIcon = WeightInputPage.icon(context, size: responsiveSize);
+        break;
+      case '/health/food/dashboard':
+        pageIcon = FoodDashboardPage.icon(context, size: responsiveSize);
+        break;
+      case '/finance':
+        pageIcon = FinancePage.icon(context, size: responsiveSize);
+        break;
+      case '/social':
+        pageIcon = SocialPage.icon(context, size: responsiveSize);
+        break;
+      case '/projects':
+        pageIcon = ProjectsPage.icon(context, size: responsiveSize);
+        break;
+      case '/projects/dashboard':
+        pageIcon = ProjectAnalysisPage.icon(context, size: responsiveSize);
+        break;
+      case '/personal-info':
+        pageIcon = PersonalInformationPage.icon(context, size: responsiveSize);
+        break;
+      case '/project_notes':
+        pageIcon = ProjectsPage.icon(context, size: responsiveSize);
+        break;
+      default:
+        pageIcon = HomePage.returnHomeIcon(context, size: responsiveSize);
+    }
+
+    return SizedBox(
+      width: responsiveSize,
+      height: responsiveSize,
+      child: pageIcon,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final currentRoute = GoRouterState.of(context).uri.path;
+    
+    // Update the tracker with the current path after the build is complete
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ActivityTrackerService().updatePath(currentRoute);
+    });
+
+    final bool shouldHideAppBar =
+        currentRoute == '/health/focus' ||
+        currentRoute == '/notifications' ||
+        currentRoute == '/personal-info' ||
+        currentRoute == '/profile' ||
+        currentRoute == '/settings' ||
+        currentRoute == '/manual' ||
+        currentRoute == '/projects/editor' ||
+        currentRoute.contains('/dashboard') ||
+        currentRoute.contains('/analysis') ||
+        currentRoute.startsWith('/webview');
+
+    final bool wideLayout = _wideChromeLayout(context);
+    final width = MediaQuery.sizeOf(context).width;
+    final double responsiveSize = wideLayout
+        ? (width * 0.035).clamp(40.0, 50.0)
+        : (width * 0.5).clamp(40.0, 68.0);
+    final mainButton = _getMainButtonForRoute(
+      context,
+      currentRoute,
+      responsiveSize,
+    );
+
+    return Scaffold(
+      bottomNavigationBar: Padding(
+        padding: EdgeInsets.only(
+          bottom: wideLayout ? 16.0 : 20.0,
+          top: 5,
+          left: wideLayout ? 16.0 : 0,
+          right: wideLayout ? 16.0 : 0,
+        ),
+        child: wideLayout
+            ? SizedBox(
+                height: responsiveSize,
+                child: Align(
+                  alignment: Alignment.bottomRight,
+                  child: mainButton,
+                ),
+              )
+            : SizedBox(
+                height: responsiveSize,
+                child: Center(child: mainButton),
+              ),
+      ),
+      body: Stack(
+        children: [
+          widget.child,
+          if (!shouldHideAppBar)
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: SafeArea(
+                child: SizedBox(
+                  height: 50,
+                child: Padding(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: currentRoute.startsWith('/finance') ? 0.0 : 20.0,
+                  ),
+                  child: Align(
+                    alignment: currentRoute.startsWith('/finance') 
+                        ? Alignment.center 
+                        : Alignment.centerLeft,
+                    child: CanvasDynamicIsland(
+                        personBlock: context.watch<PersonBlock>(),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}

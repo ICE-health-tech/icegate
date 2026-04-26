@@ -6,7 +6,6 @@ import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:watcher/watcher.dart';
 import 'package:googleapis/drive/v3.dart' as drive;
-import 'package:google_sign_in/google_sign_in.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:file_picker/file_picker.dart';
@@ -14,13 +13,6 @@ import 'package:path/path.dart' as p;
 import '../../../data_layer/Services/cloud/GoogleDriveService.dart';
 
 class DocumentationBlock {
-  String get _googleClientId {
-    if (Platform.isIOS || Platform.isMacOS) {
-      return GoogleDriveService.googleDarwinClientId;
-    }
-    return GoogleDriveService.googleWebClientId;
-  }
-
   // Cloud Service
   final driveService = GoogleDriveService();
 
@@ -29,7 +21,6 @@ class DocumentationBlock {
   final uptimeSeconds = signal<int>(0);
   final syncMethod = signal<String>('Mirror'); // Default: Mirror
   final refreshRate = signal<Duration>(const Duration(minutes: 5));
-  final systemHealth = signal<double>(98.4);
   Timer? _uptimeTimer;
 
   final files = signal<List<File>>([]);
@@ -78,6 +69,10 @@ class DocumentationBlock {
 
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) return;
+
+    // Restore Google Drive Session silently
+    await driveService.restoreSession();
+    isGoogleDriveConnected.value = driveService.driveApi != null;
 
     final appDir = await getApplicationDocumentsDirectory();
     _docDir = Directory(
@@ -676,11 +671,9 @@ class DocumentationBlock {
       await _syncRecursive(rootFolderId, _googleDriveDir!.path);
 
       logActivity("Sync Complete", details: "Two-way mirroring finished successfully");
-      systemHealth.value = 100.0;
       syncStatus.value = "✅ Full Recursive Sync Complete!";
     } catch (e) {
       logActivity("Sync Error", details: e.toString(), isError: true);
-      systemHealth.value = 78.5; // Significant drop on full sync error
       print('❌ Google Drive Sync Error: $e');
       syncStatus.value = "❌ Sync failed: $e";
     } finally {
@@ -771,22 +764,14 @@ class DocumentationBlock {
       // 1. Pre-create local folder immediately so it appears in UI
       await createLocalFolder(targetLocalName!);
       
-      final googleSignIn = GoogleSignIn(
-        clientId: _googleClientId,
-        scopes: [drive.DriveApi.driveFileScope],
-      );
-
-      GoogleSignInAccount? account = await googleSignIn.signInSilently();
-      account ??= await googleSignIn.signIn();
-
-      if (account == null) {
+      final success = await driveService.signIn();
+      if (!success) {
         syncStatus.value = "Cancelled";
         isSyncing.value = false;
         return;
       }
 
-      final authHeaders = await account.authHeaders;
-      final driveApi = drive.DriveApi(_GoogleAuthClient(authHeaders));
+      final driveApi = driveService.driveApi!;
 
       // 1. Locate Folder
       final folderList = await driveApi.files.list(
@@ -1046,19 +1031,5 @@ class DocumentationBlock {
 
   void dispose() {
     _watcherSubscription?.cancel();
-  }
-}
-
-/// Helper client to inject Google Auth headers into every request
-class _GoogleAuthClient extends http.BaseClient {
-  final Map<String, String> _headers;
-  final http.Client _client = http.Client();
-
-  _GoogleAuthClient(this._headers);
-
-  @override
-  Future<http.StreamedResponse> send(http.BaseRequest request) {
-    request.headers.addAll(_headers);
-    return _client.send(request);
   }
 }

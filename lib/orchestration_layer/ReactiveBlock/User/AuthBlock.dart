@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:drift/drift.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/CustomAuthService.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PasskeyAuthService.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/BiometricAuthService.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/SecureStorageService.dart';
+import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
+import 'package:ice_gate/orchestration_layer/Services/PasskeyAuthService.dart';
+import 'package:ice_gate/orchestration_layer/Services/BiometricAuthService.dart';
+import 'package:ice_gate/orchestration_layer/Services/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:sign_in_with_apple/sign_in_with_apple.dart';
 import 'dart:async';
+import 'dart:io';
 
 enum AuthStatus {
   init,
@@ -582,6 +584,76 @@ class AuthBlock {
       }
     } catch (e) {
       print("❌ [AuthBlock] Authentication failed: $e");
+      error.value = _mapError(e);
+      status.value = AuthStatus.unauthenticated;
+    }
+  }
+
+  /// Apple Sign-In with Supabase
+  Future<void> signInWithApple() async {
+    status.value = AuthStatus.authenticating;
+    error.value = null;
+    print("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
+
+    try {
+      if (Platform.isIOS || Platform.isMacOS) {
+        final credential = await SignInWithApple.getAppleIDCredential(
+          scopes: [
+            AppleIDAuthorizationScopes.email,
+            AppleIDAuthorizationScopes.fullName,
+          ],
+        );
+
+        final idToken = credential.identityToken;
+        if (idToken == null) {
+          throw Exception('Could not fetch Apple ID token.');
+        }
+
+        await Supabase.instance.client.auth.signInWithIdToken(
+          provider: OAuthProvider.apple,
+          idToken: idToken,
+        );
+      } else {
+        // Fallback to OAuth for other platforms
+        const redirectTo = 'io.supabase.icegate://login-callback';
+        await Supabase.instance.client.auth.signInWithOAuth(
+          OAuthProvider.apple,
+          redirectTo: redirectTo,
+          authScreenLaunchMode: LaunchMode.externalApplication,
+        );
+      }
+
+      final user = Supabase.instance.client.auth.currentUser;
+
+      if (user != null) {
+        print(
+          "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
+        );
+        await syncUserWithSupabase(user);
+        final session = Supabase.instance.client.auth.currentSession;
+        if (session != null) {
+          unawaited(_authService.appSync(session.accessToken));
+        }
+
+        // Save metadata for credential persistence
+        final email = user.email ?? "AppleUser";
+        await _secureStorage.saveCredentials(
+          email, 
+          "APPLE_AUTH",
+          displayName: user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
+          avatarUrl: user.userMetadata?['avatar_url'],
+        );
+        await _secureStorage.setBiometricEnabled(true);
+        await _loadRememberedUser();
+      }
+
+      print("✅ [AuthBlock] User account synced to database.");
+
+      print(
+        "✅ [AuthBlock] Apple OAuth command sent. State change will be handled in DataLayer.",
+      );
+    } catch (e) {
+      print("❌ [AuthBlock] Apple Sign-In initiation failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
     }

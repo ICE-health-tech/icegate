@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Services/YoutubeService.dart';
-import 'package:ice_gate/initial_layer/FocusAudioHandler.dart';
+import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 
 class MusicBlock {
   // Dependencies

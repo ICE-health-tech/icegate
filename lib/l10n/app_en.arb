@@ -165,6 +165,15 @@
   "health_metrics_weight": "Weight",
   "health_metrics_net_calories": "Net Cal",
   "health_metrics_calories_consumed": "Consumed",
+  "health_metrics_oxygen_saturation": "Oxygen",
+  "health_metrics_air_quality": "Air Quality",
+  "health_metrics_weather": "Weather",
+  "health_metrics_air_quality": "Air Quality",
+  "health_metrics_weather": "Weather",
+  "health_air_quality": "Air Quality",
+  "health_weather": "Weather",
+  "health_temperature_subtitle": "Current Temperature",
+  "health_aqi_unit": "AQI",
   "health_metrics_detail_coming_soon": "Detail page for {name} coming soon!",
   "@health_metrics_detail_coming_soon": {
     "placeholders": {
@@ -276,6 +285,7 @@
   "secure_login": "SECURE",
   "google_login": "GMAIL",
   "guest_access": "GUEST ACCESS",
+  "apple_login": "APPLE",
   "enroll_hub": "ENROLL",
   "msg_secure_login_failed": "Secure login failed: {error}",
   "@msg_secure_login_failed": {
@@ -353,6 +363,8 @@
   "breakdown_tasks": "Tasks",
   "breakdown_projects": "Projects",
   "breakdown_system": "System",
+  "breakdown_screentime": "Screen Time",
+  "date_today": "Today",
   "score_balance": "SCORE BALANCE",
   "err_verification_failed": "Current password verification failed",
   "err_unexpected": "An unexpected error occurred: {error}",
@@ -368,6 +380,14 @@
   "security_title": "Security",
   "change_password": "Change Password",
   "btn_enter": "ENTER",
+  "apple_signin_error": "Apple Sign-In Error: {error}",
+  "@apple_signin_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "google_signin_error": "Google Sign-In Error: {error}",
   "@google_signin_error": {
     "placeholders": {
@@ -1078,5 +1098,7 @@
   "widget_name_hint": "Widget Name (e.g. Facebook)",
   "url_hint": "URL (e.g. facebook.com)",
   "plugins": "Plugins",
-  "custom_url": "Custom URL"
+  "custom_url": "Custom URL",
+  "settings_title": "Settings",
+  "common_done": "Done"
 }

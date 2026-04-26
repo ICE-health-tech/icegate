@@ -7,6 +7,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart'
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SocialBlockerBlock {
   static const _channel = MethodChannel('duylong.art/screentime');
@@ -20,10 +21,11 @@ class SocialBlockerBlock {
   final isSystemAuthGranted = signal<bool>(false);
   final appSelectionJson = signal<String?>(null);
   final _currentTime = signal<DateTime>(DateTime.now());
-  
+
   static const _appSelectionKey = 'ice_gate_social_app_selection';
 
   FocusBlock? _focusBlock;
+  String? _personId;
   late final void Function() _disposeEvaluation;
   dynamic _timerSubscription;
 
@@ -33,6 +35,25 @@ class SocialBlockerBlock {
     _focusBlock = focusBlock;
     await _load();
     await checkAuthStatus();
+    _setupEvaluation();
+  }
+
+  Future<void> initWithSync(FocusBlock focusBlock, String personId) async {
+    _focusBlock = focusBlock;
+    _personId = personId;
+    await _load();
+    print('SocialBlockerBlock: Initializing for person $personId');
+    print('SocialBlockerBlock: Initializing for person ${_focusBlock}');
+    await checkAuthStatus();
+
+    // Pull from cloud on start
+    await _pullSelectionFromCloud();
+
+    _setupEvaluation();
+  }
+
+  void _setupEvaluation() {
+    _currentTime.value = DateTime.now();
 
     // Evaluation Logic
     _disposeEvaluation = effect(() {
@@ -41,19 +62,19 @@ class SocialBlockerBlock {
       final now = _currentTime.value;
       final currentRules = rules.value;
       appSelectionJson.value; // Track selection changes for reactive updates
-      
-      // Evaluation logic: 
+
+      // Evaluation logic:
       // Block is active IF (Blacklist is ON) AND ( (Focus is Running and rule allows it) OR (Schedule is Active) )
       bool shouldBeActive = false;
-      
+
       if (blacklistEnabled) {
         // 1. Check if any rule matches current schedule
         final scheduleActive = currentRules.any((rule) {
           if (!rule.isEnabled) return false;
-          
+
           // Check day match
           if (!rule.blockedDays.contains(now.weekday)) return false;
-          
+
           // Check time match if schedule exists
           if (rule.scheduleStart != null && rule.scheduleEnd != null) {
             final start = rule.scheduleStart!;
@@ -61,23 +82,27 @@ class SocialBlockerBlock {
             final currentTotalMinutes = now.hour * 60 + now.minute;
             final startTotalMinutes = start.hour * 60 + start.minute;
             final endTotalMinutes = end.hour * 60 + end.minute;
-            
+
             if (startTotalMinutes <= endTotalMinutes) {
-              return currentTotalMinutes >= startTotalMinutes && currentTotalMinutes < endTotalMinutes;
+              return currentTotalMinutes >= startTotalMinutes &&
+                  currentTotalMinutes < endTotalMinutes;
             } else {
               // Overnight schedule
-              return currentTotalMinutes >= startTotalMinutes || currentTotalMinutes < endTotalMinutes;
+              return currentTotalMinutes >= startTotalMinutes ||
+                  currentTotalMinutes < endTotalMinutes;
             }
           }
           return false;
         });
 
         // 2. Check focus linkage
-        final focusActive = focusRunning && currentRules.any((r) => r.isEnabled && r.blockDuringFocus);
-        
+        final focusActive =
+            focusRunning &&
+            currentRules.any((r) => r.isEnabled && r.blockDuringFocus);
+
         shouldBeActive = scheduleActive || focusActive;
       }
-      
+
       // Update the active state signal and trigger native sync ONLY on state change
       if (shouldBeActive != isAnyBlockActive.value) {
         untracked(() {
@@ -90,7 +115,9 @@ class SocialBlockerBlock {
     _currentTime.value = DateTime.now();
 
     // Tick current time every 30 seconds to evaluate schedules precisely
-    _timerSubscription = Stream.periodic(const Duration(seconds: 30)).listen((_) {
+    _timerSubscription = Stream.periodic(const Duration(seconds: 30)).listen((
+      _,
+    ) {
       _currentTime.value = DateTime.now();
     });
   }
@@ -188,10 +215,16 @@ class SocialBlockerBlock {
     try {
       final bool granted = await _channel.invokeMethod('requestAuthorization');
       isSystemAuthGranted.value = granted;
+
+      // UX improvement: if we just got granted, open the picker immediately
+      if (granted) {
+        await openAppPicker();
+      }
     } on PlatformException catch (e) {
       if (e.code == 'AUTH_DENIED') {
-        debugPrint("SocialBlockerBlock: Auth denied. User needs to enable in Settings.");
-        // We can throw here to be caught by the UI or handle it with a signal
+        debugPrint(
+          "SocialBlockerBlock: Auth denied. User needs to enable in Settings.",
+        );
       }
       debugPrint("SocialBlockerBlock: Error requesting auth: ${e.message}");
     } catch (e) {
@@ -201,19 +234,95 @@ class SocialBlockerBlock {
 
   Future<void> openAppPicker() async {
     try {
+      // For iOS, the picker now handles persistence internally via tokens,
+      // but we still want to trigger a sync to cloud after it closes.
       final String? result = await _channel.invokeMethod('showAppPicker', {
         'initialSelection': appSelectionJson.value,
       });
-      
+
       if (result != null) {
         debugPrint("SocialBlockerBlock: App selection updated");
         appSelectionJson.value = result;
         await _persist();
-        
+
+        // Push to cloud after change
+        await _pushSelectionToCloud();
+
         _toggleSystemShield(isAnyBlockActive.value);
       }
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error opening app picker: $e");
+    }
+  }
+
+  // --- Cloud Sync ---
+
+  Future<void> _pullSelectionFromCloud() async {
+    if (_personId == null ||
+        _personId!.isEmpty ||
+        _personId == '00000000-0000-0000-0000-000000000000')
+      return;
+
+    try {
+      final response = await Supabase.instance.client
+          .from('screen_time_settings')
+          .select()
+          .eq('person_id', _personId!)
+          .maybeSingle();
+
+      if (response != null) {
+        final List<String> appTokens = List<String>.from(
+          response['app_tokens'] ?? [],
+        );
+        final List<String> categoryTokens = List<String>.from(
+          response['category_tokens'] ?? [],
+        );
+
+        debugPrint(
+          "SocialBlockerBlock: Pulled ${appTokens.length} apps and ${categoryTokens.length} categories from cloud",
+        );
+
+        // Update native side
+        await _channel.invokeMethod('setSelection', {
+          'appTokens': appTokens,
+          'categoryTokens': categoryTokens,
+        });
+
+        // Trigger UI update if needed (though appSelectionJson is mostly for macOS legacy)
+        // For iOS, the tokens are the source of truth now.
+      }
+    } catch (e) {
+      debugPrint("SocialBlockerBlock: Error pulling from cloud: $e");
+    }
+  }
+
+  Future<void> _pushSelectionToCloud() async {
+    if (_personId == null ||
+        _personId!.isEmpty ||
+        _personId == '00000000-0000-0000-0000-000000000000')
+      return;
+
+    try {
+      // Get current selection from native side
+      final Map<dynamic, dynamic>? selection = await _channel.invokeMethod(
+        'getSelection',
+      );
+      if (selection != null) {
+        final appTokens = List<String>.from(selection['appTokens'] ?? []);
+        final categoryTokens = List<String>.from(
+          selection['categoryTokens'] ?? [],
+        );
+
+        await Supabase.instance.client.from('screen_time_settings').upsert({
+          'person_id': _personId!,
+          'app_tokens': appTokens,
+          'category_tokens': categoryTokens,
+          'updated_at': DateTime.now().toIso8601String(),
+        }, onConflict: 'person_id');
+        debugPrint("SocialBlockerBlock: Pushed selection to cloud");
+      }
+    } catch (e) {
+      debugPrint("SocialBlockerBlock: Error pushing to cloud: $e");
     }
   }
 
@@ -224,7 +333,9 @@ class SocialBlockerBlock {
   }
 
   void disableAllRules() {
-    final newList = rules.value.map((r) => r.copyWith(isEnabled: false)).toList();
+    final newList = rules.value
+        .map((r) => r.copyWith(isEnabled: false))
+        .toList();
     rules.value = newList;
     _persist();
     _toggleSystemShield(isAnyBlockActive.value);
@@ -235,7 +346,7 @@ class SocialBlockerBlock {
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     isAppBlacklistEnabled.value = prefs.getBool(_blacklistEnabledKey) ?? false;
-    
+
     final rulesJson = prefs.getStringList(_storageKey);
     if (rulesJson != null) {
       rules.value = rulesJson
@@ -249,10 +360,8 @@ class SocialBlockerBlock {
   Future<void> _persist() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(_blacklistEnabledKey, isAppBlacklistEnabled.value);
-    
-    final rulesJson = rules.value
-        .map((r) => jsonEncode(r.toJson()))
-        .toList();
+
+    final rulesJson = rules.value.map((r) => jsonEncode(r.toJson())).toList();
     await prefs.setStringList(_storageKey, rulesJson);
 
     if (appSelectionJson.value != null) {
@@ -265,12 +374,17 @@ class SocialBlockerBlock {
   // --- Native Communication ---
 
   Future<void> _toggleSystemShield(bool active) async {
-    // If auth not granted, try to refresh first
+    // If auth not granted, attempt to request it
     if (!isSystemAuthGranted.value) {
-      await checkAuthStatus();
+      debugPrint("SocialBlockerBlock: Shield toggle requested but auth missing. Requesting...");
+      await requestAuth();
     }
-    
-    if (!isSystemAuthGranted.value) return;
+
+    // If still not granted (user denied), we cannot proceed
+    if (!isSystemAuthGranted.value) {
+      debugPrint("SocialBlockerBlock: Cannot toggle shield without system authorization.");
+      return;
+    }
 
     try {
       final selections = <String>[];

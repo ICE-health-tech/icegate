@@ -86,6 +86,8 @@ mixin _$MetricsDAOMixin on DatabaseAccessor<AppDatabase> {
   $SocialMetricsTableTable get socialMetricsTable =>
       attachedDatabase.socialMetricsTable;
   $WeightLogsTableTable get weightLogsTable => attachedDatabase.weightLogsTable;
+  $AppUsageHistoryTableTable get appUsageHistoryTable =>
+      attachedDatabase.appUsageHistoryTable;
 }
 mixin _$HealthMealDAOMixin on DatabaseAccessor<AppDatabase> {
   $MealsTableTable get mealsTable => attachedDatabase.mealsTable;
@@ -119,6 +121,10 @@ mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
   $WeightLogsTableTable get weightLogsTable => attachedDatabase.weightLogsTable;
   $FocusSessionsTableTable get focusSessionsTable =>
       attachedDatabase.focusSessionsTable;
+  $HeartRateLogsTableTable get heartRateLogsTable =>
+      attachedDatabase.heartRateLogsTable;
+  $OxygenSaturationLogsTableTable get oxygenSaturationLogsTable =>
+      attachedDatabase.oxygenSaturationLogsTable;
 }
 mixin _$AiPromptsDAOMixin on DatabaseAccessor<AppDatabase> {
   $AiPromptsTableTable get aiPromptsTable => attachedDatabase.aiPromptsTable;
@@ -13952,6 +13958,27 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _oxygenSaturationMeta = const VerificationMeta(
+    'oxygenSaturation',
+  );
+  @override
+  late final GeneratedColumn<double> oxygenSaturation = GeneratedColumn<double>(
+    'oxygen_saturation',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _categoryMeta = const VerificationMeta(
     'category',
   );
@@ -14004,6 +14031,8 @@ class $HealthMetricsTableTable extends HealthMetricsTable
     caloriesConsumed,
     caloriesBurned,
     questPoints,
+    oxygenSaturation,
+    source,
     category,
     createdAt,
     updatedAt,
@@ -14121,6 +14150,21 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         ),
       );
     }
+    if (data.containsKey('oxygen_saturation')) {
+      context.handle(
+        _oxygenSaturationMeta,
+        oxygenSaturation.isAcceptableOrUnknown(
+          data['oxygen_saturation']!,
+          _oxygenSaturationMeta,
+        ),
+      );
+    }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     if (data.containsKey('category')) {
       context.handle(
         _categoryMeta,
@@ -14214,6 +14258,14 @@ class $HealthMetricsTableTable extends HealthMetricsTable
         DriftSqlType.double,
         data['${effectivePrefix}quest_points'],
       ),
+      oxygenSaturation: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}oxygen_saturation'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
       category: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}category'],
@@ -14255,6 +14307,8 @@ class HealthMetricsLocal extends DataClass
   final int? caloriesConsumed;
   final int? caloriesBurned;
   final double? questPoints;
+  final double? oxygenSaturation;
+  final String? source;
   final String? category;
   final DateTime? createdAt;
   final DateTime? updatedAt;
@@ -14274,6 +14328,8 @@ class HealthMetricsLocal extends DataClass
     this.caloriesConsumed,
     this.caloriesBurned,
     this.questPoints,
+    this.oxygenSaturation,
+    this.source,
     this.category,
     this.createdAt,
     this.updatedAt,
@@ -14325,6 +14381,12 @@ class HealthMetricsLocal extends DataClass
     }
     if (!nullToAbsent || questPoints != null) {
       map['quest_points'] = Variable<double>(questPoints);
+    }
+    if (!nullToAbsent || oxygenSaturation != null) {
+      map['oxygen_saturation'] = Variable<double>(oxygenSaturation);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || category != null) {
       map['category'] = Variable<String>(category);
@@ -14381,6 +14443,12 @@ class HealthMetricsLocal extends DataClass
       questPoints: questPoints == null && nullToAbsent
           ? const Value.absent()
           : Value(questPoints),
+      oxygenSaturation: oxygenSaturation == null && nullToAbsent
+          ? const Value.absent()
+          : Value(oxygenSaturation),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       category: category == null && nullToAbsent
           ? const Value.absent()
           : Value(category),
@@ -14414,6 +14482,8 @@ class HealthMetricsLocal extends DataClass
       caloriesConsumed: serializer.fromJson<int?>(json['caloriesConsumed']),
       caloriesBurned: serializer.fromJson<int?>(json['caloriesBurned']),
       questPoints: serializer.fromJson<double?>(json['questPoints']),
+      oxygenSaturation: serializer.fromJson<double?>(json['oxygenSaturation']),
+      source: serializer.fromJson<String?>(json['source']),
       category: serializer.fromJson<String?>(json['category']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
@@ -14438,6 +14508,8 @@ class HealthMetricsLocal extends DataClass
       'caloriesConsumed': serializer.toJson<int?>(caloriesConsumed),
       'caloriesBurned': serializer.toJson<int?>(caloriesBurned),
       'questPoints': serializer.toJson<double?>(questPoints),
+      'oxygenSaturation': serializer.toJson<double?>(oxygenSaturation),
+      'source': serializer.toJson<String?>(source),
       'category': serializer.toJson<String?>(category),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
@@ -14460,6 +14532,8 @@ class HealthMetricsLocal extends DataClass
     Value<int?> caloriesConsumed = const Value.absent(),
     Value<int?> caloriesBurned = const Value.absent(),
     Value<double?> questPoints = const Value.absent(),
+    Value<double?> oxygenSaturation = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     Value<String?> category = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
@@ -14485,6 +14559,10 @@ class HealthMetricsLocal extends DataClass
         ? caloriesBurned.value
         : this.caloriesBurned,
     questPoints: questPoints.present ? questPoints.value : this.questPoints,
+    oxygenSaturation: oxygenSaturation.present
+        ? oxygenSaturation.value
+        : this.oxygenSaturation,
+    source: source.present ? source.value : this.source,
     category: category.present ? category.value : this.category,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
@@ -14520,6 +14598,10 @@ class HealthMetricsLocal extends DataClass
       questPoints: data.questPoints.present
           ? data.questPoints.value
           : this.questPoints,
+      oxygenSaturation: data.oxygenSaturation.present
+          ? data.oxygenSaturation.value
+          : this.oxygenSaturation,
+      source: data.source.present ? data.source.value : this.source,
       category: data.category.present ? data.category.value : this.category,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
@@ -14544,6 +14626,8 @@ class HealthMetricsLocal extends DataClass
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
           ..write('questPoints: $questPoints, ')
+          ..write('oxygenSaturation: $oxygenSaturation, ')
+          ..write('source: $source, ')
           ..write('category: $category, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
@@ -14568,6 +14652,8 @@ class HealthMetricsLocal extends DataClass
     caloriesConsumed,
     caloriesBurned,
     questPoints,
+    oxygenSaturation,
+    source,
     category,
     createdAt,
     updatedAt,
@@ -14591,6 +14677,8 @@ class HealthMetricsLocal extends DataClass
           other.caloriesConsumed == this.caloriesConsumed &&
           other.caloriesBurned == this.caloriesBurned &&
           other.questPoints == this.questPoints &&
+          other.oxygenSaturation == this.oxygenSaturation &&
+          other.source == this.source &&
           other.category == this.category &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
@@ -14612,6 +14700,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
   final Value<int?> caloriesConsumed;
   final Value<int?> caloriesBurned;
   final Value<double?> questPoints;
+  final Value<double?> oxygenSaturation;
+  final Value<String?> source;
   final Value<String?> category;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
@@ -14632,6 +14722,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.oxygenSaturation = const Value.absent(),
+    this.source = const Value.absent(),
     this.category = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -14653,6 +14745,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     this.caloriesConsumed = const Value.absent(),
     this.caloriesBurned = const Value.absent(),
     this.questPoints = const Value.absent(),
+    this.oxygenSaturation = const Value.absent(),
+    this.source = const Value.absent(),
     this.category = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
@@ -14675,6 +14769,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Expression<int>? caloriesConsumed,
     Expression<int>? caloriesBurned,
     Expression<double>? questPoints,
+    Expression<double>? oxygenSaturation,
+    Expression<String>? source,
     Expression<String>? category,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
@@ -14696,6 +14792,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       if (caloriesConsumed != null) 'calories_consumed': caloriesConsumed,
       if (caloriesBurned != null) 'calories_burned': caloriesBurned,
       if (questPoints != null) 'quest_points': questPoints,
+      if (oxygenSaturation != null) 'oxygen_saturation': oxygenSaturation,
+      if (source != null) 'source': source,
       if (category != null) 'category': category,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
@@ -14719,6 +14817,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     Value<int?>? caloriesConsumed,
     Value<int?>? caloriesBurned,
     Value<double?>? questPoints,
+    Value<double?>? oxygenSaturation,
+    Value<String?>? source,
     Value<String?>? category,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
@@ -14740,6 +14840,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
       caloriesConsumed: caloriesConsumed ?? this.caloriesConsumed,
       caloriesBurned: caloriesBurned ?? this.caloriesBurned,
       questPoints: questPoints ?? this.questPoints,
+      oxygenSaturation: oxygenSaturation ?? this.oxygenSaturation,
+      source: source ?? this.source,
       category: category ?? this.category,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
@@ -14797,6 +14899,12 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
     if (questPoints.present) {
       map['quest_points'] = Variable<double>(questPoints.value);
     }
+    if (oxygenSaturation.present) {
+      map['oxygen_saturation'] = Variable<double>(oxygenSaturation.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (category.present) {
       map['category'] = Variable<String>(category.value);
     }
@@ -14830,6 +14938,8 @@ class HealthMetricsTableCompanion extends UpdateCompanion<HealthMetricsLocal> {
           ..write('caloriesConsumed: $caloriesConsumed, ')
           ..write('caloriesBurned: $caloriesBurned, ')
           ..write('questPoints: $questPoints, ')
+          ..write('oxygenSaturation: $oxygenSaturation, ')
+          ..write('source: $source, ')
           ..write('category: $category, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
@@ -21970,6 +22080,18 @@ class $SubscriptionsTableTable extends SubscriptionsTable
     ),
     defaultValue: const Constant(true),
   );
+  static const VerificationMeta _billingCycleMeta = const VerificationMeta(
+    'billingCycle',
+  );
+  @override
+  late final GeneratedColumn<String> billingCycle = GeneratedColumn<String>(
+    'billing_cycle',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('monthly'),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -21990,6 +22112,7 @@ class $SubscriptionsTableTable extends SubscriptionsTable
     billingDay,
     category,
     isActive,
+    billingCycle,
     createdAt,
   ];
   @override
@@ -22059,6 +22182,15 @@ class $SubscriptionsTableTable extends SubscriptionsTable
         isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
       );
     }
+    if (data.containsKey('billing_cycle')) {
+      context.handle(
+        _billingCycleMeta,
+        billingCycle.isAcceptableOrUnknown(
+          data['billing_cycle']!,
+          _billingCycleMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -22100,6 +22232,10 @@ class $SubscriptionsTableTable extends SubscriptionsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_active'],
       )!,
+      billingCycle: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}billing_cycle'],
+      )!,
       createdAt: $SubscriptionsTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -22128,6 +22264,7 @@ class SubscriptionData extends DataClass
   final int billingDay;
   final String? category;
   final bool isActive;
+  final String billingCycle;
   final DateTime createdAt;
   const SubscriptionData({
     required this.id,
@@ -22138,6 +22275,7 @@ class SubscriptionData extends DataClass
     required this.billingDay,
     this.category,
     required this.isActive,
+    required this.billingCycle,
     required this.createdAt,
   });
   @override
@@ -22155,6 +22293,7 @@ class SubscriptionData extends DataClass
       map['category'] = Variable<String>(category);
     }
     map['is_active'] = Variable<bool>(isActive);
+    map['billing_cycle'] = Variable<String>(billingCycle);
     {
       map['created_at'] = Variable<DateTime>(
         $SubscriptionsTableTable.$convertercreatedAt.toSql(createdAt),
@@ -22177,6 +22316,7 @@ class SubscriptionData extends DataClass
           ? const Value.absent()
           : Value(category),
       isActive: Value(isActive),
+      billingCycle: Value(billingCycle),
       createdAt: Value(createdAt),
     );
   }
@@ -22195,6 +22335,7 @@ class SubscriptionData extends DataClass
       billingDay: serializer.fromJson<int>(json['billingDay']),
       category: serializer.fromJson<String?>(json['category']),
       isActive: serializer.fromJson<bool>(json['isActive']),
+      billingCycle: serializer.fromJson<String>(json['billingCycle']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -22210,6 +22351,7 @@ class SubscriptionData extends DataClass
       'billingDay': serializer.toJson<int>(billingDay),
       'category': serializer.toJson<String?>(category),
       'isActive': serializer.toJson<bool>(isActive),
+      'billingCycle': serializer.toJson<String>(billingCycle),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -22223,6 +22365,7 @@ class SubscriptionData extends DataClass
     int? billingDay,
     Value<String?> category = const Value.absent(),
     bool? isActive,
+    String? billingCycle,
     DateTime? createdAt,
   }) => SubscriptionData(
     id: id ?? this.id,
@@ -22233,6 +22376,7 @@ class SubscriptionData extends DataClass
     billingDay: billingDay ?? this.billingDay,
     category: category.present ? category.value : this.category,
     isActive: isActive ?? this.isActive,
+    billingCycle: billingCycle ?? this.billingCycle,
     createdAt: createdAt ?? this.createdAt,
   );
   SubscriptionData copyWithCompanion(SubscriptionsTableCompanion data) {
@@ -22247,6 +22391,9 @@ class SubscriptionData extends DataClass
           : this.billingDay,
       category: data.category.present ? data.category.value : this.category,
       isActive: data.isActive.present ? data.isActive.value : this.isActive,
+      billingCycle: data.billingCycle.present
+          ? data.billingCycle.value
+          : this.billingCycle,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -22262,6 +22409,7 @@ class SubscriptionData extends DataClass
           ..write('billingDay: $billingDay, ')
           ..write('category: $category, ')
           ..write('isActive: $isActive, ')
+          ..write('billingCycle: $billingCycle, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -22277,6 +22425,7 @@ class SubscriptionData extends DataClass
     billingDay,
     category,
     isActive,
+    billingCycle,
     createdAt,
   );
   @override
@@ -22291,6 +22440,7 @@ class SubscriptionData extends DataClass
           other.billingDay == this.billingDay &&
           other.category == this.category &&
           other.isActive == this.isActive &&
+          other.billingCycle == this.billingCycle &&
           other.createdAt == this.createdAt);
 }
 
@@ -22303,6 +22453,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
   final Value<int> billingDay;
   final Value<String?> category;
   final Value<bool> isActive;
+  final Value<String> billingCycle;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const SubscriptionsTableCompanion({
@@ -22314,6 +22465,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     this.billingDay = const Value.absent(),
     this.category = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.billingCycle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -22326,6 +22478,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     required int billingDay,
     this.category = const Value.absent(),
     this.isActive = const Value.absent(),
+    this.billingCycle = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -22342,6 +22495,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     Expression<int>? billingDay,
     Expression<String>? category,
     Expression<bool>? isActive,
+    Expression<String>? billingCycle,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -22354,6 +22508,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
       if (billingDay != null) 'billing_day': billingDay,
       if (category != null) 'category': category,
       if (isActive != null) 'is_active': isActive,
+      if (billingCycle != null) 'billing_cycle': billingCycle,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -22368,6 +22523,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     Value<int>? billingDay,
     Value<String?>? category,
     Value<bool>? isActive,
+    Value<String>? billingCycle,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -22380,6 +22536,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
       billingDay: billingDay ?? this.billingDay,
       category: category ?? this.category,
       isActive: isActive ?? this.isActive,
+      billingCycle: billingCycle ?? this.billingCycle,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -22412,6 +22569,9 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
     if (isActive.present) {
       map['is_active'] = Variable<bool>(isActive.value);
     }
+    if (billingCycle.present) {
+      map['billing_cycle'] = Variable<String>(billingCycle.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $SubscriptionsTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -22434,6 +22594,7 @@ class SubscriptionsTableCompanion extends UpdateCompanion<SubscriptionData> {
           ..write('billingDay: $billingDay, ')
           ..write('category: $category, ')
           ..write('isActive: $isActive, ')
+          ..write('billingCycle: $billingCycle, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -25234,6 +25395,15 @@ class $SleepLogsTableTable extends SleepLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -25264,6 +25434,7 @@ class $SleepLogsTableTable extends SleepLogsTable
     endTime,
     quality,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   ];
@@ -25317,11 +25488,21 @@ class $SleepLogsTableTable extends SleepLogsTable
         ),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
   @override
   Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, startTime},
+  ];
   @override
   SleepLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
@@ -25361,6 +25542,10 @@ class $SleepLogsTableTable extends SleepLogsTable
       healthMetricID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}health_metric_id'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
       ),
       createdAt: $SleepLogsTableTable.$convertercreatedAtn.fromSql(
         attachedDatabase.typeMapping.read(
@@ -25407,6 +25592,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
   final DateTime? endTime;
   final int quality;
   final String? healthMetricID;
+  final String? source;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   const SleepLogData({
@@ -25418,6 +25604,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     this.endTime,
     required this.quality,
     this.healthMetricID,
+    this.source,
     this.createdAt,
     this.updatedAt,
   });
@@ -25447,6 +25634,9 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     map['quality'] = Variable<int>(quality);
     if (!nullToAbsent || healthMetricID != null) {
       map['health_metric_id'] = Variable<String>(healthMetricID);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(
@@ -25481,6 +25671,9 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       healthMetricID: healthMetricID == null && nullToAbsent
           ? const Value.absent()
           : Value(healthMetricID),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -25504,6 +25697,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       endTime: serializer.fromJson<DateTime?>(json['endTime']),
       quality: serializer.fromJson<int>(json['quality']),
       healthMetricID: serializer.fromJson<String?>(json['healthMetricID']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -25520,6 +25714,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       'endTime': serializer.toJson<DateTime?>(endTime),
       'quality': serializer.toJson<int>(quality),
       'healthMetricID': serializer.toJson<String?>(healthMetricID),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -25534,6 +25729,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     Value<DateTime?> endTime = const Value.absent(),
     int? quality,
     Value<String?> healthMetricID = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => SleepLogData(
@@ -25547,6 +25743,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     healthMetricID: healthMetricID.present
         ? healthMetricID.value
         : this.healthMetricID,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -25562,6 +25759,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
       healthMetricID: data.healthMetricID.present
           ? data.healthMetricID.value
           : this.healthMetricID,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -25578,6 +25776,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
           ..write('endTime: $endTime, ')
           ..write('quality: $quality, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -25594,6 +25793,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
     endTime,
     quality,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   );
@@ -25609,6 +25809,7 @@ class SleepLogData extends DataClass implements Insertable<SleepLogData> {
           other.endTime == this.endTime &&
           other.quality == this.quality &&
           other.healthMetricID == this.healthMetricID &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -25622,6 +25823,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
   final Value<DateTime?> endTime;
   final Value<int> quality;
   final Value<String?> healthMetricID;
+  final Value<String?> source;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -25634,6 +25836,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     this.endTime = const Value.absent(),
     this.quality = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -25647,6 +25850,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     this.endTime = const Value.absent(),
     this.quality = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -25661,6 +25865,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     Expression<DateTime>? endTime,
     Expression<int>? quality,
     Expression<String>? healthMetricID,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -25674,6 +25879,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
       if (endTime != null) 'end_time': endTime,
       if (quality != null) 'quality': quality,
       if (healthMetricID != null) 'health_metric_id': healthMetricID,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -25689,6 +25895,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     Value<DateTime?>? endTime,
     Value<int>? quality,
     Value<String?>? healthMetricID,
+    Value<String?>? source,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
     Value<int>? rowid,
@@ -25702,6 +25909,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
       endTime: endTime ?? this.endTime,
       quality: quality ?? this.quality,
       healthMetricID: healthMetricID ?? this.healthMetricID,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -25739,6 +25947,9 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
     if (healthMetricID.present) {
       map['health_metric_id'] = Variable<String>(healthMetricID.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $SleepLogsTableTable.$convertercreatedAtn.toSql(createdAt.value),
@@ -25766,6 +25977,7 @@ class SleepLogsTableCompanion extends UpdateCompanion<SleepLogData> {
           ..write('endTime: $endTime, ')
           ..write('quality: $quality, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -31706,6 +31918,1331 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
   }
 }
 
+class $HeartRateLogsTableTable extends HeartRateLogsTable
+    with TableInfo<$HeartRateLogsTableTable, HeartRateLogData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $HeartRateLogsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _bpmMeta = const VerificationMeta('bpm');
+  @override
+  late final GeneratedColumn<int> bpm = GeneratedColumn<int>(
+    'bpm',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> timestamp =
+      GeneratedColumn<DateTime>(
+        'timestamp',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($HeartRateLogsTableTable.$convertertimestamp);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>($HeartRateLogsTableTable.$convertercreatedAtn);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    personID,
+    bpm,
+    timestamp,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'heart_rate_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<HeartRateLogData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('bpm')) {
+      context.handle(
+        _bpmMeta,
+        bpm.isAcceptableOrUnknown(data['bpm']!, _bpmMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_bpmMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  HeartRateLogData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return HeartRateLogData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      bpm: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}bpm'],
+      )!,
+      timestamp: $HeartRateLogsTableTable.$convertertimestamp.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}timestamp'],
+        )!,
+      ),
+      createdAt: $HeartRateLogsTableTable.$convertercreatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        ),
+      ),
+    );
+  }
+
+  @override
+  $HeartRateLogsTableTable createAlias(String alias) {
+    return $HeartRateLogsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertertimestamp =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertercreatedAtn =
+      NullAwareTypeConverter.wrap($convertercreatedAt);
+}
+
+class HeartRateLogData extends DataClass
+    implements Insertable<HeartRateLogData> {
+  final String id;
+  final String? tenantID;
+  final String? personID;
+  final int bpm;
+  final DateTime timestamp;
+  final DateTime? createdAt;
+  const HeartRateLogData({
+    required this.id,
+    this.tenantID,
+    this.personID,
+    required this.bpm,
+    required this.timestamp,
+    this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['bpm'] = Variable<int>(bpm);
+    {
+      map['timestamp'] = Variable<DateTime>(
+        $HeartRateLogsTableTable.$convertertimestamp.toSql(timestamp),
+      );
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(
+        $HeartRateLogsTableTable.$convertercreatedAtn.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  HeartRateLogsTableCompanion toCompanion(bool nullToAbsent) {
+    return HeartRateLogsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      bpm: Value(bpm),
+      timestamp: Value(timestamp),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+    );
+  }
+
+  factory HeartRateLogData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return HeartRateLogData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      bpm: serializer.fromJson<int>(json['bpm']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'personID': serializer.toJson<String?>(personID),
+      'bpm': serializer.toJson<int>(bpm),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+    };
+  }
+
+  HeartRateLogData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    int? bpm,
+    DateTime? timestamp,
+    Value<DateTime?> createdAt = const Value.absent(),
+  }) => HeartRateLogData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    personID: personID.present ? personID.value : this.personID,
+    bpm: bpm ?? this.bpm,
+    timestamp: timestamp ?? this.timestamp,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+  );
+  HeartRateLogData copyWithCompanion(HeartRateLogsTableCompanion data) {
+    return HeartRateLogData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      bpm: data.bpm.present ? data.bpm.value : this.bpm,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HeartRateLogData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('bpm: $bpm, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, tenantID, personID, bpm, timestamp, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is HeartRateLogData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.personID == this.personID &&
+          other.bpm == this.bpm &&
+          other.timestamp == this.timestamp &&
+          other.createdAt == this.createdAt);
+}
+
+class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> personID;
+  final Value<int> bpm;
+  final Value<DateTime> timestamp;
+  final Value<DateTime?> createdAt;
+  final Value<int> rowid;
+  const HeartRateLogsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.bpm = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  HeartRateLogsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required int bpm,
+    required DateTime timestamp,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       bpm = Value(bpm),
+       timestamp = Value(timestamp);
+  static Insertable<HeartRateLogData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? personID,
+    Expression<int>? bpm,
+    Expression<DateTime>? timestamp,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (personID != null) 'person_id': personID,
+      if (bpm != null) 'bpm': bpm,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  HeartRateLogsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? personID,
+    Value<int>? bpm,
+    Value<DateTime>? timestamp,
+    Value<DateTime?>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return HeartRateLogsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      personID: personID ?? this.personID,
+      bpm: bpm ?? this.bpm,
+      timestamp: timestamp ?? this.timestamp,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (bpm.present) {
+      map['bpm'] = Variable<int>(bpm.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(
+        $HeartRateLogsTableTable.$convertertimestamp.toSql(timestamp.value),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $HeartRateLogsTableTable.$convertercreatedAtn.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('HeartRateLogsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('bpm: $bpm, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $OxygenSaturationLogsTableTable extends OxygenSaturationLogsTable
+    with TableInfo<$OxygenSaturationLogsTableTable, OxygenSaturationLogData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $OxygenSaturationLogsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(DEFAULT_TENANT_ID),
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _saturationMeta = const VerificationMeta(
+    'saturation',
+  );
+  @override
+  late final GeneratedColumn<double> saturation = GeneratedColumn<double>(
+    'saturation',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> timestamp =
+      GeneratedColumn<DateTime>(
+        'timestamp',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>(
+        $OxygenSaturationLogsTableTable.$convertertimestamp,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime?>(
+        $OxygenSaturationLogsTableTable.$convertercreatedAtn,
+      );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    personID,
+    saturation,
+    timestamp,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'oxygen_saturation_logs';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<OxygenSaturationLogData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('saturation')) {
+      context.handle(
+        _saturationMeta,
+        saturation.isAcceptableOrUnknown(data['saturation']!, _saturationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_saturationMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  OxygenSaturationLogData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return OxygenSaturationLogData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      saturation: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}saturation'],
+      )!,
+      timestamp: $OxygenSaturationLogsTableTable.$convertertimestamp.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}timestamp'],
+        )!,
+      ),
+      createdAt: $OxygenSaturationLogsTableTable.$convertercreatedAtn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        ),
+      ),
+    );
+  }
+
+  @override
+  $OxygenSaturationLogsTableTable createAlias(String alias) {
+    return $OxygenSaturationLogsTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $convertertimestamp =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $convertercreatedAtn =
+      NullAwareTypeConverter.wrap($convertercreatedAt);
+}
+
+class OxygenSaturationLogData extends DataClass
+    implements Insertable<OxygenSaturationLogData> {
+  final String id;
+  final String? tenantID;
+  final String? personID;
+  final double saturation;
+  final DateTime timestamp;
+  final DateTime? createdAt;
+  const OxygenSaturationLogData({
+    required this.id,
+    this.tenantID,
+    this.personID,
+    required this.saturation,
+    required this.timestamp,
+    this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['saturation'] = Variable<double>(saturation);
+    {
+      map['timestamp'] = Variable<DateTime>(
+        $OxygenSaturationLogsTableTable.$convertertimestamp.toSql(timestamp),
+      );
+    }
+    if (!nullToAbsent || createdAt != null) {
+      map['created_at'] = Variable<DateTime>(
+        $OxygenSaturationLogsTableTable.$convertercreatedAtn.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  OxygenSaturationLogsTableCompanion toCompanion(bool nullToAbsent) {
+    return OxygenSaturationLogsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      saturation: Value(saturation),
+      timestamp: Value(timestamp),
+      createdAt: createdAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(createdAt),
+    );
+  }
+
+  factory OxygenSaturationLogData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return OxygenSaturationLogData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      saturation: serializer.fromJson<double>(json['saturation']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'personID': serializer.toJson<String?>(personID),
+      'saturation': serializer.toJson<double>(saturation),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'createdAt': serializer.toJson<DateTime?>(createdAt),
+    };
+  }
+
+  OxygenSaturationLogData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    double? saturation,
+    DateTime? timestamp,
+    Value<DateTime?> createdAt = const Value.absent(),
+  }) => OxygenSaturationLogData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    personID: personID.present ? personID.value : this.personID,
+    saturation: saturation ?? this.saturation,
+    timestamp: timestamp ?? this.timestamp,
+    createdAt: createdAt.present ? createdAt.value : this.createdAt,
+  );
+  OxygenSaturationLogData copyWithCompanion(
+    OxygenSaturationLogsTableCompanion data,
+  ) {
+    return OxygenSaturationLogData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      saturation: data.saturation.present
+          ? data.saturation.value
+          : this.saturation,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OxygenSaturationLogData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('saturation: $saturation, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, tenantID, personID, saturation, timestamp, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is OxygenSaturationLogData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.personID == this.personID &&
+          other.saturation == this.saturation &&
+          other.timestamp == this.timestamp &&
+          other.createdAt == this.createdAt);
+}
+
+class OxygenSaturationLogsTableCompanion
+    extends UpdateCompanion<OxygenSaturationLogData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> personID;
+  final Value<double> saturation;
+  final Value<DateTime> timestamp;
+  final Value<DateTime?> createdAt;
+  final Value<int> rowid;
+  const OxygenSaturationLogsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.saturation = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  OxygenSaturationLogsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required double saturation,
+    required DateTime timestamp,
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       saturation = Value(saturation),
+       timestamp = Value(timestamp);
+  static Insertable<OxygenSaturationLogData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? personID,
+    Expression<double>? saturation,
+    Expression<DateTime>? timestamp,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (personID != null) 'person_id': personID,
+      if (saturation != null) 'saturation': saturation,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  OxygenSaturationLogsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? personID,
+    Value<double>? saturation,
+    Value<DateTime>? timestamp,
+    Value<DateTime?>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return OxygenSaturationLogsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      personID: personID ?? this.personID,
+      saturation: saturation ?? this.saturation,
+      timestamp: timestamp ?? this.timestamp,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (saturation.present) {
+      map['saturation'] = Variable<double>(saturation.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(
+        $OxygenSaturationLogsTableTable.$convertertimestamp.toSql(
+          timestamp.value,
+        ),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $OxygenSaturationLogsTableTable.$convertercreatedAtn.toSql(
+          createdAt.value,
+        ),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('OxygenSaturationLogsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('saturation: $saturation, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $AppUsageHistoryTableTable extends AppUsageHistoryTable
+    with TableInfo<$AppUsageHistoryTableTable, AppUsageHistoryData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppUsageHistoryTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> date =
+      GeneratedColumn<DateTime>(
+        'date',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AppUsageHistoryTableTable.$converterdate);
+  static const VerificationMeta _sectorMeta = const VerificationMeta('sector');
+  @override
+  late final GeneratedColumn<String> sector = GeneratedColumn<String>(
+    'sector',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pagePathMeta = const VerificationMeta(
+    'pagePath',
+  );
+  @override
+  late final GeneratedColumn<String> pagePath = GeneratedColumn<String>(
+    'page_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
+    'durationMinutes',
+  );
+  @override
+  late final GeneratedColumn<double> durationMinutes = GeneratedColumn<double>(
+    'duration_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($AppUsageHistoryTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    date,
+    sector,
+    pagePath,
+    durationMinutes,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_usage_history';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppUsageHistoryData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_personIDMeta);
+    }
+    if (data.containsKey('sector')) {
+      context.handle(
+        _sectorMeta,
+        sector.isAcceptableOrUnknown(data['sector']!, _sectorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sectorMeta);
+    }
+    if (data.containsKey('page_path')) {
+      context.handle(
+        _pagePathMeta,
+        pagePath.isAcceptableOrUnknown(data['page_path']!, _pagePathMeta),
+      );
+    }
+    if (data.containsKey('duration_minutes')) {
+      context.handle(
+        _durationMinutesMeta,
+        durationMinutes.isAcceptableOrUnknown(
+          data['duration_minutes']!,
+          _durationMinutesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, date, sector, pagePath},
+  ];
+  @override
+  AppUsageHistoryData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppUsageHistoryData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      date: $AppUsageHistoryTableTable.$converterdate.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}date'],
+        )!,
+      ),
+      sector: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sector'],
+      )!,
+      pagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}page_path'],
+      ),
+      durationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}duration_minutes'],
+      )!,
+      updatedAt: $AppUsageHistoryTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $AppUsageHistoryTableTable createAlias(String alias) {
+    return $AppUsageHistoryTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterdate =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class AppUsageHistoryData extends DataClass
+    implements Insertable<AppUsageHistoryData> {
+  final String id;
+  final String personID;
+  final DateTime date;
+  final String sector;
+  final String? pagePath;
+  final double durationMinutes;
+  final DateTime updatedAt;
+  const AppUsageHistoryData({
+    required this.id,
+    required this.personID,
+    required this.date,
+    required this.sector,
+    this.pagePath,
+    required this.durationMinutes,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['person_id'] = Variable<String>(personID);
+    {
+      map['date'] = Variable<DateTime>(
+        $AppUsageHistoryTableTable.$converterdate.toSql(date),
+      );
+    }
+    map['sector'] = Variable<String>(sector);
+    if (!nullToAbsent || pagePath != null) {
+      map['page_path'] = Variable<String>(pagePath);
+    }
+    map['duration_minutes'] = Variable<double>(durationMinutes);
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $AppUsageHistoryTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  AppUsageHistoryTableCompanion toCompanion(bool nullToAbsent) {
+    return AppUsageHistoryTableCompanion(
+      id: Value(id),
+      personID: Value(personID),
+      date: Value(date),
+      sector: Value(sector),
+      pagePath: pagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagePath),
+      durationMinutes: Value(durationMinutes),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory AppUsageHistoryData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppUsageHistoryData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String>(json['personID']),
+      date: serializer.fromJson<DateTime>(json['date']),
+      sector: serializer.fromJson<String>(json['sector']),
+      pagePath: serializer.fromJson<String?>(json['pagePath']),
+      durationMinutes: serializer.fromJson<double>(json['durationMinutes']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String>(personID),
+      'date': serializer.toJson<DateTime>(date),
+      'sector': serializer.toJson<String>(sector),
+      'pagePath': serializer.toJson<String?>(pagePath),
+      'durationMinutes': serializer.toJson<double>(durationMinutes),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  AppUsageHistoryData copyWith({
+    String? id,
+    String? personID,
+    DateTime? date,
+    String? sector,
+    Value<String?> pagePath = const Value.absent(),
+    double? durationMinutes,
+    DateTime? updatedAt,
+  }) => AppUsageHistoryData(
+    id: id ?? this.id,
+    personID: personID ?? this.personID,
+    date: date ?? this.date,
+    sector: sector ?? this.sector,
+    pagePath: pagePath.present ? pagePath.value : this.pagePath,
+    durationMinutes: durationMinutes ?? this.durationMinutes,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  AppUsageHistoryData copyWithCompanion(AppUsageHistoryTableCompanion data) {
+    return AppUsageHistoryData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      date: data.date.present ? data.date.value : this.date,
+      sector: data.sector.present ? data.sector.value : this.sector,
+      pagePath: data.pagePath.present ? data.pagePath.value : this.pagePath,
+      durationMinutes: data.durationMinutes.present
+          ? data.durationMinutes.value
+          : this.durationMinutes,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppUsageHistoryData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('sector: $sector, ')
+          ..write('pagePath: $pagePath, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    personID,
+    date,
+    sector,
+    pagePath,
+    durationMinutes,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppUsageHistoryData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.date == this.date &&
+          other.sector == this.sector &&
+          other.pagePath == this.pagePath &&
+          other.durationMinutes == this.durationMinutes &&
+          other.updatedAt == this.updatedAt);
+}
+
+class AppUsageHistoryTableCompanion
+    extends UpdateCompanion<AppUsageHistoryData> {
+  final Value<String> id;
+  final Value<String> personID;
+  final Value<DateTime> date;
+  final Value<String> sector;
+  final Value<String?> pagePath;
+  final Value<double> durationMinutes;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const AppUsageHistoryTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.date = const Value.absent(),
+    this.sector = const Value.absent(),
+    this.pagePath = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AppUsageHistoryTableCompanion.insert({
+    required String id,
+    required String personID,
+    required DateTime date,
+    required String sector,
+    this.pagePath = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       personID = Value(personID),
+       date = Value(date),
+       sector = Value(sector);
+  static Insertable<AppUsageHistoryData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<DateTime>? date,
+    Expression<String>? sector,
+    Expression<String>? pagePath,
+    Expression<double>? durationMinutes,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (date != null) 'date': date,
+      if (sector != null) 'sector': sector,
+      if (pagePath != null) 'page_path': pagePath,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AppUsageHistoryTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? personID,
+    Value<DateTime>? date,
+    Value<String>? sector,
+    Value<String?>? pagePath,
+    Value<double>? durationMinutes,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return AppUsageHistoryTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      date: date ?? this.date,
+      sector: sector ?? this.sector,
+      pagePath: pagePath ?? this.pagePath,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (date.present) {
+      map['date'] = Variable<DateTime>(
+        $AppUsageHistoryTableTable.$converterdate.toSql(date.value),
+      );
+    }
+    if (sector.present) {
+      map['sector'] = Variable<String>(sector.value);
+    }
+    if (pagePath.present) {
+      map['page_path'] = Variable<String>(pagePath.value);
+    }
+    if (durationMinutes.present) {
+      map['duration_minutes'] = Variable<double>(durationMinutes.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $AppUsageHistoryTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppUsageHistoryTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('date: $date, ')
+          ..write('sector: $sector, ')
+          ..write('pagePath: $pagePath, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -31784,6 +33321,12 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AchievementsTableTable achievementsTable =
       $AchievementsTableTable(this);
   late final $MindLogsTableTable mindLogsTable = $MindLogsTableTable(this);
+  late final $HeartRateLogsTableTable heartRateLogsTable =
+      $HeartRateLogsTableTable(this);
+  late final $OxygenSaturationLogsTableTable oxygenSaturationLogsTable =
+      $OxygenSaturationLogsTableTable(this);
+  late final $AppUsageHistoryTableTable appUsageHistoryTable =
+      $AppUsageHistoryTableTable(this);
   late final ThemesTableDAO themesTableDAO = ThemesTableDAO(
     this as AppDatabase,
   );
@@ -31887,6 +33430,9 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     portfolioSnapshotsTable,
     achievementsTable,
     mindLogsTable,
+    heartRateLogsTable,
+    oxygenSaturationLogsTable,
+    appUsageHistoryTable,
   ];
 }
 
@@ -38353,6 +39899,8 @@ typedef $$HealthMetricsTableTableCreateCompanionBuilder =
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
       Value<double?> questPoints,
+      Value<double?> oxygenSaturation,
+      Value<String?> source,
       Value<String?> category,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
@@ -38375,6 +39923,8 @@ typedef $$HealthMetricsTableTableUpdateCompanionBuilder =
       Value<int?> caloriesConsumed,
       Value<int?> caloriesBurned,
       Value<double?> questPoints,
+      Value<double?> oxygenSaturation,
+      Value<String?> source,
       Value<String?> category,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
@@ -38463,6 +40013,16 @@ class $$HealthMetricsTableTableFilterComposer
 
   ColumnFilters<double> get questPoints => $composableBuilder(
     column: $table.questPoints,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get oxygenSaturation => $composableBuilder(
+    column: $table.oxygenSaturation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -38566,6 +40126,16 @@ class $$HealthMetricsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<double> get oxygenSaturation => $composableBuilder(
+    column: $table.oxygenSaturation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get category => $composableBuilder(
     column: $table.category,
     builder: (column) => ColumnOrderings(column),
@@ -38650,6 +40220,14 @@ class $$HealthMetricsTableTableAnnotationComposer
     builder: (column) => column,
   );
 
+  GeneratedColumn<double> get oxygenSaturation => $composableBuilder(
+    column: $table.oxygenSaturation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
+
   GeneratedColumn<String> get category =>
       $composableBuilder(column: $table.category, builder: (column) => column);
 
@@ -38715,6 +40293,8 @@ class $$HealthMetricsTableTableTableManager
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<double?> oxygenSaturation = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
@@ -38735,6 +40315,8 @@ class $$HealthMetricsTableTableTableManager
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
                 questPoints: questPoints,
+                oxygenSaturation: oxygenSaturation,
+                source: source,
                 category: category,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -38757,6 +40339,8 @@ class $$HealthMetricsTableTableTableManager
                 Value<int?> caloriesConsumed = const Value.absent(),
                 Value<int?> caloriesBurned = const Value.absent(),
                 Value<double?> questPoints = const Value.absent(),
+                Value<double?> oxygenSaturation = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
@@ -38777,6 +40361,8 @@ class $$HealthMetricsTableTableTableManager
                 caloriesConsumed: caloriesConsumed,
                 caloriesBurned: caloriesBurned,
                 questPoints: questPoints,
+                oxygenSaturation: oxygenSaturation,
+                source: source,
                 category: category,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
@@ -42234,6 +43820,7 @@ typedef $$SubscriptionsTableTableCreateCompanionBuilder =
       required int billingDay,
       Value<String?> category,
       Value<bool> isActive,
+      Value<String> billingCycle,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -42247,6 +43834,7 @@ typedef $$SubscriptionsTableTableUpdateCompanionBuilder =
       Value<int> billingDay,
       Value<String?> category,
       Value<bool> isActive,
+      Value<String> billingCycle,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -42297,6 +43885,11 @@ class $$SubscriptionsTableTableFilterComposer
 
   ColumnFilters<bool> get isActive => $composableBuilder(
     column: $table.isActive,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get billingCycle => $composableBuilder(
+    column: $table.billingCycle,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -42356,6 +43949,11 @@ class $$SubscriptionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get billingCycle => $composableBuilder(
+    column: $table.billingCycle,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -42396,6 +43994,11 @@ class $$SubscriptionsTableTableAnnotationComposer
 
   GeneratedColumn<bool> get isActive =>
       $composableBuilder(column: $table.isActive, builder: (column) => column);
+
+  GeneratedColumn<String> get billingCycle => $composableBuilder(
+    column: $table.billingCycle,
+    builder: (column) => column,
+  );
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -42449,6 +44052,7 @@ class $$SubscriptionsTableTableTableManager
                 Value<int> billingDay = const Value.absent(),
                 Value<String?> category = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<String> billingCycle = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SubscriptionsTableCompanion(
@@ -42460,6 +44064,7 @@ class $$SubscriptionsTableTableTableManager
                 billingDay: billingDay,
                 category: category,
                 isActive: isActive,
+                billingCycle: billingCycle,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -42473,6 +44078,7 @@ class $$SubscriptionsTableTableTableManager
                 required int billingDay,
                 Value<String?> category = const Value.absent(),
                 Value<bool> isActive = const Value.absent(),
+                Value<String> billingCycle = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => SubscriptionsTableCompanion.insert(
@@ -42484,6 +44090,7 @@ class $$SubscriptionsTableTableTableManager
                 billingDay: billingDay,
                 category: category,
                 isActive: isActive,
+                billingCycle: billingCycle,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -43841,6 +45448,7 @@ typedef $$SleepLogsTableTableCreateCompanionBuilder =
       Value<DateTime?> endTime,
       Value<int> quality,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -43855,6 +45463,7 @@ typedef $$SleepLogsTableTableUpdateCompanionBuilder =
       Value<DateTime?> endTime,
       Value<int> quality,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -43908,6 +45517,11 @@ class $$SleepLogsTableTableFilterComposer
 
   ColumnFilters<String> get healthMetricID => $composableBuilder(
     column: $table.healthMetricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -43973,6 +45587,11 @@ class $$SleepLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -44018,6 +45637,9 @@ class $$SleepLogsTableTableAnnotationComposer
     column: $table.healthMetricID,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -44067,6 +45689,7 @@ class $$SleepLogsTableTableTableManager
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<int> quality = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -44079,6 +45702,7 @@ class $$SleepLogsTableTableTableManager
                 endTime: endTime,
                 quality: quality,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -44093,6 +45717,7 @@ class $$SleepLogsTableTableTableManager
                 Value<DateTime?> endTime = const Value.absent(),
                 Value<int> quality = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -44105,6 +45730,7 @@ class $$SleepLogsTableTableTableManager
                 endTime: endTime,
                 quality: quality,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -47089,6 +48715,740 @@ typedef $$MindLogsTableTableProcessedTableManager =
       MindLogData,
       PrefetchHooks Function()
     >;
+typedef $$HeartRateLogsTableTableCreateCompanionBuilder =
+    HeartRateLogsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      required int bpm,
+      required DateTime timestamp,
+      Value<DateTime?> createdAt,
+      Value<int> rowid,
+    });
+typedef $$HeartRateLogsTableTableUpdateCompanionBuilder =
+    HeartRateLogsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      Value<int> bpm,
+      Value<DateTime> timestamp,
+      Value<DateTime?> createdAt,
+      Value<int> rowid,
+    });
+
+class $$HeartRateLogsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $HeartRateLogsTableTable> {
+  $$HeartRateLogsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get bpm => $composableBuilder(
+    column: $table.bpm,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get timestamp =>
+      $composableBuilder(
+        column: $table.timestamp,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$HeartRateLogsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $HeartRateLogsTableTable> {
+  $$HeartRateLogsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get bpm => $composableBuilder(
+    column: $table.bpm,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$HeartRateLogsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $HeartRateLogsTableTable> {
+  $$HeartRateLogsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<int> get bpm =>
+      $composableBuilder(column: $table.bpm, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$HeartRateLogsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $HeartRateLogsTableTable,
+          HeartRateLogData,
+          $$HeartRateLogsTableTableFilterComposer,
+          $$HeartRateLogsTableTableOrderingComposer,
+          $$HeartRateLogsTableTableAnnotationComposer,
+          $$HeartRateLogsTableTableCreateCompanionBuilder,
+          $$HeartRateLogsTableTableUpdateCompanionBuilder,
+          (
+            HeartRateLogData,
+            BaseReferences<
+              _$AppDatabase,
+              $HeartRateLogsTableTable,
+              HeartRateLogData
+            >,
+          ),
+          HeartRateLogData,
+          PrefetchHooks Function()
+        > {
+  $$HeartRateLogsTableTableTableManager(
+    _$AppDatabase db,
+    $HeartRateLogsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$HeartRateLogsTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$HeartRateLogsTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$HeartRateLogsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<int> bpm = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HeartRateLogsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                bpm: bpm,
+                timestamp: timestamp,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required int bpm,
+                required DateTime timestamp,
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => HeartRateLogsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                bpm: bpm,
+                timestamp: timestamp,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$HeartRateLogsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $HeartRateLogsTableTable,
+      HeartRateLogData,
+      $$HeartRateLogsTableTableFilterComposer,
+      $$HeartRateLogsTableTableOrderingComposer,
+      $$HeartRateLogsTableTableAnnotationComposer,
+      $$HeartRateLogsTableTableCreateCompanionBuilder,
+      $$HeartRateLogsTableTableUpdateCompanionBuilder,
+      (
+        HeartRateLogData,
+        BaseReferences<
+          _$AppDatabase,
+          $HeartRateLogsTableTable,
+          HeartRateLogData
+        >,
+      ),
+      HeartRateLogData,
+      PrefetchHooks Function()
+    >;
+typedef $$OxygenSaturationLogsTableTableCreateCompanionBuilder =
+    OxygenSaturationLogsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      required double saturation,
+      required DateTime timestamp,
+      Value<DateTime?> createdAt,
+      Value<int> rowid,
+    });
+typedef $$OxygenSaturationLogsTableTableUpdateCompanionBuilder =
+    OxygenSaturationLogsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      Value<double> saturation,
+      Value<DateTime> timestamp,
+      Value<DateTime?> createdAt,
+      Value<int> rowid,
+    });
+
+class $$OxygenSaturationLogsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $OxygenSaturationLogsTableTable> {
+  $$OxygenSaturationLogsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get saturation => $composableBuilder(
+    column: $table.saturation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get timestamp =>
+      $composableBuilder(
+        column: $table.timestamp,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$OxygenSaturationLogsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $OxygenSaturationLogsTableTable> {
+  $$OxygenSaturationLogsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get saturation => $composableBuilder(
+    column: $table.saturation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$OxygenSaturationLogsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $OxygenSaturationLogsTableTable> {
+  $$OxygenSaturationLogsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<double> get saturation => $composableBuilder(
+    column: $table.saturation,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$OxygenSaturationLogsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $OxygenSaturationLogsTableTable,
+          OxygenSaturationLogData,
+          $$OxygenSaturationLogsTableTableFilterComposer,
+          $$OxygenSaturationLogsTableTableOrderingComposer,
+          $$OxygenSaturationLogsTableTableAnnotationComposer,
+          $$OxygenSaturationLogsTableTableCreateCompanionBuilder,
+          $$OxygenSaturationLogsTableTableUpdateCompanionBuilder,
+          (
+            OxygenSaturationLogData,
+            BaseReferences<
+              _$AppDatabase,
+              $OxygenSaturationLogsTableTable,
+              OxygenSaturationLogData
+            >,
+          ),
+          OxygenSaturationLogData,
+          PrefetchHooks Function()
+        > {
+  $$OxygenSaturationLogsTableTableTableManager(
+    _$AppDatabase db,
+    $OxygenSaturationLogsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$OxygenSaturationLogsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$OxygenSaturationLogsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$OxygenSaturationLogsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<double> saturation = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OxygenSaturationLogsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                saturation: saturation,
+                timestamp: timestamp,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required double saturation,
+                required DateTime timestamp,
+                Value<DateTime?> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => OxygenSaturationLogsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                saturation: saturation,
+                timestamp: timestamp,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$OxygenSaturationLogsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $OxygenSaturationLogsTableTable,
+      OxygenSaturationLogData,
+      $$OxygenSaturationLogsTableTableFilterComposer,
+      $$OxygenSaturationLogsTableTableOrderingComposer,
+      $$OxygenSaturationLogsTableTableAnnotationComposer,
+      $$OxygenSaturationLogsTableTableCreateCompanionBuilder,
+      $$OxygenSaturationLogsTableTableUpdateCompanionBuilder,
+      (
+        OxygenSaturationLogData,
+        BaseReferences<
+          _$AppDatabase,
+          $OxygenSaturationLogsTableTable,
+          OxygenSaturationLogData
+        >,
+      ),
+      OxygenSaturationLogData,
+      PrefetchHooks Function()
+    >;
+typedef $$AppUsageHistoryTableTableCreateCompanionBuilder =
+    AppUsageHistoryTableCompanion Function({
+      required String id,
+      required String personID,
+      required DateTime date,
+      required String sector,
+      Value<String?> pagePath,
+      Value<double> durationMinutes,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$AppUsageHistoryTableTableUpdateCompanionBuilder =
+    AppUsageHistoryTableCompanion Function({
+      Value<String> id,
+      Value<String> personID,
+      Value<DateTime> date,
+      Value<String> sector,
+      Value<String?> pagePath,
+      Value<double> durationMinutes,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$AppUsageHistoryTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AppUsageHistoryTableTable> {
+  $$AppUsageHistoryTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get date =>
+      $composableBuilder(
+        column: $table.date,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get sector => $composableBuilder(
+    column: $table.sector,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pagePath => $composableBuilder(
+    column: $table.pagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$AppUsageHistoryTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppUsageHistoryTableTable> {
+  $$AppUsageHistoryTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get date => $composableBuilder(
+    column: $table.date,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sector => $composableBuilder(
+    column: $table.sector,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pagePath => $composableBuilder(
+    column: $table.pagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppUsageHistoryTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppUsageHistoryTableTable> {
+  $$AppUsageHistoryTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get date =>
+      $composableBuilder(column: $table.date, builder: (column) => column);
+
+  GeneratedColumn<String> get sector =>
+      $composableBuilder(column: $table.sector, builder: (column) => column);
+
+  GeneratedColumn<String> get pagePath =>
+      $composableBuilder(column: $table.pagePath, builder: (column) => column);
+
+  GeneratedColumn<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$AppUsageHistoryTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AppUsageHistoryTableTable,
+          AppUsageHistoryData,
+          $$AppUsageHistoryTableTableFilterComposer,
+          $$AppUsageHistoryTableTableOrderingComposer,
+          $$AppUsageHistoryTableTableAnnotationComposer,
+          $$AppUsageHistoryTableTableCreateCompanionBuilder,
+          $$AppUsageHistoryTableTableUpdateCompanionBuilder,
+          (
+            AppUsageHistoryData,
+            BaseReferences<
+              _$AppDatabase,
+              $AppUsageHistoryTableTable,
+              AppUsageHistoryData
+            >,
+          ),
+          AppUsageHistoryData,
+          PrefetchHooks Function()
+        > {
+  $$AppUsageHistoryTableTableTableManager(
+    _$AppDatabase db,
+    $AppUsageHistoryTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppUsageHistoryTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppUsageHistoryTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AppUsageHistoryTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> personID = const Value.absent(),
+                Value<DateTime> date = const Value.absent(),
+                Value<String> sector = const Value.absent(),
+                Value<String?> pagePath = const Value.absent(),
+                Value<double> durationMinutes = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppUsageHistoryTableCompanion(
+                id: id,
+                personID: personID,
+                date: date,
+                sector: sector,
+                pagePath: pagePath,
+                durationMinutes: durationMinutes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String personID,
+                required DateTime date,
+                required String sector,
+                Value<String?> pagePath = const Value.absent(),
+                Value<double> durationMinutes = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppUsageHistoryTableCompanion.insert(
+                id: id,
+                personID: personID,
+                date: date,
+                sector: sector,
+                pagePath: pagePath,
+                durationMinutes: durationMinutes,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppUsageHistoryTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AppUsageHistoryTableTable,
+      AppUsageHistoryData,
+      $$AppUsageHistoryTableTableFilterComposer,
+      $$AppUsageHistoryTableTableOrderingComposer,
+      $$AppUsageHistoryTableTableAnnotationComposer,
+      $$AppUsageHistoryTableTableCreateCompanionBuilder,
+      $$AppUsageHistoryTableTableUpdateCompanionBuilder,
+      (
+        AppUsageHistoryData,
+        BaseReferences<
+          _$AppDatabase,
+          $AppUsageHistoryTableTable,
+          AppUsageHistoryData
+        >,
+      ),
+      AppUsageHistoryData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -47197,6 +49557,15 @@ class $AppDatabaseManager {
       $$AchievementsTableTableTableManager(_db, _db.achievementsTable);
   $$MindLogsTableTableTableManager get mindLogsTable =>
       $$MindLogsTableTableTableManager(_db, _db.mindLogsTable);
+  $$HeartRateLogsTableTableTableManager get heartRateLogsTable =>
+      $$HeartRateLogsTableTableTableManager(_db, _db.heartRateLogsTable);
+  $$OxygenSaturationLogsTableTableTableManager get oxygenSaturationLogsTable =>
+      $$OxygenSaturationLogsTableTableTableManager(
+        _db,
+        _db.oxygenSaturationLogsTable,
+      );
+  $$AppUsageHistoryTableTableTableManager get appUsageHistoryTable =>
+      $$AppUsageHistoryTableTableTableManager(_db, _db.appUsageHistoryTable);
 }
 
 mixin _$PortfolioSnapshotsDAOMixin on DatabaseAccessor<AppDatabase> {

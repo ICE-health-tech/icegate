@@ -29,6 +29,7 @@ class SupabaseService {
     'exercise_logs': {'created_at', 'updated_at'},
     'focus_sessions': {'created_at', 'updated_at'},
     'mind_logs': {'created_at', 'updated_at'},
+    'oxygen_saturation_logs': {'id'},
     'feedbacks': {'status'},
   };
 
@@ -39,10 +40,12 @@ class SupabaseService {
     required Map<String, dynamic> payload,
     bool isDelete = false,
   }) async {
-    debugPrint(
-      "📡 [SupabaseService] pushData for $table (isDelete: $isDelete)",
-    );
     try {
+      if (isDelete) {
+        await client.from(table).delete().eq('id', payload['id']);
+        return;
+      }
+
       final idValue = payload['id']?.toString() ?? "";
       if (_isGuest(idValue, payload)) {
         debugPrint(
@@ -51,30 +54,43 @@ class SupabaseService {
         return;
       }
 
+      // 1. Clean the data (remove local-only columns)
       final transformed = _transformOpData(table, payload);
-      final Map<String, dynamic> encodablePayload = Map.from(transformed).map((
-        key,
-        value,
-      ) {
-        if (value is DateTime) {
-          return MapEntry(key, value.toUtc().toIso8601String());
+      
+      // 2. Prepare the payload for Supabase
+      final Map<String, dynamic> encodablePayload = {};
+
+      transformed.forEach((key, value) {
+        // --- THE FIX: Only convert 'timestamp' to BigInt for Oxygen (to match your int8 schema) ---
+        // For heart_rate_logs, we use standard strings to avoid the "out of range" error.
+        if (table == 'oxygen_saturation_logs' && key == 'timestamp') {
+          if (value is String && value.contains('T') && value.endsWith('Z')) {
+            final parsed = DateTime.tryParse(value);
+            if (parsed != null) {
+              encodablePayload[key] = parsed.millisecondsSinceEpoch;
+              return; 
+            }
+          } else if (value is DateTime) {
+            encodablePayload[key] = value.millisecondsSinceEpoch;
+            return;
+          }
         }
-        return MapEntry(key, value);
+
+        // Standard DateTime conversion for all other columns (including created_at)
+        if (value is DateTime) {
+          encodablePayload[key] = value.toUtc().toIso8601String();
+        } else {
+          encodablePayload[key] = value;
+        }
       });
 
-      if (isDelete) {
-        debugPrint(
-          "🗑️ [SupabaseService] Deleting ${payload['id']} from $table",
-        );
-        await client.from(table).delete().eq('id', payload['id']);
-      } else {
-        debugPrint(
-          "📤 [SupabaseService] Pushing to $table: ${transformed['id']}",
-        );
-
-        // Use upsert to handle both insert and update scenarios
-        await client.from(table).upsert(encodablePayload);
+      // DEBUG: Log exactly what we are sending for the problematic table
+      if (table == 'oxygen_saturation_logs') {
+        debugPrint("📡 [Supabase-Fix] Sending payload to $table: $encodablePayload");
       }
+
+      await client.from(table).upsert(encodablePayload);
+      
     } catch (e) {
       debugPrint("❌ [SupabaseService] Error pushing to $table: $e");
     }
@@ -95,7 +111,7 @@ class SupabaseService {
       'scores',
       'financial_accounts',
       'assets',
-      'transactionss',
+      'transactions',
       'subscriptions',
       'quests',
       'ai_prompts',
@@ -108,6 +124,8 @@ class SupabaseService {
       'external_widgets',
       'person_widgets',
       'achievements',
+      'heart_rate_logs',
+      'oxygen_saturation_logs',
     ];
 
     for (final table in tablesToSync) {
@@ -185,7 +203,7 @@ class SupabaseService {
           await database.financeDAO.upsertFromSupabaseAsset(r);
         }
         break;
-      case 'transactionss':
+      case 'transactions':
         for (final r in records) {
           await database.financeDAO.upsertFromSupabaseTransaction(r);
         }
@@ -228,6 +246,16 @@ class SupabaseService {
       case 'weight_logs':
         for (final r in records) {
           await database.healthLogsDAO.upsertFromSupabaseWeight(r);
+        }
+        break;
+      case 'heart_rate_logs':
+        for (final r in records) {
+          await database.healthLogsDAO.upsertFromSupabaseHeartRate(r);
+        }
+        break;
+      case 'oxygen_saturation_logs':
+        for (final r in records) {
+          await database.healthLogsDAO.upsertFromSupabaseOxygen(r);
         }
         break;
       case 'internal_widgets':

@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/ProjectPoint.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/ProjectPoint.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 

@@ -1,6 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
 // import 'package:ice_gate/initial_layer/DuyLongServices/GeminiAPI.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/HumanEvaluation.dart';
+import 'package:ice_gate/orchestration_layer/Models/HumanEvaluation.dart';
 // import 'package:ice_gate/initial_layer/Services/PersonHealthEvaluation.dart';
 
 // Standard Dart naming convention uses snake_case for file names

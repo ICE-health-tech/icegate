@@ -437,6 +437,27 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_metrics_calories_consumed => 'Calo nạp';
 
   @override
+  String get health_metrics_oxygen_saturation => 'Oxy máu';
+
+  @override
+  String get health_metrics_air_quality => 'Air Quality';
+
+  @override
+  String get health_metrics_weather => 'Weather';
+
+  @override
+  String get health_air_quality => 'Chất lượng không khí';
+
+  @override
+  String get health_weather => 'Thời tiết';
+
+  @override
+  String get health_temperature_subtitle => 'Nhiệt độ hiện tại';
+
+  @override
+  String get health_aqi_unit => 'Chỉ số AQI';
+
+  @override
   String health_metrics_detail_coming_soon(String name) {
     return 'Trang chi tiết cho $name sắp ra mắt!';
   }
@@ -639,6 +660,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get guest_access => 'TRUY CẬP KHÁCH';
 
   @override
+  String get apple_login => 'APPLE';
+
+  @override
   String get enroll_hub => 'ĐĂNG KÝ';
 
   @override
@@ -773,6 +797,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get breakdown_system => 'HỆ THỐNG';
 
   @override
+  String get breakdown_screentime => 'Thời gian sử dụng';
+
+  @override
+  String get date_today => 'Hôm nay';
+
+  @override
   String get score_balance => 'CÂN BẰNG ĐIỂM SỐ';
 
   @override
@@ -798,6 +828,11 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get btn_enter => 'VÀO';
+
+  @override
+  String apple_signin_error(String error) {
+    return 'Lỗi đăng nhập Apple: $error';
+  }
 
   @override
   String google_signin_error(String error) {
@@ -826,7 +861,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get phone_number_label => 'Số điện thoại';
 
   @override
-  String get personal_info_professional_matrix => 'Mạng lưới chuyên nghiệp';
+  String get personal_info_professional_matrix => 'Tổ chức';
 
   @override
   String get role_label => 'Vai trò';
@@ -853,7 +888,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get city_label => 'Thành phố';
 
   @override
-  String get personal_info_digital => 'Tài khoản số';
+  String get personal_info_digital => 'Tài khoản';
 
   @override
   String get github_label => 'GitHub';
@@ -2250,4 +2285,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get custom_url => 'URL tùy chỉnh';
+
+  @override
+  String get settings_title => 'Settings';
+
+  @override
+  String get common_done => 'Done';
 }

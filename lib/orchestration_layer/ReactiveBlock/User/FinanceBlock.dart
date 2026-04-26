@@ -5,9 +5,9 @@ import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
-import 'package:ice_gate/ui_layer/finance_page/utils/QuantMath.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/utils/QuantMath.dart';
 import 'package:intl/intl.dart';
 
 class FinanceBlock {
@@ -16,6 +16,7 @@ class FinanceBlock {
   final assets = listSignal<AssetProtocol>([]);
   final transactions = listSignal<TransactionData>([]);
   final subscriptions = listSignal<SubscriptionData>([]);
+  final isSyncing = signal(false);
 
   StreamSubscription? _accountsSubscription;
   StreamSubscription? _assetsSubscription;
@@ -36,7 +37,7 @@ class FinanceBlock {
     assets.value = data;
   }
 
-  /// Total Net Worth (Accounts + Assets + Net Income)
+  /// Total Net Worth (Accounts + Assets)
   late final totalBalance = computed(() {
     final accSum = accounts.value.fold(0.0, (sum, acc) => sum + acc.balance);
     final assetSum = assets.value.fold(
@@ -44,22 +45,7 @@ class FinanceBlock {
       (sum, asset) => sum + (asset.currentEstimatedValue ?? 0.0),
     );
 
-    final txs = transactions.value;
-    final income = txs
-        .where((t) => t.type == 'income')
-        .fold(0.0, (sum, t) => sum + t.amount);
-    final expense = txs
-        .where((t) => t.type == 'expense')
-        .fold(0.0, (sum, t) => sum + t.amount);
-    final investment = txs
-        .where((t) => t.type == 'investment')
-        .fold(0.0, (sum, t) => sum + t.amount);
-
-    final savings = txs
-        .where((t) => t.type == 'savings')
-        .fold(0.0, (sum, t) => sum + t.amount);
-
-    return accSum + assetSum + (income + savings - expense - investment);
+    return accSum + assetSum;
   });
 
   /// Calculate points based on total net worth
@@ -103,7 +89,7 @@ class FinanceBlock {
         .fold(0.0, (sum, t) => sum + t.amount);
   });
 
-  /// Monthly net change (Income + Savings - Expenses - Investment)
+  /// Monthly net cash flow (Income - Expenses)
   late final monthlyNetChange = computed(() {
     final now = DateTime.now();
     final txs = transactions.value.where(
@@ -118,14 +104,8 @@ class FinanceBlock {
     final expense = txs
         .where((t) => t.type == 'expense')
         .fold(0.0, (sum, t) => sum + t.amount);
-    final investment = txs
-        .where((t) => t.type == 'investment')
-        .fold(0.0, (sum, t) => sum + t.amount);
-    final savings = txs
-        .where((t) => t.type == 'savings')
-        .fold(0.0, (sum, t) => sum + t.amount);
 
-    return income + savings - expense - investment;
+    return income - expense;
   });
 
   /// Percentage of net change relative to previous balance
@@ -154,8 +134,8 @@ class FinanceBlock {
     final todayNet = txs
         .where((t) => t.transactionDate.isAfter(todayStart))
         .fold(0.0, (sum, t) {
-          if (t.type == 'income' || t.type == 'savings') return sum + t.amount;
-          if (t.type == 'expense' || t.type == 'investment') {
+          if (t.type == 'income') return sum + t.amount;
+          if (t.type == 'expense') {
             return sum - t.amount;
           }
           return sum;
@@ -287,7 +267,7 @@ class FinanceBlock {
   /// Budget usage percentage (0.0 to 100.0+)
   late final budgetUsagePercent = computed(() {
     if (monthlyBudgetLimit.value <= 0) return 0.0;
-    return (totalSubscriptionsBilling.value / monthlyBudgetLimit.value) * 100;
+    return (monthlySpending.value / monthlyBudgetLimit.value) * 100;
   });
 
   /// Next major milestone (next $5000 or $10000 depending on current balance)
@@ -433,6 +413,23 @@ class FinanceBlock {
     });
   }
 
+  Future<void> sync() async {
+    if (_personId.isEmpty) return;
+    isSyncing.value = true;
+    try {
+      // Access the SupabaseService via the database's reference if available,
+      // but in this architecture, we usually call it directly if we have the reference.
+      // Looking at main.dart or SupabaseService usage, we can see how it's wired.
+      // For now, I'll call the DAOs if they have sync methods or the db directly.
+      await _dao.db.syncTableDown('transactions', _personId);
+      await _dao.db.syncTableDown('subscriptions', _personId);
+    } catch (e) {
+      debugPrint("FinanceBlock: Sync failed: $e");
+    } finally {
+      isSyncing.value = false;
+    }
+  }
+
   Future<void> addTransaction({
     required String category,
     required String type,
@@ -486,19 +483,13 @@ class FinanceBlock {
     required double amount,
     required int billingDay,
     String category = 'subscriptions',
+    String billingCycle = 'monthly',
   }) async {
     if (_personId.isEmpty) return;
-    await _dao.insertSubscription(
-      SubscriptionsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        personID: _personId,
-        name: name,
-        amount: amount,
-        billingDay: billingDay,
-        category: Value(category),
-        isActive: const Value(true),
-        createdAt: Value(DateTime.now()),
-      ),
+    await _dao.customStatement(
+      'INSERT INTO subscriptions (id, person_id, name, amount, billing_day, category, is_active, billing_cycle, created_at) '
+      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [IDGen.UUIDV7(), _personId, name, amount, billingDay, category, 1, billingCycle, DateTime.now().toIso8601String()],
     );
   }
 
@@ -508,19 +499,13 @@ class FinanceBlock {
     required double amount,
     required int billingDay,
     String category = 'subscriptions',
+    String billingCycle = 'monthly',
     bool isActive = true,
   }) async {
     if (_personId.isEmpty) return;
-    await _dao.updateSubscription(
-      SubscriptionsTableCompanion(
-        id: Value(id),
-        personID: Value(_personId),
-        name: Value(name),
-        amount: Value(amount),
-        billingDay: Value(billingDay),
-        category: Value(category),
-        isActive: Value(isActive),
-      ),
+    await _dao.customStatement(
+      'UPDATE subscriptions SET name = ?, amount = ?, billing_day = ?, category = ?, billing_cycle = ?, is_active = ? WHERE id = ?',
+      [name, amount, billingDay, category, billingCycle, isActive ? 1 : 0, id],
     );
   }
 

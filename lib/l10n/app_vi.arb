@@ -165,6 +165,11 @@
   "health_metrics_weight": "Cân nặng",
   "health_metrics_net_calories": "Calo thực",
   "health_metrics_calories_consumed": "Calo nạp",
+  "health_metrics_oxygen_saturation": "Oxy máu",
+  "health_air_quality": "Chất lượng không khí",
+  "health_weather": "Thời tiết",
+  "health_temperature_subtitle": "Nhiệt độ hiện tại",
+  "health_aqi_unit": "Chỉ số AQI",
   "health_metrics_detail_coming_soon": "Trang chi tiết cho {name} sắp ra mắt!",
   "@health_metrics_detail_coming_soon": {
     "placeholders": {
@@ -276,6 +281,7 @@
   "secure_login": "BẢO MẬT",
   "google_login": "GMAIL",
   "guest_access": "TRUY CẬP KHÁCH",
+  "apple_login": "APPLE",
   "enroll_hub": "ĐĂNG KÝ",
   "msg_secure_login_failed": "Đăng nhập bảo mật thất bại: {error}",
   "@msg_secure_login_failed": {
@@ -353,6 +359,8 @@
   "breakdown_tasks": "Công việc",
   "breakdown_projects": "Dự án",
   "breakdown_system": "HỆ THỐNG",
+  "breakdown_screentime": "Thời gian sử dụng",
+  "date_today": "Hôm nay",
   "score_balance": "CÂN BẰNG ĐIỂM SỐ",
   "err_verification_failed": "Xác minh mật khẩu hiện tại thất bại",
   "err_unexpected": "Đã xảy ra lỗi không mong muốn: {error}",
@@ -368,6 +376,14 @@
   "security_title": "Bảo mật",
   "change_password": "Thay đổi mật khẩu",
   "btn_enter": "VÀO",
+  "apple_signin_error": "Lỗi đăng nhập Apple: {error}",
+  "@apple_signin_error": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "google_signin_error": "Lỗi đăng nhập Google: {error}",
   "@google_signin_error": {
     "placeholders": {
@@ -383,7 +399,7 @@
   "last_name_label": "Họ",
   "email_label": "Email",
   "phone_number_label": "Số điện thoại",
-  "personal_info_professional_matrix": "Mạng lưới chuyên nghiệp",
+  "personal_info_professional_matrix": "Tổ chức",
   "role_label": "Vai trò",
   "organization_label": "Tổ chức",
   "personal_info_education_node": "Học vấn",
@@ -392,7 +408,7 @@
   "personal_info_location": "Vị trí",
   "country_label": "Quốc gia",
   "city_label": "Thành phố",
-  "personal_info_digital": "Tài khoản số",
+  "personal_info_digital": "Tài khoản",
   "github_label": "GitHub",
   "linkedin_label": "LinkedIn",
   "personal_web_label": "Website",
@@ -1041,7 +1057,7 @@
   "journal": "Nhật ký",
   "social_notes": "Ghi chú Tinh thần",
   "btn_send_feedback": "Gửi phản hồi",
-  "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới" ,
+  "feedback_subtitle": "Báo lỗi hoặc đề xuất tính năng mới",
   "sync_engine_title": "Sync Engine",
   "system_health": "SỨC KHỎE HỆ THỐNG",
   "uptime": "THỜI GIAN HOẠT ĐỘNG",

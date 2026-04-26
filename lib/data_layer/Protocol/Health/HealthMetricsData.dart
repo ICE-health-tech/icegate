@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
-import 'package:ice_gate/ui_layer/health_page/models/HealthMetric.dart';
-import 'package:ice_gate/initial_layer/CoreLogics/PowerPoint/GameConst.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:ice_gate/l10n/app_localizations.dart';
 
@@ -253,6 +254,18 @@ class HealthMetricsData {
         trendPositive: true,
         detailPage: '/health/focus',
       ),
+      HealthMetric(
+        id: 'oxygen_saturation',
+        name: 'oxygen_saturation',
+        value: '0',
+        icon: Icons.bloodtype,
+        color: const Color(0xFF2196F3),
+        unit: '%',
+        subtitle: 'Blood Oxygen',
+        trend: 'Normal',
+        trendPositive: true,
+        detailPage: '/health/oxygen_saturation',
+      ),
     ];
   }
 
@@ -297,14 +310,15 @@ class HealthMetricsData {
     // 5. Helper for trend calculation
     String trendStr(num today, num yesterday, String unit) {
       final diff = today - yesterday;
-      if (diff == 0) return '0$unit';
+      final space = unit == '%' ? '' : ' ';
+      if (diff == 0) return '0$space$unit';
       final sign = diff > 0 ? '+' : '';
       if (unit == '%') {
         if (yesterday == 0) return today > 0 ? '+100%' : '0%';
         final pct = ((diff / yesterday) * 100).round();
         return '$sign$pct%';
       }
-      return '$sign${diff is double ? diff.toStringAsFixed(1) : diff}$unit';
+      return '$sign${diff is double ? diff.toStringAsFixed(1) : diff}$space$unit';
     }
 
     bool? trendPositive(
@@ -322,12 +336,19 @@ class HealthMetricsData {
     final focusMin = metricsLocal?.focusMinutes ?? 0;
     final sleepHrs = metricsLocal?.sleepHours ?? 0.0;
     final heartRate = metricsLocal?.heartRate ?? 0;
+    final oxygenSaturation = metricsLocal?.oxygenSaturation ?? 0.0;
 
     final yWater = yesterdayMetrics?.waterGlasses ?? 0;
     final yExercise = yesterdayMetrics?.exerciseMinutes ?? 0;
     final ySleep = yesterdayMetrics?.sleepHours ?? 0.0;
     final ySteps = yesterdayMetrics?.steps ?? 0;
     final yFocus = yesterdayMetrics?.focusMinutes ?? 0;
+
+    // 6b. Get Source from DB using standardized service
+    String? rawSource;
+    try {
+      rawSource = (metricsLocal as dynamic).source as String?;
+    } catch (_) {}
 
     // Goals
     const stepGoal = STEP_GOAL;
@@ -353,31 +374,37 @@ class HealthMetricsData {
         trend: trendStr(calories, yesterdayCalories, '%'),
         trendPositive: null,
         detailPage: '/health/food/consume',
+        source: 'Manual',
+        sourceIcon: Icons.edit_note_rounded,
       ),
       'steps': HealthMetric(
         id: 'steps',
         name: 'steps',
         value: currentSteps.toString(),
-        icon: Icons.run_circle,
-        color: const Color(0xFF9C27B0),
+        icon: Icons.directions_run_rounded,
+        color: const Color(0xFF4CAF50),
         unit: l10n.health_steps_label,
         progress: (currentSteps / stepGoal).clamp(0.0, 1.0),
         subtitle: l10n.health_subtitle_goal_steps(stepGoal),
         trend: trendStr(currentSteps, ySteps, '%'),
         trendPositive: trendPositive(currentSteps, ySteps),
         detailPage: '/health/steps',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceAppleHealth),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceAppleHealth),
       ),
       'weight': HealthMetric(
         id: 'weight',
         name: 'weight',
         value: (metricsLocal?.weightKg ?? 0.0).toStringAsFixed(1),
         icon: Icons.monitor_weight_rounded,
-        color: const Color(0xFF00BCD4),
+        color: const Color.fromARGB(255, 6, 218, 237),
         unit: l10n.health_kg_label,
         subtitle: l10n.health_subtitle_current_weight,
         trend: null,
         trendPositive: null,
         detailPage: '/health/weight',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6, fallback: Icons.monitor_weight_rounded),
       ),
       'water': HealthMetric(
         id: 'water',
@@ -391,6 +418,8 @@ class HealthMetricsData {
         trend: trendStr(waterMl, yWater, '%'),
         trendPositive: trendPositive(waterMl, yWater),
         detailPage: '/health/water',
+        source: 'Manual',
+        sourceIcon: Icons.edit_note_rounded,
       ),
       'exercise': HealthMetric(
         id: 'exercise',
@@ -401,9 +430,11 @@ class HealthMetricsData {
         unit: l10n.health_min_label,
         progress: (exerciseMin / exerciseGoal).clamp(0.0, 1.0),
         subtitle: l10n.health_subtitle_goal_min(exerciseGoal),
-        trend: trendStr(exerciseMin, yExercise, ' ${l10n.health_min_label}'),
+        trend: trendStr(exerciseMin, yExercise, l10n.health_min_label),
         trendPositive: trendPositive(exerciseMin, yExercise),
         detailPage: '/health/exercise',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
       ),
       'heart_rate': HealthMetric(
         id: 'heart_rate',
@@ -422,8 +453,8 @@ class HealthMetricsData {
         trend: null,
         trendPositive: null,
         detailPage: '/health/heart_rate',
-        isFuture: true,
-        availabilityMessage: 'Apple Watch Required',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
       ),
       'sleep': HealthMetric(
         id: 'sleep',
@@ -434,11 +465,13 @@ class HealthMetricsData {
         unit: l10n.health_hours_label,
         progress: sleepHrs > 0 ? (sleepHrs / sleepGoal).clamp(0.0, 1.0) : null,
         subtitle: l10n.health_subtitle_goal_hours(sleepGoal.toStringAsFixed(0)),
-        trend: sleepHrs > 0 ? trendStr(sleepHrs, ySleep, l10n.health_hours_label[0]) : null,
+        trend: sleepHrs > 0
+            ? trendStr(sleepHrs, ySleep, l10n.health_hours_label[0])
+            : null,
         trendPositive: sleepHrs > 0 ? trendPositive(sleepHrs, ySleep) : null,
         detailPage: '/health/sleep',
-        isFuture: true,
-        availabilityMessage: 'Coming Soon',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
       ),
       'focus': HealthMetric(
         id: 'focus',
@@ -455,6 +488,28 @@ class HealthMetricsData {
         trend: trendStr(focusMin, yFocus, l10n.health_min_label),
         trendPositive: trendPositive(focusMin, yFocus),
         detailPage: '/health/focus',
+        source: 'App',
+        sourceIcon: Icons.apps_rounded,
+      ),
+      'oxygen_saturation': HealthMetric(
+        id: 'oxygen_saturation',
+        name: 'oxygen_saturation',
+        value: oxygenSaturation > 0
+            ? oxygenSaturation.toStringAsFixed(1)
+            : '--',
+        icon: Icons.bloodtype_outlined,
+        color: const Color(0xFF2196F3),
+        unit: '%',
+        subtitle: oxygenSaturation >= 95
+            ? 'Normal'
+            : oxygenSaturation >= 90
+            ? 'Low'
+            : 'Critically Low',
+        trend: null,
+        trendPositive: null,
+        detailPage: '/health/oxygen_saturation',
+        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
+        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
       ),
     };
   }
