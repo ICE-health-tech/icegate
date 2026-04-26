@@ -836,6 +836,72 @@ abstract class AppLocalizations {
   /// **'cal'**
   String get nutri_cal;
 
+  /// No description provided for @nutri_what_eat.
+  ///
+  /// In en, this message translates to:
+  /// **'What did you eat?'**
+  String get nutri_what_eat;
+
+  /// No description provided for @nutri_save_record.
+  ///
+  /// In en, this message translates to:
+  /// **'SAVE RECORD'**
+  String get nutri_save_record;
+
+  /// No description provided for @nutri_info_title.
+  ///
+  /// In en, this message translates to:
+  /// **'NUTRITION INFO'**
+  String get nutri_info_title;
+
+  /// No description provided for @nutri_camera.
+  ///
+  /// In en, this message translates to:
+  /// **'Camera'**
+  String get nutri_camera;
+
+  /// No description provided for @nutri_gallery.
+  ///
+  /// In en, this message translates to:
+  /// **'Gallery'**
+  String get nutri_gallery;
+
+  /// No description provided for @nutri_delete_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete Meal'**
+  String get nutri_delete_meal;
+
+  /// No description provided for @nutri_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete this meal?'**
+  String get nutri_delete_confirm;
+
+  /// No description provided for @nutri_meal_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal deleted'**
+  String get nutri_meal_deleted;
+
+  /// No description provided for @nutri_yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get nutri_yesterday;
+
+  /// No description provided for @common_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get common_cancel;
+
+  /// No description provided for @common_delete.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete'**
+  String get common_delete;
+
   /// No description provided for @todays_gains.
   ///
   /// In en, this message translates to:
@@ -2126,11 +2192,419 @@ abstract class AppLocalizations {
   /// **'No achievements yet'**
   String get social_no_achievements;
 
+  /// No description provided for @social_no_achievements_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'No achievements logged yet.'**
+  String get social_no_achievements_msg;
+
   /// No description provided for @social_feat.
   ///
   /// In en, this message translates to:
   /// **'Feat'**
   String get social_feat;
+
+  /// No description provided for @mind_how_feeling.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling?'**
+  String get mind_how_feeling;
+
+  /// No description provided for @mind_what_up_to.
+  ///
+  /// In en, this message translates to:
+  /// **'What have you been up to?'**
+  String get mind_what_up_to;
+
+  /// No description provided for @mind_add_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note (optional)'**
+  String get mind_add_note_hint;
+
+  /// No description provided for @mind_save_entry.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Entry'**
+  String get mind_save_entry;
+
+  /// No description provided for @mind_log_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind log saved! Reflection updated.'**
+  String get mind_log_saved;
+
+  /// No description provided for @mind_error_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: User session not found. Please log in again.'**
+  String get mind_error_login;
+
+  /// No description provided for @mind_error_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to save log: {error}'**
+  String mind_error_save(Object error);
+
+  /// No description provided for @mood_awful.
+  ///
+  /// In en, this message translates to:
+  /// **'Awful'**
+  String get mood_awful;
+
+  /// No description provided for @mood_bad.
+  ///
+  /// In en, this message translates to:
+  /// **'Bad'**
+  String get mood_bad;
+
+  /// No description provided for @mood_meh.
+  ///
+  /// In en, this message translates to:
+  /// **'Meh'**
+  String get mood_meh;
+
+  /// No description provided for @mood_good.
+  ///
+  /// In en, this message translates to:
+  /// **'Good'**
+  String get mood_good;
+
+  /// No description provided for @mood_rad.
+  ///
+  /// In en, this message translates to:
+  /// **'Rad'**
+  String get mood_rad;
+
+  /// No description provided for @mood_no_data.
+  ///
+  /// In en, this message translates to:
+  /// **'No data'**
+  String get mood_no_data;
+
+  /// No description provided for @mind_current_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Current Mood'**
+  String get mind_current_mood;
+
+  /// No description provided for @mind_day_average.
+  ///
+  /// In en, this message translates to:
+  /// **'Day Average'**
+  String get mind_day_average;
+
+  /// No description provided for @mind_latest_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Log'**
+  String get mind_latest_log;
+
+  /// No description provided for @mind_never.
+  ///
+  /// In en, this message translates to:
+  /// **'Never'**
+  String get mind_never;
+
+  /// No description provided for @mind_status.
+  ///
+  /// In en, this message translates to:
+  /// **'Status'**
+  String get mind_status;
+
+  /// No description provided for @mind_stable.
+  ///
+  /// In en, this message translates to:
+  /// **'Stable'**
+  String get mind_stable;
+
+  /// No description provided for @mind_needs_care.
+  ///
+  /// In en, this message translates to:
+  /// **'Needs Care'**
+  String get mind_needs_care;
+
+  /// No description provided for @mind_quick_entry_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s on your mind?'**
+  String get mind_quick_entry_hint;
+
+  /// No description provided for @mood_trends_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood Trends'**
+  String get mood_trends_title;
+
+  /// No description provided for @social_notes_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Notes'**
+  String get social_notes_title;
+
+  /// No description provided for @social_empty_state_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Your story begins here'**
+  String get social_empty_state_title;
+
+  /// No description provided for @social_empty_state_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Capture moments, thoughts, and ideas.'**
+  String get social_empty_state_subtitle;
+
+  /// No description provided for @btn_new_reflection.
+  ///
+  /// In en, this message translates to:
+  /// **'New Reflection'**
+  String get btn_new_reflection;
+
+  /// No description provided for @mind_insights_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind Insights'**
+  String get mind_insights_title;
+
+  /// No description provided for @mind_insights_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Analysis of your journal entries'**
+  String get mind_insights_subtitle;
+
+  /// No description provided for @mind_question.
+  ///
+  /// In en, this message translates to:
+  /// **'How are you feeling?'**
+  String get mind_question;
+
+  /// No description provided for @mind_activities_question.
+  ///
+  /// In en, this message translates to:
+  /// **'What have you been up to?'**
+  String get mind_activities_question;
+
+  /// No description provided for @mind_note_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Add a note (optional)'**
+  String get mind_note_hint;
+
+  /// No description provided for @mind_save_btn.
+  ///
+  /// In en, this message translates to:
+  /// **'Save Entry'**
+  String get mind_save_btn;
+
+  /// No description provided for @mind_save_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind log saved! Reflection updated.'**
+  String get mind_save_success;
+
+  /// No description provided for @mind_feeling_format.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m feeling {mood} today.'**
+  String mind_feeling_format(Object mood);
+
+  /// No description provided for @mind_logged_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Logged mood'**
+  String get mind_logged_mood;
+
+  /// No description provided for @todays_reflections.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s Reflections'**
+  String get todays_reflections;
+
+  /// No description provided for @daily_step_distribution.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily Step Distribution'**
+  String get daily_step_distribution;
+
+  /// No description provided for @stat_entries.
+  ///
+  /// In en, this message translates to:
+  /// **'Entries'**
+  String get stat_entries;
+
+  /// No description provided for @stat_images.
+  ///
+  /// In en, this message translates to:
+  /// **'Images'**
+  String get stat_images;
+
+  /// No description provided for @stat_sentiment.
+  ///
+  /// In en, this message translates to:
+  /// **'Sentiment'**
+  String get stat_sentiment;
+
+  /// No description provided for @weekly_mood_trend.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly Mood Trend'**
+  String get weekly_mood_trend;
+
+  /// No description provided for @no_records_last_7_days.
+  ///
+  /// In en, this message translates to:
+  /// **'No records for the last 7 days'**
+  String get no_records_last_7_days;
+
+  /// No description provided for @frequent_activities.
+  ///
+  /// In en, this message translates to:
+  /// **'Frequent Activities'**
+  String get frequent_activities;
+
+  /// No description provided for @track_patterns_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Track more logs to see patterns'**
+  String get track_patterns_msg;
+
+  /// No description provided for @monthly_reflection.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly Reflection'**
+  String get monthly_reflection;
+
+  /// No description provided for @cat_productivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Productivity'**
+  String get cat_productivity;
+
+  /// No description provided for @cat_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health'**
+  String get cat_health;
+
+  /// No description provided for @cat_social.
+  ///
+  /// In en, this message translates to:
+  /// **'Social'**
+  String get cat_social;
+
+  /// No description provided for @cat_rest.
+  ///
+  /// In en, this message translates to:
+  /// **'Rest'**
+  String get cat_rest;
+
+  /// No description provided for @act_deep_work.
+  ///
+  /// In en, this message translates to:
+  /// **'Deep Work'**
+  String get act_deep_work;
+
+  /// No description provided for @act_learning.
+  ///
+  /// In en, this message translates to:
+  /// **'Learning'**
+  String get act_learning;
+
+  /// No description provided for @act_finance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance'**
+  String get act_finance;
+
+  /// No description provided for @act_planning.
+  ///
+  /// In en, this message translates to:
+  /// **'Planning'**
+  String get act_planning;
+
+  /// No description provided for @act_exercise.
+  ///
+  /// In en, this message translates to:
+  /// **'Exercise'**
+  String get act_exercise;
+
+  /// No description provided for @act_meditation.
+  ///
+  /// In en, this message translates to:
+  /// **'Meditation'**
+  String get act_meditation;
+
+  /// No description provided for @act_healthy_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'Healthy Meal'**
+  String get act_healthy_meal;
+
+  /// No description provided for @act_great_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'Great Sleep'**
+  String get act_great_sleep;
+
+  /// No description provided for @act_family.
+  ///
+  /// In en, this message translates to:
+  /// **'Family'**
+  String get act_family;
+
+  /// No description provided for @act_friends.
+  ///
+  /// In en, this message translates to:
+  /// **'Friends'**
+  String get act_friends;
+
+  /// No description provided for @act_dating.
+  ///
+  /// In en, this message translates to:
+  /// **'Dating'**
+  String get act_dating;
+
+  /// No description provided for @act_kindness.
+  ///
+  /// In en, this message translates to:
+  /// **'Kindness'**
+  String get act_kindness;
+
+  /// No description provided for @act_gaming.
+  ///
+  /// In en, this message translates to:
+  /// **'Gaming'**
+  String get act_gaming;
+
+  /// No description provided for @act_reading.
+  ///
+  /// In en, this message translates to:
+  /// **'Reading'**
+  String get act_reading;
+
+  /// No description provided for @act_cinema.
+  ///
+  /// In en, this message translates to:
+  /// **'Cinema'**
+  String get act_cinema;
+
+  /// No description provided for @act_walking.
+  ///
+  /// In en, this message translates to:
+  /// **'Walking'**
+  String get act_walking;
+
+  /// No description provided for @act_logging.
+  ///
+  /// In en, this message translates to:
+  /// **'Logging'**
+  String get act_logging;
+
+  /// No description provided for @act_productivity.
+  ///
+  /// In en, this message translates to:
+  /// **'Productivity'**
+  String get act_productivity;
 
   /// No description provided for @add_app_plugin.
   ///
@@ -2245,6 +2719,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Finance'**
   String get finance;
+
+  /// No description provided for @auth_error_session_not_found.
+  ///
+  /// In en, this message translates to:
+  /// **'Error: User session not found. Please log in again.'**
+  String get auth_error_session_not_found;
 
   /// No description provided for @projects.
   ///

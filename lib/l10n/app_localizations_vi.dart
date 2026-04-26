@@ -395,6 +395,40 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nutri_cal => 'cal';
 
   @override
+  String get nutri_what_eat => 'Bạn đã ăn gì?';
+
+  @override
+  String get nutri_save_record => 'LƯU HỒ SƠ';
+
+  @override
+  String get nutri_info_title => 'THÔNG TIN DINH DƯỠNG';
+
+  @override
+  String get nutri_camera => 'Máy ảnh';
+
+  @override
+  String get nutri_gallery => 'Bộ sưu tập';
+
+  @override
+  String get nutri_delete_meal => 'Xóa bữa ăn';
+
+  @override
+  String get nutri_delete_confirm =>
+      'Bạn có chắc chắn muốn xóa bữa ăn này không?';
+
+  @override
+  String get nutri_meal_deleted => 'Đã xóa bữa ăn';
+
+  @override
+  String get nutri_yesterday => 'Hôm qua';
+
+  @override
+  String get common_cancel => 'Hủy';
+
+  @override
+  String get common_delete => 'Xóa';
+
+  @override
   String get todays_gains => 'Điểm Hôm Nay';
 
   @override
@@ -1092,7 +1126,219 @@ class AppLocalizationsVi extends AppLocalizations {
   String get social_no_achievements => 'Chưa có thành tích nào';
 
   @override
+  String get social_no_achievements_msg =>
+      'Chưa có thành tích nào được ghi nhận.';
+
+  @override
   String get social_feat => 'Chiến công';
+
+  @override
+  String get mind_how_feeling => 'Bạn cảm thấy thế nào?';
+
+  @override
+  String get mind_what_up_to => 'Bạn đang làm gì thế?';
+
+  @override
+  String get mind_add_note_hint => 'Thêm ghi chú (tùy chọn)';
+
+  @override
+  String get mind_save_entry => 'Lưu ghi chép';
+
+  @override
+  String get mind_log_saved => 'Đã lưu ghi chép! Suy ngẫm đã cập nhật.';
+
+  @override
+  String get mind_error_login =>
+      'Lỗi: Không tìm thấy phiên người dùng. Vui lòng đăng nhập lại.';
+
+  @override
+  String mind_error_save(Object error) {
+    return 'Lưu ghi chép thất bại: $error';
+  }
+
+  @override
+  String get mood_awful => 'Tồi tệ';
+
+  @override
+  String get mood_bad => 'Kém';
+
+  @override
+  String get mood_meh => 'Bình thường';
+
+  @override
+  String get mood_good => 'Tốt';
+
+  @override
+  String get mood_rad => 'Tuyệt vời';
+
+  @override
+  String get mood_no_data => 'Không có dữ liệu';
+
+  @override
+  String get mind_current_mood => 'Tâm trạng';
+
+  @override
+  String get mind_day_average => 'TB trong ngày';
+
+  @override
+  String get mind_latest_log => 'Ghi chép cuối';
+
+  @override
+  String get mind_never => 'Chưa có';
+
+  @override
+  String get mind_status => 'Trạng thái';
+
+  @override
+  String get mind_stable => 'Ổn định';
+
+  @override
+  String get mind_needs_care => 'Cần quan tâm';
+
+  @override
+  String get mind_quick_entry_hint => 'Bạn đang nghĩ gì thế?';
+
+  @override
+  String get mood_trends_title => 'XU HƯỚNG TÂM TRẠNG';
+
+  @override
+  String get social_notes_title => 'GHI CHÉP TINH THẦN';
+
+  @override
+  String get social_empty_state_title => 'Câu chuyện của bạn bắt đầu tại đây';
+
+  @override
+  String get social_empty_state_subtitle =>
+      'Ghi lại những khoảnh khắc, suy nghĩ và ý tưởng.';
+
+  @override
+  String get btn_new_reflection => 'Suy ngẫm mới';
+
+  @override
+  String get mind_insights_title => 'THÔNG TIN TINH THẦN';
+
+  @override
+  String get mind_insights_subtitle => 'Phân tích nhật ký của bạn';
+
+  @override
+  String get mind_question => 'Bạn cảm thấy thế nào?';
+
+  @override
+  String get mind_activities_question => 'Bạn đã làm gì?';
+
+  @override
+  String get mind_note_hint => 'Thêm ghi chú (tùy chọn)';
+
+  @override
+  String get mind_save_btn => 'Lưu mục nhập';
+
+  @override
+  String get mind_save_success =>
+      'Đã lưu nhật ký tinh thần! Cập nhật suy ngẫm.';
+
+  @override
+  String mind_feeling_format(Object mood) {
+    return 'Hôm nay tôi cảm thấy $mood.';
+  }
+
+  @override
+  String get mind_logged_mood => 'Đã ghi lại tâm trạng';
+
+  @override
+  String get todays_reflections => 'SUY NGẪM HÔM NAY';
+
+  @override
+  String get daily_step_distribution => 'PHÂN BỔ BƯỚC CHÂN HÀNG NGÀY';
+
+  @override
+  String get stat_entries => 'MỤC NHẬP';
+
+  @override
+  String get stat_images => 'HÌNH ẢNH';
+
+  @override
+  String get stat_sentiment => 'TÂM TRẠNG';
+
+  @override
+  String get weekly_mood_trend => 'XU HƯỚNG TÂM TRẠNG TUẦN';
+
+  @override
+  String get no_records_last_7_days => 'Không có dữ liệu trong 7 ngày qua';
+
+  @override
+  String get frequent_activities => 'HOẠT ĐỘNG THƯỜNG XUYÊN';
+
+  @override
+  String get track_patterns_msg => 'Theo dõi thêm để thấy quy luật';
+
+  @override
+  String get monthly_reflection => 'SUY NGẪM HÀNG THÁNG';
+
+  @override
+  String get cat_productivity => 'Năng suất';
+
+  @override
+  String get cat_health => 'Sức khỏe';
+
+  @override
+  String get cat_social => 'Xã hội';
+
+  @override
+  String get cat_rest => 'Nghỉ ngơi';
+
+  @override
+  String get act_deep_work => 'Làm việc sâu';
+
+  @override
+  String get act_learning => 'Học tập';
+
+  @override
+  String get act_finance => 'Tài chính';
+
+  @override
+  String get act_planning => 'Lập kế hoạch';
+
+  @override
+  String get act_exercise => 'Tập thể dục';
+
+  @override
+  String get act_meditation => 'Thiền';
+
+  @override
+  String get act_healthy_meal => 'Bữa ăn lành mạnh';
+
+  @override
+  String get act_great_sleep => 'Ngủ ngon';
+
+  @override
+  String get act_family => 'Gia đình';
+
+  @override
+  String get act_friends => 'Bạn bè';
+
+  @override
+  String get act_dating => 'Hẹn hò';
+
+  @override
+  String get act_kindness => 'Tử tế';
+
+  @override
+  String get act_gaming => 'Chơi game';
+
+  @override
+  String get act_reading => 'Đọc sách';
+
+  @override
+  String get act_cinema => 'Xem phim';
+
+  @override
+  String get act_walking => 'Đi dạo';
+
+  @override
+  String get act_logging => 'Logging';
+
+  @override
+  String get act_productivity => 'Productivity';
 
   @override
   String get add_app_plugin => 'Thêm Plugin ứng dụng';
@@ -1151,6 +1397,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance => 'Tài chính';
+
+  @override
+  String get auth_error_session_not_found =>
+      'Lỗi: Không tìm thấy phiên người dùng. Vui lòng đăng nhập lại.';
 
   @override
   String get projects => 'Dự án';

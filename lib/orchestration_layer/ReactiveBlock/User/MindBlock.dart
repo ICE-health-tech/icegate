@@ -8,8 +8,15 @@ class MindBlock {
   
   // Daily mood signal
   final dailyMoodValue = signal<int>(3);
+  final latestMoodLog = signal<MindLogData?>(null);
   
   MindBlock(this.dao);
+
+  void init(String personId) {
+    dao.watchLatestLog(personId).listen((log) {
+      latestMoodLog.value = log;
+    });
+  }
 
   Stream<List<MindLogData>> watchMindLogs(String personId) {
     return dao.watchLogsByPerson(personId);

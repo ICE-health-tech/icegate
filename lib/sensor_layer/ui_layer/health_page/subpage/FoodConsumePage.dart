@@ -8,7 +8,7 @@ import 'package:intl/intl.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
-import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodInputPage.dart';
 
 class FoodConsumePage extends StatefulWidget {
   const FoodConsumePage({super.key});
@@ -22,7 +22,7 @@ class FoodConsumePage extends StatefulWidget {
       destination: "/health/food/consume",
       size: size,
       icon: Icons.camera_alt_rounded,
-      mainFunction: () => context.push('/health/food'),
+      mainFunction: () => FoodInputPage.show(context),
     );
   }
 }
@@ -173,16 +173,6 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
             ),
           ),
           const SizedBox(height: 24),
-          ElevatedButton.icon(
-            onPressed: () => context.push('/health/food'),
-            icon: const Icon(Icons.add_rounded),
-            label: Text(l10n.add_food),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: colorScheme.primary,
-              foregroundColor: colorScheme.onPrimary,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-            ),
-          ),
         ],
       ),
     );
@@ -215,7 +205,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
     if (isToday) {
       dayLabel = l10n.nutri_today;
     } else if (date == today.subtract(const Duration(days: 1))) {
-      dayLabel = 'Yesterday';
+      dayLabel = l10n.nutri_yesterday;
     } else {
       dayLabel = DateFormat('EEEE, MMM d').format(date);
     }
@@ -358,7 +348,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
         if (direction == DismissDirection.endToStart) {
           return await _showDeleteConfirmation();
         } else {
-          context.push('/health/food_entry/${meal.id}');
+          FoodInputPage.show(context, mealId: meal.id);
           return false;
         }
       },
@@ -368,7 +358,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
         }
       },
       child: InkWell(
-        onTap: () => context.push('/health/food_entry/${meal.id}'),
+        onTap: () => FoodInputPage.show(context, mealId: meal.id),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
@@ -474,20 +464,21 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
   }
 
   Future<bool> _showDeleteConfirmation() async {
+    final l10n = AppLocalizations.of(context)!;
     return await showDialog<bool>(
           context: context,
           builder: (context) => AlertDialog(
-            title: const Text('Delete Meal'),
-            content: const Text('Are you sure you want to delete this meal?'),
+            title: Text(l10n.nutri_delete_meal),
+            content: Text(l10n.nutri_delete_confirm),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancel'),
+                child: Text(l10n.common_cancel),
               ),
               TextButton(
                 onPressed: () => Navigator.pop(context, true),
                 style: TextButton.styleFrom(foregroundColor: Colors.red),
-                child: const Text('Delete'),
+                child: Text(l10n.common_delete),
               ),
             ],
           ),
@@ -496,13 +487,14 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
   }
 
   Future<void> _deleteMeal(String mealId) async {
+    final l10n = AppLocalizations.of(context)!;
     try {
       final db = context.read<AppDatabase>();
       await (db.delete(db.mealsTable)..where((t) => t.id.equals(mealId))).go();
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(const SnackBar(content: Text('Meal deleted')));
+        ).showSnackBar(SnackBar(content: Text(l10n.nutri_meal_deleted)));
       }
     } catch (e) {
       debugPrint('Error deleting meal: $e');

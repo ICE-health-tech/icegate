@@ -19,7 +19,7 @@ class WeightInputPage extends StatefulWidget {
     return MainButton(
       type: "weight_log",
       destination: "/health/weight/log",
-            onSwipeUp: () {
+      onSwipeUp: () {
         WidgetNavigatorAction.smartPop(context);
       },
       onSwipeRight: () {
@@ -76,9 +76,9 @@ class _WeightInputPageState extends State<WeightInputPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: Theme.of(context).colorScheme.copyWith(
-              primary: Colors.purpleAccent,
-            ),
+            colorScheme: Theme.of(
+              context,
+            ).colorScheme.copyWith(primary: Colors.purpleAccent),
           ),
           child: child!,
         );
@@ -108,7 +108,10 @@ class _WeightInputPageState extends State<WeightInputPage> {
     return Scaffold(
       backgroundColor: colorScheme.surface,
       appBar: AppBar(
-        title: const Text('Log Weight', style: TextStyle(fontWeight: FontWeight.w900)),
+        title: const Text(
+          'Log Weight',
+          style: TextStyle(fontWeight: FontWeight.w900),
+        ),
         backgroundColor: colorScheme.surface,
         leading: IconButton(
           icon: Icon(Icons.arrow_back_ios_new, size: iconSize - 4),
@@ -127,10 +130,13 @@ class _WeightInputPageState extends State<WeightInputPage> {
               // Big Weight Input
               TextField(
                 controller: _weightController,
-                keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                keyboardType: const TextInputType.numberWithOptions(
+                  decimal: true,
+                ),
                 autofocus: true,
                 style: TextStyle(
-                  fontSize: UIResponsiveManager.responsiveFontScale(context) * 48,
+                  fontSize:
+                      UIResponsiveManager.responsiveFontScale(context) * 48,
                   fontWeight: FontWeight.w900,
                   letterSpacing: -2,
                 ),
@@ -146,7 +152,7 @@ class _WeightInputPageState extends State<WeightInputPage> {
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // Date Selection (matches FoodInputPage TextField style but interactive)
               InkWell(
                 onTap: _pickDate,
@@ -154,26 +160,43 @@ class _WeightInputPageState extends State<WeightInputPage> {
                 child: Container(
                   padding: EdgeInsets.symmetric(
                     horizontal: 16,
-                    vertical: UIResponsiveManager.inputFieldSpacing(context, factor: 1.5),
+                    vertical: UIResponsiveManager.inputFieldSpacing(
+                      context,
+                      factor: 1.5,
+                    ),
                   ),
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+                    color: colorScheme.surfaceContainerHighest.withValues(
+                      alpha: 0.3,
+                    ),
                     borderRadius: BorderRadius.circular(buttonRadius),
-                    border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+                    ),
                   ),
                   child: Row(
                     children: [
-                      Icon(Icons.calendar_today_rounded, size: iconSize, color: Colors.purpleAccent),
+                      Icon(
+                        Icons.calendar_today_rounded,
+                        size: iconSize,
+                        color: Colors.purpleAccent,
+                      ),
                       const SizedBox(width: 16),
                       Text(
                         DateFormat('EEEE, MMMM d, yyyy').format(_selectedDate),
                         style: TextStyle(
-                          fontSize: UIResponsiveManager.responsiveFontScale(context) * 16,
+                          fontSize:
+                              UIResponsiveManager.responsiveFontScale(context) *
+                              16,
                           fontWeight: FontWeight.bold,
                         ),
                       ),
                       const Spacer(),
-                      const Icon(Icons.edit_rounded, size: 16, color: Colors.white24),
+                      const Icon(
+                        Icons.edit_rounded,
+                        size: 16,
+                        color: Colors.white24,
+                      ),
                     ],
                   ),
                 ),
@@ -188,7 +211,10 @@ class _WeightInputPageState extends State<WeightInputPage> {
                   backgroundColor: Colors.purpleAccent,
                   foregroundColor: Colors.white,
                   padding: EdgeInsets.symmetric(
-                    vertical: UIResponsiveManager.inputFieldSpacing(context, factor: 1.5),
+                    vertical: UIResponsiveManager.inputFieldSpacing(
+                      context,
+                      factor: 1.5,
+                    ),
                   ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(buttonRadius + 4),
@@ -200,7 +226,8 @@ class _WeightInputPageState extends State<WeightInputPage> {
                   'SAVE RECORD',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    fontSize: UIResponsiveManager.responsiveFontScale(context) * 14,
+                    fontSize:
+                        UIResponsiveManager.responsiveFontScale(context) * 14,
                     letterSpacing: 1.2,
                   ),
                 ),

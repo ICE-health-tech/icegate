@@ -6,7 +6,7 @@ import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
 class Aifoodcaloriesservices {
   final String _baseUrl = "https://lang.duylong.art/runs/stream";
 
-  Future<CaloriesProtocol> getCalories(String foodName, {XFile? image}) async {
+  Future<CaloriesProtocol> getCalories(String foodName, {XFile? image, double? distance}) async {
     try {
       String? base64Image;
       if (image != null) {
@@ -20,10 +20,10 @@ class Aifoodcaloriesservices {
             {
               "role": "user",
               "content": [
-                {
-                  "type": "text",
-                  "text": "Please analyze this $foodName image.",
-                },
+                  {
+                    "type": "text",
+                    "text": "Please analyze this $foodName image.${distance != null ? " The measured size is ${(distance * 100).toStringAsFixed(1)} cm." : ""}",
+                  },
                 if (base64Image != null)
                   {
                     "type": "image_url",

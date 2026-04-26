@@ -8,6 +8,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryD
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementTimeline.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
@@ -216,7 +217,7 @@ class _SocialPageState extends State<SocialPage>
       case 1:
         return l10n.achievements;
       case 2:
-        return "ANALYSIS"; // Placeholder for L10n
+        return AppLocalizations.of(context)!.analysis.toUpperCase();
       default:
         return l10n.social;
     }
@@ -237,39 +238,41 @@ class _SocialPageState extends State<SocialPage>
     return SwipeablePage(
       onSwipe: () => Navigator.maybePop(context),
       direction: SwipeablePageDirection.leftToRight,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).colorScheme.surface,
-        appBar: AppBar(
-          toolbarHeight: 80, // We use a custom header (CanvasDynamicIsland)
-          backgroundColor: Theme.of(context).colorScheme.surface,
-          elevation: 0,
-          automaticallyImplyLeading: false,
-        ),
-        body: Column(
-          children: [
-            // const SizedBox(height: 16),
-            // TabBar is now removed, navigation is handled by Dynamic Island
-            Expanded(
-              child: Watch((context) {
-                // Accessing activeTab.value ensures this widget rebuilds when the signal changes
-                final _ = _socialBlock.activeTab.value;
+      child: RadialPremiumBackground(
+        child: Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            toolbarHeight: 80, // We use a custom header (CanvasDynamicIsland)
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            automaticallyImplyLeading: false,
+          ),
+          body: Column(
+            children: [
+              // const SizedBox(height: 16),
+              // TabBar is now removed, navigation is handled by Dynamic Island
+              Expanded(
+                child: Watch((context) {
+                  // Accessing activeTab.value ensures this widget rebuilds when the signal changes
+                  final _ = _socialBlock.activeTab.value;
 
-                return Stack(
-                  children: [
-                    // Main content – swipe disabled so navigation is button-only
-                    TabBarView(
-                      controller: _tabController,
-                      children: [
-                        const SocialNotesDashboard(),
-                        _buildAchievementsDashboard(context),
-                        const SocialAnalysisPage(),
-                      ],
-                    ),
-                  ],
-                );
-              }),
-            ),
-          ],
+                  return Stack(
+                    children: [
+                      // Main content – swipe disabled so navigation is button-only
+                      TabBarView(
+                        controller: _tabController,
+                        children: [
+                          const SocialNotesDashboard(),
+                          _buildAchievementsDashboard(context),
+                          const SocialAnalysisPage(),
+                        ],
+                      ),
+                    ],
+                  );
+                }),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -329,7 +332,7 @@ class _SocialPageState extends State<SocialPage>
           if (achievements.isEmpty) {
             return _buildEmptyState(
               context,
-              "No achievements logged yet.",
+              AppLocalizations.of(context)!.social_no_achievements_msg,
               Icons.emoji_events_outlined,
             );
           }

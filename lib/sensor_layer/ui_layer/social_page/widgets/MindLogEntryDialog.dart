@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -57,8 +58,8 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
 
     if (personId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Error: User session not found. Please log in again."),
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.auth_error_session_not_found),
         ),
       );
       return;
@@ -85,13 +86,13 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
       // Double insert into project_notes for Journal visibility
       final activitiesStr = _selectedActivities.isNotEmpty 
           ? _selectedActivities.join(", ") 
-          : "Logged mood";
+          : AppLocalizations.of(context)!.mind_logged_mood;
       final emoji = _getMoodEmoji(_selectedMood);
       
       await context.read<ProjectNoteDAO>().insertNote(
         title: "$emoji $activitiesStr",
         content: _noteController.text.trim().isEmpty 
-            ? "I'm feeling $emoji today." 
+            ? AppLocalizations.of(context)!.mind_feeling_format(emoji)
             : _noteController.text.trim(),
         personID: personId,
         tenantID: tenantId,
@@ -102,7 +103,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
       if (mounted) {
         Navigator.of(context).pop();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Mind log saved! Reflection updated.")),
+          SnackBar(content: Text(AppLocalizations.of(context)!.mind_save_success)),
         );
       }
     } catch (e) {
@@ -168,7 +169,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  "How are you feeling?",
+                  AppLocalizations.of(context)!.mind_question,
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.w900,
@@ -182,7 +183,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                 ),
                 const SizedBox(height: 32),
                 Text(
-                  "What have you been up to?",
+                  AppLocalizations.of(context)!.mind_activities_question,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -200,7 +201,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                   maxLines: 3,
                   style: TextStyle(color: colorScheme.onSurface),
                   decoration: InputDecoration(
-                    hintText: "Add a note (optional)",
+                    hintText: AppLocalizations.of(context)!.mind_note_hint,
                     hintStyle: TextStyle(color: colorScheme.onSurfaceVariant),
                     filled: true,
                     fillColor: colorScheme.surfaceContainerHighest.withValues(
@@ -235,9 +236,9 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                               color: Colors.white,
                             ),
                           )
-                        : const Text(
-                            "Save Entry",
-                            style: TextStyle(
+                        : Text(
+                            AppLocalizations.of(context)!.mind_save_btn,
+                            style: const TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
                             ),

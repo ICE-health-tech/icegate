@@ -1526,6 +1526,7 @@ class WaterLogsTable extends Table {
 
   TextColumn get healthMetricID =>
       text().nullable().named('health_metric_id')();
+  TextColumn get source => text().nullable().named('source')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1561,6 +1562,7 @@ class WeightLogsTable extends Table {
 
   TextColumn get healthMetricID =>
       text().nullable().named('health_metric_id')();
+  TextColumn get source => text().nullable().named('source')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1594,6 +1596,8 @@ class HeartRateLogsTable extends Table {
       .map(const DateTimeUTCConverter())
       .named('timestamp')();
 
+  TextColumn get source => text().nullable().named('source')();
+
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1617,6 +1621,7 @@ class OxygenSaturationLogsTable extends Table {
   TextColumn get personID => text().nullable().named('person_id')();
 
   RealColumn get saturation => real().named('saturation')(); // e.g. 98.5
+  TextColumn get source => text().nullable().named('source')();
   DateTimeColumn get timestamp => dateTime()
       .map(const DateTimeUTCConverter())
       .named('timestamp')();
@@ -1698,6 +1703,7 @@ class ExerciseLogsTable extends Table {
       .named('timestamp')();
   TextColumn get focusSessionID =>
       text().nullable().named('focus_session_id')();
+  TextColumn get source => text().nullable().named('source')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .named('created_at')
@@ -1888,6 +1894,7 @@ class MindLogsTable extends Table {
   // JSON array of strings: ["Deep Work", "Exercise", "Family"]
   TextColumn get activities => text().named('activities')();
   TextColumn get note => text().nullable().named('note')();
+  TextColumn get source => text().nullable().named('source')();
 
   DateTimeColumn get logDate => dateTime()
       .withDefault(currentDateAndTime)
@@ -1961,6 +1968,17 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
       payload: {'id': id},
       isDelete: true,
     );
+  }
+
+  Stream<MindLogData?> watchLatestLog(String personId) {
+    return (select(mindLogsTable)
+          ..where((tbl) => tbl.personID.equals(personId))
+          ..orderBy([
+            (tbl) =>
+                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+          ])
+          ..limit(1))
+        .watchSingleOrNull();
   }
 
   Stream<List<MindLogData>> watchLogsByMood(String personId, int moodScore) {

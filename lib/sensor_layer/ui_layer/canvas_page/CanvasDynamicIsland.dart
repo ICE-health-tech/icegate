@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
@@ -145,20 +144,10 @@ class CanvasDynamicIsland extends StatelessWidget {
       final currentRoute = GoRouterState.of(context).uri.path;
       final activeTab = DragCanvasGrid.activeCanvasTab.value;
       final isAnyTabOpen = isCanvas && activeTab != 'none';
-      final numberOfQuests = questBlock.numberOfQuests.value;
-      final numberOfEnabledNotifications =
-          notificationService.numberOfEnabledNotifications.value;
-      final totalNotifications = numberOfQuests + numberOfEnabledNotifications;
-
-      if (kDebugMode) {
-        debugPrint(
-          "🏝️ [CanvasDynamicIsland] Badge Update: quests=$numberOfQuests, notifications=$numberOfEnabledNotifications, total=$totalNotifications, isSyncingHealth=${healthBlock.isSyncing.value}",
-        );
-      }
+      
       final isFocusRunning = focusBlock.isRunning.value;
       final isSyncing = docBlock.isSyncing.value;
       final syncStatus = docBlock.syncStatus.value;
-      final remainingSecs = focusBlock.remainingTime.value;
       final sessionType = focusBlock.currentSessionType.value;
       final useTmux = sshService.useTmuxSignal.value;
 
@@ -286,9 +275,9 @@ class CanvasDynamicIsland extends StatelessWidget {
                       : isFocusRunning
                       ? _buildFocusTimer(
                           context,
+                          focusBlock,
                           focusColor,
                           sessionType,
-                          remainingSecs,
                           scalingFactor,
                           colorScheme,
                         )
@@ -373,73 +362,83 @@ class CanvasDynamicIsland extends StatelessWidget {
                       ),
                       SizedBox(width: 4 * scalingFactor),
                       // Notifications (badge shows active quest count; cap display to avoid overlap)
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          context.push('/notifications');
-                        },
-                        child: Stack(
-                          clipBehavior: Clip.none,
-                          alignment: Alignment.topRight,
-                          children: [
-                            Container(
-                              padding: EdgeInsets.all(4 * scalingFactor),
-                              decoration: const BoxDecoration(
-                                color: Colors.transparent,
-                                shape: BoxShape.circle,
+                      Watch((context) {
+                        final numberOfQuests = questBlock.numberOfQuests.value;
+                        final numberOfEnabledNotifications =
+                            notificationService.numberOfEnabledNotifications.value;
+                        final totalNotifications = numberOfQuests + numberOfEnabledNotifications;
+
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            context.push('/notifications');
+                          },
+                          child: Stack(
+                            clipBehavior: Clip.none,
+                            alignment: Alignment.topRight,
+                            children: [
+                              Container(
+                                padding: EdgeInsets.all(4 * scalingFactor),
+                                decoration: const BoxDecoration(
+                                  color: Colors.transparent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  Icons.notifications_none_rounded,
+                                  color: colorScheme.onSurfaceVariant,
+                                  size: 20 * scalingFactor,
+                                ),
                               ),
-                              child: Icon(
-                                Icons.notifications_none_rounded,
-                                color: colorScheme.onSurfaceVariant,
-                                size: 20 * scalingFactor,
-                              ),
-                            ),
-                            if (totalNotifications > 0)
-                              Positioned(
-                                right: 0,
-                                top: -2,
-                                child: Container(
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 5 * scalingFactor,
-                                    vertical: 2 * scalingFactor,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.error,
-                                    borderRadius: BorderRadius.circular(
-                                      10 * scalingFactor,
+                              if (totalNotifications > 0)
+                                Positioned(
+                                  right: 0,
+                                  top: -2,
+                                  child: Container(
+                                    padding: EdgeInsets.symmetric(
+                                      horizontal: 5 * scalingFactor,
+                                      vertical: 2 * scalingFactor,
                                     ),
-                                  ),
-                                  constraints: BoxConstraints(
-                                    minWidth: 16 * scalingFactor,
-                                    minHeight: 16 * scalingFactor,
-                                    maxWidth: 34 * scalingFactor,
-                                  ),
-                                  alignment: Alignment.center,
-                                  child: FittedBox(
-                                    fit: BoxFit.scaleDown,
-                                    child: Text(
-                                      totalNotifications > 99
-                                          ? '99+'
-                                          : '$totalNotifications',
-                                      style: TextStyle(
-                                        color: colorScheme.onError,
-                                        fontSize: 9 * scalingFactor,
-                                        fontWeight: FontWeight.bold,
-                                        height: 1,
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.error,
+                                      borderRadius: BorderRadius.circular(
+                                        10 * scalingFactor,
                                       ),
-                                      textAlign: TextAlign.center,
+                                    ),
+                                    constraints: BoxConstraints(
+                                      minWidth: 16 * scalingFactor,
+                                      minHeight: 16 * scalingFactor,
+                                      maxWidth: 34 * scalingFactor,
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: FittedBox(
+                                      fit: BoxFit.scaleDown,
+                                      child: Text(
+                                        totalNotifications > 99
+                                            ? '99+'
+                                            : '$totalNotifications',
+                                        style: TextStyle(
+                                          color: colorScheme.onError,
+                                          fontSize: 9 * scalingFactor,
+                                          fontWeight: FontWeight.bold,
+                                          height: 1,
+                                        ),
+                                        textAlign: TextAlign.center,
+                                      ),
                                     ),
                                   ),
                                 ),
-                              ),
-                          ],
-                        ),
-                      ),
+                            ],
+                          ),
+                        );
+                      }),
                       
-                      if (healthBlock.isSyncing.value) ...[
-                        SizedBox(width: 4 * scalingFactor),
-                        _PulseHeartIcon(scalingFactor: scalingFactor, colorScheme: colorScheme),
-                      ],
+                      Watch((context) {
+                        if (!healthBlock.isSyncing.value) return const SizedBox.shrink();
+                        return Padding(
+                          padding: EdgeInsets.only(left: 4 * scalingFactor),
+                          child: _PulseHeartIcon(scalingFactor: scalingFactor, colorScheme: colorScheme),
+                        );
+                      }),
                     ],
                   ],
                 ),
@@ -516,9 +515,9 @@ class CanvasDynamicIsland extends StatelessWidget {
 
   Widget _buildFocusTimer(
     BuildContext context,
+    FocusBlock focusBlock,
     Color focusColor,
     String sessionType,
-    int remainingSecs,
     double scalingFactor,
     ColorScheme colorScheme,
   ) {
@@ -562,15 +561,18 @@ class CanvasDynamicIsland extends StatelessWidget {
               letterSpacing: 1.0,
             ),
           ),
-          Text(
-            formatTime(remainingSecs),
-            style: TextStyle(
-              color: colorScheme.onSurface,
-              fontSize: 14 * scalingFactor,
-              fontWeight: FontWeight.bold,
-              fontFamily: 'Monospace',
-            ),
-          ),
+          Watch((context) {
+            final remainingSecs = focusBlock.remainingTime.value;
+            return Text(
+              formatTime(remainingSecs),
+              style: TextStyle(
+                color: colorScheme.onSurface,
+                fontSize: 14 * scalingFactor,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Monospace',
+              ),
+            );
+          }),
         ],
       ),
     );
@@ -949,7 +951,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             scalingFactor: scalingFactor,
             colorScheme: colorScheme,
           ),
-          SizedBox(width: 32 * scalingFactor),
+          SizedBox(width: 16 * scalingFactor),
           _buildAdaptiveTabIcon(
             context,
             index: 1,
@@ -960,7 +962,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             scalingFactor: scalingFactor,
             colorScheme: colorScheme,
           ),
-          SizedBox(width: 32 * scalingFactor),
+          SizedBox(width: 16 * scalingFactor),
           _buildAdaptiveTabIcon(
             context,
             index: 2,
@@ -971,7 +973,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             scalingFactor: scalingFactor,
             colorScheme: colorScheme,
           ),
-          SizedBox(width: 32 * scalingFactor),
+          SizedBox(width: 16 * scalingFactor),
           _buildAdaptiveTabIcon(
             context,
             index: 3,

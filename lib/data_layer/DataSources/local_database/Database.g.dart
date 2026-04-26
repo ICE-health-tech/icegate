@@ -24848,6 +24848,15 @@ class $WaterLogsTableTable extends WaterLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -24876,6 +24885,7 @@ class $WaterLogsTableTable extends WaterLogsTable
     amount,
     timestamp,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   ];
@@ -24923,6 +24933,12 @@ class $WaterLogsTableTable extends WaterLogsTable
         ),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -24957,6 +24973,10 @@ class $WaterLogsTableTable extends WaterLogsTable
       healthMetricID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}health_metric_id'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
       ),
       createdAt: $WaterLogsTableTable.$convertercreatedAtn.fromSql(
         attachedDatabase.typeMapping.read(
@@ -24997,6 +25017,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
   final int amount;
   final DateTime timestamp;
   final String? healthMetricID;
+  final String? source;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   const WaterLogData({
@@ -25006,6 +25027,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     required this.amount,
     required this.timestamp,
     this.healthMetricID,
+    this.source,
     this.createdAt,
     this.updatedAt,
   });
@@ -25027,6 +25049,9 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     }
     if (!nullToAbsent || healthMetricID != null) {
       map['health_metric_id'] = Variable<String>(healthMetricID);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(
@@ -25055,6 +25080,9 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       healthMetricID: healthMetricID == null && nullToAbsent
           ? const Value.absent()
           : Value(healthMetricID),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -25076,6 +25104,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       amount: serializer.fromJson<int>(json['amount']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       healthMetricID: serializer.fromJson<String?>(json['healthMetricID']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -25090,6 +25119,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       'amount': serializer.toJson<int>(amount),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'healthMetricID': serializer.toJson<String?>(healthMetricID),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -25102,6 +25132,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     int? amount,
     DateTime? timestamp,
     Value<String?> healthMetricID = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => WaterLogData(
@@ -25113,6 +25144,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     healthMetricID: healthMetricID.present
         ? healthMetricID.value
         : this.healthMetricID,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -25126,6 +25158,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
       healthMetricID: data.healthMetricID.present
           ? data.healthMetricID.value
           : this.healthMetricID,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -25140,6 +25173,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
           ..write('amount: $amount, ')
           ..write('timestamp: $timestamp, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -25154,6 +25188,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
     amount,
     timestamp,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   );
@@ -25167,6 +25202,7 @@ class WaterLogData extends DataClass implements Insertable<WaterLogData> {
           other.amount == this.amount &&
           other.timestamp == this.timestamp &&
           other.healthMetricID == this.healthMetricID &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -25178,6 +25214,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
   final Value<int> amount;
   final Value<DateTime> timestamp;
   final Value<String?> healthMetricID;
+  final Value<String?> source;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -25188,6 +25225,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     this.amount = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -25199,6 +25237,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     this.amount = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -25210,6 +25249,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     Expression<int>? amount,
     Expression<DateTime>? timestamp,
     Expression<String>? healthMetricID,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -25221,6 +25261,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
       if (amount != null) 'amount': amount,
       if (timestamp != null) 'timestamp': timestamp,
       if (healthMetricID != null) 'health_metric_id': healthMetricID,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -25234,6 +25275,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     Value<int>? amount,
     Value<DateTime>? timestamp,
     Value<String?>? healthMetricID,
+    Value<String?>? source,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
     Value<int>? rowid,
@@ -25245,6 +25287,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
       amount: amount ?? this.amount,
       timestamp: timestamp ?? this.timestamp,
       healthMetricID: healthMetricID ?? this.healthMetricID,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -25274,6 +25317,9 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
     if (healthMetricID.present) {
       map['health_metric_id'] = Variable<String>(healthMetricID.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $WaterLogsTableTable.$convertercreatedAtn.toSql(createdAt.value),
@@ -25299,6 +25345,7 @@ class WaterLogsTableCompanion extends UpdateCompanion<WaterLogData> {
           ..write('amount: $amount, ')
           ..write('timestamp: $timestamp, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -26057,6 +26104,15 @@ class $WeightLogsTableTable extends WeightLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -26085,6 +26141,7 @@ class $WeightLogsTableTable extends WeightLogsTable
     weightKg,
     timestamp,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   ];
@@ -26132,6 +26189,12 @@ class $WeightLogsTableTable extends WeightLogsTable
         ),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -26166,6 +26229,10 @@ class $WeightLogsTableTable extends WeightLogsTable
       healthMetricID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}health_metric_id'],
+      ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
       ),
       createdAt: $WeightLogsTableTable.$convertercreatedAtn.fromSql(
         attachedDatabase.typeMapping.read(
@@ -26206,6 +26273,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
   final double weightKg;
   final DateTime timestamp;
   final String? healthMetricID;
+  final String? source;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   const WeightLogData({
@@ -26215,6 +26283,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
     required this.weightKg,
     required this.timestamp,
     this.healthMetricID,
+    this.source,
     this.createdAt,
     this.updatedAt,
   });
@@ -26236,6 +26305,9 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
     }
     if (!nullToAbsent || healthMetricID != null) {
       map['health_metric_id'] = Variable<String>(healthMetricID);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(
@@ -26264,6 +26336,9 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
       healthMetricID: healthMetricID == null && nullToAbsent
           ? const Value.absent()
           : Value(healthMetricID),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -26285,6 +26360,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
       weightKg: serializer.fromJson<double>(json['weightKg']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       healthMetricID: serializer.fromJson<String?>(json['healthMetricID']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -26299,6 +26375,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
       'weightKg': serializer.toJson<double>(weightKg),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'healthMetricID': serializer.toJson<String?>(healthMetricID),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -26311,6 +26388,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
     double? weightKg,
     DateTime? timestamp,
     Value<String?> healthMetricID = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => WeightLogData(
@@ -26322,6 +26400,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
     healthMetricID: healthMetricID.present
         ? healthMetricID.value
         : this.healthMetricID,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -26335,6 +26414,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
       healthMetricID: data.healthMetricID.present
           ? data.healthMetricID.value
           : this.healthMetricID,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -26349,6 +26429,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
           ..write('weightKg: $weightKg, ')
           ..write('timestamp: $timestamp, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -26363,6 +26444,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
     weightKg,
     timestamp,
     healthMetricID,
+    source,
     createdAt,
     updatedAt,
   );
@@ -26376,6 +26458,7 @@ class WeightLogData extends DataClass implements Insertable<WeightLogData> {
           other.weightKg == this.weightKg &&
           other.timestamp == this.timestamp &&
           other.healthMetricID == this.healthMetricID &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -26387,6 +26470,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
   final Value<double> weightKg;
   final Value<DateTime> timestamp;
   final Value<String?> healthMetricID;
+  final Value<String?> source;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -26397,6 +26481,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
     this.weightKg = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -26408,6 +26493,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
     this.weightKg = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.healthMetricID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -26419,6 +26505,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
     Expression<double>? weightKg,
     Expression<DateTime>? timestamp,
     Expression<String>? healthMetricID,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -26430,6 +26517,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
       if (weightKg != null) 'weight_kg': weightKg,
       if (timestamp != null) 'timestamp': timestamp,
       if (healthMetricID != null) 'health_metric_id': healthMetricID,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -26443,6 +26531,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
     Value<double>? weightKg,
     Value<DateTime>? timestamp,
     Value<String?>? healthMetricID,
+    Value<String?>? source,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
     Value<int>? rowid,
@@ -26454,6 +26543,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
       weightKg: weightKg ?? this.weightKg,
       timestamp: timestamp ?? this.timestamp,
       healthMetricID: healthMetricID ?? this.healthMetricID,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -26483,6 +26573,9 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
     if (healthMetricID.present) {
       map['health_metric_id'] = Variable<String>(healthMetricID.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $WeightLogsTableTable.$convertercreatedAtn.toSql(createdAt.value),
@@ -26508,6 +26601,7 @@ class WeightLogsTableCompanion extends UpdateCompanion<WeightLogData> {
           ..write('weightKg: $weightKg, ')
           ..write('timestamp: $timestamp, ')
           ..write('healthMetricID: $healthMetricID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -26618,6 +26712,15 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -26653,6 +26756,7 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
     intensity,
     timestamp,
     focusSessionID,
+    source,
     createdAt,
     updatedAt,
   ];
@@ -26728,6 +26832,12 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
         ),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -26787,6 +26897,10 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
         DriftSqlType.string,
         data['${effectivePrefix}focus_session_id'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -26817,6 +26931,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
   final String intensity;
   final DateTime timestamp;
   final String? focusSessionID;
+  final String? source;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   const ExerciseLogData({
@@ -26829,6 +26944,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     required this.intensity,
     required this.timestamp,
     this.focusSessionID,
+    this.source,
     this.createdAt,
     this.updatedAt,
   });
@@ -26855,6 +26971,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     }
     if (!nullToAbsent || focusSessionID != null) {
       map['focus_session_id'] = Variable<String>(focusSessionID);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(createdAt);
@@ -26884,6 +27003,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       focusSessionID: focusSessionID == null && nullToAbsent
           ? const Value.absent()
           : Value(focusSessionID),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -26908,6 +27030,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       intensity: serializer.fromJson<String>(json['intensity']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       focusSessionID: serializer.fromJson<String?>(json['focusSessionID']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -26925,6 +27048,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       'intensity': serializer.toJson<String>(intensity),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'focusSessionID': serializer.toJson<String?>(focusSessionID),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -26940,6 +27064,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     String? intensity,
     DateTime? timestamp,
     Value<String?> focusSessionID = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => ExerciseLogData(
@@ -26956,6 +27081,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     focusSessionID: focusSessionID.present
         ? focusSessionID.value
         : this.focusSessionID,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -26976,6 +27102,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       focusSessionID: data.focusSessionID.present
           ? data.focusSessionID.value
           : this.focusSessionID,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -26993,6 +27120,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
           ..write('intensity: $intensity, ')
           ..write('timestamp: $timestamp, ')
           ..write('focusSessionID: $focusSessionID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -27010,6 +27138,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     intensity,
     timestamp,
     focusSessionID,
+    source,
     createdAt,
     updatedAt,
   );
@@ -27026,6 +27155,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
           other.intensity == this.intensity &&
           other.timestamp == this.timestamp &&
           other.focusSessionID == this.focusSessionID &&
+          other.source == this.source &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -27040,6 +27170,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
   final Value<String> intensity;
   final Value<DateTime> timestamp;
   final Value<String?> focusSessionID;
+  final Value<String?> source;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -27053,6 +27184,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     this.intensity = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.focusSessionID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -27067,6 +27199,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     this.intensity = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.focusSessionID = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -27083,6 +27216,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     Expression<String>? intensity,
     Expression<DateTime>? timestamp,
     Expression<String>? focusSessionID,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -27097,6 +27231,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
       if (intensity != null) 'intensity': intensity,
       if (timestamp != null) 'timestamp': timestamp,
       if (focusSessionID != null) 'focus_session_id': focusSessionID,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -27113,6 +27248,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     Value<String>? intensity,
     Value<DateTime>? timestamp,
     Value<String?>? focusSessionID,
+    Value<String?>? source,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
     Value<int>? rowid,
@@ -27127,6 +27263,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
       intensity: intensity ?? this.intensity,
       timestamp: timestamp ?? this.timestamp,
       focusSessionID: focusSessionID ?? this.focusSessionID,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -27165,6 +27302,9 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     if (focusSessionID.present) {
       map['focus_session_id'] = Variable<String>(focusSessionID.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -27189,6 +27329,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
           ..write('intensity: $intensity, ')
           ..write('timestamp: $timestamp, ')
           ..write('focusSessionID: $focusSessionID, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -31434,6 +31575,15 @@ class $MindLogsTableTable extends MindLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> logDate =
       GeneratedColumn<DateTime>(
@@ -31463,6 +31613,7 @@ class $MindLogsTableTable extends MindLogsTable
     moodEmoji,
     activities,
     note,
+    source,
     logDate,
     createdAt,
   ];
@@ -31523,6 +31674,12 @@ class $MindLogsTableTable extends MindLogsTable
         note.isAcceptableOrUnknown(data['note']!, _noteMeta),
       );
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -31560,6 +31717,10 @@ class $MindLogsTableTable extends MindLogsTable
         DriftSqlType.string,
         data['${effectivePrefix}note'],
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
       logDate: $MindLogsTableTable.$converterlogDate.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -31594,6 +31755,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
   final String? moodEmoji;
   final String activities;
   final String? note;
+  final String? source;
   final DateTime logDate;
   final DateTime createdAt;
   const MindLogData({
@@ -31604,6 +31766,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
     this.moodEmoji,
     required this.activities,
     this.note,
+    this.source,
     required this.logDate,
     required this.createdAt,
   });
@@ -31624,6 +31787,9 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
     map['activities'] = Variable<String>(activities);
     if (!nullToAbsent || note != null) {
       map['note'] = Variable<String>(note);
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     {
       map['log_date'] = Variable<DateTime>(
@@ -31653,6 +31819,9 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
           : Value(moodEmoji),
       activities: Value(activities),
       note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       logDate: Value(logDate),
       createdAt: Value(createdAt),
     );
@@ -31671,6 +31840,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
       moodEmoji: serializer.fromJson<String?>(json['moodEmoji']),
       activities: serializer.fromJson<String>(json['activities']),
       note: serializer.fromJson<String?>(json['note']),
+      source: serializer.fromJson<String?>(json['source']),
       logDate: serializer.fromJson<DateTime>(json['logDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
@@ -31686,6 +31856,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
       'moodEmoji': serializer.toJson<String?>(moodEmoji),
       'activities': serializer.toJson<String>(activities),
       'note': serializer.toJson<String?>(note),
+      'source': serializer.toJson<String?>(source),
       'logDate': serializer.toJson<DateTime>(logDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
@@ -31699,6 +31870,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
     Value<String?> moodEmoji = const Value.absent(),
     String? activities,
     Value<String?> note = const Value.absent(),
+    Value<String?> source = const Value.absent(),
     DateTime? logDate,
     DateTime? createdAt,
   }) => MindLogData(
@@ -31709,6 +31881,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
     moodEmoji: moodEmoji.present ? moodEmoji.value : this.moodEmoji,
     activities: activities ?? this.activities,
     note: note.present ? note.value : this.note,
+    source: source.present ? source.value : this.source,
     logDate: logDate ?? this.logDate,
     createdAt: createdAt ?? this.createdAt,
   );
@@ -31723,6 +31896,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
           ? data.activities.value
           : this.activities,
       note: data.note.present ? data.note.value : this.note,
+      source: data.source.present ? data.source.value : this.source,
       logDate: data.logDate.present ? data.logDate.value : this.logDate,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -31738,6 +31912,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
           ..write('moodEmoji: $moodEmoji, ')
           ..write('activities: $activities, ')
           ..write('note: $note, ')
+          ..write('source: $source, ')
           ..write('logDate: $logDate, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -31753,6 +31928,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
     moodEmoji,
     activities,
     note,
+    source,
     logDate,
     createdAt,
   );
@@ -31767,6 +31943,7 @@ class MindLogData extends DataClass implements Insertable<MindLogData> {
           other.moodEmoji == this.moodEmoji &&
           other.activities == this.activities &&
           other.note == this.note &&
+          other.source == this.source &&
           other.logDate == this.logDate &&
           other.createdAt == this.createdAt);
 }
@@ -31779,6 +31956,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
   final Value<String?> moodEmoji;
   final Value<String> activities;
   final Value<String?> note;
+  final Value<String?> source;
   final Value<DateTime> logDate;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
@@ -31790,6 +31968,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
     this.moodEmoji = const Value.absent(),
     this.activities = const Value.absent(),
     this.note = const Value.absent(),
+    this.source = const Value.absent(),
     this.logDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -31802,6 +31981,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
     this.moodEmoji = const Value.absent(),
     required String activities,
     this.note = const Value.absent(),
+    this.source = const Value.absent(),
     this.logDate = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -31816,6 +31996,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
     Expression<String>? moodEmoji,
     Expression<String>? activities,
     Expression<String>? note,
+    Expression<String>? source,
     Expression<DateTime>? logDate,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -31828,6 +32009,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
       if (moodEmoji != null) 'mood_emoji': moodEmoji,
       if (activities != null) 'activities': activities,
       if (note != null) 'note': note,
+      if (source != null) 'source': source,
       if (logDate != null) 'log_date': logDate,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -31842,6 +32024,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
     Value<String?>? moodEmoji,
     Value<String>? activities,
     Value<String?>? note,
+    Value<String?>? source,
     Value<DateTime>? logDate,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
@@ -31854,6 +32037,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
       moodEmoji: moodEmoji ?? this.moodEmoji,
       activities: activities ?? this.activities,
       note: note ?? this.note,
+      source: source ?? this.source,
       logDate: logDate ?? this.logDate,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -31884,6 +32068,9 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
     if (note.present) {
       map['note'] = Variable<String>(note.value);
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (logDate.present) {
       map['log_date'] = Variable<DateTime>(
         $MindLogsTableTable.$converterlogDate.toSql(logDate.value),
@@ -31910,6 +32097,7 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
           ..write('moodEmoji: $moodEmoji, ')
           ..write('activities: $activities, ')
           ..write('note: $note, ')
+          ..write('source: $source, ')
           ..write('logDate: $logDate, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -31974,6 +32162,15 @@ class $HeartRateLogsTableTable extends HeartRateLogsTable
         type: DriftSqlType.dateTime,
         requiredDuringInsert: true,
       ).withConverter<DateTime>($HeartRateLogsTableTable.$convertertimestamp);
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -31991,6 +32188,7 @@ class $HeartRateLogsTableTable extends HeartRateLogsTable
     personID,
     bpm,
     timestamp,
+    source,
     createdAt,
   ];
   @override
@@ -32030,6 +32228,12 @@ class $HeartRateLogsTableTable extends HeartRateLogsTable
     } else if (isInserting) {
       context.missing(_bpmMeta);
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -32061,6 +32265,10 @@ class $HeartRateLogsTableTable extends HeartRateLogsTable
           data['${effectivePrefix}timestamp'],
         )!,
       ),
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
       createdAt: $HeartRateLogsTableTable.$convertercreatedAtn.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -32090,6 +32298,7 @@ class HeartRateLogData extends DataClass
   final String? personID;
   final int bpm;
   final DateTime timestamp;
+  final String? source;
   final DateTime? createdAt;
   const HeartRateLogData({
     required this.id,
@@ -32097,6 +32306,7 @@ class HeartRateLogData extends DataClass
     this.personID,
     required this.bpm,
     required this.timestamp,
+    this.source,
     this.createdAt,
   });
   @override
@@ -32114,6 +32324,9 @@ class HeartRateLogData extends DataClass
       map['timestamp'] = Variable<DateTime>(
         $HeartRateLogsTableTable.$convertertimestamp.toSql(timestamp),
       );
+    }
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(
@@ -32134,6 +32347,9 @@ class HeartRateLogData extends DataClass
           : Value(personID),
       bpm: Value(bpm),
       timestamp: Value(timestamp),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -32151,6 +32367,7 @@ class HeartRateLogData extends DataClass
       personID: serializer.fromJson<String?>(json['personID']),
       bpm: serializer.fromJson<int>(json['bpm']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      source: serializer.fromJson<String?>(json['source']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
     );
   }
@@ -32163,6 +32380,7 @@ class HeartRateLogData extends DataClass
       'personID': serializer.toJson<String?>(personID),
       'bpm': serializer.toJson<int>(bpm),
       'timestamp': serializer.toJson<DateTime>(timestamp),
+      'source': serializer.toJson<String?>(source),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
     };
   }
@@ -32173,6 +32391,7 @@ class HeartRateLogData extends DataClass
     Value<String?> personID = const Value.absent(),
     int? bpm,
     DateTime? timestamp,
+    Value<String?> source = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
   }) => HeartRateLogData(
     id: id ?? this.id,
@@ -32180,6 +32399,7 @@ class HeartRateLogData extends DataClass
     personID: personID.present ? personID.value : this.personID,
     bpm: bpm ?? this.bpm,
     timestamp: timestamp ?? this.timestamp,
+    source: source.present ? source.value : this.source,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
   );
   HeartRateLogData copyWithCompanion(HeartRateLogsTableCompanion data) {
@@ -32189,6 +32409,7 @@ class HeartRateLogData extends DataClass
       personID: data.personID.present ? data.personID.value : this.personID,
       bpm: data.bpm.present ? data.bpm.value : this.bpm,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      source: data.source.present ? data.source.value : this.source,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -32201,6 +32422,7 @@ class HeartRateLogData extends DataClass
           ..write('personID: $personID, ')
           ..write('bpm: $bpm, ')
           ..write('timestamp: $timestamp, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -32208,7 +32430,7 @@ class HeartRateLogData extends DataClass
 
   @override
   int get hashCode =>
-      Object.hash(id, tenantID, personID, bpm, timestamp, createdAt);
+      Object.hash(id, tenantID, personID, bpm, timestamp, source, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -32218,6 +32440,7 @@ class HeartRateLogData extends DataClass
           other.personID == this.personID &&
           other.bpm == this.bpm &&
           other.timestamp == this.timestamp &&
+          other.source == this.source &&
           other.createdAt == this.createdAt);
 }
 
@@ -32227,6 +32450,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
   final Value<String?> personID;
   final Value<int> bpm;
   final Value<DateTime> timestamp;
+  final Value<String?> source;
   final Value<DateTime?> createdAt;
   final Value<int> rowid;
   const HeartRateLogsTableCompanion({
@@ -32235,6 +32459,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
     this.personID = const Value.absent(),
     this.bpm = const Value.absent(),
     this.timestamp = const Value.absent(),
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -32244,6 +32469,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
     this.personID = const Value.absent(),
     required int bpm,
     required DateTime timestamp,
+    this.source = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -32255,6 +32481,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
     Expression<String>? personID,
     Expression<int>? bpm,
     Expression<DateTime>? timestamp,
+    Expression<String>? source,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -32264,6 +32491,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
       if (personID != null) 'person_id': personID,
       if (bpm != null) 'bpm': bpm,
       if (timestamp != null) 'timestamp': timestamp,
+      if (source != null) 'source': source,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -32275,6 +32503,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
     Value<String?>? personID,
     Value<int>? bpm,
     Value<DateTime>? timestamp,
+    Value<String?>? source,
     Value<DateTime?>? createdAt,
     Value<int>? rowid,
   }) {
@@ -32284,6 +32513,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
       personID: personID ?? this.personID,
       bpm: bpm ?? this.bpm,
       timestamp: timestamp ?? this.timestamp,
+      source: source ?? this.source,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -32309,6 +32539,9 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
         $HeartRateLogsTableTable.$convertertimestamp.toSql(timestamp.value),
       );
     }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $HeartRateLogsTableTable.$convertercreatedAtn.toSql(createdAt.value),
@@ -32328,6 +32561,7 @@ class HeartRateLogsTableCompanion extends UpdateCompanion<HeartRateLogData> {
           ..write('personID: $personID, ')
           ..write('bpm: $bpm, ')
           ..write('timestamp: $timestamp, ')
+          ..write('source: $source, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -32384,6 +32618,15 @@ class $OxygenSaturationLogsTableTable extends OxygenSaturationLogsTable
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _sourceMeta = const VerificationMeta('source');
+  @override
+  late final GeneratedColumn<String> source = GeneratedColumn<String>(
+    'source',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> timestamp =
       GeneratedColumn<DateTime>(
@@ -32413,6 +32656,7 @@ class $OxygenSaturationLogsTableTable extends OxygenSaturationLogsTable
     tenantID,
     personID,
     saturation,
+    source,
     timestamp,
     createdAt,
   ];
@@ -32453,6 +32697,12 @@ class $OxygenSaturationLogsTableTable extends OxygenSaturationLogsTable
     } else if (isInserting) {
       context.missing(_saturationMeta);
     }
+    if (data.containsKey('source')) {
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
+    }
     return context;
   }
 
@@ -32481,6 +32731,10 @@ class $OxygenSaturationLogsTableTable extends OxygenSaturationLogsTable
         DriftSqlType.double,
         data['${effectivePrefix}saturation'],
       )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      ),
       timestamp: $OxygenSaturationLogsTableTable.$convertertimestamp.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -32515,6 +32769,7 @@ class OxygenSaturationLogData extends DataClass
   final String? tenantID;
   final String? personID;
   final double saturation;
+  final String? source;
   final DateTime timestamp;
   final DateTime? createdAt;
   const OxygenSaturationLogData({
@@ -32522,6 +32777,7 @@ class OxygenSaturationLogData extends DataClass
     this.tenantID,
     this.personID,
     required this.saturation,
+    this.source,
     required this.timestamp,
     this.createdAt,
   });
@@ -32536,6 +32792,9 @@ class OxygenSaturationLogData extends DataClass
       map['person_id'] = Variable<String>(personID);
     }
     map['saturation'] = Variable<double>(saturation);
+    if (!nullToAbsent || source != null) {
+      map['source'] = Variable<String>(source);
+    }
     {
       map['timestamp'] = Variable<DateTime>(
         $OxygenSaturationLogsTableTable.$convertertimestamp.toSql(timestamp),
@@ -32559,6 +32818,9 @@ class OxygenSaturationLogData extends DataClass
           ? const Value.absent()
           : Value(personID),
       saturation: Value(saturation),
+      source: source == null && nullToAbsent
+          ? const Value.absent()
+          : Value(source),
       timestamp: Value(timestamp),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
@@ -32576,6 +32838,7 @@ class OxygenSaturationLogData extends DataClass
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       personID: serializer.fromJson<String?>(json['personID']),
       saturation: serializer.fromJson<double>(json['saturation']),
+      source: serializer.fromJson<String?>(json['source']),
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
     );
@@ -32588,6 +32851,7 @@ class OxygenSaturationLogData extends DataClass
       'tenantID': serializer.toJson<String?>(tenantID),
       'personID': serializer.toJson<String?>(personID),
       'saturation': serializer.toJson<double>(saturation),
+      'source': serializer.toJson<String?>(source),
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
     };
@@ -32598,6 +32862,7 @@ class OxygenSaturationLogData extends DataClass
     Value<String?> tenantID = const Value.absent(),
     Value<String?> personID = const Value.absent(),
     double? saturation,
+    Value<String?> source = const Value.absent(),
     DateTime? timestamp,
     Value<DateTime?> createdAt = const Value.absent(),
   }) => OxygenSaturationLogData(
@@ -32605,6 +32870,7 @@ class OxygenSaturationLogData extends DataClass
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     personID: personID.present ? personID.value : this.personID,
     saturation: saturation ?? this.saturation,
+    source: source.present ? source.value : this.source,
     timestamp: timestamp ?? this.timestamp,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
   );
@@ -32618,6 +32884,7 @@ class OxygenSaturationLogData extends DataClass
       saturation: data.saturation.present
           ? data.saturation.value
           : this.saturation,
+      source: data.source.present ? data.source.value : this.source,
       timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
@@ -32630,6 +32897,7 @@ class OxygenSaturationLogData extends DataClass
           ..write('tenantID: $tenantID, ')
           ..write('personID: $personID, ')
           ..write('saturation: $saturation, ')
+          ..write('source: $source, ')
           ..write('timestamp: $timestamp, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
@@ -32637,8 +32905,15 @@ class OxygenSaturationLogData extends DataClass
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, tenantID, personID, saturation, timestamp, createdAt);
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    personID,
+    saturation,
+    source,
+    timestamp,
+    createdAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -32647,6 +32922,7 @@ class OxygenSaturationLogData extends DataClass
           other.tenantID == this.tenantID &&
           other.personID == this.personID &&
           other.saturation == this.saturation &&
+          other.source == this.source &&
           other.timestamp == this.timestamp &&
           other.createdAt == this.createdAt);
 }
@@ -32657,6 +32933,7 @@ class OxygenSaturationLogsTableCompanion
   final Value<String?> tenantID;
   final Value<String?> personID;
   final Value<double> saturation;
+  final Value<String?> source;
   final Value<DateTime> timestamp;
   final Value<DateTime?> createdAt;
   final Value<int> rowid;
@@ -32665,6 +32942,7 @@ class OxygenSaturationLogsTableCompanion
     this.tenantID = const Value.absent(),
     this.personID = const Value.absent(),
     this.saturation = const Value.absent(),
+    this.source = const Value.absent(),
     this.timestamp = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -32674,6 +32952,7 @@ class OxygenSaturationLogsTableCompanion
     this.tenantID = const Value.absent(),
     this.personID = const Value.absent(),
     required double saturation,
+    this.source = const Value.absent(),
     required DateTime timestamp,
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -32685,6 +32964,7 @@ class OxygenSaturationLogsTableCompanion
     Expression<String>? tenantID,
     Expression<String>? personID,
     Expression<double>? saturation,
+    Expression<String>? source,
     Expression<DateTime>? timestamp,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
@@ -32694,6 +32974,7 @@ class OxygenSaturationLogsTableCompanion
       if (tenantID != null) 'tenant_id': tenantID,
       if (personID != null) 'person_id': personID,
       if (saturation != null) 'saturation': saturation,
+      if (source != null) 'source': source,
       if (timestamp != null) 'timestamp': timestamp,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
@@ -32705,6 +32986,7 @@ class OxygenSaturationLogsTableCompanion
     Value<String?>? tenantID,
     Value<String?>? personID,
     Value<double>? saturation,
+    Value<String?>? source,
     Value<DateTime>? timestamp,
     Value<DateTime?>? createdAt,
     Value<int>? rowid,
@@ -32714,6 +32996,7 @@ class OxygenSaturationLogsTableCompanion
       tenantID: tenantID ?? this.tenantID,
       personID: personID ?? this.personID,
       saturation: saturation ?? this.saturation,
+      source: source ?? this.source,
       timestamp: timestamp ?? this.timestamp,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
@@ -32734,6 +33017,9 @@ class OxygenSaturationLogsTableCompanion
     }
     if (saturation.present) {
       map['saturation'] = Variable<double>(saturation.value);
+    }
+    if (source.present) {
+      map['source'] = Variable<String>(source.value);
     }
     if (timestamp.present) {
       map['timestamp'] = Variable<DateTime>(
@@ -32762,6 +33048,7 @@ class OxygenSaturationLogsTableCompanion
           ..write('tenantID: $tenantID, ')
           ..write('personID: $personID, ')
           ..write('saturation: $saturation, ')
+          ..write('source: $source, ')
           ..write('timestamp: $timestamp, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
@@ -45182,6 +45469,7 @@ typedef $$WaterLogsTableTableCreateCompanionBuilder =
       Value<int> amount,
       Value<DateTime> timestamp,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -45194,6 +45482,7 @@ typedef $$WaterLogsTableTableUpdateCompanionBuilder =
       Value<int> amount,
       Value<DateTime> timestamp,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -45236,6 +45525,11 @@ class $$WaterLogsTableTableFilterComposer
 
   ColumnFilters<String> get healthMetricID => $composableBuilder(
     column: $table.healthMetricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -45291,6 +45585,11 @@ class $$WaterLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -45330,6 +45629,9 @@ class $$WaterLogsTableTableAnnotationComposer
     column: $table.healthMetricID,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -45377,6 +45679,7 @@ class $$WaterLogsTableTableTableManager
                 Value<int> amount = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -45387,6 +45690,7 @@ class $$WaterLogsTableTableTableManager
                 amount: amount,
                 timestamp: timestamp,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -45399,6 +45703,7 @@ class $$WaterLogsTableTableTableManager
                 Value<int> amount = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -45409,6 +45714,7 @@ class $$WaterLogsTableTableTableManager
                 amount: amount,
                 timestamp: timestamp,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -45768,6 +46074,7 @@ typedef $$WeightLogsTableTableCreateCompanionBuilder =
       Value<double> weightKg,
       Value<DateTime> timestamp,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -45780,6 +46087,7 @@ typedef $$WeightLogsTableTableUpdateCompanionBuilder =
       Value<double> weightKg,
       Value<DateTime> timestamp,
       Value<String?> healthMetricID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -45822,6 +46130,11 @@ class $$WeightLogsTableTableFilterComposer
 
   ColumnFilters<String> get healthMetricID => $composableBuilder(
     column: $table.healthMetricID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -45877,6 +46190,11 @@ class $$WeightLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -45916,6 +46234,9 @@ class $$WeightLogsTableTableAnnotationComposer
     column: $table.healthMetricID,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -45963,6 +46284,7 @@ class $$WeightLogsTableTableTableManager
                 Value<double> weightKg = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -45973,6 +46295,7 @@ class $$WeightLogsTableTableTableManager
                 weightKg: weightKg,
                 timestamp: timestamp,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -45985,6 +46308,7 @@ class $$WeightLogsTableTableTableManager
                 Value<double> weightKg = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> healthMetricID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -45995,6 +46319,7 @@ class $$WeightLogsTableTableTableManager
                 weightKg: weightKg,
                 timestamp: timestamp,
                 healthMetricID: healthMetricID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -46035,6 +46360,7 @@ typedef $$ExerciseLogsTableTableCreateCompanionBuilder =
       Value<String> intensity,
       Value<DateTime> timestamp,
       Value<String?> focusSessionID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -46050,6 +46376,7 @@ typedef $$ExerciseLogsTableTableUpdateCompanionBuilder =
       Value<String> intensity,
       Value<DateTime> timestamp,
       Value<String?> focusSessionID,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -46107,6 +46434,11 @@ class $$ExerciseLogsTableTableFilterComposer
 
   ColumnFilters<String> get focusSessionID => $composableBuilder(
     column: $table.focusSessionID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -46175,6 +46507,11 @@ class $$ExerciseLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -46227,6 +46564,9 @@ class $$ExerciseLogsTableTableAnnotationComposer
     column: $table.focusSessionID,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -46284,6 +46624,7 @@ class $$ExerciseLogsTableTableTableManager
                 Value<String> intensity = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> focusSessionID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -46297,6 +46638,7 @@ class $$ExerciseLogsTableTableTableManager
                 intensity: intensity,
                 timestamp: timestamp,
                 focusSessionID: focusSessionID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -46312,6 +46654,7 @@ class $$ExerciseLogsTableTableTableManager
                 Value<String> intensity = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> focusSessionID = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -46325,6 +46668,7 @@ class $$ExerciseLogsTableTableTableManager
                 intensity: intensity,
                 timestamp: timestamp,
                 focusSessionID: focusSessionID,
+                source: source,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -48444,6 +48788,7 @@ typedef $$MindLogsTableTableCreateCompanionBuilder =
       Value<String?> moodEmoji,
       required String activities,
       Value<String?> note,
+      Value<String?> source,
       Value<DateTime> logDate,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -48457,6 +48802,7 @@ typedef $$MindLogsTableTableUpdateCompanionBuilder =
       Value<String?> moodEmoji,
       Value<String> activities,
       Value<String?> note,
+      Value<String?> source,
       Value<DateTime> logDate,
       Value<DateTime> createdAt,
       Value<int> rowid,
@@ -48503,6 +48849,11 @@ class $$MindLogsTableTableFilterComposer
 
   ColumnFilters<String> get note => $composableBuilder(
     column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -48563,6 +48914,11 @@ class $$MindLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get logDate => $composableBuilder(
     column: $table.logDate,
     builder: (column) => ColumnOrderings(column),
@@ -48605,6 +48961,9 @@ class $$MindLogsTableTableAnnotationComposer
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get logDate =>
       $composableBuilder(column: $table.logDate, builder: (column) => column);
@@ -48651,6 +49010,7 @@ class $$MindLogsTableTableTableManager
                 Value<String?> moodEmoji = const Value.absent(),
                 Value<String> activities = const Value.absent(),
                 Value<String?> note = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime> logDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -48662,6 +49022,7 @@ class $$MindLogsTableTableTableManager
                 moodEmoji: moodEmoji,
                 activities: activities,
                 note: note,
+                source: source,
                 logDate: logDate,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -48675,6 +49036,7 @@ class $$MindLogsTableTableTableManager
                 Value<String?> moodEmoji = const Value.absent(),
                 required String activities,
                 Value<String?> note = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime> logDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -48686,6 +49048,7 @@ class $$MindLogsTableTableTableManager
                 moodEmoji: moodEmoji,
                 activities: activities,
                 note: note,
+                source: source,
                 logDate: logDate,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -48722,6 +49085,7 @@ typedef $$HeartRateLogsTableTableCreateCompanionBuilder =
       Value<String?> personID,
       required int bpm,
       required DateTime timestamp,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<int> rowid,
     });
@@ -48732,6 +49096,7 @@ typedef $$HeartRateLogsTableTableUpdateCompanionBuilder =
       Value<String?> personID,
       Value<int> bpm,
       Value<DateTime> timestamp,
+      Value<String?> source,
       Value<DateTime?> createdAt,
       Value<int> rowid,
     });
@@ -48770,6 +49135,11 @@ class $$HeartRateLogsTableTableFilterComposer
         column: $table.timestamp,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get createdAt =>
       $composableBuilder(
@@ -48812,6 +49182,11 @@ class $$HeartRateLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -48841,6 +49216,9 @@ class $$HeartRateLogsTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime?, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -48891,6 +49269,7 @@ class $$HeartRateLogsTableTableTableManager
                 Value<String?> personID = const Value.absent(),
                 Value<int> bpm = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HeartRateLogsTableCompanion(
@@ -48899,6 +49278,7 @@ class $$HeartRateLogsTableTableTableManager
                 personID: personID,
                 bpm: bpm,
                 timestamp: timestamp,
+                source: source,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -48909,6 +49289,7 @@ class $$HeartRateLogsTableTableTableManager
                 Value<String?> personID = const Value.absent(),
                 required int bpm,
                 required DateTime timestamp,
+                Value<String?> source = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HeartRateLogsTableCompanion.insert(
@@ -48917,6 +49298,7 @@ class $$HeartRateLogsTableTableTableManager
                 personID: personID,
                 bpm: bpm,
                 timestamp: timestamp,
+                source: source,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -48955,6 +49337,7 @@ typedef $$OxygenSaturationLogsTableTableCreateCompanionBuilder =
       Value<String?> tenantID,
       Value<String?> personID,
       required double saturation,
+      Value<String?> source,
       required DateTime timestamp,
       Value<DateTime?> createdAt,
       Value<int> rowid,
@@ -48965,6 +49348,7 @@ typedef $$OxygenSaturationLogsTableTableUpdateCompanionBuilder =
       Value<String?> tenantID,
       Value<String?> personID,
       Value<double> saturation,
+      Value<String?> source,
       Value<DateTime> timestamp,
       Value<DateTime?> createdAt,
       Value<int> rowid,
@@ -48996,6 +49380,11 @@ class $$OxygenSaturationLogsTableTableFilterComposer
 
   ColumnFilters<double> get saturation => $composableBuilder(
     column: $table.saturation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get source => $composableBuilder(
+    column: $table.source,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -49041,6 +49430,11 @@ class $$OxygenSaturationLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get source => $composableBuilder(
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get timestamp => $composableBuilder(
     column: $table.timestamp,
     builder: (column) => ColumnOrderings(column),
@@ -49074,6 +49468,9 @@ class $$OxygenSaturationLogsTableTableAnnotationComposer
     column: $table.saturation,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get source =>
+      $composableBuilder(column: $table.source, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get timestamp =>
       $composableBuilder(column: $table.timestamp, builder: (column) => column);
@@ -49132,6 +49529,7 @@ class $$OxygenSaturationLogsTableTableTableManager
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<double> saturation = const Value.absent(),
+                Value<String?> source = const Value.absent(),
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -49140,6 +49538,7 @@ class $$OxygenSaturationLogsTableTableTableManager
                 tenantID: tenantID,
                 personID: personID,
                 saturation: saturation,
+                source: source,
                 timestamp: timestamp,
                 createdAt: createdAt,
                 rowid: rowid,
@@ -49150,6 +49549,7 @@ class $$OxygenSaturationLogsTableTableTableManager
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 required double saturation,
+                Value<String?> source = const Value.absent(),
                 required DateTime timestamp,
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -49158,6 +49558,7 @@ class $$OxygenSaturationLogsTableTableTableManager
                 tenantID: tenantID,
                 personID: personID,
                 saturation: saturation,
+                source: source,
                 timestamp: timestamp,
                 createdAt: createdAt,
                 rowid: rowid,

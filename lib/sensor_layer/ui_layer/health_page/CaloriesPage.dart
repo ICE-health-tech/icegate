@@ -326,22 +326,6 @@ class _CaloriesCardState extends State<CaloriesPage> {
             Row(
               children: [
                 Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _showAddFoodModal,
-                    icon: const Icon(Icons.add),
-                    label: Text(AppLocalizations.of(context)!.add_food),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
                   child: OutlinedButton.icon(
                     onPressed: _openLidarScanner,
                     icon: const Icon(Icons.qr_code_scanner),

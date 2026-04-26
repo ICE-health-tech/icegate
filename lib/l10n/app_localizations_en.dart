@@ -395,6 +395,40 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nutri_cal => 'cal';
 
   @override
+  String get nutri_what_eat => 'What did you eat?';
+
+  @override
+  String get nutri_save_record => 'SAVE RECORD';
+
+  @override
+  String get nutri_info_title => 'NUTRITION INFO';
+
+  @override
+  String get nutri_camera => 'Camera';
+
+  @override
+  String get nutri_gallery => 'Gallery';
+
+  @override
+  String get nutri_delete_meal => 'Delete Meal';
+
+  @override
+  String get nutri_delete_confirm =>
+      'Are you sure you want to delete this meal?';
+
+  @override
+  String get nutri_meal_deleted => 'Meal deleted';
+
+  @override
+  String get nutri_yesterday => 'Yesterday';
+
+  @override
+  String get common_cancel => 'Cancel';
+
+  @override
+  String get common_delete => 'Delete';
+
+  @override
   String get todays_gains => 'Today\'s Gains';
 
   @override
@@ -1091,7 +1125,217 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_no_achievements => 'No achievements yet';
 
   @override
+  String get social_no_achievements_msg => 'No achievements logged yet.';
+
+  @override
   String get social_feat => 'Feat';
+
+  @override
+  String get mind_how_feeling => 'How are you feeling?';
+
+  @override
+  String get mind_what_up_to => 'What have you been up to?';
+
+  @override
+  String get mind_add_note_hint => 'Add a note (optional)';
+
+  @override
+  String get mind_save_entry => 'Save Entry';
+
+  @override
+  String get mind_log_saved => 'Mind log saved! Reflection updated.';
+
+  @override
+  String get mind_error_login =>
+      'Error: User session not found. Please log in again.';
+
+  @override
+  String mind_error_save(Object error) {
+    return 'Failed to save log: $error';
+  }
+
+  @override
+  String get mood_awful => 'Awful';
+
+  @override
+  String get mood_bad => 'Bad';
+
+  @override
+  String get mood_meh => 'Meh';
+
+  @override
+  String get mood_good => 'Good';
+
+  @override
+  String get mood_rad => 'Rad';
+
+  @override
+  String get mood_no_data => 'No data';
+
+  @override
+  String get mind_current_mood => 'Current Mood';
+
+  @override
+  String get mind_day_average => 'Day Average';
+
+  @override
+  String get mind_latest_log => 'Latest Log';
+
+  @override
+  String get mind_never => 'Never';
+
+  @override
+  String get mind_status => 'Status';
+
+  @override
+  String get mind_stable => 'Stable';
+
+  @override
+  String get mind_needs_care => 'Needs Care';
+
+  @override
+  String get mind_quick_entry_hint => 'What\'s on your mind?';
+
+  @override
+  String get mood_trends_title => 'Mood Trends';
+
+  @override
+  String get social_notes_title => 'Social Notes';
+
+  @override
+  String get social_empty_state_title => 'Your story begins here';
+
+  @override
+  String get social_empty_state_subtitle =>
+      'Capture moments, thoughts, and ideas.';
+
+  @override
+  String get btn_new_reflection => 'New Reflection';
+
+  @override
+  String get mind_insights_title => 'Mind Insights';
+
+  @override
+  String get mind_insights_subtitle => 'Analysis of your journal entries';
+
+  @override
+  String get mind_question => 'How are you feeling?';
+
+  @override
+  String get mind_activities_question => 'What have you been up to?';
+
+  @override
+  String get mind_note_hint => 'Add a note (optional)';
+
+  @override
+  String get mind_save_btn => 'Save Entry';
+
+  @override
+  String get mind_save_success => 'Mind log saved! Reflection updated.';
+
+  @override
+  String mind_feeling_format(Object mood) {
+    return 'I\'m feeling $mood today.';
+  }
+
+  @override
+  String get mind_logged_mood => 'Logged mood';
+
+  @override
+  String get todays_reflections => 'Today\'s Reflections';
+
+  @override
+  String get daily_step_distribution => 'Daily Step Distribution';
+
+  @override
+  String get stat_entries => 'Entries';
+
+  @override
+  String get stat_images => 'Images';
+
+  @override
+  String get stat_sentiment => 'Sentiment';
+
+  @override
+  String get weekly_mood_trend => 'Weekly Mood Trend';
+
+  @override
+  String get no_records_last_7_days => 'No records for the last 7 days';
+
+  @override
+  String get frequent_activities => 'Frequent Activities';
+
+  @override
+  String get track_patterns_msg => 'Track more logs to see patterns';
+
+  @override
+  String get monthly_reflection => 'Monthly Reflection';
+
+  @override
+  String get cat_productivity => 'Productivity';
+
+  @override
+  String get cat_health => 'Health';
+
+  @override
+  String get cat_social => 'Social';
+
+  @override
+  String get cat_rest => 'Rest';
+
+  @override
+  String get act_deep_work => 'Deep Work';
+
+  @override
+  String get act_learning => 'Learning';
+
+  @override
+  String get act_finance => 'Finance';
+
+  @override
+  String get act_planning => 'Planning';
+
+  @override
+  String get act_exercise => 'Exercise';
+
+  @override
+  String get act_meditation => 'Meditation';
+
+  @override
+  String get act_healthy_meal => 'Healthy Meal';
+
+  @override
+  String get act_great_sleep => 'Great Sleep';
+
+  @override
+  String get act_family => 'Family';
+
+  @override
+  String get act_friends => 'Friends';
+
+  @override
+  String get act_dating => 'Dating';
+
+  @override
+  String get act_kindness => 'Kindness';
+
+  @override
+  String get act_gaming => 'Gaming';
+
+  @override
+  String get act_reading => 'Reading';
+
+  @override
+  String get act_cinema => 'Cinema';
+
+  @override
+  String get act_walking => 'Walking';
+
+  @override
+  String get act_logging => 'Logging';
+
+  @override
+  String get act_productivity => 'Productivity';
 
   @override
   String get add_app_plugin => 'Add App Plugin';
@@ -1149,6 +1393,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance => 'Finance';
+
+  @override
+  String get auth_error_session_not_found =>
+      'Error: User session not found. Please log in again.';
 
   @override
   String get projects => 'Projects';

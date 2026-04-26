@@ -28,6 +28,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/ExternalWidgetBl
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/ScoreAnimations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
@@ -138,6 +139,7 @@ class _HomePageState extends State<HomePage> {
   late HealthBlock healthBlock;
   late ProjectBlock projectBlock;
   late QuoteBlock quoteBlock;
+  late MindBlock mindBlock;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
   int? _lastSeenLevel;
@@ -160,6 +162,7 @@ class _HomePageState extends State<HomePage> {
     healthBlock = context.read<HealthBlock>();
     projectBlock = context.read<ProjectBlock>();
     quoteBlock = context.read<QuoteBlock>();
+    mindBlock = context.read<MindBlock>();
 
     _fetchInitialData();
 
@@ -273,7 +276,6 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final personBlock = context.read<PersonBlock>();
     final double sizeOfDepartment = UIConstants.getSizeOfDepartment(context);
     final double sizeOfWidget = UIConstants.getSizeOfWidget(context);
     final colorScheme = Theme.of(context).colorScheme;
@@ -440,49 +442,63 @@ class _HomePageState extends State<HomePage> {
                               );
                             }),
                             Watch((context) {
-                              final info = personBlock.information.value;
-                              return StreamBuilder<List<PersonData>>(
-                                stream: database.personDAO.getAllPersons(),
-                                builder: (context, snapshot) {
-                                  final count = snapshot.data?.length ?? 0;
-                                  return _buildQuickAccessCard(
-                                    context,
-                                    AppLocalizations.of(context)!.social,
-                                    Icons.psychology_rounded,
-                                    Colors.purple,
-                                    metrics: [
-                                      {
-                                        'label': AppLocalizations.of(
-                                          context,
-                                        )!.total_users,
-                                        'value': '$count',
-                                      },
-                                      {
-                                        'label': AppLocalizations.of(
-                                          context,
-                                        )!.friends,
-                                        'value': '${info.profiles.friends}',
-                                      },
-                                      {
-                                        'label': AppLocalizations.of(
-                                          context,
-                                        )!.mutual,
-                                        'value': '${info.profiles.mutual}',
-                                      },
-                                      {
-                                        'label': AppLocalizations.of(
-                                          context,
-                                        )!.username,
-                                        'value':
-                                            authBlock.username.value ??
-                                            info.profiles.username,
-                                      },
-                                    ],
-                                    route: '/social',
-                                    scoreData:
-                                        scoreBlock.score.socialGlobalScore,
-                                  );
-                                },
+                              final moodLog = mindBlock.latestMoodLog.value;
+                              final socialScore =
+                                  scoreBlock.score.socialGlobalScore;
+
+                              String moodDisplay = AppLocalizations.of(context)!.mood_no_data;
+                              if (moodLog != null) {
+                                final score = moodLog.moodScore;
+                                String emoji = "😐";
+                                String text = AppLocalizations.of(context)!.mood_meh;
+                                if (score == 1) {
+                                  emoji = "😫";
+                                  text = AppLocalizations.of(context)!.mood_awful;
+                                } else if (score == 2) {
+                                  emoji = "🙁";
+                                  text = AppLocalizations.of(context)!.mood_bad;
+                                } else if (score == 3) {
+                                  emoji = "😐";
+                                  text = AppLocalizations.of(context)!.mood_meh;
+                                } else if (score == 4) {
+                                  emoji = "😊";
+                                  text = AppLocalizations.of(context)!.mood_good;
+                                } else if (score == 5) {
+                                  emoji = "🤩";
+                                  text = AppLocalizations.of(context)!.mood_rad;
+                                }
+                                moodDisplay = "$emoji $text";
+                              }
+
+                              return _buildQuickAccessCard(
+                                context,
+                                AppLocalizations.of(context)!.social, // Or l10n fallback
+                                Icons.psychology_rounded,
+                                Colors.purple,
+                                metrics: [
+                                  {
+                                    'label': AppLocalizations.of(context)!.mind_current_mood,
+                                    'value': moodDisplay,
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(context)!.mind_day_average,
+                                    'value': socialScore.toStringAsFixed(1),
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(context)!.mind_latest_log,
+                                    'value': moodLog != null
+                                        ? _formatRelativeTime(moodLog.createdAt)
+                                        : AppLocalizations.of(context)!.mind_never,
+                                  },
+                                  {
+                                    'label': AppLocalizations.of(context)!.mind_status,
+                                    'value': socialScore >= 70
+                                        ? AppLocalizations.of(context)!.mind_stable
+                                        : AppLocalizations.of(context)!.mind_needs_care,
+                                  },
+                                ],
+                                route: '/social', // Navigate to mind/social
+                                scoreData: socialScore,
                               );
                             }),
                             Watch((context) {
@@ -754,6 +770,14 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
+  }
+
+  String _formatRelativeTime(DateTime dateTime) {
+    final diff = DateTime.now().difference(dateTime);
+    if (diff.inDays > 0) return '${diff.inDays}d ago';
+    if (diff.inHours > 0) return '${diff.inHours}h ago';
+    if (diff.inMinutes > 0) return '${diff.inMinutes}m ago';
+    return 'Just now';
   }
 
   Widget _buildQuickAccessCard(

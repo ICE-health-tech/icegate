@@ -491,8 +491,10 @@ class ProjectDetailsPage extends StatelessWidget {
                               ...notes
                                   .take(3)
                                   .map(
-                                    (note) =>
-                                        ProjectNoteItem(note: note, project: project),
+                                    (note) => ProjectNoteItem(
+                                      note: note,
+                                      project: project,
+                                    ),
                                   ),
                             ],
                           );
@@ -818,14 +820,14 @@ class ProjectDetailsPage extends StatelessWidget {
   ) async {
     final personBlock = context.read<PersonBlock>();
     final docBlock = context.read<DocumentationBlock>();
-    
+
     // 1. Ensure a project-specific folder exists
     final folderName = project.name.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
     await docBlock.createLocalFolder(folderName);
-    
+
     // Show a quick dialog to choose type
     if (!context.mounted) return;
-    
+
     final type = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
@@ -839,12 +841,13 @@ class ProjectDetailsPage extends StatelessWidget {
 
     if (type == 'tech_doc') {
       title = 'Technical Documentation';
-      content = '# Technical Documentation\n\n## Overview\n\n## Architecture\n\n## Implementation Details\n';
+      content =
+          '# Technical Documentation\n\n## Overview\n\n## Architecture\n\n## Implementation Details\n';
     } else if (type == 'api_spec') {
       title = 'API Specification';
       content = '# API Specification\n\n## Endpoints\n\n### GET /v1/...\n';
     }
-    
+
     // 2. Resolve the directory for the editor
     final projectDir = Directory('${docBlock.rootDir?.path}/$folderName');
 
@@ -858,13 +861,10 @@ class ProjectDetailsPage extends StatelessWidget {
     final note = await dao.getNoteById(noteID);
     if (note != null && context.mounted) {
       await context.push(
-        '/projects/editor', 
-        extra: {
-          'note': note,
-          'initialDirectory': projectDir,
-        }
+        '/projects/editor',
+        extra: {'note': note, 'initialDirectory': projectDir},
       );
-      // No setState needed here as it's a StatelessWidget, 
+      // No setState needed here as it's a StatelessWidget,
       // but the StreamBuilder will catch the DB change.
     }
   }

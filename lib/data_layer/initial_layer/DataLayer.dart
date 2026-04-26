@@ -409,6 +409,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 );
                 healthBlock.personId = personId;
                 Future.microtask(() => healthBlock.init());
+                Future.microtask(() => mindBlock.init(personId));
                 _syncHealthData();
 
                 projectBlock.init(database.projectsDAO, personId);

@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -34,13 +35,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       }
 
       return Container(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [colorScheme.surface, colorScheme.surfaceContainerLowest],
-          ),
-        ),
+        color: Colors.transparent,
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
@@ -64,7 +59,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "MOOD TRENDS",
+                              AppLocalizations.of(context)!.mood_trends_title.toUpperCase(),
                               style: textTheme.labelSmall?.copyWith(
                                 letterSpacing: 2,
                                 fontWeight: FontWeight.bold,
@@ -79,7 +74,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                             _buildRecentLogsPreview(context, snapshot.data!),
                             const SizedBox(height: 24),
                             Text(
-                              "SOCIAL NOTES",
+                              AppLocalizations.of(context)!.social_notes_title.toUpperCase(),
                               style: textTheme.labelSmall?.copyWith(
                                 letterSpacing: 2,
                                 fontWeight: FontWeight.bold,
@@ -192,7 +187,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     ),
                     const SizedBox(width: 12),
                     Text(
-                      "What's on your mind?",
+                      AppLocalizations.of(context)!.mind_quick_entry_hint,
                       style: textTheme.bodyMedium?.copyWith(
                         color: colorScheme.onSurfaceVariant.withValues(
                           alpha: 0.8,
@@ -246,7 +241,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             ),
             const SizedBox(height: 24),
             Text(
-              'Your story begins here',
+              AppLocalizations.of(context)!.social_empty_state_title,
               textAlign: TextAlign.center,
               style: textTheme.headlineSmall?.copyWith(
                 color: colorScheme.onSurface,
@@ -256,7 +251,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Capture moments, thoughts, and ideas.',
+              AppLocalizations.of(context)!.social_empty_state_subtitle,
               textAlign: TextAlign.center,
               style: textTheme.bodyMedium?.copyWith(
                 color: colorScheme.onSurfaceVariant,
@@ -266,7 +261,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
             FilledButton.icon(
               onPressed: () => _createNewNote(context),
               icon: const Icon(Icons.add_rounded),
-              label: const Text('New Reflection'),
+              label: Text(AppLocalizations.of(context)!.btn_new_reflection),
             ),
           ],
         ),

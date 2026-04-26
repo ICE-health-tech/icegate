@@ -20,11 +20,32 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 class FoodInputPage extends StatefulWidget {
   final String? mealId;
   final XFile? image;
+  final bool isPopUp;
 
-  const FoodInputPage({super.key, this.mealId, this.image});
+  const FoodInputPage({
+    super.key,
+    this.mealId,
+    this.image,
+    this.isPopUp = false,
+  });
 
   @override
   State<FoodInputPage> createState() => _FoodInputPageState();
+
+  static Future<void> show(
+    BuildContext context, {
+    String? mealId,
+    XFile? image,
+  }) {
+    return showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder:
+          (context) =>
+              FoodInputPage(mealId: mealId, image: image, isPopUp: true),
+    );
+  }
 
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
@@ -32,7 +53,7 @@ class FoodInputPage extends StatefulWidget {
       destination: "/health/food",
       size: size,
       icon: Icons.camera_alt_rounded,
-      mainFunction: () {},
+      mainFunction: () => show(context),
     );
   }
 }
@@ -247,8 +268,11 @@ class _FoodInputPageState extends State<FoodInputPage> {
     );
 
     if (mounted) {
-      // WidgetNavigatorAction.smartPop(context);
-      context.go("/health/food/consume");
+      if (widget.isPopUp) {
+        Navigator.of(context).pop();
+      } else {
+        context.go("/health/food/consume");
+      }
     }
   }
 
@@ -279,224 +303,220 @@ class _FoodInputPageState extends State<FoodInputPage> {
     );
     final iconSize = UIResponsiveManager.iconSize(context);
 
-    return Scaffold(
-      backgroundColor: colorScheme.surface,
-      // appBar: AppBar(
-      //   title: Text('Log Meal', style: TextStyle(fontWeight: FontWeight.w900)),
-      //   backgroundColor: colorScheme.surface,
-      //   leading: IconButton(
-      //     icon: Icon(Icons.arrow_back_ios_new, size: iconSize - 4),
-      //     onPressed: () => WidgetNavigatorAction.smartPop(context),
-      //   ),
-      // ),
-      body: SwipeablePage(
-        direction: SwipeablePageDirection.leftToRight,
-        onSwipe: () => WidgetNavigatorAction.smartPop(context),
-        child: SingleChildScrollView(
-          padding: padding,
-          child: Center(
-            child: ConstrainedBox(
-              constraints: BoxConstraints(
-                maxWidth: UIResponsiveManager.responsiveValue(
-                  context,
-                  phone: double.infinity,
-                  tablet: double.infinity,
-                  laptop: double.infinity,
-                  desktop: double.infinity,
+    final content = ConstrainedBox(
+      constraints: BoxConstraints(
+        maxWidth: UIResponsiveManager.responsiveValue(
+          context,
+          phone: double.infinity,
+          tablet: double.infinity,
+          laptop: double.infinity,
+          desktop: double.infinity,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (widget.isPopUp) ...[
+            Center(
+              child: Container(
+                width: 40,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: colorScheme.outlineVariant,
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(height: inputFieldSpacing),
-                  if (_pickedImage != null)
-                    Container(
-                      height: imageHeight,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(imageRadius),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: UIResponsiveManager.inputFieldSpacing(
-                              context,
-                              factor: 2,
-                            ),
-                            offset: Offset(
-                              0,
-                              UIResponsiveManager.inputFieldSpacing(
-                                context,
-                                factor: 1,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(imageRadius),
-                        child: kIsWeb
-                            ? Image.network(
-                                _pickedImage!.path,
-                                fit: BoxFit.cover,
-                              )
-                            : Image.file(
-                                File(_pickedImage!.path),
-                                fit: BoxFit.cover,
-                              ),
-                      ),
-                    )
-                  else
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildCaptureModeButton(
-                            Icons.camera_alt_rounded,
-                            "Camera",
-                            colorScheme.primary,
-                            () => _pickImage(ImageSource.camera),
-                          ),
-                        ),
-                        SizedBox(
-                          width: UIResponsiveManager.horizontalSpacing(context),
-                        ),
-                        Expanded(
-                          child: _buildCaptureModeButton(
-                            Icons.photo_library_rounded,
-                            "Gallery",
-                            colorScheme.secondary,
-                            () => _pickImage(ImageSource.gallery),
-                          ),
-                        ),
-                      ],
+            ),
+            SizedBox(height: inputFieldSpacing),
+          ],
+          SizedBox(height: inputFieldSpacing),
+          if (_pickedImage != null)
+            Container(
+              height: imageHeight,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(imageRadius),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: UIResponsiveManager.inputFieldSpacing(
+                      context,
+                      factor: 2,
                     ),
-                  SizedBox(height: inputFieldSpacing * 1.5),
-                  TextField(
-                    controller: _foodController,
-                    style: TextStyle(
-                      fontSize:
-                          UIResponsiveManager.responsiveFontScale(context) * 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: 'What did you eat?',
-                      prefixIcon: Icon(
-                        Icons.restaurant_rounded,
-                        size: iconSize,
-                      ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(buttonRadius),
-                      ),
-                      filled: true,
-                      fillColor: colorScheme.surfaceContainerHighest.withValues(
-                        alpha: 0.3,
-                      ),
-                    ),
-                    onEditingComplete: _analyzeFood,
-                  ),
-                  SizedBox(height: inputFieldSpacing),
-                  Text(
-                    'NUTRITION INFO',
-                    style: textTheme.labelSmall?.copyWith(
-                      fontWeight: FontWeight.w900,
-                      color: colorScheme.primary,
-                      letterSpacing: 1.5,
-                    ),
-                  ),
-                  SizedBox(
-                    height: UIResponsiveManager.inputFieldSpacing(context),
-                  ),
-                  Row(
-                    children: [
-                      _buildMacroInput(
-                        l10n.nutri_protein,
-                        _proteinController,
-                        Colors.orange,
-                      ),
-                      SizedBox(
-                        width: UIResponsiveManager.inputFieldSpacing(context),
-                      ),
-                      _buildMacroInput(
-                        l10n.nutri_carbs,
-                        _carbsController,
-                        Colors.blue,
-                      ),
-                      SizedBox(
-                        width: UIResponsiveManager.inputFieldSpacing(context),
-                      ),
-                      _buildMacroInput(
-                        l10n.nutri_fat,
-                        _fatController,
-                        Colors.pink,
-                      ),
-                    ],
-                  ),
-                  SizedBox(height: inputFieldSpacing),
-                  TextField(
-                    controller: _kcalController,
-                    keyboardType: TextInputType.number,
-                    style: TextStyle(
-                      fontSize:
-                          UIResponsiveManager.responsiveFontScale(context) * 20,
-                      fontWeight: FontWeight.w900,
-                    ),
-                    decoration: InputDecoration(
-                      labelText: "${l10n.nutri_total} (kcal)",
-                      prefixIcon: Icon(
-                        Icons.local_fire_department_rounded,
-                        size: iconSize,
-                      ),
-                      suffixIcon: _isAnalyzing
-                          ? Padding(
-                              padding: EdgeInsets.all(
-                                UIResponsiveManager.inputFieldSpacing(context) *
-                                    0.75,
-                              ),
-                              child: const CircularProgressIndicator(
-                                strokeWidth: 2,
-                              ),
-                            )
-                          : IconButton(
-                              icon: const Icon(Icons.auto_awesome),
-                              onPressed: _analyzeFood,
-                              color: colorScheme.primary,
-                            ),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(buttonRadius),
-                      ),
-                    ),
-                  ),
-                  SizedBox(height: inputFieldSpacing * 2),
-                  ElevatedButton(
-                    onPressed: _addMeal,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: colorScheme.primary,
-                      foregroundColor: colorScheme.onPrimary,
-                      padding: EdgeInsets.symmetric(
-                        vertical: UIResponsiveManager.inputFieldSpacing(
-                          context,
-                          factor: 1.5,
-                        ),
-                      ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(buttonRadius + 4),
-                      ),
-                      elevation: UIResponsiveManager.cardElevation(context),
-                      shadowColor: colorScheme.primary.withValues(alpha: 0.4),
-                    ),
-                    child: Text(
-                      'SAVE RECORD',
-                      style: TextStyle(
-                        fontWeight: FontWeight.w900,
-                        fontSize:
-                            UIResponsiveManager.responsiveFontScale(context) *
-                            14,
-                      ),
+                    offset: Offset(
+                      0,
+                      UIResponsiveManager.inputFieldSpacing(context, factor: 1),
                     ),
                   ),
                 ],
               ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(imageRadius),
+                child:
+                    kIsWeb
+                        ? Image.network(_pickedImage!.path, fit: BoxFit.cover)
+                        : Image.file(
+                          File(_pickedImage!.path),
+                          fit: BoxFit.cover,
+                        ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: _buildCaptureModeButton(
+                    Icons.camera_alt_rounded,
+                    l10n.nutri_camera,
+                    colorScheme.primary,
+                    () => _pickImage(ImageSource.camera),
+                  ),
+                ),
+                SizedBox(width: UIResponsiveManager.horizontalSpacing(context)),
+                Expanded(
+                  child: _buildCaptureModeButton(
+                    Icons.photo_library_rounded,
+                    l10n.nutri_gallery,
+                    colorScheme.secondary,
+                    () => _pickImage(ImageSource.gallery),
+                  ),
+                ),
+              ],
+            ),
+          SizedBox(height: inputFieldSpacing * 1.5),
+          TextField(
+            controller: _foodController,
+            style: TextStyle(
+              fontSize: UIResponsiveManager.responsiveFontScale(context) * 16,
+              fontWeight: FontWeight.bold,
+            ),
+            decoration: InputDecoration(
+              labelText: l10n.nutri_what_eat,
+              prefixIcon: Icon(Icons.restaurant_rounded, size: iconSize),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(buttonRadius),
+              ),
+              filled: true,
+              fillColor: colorScheme.surfaceContainerHighest.withValues(
+                alpha: 0.3,
+              ),
+            ),
+            onEditingComplete: _analyzeFood,
+          ),
+          SizedBox(height: inputFieldSpacing),
+          Text(
+            l10n.nutri_info_title,
+            style: textTheme.labelSmall?.copyWith(
+              fontWeight: FontWeight.w900,
+              color: colorScheme.primary,
+              letterSpacing: 1.5,
             ),
           ),
+          SizedBox(height: UIResponsiveManager.inputFieldSpacing(context)),
+          Row(
+            children: [
+              _buildMacroInput(
+                l10n.nutri_protein,
+                _proteinController,
+                Colors.orange,
+              ),
+              SizedBox(width: UIResponsiveManager.inputFieldSpacing(context)),
+              _buildMacroInput(
+                l10n.nutri_carbs,
+                _carbsController,
+                Colors.blue,
+              ),
+              SizedBox(width: UIResponsiveManager.inputFieldSpacing(context)),
+              _buildMacroInput(l10n.nutri_fat, _fatController, Colors.pink),
+            ],
+          ),
+          SizedBox(height: inputFieldSpacing),
+          TextField(
+            controller: _kcalController,
+            keyboardType: TextInputType.number,
+            style: TextStyle(
+              fontSize: UIResponsiveManager.responsiveFontScale(context) * 20,
+              fontWeight: FontWeight.w900,
+            ),
+            decoration: InputDecoration(
+              labelText: "${l10n.nutri_total} (kcal)",
+              prefixIcon: Icon(
+                Icons.local_fire_department_rounded,
+                size: iconSize,
+              ),
+              suffixIcon:
+                  _isAnalyzing
+                      ? Padding(
+                        padding: EdgeInsets.all(
+                          UIResponsiveManager.inputFieldSpacing(context) * 0.75,
+                        ),
+                        child: const CircularProgressIndicator(strokeWidth: 2),
+                      )
+                      : IconButton(
+                        icon: const Icon(Icons.auto_awesome),
+                        onPressed: _analyzeFood,
+                        color: colorScheme.primary,
+                      ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(buttonRadius),
+              ),
+            ),
+          ),
+          SizedBox(height: inputFieldSpacing * 2),
+          ElevatedButton(
+            onPressed: _addMeal,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              padding: EdgeInsets.symmetric(
+                vertical: UIResponsiveManager.inputFieldSpacing(
+                  context,
+                  factor: 1.5,
+                ),
+              ),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(buttonRadius + 4),
+              ),
+              elevation: UIResponsiveManager.cardElevation(context),
+              shadowColor: colorScheme.primary.withValues(alpha: 0.4),
+            ),
+            child: Text(
+              l10n.nutri_save_record,
+              style: TextStyle(
+                fontWeight: FontWeight.w900,
+                fontSize: UIResponsiveManager.responsiveFontScale(context) * 14,
+              ),
+            ),
+          ),
+          if (widget.isPopUp) SizedBox(height: 32),
+        ],
+      ),
+    );
+
+    if (widget.isPopUp) {
+      final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+      return Container(
+        height: MediaQuery.of(context).size.height * 0.85,
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          border: Border.all(
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+          ),
         ),
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottomInset),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          child: content,
+        ),
+      );
+    }
+
+    return Scaffold(
+      backgroundColor: colorScheme.surface,
+      body: SwipeablePage(
+        direction: SwipeablePageDirection.leftToRight,
+        onSwipe: () => WidgetNavigatorAction.smartPop(context),
+        child: SingleChildScrollView(padding: padding, child: Center(child: content)),
       ),
     );
   }

@@ -756,14 +756,14 @@ class HealthBlock {
   void updateSleep(double hours) {
     todaySleep.value = hours;
 
-    _saveSleep(hours, source: HealthSourceService.sourceGT6);
+    _saveSleep(hours, source: HealthSourceService.sourceAppleHealth);
   }
 
   void updateHeartRate(int bpm) {
     if (bpm > 0) {
       todayHeartRate.value = bpm;
 
-      _saveHeartRate(bpm, source: HealthSourceService.sourceGT6);
+      _saveHeartRate(bpm, source: HealthSourceService.sourceAppleHealth);
     }
   }
 
@@ -853,7 +853,7 @@ class HealthBlock {
     if (saturation > 0) {
       todayOxygenSaturation.value = saturation;
 
-      _saveOxygenSaturation(saturation, source: HealthSourceService.sourceGT6);
+      _saveOxygenSaturation(saturation, source: HealthSourceService.sourceAppleHealth);
     }
   }
 

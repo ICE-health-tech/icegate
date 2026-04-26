@@ -49,20 +49,20 @@ class HealthSourceService {
 
   /// Returns the signature brand color for each data source
   static Color getSourceColor(String? source, ColorScheme colorScheme) {
-    final label = getLabel(source);
-
-    switch (label) {
-      case sourceAppleHealth:
-        return const Color(0xFFFF2D55); // Apple Red
-      case sourceGT6:
-        return const Color(0xFFFF9500); // GT6 Orange/Gold
-      case sourceManual:
-        return const Color(0xFF34C759); // Manual Green
-      case sourceApp:
-        return const Color(0xFF5856D6); // App Indigo/Purple
-      default:
-        return colorScheme.primary;
+    final s = source?.toLowerCase() ?? '';
+    if (s.contains('applehealth') || s.contains('apple')) {
+      return const Color(0xFFFF2D55); // Apple Red
     }
+    if (s.contains('gt6')) {
+      return const Color(0xFFFF9500); // GT6 Orange/Gold
+    }
+    if (s.contains('manual')) {
+      return const Color(0xFF34C759); // Manual Green
+    }
+    if (s.contains('app')) {
+      return const Color(0xFF5856D6); // App Indigo/Purple
+    }
+    return colorScheme.primary;
   }
 
   /// Helper to determine if a source is a physical wearable

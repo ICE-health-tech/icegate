@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -24,7 +25,7 @@ class SocialAnalysisPage extends StatelessWidget {
     final mindBlock = context.read<MindBlock>();
 
     return Scaffold(
-      backgroundColor: colorScheme.surface,
+      backgroundColor: Colors.transparent,
       body: Watch((context) {
         final personId = personBlock.currentPersonID.value;
         if (personId == null || personId.isEmpty) {
@@ -61,7 +62,7 @@ class SocialAnalysisPage extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              "MIND INSIGHTS",
+                              AppLocalizations.of(context)!.mind_insights_title.toUpperCase(),
                               style: textTheme.labelLarge?.copyWith(
                                 color: colorScheme.primary,
                                 fontWeight: FontWeight.w900,
@@ -70,7 +71,7 @@ class SocialAnalysisPage extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              "Analysis of your journal entries",
+                              AppLocalizations.of(context)!.mind_insights_subtitle,
                               style: textTheme.headlineSmall?.copyWith(
                                 fontWeight: FontWeight.w900,
                               ),
@@ -114,9 +115,9 @@ class SocialAnalysisPage extends StatelessWidget {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "TODAY'S REFLECTIONS",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            Text(
+              AppLocalizations.of(context)!.todays_reflections.toUpperCase(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             const SizedBox(height: 16),
             ...logs.take(5).map((log) {
@@ -207,9 +208,9 @@ class SocialAnalysisPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              "DAILY STEP DISTRIBUTION",
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+            Text(
+              AppLocalizations.of(context)!.daily_step_distribution.toUpperCase(),
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
             ),
             const Spacer(),
             SizedBox(
@@ -272,9 +273,9 @@ class SocialAnalysisPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          _buildStatItem(context, notes.length.toString(), "ENTRIES"),
-          _buildStatItem(context, _countImages(notes).toString(), "IMAGES"),
-          _buildStatItem(context, "${sentiment.toStringAsFixed(0)}%", "SENTIMENT"),
+          _buildStatItem(context, notes.length.toString(), AppLocalizations.of(context)!.stat_entries.toUpperCase()),
+          _buildStatItem(context, _countImages(notes).toString(), AppLocalizations.of(context)!.stat_images.toUpperCase()),
+          _buildStatItem(context, "${sentiment.toStringAsFixed(0)}%", AppLocalizations.of(context)!.stat_sentiment.toUpperCase()),
         ],
       ),
     );
@@ -319,9 +320,9 @@ class SocialAnalysisPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "WEEKLY MOOD TREND",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          Text(
+            AppLocalizations.of(context)!.weekly_mood_trend.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
           const SizedBox(height: 16),
           Expanded(
@@ -332,7 +333,7 @@ class SocialAnalysisPage extends StatelessWidget {
                 if (logs.isEmpty) {
                   return Center(
                     child: Text(
-                      "No records for the last 7 days",
+                      AppLocalizations.of(context)!.no_records_last_7_days,
                       style: TextStyle(
                         fontSize: 10,
                         color: colorScheme.onSurfaceVariant.withOpacity(0.5),
@@ -362,16 +363,16 @@ class SocialAnalysisPage extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            "FREQUENT ACTIVITIES",
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          Text(
+            AppLocalizations.of(context)!.frequent_activities.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
           ),
           const SizedBox(height: 16),
           FutureBuilder<Map<String, int>>(
             future: mindBlock.getTopActivitiesForMood(personId, 5), // High energy activities
             builder: (context, snapshot) {
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Text("Track more logs to see patterns", 
+                return Text(AppLocalizations.of(context)!.track_patterns_msg, 
                     style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant.withOpacity(0.5)));
               }
               final activities = snapshot.data!.entries.toList()
@@ -425,7 +426,7 @@ class SocialAnalysisPage extends StatelessWidget {
               Icon(Icons.auto_awesome, color: colorScheme.tertiary),
               const SizedBox(width: 8),
               Text(
-                "MONTHLY REFLECTION",
+                AppLocalizations.of(context)!.monthly_reflection.toUpperCase(),
                 style: TextStyle(
                   color: colorScheme.tertiary,
                   fontWeight: FontWeight.bold,
