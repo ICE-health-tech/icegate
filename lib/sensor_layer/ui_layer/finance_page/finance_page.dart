@@ -289,7 +289,7 @@ class _FinancePageState extends State<FinancePage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const SizedBox(width: 20),
+              SizedBox(width: 40),
               Row(
                 children: [
                   Watch((context) {
@@ -343,7 +343,6 @@ class _FinancePageState extends State<FinancePage>
       ),
     );
   }
-
 
   Widget _buildGlowSphere(Color color, double size) {
     return Container(

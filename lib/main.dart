@@ -14,8 +14,12 @@ import 'package:media_kit/media_kit.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
 
-void main() {
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: ".env");
+  debugPrint("✅ [Boot] .env loaded: ${dotenv.env.keys.length} keys found.");
   MediaKit.ensureInitialized();
 
   // Call runApp immediately to prevent iOS black screen/Xcode hang.

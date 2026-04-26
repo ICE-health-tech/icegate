@@ -17,8 +17,7 @@ class HealthSourceService {
     if (source == null) return "DEVICE (GT6)";
 
     final s = source.toLowerCase();
-    if (s.contains('applehealth') || s.contains('apple'))
-      return "PHONE (APPLE)";
+    if (s.contains('applehealth') || s.contains('apple')) return "Apple Health";
     if (s.contains('gt6')) return "DEVICE (GT6)";
     if (s.contains('manual')) return "MANUAL";
     if (s.contains('app')) return "SYSTEM";
@@ -34,8 +33,8 @@ class HealthSourceService {
     final label = getLabel(source);
 
     switch (label) {
-      case "PHONE (APPLE)":
-        return Icons.smartphone_rounded;
+      case "Apple Health":
+        return Icons.apple_rounded;
       case "DEVICE (GT6)":
         return Icons.watch_rounded;
       case "MANUAL":

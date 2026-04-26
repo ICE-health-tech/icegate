@@ -99,9 +99,14 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
 
           return SwipeablePage(
             direction: SwipeablePageDirection.bottomToTop,
-            onSwipe: () => context.push('/health/food/dashboard'),
+            onSwipe: () => context.pop(),
             child: ListView.builder(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
+              padding: EdgeInsets.fromLTRB(
+                16,
+                MediaQuery.of(context).padding.top + 80,
+                16,
+                100,
+              ),
               itemCount: sortedDays.length,
               itemBuilder: (context, index) {
                 final dateKey = sortedDays[index];
@@ -222,25 +227,56 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: colorScheme.primaryContainer.withOpacity(0.3),
+              gradient: LinearGradient(
+                colors: [
+                  colorScheme.primaryContainer.withOpacity(0.4),
+                  colorScheme.primaryContainer.withOpacity(0.1),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
               borderRadius: const BorderRadius.vertical(
                 top: Radius.circular(20),
+              ),
+              border: Border(
+                bottom: BorderSide(
+                  color: colorScheme.primary.withOpacity(0.2),
+                ),
               ),
             ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  dayLabel,
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                  ),
+                Row(
+                  children: [
+                    Icon(
+                      isToday ? Icons.today_rounded : Icons.calendar_today_rounded,
+                      color: colorScheme.primary,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      dayLabel,
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${totalCals.toInt()} ${l10n.nutri_kcal}',
-                  style: textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w900,
-                    color: colorScheme.primary,
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: colorScheme.primary.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                  ),
+                  child: Text(
+                    '${totalCals.toInt()} ${l10n.nutri_kcal}',
+                    style: textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.primary,
+                    ),
                   ),
                 ),
               ],
@@ -357,108 +393,132 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
           _deleteMeal(meal.id);
         }
       },
-      child: InkWell(
-        onTap: () => FoodInputPage.show(context, mealId: meal.id),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            border: Border(
-              bottom: BorderSide(
-                color: colorScheme.outlineVariant.withOpacity(0.2),
-              ),
-            ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A1024), // obsidianCard
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: const Color(0xFF322244), // obsidianBorder
           ),
-          child: Row(
-            children: [
-              ClipRRect(
-                borderRadius: BorderRadius.circular(12),
-                child: LocalFirstImage(
-                  ownerId: meal.personID,
-                  localPath: meal.mealImageUrl ?? '',
-                  remoteUrl: '',
-                  subFolder: 'meals',
-                  width: 56,
-                  height: 56,
-                  fit: BoxFit.cover,
-                  placeholder: Container(
-                    width: 56,
-                    height: 56,
-                    color: colorScheme.surfaceContainerHighest,
-                    child: Icon(
-                      Icons.restaurant_rounded,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.3),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: InkWell(
+          onTap: () => FoodInputPage.show(context, mealId: meal.id),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(12),
+                  child: LocalFirstImage(
+                    ownerId: meal.personID,
+                    localPath: meal.mealImageUrl ?? '',
+                    remoteUrl: '',
+                    subFolder: 'meals',
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                    placeholder: Container(
+                      width: 60,
+                      height: 60,
+                      color: const Color(0xFF322244),
+                      child: Icon(
+                        Icons.restaurant_rounded,
+                        color: Colors.white.withOpacity(0.2),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        meal.mealName,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 16,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          _buildMiniMacro('F', meal.fat, Colors.pink),
+                          const SizedBox(width: 8),
+                          _buildMiniMacro('C', meal.carbs, Colors.blue),
+                          const SizedBox(width: 8),
+                          _buildMiniMacro('P', meal.protein, Colors.orange),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      meal.mealName,
+                      '${meal.calories.toInt()}',
                       style: const TextStyle(
-                        fontWeight: FontWeight.w700,
-                        fontSize: 15,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 20,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        _buildMacroPill('F', meal.fat, Colors.pink),
-                        const SizedBox(width: 6),
-                        _buildMacroPill('C', meal.carbs, Colors.blue),
-                        const SizedBox(width: 6),
-                        _buildMacroPill('P', meal.protein, Colors.orange),
-                      ],
+                    Text(
+                      'cal',
+                      style: TextStyle(
+                        color: Colors.white.withOpacity(0.5),
+                        fontSize: 12,
+                      ),
                     ),
                   ],
                 ),
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    '${meal.calories.toInt()}',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      fontSize: 18,
-                      color: colorScheme.primary,
-                    ),
-                  ),
-                  Text(
-                    l10n.nutri_cal,
-                    style: TextStyle(
-                      fontSize: 10,
-                      color: colorScheme.onSurfaceVariant.withOpacity(0.6),
-                    ),
-                  ),
-                ],
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  Widget _buildMacroPill(String label, double value, Color color) {
+  Widget _buildMiniMacro(String label, double value, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
-      child: Text(
-        '$label: ${value.toInt()}g',
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: color,
-        ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(
+              color: color,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          Text(
+            '${value.toInt()}g',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+            ),
+          ),
+        ],
       ),
     );
   }

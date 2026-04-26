@@ -146,4 +146,15 @@ class TickerItem {
     required this.price,
     required this.change,
   });
+
+  static List<TickerItem> getDefaults() {
+    return [
+      TickerItem(symbol: "VNINDEX", price: "1,250.32", change: 0.45),
+      TickerItem(symbol: "VN30", price: "1,265.11", change: -0.12),
+      TickerItem(symbol: "GOLD", price: "82.50", change: 1.20),
+      TickerItem(symbol: "USDVND", price: "25,450", change: 0.05),
+      TickerItem(symbol: "BTC", price: "64,250", change: 2.15),
+      TickerItem(symbol: "ETH", price: "3,450", change: -1.05),
+    ];
+  }
 }

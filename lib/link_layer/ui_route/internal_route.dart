@@ -211,16 +211,13 @@ final GoRouter router = GoRouter(
                 transitionDuration: const Duration(milliseconds: 800),
                 transitionsBuilder:
                     (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
+                      return FadeTransition(opacity: animation, child: child);
+                    },
                 child: const HomePage(),
               );
             }
             // Default Material/Cupertino slide for other entries
-            return MaterialPage(
-              key: state.pageKey,
-              child: const HomePage(),
-            );
+            return MaterialPage(key: state.pageKey, child: const HomePage());
           },
         ),
         GoRoute(
@@ -314,11 +311,15 @@ final GoRouter router = GoRouter(
             ),
             GoRoute(
               path: 'food',
-              builder: (context, state) => const FoodInputPage(),
+              builder: (context, state) => const FoodConsumePage(),
               routes: [
                 GoRoute(
+                  path: 'input',
+                  builder: (context, state) => const FoodInputPage(),
+                ),
+                GoRoute(
                   path: 'consume',
-                  builder: (context, state) => const FoodConsumePage(),
+                  redirect: (context, state) => '/health/food',
                 ),
                 GoRoute(
                   path: 'entry/:id',

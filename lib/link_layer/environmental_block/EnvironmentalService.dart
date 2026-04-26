@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class EnvironmentalData {
   final double temperature;
@@ -52,7 +53,7 @@ class EnvironmentalService {
       );
       
       // 2. Fetch Air Quality from WAQI (AQICN) - Better for Vietnam/Hanoi
-      const waqiToken = 'ba05403961fe1de0fb7049d8bbd94d1a610891f8';
+      final waqiToken = dotenv.env['WAQI_TOKEN'] ?? "";
       final aqiUrl = Uri.parse(
         'https://api.waqi.info/feed/geo:$lat;$lon/?token=$waqiToken',
       );

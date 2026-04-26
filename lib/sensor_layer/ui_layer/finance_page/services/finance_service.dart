@@ -116,30 +116,26 @@ class FinanceService {
   }
 
   static Future<FinanceAsset> fetchVnStock(String ticker) async {
-    final url = Uri.parse(
-      'https://tcinvest.tcbs.com.vn/v1/stock/stats/$ticker',
-    );
+    const baseUrl = 'https://vnstock.finance.duylong.art';
+    final url = Uri.parse('$baseUrl/stock/price?symbol=$ticker');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
-        if (response.body.trim().startsWith('<!doctype html>')) {
-          debugPrint('Error fetching $ticker: Received HTML instead of JSON');
-          return empty;
-        }
         final data = json.decode(response.body);
+        
+        // Use either the top-level price map or the data if it's wrapped
+        final priceData = data.containsKey('price') ? data['price'] : data;
 
-        // Mapping TCBS data to your FinanceAsset model
         return FinanceAsset(
           id: ticker.toLowerCase(),
-          name: ticker, // You can fetch company names from a separate mapping
+          name: ticker.toUpperCase(),
           symbol: ticker.toUpperCase(),
-          price: (data['lastPrice'] as num).toDouble(),
-          change24h: (data['pcp'] as num).toDouble(),
+          price: (priceData['price'] as num).toDouble(),
+          change24h: (priceData['changePercent'] as num).toDouble(),
           icon: Icons.show_chart,
-          color: (data['pcp'] >= 0) ? Colors.green : Colors.red,
+          color: (priceData['change'] >= 0) ? Colors.green : Colors.red,
           type: AssetType.stock,
-          // TCBS provides recent price history in other endpoints for the sparkline
-          sparkline: [data['referencePrice'], data['lastPrice']],
+          sparkline: [priceData['price'] * 0.98, priceData['price']], // Placeholder for sparkline
         );
       }
     } catch (e) {

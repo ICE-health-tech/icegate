@@ -49,7 +49,7 @@ class UIResponsiveManager {
   static double getSizeOfDepartment(BuildContext context) {
     return responsiveValue(
       context,
-      phone: 205.0,
+      phone: 225.0,
       tablet: 250.0,
       laptop: 280.0,
       desktop: 300.0,

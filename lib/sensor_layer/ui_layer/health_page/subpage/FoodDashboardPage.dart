@@ -109,6 +109,13 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                     icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
                     onPressed: () => WidgetNavigatorAction.smartPop(context),
                   ),
+                  actions: [
+                    IconButton(
+                      icon: const Icon(Icons.view_in_ar_rounded, color: Colors.white),
+                      onPressed: () => context.push('/health/food/scan'),
+                      tooltip: '3D Scan Scene',
+                    ),
+                  ],
                   flexibleSpace: FlexibleSpaceBar(
                     title: Text(
                       l10n.nutrition_dashboard,

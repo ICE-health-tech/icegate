@@ -292,7 +292,10 @@ class ProjectsPage extends StatelessWidget {
                                       context.push(latestApp.url);
                                     },
                                     onLongPress: () {
-                                      _showDeletePluginDialog(context, latestApp);
+                                      _showDeletePluginDialog(
+                                        context,
+                                        latestApp,
+                                      );
                                     },
                                   ),
                                 );
@@ -927,9 +930,7 @@ class _ProjectCard extends StatelessWidget {
           context: context,
           builder: (ctx) => AlertDialog(
             title: const Text('Delete Project?'),
-            content: Text(
-              'Are you sure you want to delete "${project.name}"?',
-            ),
+            content: Text('Are you sure you want to delete "${project.name}"?'),
             actions: [
               TextButton(
                 onPressed: () => Navigator.pop(ctx, false),

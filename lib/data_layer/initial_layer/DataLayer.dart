@@ -50,6 +50,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.d
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/RemoteControllerBlock.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -261,9 +262,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       debugPrint("🚀 [Boot] Step 1: Initialize Supabase...");
       await Supabase.initialize(
-        url: 'https://wthislkepfufkbgiqegs.supabase.co',
-        anonKey:
-            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind0aGlzbGtlcGZ1ZmtiZ2lxZWdzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzE0ODk2MjEsImV4cCI6MjA4NzA2NTYyMX0.EaYqJVIni8cSh0BCDZH1hQxqy-pdPj8o2aSG6dF7z-8',
+        url: dotenv.env['SUPABASE_URL'] ?? "",
+        anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? "",
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
         ),
@@ -320,7 +320,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       debugPrint("🚀 [Boot] Step 5: Initializing Core Blocks...");
       final authService = CustomAuthService(
-        baseUrl: "https://backend.duylong.art",
+        baseUrl: dotenv.env['BACKEND_URL'] ?? "",
       );
       final passkeyService = PasskeyAuthService();
       final biometricService = BiometricAuthService();
@@ -551,9 +551,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
             if (ps != null) {
               final connector = MyPowerSyncConnector(
                 authBlock: authBlock,
-                powerSyncUrl:
-                    "https://69967e7cd17eab7f63d96041.powersync.journeyapps.com",
-                baseUrl: "https://backend.duylong.art",
+                powerSyncUrl: dotenv.env['POWERSYNC_URL'] ?? "",
+                baseUrl: dotenv.env['BACKEND_URL'] ?? "",
               );
               ps.connect(connector: connector);
             }

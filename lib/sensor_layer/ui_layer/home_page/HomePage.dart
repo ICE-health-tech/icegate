@@ -140,6 +140,7 @@ class _HomePageState extends State<HomePage> {
   late ProjectBlock projectBlock;
   late QuoteBlock quoteBlock;
   late MindBlock mindBlock;
+  late ConfigBlock configBlock;
   EffectCleanup? _levelEffect;
   final _levelUpToShow = signal<int?>(null);
   int? _lastSeenLevel;
@@ -163,6 +164,7 @@ class _HomePageState extends State<HomePage> {
     projectBlock = context.read<ProjectBlock>();
     quoteBlock = context.read<QuoteBlock>();
     mindBlock = context.read<MindBlock>();
+    configBlock = context.read<ConfigBlock>();
 
     _fetchInitialData();
 
@@ -227,7 +229,6 @@ class _HomePageState extends State<HomePage> {
       );
     });
   }
-
 
   @override
   void dispose() {
@@ -312,7 +313,7 @@ class _HomePageState extends State<HomePage> {
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
             body: Watch((context) {
-
+              final l10n = AppLocalizations.of(context)!;
               return SwipeablePage(
                 direction: SwipeablePageDirection.leftToRight,
                 onSwipe: () => context.pop(),
@@ -336,7 +337,10 @@ class _HomePageState extends State<HomePage> {
                       // const SizedBox(height: 16),
                       _buildEnvironmentalSummary(context),
                       _buildQuotesSection(context),
-                      const SizedBox(height: 16),
+                      // const SizedBox(height: 20),
+
+                      const SizedBox(height: 24),
+
                       // --- SECTION: 4 life elements ---
                       _buildSectionHeader(
                         context,
@@ -354,150 +358,111 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Watch((context) {
                               final steps = healthBlock.todaySteps.value;
-                              final kcal =
-                                  healthBlock.todayCaloriesConsumed.value;
+                              final kcal = healthBlock.todayCaloriesConsumed.value;
                               final sleep = healthBlock.todaySleep.value;
                               final hr = healthBlock.todayHeartRate.value;
+                              final water = healthBlock.todayWater.value;
+                              final weight = healthBlock.latestWeight.value;
+
+                              final allMetrics = [
+                                {'label': l10n.steps, 'value': '$steps', 'visible': configBlock.showIndexSteps.value},
+                                {'label': l10n.kcal_consume, 'value': '$kcal', 'visible': configBlock.showIndexCalories.value},
+                                {'label': l10n.sleep, 'value': '${sleep.toStringAsFixed(1)}h', 'visible': true}, // Always show some core metrics
+                                {'label': l10n.hr, 'value': hr > 0 ? '$hr bpm' : '--', 'visible': true},
+                                {'label': l10n.home_index_water, 'value': '$water ml', 'visible': configBlock.showIndexWater.value},
+                                {'label': l10n.home_index_weight, 'value': weight > 0 ? '$weight kg' : '--', 'visible': configBlock.showIndexWeight.value},
+                              ];
+
+                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+
                               return _buildQuickAccessCard(
                                 context,
-                                AppLocalizations.of(context)!.health,
+                                l10n.health,
                                 Icons.favorite_rounded,
                                 Colors.green,
-                                metrics: [
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.steps,
-                                    'value': '$steps',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.kcal_consume,
-                                    'value': '$kcal',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.sleep,
-                                    'value': '${sleep.toStringAsFixed(1)}h',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(context)!.hr,
-                                    'value': hr > 0 ? '$hr bpm' : '--',
-                                  },
-                                ],
+                                metrics: visibleMetrics,
                                 route: '/health',
                                 scoreData: scoreBlock.score.healthGlobalScore,
                               );
                             }),
                             Watch((context) {
                               final balance = financeBlock.totalBalance.value;
-                              final spending =
-                                  financeBlock.monthlySpending.value;
+                              final spending = financeBlock.monthlySpending.value;
                               final income = financeBlock.monthlyIncome.value;
                               final savings = financeBlock.totalSavings.value;
+                              final delta = financeBlock.dailyDelta.value;
+                              final usage = financeBlock.budgetUsagePercent.value;
+
+                              final allMetrics = [
+                                {'label': l10n.balance, 'value': financeBlock.formatCurrency(balance, compact: true), 'visible': configBlock.showIndexBalance.value},
+                                {'label': l10n.spent, 'value': financeBlock.formatCurrency(spending, compact: true), 'visible': configBlock.showIndexSpending.value},
+                                {'label': l10n.income, 'value': financeBlock.formatCurrency(income, compact: true), 'visible': true},
+                                {'label': l10n.savings, 'value': financeBlock.formatCurrency(savings, compact: true), 'visible': true},
+                                {'label': l10n.home_index_daily, 'value': financeBlock.formatCurrency(delta, compact: true), 'visible': configBlock.showIndexFinanceDaily.value},
+                                {'label': l10n.home_index_usage, 'value': '${usage.toStringAsFixed(0)}%', 'visible': configBlock.showIndexFinanceUsage.value},
+                              ];
+
+                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+
                               return _buildQuickAccessCard(
                                 context,
-                                AppLocalizations.of(context)!.finance,
+                                l10n.finance,
                                 Icons.account_balance_wallet_rounded,
                                 EntryColors.primaryIceBlue,
-                                metrics: [
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.balance,
-                                    'value': financeBlock.formatCurrency(
-                                      balance,
-                                    ),
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.spent,
-                                    'value': financeBlock.formatCurrency(
-                                      spending,
-                                    ),
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.income,
-                                    'value': financeBlock.formatCurrency(
-                                      income,
-                                    ),
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.savings,
-                                    'value': financeBlock.formatCurrency(
-                                      savings,
-                                    ),
-                                  },
-                                ],
+                                metrics: visibleMetrics,
                                 route: '/finance',
-                                scoreData:
-                                    scoreBlock.score.financialGlobalScore,
+                                scoreData: scoreBlock.score.financialGlobalScore,
                               );
                             }),
                             Watch((context) {
                               final moodLog = mindBlock.latestMoodLog.value;
-                              final socialScore =
-                                  scoreBlock.score.socialGlobalScore;
+                              final socialScore = scoreBlock.score.socialGlobalScore;
+                              final focus = healthBlock.todayFocusMinutes.value;
+                              final socialXP = scoreBlock.todaySocialPoints.value;
 
-                              String moodDisplay = AppLocalizations.of(context)!.mood_no_data;
+                              String moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
                                 final score = moodLog.moodScore;
                                 String emoji = "😐";
-                                String text = AppLocalizations.of(context)!.mood_meh;
+                                String text = l10n.mood_meh;
                                 if (score == 1) {
                                   emoji = "😫";
-                                  text = AppLocalizations.of(context)!.mood_awful;
+                                  text = l10n.mood_awful;
                                 } else if (score == 2) {
                                   emoji = "🙁";
-                                  text = AppLocalizations.of(context)!.mood_bad;
+                                  text = l10n.mood_bad;
                                 } else if (score == 3) {
                                   emoji = "😐";
-                                  text = AppLocalizations.of(context)!.mood_meh;
+                                  text = l10n.mood_meh;
                                 } else if (score == 4) {
                                   emoji = "😊";
-                                  text = AppLocalizations.of(context)!.mood_good;
+                                  text = l10n.mood_good;
                                 } else if (score == 5) {
                                   emoji = "🤩";
-                                  text = AppLocalizations.of(context)!.mood_rad;
+                                  text = l10n.mood_rad;
                                 }
                                 moodDisplay = "$emoji $text";
                               }
 
+                              final allMetrics = [
+                                {'label': l10n.mind_current_mood, 'value': moodDisplay, 'visible': configBlock.showIndexMood.value},
+                                {'label': l10n.mind_day_average, 'value': socialScore.toStringAsFixed(1), 'visible': true},
+                                {'label': l10n.mind_latest_log, 'value': moodLog != null ? _formatRelativeTime(moodLog.createdAt) : l10n.mind_never, 'visible': true},
+                                {'label': l10n.mind_status, 'value': socialScore >= 70 ? l10n.mind_stable : l10n.mind_needs_care, 'visible': true},
+                                {'label': l10n.home_index_focus, 'value': '${focus}m', 'visible': configBlock.showIndexFocus.value},
+                                {'label': l10n.home_index_xp, 'value': '+${socialXP.toInt()}', 'visible': configBlock.showIndexXP.value},
+                                {'label': l10n.mind_latest_note, 'value': moodLog?.note ?? l10n.mood_no_data, 'visible': configBlock.showIndexMoodNote.value},
+                              ];
+
+                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+
                               return _buildQuickAccessCard(
                                 context,
-                                AppLocalizations.of(context)!.social, // Or l10n fallback
+                                l10n.social,
                                 Icons.psychology_rounded,
                                 Colors.purple,
-                                metrics: [
-                                  {
-                                    'label': AppLocalizations.of(context)!.mind_current_mood,
-                                    'value': moodDisplay,
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(context)!.mind_day_average,
-                                    'value': socialScore.toStringAsFixed(1),
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(context)!.mind_latest_log,
-                                    'value': moodLog != null
-                                        ? _formatRelativeTime(moodLog.createdAt)
-                                        : AppLocalizations.of(context)!.mind_never,
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(context)!.mind_status,
-                                    'value': socialScore >= 70
-                                        ? AppLocalizations.of(context)!.mind_stable
-                                        : AppLocalizations.of(context)!.mind_needs_care,
-                                  },
-                                ],
-                                route: '/social', // Navigate to mind/social
+                                metrics: visibleMetrics,
+                                route: '/social',
                                 scoreData: socialScore,
                               );
                             }),
@@ -505,52 +470,30 @@ class _HomePageState extends State<HomePage> {
                               final projectGoals = growthBlock.goals.value
                                   .where((g) => g.category == 'project')
                                   .toList();
-                              final tasksRemaining = projectGoals
-                                  .where((g) => g.status != 'done')
-                                  .length;
-                              final tasksDone = projectGoals
-                                  .where((g) => g.status == 'done')
-                                  .length;
-
+                              final tasksRemaining = projectGoals.where((g) => g.status != 'done').length;
+                              final tasksDone = projectGoals.where((g) => g.status == 'done').length;
                               final allProjects = projectBlock.projects.value;
-                              final projectsDone = allProjects
-                                  .where((p) => p.status == 1)
-                                  .length;
-                              final projectsRemaining = allProjects
-                                  .where((p) => p.status == 0)
-                                  .length;
+                              final projectsDone = allProjects.where((p) => p.status == 1).length;
+                              final projectsRemaining = allProjects.where((p) => p.status == 0).length;
+                              final projectXP = scoreBlock.todayProjectPoints.value;
+
+                              final allMetrics = [
+                                {'label': l10n.home_projects_done, 'value': '$projectsDone', 'visible': true},
+                                {'label': l10n.home_projects_active, 'value': '$projectsRemaining', 'visible': true},
+                                {'label': l10n.home_tasks_done, 'value': '$tasksDone', 'visible': configBlock.showIndexProjects.value},
+                                {'label': l10n.home_tasks_active, 'value': '$tasksRemaining', 'visible': configBlock.showIndexProjects.value},
+                                {'label': l10n.home_index_total, 'value': '${allProjects.length}', 'visible': true},
+                                {'label': l10n.home_index_xp, 'value': '+${projectXP.toInt()}', 'visible': configBlock.showIndexXP.value},
+                              ];
+
+                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
 
                               return _buildQuickAccessCard(
                                 context,
-                                AppLocalizations.of(context)!.projects,
+                                l10n.projects,
                                 Icons.rocket_launch_rounded,
                                 Colors.orange,
-                                metrics: [
-                                  {
-                                    'label': AppLocalizations.of(context)!.done,
-                                    'value':
-                                        '$projectsDone ${AppLocalizations.of(context)!.projs}',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.active,
-                                    'value':
-                                        '$projectsRemaining ${AppLocalizations.of(context)!.projs}',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(context)!.done,
-                                    'value':
-                                        '$tasksDone ${AppLocalizations.of(context)!.tasks}',
-                                  },
-                                  {
-                                    'label': AppLocalizations.of(
-                                      context,
-                                    )!.active,
-                                    'value':
-                                        '$tasksRemaining ${AppLocalizations.of(context)!.tasks}',
-                                  },
-                                ],
+                                metrics: visibleMetrics,
                                 route: '/projects',
                                 scoreData: scoreBlock.score.careerGlobalScore,
                               );
@@ -577,14 +520,15 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               IconButton(
                                 onPressed: () {
-                                  final configBlock =
-                                      context.read<ConfigBlock>();
+                                  final configBlock = context
+                                      .read<ConfigBlock>();
                                   HomePageSettings.show(context, configBlock);
                                 },
                                 icon: Icon(
                                   Icons.settings_suggest_rounded,
-                                  color:
-                                      colorScheme.primary.withValues(alpha: 0.6),
+                                  color: colorScheme.primary.withValues(
+                                    alpha: 0.6,
+                                  ),
                                   size: 20,
                                 ),
                                 tooltip: "Settings",
@@ -612,11 +556,13 @@ class _HomePageState extends State<HomePage> {
                         child: Watch((context) {
                           final configBlock = context.read<ConfigBlock>();
                           final envBlock = context.read<EnvironmentalBlock>();
-                          final externalWidgets =
-                              externalWidgetBlock.listExternalWidgets.watch(context);
+                          final externalWidgets = externalWidgetBlock
+                              .listExternalWidgets
+                              .watch(context);
                           final showAqi = configBlock.showAqi.watch(context);
-                          final showWeather =
-                              configBlock.showWeather.watch(context);
+                          final showWeather = configBlock.showWeather.watch(
+                            context,
+                          );
 
                           // Build the temporary list of plugin widgets
                           final List<Widget> pluginItems = [];
@@ -707,44 +653,6 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
-  }
-
-  Widget _buildGamifiedHeader(BuildContext context) {
-    return Watch((context) {
-      final colorScheme = Theme.of(context).colorScheme;
-
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-          child: Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: colorScheme.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15), // Crisp glass edge
-                width: 1,
-              ),
-            ),
-            child: const Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [],
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ),
-      );
-    });
   }
 
   Widget _buildSectionHeader(BuildContext context, String title, String route) {
@@ -1339,8 +1247,11 @@ class _HomePageState extends State<HomePage> {
             mainAxisSize: MainAxisSize.min,
             children: [
               if (showWeather) ...[
-                Icon(Icons.thermostat_rounded,
-                    size: 14, color: colorScheme.primary),
+                Icon(
+                  Icons.thermostat_rounded,
+                  size: 14,
+                  color: colorScheme.primary,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   "${envData?.temperature.toStringAsFixed(1) ?? '--'}°C",
@@ -1360,8 +1271,11 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ),
               if (showAqi) ...[
-                Icon(Icons.air_rounded,
-                    size: 14, color: _getAQIColor(envData?.aqi ?? 0)),
+                Icon(
+                  Icons.air_rounded,
+                  size: 14,
+                  color: _getAQIColor(envData?.aqi ?? 0),
+                ),
                 const SizedBox(width: 4),
                 Text(
                   "AQI ${envData?.aqi ?? '--'}",

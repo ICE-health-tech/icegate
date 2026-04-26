@@ -337,6 +337,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_enter_title_snack => 'Vui lòng nhập tiêu đề';
 
   @override
+  String get nutri_add_meal => 'Thêm bữa ăn';
+
+  @override
+  String get nutri_analyzing => 'Đang phân tích...';
+
+  @override
   String get nutri_trends_title => 'Xu hướng dinh dưỡng';
 
   @override
@@ -474,10 +480,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_metrics_oxygen_saturation => 'Oxy máu';
 
   @override
-  String get health_metrics_air_quality => 'Air Quality';
+  String get health_metrics_air_quality => 'Chất lượng không khí';
 
   @override
-  String get health_metrics_weather => 'Weather';
+  String get health_metrics_weather => 'Thời tiết';
 
   @override
   String get health_air_quality => 'Chất lượng không khí';
@@ -1152,7 +1158,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Lỗi: Không tìm thấy phiên người dùng. Vui lòng đăng nhập lại.';
 
   @override
-  String mind_error_save(Object error) {
+  String mind_error_save(String error) {
     return 'Lưu ghi chép thất bại: $error';
   }
 
@@ -1237,7 +1243,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Đã lưu nhật ký tinh thần! Cập nhật suy ngẫm.';
 
   @override
-  String mind_feeling_format(Object mood) {
+  String mind_feeling_format(String mood) {
     return 'Hôm nay tôi cảm thấy $mood.';
   }
 
@@ -1335,10 +1341,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get act_walking => 'Đi dạo';
 
   @override
-  String get act_logging => 'Logging';
+  String get act_logging => 'Ghi chép';
 
   @override
-  String get act_productivity => 'Productivity';
+  String get act_productivity => 'Năng suất';
 
   @override
   String get add_app_plugin => 'Thêm Plugin ứng dụng';
@@ -1431,6 +1437,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get username => 'Tên người dùng';
+
+  @override
+  String get home_indices_title => 'Chỉ số nhanh';
+
+  @override
+  String get home_index_steps => 'Bước chân';
+
+  @override
+  String get home_index_calories => 'Calo';
+
+  @override
+  String get home_index_balance => 'Số dư';
+
+  @override
+  String get home_index_spending => 'Chi tiêu';
+
+  @override
+  String get home_index_mood => 'Tâm trạng';
+
+  @override
+  String get home_index_projects => 'Tăng trưởng';
+
+  @override
+  String get home_index_weight => 'Cân nặng';
+
+  @override
+  String get home_index_water => 'Nước uống';
+
+  @override
+  String get home_index_daily => 'Hàng ngày';
+
+  @override
+  String get home_index_usage => 'Sử dụng';
+
+  @override
+  String get home_index_focus => 'Tập trung';
+
+  @override
+  String get home_index_xp => 'XP Hôm nay';
+
+  @override
+  String get home_index_total => 'Tổng cộng';
+
+  @override
+  String get home_projects_done => 'Dự án xong';
+
+  @override
+  String get home_projects_active => 'Dự án chạy';
+
+  @override
+  String get home_tasks_done => 'Nhiệm vụ xong';
+
+  @override
+  String get home_tasks_active => 'Nhiệm vụ chạy';
 
   @override
   String get goal_target_evolution => 'Tiến hóa mục tiêu';
@@ -2537,8 +2597,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get custom_url => 'URL tùy chỉnh';
 
   @override
-  String get settings_title => 'Settings';
+  String get settings_title => 'Cài đặt';
 
   @override
-  String get common_done => 'Done';
+  String get mind_latest_note => 'Ghi chú gần nhất';
+
+  @override
+  String get common_done => 'Xong';
 }

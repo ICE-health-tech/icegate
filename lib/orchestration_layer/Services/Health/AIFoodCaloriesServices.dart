@@ -2,85 +2,103 @@ import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-class Aifoodcaloriesservices {
-  final String _baseUrl = "https://lang.duylong.art/runs/stream";
+class AIFoodCaloriesService {
+  // Gemini 1.5 Flash: Cheap, Fast, and supports Vision
+  static String get _apiKey => dotenv.env['GEMINI_API_KEY'] ?? "";
+  static const String _baseUrl =
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent";
 
-  Future<CaloriesProtocol> getCalories(String foodName, {XFile? image, double? distance}) async {
+  static Future<CaloriesProtocol> getCalories(
+    String foodName, {
+    XFile? image,
+    double? distance,
+    double? volume,
+    Map<String, dynamic>? fdcData,
+  }) async {
     try {
+      // 1. Prepare Image Data if exists
       String? base64Image;
       if (image != null) {
-        base64Image = base64Encode(await image.readAsBytes());
+        final bytes = await image.readAsBytes();
+        base64Image = base64Encode(bytes);
       }
 
-      final Map<String, dynamic> requestBody = {
-        "assistant_id": "agent",
-        "input": {
-          "messages": [
-            {
-              "role": "user",
-              "content": [
-                  {
-                    "type": "text",
-                    "text": "Please analyze this $foodName image.${distance != null ? " The measured size is ${(distance * 100).toStringAsFixed(1)} cm." : ""}",
-                  },
-                if (base64Image != null)
-                  {
-                    "type": "image_url",
-                    "image_url": {"url": "data:image/jpeg;base64,$base64Image"},
-                  },
-              ],
-            },
+      // 2. Construct the prompt
+      String prompt = """
+      Analyze this food item. 
+      Name Provided: "$foodName"
+      
+      CONTEXT DATA:
+      - Measured Volume: ${volume?.toStringAsFixed(1) ?? "N/A"} cm³
+      - Measured Length: ${distance?.toStringAsFixed(1) ?? "N/A"} cm
+      - Reference Data: ${fdcData != null ? jsonEncode(fdcData) : "None"}
+      
+      TASK:
+      1. Identify the food from the image (if provided) and the name.
+      2. Estimate density (g/cm³).
+      3. Calculate total grams using the measured volume.
+      4. Calculate Calories, Protein, Carbs, and Fat based on estimated weight.
+      
+      Return ONLY a JSON object:
+      {
+        "calories": number,
+        "protein": number,
+        "carbs": number,
+        "fat": number,
+        "serving_size": "string (e.g. '250g based on scan')",
+        "confidence": number
+      }
+      """;
+
+      print("--- GEMINI FOOD ANALYSIS REQUEST ---");
+      print("Name: $foodName, Volume: $volume");
+      if (image != null)
+        print("Image included (Base64 length: ${base64Image?.length})");
+
+      final List<Map<String, dynamic>> contents = [
+        {
+          "parts": [
+            {"text": prompt},
+            if (base64Image != null)
+              {
+                "inline_data": {"mime_type": "image/jpeg", "data": base64Image},
+              },
           ],
         },
-        "stream_mode": "values",
-      };
+      ];
 
-      final request = http.Request('POST', Uri.parse(_baseUrl))
-        ..headers['Content-Type'] = 'application/json'
-        ..body = jsonEncode(requestBody);
+      final response = await http.post(
+        Uri.parse("$_baseUrl?key=$_apiKey"),
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          "contents": contents,
+          "generationConfig": {
+            "response_mime_type": "application/json",
+            "temperature": 0.2,
+          },
+        }),
+      );
 
-      final streamedResponse = await request.send();
+      print("Gemini Status: ${response.statusCode}");
 
-      if (streamedResponse.statusCode == 200) {
-        String lastDataChunk = "";
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = jsonDecode(response.body);
+        final String textResponse =
+            data['candidates'][0]['content']['parts'][0]['text'];
 
-        // Listen to the stream and capture the LAST 'data' block
-        await for (var line
-            in streamedResponse.stream
-                .transform(utf8.decoder)
-                .transform(const LineSplitter())) {
-          if (line.startsWith('data: ')) {
-            lastDataChunk = line.substring(6);
-          }
-        }
+        print("--- GEMINI RESPONSE ---");
+        print(textResponse);
 
-        if (lastDataChunk.isNotEmpty) {
-          final Map<String, dynamic> fullState = jsonDecode(lastDataChunk);
-
-          // LangGraph "values" mode returns the full state including the messages list
-          final List<dynamic> messages = fullState['messages'] ?? [];
-
-          // Find the last message with content (the AI's JSON string)
-          final aiMessage = messages.lastWhere(
-            (m) =>
-                (m['type'] == 'ai' || m['type'] == 'tool') &&
-                m['content'].toString().isNotEmpty,
-            orElse: () => null,
-          );
-          // print(aiMessage);
-          if (aiMessage != null) {
-            // The content itself is a JSON string: "{"fat": 20, ...}"
-            final Map<String, dynamic> calorieData = jsonDecode(
-              aiMessage['content'],
-            );
-            return CaloriesProtocol.fromJson(calorieData);
-          }
-        }
+        final Map<String, dynamic> calorieData = jsonDecode(textResponse);
+        return CaloriesProtocol.fromJson(calorieData);
+      } else {
+        print("Gemini Error: ${response.body}");
+        return CaloriesProtocol.empty();
       }
-      throw Exception('Failed to get valid data from stream');
     } catch (e) {
-      print("Error in AIFoodCaloriesServices: $e");
+      print("Error in Gemini Service: $e");
       return CaloriesProtocol.empty();
     }
   }

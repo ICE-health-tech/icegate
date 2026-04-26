@@ -350,7 +350,12 @@ class FinanceOverviewPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             financeBlock.formatCurrency(currentTotal),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 32, letterSpacing: -1),
+            style: const TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.w900,
+              fontSize: 32,
+              letterSpacing: -1,
+            ),
           ),
           const SizedBox(height: 24),
           if (chartData.length > 1)
@@ -362,7 +367,12 @@ class FinanceOverviewPage extends StatelessWidget {
           else
             const SizedBox(
               height: 140,
-              child: Center(child: Text('Need more data for trend', style: TextStyle(color: Colors.white38))),
+              child: Center(
+                child: Text(
+                  'Need more data for trend',
+                  style: TextStyle(color: Colors.white38),
+                ),
+              ),
             ),
         ],
       ),
@@ -411,7 +421,9 @@ class FinanceOverviewPage extends StatelessWidget {
           else
             const SizedBox(
               height: 140,
-              child: Center(child: Text('No data', style: TextStyle(color: Colors.white38))),
+              child: Center(
+                child: Text('No data', style: TextStyle(color: Colors.white38)),
+              ),
             ),
         ],
       ),

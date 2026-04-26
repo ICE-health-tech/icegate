@@ -728,6 +728,18 @@ abstract class AppLocalizations {
   /// **'Please enter a title'**
   String get notification_enter_title_snack;
 
+  /// No description provided for @nutri_add_meal.
+  ///
+  /// In en, this message translates to:
+  /// **'Add Meal'**
+  String get nutri_add_meal;
+
+  /// No description provided for @nutri_analyzing.
+  ///
+  /// In en, this message translates to:
+  /// **'Analyzing...'**
+  String get nutri_analyzing;
+
   /// No description provided for @nutri_trends_title.
   ///
   /// In en, this message translates to:
@@ -2244,7 +2256,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'Failed to save log: {error}'**
-  String mind_error_save(Object error);
+  String mind_error_save(String error);
 
   /// No description provided for @mood_awful.
   ///
@@ -2406,7 +2418,7 @@ abstract class AppLocalizations {
   ///
   /// In en, this message translates to:
   /// **'I\'m feeling {mood} today.'**
-  String mind_feeling_format(Object mood);
+  String mind_feeling_format(String mood);
 
   /// No description provided for @mind_logged_mood.
   ///
@@ -2785,6 +2797,114 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Username'**
   String get username;
+
+  /// No description provided for @home_indices_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Quick Indices'**
+  String get home_indices_title;
+
+  /// No description provided for @home_index_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps'**
+  String get home_index_steps;
+
+  /// No description provided for @home_index_calories.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories'**
+  String get home_index_calories;
+
+  /// No description provided for @home_index_balance.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get home_index_balance;
+
+  /// No description provided for @home_index_spending.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending'**
+  String get home_index_spending;
+
+  /// No description provided for @home_index_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood'**
+  String get home_index_mood;
+
+  /// No description provided for @home_index_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Growth'**
+  String get home_index_projects;
+
+  /// No description provided for @home_index_weight.
+  ///
+  /// In en, this message translates to:
+  /// **'Weight'**
+  String get home_index_weight;
+
+  /// No description provided for @home_index_water.
+  ///
+  /// In en, this message translates to:
+  /// **'Water'**
+  String get home_index_water;
+
+  /// No description provided for @home_index_daily.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily'**
+  String get home_index_daily;
+
+  /// No description provided for @home_index_usage.
+  ///
+  /// In en, this message translates to:
+  /// **'Usage'**
+  String get home_index_usage;
+
+  /// No description provided for @home_index_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get home_index_focus;
+
+  /// No description provided for @home_index_xp.
+  ///
+  /// In en, this message translates to:
+  /// **'XP Today'**
+  String get home_index_xp;
+
+  /// No description provided for @home_index_total.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get home_index_total;
+
+  /// No description provided for @home_projects_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done Projs'**
+  String get home_projects_done;
+
+  /// No description provided for @home_projects_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Projs'**
+  String get home_projects_active;
+
+  /// No description provided for @home_tasks_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Done Tasks'**
+  String get home_tasks_done;
+
+  /// No description provided for @home_tasks_active.
+  ///
+  /// In en, this message translates to:
+  /// **'Active Tasks'**
+  String get home_tasks_active;
 
   /// No description provided for @goal_target_evolution.
   ///
@@ -4855,6 +4975,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Settings'**
   String get settings_title;
+
+  /// No description provided for @mind_latest_note.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest Note'**
+  String get mind_latest_note;
 
   /// No description provided for @common_done.
   ///

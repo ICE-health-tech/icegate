@@ -337,6 +337,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_enter_title_snack => 'Please enter a title';
 
   @override
+  String get nutri_add_meal => 'Add Meal';
+
+  @override
+  String get nutri_analyzing => 'Analyzing...';
+
+  @override
   String get nutri_trends_title => 'Nutrition Trends';
 
   @override
@@ -1150,7 +1156,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Error: User session not found. Please log in again.';
 
   @override
-  String mind_error_save(Object error) {
+  String mind_error_save(String error) {
     return 'Failed to save log: $error';
   }
 
@@ -1234,7 +1240,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_save_success => 'Mind log saved! Reflection updated.';
 
   @override
-  String mind_feeling_format(Object mood) {
+  String mind_feeling_format(String mood) {
     return 'I\'m feeling $mood today.';
   }
 
@@ -1427,6 +1433,60 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get username => 'Username';
+
+  @override
+  String get home_indices_title => 'Quick Indices';
+
+  @override
+  String get home_index_steps => 'Steps';
+
+  @override
+  String get home_index_calories => 'Calories';
+
+  @override
+  String get home_index_balance => 'Balance';
+
+  @override
+  String get home_index_spending => 'Spending';
+
+  @override
+  String get home_index_mood => 'Mood';
+
+  @override
+  String get home_index_projects => 'Growth';
+
+  @override
+  String get home_index_weight => 'Weight';
+
+  @override
+  String get home_index_water => 'Water';
+
+  @override
+  String get home_index_daily => 'Daily';
+
+  @override
+  String get home_index_usage => 'Usage';
+
+  @override
+  String get home_index_focus => 'Focus';
+
+  @override
+  String get home_index_xp => 'XP Today';
+
+  @override
+  String get home_index_total => 'Total';
+
+  @override
+  String get home_projects_done => 'Done Projs';
+
+  @override
+  String get home_projects_active => 'Active Projs';
+
+  @override
+  String get home_tasks_done => 'Done Tasks';
+
+  @override
+  String get home_tasks_active => 'Active Tasks';
 
   @override
   String get goal_target_evolution => 'Goal Evolution';
@@ -2535,6 +2595,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get settings_title => 'Settings';
+
+  @override
+  String get mind_latest_note => 'Latest Note';
 
   @override
   String get common_done => 'Done';

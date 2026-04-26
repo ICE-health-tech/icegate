@@ -133,6 +133,8 @@
   "notification_freq_daily": "Daily",
   "notification_freq_weekly": "Weekly",
   "notification_enter_title_snack": "Please enter a title",
+  "nutri_add_meal": "Add Meal",
+  "nutri_analyzing": "Analyzing...",
   "nutri_trends_title": "Nutrition Trends",
   "nutri_weekly_avg": "Weekly Avg",
   "nutri_insights_title": "Nutri Insights",
@@ -531,6 +533,13 @@
   "mind_log_saved": "Mind log saved! Reflection updated.",
   "mind_error_login": "Error: User session not found. Please log in again.",
   "mind_error_save": "Failed to save log: {error}",
+  "@mind_error_save": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "mood_awful": "Awful",
   "mood_bad": "Bad",
   "mood_meh": "Meh",
@@ -558,6 +567,13 @@
   "mind_save_btn": "Save Entry",
   "mind_save_success": "Mind log saved! Reflection updated.",
   "mind_feeling_format": "I'm feeling {mood} today.",
+  "@mind_feeling_format": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      }
+    }
+  },
   "mind_logged_mood": "Logged mood",
   "todays_reflections": "Today's Reflections",
   "daily_step_distribution": "Daily Step Distribution",
@@ -621,6 +637,24 @@
   "steps": "Steps",
   "sleep": "Sleep",
   "username": "Username",
+  "home_indices_title": "Quick Indices",
+  "home_index_steps": "Steps",
+  "home_index_calories": "Calories",
+  "home_index_balance": "Balance",
+  "home_index_spending": "Spending",
+  "home_index_mood": "Mood",
+  "home_index_projects": "Growth",
+  "home_index_weight": "Weight",
+  "home_index_water": "Water",
+  "home_index_daily": "Daily",
+  "home_index_usage": "Usage",
+  "home_index_focus": "Focus",
+  "home_index_xp": "XP Today",
+  "home_index_total": "Total",
+  "home_projects_done": "Done Projs",
+  "home_projects_active": "Active Projs",
+  "home_tasks_done": "Done Tasks",
+  "home_tasks_active": "Active Tasks",
   "goal_target_evolution": "Goal Evolution",
   "goal_mission": "MISSIONS",
   "goal_mission_desc": "Adjust daily targets to optimize life performance.",
@@ -1141,7 +1175,7 @@
   "journal": "Journal",
   "social_notes": "Mind Notes",
   "btn_send_feedback": "Send Feedback",
-  "feedback_subtitle": "Report issues or suggest features" ,
+  "feedback_subtitle": "Report issues or suggest features",
   "sync_engine_title": "Sync Engine",
   "system_health": "SYSTEM HEALTH",
   "uptime": "UPTIME",
@@ -1180,5 +1214,6 @@
   "plugins": "Plugins",
   "custom_url": "Custom URL",
   "settings_title": "Settings",
+  "mind_latest_note": "Latest Note",
   "common_done": "Done"
 }

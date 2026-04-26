@@ -2,8 +2,10 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/sensor_layer/ui_layer/stock_page/models/stock_data.dart';
 
+import 'package:flutter_dotenv/flutter_dotenv.dart';
+
 class StockService {
-  static const String baseUrl = 'https://vnstock.finance.duylong.art';
+  static String get baseUrl => dotenv.env['VNSTOCK_BASE_URL'] ?? 'https://vnstock.finance.duylong.art';
 
   Future<StockPrice?> fetchStockPrice(String symbol, {int retries = 3}) async {
     for (int i = 0; i < retries; i++) {
@@ -11,14 +13,21 @@ class StockService {
         final response = await http.get(Uri.parse('$baseUrl/stock/price?symbol=$symbol')).timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           final json = jsonDecode(response.body);
-          if (json.containsKey('symbol')) return StockPrice.fromJson(json);
-          if (json.containsKey('price') && json['price'] is Map<String, dynamic>) return StockPrice.fromJson(json['price']);
-          if (json.containsKey('data')) return StockPrice.fromJson(json['data']);
+          if (json.containsKey('data')) {
+            return StockPrice.fromJson(json['data']);
+          }
+          if (json.containsKey('price')) {
+            return StockPrice.fromJson(json['price']);
+          }
+          return StockPrice.fromJson(json);
+        } else if (response.statusCode == 404 || response.statusCode == 500) {
+          final errorJson = jsonDecode(response.body);
+          print("StockService API Error for $symbol: ${errorJson['detail']}");
+          return null;
         }
-      } catch (e, stack) {
+      } catch (e) {
         if (i == retries - 1) {
-          print("StockService Error after $retries retries for $symbol: $e");
-          print(stack);
+          print("StockService Network Error after $retries retries for $symbol: $e");
         }
         await Future.delayed(Duration(seconds: 1 * (i + 1))); // Exponential backoff
       }

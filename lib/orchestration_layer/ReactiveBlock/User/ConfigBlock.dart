@@ -12,6 +12,21 @@ class ConfigBlock {
   final showAqi = signal<bool>(true);
   final showWeather = signal<bool>(true);
 
+  // Home Page Indices Visibility
+  final showIndexSteps = signal<bool>(true);
+  final showIndexCalories = signal<bool>(true);
+  final showIndexBalance = signal<bool>(true);
+  final showIndexSpending = signal<bool>(true);
+  final showIndexMood = signal<bool>(true);
+  final showIndexProjects = signal<bool>(true);
+  final showIndexWater = signal<bool>(true);
+  final showIndexWeight = signal<bool>(true);
+  final showIndexFinanceDaily = signal<bool>(true);
+  final showIndexFinanceUsage = signal<bool>(true);
+  final showIndexFocus = signal<bool>(true);
+  final showIndexXP = signal<bool>(true);
+  final showIndexMoodNote = signal<bool>(true);
+
   void init(ConfigsDAO dao, String personId) async {
     _dao = dao;
     _personId = personId;
@@ -37,6 +52,90 @@ class ConfigBlock {
     if (weatherConfig != null) {
       showWeather.value = weatherConfig.configValue == 'true';
     }
+
+    // Load Indices
+    showIndexSteps.value = await _getBoolConfig('show_index_steps', true);
+    showIndexCalories.value = await _getBoolConfig('show_index_calories', true);
+    showIndexBalance.value = await _getBoolConfig('show_index_balance', true);
+    showIndexSpending.value = await _getBoolConfig('show_index_spending', true);
+    showIndexMood.value = await _getBoolConfig('show_index_mood', true);
+    showIndexProjects.value = await _getBoolConfig('show_index_projects', true);
+    showIndexWater.value = await _getBoolConfig('show_index_water', true);
+    showIndexWeight.value = await _getBoolConfig('show_index_weight', true);
+    showIndexFinanceDaily.value = await _getBoolConfig('show_index_finance_daily', true);
+    showIndexFinanceUsage.value = await _getBoolConfig('show_index_finance_usage', true);
+    showIndexFocus.value = await _getBoolConfig('show_index_focus', true);
+    showIndexXP.value = await _getBoolConfig('show_index_xp', true);
+    showIndexMoodNote.value = await _getBoolConfig('show_index_mood_note', true);
+  }
+
+  Future<bool> _getBoolConfig(String key, bool defaultValue) async {
+    final config = await _dao.getConfig(_personId, key);
+    if (config == null) return defaultValue;
+    return config.configValue == 'true';
+  }
+
+  Future<void> _setBoolConfig(String key, bool value) async {
+    if (_personId.isNotEmpty) {
+      await _dao.setConfig(_personId, key, value.toString());
+    }
+  }
+
+  Future<void> setIndexVisibility(String key, bool visible) async {
+    switch (key) {
+      case 'steps':
+        showIndexSteps.value = visible;
+        await _setBoolConfig('show_index_steps', visible);
+        break;
+      case 'calories':
+        showIndexCalories.value = visible;
+        await _setBoolConfig('show_index_calories', visible);
+        break;
+      case 'balance':
+        showIndexBalance.value = visible;
+        await _setBoolConfig('show_index_balance', visible);
+        break;
+      case 'spending':
+        showIndexSpending.value = visible;
+        await _setBoolConfig('show_index_spending', visible);
+        break;
+      case 'mood':
+        showIndexMood.value = visible;
+        await _setBoolConfig('show_index_mood', visible);
+        break;
+      case 'projects':
+        showIndexProjects.value = visible;
+        await _setBoolConfig('show_index_projects', visible);
+        break;
+      case 'water':
+        showIndexWater.value = visible;
+        await _setBoolConfig('show_index_water', visible);
+        break;
+      case 'weight':
+        showIndexWeight.value = visible;
+        await _setBoolConfig('show_index_weight', visible);
+        break;
+      case 'financeDaily':
+        showIndexFinanceDaily.value = visible;
+        await _setBoolConfig('show_index_finance_daily', visible);
+        break;
+      case 'financeUsage':
+        showIndexFinanceUsage.value = visible;
+        await _setBoolConfig('show_index_finance_usage', visible);
+        break;
+      case 'focus':
+        showIndexFocus.value = visible;
+        await _setBoolConfig('show_index_focus', visible);
+        break;
+      case 'xp':
+        showIndexXP.value = visible;
+        await _setBoolConfig('show_index_xp', visible);
+        break;
+      case 'mood_note':
+        showIndexMoodNote.value = visible;
+        await _setBoolConfig('show_index_mood_note', visible);
+        break;
+    }
   }
 
   Future<void> setCurrency(String value) async {
@@ -46,7 +145,6 @@ class ConfigBlock {
     }
   }
 
-  // Helper for toggle (specific to currency for now)
   Future<void> toggleCurrency() async {
     final newValue = currency.value == 'USD' ? 'VND' : 'USD';
     await setCurrency(newValue);
@@ -54,9 +152,7 @@ class ConfigBlock {
 
   Future<void> setAqiVisibility(bool visible) async {
     showAqi.value = visible;
-    if (_personId.isNotEmpty) {
-      await _dao.setConfig(_personId, 'show_aqi', visible.toString());
-    }
+    await _setBoolConfig('show_aqi', visible);
   }
 
   Future<void> toggleAqi() async {
@@ -65,9 +161,7 @@ class ConfigBlock {
 
   Future<void> setWeatherVisibility(bool visible) async {
     showWeather.value = visible;
-    if (_personId.isNotEmpty) {
-      await _dao.setConfig(_personId, 'show_weather', visible.toString());
-    }
+    await _setBoolConfig('show_weather', visible);
   }
 
   Future<void> toggleWeather() async {

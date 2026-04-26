@@ -133,6 +133,8 @@
   "notification_freq_daily": "Hàng ngày",
   "notification_freq_weekly": "Hàng tuần",
   "notification_enter_title_snack": "Vui lòng nhập tiêu đề",
+  "nutri_add_meal": "Thêm bữa ăn",
+  "nutri_analyzing": "Đang phân tích...",
   "nutri_trends_title": "Xu hướng dinh dưỡng",
   "nutri_weekly_avg": "Trung bình tuần",
   "nutri_insights_title": "Nhận định dinh dưỡng",
@@ -527,6 +529,13 @@
   "mind_log_saved": "Đã lưu ghi chép! Suy ngẫm đã cập nhật.",
   "mind_error_login": "Lỗi: Không tìm thấy phiên người dùng. Vui lòng đăng nhập lại.",
   "mind_error_save": "Lưu ghi chép thất bại: {error}",
+  "@mind_error_save": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
   "mood_awful": "Tồi tệ",
   "mood_bad": "Kém",
   "mood_meh": "Bình thường",
@@ -554,6 +563,13 @@
   "mind_save_btn": "Lưu mục nhập",
   "mind_save_success": "Đã lưu nhật ký tinh thần! Cập nhật suy ngẫm.",
   "mind_feeling_format": "Hôm nay tôi cảm thấy {mood}.",
+  "@mind_feeling_format": {
+    "placeholders": {
+      "mood": {
+        "type": "String"
+      }
+    }
+  },
   "mind_logged_mood": "Đã ghi lại tâm trạng",
   "todays_reflections": "SUY NGẪM HÔM NAY",
   "daily_step_distribution": "PHÂN BỔ BƯỚC CHÂN HÀNG NGÀY",
@@ -1172,5 +1188,30 @@
   "widget_name_hint": "Tên Widget (ví dụ: Facebook)",
   "url_hint": "URL (ví dụ: facebook.com)",
   "plugins": "Plugins",
-  "custom_url": "URL tùy chỉnh"
+  "custom_url": "URL tùy chỉnh",
+  "health_metrics_air_quality": "Chất lượng không khí",
+  "health_metrics_weather": "Thời tiết",
+  "act_logging": "Ghi chép",
+  "act_productivity": "Năng suất",
+  "home_indices_title": "Chỉ số nhanh",
+  "home_index_steps": "Bước chân",
+  "home_index_calories": "Calo",
+  "home_index_balance": "Số dư",
+  "home_index_spending": "Chi tiêu",
+  "home_index_mood": "Tâm trạng",
+  "home_index_projects": "Tăng trưởng",
+  "home_index_weight": "Cân nặng",
+  "home_index_water": "Nước uống",
+  "home_index_daily": "Hàng ngày",
+  "home_index_usage": "Sử dụng",
+  "home_index_focus": "Tập trung",
+  "home_index_xp": "XP Hôm nay",
+  "home_index_total": "Tổng cộng",
+  "home_projects_done": "Dự án xong",
+  "home_projects_active": "Dự án chạy",
+  "home_tasks_done": "Nhiệm vụ xong",
+  "home_tasks_active": "Nhiệm vụ chạy",
+  "settings_title": "Cài đặt",
+  "mind_latest_note": "Ghi chú gần nhất",
+  "common_done": "Xong"
 }

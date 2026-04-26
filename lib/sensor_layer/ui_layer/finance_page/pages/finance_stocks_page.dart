@@ -6,6 +6,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_c
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/link_layer/finnace_services/stock_service.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/services/market_service.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/stock_page/models/stock_data.dart';
 import 'package:go_router/go_router.dart';
 
@@ -38,6 +39,8 @@ class FinanceStocksPage extends StatelessWidget {
           children: [
             const SizedBox(height: 16),
             _buildStockSummary(context, groupedStocks),
+            const SizedBox(height: 32),
+            _buildMarketPulse(context),
             const SizedBox(height: 32),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
@@ -339,6 +342,119 @@ class FinanceStocksPage extends StatelessWidget {
           ),
         );
       }
+    );
+  }
+
+  Widget _buildMarketPulse(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Padding(
+          padding: EdgeInsets.symmetric(horizontal: 8),
+          child: Text(
+            "MARKET PULSE",
+            style: TextStyle(
+              color: Colors.white54,
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          height: 110,
+          child: ListView(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            children: [
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: MarketService.fetchGoldPrices(),
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+                  final price = data != null && data.isNotEmpty ? data.first['sjc'][0]['sell_price'].toString() : "---";
+                  return _buildPulseCard("GOLD", "SJC", price, Icons.auto_awesome, Colors.amber);
+                }
+              ),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: MarketService.fetchIndexHistorical("VNINDEX"),
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+                  final price = data != null && data.isNotEmpty ? data.last['close'].toString() : "---";
+                  return _buildPulseCard("VNINDEX", "INDEX", price, Icons.trending_up, Colors.blue);
+                }
+              ),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: MarketService.fetchIndexHistorical("VN30"),
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+                  final price = data != null && data.isNotEmpty ? data.last['close'].toString() : "---";
+                  return _buildPulseCard("VN30", "INDEX", price, Icons.layers_outlined, Colors.indigo);
+                }
+              ),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: MarketService.fetchForexHistorical(symbol: "USDVND"),
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+                  final price = data != null && data.isNotEmpty ? data.last['close'].toString() : "---";
+                  return _buildPulseCard("USDVND", "FOREX", price, Icons.currency_exchange, Colors.green);
+                }
+              ),
+              FutureBuilder<List<Map<String, dynamic>>>(
+                future: MarketService.fetchCryptoHistorical(symbol: "BTC"),
+                builder: (context, snapshot) {
+                  final data = snapshot.data;
+                  final price = data != null && data.isNotEmpty ? data.last['close'].toString() : "---";
+                  return _buildPulseCard("BTC", "CRYPTO", price, Icons.currency_bitcoin, Colors.orange);
+                }
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildPulseCard(String symbol, String type, String price, IconData icon, Color color) {
+    return Container(
+      width: 150,
+      margin: const EdgeInsets.only(right: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: color.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(icon, color: color, size: 14),
+              Text(
+                type,
+                style: TextStyle(color: color.withOpacity(0.5), fontSize: 8, fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
+          const Spacer(),
+          Text(
+            symbol,
+            style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w900),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            price == "---" ? "Fetching..." : price,
+            style: TextStyle(
+              color: price == "---" ? Colors.white24 : Colors.white70,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'JetBrainsMono'
+            ),
+          ),
+        ],
+      ),
     );
   }
 
