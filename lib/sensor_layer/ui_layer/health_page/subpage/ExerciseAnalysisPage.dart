@@ -38,10 +38,7 @@ class ExerciseAnalysisPage extends StatelessWidget {
               gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
-                colors: [
-                  colorScheme.surface,
-                  Colors.orange.withOpacity(0.05),
-                ],
+                colors: [colorScheme.surface, Colors.orange.withOpacity(0.05)],
               ),
             ),
           ),
@@ -52,7 +49,9 @@ class ExerciseAnalysisPage extends StatelessWidget {
             ),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(child: CircularProgressIndicator(color: Colors.orange));
+                return const Center(
+                  child: CircularProgressIndicator(color: Colors.orange),
+                );
               }
 
               final logs = snapshot.data ?? [];
@@ -61,9 +60,16 @@ class ExerciseAnalysisPage extends StatelessWidget {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.fitness_center_rounded, size: 64, color: colorScheme.primary.withOpacity(0.1)),
+                      Icon(
+                        Icons.fitness_center_rounded,
+                        size: 64,
+                        color: colorScheme.primary.withOpacity(0.1),
+                      ),
                       const SizedBox(height: 16),
-                      Text('No exercise history found', style: TextStyle(color: colorScheme.onSurfaceVariant)),
+                      Text(
+                        'No exercise history found',
+                        style: TextStyle(color: colorScheme.onSurfaceVariant),
+                      ),
                     ],
                   ),
                 );
@@ -73,7 +79,7 @@ class ExerciseAnalysisPage extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 100)),
-                  
+
                   // Weekly Duration Chart
                   SliverToBoxAdapter(
                     child: Padding(
@@ -88,9 +94,16 @@ class ExerciseAnalysisPage extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Row(
                         children: [
-                          Expanded(child: _buildIntensityDistribution(context, logs)),
+                          Expanded(
+                            child: _buildIntensityDistribution(context, logs),
+                          ),
                           const SizedBox(width: 16),
-                          Expanded(child: _buildActivityTypeDistribution(context, logs)),
+                          Expanded(
+                            child: _buildActivityTypeDistribution(
+                              context,
+                              logs,
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -101,10 +114,16 @@ class ExerciseAnalysisPage extends StatelessWidget {
                   // History list
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32.0, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32.0,
+                        vertical: 8,
+                      ),
                       child: Text(
                         'RECENT SESSIONS',
-                        style: textTheme.labelLarge?.copyWith(fontWeight: FontWeight.w900, letterSpacing: 1),
+                        style: textTheme.labelLarge?.copyWith(
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1,
+                        ),
                       ),
                     ),
                   ),
@@ -154,7 +173,12 @@ class ExerciseAnalysisPage extends StatelessWidget {
         children: [
           const Text(
             'WEEKLY MINUTES',
-            style: TextStyle(fontSize: 12, fontWeight: FontWeight.w900, color: Colors.orange, letterSpacing: 1.2),
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: Colors.orange,
+              letterSpacing: 1.2,
+            ),
           ),
           const SizedBox(height: 24),
           SimpleLineChart(data: data, color: Colors.orange, height: 120),
@@ -165,7 +189,10 @@ class ExerciseAnalysisPage extends StatelessWidget {
               final date = DateFormat('yyyy-MM-dd').parse(dateStr);
               return Text(
                 DateFormat('E').format(date).substring(0, 1),
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 10),
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 10,
+                ),
               );
             }).toList(),
           ),
@@ -174,8 +201,15 @@ class ExerciseAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildIntensityDistribution(BuildContext context, List<ExerciseLogData> logs) {
-    final Map<String, double> intensityCount = {'low': 0, 'medium': 0, 'high': 0};
+  Widget _buildIntensityDistribution(
+    BuildContext context,
+    List<ExerciseLogData> logs,
+  ) {
+    final Map<String, double> intensityCount = {
+      'low': 0,
+      'medium': 0,
+      'high': 0,
+    };
     for (var log in logs) {
       final intensity = log.intensity.toLowerCase();
       if (intensityCount.containsKey(intensity)) {
@@ -192,7 +226,10 @@ class ExerciseAnalysisPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text('Intensity', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text(
+            'Intensity',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
           const SizedBox(height: 16),
           SimplePieChart(
             data: intensityCount,
@@ -204,12 +241,16 @@ class ExerciseAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildActivityTypeDistribution(BuildContext context, List<ExerciseLogData> logs) {
+  Widget _buildActivityTypeDistribution(
+    BuildContext context,
+    List<ExerciseLogData> logs,
+  ) {
     final Map<String, double> typeCount = {};
     for (var log in logs) {
       typeCount[log.type] = (typeCount[log.type] ?? 0) + 1;
     }
-    final sortedTypes = typeCount.entries.toList()..sort((a, b) => b.value.compareTo(a.value));
+    final sortedTypes = typeCount.entries.toList()
+      ..sort((a, b) => b.value.compareTo(a.value));
     final Map<String, double> topTypes = Map.fromEntries(sortedTypes.take(3));
 
     return Container(
@@ -221,7 +262,10 @@ class ExerciseAnalysisPage extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const Text('Top Types', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
+          const Text(
+            'Top Types',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
           const SizedBox(height: 16),
           SimplePieChart(
             data: topTypes,
@@ -249,16 +293,29 @@ class ExerciseAnalysisPage extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(log.type, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                log.type,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
               Text(
                 DateFormat('MMM d, HH:mm').format(log.timestamp),
-                style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 12),
+                style: TextStyle(
+                  color: colorScheme.onSurfaceVariant,
+                  fontSize: 12,
+                ),
               ),
             ],
           ),
           Text(
             '${log.durationMinutes}m',
-            style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20, color: Colors.orange),
+            style: const TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 20,
+              color: Colors.orange,
+            ),
           ),
         ],
       ),

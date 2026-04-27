@@ -337,8 +337,8 @@ class _HomePageState extends State<HomePage> {
                       // const SizedBox(height: 16),
                       _buildEnvironmentalSummary(context),
                       _buildQuotesSection(context),
-                      // const SizedBox(height: 20),
 
+                      // const SizedBox(height: 20),
                       const SizedBox(height: 24),
 
                       // --- SECTION: 4 life elements ---
@@ -358,22 +358,56 @@ class _HomePageState extends State<HomePage> {
                           children: [
                             Watch((context) {
                               final steps = healthBlock.todaySteps.value;
-                              final kcal = healthBlock.todayCaloriesConsumed.value;
+                              final kcal =
+                                  healthBlock.todayCaloriesConsumed.value;
                               final sleep = healthBlock.todaySleep.value;
                               final hr = healthBlock.todayHeartRate.value;
                               final water = healthBlock.todayWater.value;
                               final weight = healthBlock.latestWeight.value;
 
                               final allMetrics = [
-                                {'label': l10n.steps, 'value': '$steps', 'visible': configBlock.showIndexSteps.value},
-                                {'label': l10n.kcal_consume, 'value': '$kcal', 'visible': configBlock.showIndexCalories.value},
-                                {'label': l10n.sleep, 'value': '${sleep.toStringAsFixed(1)}h', 'visible': true}, // Always show some core metrics
-                                {'label': l10n.hr, 'value': hr > 0 ? '$hr bpm' : '--', 'visible': true},
-                                {'label': l10n.home_index_water, 'value': '$water ml', 'visible': configBlock.showIndexWater.value},
-                                {'label': l10n.home_index_weight, 'value': weight > 0 ? '$weight kg' : '--', 'visible': configBlock.showIndexWeight.value},
+                                {
+                                  'label': l10n.steps,
+                                  'value': '$steps',
+                                  'visible': configBlock.showIndexSteps.value,
+                                },
+                                {
+                                  'label': l10n.kcal_consume,
+                                  'value': '$kcal',
+                                  'visible':
+                                      configBlock.showIndexCalories.value,
+                                },
+                                {
+                                  'label': l10n.sleep,
+                                  'value': '${sleep.toStringAsFixed(1)}h',
+                                  'visible': true,
+                                }, // Always show some core metrics
+                                {
+                                  'label': l10n.hr,
+                                  'value': hr > 0 ? '$hr bpm' : '--',
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_index_water,
+                                  'value': '$water ml',
+                                  'visible': configBlock.showIndexWater.value,
+                                },
+                                {
+                                  'label': l10n.home_index_weight,
+                                  'value': weight > 0 ? '$weight kg' : '--',
+                                  'visible': configBlock.showIndexWeight.value,
+                                },
                               ];
 
-                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+                              final visibleMetrics = allMetrics
+                                  .where((m) => m['visible'] == true)
+                                  .map(
+                                    (m) => {
+                                      'label': m['label'] as String,
+                                      'value': m['value'] as String,
+                                    },
+                                  )
+                                  .toList();
 
                               return _buildQuickAccessCard(
                                 context,
@@ -387,22 +421,74 @@ class _HomePageState extends State<HomePage> {
                             }),
                             Watch((context) {
                               final balance = financeBlock.totalBalance.value;
-                              final spending = financeBlock.monthlySpending.value;
+                              final spending =
+                                  financeBlock.monthlySpending.value;
                               final income = financeBlock.monthlyIncome.value;
                               final savings = financeBlock.totalSavings.value;
                               final delta = financeBlock.dailyDelta.value;
-                              final usage = financeBlock.budgetUsagePercent.value;
+                              final usage =
+                                  financeBlock.budgetUsagePercent.value;
 
                               final allMetrics = [
-                                {'label': l10n.balance, 'value': financeBlock.formatCurrency(balance, compact: true), 'visible': configBlock.showIndexBalance.value},
-                                {'label': l10n.spent, 'value': financeBlock.formatCurrency(spending, compact: true), 'visible': configBlock.showIndexSpending.value},
-                                {'label': l10n.income, 'value': financeBlock.formatCurrency(income, compact: true), 'visible': true},
-                                {'label': l10n.savings, 'value': financeBlock.formatCurrency(savings, compact: true), 'visible': true},
-                                {'label': l10n.home_index_daily, 'value': financeBlock.formatCurrency(delta, compact: true), 'visible': configBlock.showIndexFinanceDaily.value},
-                                {'label': l10n.home_index_usage, 'value': '${usage.toStringAsFixed(0)}%', 'visible': configBlock.showIndexFinanceUsage.value},
+                                {
+                                  'label': l10n.balance,
+                                  'value': financeBlock.formatCurrency(
+                                    balance,
+                                    compact: true,
+                                  ),
+                                  'visible': configBlock.showIndexBalance.value,
+                                },
+                                {
+                                  'label': l10n.spent,
+                                  'value': financeBlock.formatCurrency(
+                                    spending,
+                                    compact: true,
+                                  ),
+                                  'visible':
+                                      configBlock.showIndexSpending.value,
+                                },
+                                {
+                                  'label': l10n.income,
+                                  'value': financeBlock.formatCurrency(
+                                    income,
+                                    compact: true,
+                                  ),
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.savings,
+                                  'value': financeBlock.formatCurrency(
+                                    savings,
+                                    compact: true,
+                                  ),
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_index_daily,
+                                  'value': financeBlock.formatCurrency(
+                                    delta,
+                                    compact: true,
+                                  ),
+                                  'visible':
+                                      configBlock.showIndexFinanceDaily.value,
+                                },
+                                {
+                                  'label': l10n.home_index_usage,
+                                  'value': '${usage.toStringAsFixed(0)}%',
+                                  'visible':
+                                      configBlock.showIndexFinanceUsage.value,
+                                },
                               ];
 
-                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+                              final visibleMetrics = allMetrics
+                                  .where((m) => m['visible'] == true)
+                                  .map(
+                                    (m) => {
+                                      'label': m['label'] as String,
+                                      'value': m['value'] as String,
+                                    },
+                                  )
+                                  .toList();
 
                               return _buildQuickAccessCard(
                                 context,
@@ -411,14 +497,17 @@ class _HomePageState extends State<HomePage> {
                                 EntryColors.primaryIceBlue,
                                 metrics: visibleMetrics,
                                 route: '/finance',
-                                scoreData: scoreBlock.score.financialGlobalScore,
+                                scoreData:
+                                    scoreBlock.score.financialGlobalScore,
                               );
                             }),
                             Watch((context) {
                               final moodLog = mindBlock.latestMoodLog.value;
-                              final socialScore = scoreBlock.score.socialGlobalScore;
+                              final socialScore =
+                                  scoreBlock.score.socialGlobalScore;
                               final focus = healthBlock.todayFocusMinutes.value;
-                              final socialXP = scoreBlock.todaySocialPoints.value;
+                              final socialXP =
+                                  scoreBlock.todaySocialPoints.value;
 
                               String moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
@@ -445,16 +534,57 @@ class _HomePageState extends State<HomePage> {
                               }
 
                               final allMetrics = [
-                                {'label': l10n.mind_current_mood, 'value': moodDisplay, 'visible': configBlock.showIndexMood.value},
-                                {'label': l10n.mind_day_average, 'value': socialScore.toStringAsFixed(1), 'visible': true},
-                                {'label': l10n.mind_latest_log, 'value': moodLog != null ? _formatRelativeTime(moodLog.createdAt) : l10n.mind_never, 'visible': true},
-                                {'label': l10n.mind_status, 'value': socialScore >= 70 ? l10n.mind_stable : l10n.mind_needs_care, 'visible': true},
-                                {'label': l10n.home_index_focus, 'value': '${focus}m', 'visible': configBlock.showIndexFocus.value},
-                                {'label': l10n.home_index_xp, 'value': '+${socialXP.toInt()}', 'visible': configBlock.showIndexXP.value},
-                                {'label': l10n.mind_latest_note, 'value': moodLog?.note ?? l10n.mood_no_data, 'visible': configBlock.showIndexMoodNote.value},
+                                {
+                                  'label': l10n.mind_current_mood,
+                                  'value': moodDisplay,
+                                  'visible': configBlock.showIndexMood.value,
+                                },
+                                {
+                                  'label': l10n.mind_day_average,
+                                  'value': socialScore.toStringAsFixed(1),
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.mind_latest_log,
+                                  'value': moodLog != null
+                                      ? _formatRelativeTime(moodLog.createdAt)
+                                      : l10n.mind_never,
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.mind_status,
+                                  'value': socialScore >= 70
+                                      ? l10n.mind_stable
+                                      : l10n.mind_needs_care,
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_index_focus,
+                                  'value': '${focus}m',
+                                  'visible': configBlock.showIndexFocus.value,
+                                },
+                                {
+                                  'label': l10n.home_index_xp,
+                                  'value': '+${socialXP.toInt()}',
+                                  'visible': configBlock.showIndexXP.value,
+                                },
+                                {
+                                  'label': l10n.mind_latest_note,
+                                  'value': moodLog?.note ?? l10n.mood_no_data,
+                                  'visible':
+                                      configBlock.showIndexMoodNote.value,
+                                },
                               ];
 
-                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+                              final visibleMetrics = allMetrics
+                                  .where((m) => m['visible'] == true)
+                                  .map(
+                                    (m) => {
+                                      'label': m['label'] as String,
+                                      'value': m['value'] as String,
+                                    },
+                                  )
+                                  .toList();
 
                               return _buildQuickAccessCard(
                                 context,
@@ -470,23 +600,66 @@ class _HomePageState extends State<HomePage> {
                               final projectGoals = growthBlock.goals.value
                                   .where((g) => g.category == 'project')
                                   .toList();
-                              final tasksRemaining = projectGoals.where((g) => g.status != 'done').length;
-                              final tasksDone = projectGoals.where((g) => g.status == 'done').length;
+                              final tasksRemaining = projectGoals
+                                  .where((g) => g.status != 'done')
+                                  .length;
+                              final tasksDone = projectGoals
+                                  .where((g) => g.status == 'done')
+                                  .length;
                               final allProjects = projectBlock.projects.value;
-                              final projectsDone = allProjects.where((p) => p.status == 1).length;
-                              final projectsRemaining = allProjects.where((p) => p.status == 0).length;
-                              final projectXP = scoreBlock.todayProjectPoints.value;
+                              final projectsDone = allProjects
+                                  .where((p) => p.status == 1)
+                                  .length;
+                              final projectsRemaining = allProjects
+                                  .where((p) => p.status == 0)
+                                  .length;
+                              final projectXP =
+                                  scoreBlock.todayProjectPoints.value;
 
                               final allMetrics = [
-                                {'label': l10n.home_projects_done, 'value': '$projectsDone', 'visible': true},
-                                {'label': l10n.home_projects_active, 'value': '$projectsRemaining', 'visible': true},
-                                {'label': l10n.home_tasks_done, 'value': '$tasksDone', 'visible': configBlock.showIndexProjects.value},
-                                {'label': l10n.home_tasks_active, 'value': '$tasksRemaining', 'visible': configBlock.showIndexProjects.value},
-                                {'label': l10n.home_index_total, 'value': '${allProjects.length}', 'visible': true},
-                                {'label': l10n.home_index_xp, 'value': '+${projectXP.toInt()}', 'visible': configBlock.showIndexXP.value},
+                                {
+                                  'label': l10n.home_projects_done,
+                                  'value': '$projectsDone',
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_projects_active,
+                                  'value': '$projectsRemaining',
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_tasks_done,
+                                  'value': '$tasksDone',
+                                  'visible':
+                                      configBlock.showIndexProjects.value,
+                                },
+                                {
+                                  'label': l10n.home_tasks_active,
+                                  'value': '$tasksRemaining',
+                                  'visible':
+                                      configBlock.showIndexProjects.value,
+                                },
+                                {
+                                  'label': l10n.home_index_total,
+                                  'value': '${allProjects.length}',
+                                  'visible': true,
+                                },
+                                {
+                                  'label': l10n.home_index_xp,
+                                  'value': '+${projectXP.toInt()}',
+                                  'visible': configBlock.showIndexXP.value,
+                                },
                               ];
 
-                              final visibleMetrics = allMetrics.where((m) => m['visible'] == true).map((m) => {'label': m['label'] as String, 'value': m['value'] as String}).toList();
+                              final visibleMetrics = allMetrics
+                                  .where((m) => m['visible'] == true)
+                                  .map(
+                                    (m) => {
+                                      'label': m['label'] as String,
+                                      'value': m['value'] as String,
+                                    },
+                                  )
+                                  .toList();
 
                               return _buildQuickAccessCard(
                                 context,
@@ -734,7 +907,7 @@ class _HomePageState extends State<HomePage> {
               ),
               // Subtle Glow
               Positioned(
-                top: -20,
+                top: -25,
                 right: -20,
                 child: Container(
                   width: 100,
@@ -799,7 +972,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ],
                     ),
-                    const Spacer(),
+                    const SizedBox(height: 24),
                     // 2x2 Grid of metrics
                     Wrap(
                       spacing: isPhone ? 8 : 12,

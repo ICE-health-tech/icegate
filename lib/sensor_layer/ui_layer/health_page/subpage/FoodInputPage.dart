@@ -1,9 +1,9 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:ice_gate/orchestration_layer/Services/Health/AIFoodCaloriesServices.dart';
-import 'package:ice_gate/orchestration_layer/Services/Health/FoodDataCentralService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/LidarFoodScanner.dart';
+
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
@@ -14,7 +14,9 @@ import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dar
 import 'dart:io';
 import 'package:drift/drift.dart' hide Column;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+
 import 'package:path_provider/path_provider.dart';
 
 class FoodInputPage extends StatefulWidget {
@@ -71,8 +73,11 @@ class _FoodInputPageState extends State<FoodInputPage> {
   bool _isAnalyzing = false;
   double? _measuredVolume;
   Map<String, double>? _dimensions;
-  Map<String, dynamic>? _fdcData;
   late HealthMealDAO _healthMealDAO;
+  Timer? _analysisTimer;
+  bool _isSaving = false;
+
+
 
   @override
   void initState() {
@@ -141,6 +146,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
     _carbsController.dispose();
     _fatController.dispose();
     _kcalController.dispose();
+    _analysisTimer?.cancel();
     super.dispose();
   }
 
@@ -193,50 +199,51 @@ class _FoodInputPageState extends State<FoodInputPage> {
     if (_pickedImage == null && _foodController.text.isEmpty) return;
 
     setState(() => _isAnalyzing = true);
+    _analysisTimer?.cancel();
+
+    _analysisTimer = Timer(const Duration(seconds: 2), () {
+      if (_isAnalyzing && mounted && !_isSaving) {
+        _addMeal(); // Auto-save and close for faster UX
+      }
+    });
 
     try {
-      // 1. First, if we have a name, try to get official data from FoodData Central
-      if (_foodController.text.isNotEmpty) {
-        final fdc = await FoodDataCentralService.searchFood(
-          _foodController.text,
-        );
-        if (fdc != null) {
-          setState(() => _fdcData = fdc);
-          // Pre-fill if we have a good match and no LiDAR yet
-          if (_measuredVolume == null) {
-            _proteinController.text = fdc['protein'].toString();
-            _carbsController.text = fdc['carbs'].toString();
-            _fatController.text = fdc['fat'].toString();
-            _kcalController.text = fdc['calories'].toString();
-          }
-        }
-      }
+      final authBlock = context.read<AuthBlock>();
+      final userData = authBlock.user.value;
+      final String personID =
+          userData?['person_id']?.toString() ??
+          userData?['id']?.toString() ??
+          '1';
 
-      // 2. Call AI with all available context (Image, LiDAR, FDC data)
-      final result = await AIFoodCaloriesService.getCalories(
-        _foodController.text,
+      final analysisBlock = context.read<FoodAnalysisBlock>();
+      final result = await analysisBlock.analyze(
+        foodName: _foodController.text,
         image: _pickedImage,
         volume: _measuredVolume,
-        distance: _dimensions?['length'], // Using length as a primary dimension
-        fdcData: _fdcData,
+        distance: _dimensions?['length'],
+        personId: personID,
       );
 
       if (mounted) {
         setState(() {
-          // If we have official data AND LiDAR, we can scale the FDC data
-          // But for now, let's trust the AI which combines both
           _proteinController.text = result.protein.toString();
           _carbsController.text = result.carbs.toString();
           _fatController.text = result.fat.toString();
           _kcalController.text = result.calories.toString();
           _isAnalyzing = false;
         });
+        _analysisTimer?.cancel();
       }
     } catch (e) {
-      debugPrint('Error analyzing food: $e');
+      debugPrint('FoodInputPage: Analysis error: $e');
       if (mounted) setState(() => _isAnalyzing = false);
+    } finally {
+      _analysisTimer?.cancel();
     }
   }
+
+
+
 
   Future<void> _startLidarScan() async {
     final result = await Navigator.push(
@@ -274,11 +281,16 @@ class _FoodInputPageState extends State<FoodInputPage> {
   }
 
   Future<void> _addMeal() async {
+    if (_isSaving) return;
+    _isSaving = true;
+    _analysisTimer?.cancel();
+
     final protein = double.tryParse(_proteinController.text) ?? 0.0;
     final carbs = double.tryParse(_carbsController.text) ?? 0.0;
     final fat = double.tryParse(_fatController.text) ?? 0.0;
     final calories = double.tryParse(_kcalController.text) ?? 0.0;
 
+    if (!mounted) return;
     final authBlock = context.read<AuthBlock>();
     final userData = authBlock.user.value;
     final String personID =
@@ -293,7 +305,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
       DateFormat('yyyy-MM-dd').format(normalizedDate),
     );
 
+    final String mealId = widget.mealId ?? IDGen.UUIDV7();
+
+    final messenger = ScaffoldMessenger.maybeOf(context);
+
     if (widget.mealId != null) {
+      if (!mounted) return;
       final db = context.read<AppDatabase>();
       await (db.update(
         db.mealsTable,
@@ -307,12 +324,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
           protein: Value(protein),
           fat: Value(fat),
           calories: Value(calories),
+          isAnalyzing: Value(_isAnalyzing),
         ),
       );
     } else {
       await _healthMealDAO.insertMeal(
         MealsTableCompanion.insert(
-          id: IDGen.UUIDV7(),
+          id: mealId,
           mealName: _foodController.text.isEmpty
               ? "Meal"
               : _foodController.text,
@@ -323,9 +341,58 @@ class _FoodInputPageState extends State<FoodInputPage> {
           fat: Value(fat),
           calories: Value(calories),
           eatenAt: Value(now),
+          isAnalyzing: Value(_isAnalyzing),
         ),
       );
     }
+
+    if (_isAnalyzing) {
+      // Delegate further analysis to background orchestrator
+      if (!mounted) return;
+      context.read<FoodAnalysisBlock>().analyzeAndSave(
+            mealId: mealId,
+            foodName: _foodController.text,
+            image: _pickedImage,
+            volume: _measuredVolume,
+            distance: _dimensions?['length'],
+            personId: personID,
+          );
+
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Row(
+            children: [
+              const SizedBox(
+                width: 16,
+                height: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Color(0xFFD499D4),
+                ),
+              ),
+              const SizedBox(width: 12),
+              const Expanded(
+                child: Text(
+                  "AI is analyzing your meal in background... it will update automatically.",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          backgroundColor: const Color(0xFF1A1024),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: const BorderSide(color: Color(0xFF322244)),
+          ),
+          duration: const Duration(seconds: 4),
+        ),
+      );
+    }
+
 
     await _healthMealDAO.upsertDay(
       DaysTableCompanion.insert(
@@ -338,7 +405,9 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
     if (mounted) {
       if (widget.isPopUp) {
-        Navigator.of(context).pop();
+        if (Navigator.of(context).canPop()) {
+          Navigator.of(context).pop();
+        }
       } else {
         context.go("/health/food/consume");
       }

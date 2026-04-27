@@ -32,6 +32,8 @@
 	</array>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.healthcare-fitness</string>
 	<key>GIDClientID</key>
 	<string>807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com</string>
 	<key>ITSAppUsesNonExemptEncryption</key>

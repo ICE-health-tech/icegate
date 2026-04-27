@@ -93,8 +93,10 @@ class ScoreBlock {
   ScoreData get score => _score.value;
 
   void updateScore(ScoreData scoreValue) {
-    batch(() {
-      _score.value = scoreValue;
+    untracked(() {
+      batch(() {
+        _score.value = scoreValue;
+
 
       final xp =
           scoreValue.healthGlobalScore +
@@ -127,8 +129,10 @@ class ScoreBlock {
         rankTitle.value = "Saint";
       else
         rankTitle.value = "God";
+      });
     });
   }
+
 
   /// Manual point increment for social actions (Legacy support)
   Future<void> manualSocialIncrement(double amount) async {

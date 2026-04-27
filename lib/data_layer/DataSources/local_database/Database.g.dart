@@ -17702,6 +17702,21 @@ class $MealsTableTable extends MealsTable
         requiredDuringInsert: false,
         defaultValue: currentDateAndTime,
       ).withConverter<DateTime>($MealsTableTable.$convertereatenAt);
+  static const VerificationMeta _isAnalyzingMeta = const VerificationMeta(
+    'isAnalyzing',
+  );
+  @override
+  late final GeneratedColumn<bool> isAnalyzing = GeneratedColumn<bool>(
+    'is_analyzing',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_analyzing" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -17715,6 +17730,7 @@ class $MealsTableTable extends MealsTable
     protein,
     calories,
     eatenAt,
+    isAnalyzing,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -17792,6 +17808,15 @@ class $MealsTableTable extends MealsTable
         calories.isAcceptableOrUnknown(data['calories']!, _caloriesMeta),
       );
     }
+    if (data.containsKey('is_analyzing')) {
+      context.handle(
+        _isAnalyzingMeta,
+        isAnalyzing.isAcceptableOrUnknown(
+          data['is_analyzing']!,
+          _isAnalyzingMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -17847,6 +17872,10 @@ class $MealsTableTable extends MealsTable
           data['${effectivePrefix}eaten_at'],
         )!,
       ),
+      isAnalyzing: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_analyzing'],
+      )!,
     );
   }
 
@@ -17871,6 +17900,7 @@ class MealData extends DataClass implements Insertable<MealData> {
   final double protein;
   final double calories;
   final DateTime eatenAt;
+  final bool isAnalyzing;
   const MealData({
     required this.id,
     this.tenantID,
@@ -17883,6 +17913,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     required this.protein,
     required this.calories,
     required this.eatenAt,
+    required this.isAnalyzing,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -17910,6 +17941,7 @@ class MealData extends DataClass implements Insertable<MealData> {
         $MealsTableTable.$convertereatenAt.toSql(eatenAt),
       );
     }
+    map['is_analyzing'] = Variable<bool>(isAnalyzing);
     return map;
   }
 
@@ -17934,6 +17966,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       protein: Value(protein),
       calories: Value(calories),
       eatenAt: Value(eatenAt),
+      isAnalyzing: Value(isAnalyzing),
     );
   }
 
@@ -17954,6 +17987,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       protein: serializer.fromJson<double>(json['protein']),
       calories: serializer.fromJson<double>(json['calories']),
       eatenAt: serializer.fromJson<DateTime>(json['eatenAt']),
+      isAnalyzing: serializer.fromJson<bool>(json['isAnalyzing']),
     );
   }
   @override
@@ -17971,6 +18005,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       'protein': serializer.toJson<double>(protein),
       'calories': serializer.toJson<double>(calories),
       'eatenAt': serializer.toJson<DateTime>(eatenAt),
+      'isAnalyzing': serializer.toJson<bool>(isAnalyzing),
     };
   }
 
@@ -17986,6 +18021,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     double? protein,
     double? calories,
     DateTime? eatenAt,
+    bool? isAnalyzing,
   }) => MealData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -17998,6 +18034,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     protein: protein ?? this.protein,
     calories: calories ?? this.calories,
     eatenAt: eatenAt ?? this.eatenAt,
+    isAnalyzing: isAnalyzing ?? this.isAnalyzing,
   );
   MealData copyWithCompanion(MealsTableCompanion data) {
     return MealData(
@@ -18014,6 +18051,9 @@ class MealData extends DataClass implements Insertable<MealData> {
       protein: data.protein.present ? data.protein.value : this.protein,
       calories: data.calories.present ? data.calories.value : this.calories,
       eatenAt: data.eatenAt.present ? data.eatenAt.value : this.eatenAt,
+      isAnalyzing: data.isAnalyzing.present
+          ? data.isAnalyzing.value
+          : this.isAnalyzing,
     );
   }
 
@@ -18030,7 +18070,8 @@ class MealData extends DataClass implements Insertable<MealData> {
           ..write('carbs: $carbs, ')
           ..write('protein: $protein, ')
           ..write('calories: $calories, ')
-          ..write('eatenAt: $eatenAt')
+          ..write('eatenAt: $eatenAt, ')
+          ..write('isAnalyzing: $isAnalyzing')
           ..write(')'))
         .toString();
   }
@@ -18048,6 +18089,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     protein,
     calories,
     eatenAt,
+    isAnalyzing,
   );
   @override
   bool operator ==(Object other) =>
@@ -18063,7 +18105,8 @@ class MealData extends DataClass implements Insertable<MealData> {
           other.carbs == this.carbs &&
           other.protein == this.protein &&
           other.calories == this.calories &&
-          other.eatenAt == this.eatenAt);
+          other.eatenAt == this.eatenAt &&
+          other.isAnalyzing == this.isAnalyzing);
 }
 
 class MealsTableCompanion extends UpdateCompanion<MealData> {
@@ -18078,6 +18121,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
   final Value<double> protein;
   final Value<double> calories;
   final Value<DateTime> eatenAt;
+  final Value<bool> isAnalyzing;
   final Value<int> rowid;
   const MealsTableCompanion({
     this.id = const Value.absent(),
@@ -18091,6 +18135,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     this.protein = const Value.absent(),
     this.calories = const Value.absent(),
     this.eatenAt = const Value.absent(),
+    this.isAnalyzing = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MealsTableCompanion.insert({
@@ -18105,6 +18150,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     this.protein = const Value.absent(),
     this.calories = const Value.absent(),
     this.eatenAt = const Value.absent(),
+    this.isAnalyzing = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        mealName = Value(mealName);
@@ -18120,6 +18166,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     Expression<double>? protein,
     Expression<double>? calories,
     Expression<DateTime>? eatenAt,
+    Expression<bool>? isAnalyzing,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -18134,6 +18181,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
       if (protein != null) 'protein': protein,
       if (calories != null) 'calories': calories,
       if (eatenAt != null) 'eaten_at': eatenAt,
+      if (isAnalyzing != null) 'is_analyzing': isAnalyzing,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -18150,6 +18198,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     Value<double>? protein,
     Value<double>? calories,
     Value<DateTime>? eatenAt,
+    Value<bool>? isAnalyzing,
     Value<int>? rowid,
   }) {
     return MealsTableCompanion(
@@ -18164,6 +18213,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
       protein: protein ?? this.protein,
       calories: calories ?? this.calories,
       eatenAt: eatenAt ?? this.eatenAt,
+      isAnalyzing: isAnalyzing ?? this.isAnalyzing,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -18206,6 +18256,9 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
         $MealsTableTable.$convertereatenAt.toSql(eatenAt.value),
       );
     }
+    if (isAnalyzing.present) {
+      map['is_analyzing'] = Variable<bool>(isAnalyzing.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -18226,6 +18279,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
           ..write('protein: $protein, ')
           ..write('calories: $calories, ')
           ..write('eatenAt: $eatenAt, ')
+          ..write('isAnalyzing: $isAnalyzing, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -41984,6 +42038,7 @@ typedef $$MealsTableTableCreateCompanionBuilder =
       Value<double> protein,
       Value<double> calories,
       Value<DateTime> eatenAt,
+      Value<bool> isAnalyzing,
       Value<int> rowid,
     });
 typedef $$MealsTableTableUpdateCompanionBuilder =
@@ -41999,6 +42054,7 @@ typedef $$MealsTableTableUpdateCompanionBuilder =
       Value<double> protein,
       Value<double> calories,
       Value<DateTime> eatenAt,
+      Value<bool> isAnalyzing,
       Value<int> rowid,
     });
 
@@ -42066,6 +42122,11 @@ class $$MealsTableTableFilterComposer
         column: $table.eatenAt,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<bool> get isAnalyzing => $composableBuilder(
+    column: $table.isAnalyzing,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$MealsTableTableOrderingComposer
@@ -42131,6 +42192,11 @@ class $$MealsTableTableOrderingComposer
     column: $table.eatenAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get isAnalyzing => $composableBuilder(
+    column: $table.isAnalyzing,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MealsTableTableAnnotationComposer
@@ -42176,6 +42242,11 @@ class $$MealsTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get eatenAt =>
       $composableBuilder(column: $table.eatenAt, builder: (column) => column);
+
+  GeneratedColumn<bool> get isAnalyzing => $composableBuilder(
+    column: $table.isAnalyzing,
+    builder: (column) => column,
+  );
 }
 
 class $$MealsTableTableTableManager
@@ -42217,6 +42288,7 @@ class $$MealsTableTableTableManager
                 Value<double> protein = const Value.absent(),
                 Value<double> calories = const Value.absent(),
                 Value<DateTime> eatenAt = const Value.absent(),
+                Value<bool> isAnalyzing = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MealsTableCompanion(
                 id: id,
@@ -42230,6 +42302,7 @@ class $$MealsTableTableTableManager
                 protein: protein,
                 calories: calories,
                 eatenAt: eatenAt,
+                isAnalyzing: isAnalyzing,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -42245,6 +42318,7 @@ class $$MealsTableTableTableManager
                 Value<double> protein = const Value.absent(),
                 Value<double> calories = const Value.absent(),
                 Value<DateTime> eatenAt = const Value.absent(),
+                Value<bool> isAnalyzing = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MealsTableCompanion.insert(
                 id: id,
@@ -42258,6 +42332,7 @@ class $$MealsTableTableTableManager
                 protein: protein,
                 calories: calories,
                 eatenAt: eatenAt,
+                isAnalyzing: isAnalyzing,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

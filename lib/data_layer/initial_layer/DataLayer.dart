@@ -29,7 +29,10 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart'
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+
 import 'package:ice_gate/link_layer/cloud_database/powersync_connector.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -93,7 +96,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late ConfigBlock configBlock;
   late DocumentationBlock documentationBlock;
   late RemoteControllerBlock remoteControllerBlock;
+  late FoodAnalysisBlock foodAnalysisBlock;
   late EnvironmentalBlock environmentalBlock;
+  late StorageBlock storageBlock;
+
   DateTime? _lastPausedTime;
   String? _lastInitializedPersonId; // Guard for redundant re-inits
 
@@ -290,6 +296,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       // _databaseInstance ??= AppDatabase.powersync(powersync);
 
       _databaseInstance ??= AppDatabase();
+      
+      // Initialize FoodAnalysisBlock early to avoid LateInitializationError
+      foodAnalysisBlock = FoodAnalysisBlock(database);
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
@@ -389,7 +398,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         musicBlock: musicBlock,
       );
 
+
       environmentalBlock = EnvironmentalBlock();
+      storageBlock = StorageBlock();
+      Future.microtask(() => storageBlock.init());
+
 
       _effectCleanups.add(
         effect(() {
@@ -614,12 +627,18 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     _effectCleanups.clear();
 
     // Dispose all blocks to stop background activities
-    documentationBlock.dispose();
-    focusBlock.dispose();
-    musicBlock.dispose();
-    remoteControllerBlock.dispose();
-    socialBlockerBlock.dispose();
-    environmentalBlock.dispose();
+    if (_isInitialized) {
+      documentationBlock.dispose();
+      focusBlock.dispose();
+      musicBlock.dispose();
+      remoteControllerBlock.dispose();
+      socialBlockerBlock.dispose();
+      foodAnalysisBlock.dispose();
+      environmentalBlock.dispose();
+      storageBlock.dispose();
+    }
+
+
     
     super.dispose();
   }
@@ -739,7 +758,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<ChallengeBlock>.value(value: challengeBlock),
         Provider<MindBlock>.value(value: mindBlock),
         Provider<RemoteControllerBlock>.value(value: remoteControllerBlock),
+        Provider<FoodAnalysisBlock>.value(value: foodAnalysisBlock),
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
+        Provider<StorageBlock>.value(value: storageBlock),
+
       ],
       child: widget.childWidget,
     );

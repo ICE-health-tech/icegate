@@ -143,18 +143,30 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
 
   Widget _buildErrorState(String error) {
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(Icons.error_outline, size: 64, color: Colors.red),
-          const SizedBox(height: 16),
-          Text('Error: $error'),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: () => setState(() {}),
-            child: const Text('Retry'),
-          ),
-        ],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text(
+              'Error: $error',
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 14),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => setState(() {}),
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text('Retry'),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -442,15 +454,42 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        meal.mealName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.w900,
-                          fontSize: 16,
-                        ),
+                      Row(
+                        children: [
+                          Text(
+                            meal.mealName,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 16,
+                            ),
+                          ),
+                          if (meal.isAnalyzing) ...[
+                            const SizedBox(width: 8),
+                            const SizedBox(
+                              height: 12,
+                              width: 12,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Color(0xFFD499D4),
+                              ),
+                            ),
+                          ],
+                        ],
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: 4),
+                      if (meal.isAnalyzing)
+                        Text(
+                          "Analyzing components...",
+                          style: TextStyle(
+                            color: const Color(0xFFD499D4).withOpacity(0.7),
+                            fontSize: 10,
+                            fontStyle: FontStyle.italic,
+                          ),
+                        )
+                      else
+                        const SizedBox.shrink(),
+                      const SizedBox(height: 4),
                       Row(
                         children: [
                           _buildMiniMacro('F', meal.fat, Colors.pink),
@@ -466,19 +505,27 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text(
-                      '${meal.calories.toInt()}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 20,
+                    if (meal.isAnalyzing)
+                      const Icon(
+                        Icons.auto_awesome,
+                        color: Color(0xFFD499D4),
+                        size: 16,
+                      )
+                    else
+                      Text(
+                        '${meal.calories.toInt()}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w900,
+                          fontSize: 20,
+                        ),
                       ),
-                    ),
                     Text(
-                      'cal',
+                      meal.isAnalyzing ? 'WAITING' : 'cal',
                       style: TextStyle(
                         color: Colors.white.withOpacity(0.5),
                         fontSize: 12,
+                        fontWeight: meal.isAnalyzing ? FontWeight.bold : FontWeight.normal,
                       ),
                     ),
                   ],

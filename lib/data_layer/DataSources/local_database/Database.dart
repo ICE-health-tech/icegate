@@ -1461,6 +1461,8 @@ class MealsTable extends Table {
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
       .named("eaten_at")();
+  BoolColumn get isAnalyzing =>
+      boolean().withDefault(const Constant(false)).named("is_analyzing")();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -8063,7 +8065,9 @@ class AppDatabase extends _$AppDatabase {
   // v58 → adds extension column to project_notes for .txt support
   // v59 → adds heart_rate_logs table for high-frequency samples
   // v62 → adds unique constraint {personID, startTime} to sleep_logs
-  int get schemaVersion => 67;
+  // v67 → adds health metrics source/category
+  // v68 → adds is_analyzing to meals table for background AI tracking
+  int get schemaVersion => 68;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -8146,6 +8150,11 @@ class AppDatabase extends _$AppDatabase {
           } catch (_) {}
           try {
             await m.addColumn(healthMetricsTable, healthMetricsTable.category);
+          } catch (_) {}
+        }
+        if (from < 68) {
+          try {
+            await m.addColumn(mealsTable, mealsTable.isAnalyzing);
           } catch (_) {}
         }
         if (from < 60) {

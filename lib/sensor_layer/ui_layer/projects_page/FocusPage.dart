@@ -265,6 +265,8 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
     final themeName = musicBlock.timerTheme.watch(context);
     final isExerciseMode = focusBlock.isExerciseMode.watch(context);
     final exerciseType = focusBlock.exerciseType.watch(context);
+    final isMuskMode = focusBlock.isMuskMode.watch(context);
+    final isSyncing = focusBlock.isSyncingWithClock.watch(context);
 
     // Sync logic has been moved to FocusBlock and FocusAudioHandler
     // to prevent infinite loops and state fighting.
@@ -276,14 +278,22 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
     );
 
     // Dynamic Colors based on mode
-    final modeColor = isExerciseMode
-        ? Colors.orange
-        : (sessionType == 'Focus' ? themeStyle.color : Colors.teal);
-    final modeBg = isExerciseMode
-        ? Colors.orange.withOpacity(0.1)
-        : (sessionType == 'Focus'
-              ? themeStyle.color.withOpacity(0.1)
-              : Colors.teal.withOpacity(0.1));
+    final modeColor = isSyncing 
+        ? Colors.amber 
+        : (isMuskMode 
+            ? const Color(0xFFFCEE0A) // Cyberpunk Gold
+            : (isExerciseMode
+                ? Colors.orange
+                : (sessionType == 'Focus' ? themeStyle.color : Colors.teal)));
+    final modeBg = isSyncing
+        ? Colors.amber.withOpacity(0.1)
+        : (isMuskMode 
+            ? const Color(0xFFFCEE0A).withOpacity(0.1)
+            : (isExerciseMode
+                ? Colors.orange.withOpacity(0.1)
+                : (sessionType == 'Focus'
+                    ? themeStyle.color.withOpacity(0.1)
+                    : Colors.teal.withOpacity(0.1))));
 
     int totalDuration = focusMin * 60;
     if (sessionType == 'Short Break') totalDuration = shortMin * 60;
@@ -403,11 +413,17 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
                           themeName: themeName,
                           isExerciseMode: isExerciseMode,
                           exerciseType: exerciseType,
+                          isMuskMode: isMuskMode,
+                          isSyncing: isSyncing,
                           pulse: isRunning ? _breathingController : null,
                         ),
                         const Spacer(),
 
                         // Detailed Controls Consolidated into Circle
+                        const SizedBox(height: 30),
+
+                        _SpecialOpsRow(focusBlock: focusBlock),
+
                         const SizedBox(height: 30),
 
                         // Stats & History Preview
@@ -621,6 +637,144 @@ class _TimerControls extends StatelessWidget {
       builder: (context) => _TimerSettingsSheet(
         focusBlock: focusBlock,
         musicBlock: context.read<MusicBlock>(),
+      ),
+    );
+  }
+}
+
+class _SpecialOpsRow extends StatelessWidget {
+  final FocusBlock focusBlock;
+  const _SpecialOpsRow({required this.focusBlock});
+
+  @override
+  Widget build(BuildContext context) {
+    final isMusk = focusBlock.isMuskMode.watch(context);
+    final isExercise = focusBlock.isExerciseMode.watch(context);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        _OpButton(
+          label: "MUSK BLOCK",
+          icon: Icons.auto_fix_high_rounded,
+          isActive: isMusk,
+          color: const Color(0xFFFCEE0A),
+          onTap: () {
+            HapticFeedback.mediumImpact();
+            focusBlock.startMuskFocus();
+          },
+        ),
+        const SizedBox(width: 12),
+        _OpButton(
+          label: "EXERCISE",
+          icon: Icons.fitness_center_rounded,
+          isActive: isExercise,
+          color: Colors.orange,
+          onTap: () => _showExercisePicker(context),
+        ),
+      ],
+    );
+  }
+
+  void _showExercisePicker(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (context) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.surface,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: SafeArea(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 12),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))),
+              const Padding(
+                padding: EdgeInsets.all(20),
+                child: Text("SELECT EXERCISE", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
+              ),
+              ListTile(
+                leading: const Icon(Icons.directions_run_rounded, color: Colors.orange),
+                title: const Text("RUNNING"),
+                onTap: () {
+                  focusBlock.startExercise("Running", 30);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.fitness_center_rounded, color: Colors.orange),
+                title: const Text("WORKOUT"),
+                onTap: () {
+                  focusBlock.startExercise("Workout", 45);
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const Icon(Icons.self_improvement_rounded, color: Colors.orange),
+                title: const Text("YOGA"),
+                onTap: () {
+                  focusBlock.startExercise("Yoga", 20);
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _OpButton extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isActive;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _OpButton({
+    required this.label,
+    required this.icon,
+    required this.isActive,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 300),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        decoration: BoxDecoration(
+          color: isActive ? color.withOpacity(0.2) : Theme.of(context).colorScheme.surfaceContainerHigh.withOpacity(0.5),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isActive ? color : Colors.transparent,
+            width: 1.5,
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 16, color: isActive ? color : Theme.of(context).colorScheme.onSurfaceVariant),
+            const SizedBox(width: 8),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.2,
+                color: isActive ? color : Theme.of(context).colorScheme.onSurfaceVariant,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1024,6 +1178,8 @@ class _TimerCircle extends StatelessWidget {
   final String themeName;
   final bool isExerciseMode;
   final String exerciseType;
+  final bool isMuskMode;
+  final bool isSyncing;
   final Animation<double>? pulse;
 
   const _TimerCircle({
@@ -1037,6 +1193,8 @@ class _TimerCircle extends StatelessWidget {
     required this.themeName,
     required this.isExerciseMode,
     required this.exerciseType,
+    required this.isMuskMode,
+    required this.isSyncing,
     this.pulse,
   });
 
@@ -1166,56 +1324,52 @@ class _TimerCircle extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const SizedBox(height: 10),
+                if (isSyncing) ...[
+                  Text(
+                    "SYSTEM ALIGNMENT",
+                    style: TextStyle(
+                      color: modeColor,
+                      fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 3,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ] else if (isMuskMode) ...[
+                  Text(
+                    "MUSK BLOCK",
+                    style: TextStyle(
+                      color: modeColor.withValues(alpha: 0.7),
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 4,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                ],
                 Text(
                   timeStr,
                   style: TextStyle(
-                    fontSize: 60,
-                    fontWeight: FontWeight.w900, // Even bolder
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    color: _getContrastColor(modeColor, colorScheme.surface),
+                    fontSize: isSyncing ? 48 : 64,
+                    fontWeight: FontWeight.w100,
+                    fontFamily: 'Monospace',
                     letterSpacing: -2,
-                    shadows: [
-                      Shadow(color: modeColor.withOpacity(0.2), blurRadius: 20),
-                    ],
+                    color: isSyncing ? modeColor : colorScheme.onSurface,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      isExerciseMode
-                          ? Icons.bolt_rounded
-                          : (isRunning
-                                ? Icons.bolt_rounded
-                                : Icons.spa_rounded),
-                      size: 14,
-                      color: _getContrastColor(
-                        modeColor,
-                        colorScheme.surface,
-                      ).withOpacity(0.8),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      isExerciseMode
-                          ? l10n.focus_active_exercise(
-                              exerciseType.toUpperCase(),
-                            )
-                          : (isRunning
-                                ? l10n.focus_flow_active
-                                : l10n.focus_breathing),
-                      style: TextStyle(
-                        fontSize: 11,
-                        letterSpacing: 2,
-                        color: _getContrastColor(
-                          modeColor,
-                          colorScheme.surface,
-                        ).withOpacity(0.9),
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+                Text(
+                  isSyncing 
+                      ? "PREPARING SEQUENCE"
+                      : (isExerciseMode 
+                          ? exerciseType.toUpperCase() 
+                          : sessionType.toUpperCase()),
+                  style: TextStyle(
+                    color: modeColor.withValues(alpha: 0.6),
+                    fontSize: 10,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 2.0,
+                  ),
                 ),
                 if (musicBlock.isDownloading.watch(context)) ...[
                   const SizedBox(height: 12),
@@ -3297,29 +3451,7 @@ class _SoundOption extends StatelessWidget {
   }
 }
 
-Color _getContrastColor(Color baseColor, Color backgroundColor) {
-  // Basic luminance check to ensure text is readable
-  // If the base color is too close to light background, return a darker version or onSurface
-  final double bgLuminance = backgroundColor.computeLuminance();
-  final double colorLuminance = baseColor.computeLuminance();
 
-  // If background is light (high luminance) and color is also light
-  if (bgLuminance > 0.6 && colorLuminance > 0.6) {
-    // Return a darker version or a fallback dark color
-    return HSLColor.fromColor(baseColor)
-        .withLightness(
-          (HSLColor.fromColor(baseColor).lightness - 0.4).clamp(0.0, 1.0),
-        )
-        .toColor();
-  }
-
-  // If background is dark and color is dark
-  if (bgLuminance < 0.4 && colorLuminance < 0.3) {
-    return Colors.white70;
-  }
-
-  return baseColor;
-}
 
 class _SessionResultDialog extends StatefulWidget {
   final FocusBlock focusBlock;

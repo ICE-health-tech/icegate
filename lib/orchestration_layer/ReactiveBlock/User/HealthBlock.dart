@@ -351,9 +351,12 @@ class HealthBlock {
         .watchDailyCalories(personId, DateTime.now())
         .listen(
           (cals) {
-            todayCaloriesConsumed.value = cals.toInt();
-            _saveCaloriesConsumed(cals.toInt());
+            untracked(() {
+              todayCaloriesConsumed.value = cals.toInt();
+              _saveCaloriesConsumed(cals.toInt());
+            });
           },
+
           onError: (e) =>
               debugPrint("HealthBlock: Error watching meal calories: $e"),
         );

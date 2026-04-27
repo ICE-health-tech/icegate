@@ -448,6 +448,12 @@ class _HealthPageState extends State<HealthPage>
                                         .clamp(0.0, 1.0),
                               );
                             }
+                            if (m.id == 'food') {
+                              return m.copyWith(
+                                value: healthBlock.todayCaloriesConsumed.value.toString(),
+                                isLoading: healthBlock.isCaloriesConsumedLoading.value,
+                              );
+                            }
                             if (m.id == 'calories') {
                               return m.copyWith(
                                 value: currentCaloriesBurned.toString(),

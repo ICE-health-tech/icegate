@@ -203,15 +203,22 @@ class SocialBlockerBlock {
   }
 
   Future<void> checkAuthStatus() async {
+    // Temporarily disabled for distribution
+    isSystemAuthGranted.value = true;
+    /*
     try {
       final bool granted = await _channel.invokeMethod('checkAuthorization');
       isSystemAuthGranted.value = granted;
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error checking auth: $e");
     }
+    */
   }
 
   Future<void> requestAuth() async {
+    // Temporarily disabled for distribution
+    isSystemAuthGranted.value = true;
+    /*
     try {
       final bool granted = await _channel.invokeMethod('requestAuthorization');
       isSystemAuthGranted.value = granted;
@@ -230,9 +237,13 @@ class SocialBlockerBlock {
     } catch (e) {
       debugPrint("SocialBlockerBlock: Unexpected error requesting auth: $e");
     }
+    */
   }
 
   Future<void> openAppPicker() async {
+    // Temporarily disabled for distribution
+    debugPrint("SocialBlockerBlock: App picker disabled for distribution");
+    /*
     try {
       // For iOS, the picker now handles persistence internally via tokens,
       // but we still want to trigger a sync to cloud after it closes.
@@ -253,6 +264,7 @@ class SocialBlockerBlock {
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error opening app picker: $e");
     }
+    */
   }
 
   // --- Cloud Sync ---
@@ -297,6 +309,8 @@ class SocialBlockerBlock {
   }
 
   Future<void> _pushSelectionToCloud() async {
+    // Temporarily disabled for distribution
+    /*
     if (_personId == null ||
         _personId!.isEmpty ||
         _personId == '00000000-0000-0000-0000-000000000000')
@@ -324,6 +338,7 @@ class SocialBlockerBlock {
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error pushing to cloud: $e");
     }
+    */
   }
 
   void toggleBlacklist(bool enabled) {
@@ -374,6 +389,9 @@ class SocialBlockerBlock {
   // --- Native Communication ---
 
   Future<void> _toggleSystemShield(bool active) async {
+    // Temporarily disabled for distribution
+    debugPrint("SocialBlockerBlock: System shield toggle ($active) disabled for distribution");
+    /*
     // If auth not granted, attempt to request it
     if (!isSystemAuthGranted.value) {
       debugPrint("SocialBlockerBlock: Shield toggle requested but auth missing. Requesting...");
@@ -399,5 +417,6 @@ class SocialBlockerBlock {
     } catch (e) {
       debugPrint("SocialBlockerBlock: Error toggling shield: $e");
     }
+    */
   }
 }

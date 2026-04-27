@@ -96,23 +96,17 @@ class SocialBlockerPage extends StatelessWidget {
                 return _buildTile(
                   context,
                   title: "System Shield Master",
-                  subtitle: !blocker.isSystemAuthGranted.watch(context)
-                      ? "Grant System Permissions to start"
-                      : (blocker.appSelectionJson.watch(context) == null
-                            ? "Setup Required: Tap to select apps"
-                            : "Shielding is active. Tap to change apps."),
+                  subtitle: "New blocking feature will comming soon",
                   icon: Icons.shield_rounded,
-                  color:
-                      !blocker.isSystemAuthGranted.watch(context) ||
-                          blocker.appSelectionJson.watch(context) == null
-                      ? Colors.red
-                      : orangeAccent,
+                  color: orangeAccent,
                   onTap: () {
-                    if (!blocker.isSystemAuthGranted.value) {
-                      blocker.requestAuth();
-                    } else {
-                      blocker.openAppPicker();
-                    }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text("New blocking feature will comming soon"),
+                        behavior: SnackBarBehavior.floating,
+                        duration: Duration(seconds: 3),
+                      ),
+                    );
                   },
                   trailing: Switch.adaptive(
                     value: isEnabled,

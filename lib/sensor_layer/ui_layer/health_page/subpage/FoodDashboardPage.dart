@@ -397,14 +397,40 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(meal.mealName, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
-                Text(DateFormat('h:mm a').format(meal.eatenAt), 
-                  style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withOpacity(0.6))),
+                if (meal.isAnalyzing)
+                  Row(
+                    children: [
+                      const SizedBox(
+                        width: 10,
+                        height: 10,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      const Text(
+                        "Analyzing...",
+                        style: TextStyle(
+                          fontSize: 10,
+                          color: Colors.orange,
+                          fontWeight: FontWeight.bold,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      ),
+                    ],
+                  )
+                else
+                  Text(DateFormat('h:mm a').format(meal.eatenAt), 
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withOpacity(0.6))),
               ],
             ),
           ),
-          Text('${meal.calories.toInt()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
-          const SizedBox(width: 2),
-          Text(l10n.nutri_cal, style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+          if (!meal.isAnalyzing) ...[
+            Text('${meal.calories.toInt()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            const SizedBox(width: 2),
+            Text(l10n.nutri_cal, style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+          ],
         ],
       ),
     );
