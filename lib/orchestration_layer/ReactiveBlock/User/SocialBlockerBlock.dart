@@ -43,7 +43,7 @@ class SocialBlockerBlock {
     _personId = personId;
     await _load();
     print('SocialBlockerBlock: Initializing for person $personId');
-    print('SocialBlockerBlock: Initializing for person ${_focusBlock}');
+    print('SocialBlockerBlock: Initializing for person $_focusBlock');
     await checkAuthStatus();
 
     // Pull from cloud on start
@@ -272,8 +272,9 @@ class SocialBlockerBlock {
   Future<void> _pullSelectionFromCloud() async {
     if (_personId == null ||
         _personId!.isEmpty ||
-        _personId == '00000000-0000-0000-0000-000000000000')
+        _personId == '00000000-0000-0000-0000-000000000000') {
       return;
+    }
 
     try {
       final response = await Supabase.instance.client
@@ -390,7 +391,9 @@ class SocialBlockerBlock {
 
   Future<void> _toggleSystemShield(bool active) async {
     // Temporarily disabled for distribution
-    debugPrint("SocialBlockerBlock: System shield toggle ($active) disabled for distribution");
+    debugPrint(
+      "SocialBlockerBlock: System shield toggle ($active) disabled for distribution",
+    );
     /*
     // If auth not granted, attempt to request it
     if (!isSystemAuthGranted.value) {

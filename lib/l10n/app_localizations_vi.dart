@@ -480,13 +480,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_metrics_oxygen_saturation => 'Oxy máu';
 
   @override
-  String get health_metrics_air_quality => 'Chất lượng không khí';
+  String get health_metrics_air_quality => 'AQI';
 
   @override
   String get health_metrics_weather => 'Thời tiết';
 
   @override
-  String get health_air_quality => 'Chất lượng không khí';
+  String get health_air_quality => 'AQI';
 
   @override
   String get health_weather => 'Thời tiết';

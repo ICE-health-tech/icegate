@@ -29,11 +29,12 @@ class LocationService {
     } 
 
     try {
+      debugPrint('LocationService: Requesting position with 5s timeout...');
       return await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.low,
-      );
+      ).timeout(const Duration(seconds: 5));
     } catch (e) {
-      debugPrint('Error getting location: $e');
+      debugPrint('LocationService error (likely timeout): $e');
       return null;
     }
   }

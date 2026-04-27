@@ -26,24 +26,26 @@ class EnvironmentalBlock {
     
     isLoading.value = true;
     error.value = null;
+    debugPrint('EnvironmentalBlock: refresh() started');
 
     try {
-      final position = await LocationService.getCurrentLocation();
-      if (position != null) {
-        final data = await EnvironmentalService.fetchEnvironmentalData(
-          position.latitude, 
-          position.longitude,
-        );
-        
-        if (data != null) {
-          currentData.value = data;
-          lastUpdated.value = DateTime.now();
-          debugPrint('EnvironmentalBlock: Successfully updated data for ${position.latitude}, ${position.longitude}');
-        } else {
-          error.value = 'Failed to fetch environmental data';
-        }
+      var position = await LocationService.getCurrentLocation();
+      
+      double lat = position?.latitude ?? 21.0285; // Fallback to Hanoi
+      double lon = position?.longitude ?? 105.8542;
+      
+      if (position == null) {
+        debugPrint('EnvironmentalBlock: Location null, using fallback (Hanoi)');
+      }
+
+      final data = await EnvironmentalService.fetchEnvironmentalData(lat, lon);
+      
+      if (data != null) {
+        currentData.value = data;
+        lastUpdated.value = DateTime.now();
+        debugPrint('EnvironmentalBlock: Successfully updated data for $lat, $lon');
       } else {
-        error.value = 'Could not determine location';
+        error.value = 'Failed to fetch environmental data';
       }
     } catch (e) {
       error.value = 'Error: $e';

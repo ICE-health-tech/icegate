@@ -58,10 +58,16 @@ class EnvironmentalService {
         'https://api.waqi.info/feed/geo:$lat;$lon/?token=$waqiToken',
       );
 
+      debugPrint('🌍 [Env] Fetching for: $lat, $lon');
+      debugPrint('🌍 [Env] Token: ${waqiToken.isNotEmpty ? "SET (ends with ...${waqiToken.substring(waqiToken.length > 5 ? waqiToken.length - 5 : 0)})" : "MISSING"}');
+
       final responses = await Future.wait([
         http.get(weatherUrl),
         http.get(aqiUrl),
-      ]);
+      ]).timeout(const Duration(seconds: 10));
+
+      debugPrint('🌍 [Env] Weather Status: ${responses[0].statusCode}');
+      debugPrint('🌍 [Env] AQI Status: ${responses[1].statusCode}');
 
       if (responses[0].statusCode == 200 && responses[1].statusCode == 200) {
         final weatherJson = json.decode(responses[0].body);
@@ -69,15 +75,23 @@ class EnvironmentalService {
 
         if (aqiJson['status'] == 'ok') {
           final data = aqiJson['data'];
-          final iaqi = data['iaqi'];
+          final iaqi = data['iaqi'] ?? {};
+          
+          final temp = weatherJson['current']?['temperature_2m']?.toDouble() ?? 0.0;
+          final code = weatherJson['current']?['weather_code']?.toInt() ?? 0;
+          final aqiValue = data['aqi']?.toInt() ?? 0;
+
+          debugPrint('🌍 [Env] Success: Temp $temp, AQI $aqiValue');
           
           return EnvironmentalData(
-            temperature: weatherJson['current']['temperature_2m'].toDouble(),
-            weatherCode: weatherJson['current']['weather_code'].toInt(),
-            aqi: data['aqi'].toInt(),
+            temperature: temp,
+            weatherCode: code,
+            aqi: aqiValue,
             pm25: iaqi['pm25']?['v']?.toDouble() ?? 0.0,
             pm10: iaqi['pm10']?['v']?.toDouble() ?? 0.0,
           );
+        } else {
+          debugPrint('🌍 [Env] AQI Status NOT OK: ${aqiJson['status']} - ${aqiJson['data']}');
         }
       } else {
         debugPrint('Failed to fetch environmental data: ${responses[0].statusCode} / ${responses[1].statusCode}');

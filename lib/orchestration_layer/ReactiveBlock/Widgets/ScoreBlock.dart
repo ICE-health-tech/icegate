@@ -97,38 +97,37 @@ class ScoreBlock {
       batch(() {
         _score.value = scoreValue;
 
+        final xp = scoreValue.healthGlobalScore +
+            scoreValue.socialGlobalScore +
+            scoreValue.financialGlobalScore +
+            scoreValue.careerGlobalScore;
+        totalXP.value = xp;
 
-      final xp =
-          scoreValue.healthGlobalScore +
-          scoreValue.socialGlobalScore +
-          scoreValue.financialGlobalScore +
-          scoreValue.careerGlobalScore;
-      totalXP.value = xp;
+        final avg = xp / 4;
+        averageScore.value = avg;
 
-      final avg = xp / 4;
-      averageScore.value = avg;
+        final level = GamificationService.getLevel(xp.toInt());
+        globalLevel.value = level;
 
-      final level = GamificationService.getLevel(xp.toInt());
-      globalLevel.value = level;
+        levelProgress.value = GamificationService.getProgressToNextLevel(
+          xp.toInt(),
+        );
 
-      levelProgress.value = GamificationService.getProgressToNextLevel(
-        xp.toInt(),
-      );
-
-      if (level < 10) {
-        rankTitle.value = "Novice";
-      } else if (level < 20)
-        rankTitle.value = "Protector";
-      else if (level < 30)
-        rankTitle.value = "Guardian";
-      else if (level < 50)
-        rankTitle.value = "Hero";
-      else if (level < 70)
-        rankTitle.value = "Legend";
-      else if (level < 90)
-        rankTitle.value = "Saint";
-      else
-        rankTitle.value = "God";
+        if (level < 10) {
+          rankTitle.value = "Novice";
+        } else if (level < 20) {
+          rankTitle.value = "Protector";
+        } else if (level < 30) {
+          rankTitle.value = "Guardian";
+        } else if (level < 50) {
+          rankTitle.value = "Hero";
+        } else if (level < 70) {
+          rankTitle.value = "Legend";
+        } else if (level < 90) {
+          rankTitle.value = "Saint";
+        } else {
+          rankTitle.value = "God";
+        }
       });
     });
   }
