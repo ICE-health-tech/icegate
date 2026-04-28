@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -29,10 +27,8 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/ScoreAnimations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
@@ -142,7 +138,7 @@ class _HomePageState extends State<HomePage> {
   late MindBlock mindBlock;
   late ConfigBlock configBlock;
   EffectCleanup? _levelEffect;
-  final _levelUpToShow = signal<int?>(null);
+  // final _levelUpToShow = signal<int?>(null);
   int? _lastSeenLevel;
 
   @override
@@ -169,30 +165,9 @@ class _HomePageState extends State<HomePage> {
     _fetchInitialData();
 
     // Level Up effect
-    _initLevelTracking();
-  }
-
-  Future<void> _initLevelTracking() async {
-    final prefs = await SharedPreferences.getInstance();
-    _lastSeenLevel = prefs.getInt('last_seen_level');
-
-    _levelEffect = effect(() {
-      final currentLevel = scoreBlock.globalLevel.value;
-
-      // If we haven't seen a level before, initialize it to the current level
-      // instead of showing a level up from 0/1.
-      if (_lastSeenLevel == null) {
-        _lastSeenLevel = currentLevel;
-        prefs.setInt('last_seen_level', currentLevel);
-        return;
-      }
-
-      if (currentLevel > _lastSeenLevel!) {
-        _levelUpToShow.value = currentLevel;
-        _lastSeenLevel = currentLevel;
-        prefs.setInt('last_seen_level', currentLevel);
-      }
-    });
+    // Future.microtask(() {
+    //   _initLevelTracking();
+    // });
   }
 
   void _fetchInitialData() {
@@ -302,17 +277,21 @@ class _HomePageState extends State<HomePage> {
               leading: const SizedBox.shrink(),
               actions: [const SizedBox(width: 8)],
             ),
-            floatingActionButton: Watch((context) {
-              final level = _levelUpToShow.value;
-              if (level == null) return const SizedBox.shrink();
-              return LevelUpCelebration(
-                level: level,
-                onFinished: () => _levelUpToShow.value = null,
-              );
-            }),
+            // floatingActionButton: Watch((context) {
+            //   final level = _levelUpToShow.value;
+            //   if (level == null) return const SizedBox.shrink();
+            //   return LevelUpCelebration(
+            //     level: level,
+            //     onFinished: () => _levelUpToShow.value = null,
+            //   );
+            // }),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
-            body: Watch((context) {
+            // Use Builder instead of Watch here — this scope doesn't read
+            // any signals directly. Inner Watch widgets handle their own
+            // reactive tracking. Using Watch here caused nested-scope
+            // SignalEffectException crashes.
+            body: Builder(builder: (context) {
               final l10n = AppLocalizations.of(context)!;
               return SwipeablePage(
                 direction: SwipeablePageDirection.leftToRight,
@@ -509,28 +488,33 @@ class _HomePageState extends State<HomePage> {
                               final socialXP =
                                   scoreBlock.todaySocialPoints.value;
 
-                              String moodDisplay = l10n.mood_no_data;
+                              dynamic moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
-                                final score = moodLog.moodScore;
-                                String emoji = "😐";
-                                String text = l10n.mood_meh;
-                                if (score == 1) {
-                                  emoji = "😫";
-                                  text = l10n.mood_awful;
-                                } else if (score == 2) {
-                                  emoji = "🙁";
-                                  text = l10n.mood_bad;
-                                } else if (score == 3) {
-                                  emoji = "😐";
-                                  text = l10n.mood_meh;
-                                } else if (score == 4) {
-                                  emoji = "😊";
-                                  text = l10n.mood_good;
-                                } else if (score == 5) {
-                                  emoji = "🤩";
-                                  text = l10n.mood_rad;
-                                }
-                                moodDisplay = "$emoji $text";
+                                moodDisplay = Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    _buildMoodIcon(context, moodLog.moodScore),
+                                    const SizedBox(width: 4),
+                                    AutoSizeText(
+                                      moodLog.moodScore == 1
+                                          ? l10n.mood_awful
+                                          : moodLog.moodScore == 2
+                                          ? l10n.mood_bad
+                                          : moodLog.moodScore == 3
+                                          ? l10n.mood_meh
+                                          : moodLog.moodScore == 4
+                                          ? l10n.mood_good
+                                          : l10n.mood_rad,
+                                      style: TextStyle(
+                                        color: colorScheme.onSurface.withValues(
+                                          alpha: 0.9,
+                                        ),
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                );
                               }
 
                               final allMetrics = [
@@ -866,7 +850,7 @@ class _HomePageState extends State<HomePage> {
     String title,
     IconData icon,
     Color color, {
-    required List<Map<String, String>> metrics,
+    required List<Map<String, dynamic>> metrics,
     required String route,
     required double scoreData,
   }) {
@@ -983,21 +967,24 @@ class _HomePageState extends State<HomePage> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              AutoSizeText(
-                                m['value'] ?? '',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface.withValues(
-                                    alpha: 0.9,
+                              if (m['value'] is Widget)
+                                m['value'] as Widget
+                              else
+                                AutoSizeText(
+                                  m['value']?.toString() ?? '',
+                                  style: TextStyle(
+                                    color: colorScheme.onSurface.withValues(
+                                      alpha: 0.9,
+                                    ),
+                                    fontSize: isPhone ? 11 : 13,
+                                    fontWeight: FontWeight.w800,
+                                    height: 1.1,
                                   ),
-                                  fontSize: isPhone ? 11 : 13,
-                                  fontWeight: FontWeight.w800,
-                                  height: 1.1,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
                               AutoSizeText(
-                                m['label'] ?? '',
+                                m['label']?.toString() ?? '',
                                 style: TextStyle(
                                   color: colorScheme.onSurface.withValues(
                                     alpha: 0.5,
@@ -1472,6 +1459,54 @@ class _HomePageState extends State<HomePage> {
     if (aqi <= 200) return Colors.red;
     if (aqi <= 300) return Colors.purple;
     return Colors.brown;
+  }
+
+  Widget _buildMoodIcon(BuildContext context, int score) {
+    final Color color;
+    final IconData icon;
+
+    switch (score) {
+      case 1:
+        color = const Color(0xFF8000FF);
+        icon = Icons.sentiment_very_dissatisfied_rounded;
+        break;
+      case 2:
+        color = const Color(0xFF2C3E50);
+        icon = Icons.sentiment_dissatisfied_rounded;
+        break;
+      case 3:
+        color = const Color(0xFFE0E0E0);
+        icon = Icons.sentiment_neutral_rounded;
+        break;
+      case 4:
+        color = const Color(0xFF00FF88);
+        icon = Icons.sentiment_satisfied_alt_rounded;
+        break;
+      case 5:
+        color = const Color(0xFF00FFFF);
+        icon = Icons.sentiment_very_satisfied_rounded;
+        break;
+      default:
+        color = const Color(0xFFE0E0E0);
+        icon = Icons.sentiment_neutral_rounded;
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.2),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 16, color: color),
+    );
   }
 
   Widget _buildQuotesSection(BuildContext context) {

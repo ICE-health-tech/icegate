@@ -67,8 +67,8 @@ class _FoodMeasurePageState extends State<FoodMeasurePage> {
   }
 
   void onARKitViewCreated(ARKitController controller) {
-    this.arkitController = controller;
-    this.arkitController.onARTap = (List<ARKitTestResult> results) {
+    arkitController = controller;
+    arkitController.onARTap = (List<ARKitTestResult> results) {
       if (results.isNotEmpty) {
         final tap = results.first;
         final position = vector.Vector3(

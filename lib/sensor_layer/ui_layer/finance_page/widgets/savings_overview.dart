@@ -26,7 +26,7 @@ class SavingsOverview extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF15151A),
           borderRadius: BorderRadius.circular(32),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -56,7 +56,7 @@ class SavingsOverview extends StatelessWidget {
               borderRadius: BorderRadius.circular(10),
               child: LinearProgressIndicator(
                 value: (income > 0) ? (spending + savings) / income : 0.0,
-                backgroundColor: Colors.white.withOpacity(0.05),
+                backgroundColor: Colors.white.withValues(alpha: 0.05),
                 color: Colors.greenAccent,
                 minHeight: 12,
               ),
@@ -88,7 +88,7 @@ class SavingsOverview extends StatelessWidget {
         const SizedBox(width: 6),
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 10, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 10, fontWeight: FontWeight.bold),
         ),
       ],
     );

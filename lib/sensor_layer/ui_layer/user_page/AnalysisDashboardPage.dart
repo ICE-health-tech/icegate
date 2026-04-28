@@ -845,7 +845,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                 const SizedBox(height: 12),
                 Container(
                   decoration: BoxDecoration(
-                    color: colorScheme.surfaceVariant.withOpacity(0.3),
+                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -894,7 +894,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
               ],
             ),
           );
-        }).toList(),
+        }),
       ],
     );
   }

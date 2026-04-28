@@ -28,7 +28,7 @@ class TransactionCalendar extends StatelessWidget {
         decoration: BoxDecoration(
           color: const Color(0xFF101014),
           borderRadius: BorderRadius.circular(28),
-          border: Border.all(color: Colors.white.withOpacity(0.04)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
         ),
         child: Column(
           children: [
@@ -46,7 +46,7 @@ class TransactionCalendar extends StatelessWidget {
                 ),
                 Text(
                   now.year.toString(),
-                  style: TextStyle(color: Colors.white.withOpacity(0.3), fontWeight: FontWeight.bold),
+                  style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontWeight: FontWeight.bold),
                 ),
               ],
             ),
@@ -69,15 +69,15 @@ class TransactionCalendar extends StatelessWidget {
                 
                 return Container(
                   decoration: BoxDecoration(
-                    color: isToday ? Colors.blueAccent : (hasTx ? Colors.white.withOpacity(0.05) : Colors.transparent),
+                    color: isToday ? Colors.blueAccent : (hasTx ? Colors.white.withValues(alpha: 0.05) : Colors.transparent),
                     borderRadius: BorderRadius.circular(12),
-                    border: isToday ? null : Border.all(color: Colors.white.withOpacity(0.05)),
+                    border: isToday ? null : Border.all(color: Colors.white.withValues(alpha: 0.05)),
                   ),
                   child: Center(
                     child: Text(
                       "$day",
                       style: TextStyle(
-                        color: isToday ? Colors.white : (hasTx ? Colors.white : Colors.white.withOpacity(0.2)),
+                        color: isToday ? Colors.white : (hasTx ? Colors.white : Colors.white.withValues(alpha: 0.2)),
                         fontSize: 12,
                         fontWeight: isToday ? FontWeight.bold : FontWeight.normal,
                       ),

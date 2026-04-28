@@ -168,10 +168,10 @@ class ProjectAnalysisPage extends StatelessWidget {
             decoration: BoxDecoration(
               color: Theme.of(
                 context,
-              ).colorScheme.surfaceContainerHighest.withOpacity(0.3),
+              ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Theme.of(context).colorScheme.outline.withOpacity(0.1),
+                color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.1),
               ),
             ),
             child: SimpleLineChart(
@@ -234,7 +234,7 @@ class ProjectAnalysisPage extends StatelessWidget {
                   border: Border.all(
                     color: Theme.of(
                       context,
-                    ).colorScheme.outline.withOpacity(0.05),
+                    ).colorScheme.outline.withValues(alpha: 0.05),
                   ),
                 ),
                 child: Row(
@@ -247,7 +247,7 @@ class ProjectAnalysisPage extends StatelessWidget {
                             (project.color != null
                                     ? Color(int.parse(project.color!))
                                     : Colors.blue)
-                                .withOpacity(0.1),
+                                .withValues(alpha: 0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -278,7 +278,7 @@ class ProjectAnalysisPage extends StatelessWidget {
                               minHeight: 6,
                               backgroundColor: Theme.of(
                                 context,
-                              ).colorScheme.primary.withOpacity(0.1),
+                              ).colorScheme.primary.withValues(alpha: 0.1),
                               valueColor: AlwaysStoppedAnimation(
                                 Theme.of(context).colorScheme.primary,
                               ),
@@ -325,9 +325,9 @@ class _SummaryCard extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.15)),
+        border: Border.all(color: color.withValues(alpha: 0.15)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -348,7 +348,7 @@ class _SummaryCard extends StatelessWidget {
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
-              color: color.withOpacity(0.8),
+              color: color.withValues(alpha: 0.8),
               letterSpacing: 0.5,
             ),
           ),

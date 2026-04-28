@@ -495,7 +495,7 @@ class _TextEditorPageState extends State<TextEditorPage>
             color: colorScheme.surface,
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: colorScheme.outlineVariant.withOpacity(0.3),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
             ),
           ),
           child: Column(
@@ -569,7 +569,7 @@ class _TextEditorPageState extends State<TextEditorPage>
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.08),
+          color: color.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
@@ -588,7 +588,7 @@ class _TextEditorPageState extends State<TextEditorPage>
             Text(
               label,
               style: TextStyle(
-                color: colorScheme.onSurface.withOpacity(0.5),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),
@@ -620,7 +620,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                 color: colorScheme.surface,
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.3),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
               child: Column(
@@ -631,7 +631,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                     width: 36,
                     height: 4,
                     decoration: BoxDecoration(
-                      color: colorScheme.onSurface.withOpacity(0.2),
+                      color: colorScheme.onSurface.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -746,7 +746,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                             thickness: 0.5,
                             indent: 16,
                             endIndent: 16,
-                            color: Colors.red.withOpacity(0.2),
+                            color: Colors.red.withValues(alpha: 0.2),
                           ),
                           _optionTile(
                             ctx,
@@ -812,7 +812,7 @@ class _TextEditorPageState extends State<TextEditorPage>
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(icon, color: color, size: 20),
@@ -924,7 +924,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                         end: Alignment.bottomRight,
                         colors: [
                           colorScheme.surface,
-                          colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                          colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                         ],
                       ),
                     ),
@@ -1003,14 +1003,14 @@ class _TextEditorPageState extends State<TextEditorPage>
                                               Icons.access_time_rounded,
                                               size: 12,
                                               color: colorScheme.onSurface
-                                                  .withOpacity(0.3),
+                                                  .withValues(alpha: 0.3),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               'Saved ${_formatRelativeTime(_lastSaved!)}',
                                               style: TextStyle(
                                                 color: colorScheme.onSurface
-                                                    .withOpacity(0.3),
+                                                    .withValues(alpha: 0.3),
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w500,
                                               ),
@@ -1022,7 +1022,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                                               Icons.folder_open_rounded,
                                               size: 12,
                                               color: colorScheme.primary
-                                                  .withOpacity(0.5),
+                                                  .withValues(alpha: 0.5),
                                             ),
                                             const SizedBox(width: 4),
                                             Expanded(
@@ -1030,7 +1030,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                                                 _openedFile!.path,
                                                 style: TextStyle(
                                                   color: colorScheme.primary
-                                                      .withOpacity(0.5),
+                                                      .withValues(alpha: 0.5),
                                                   fontSize: 10,
                                                   fontWeight: FontWeight.w500,
                                                 ),
@@ -1053,7 +1053,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                                               'Unsaved',
                                               style: TextStyle(
                                                 color: Colors.orange
-                                                    .withOpacity(0.7),
+                                                    .withValues(alpha: 0.7),
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -1074,7 +1074,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                                               'Saving...',
                                               style: TextStyle(
                                                 color: colorScheme.primary
-                                                    .withOpacity(0.7),
+                                                    .withValues(alpha: 0.7),
                                                 fontSize: 11,
                                                 fontWeight: FontWeight.w600,
                                               ),
@@ -1136,7 +1136,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                     ),
                     decoration: BoxDecoration(
                       color: _isPreview
-                          ? colorScheme.primary.withOpacity(0.15)
+                          ? colorScheme.primary.withValues(alpha: 0.15)
                           : colorScheme.surfaceContainerHighest.withOpacity(
                               0.5,
                             ),
@@ -1155,7 +1155,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                             size: 16,
                             color: _isPreview
                                 ? colorScheme.primary
-                                : colorScheme.onSurface.withOpacity(0.6),
+                                : colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                           const SizedBox(width: 4),
                           Text(
@@ -1166,7 +1166,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                               letterSpacing: 0.8,
                               color: _isPreview
                                   ? colorScheme.primary
-                                  : colorScheme.onSurface.withOpacity(0.6),
+                                  : colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],
@@ -1193,14 +1193,14 @@ class _TextEditorPageState extends State<TextEditorPage>
       style: TextStyle(
         fontSize: 15,
         height: 1.8,
-        color: colorScheme.onSurface.withOpacity(0.85),
+        color: colorScheme.onSurface.withValues(alpha: 0.85),
         fontFamily: 'monospace',
       ),
       decoration: InputDecoration(
         hintText:
             'Write in markdown...\n\n# Heading\n## Subheading\n**bold** *italic* ~~strikethrough~~\n- bullet list\n1. numbered list\n> blockquote\n`inline code`',
         hintStyle: TextStyle(
-          color: colorScheme.onSurface.withOpacity(0.15),
+          color: colorScheme.onSurface.withValues(alpha: 0.15),
           fontSize: 14,
           height: 1.8,
         ),
@@ -1233,30 +1233,30 @@ class _TextEditorPageState extends State<TextEditorPage>
           fontSize: 18,
           fontWeight: FontWeight.w700,
           height: 1.4,
-          color: colorScheme.onSurface.withOpacity(0.9),
+          color: colorScheme.onSurface.withValues(alpha: 0.9),
         ),
         p: TextStyle(
           fontSize: 16,
           height: 1.7,
-          color: colorScheme.onSurface.withOpacity(0.85),
+          color: colorScheme.onSurface.withValues(alpha: 0.85),
         ),
         code: TextStyle(
           fontSize: 14,
-          backgroundColor: colorScheme.primary.withOpacity(0.08),
+          backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
           color: colorScheme.primary,
           fontFamily: 'monospace',
         ),
         codeblockDecoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.2),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           ),
         ),
         blockquoteDecoration: BoxDecoration(
           border: Border(
             left: BorderSide(
-              color: colorScheme.primary.withOpacity(0.4),
+              color: colorScheme.primary.withValues(alpha: 0.4),
               width: 3,
             ),
           ),
@@ -1269,7 +1269,7 @@ class _TextEditorPageState extends State<TextEditorPage>
         horizontalRuleDecoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: colorScheme.outlineVariant.withOpacity(0.3),
+              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
               width: 1,
             ),
           ),
@@ -1287,7 +1287,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           hint: Text(
             'Mood',
             style: TextStyle(
-              color: colorScheme.onSurface.withOpacity(0.7),
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 12,
             ),
           ),
@@ -1297,7 +1297,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           style: TextStyle(color: colorScheme.onSurface, fontSize: 12),
           underline: Container(
             height: 1,
-            color: colorScheme.onSurface.withOpacity(0.2),
+            color: colorScheme.onSurface.withValues(alpha: 0.2),
           ),
           onChanged: (String? newValue) {
             setState(() {
@@ -1332,14 +1332,14 @@ class _TextEditorPageState extends State<TextEditorPage>
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.8),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: colorScheme.outline.withOpacity(0.12),
+                  color: colorScheme.outline.withValues(alpha: 0.12),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.12),
+                    color: Colors.black.withValues(alpha: 0.12),
                     blurRadius: 32,
                     offset: const Offset(0, 12),
                   ),
@@ -1357,7 +1357,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       _undo,
                       color: _undoStack.length > 1
                           ? null
-                          : colorScheme.onSurface.withOpacity(0.2),
+                          : colorScheme.onSurface.withValues(alpha: 0.2),
                     ),
                     _toolbarBtn(
                       Icons.redo_rounded,
@@ -1365,7 +1365,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       _redo,
                       color: _redoStack.isNotEmpty
                           ? null
-                          : colorScheme.onSurface.withOpacity(0.2),
+                          : colorScheme.onSurface.withValues(alpha: 0.2),
                     ),
                     _toolbarDivider(colorScheme),
                     _toolbarBtn(
@@ -1457,7 +1457,7 @@ class _TextEditorPageState extends State<TextEditorPage>
             child: Icon(
               icon,
               size: 20,
-              color: color ?? colorScheme.onSurface.withOpacity(0.7),
+              color: color ?? colorScheme.onSurface.withValues(alpha: 0.7),
             ),
           ),
         ),
@@ -1475,9 +1475,9 @@ class _TextEditorPageState extends State<TextEditorPage>
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            colorScheme.onSurface.withOpacity(0.0),
-            colorScheme.onSurface.withOpacity(0.15),
-            colorScheme.onSurface.withOpacity(0.0),
+            colorScheme.onSurface.withValues(alpha: 0.0),
+            colorScheme.onSurface.withValues(alpha: 0.15),
+            colorScheme.onSurface.withValues(alpha: 0.0),
           ],
         ),
       ),
@@ -1489,7 +1489,7 @@ class _TextEditorPageState extends State<TextEditorPage>
       child: BackdropFilter(
         filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: colorScheme.surface.withOpacity(0.5),
+          color: colorScheme.surface.withValues(alpha: 0.5),
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -1509,7 +1509,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.05),
+                        color: colorScheme.outline.withValues(alpha: 0.05),
                       ),
                     ),
                     child: IconButton(
@@ -1544,7 +1544,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       ),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.05),
+                        color: colorScheme.outline.withValues(alpha: 0.05),
                       ),
                     ),
                     child: Row(
@@ -1580,7 +1580,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: colorScheme.outline.withOpacity(0.05),
+                        color: colorScheme.outline.withValues(alpha: 0.05),
                       ),
                     ),
                     child: IconButton(
@@ -1622,7 +1622,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           boxShadow: active
               ? [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
+                    color: colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -1636,7 +1636,7 @@ class _TextEditorPageState extends State<TextEditorPage>
               size: 16,
               color: active
                   ? colorScheme.onPrimary
-                  : colorScheme.onSurface.withOpacity(0.5),
+                  : colorScheme.onSurface.withValues(alpha: 0.5),
             ),
             const SizedBox(width: 6),
             Text(
@@ -1647,7 +1647,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                 letterSpacing: 0.5,
                 color: active
                     ? colorScheme.onPrimary
-                    : colorScheme.onSurface.withOpacity(0.5),
+                    : colorScheme.onSurface.withValues(alpha: 0.5),
               ),
             ),
           ],

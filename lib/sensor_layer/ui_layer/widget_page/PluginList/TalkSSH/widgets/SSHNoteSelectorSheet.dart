@@ -32,7 +32,7 @@ class SSHNoteSelectorSheet extends StatelessWidget {
             width: 36,
             height: 4,
             decoration: BoxDecoration(
-              color: colorScheme.onSurface.withOpacity(0.2),
+              color: colorScheme.onSurface.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -106,12 +106,12 @@ class SSHNoteSelectorSheet extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.note_alt_outlined, size: 48, color: colorScheme.onSurface.withOpacity(0.2)),
+          Icon(Icons.note_alt_outlined, size: 48, color: colorScheme.onSurface.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text(
             l10n.project_no_notes_list,
             textAlign: TextAlign.center,
-            style: TextStyle(color: colorScheme.onSurface.withOpacity(0.6)),
+            style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.6)),
           ),
         ],
       ),
@@ -136,9 +136,9 @@ class _NoteTile extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.1)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -157,7 +157,7 @@ class _NoteTile extends StatelessWidget {
                   DateFormat.MMMd().format(updatedAt),
                   style: TextStyle(
                     fontSize: 11,
-                    color: colorScheme.onSurface.withOpacity(0.4),
+                    color: colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
               ],
@@ -167,7 +167,7 @@ class _NoteTile extends StatelessWidget {
               _getPreviewText(note.content),
               style: TextStyle(
                 fontSize: 13,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

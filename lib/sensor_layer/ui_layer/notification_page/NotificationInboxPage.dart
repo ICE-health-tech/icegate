@@ -41,7 +41,7 @@ class NotificationInboxPage extends StatelessWidget {
           Positioned.fill(
             child: BackdropFilter(
               filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-              child: Container(color: Colors.black.withOpacity(0.3)),
+              child: Container(color: Colors.black.withValues(alpha: 0.3)),
             ),
           ),
           SafeArea(
@@ -184,12 +184,12 @@ class NotificationInboxPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blueAccent.withOpacity(0.2)),
+        border: Border.all(color: Colors.blueAccent.withValues(alpha: 0.2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.blueAccent.withOpacity(0.05),
+            color: Colors.blueAccent.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 2,
           ),
@@ -200,7 +200,7 @@ class NotificationInboxPage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.blueAccent.withOpacity(0.1),
+              color: Colors.blueAccent.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -248,7 +248,7 @@ class NotificationInboxPage extends StatelessWidget {
                 Text(
                   quest.description ?? AppLocalizations.of(context)!.notification_mission_success,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.6),
+                    color: Colors.white.withValues(alpha: 0.6),
                     fontSize: 13,
                   ),
                   maxLines: 2,
@@ -271,16 +271,16 @@ class NotificationInboxPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.purpleAccent.withOpacity(0.2)),
+        border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.2)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.purpleAccent.withOpacity(0.1),
+              color: Colors.purpleAccent.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: const Icon(
@@ -329,7 +329,7 @@ class NotificationInboxPage extends StatelessWidget {
                   Text(
                     session.notes!,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13,
                     ),
                     maxLines: 2,
@@ -354,21 +354,21 @@ class NotificationInboxPage extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
               _getIconForCategory(notification.category),
-              color: Colors.white.withOpacity(0.7),
+              color: Colors.white.withValues(alpha: 0.7),
               size: 24,
             ),
           ),
@@ -383,7 +383,7 @@ class NotificationInboxPage extends StatelessWidget {
                     Text(
                       AppLocalizations.of(context)!.notification_reminder,
                       style: TextStyle(
-                        color: Colors.blueAccent.withOpacity(0.8),
+                        color: Colors.blueAccent.withValues(alpha: 0.8),
                         fontWeight: FontWeight.w900,
                         fontSize: 10,
                         letterSpacing: 1.0,
@@ -412,7 +412,7 @@ class NotificationInboxPage extends StatelessWidget {
                   Text(
                     notification.content,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.6),
+                      color: Colors.white.withValues(alpha: 0.6),
                       fontSize: 13,
                     ),
                     maxLines: 2,
@@ -450,13 +450,13 @@ class NotificationInboxPage extends StatelessWidget {
           Icon(
             Icons.inbox_rounded,
             size: 80,
-            color: Colors.white.withOpacity(0.1),
+            color: Colors.white.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 24),
           Text(
             AppLocalizations.of(context)!.notification_no_logs,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               fontWeight: FontWeight.w900,
               fontSize: 14,
               letterSpacing: 2.0,
@@ -466,7 +466,7 @@ class NotificationInboxPage extends StatelessWidget {
           Text(
             AppLocalizations.of(context)!.notification_empty_desc,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
               fontSize: 14,
             ),
           ),

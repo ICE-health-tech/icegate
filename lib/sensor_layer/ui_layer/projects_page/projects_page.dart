@@ -515,14 +515,14 @@ class ProjectsPage extends StatelessWidget {
                             width: 1,
                           ),
                           color: colorScheme.surfaceContainerHighest
-                              .withOpacity(0.3),
+                              .withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(16),
                         ),
                         child: Center(
                           child: Text(
                             'No recent notes',
                             style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ),
@@ -582,7 +582,7 @@ class ProjectsPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(icon, color: color, size: 24),
@@ -602,7 +602,7 @@ class ProjectsPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface.withOpacity(0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
           ),
         ),
       ],
@@ -724,19 +724,19 @@ class _EmptyState extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outline.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.outline.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
-          Icon(icon, size: 48, color: colorScheme.primary.withOpacity(0.2)),
+          Icon(icon, size: 48, color: colorScheme.primary.withValues(alpha: 0.2)),
           const SizedBox(height: 16),
           Text(
             message,
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: colorScheme.onSurface.withOpacity(0.5),
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
               fontSize: 14,
             ),
           ),
@@ -830,7 +830,7 @@ class _RecentNoteItem extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -838,7 +838,7 @@ class _RecentNoteItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(
@@ -872,7 +872,7 @@ class _RecentNoteItem extends StatelessWidget {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: colorScheme.primary.withOpacity(0.1),
+                            color: colorScheme.primary.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -889,7 +889,7 @@ class _RecentNoteItem extends StatelessWidget {
                       Text(
                         'Edited ${DateFormat.MMMd().format(note.updatedAt)}',
                         style: TextStyle(
-                          color: colorScheme.onSurface.withOpacity(0.6),
+                          color: colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 12,
                         ),
                       ),
@@ -900,7 +900,7 @@ class _RecentNoteItem extends StatelessWidget {
             ),
             Icon(
               Icons.chevron_right,
-              color: colorScheme.onSurface.withOpacity(0.4),
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
             ),
           ],
         ),
@@ -963,9 +963,9 @@ class _ProjectCard extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: projectColor.withOpacity(0.08),
+          color: projectColor.withValues(alpha: 0.08),
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: projectColor.withOpacity(0.2)),
+          border: Border.all(color: projectColor.withValues(alpha: 0.2)),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -976,7 +976,7 @@ class _ProjectCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: projectColor.withOpacity(0.15),
+                    color: projectColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -987,7 +987,7 @@ class _ProjectCard extends StatelessWidget {
                 ),
                 Icon(
                   Icons.arrow_forward_rounded,
-                  color: colorScheme.onSurface.withOpacity(0.3),
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                   size: 16,
                 ),
               ],
@@ -1008,7 +1008,7 @@ class _ProjectCard extends StatelessWidget {
             Text(
               'Created ${DateFormat.MMMd().format(project.createdAt)}',
               style: TextStyle(
-                color: colorScheme.onSurface.withOpacity(0.4),
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
               ),

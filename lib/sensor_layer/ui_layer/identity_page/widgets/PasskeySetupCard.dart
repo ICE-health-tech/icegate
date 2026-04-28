@@ -46,7 +46,7 @@ class PasskeySetupCard extends StatelessWidget {
               child: Icon(
                 Icons.fingerprint_rounded,
                 size: 120,
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
               ),
             ),
             
@@ -95,7 +95,7 @@ class PasskeySetupCard extends StatelessWidget {
                     Text(
                       "This device is linked to your biometric identity. You can now use FaceID or TouchID for seamless entry.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 13,
                         height: 1.4,
                       ),
@@ -115,7 +115,7 @@ class PasskeySetupCard extends StatelessWidget {
                       ),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                        backgroundColor: Colors.green.withOpacity(0.1),
+                        backgroundColor: Colors.green.withValues(alpha: 0.1),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
@@ -161,7 +161,7 @@ class PasskeySetupCard extends StatelessWidget {
                     Text(
                       "Enjoy faster, passwordless logins using FaceID or TouchID. It's more secure and easier.",
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.6),
+                        color: Colors.white.withValues(alpha: 0.6),
                         fontSize: 13,
                         height: 1.4,
                       ),

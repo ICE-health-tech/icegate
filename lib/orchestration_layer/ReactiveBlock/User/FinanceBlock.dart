@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
@@ -336,80 +337,112 @@ class FinanceBlock {
       final currentNW = totalBalance.value;
       if (currentNW == 0) return; // Wait for initial data load
 
-      bool shouldSave = false;
+      untracked(() {
+        bool shouldSave = false;
 
-      // Rule 1: All-Time High
-      if (currentNW > _persistedAth.value) {
-        _persistedAth.value = currentNW;
-        shouldSave = true;
-      }
+        // Rule 1: All-Time High
+        if (currentNW > _persistedAth.value) {
+          Timer(Duration.zero, () {
+            _persistedAth.value = currentNW;
+          });
+          shouldSave = true;
+        }
 
-      // Rule 2: Daily Snapshot
-      if (lastSnapshotTime == null ||
-          DateTime.now().difference(lastSnapshotTime!).inDays >= 1) {
-        shouldSave = true;
-      }
+        // Rule 2: Daily Snapshot
+        if (lastSnapshotTime == null ||
+            DateTime.now().difference(lastSnapshotTime!).inDays >= 1) {
+          shouldSave = true;
+        }
 
-      if (shouldSave) {
-        _saveSnapshot();
-        lastSnapshotTime = DateTime.now();
-      }
+        if (shouldSave) {
+          _saveSnapshot();
+          lastSnapshotTime = DateTime.now();
+        }
+      });
     });
 
     _accountsSubscription?.cancel();
-    _accountsSubscription = dao.watchAccounts(personId).listen((data) {
-      final protocols = data
-          .map(
-            (e) => FinancialAccountProtocol(
-              financialAccountID: e.accountID ?? "",
-              personID: e.personID ?? "",
-              accountName: e.accountName,
-              accountType: e.accountType,
-              balance: e.balance,
-              currency: e.currency.name,
-              isPrimary: e.isPrimary,
-              isActive: e.isActive,
-            ),
-          )
-          .toList();
-      updateAccounts(protocols);
+    _accountsSubscription = dao
+        .watchAccounts(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          batch(() {
+            final protocols = data
+                .map(
+                  (e) => FinancialAccountProtocol(
+                    financialAccountID: e.accountID ?? "",
+                    personID: e.personID ?? "",
+                    accountName: e.accountName,
+                    accountType: e.accountType,
+                    balance: e.balance,
+                    currency: e.currency.name,
+                    isPrimary: e.isPrimary,
+                    isActive: e.isActive,
+                  ),
+                )
+                .toList();
+            updateAccounts(protocols);
+          });
+        });
+      });
     });
 
     _assetsSubscription?.cancel();
-    _assetsSubscription = dao.watchAssets(personId).listen((data) {
-      final protocols = data
-          .map(
-            (e) => AssetProtocol(
-              id: e.assetID ?? "",
-              personId: e.personID ?? "",
-              assetName: e.assetName,
-              assetCategory: e.assetCategory,
-              purchaseDate: e.purchaseDate,
-              purchasePrice: e.purchasePrice,
-              currentEstimatedValue: e.currentEstimatedValue,
-              currency: e.currency.name,
-              condition: e.condition,
-              location: e.location,
-              notes: e.notes,
-              isInsured: e.isInsured,
-            ),
-          )
-          .toList();
-      updateAssets(protocols);
+    _assetsSubscription = dao
+        .watchAssets(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          batch(() {
+            final protocols = data
+                .map(
+                  (e) => AssetProtocol(
+                    id: e.assetID ?? "",
+                    personId: e.personID ?? "",
+                    assetName: e.assetName,
+                    assetCategory: e.assetCategory,
+                    purchaseDate: e.purchaseDate,
+                    purchasePrice: e.purchasePrice,
+                    currentEstimatedValue: e.currentEstimatedValue,
+                    currency: e.currency.name,
+                    condition: e.condition,
+                    location: e.location,
+                    notes: e.notes,
+                    isInsured: e.isInsured,
+                  ),
+                )
+                .toList();
+            updateAssets(protocols);
+          });
+        });
+      });
     });
 
     _transactionsSubscription?.cancel();
-    _transactionsSubscription = dao.watchAllTransactions(personId).listen((
-      data,
-    ) {
-      transactions.value = data;
+    _transactionsSubscription = dao
+        .watchAllTransactions(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data, ) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          transactions.value = data;
+        });
+      });
     });
 
     _subscriptionsSubscription?.cancel();
-    _subscriptionsSubscription = dao.watchSubscriptions(personId).listen((
-      data,
-    ) {
-      subscriptions.value = data;
+    _subscriptionsSubscription = dao
+        .watchSubscriptions(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data, ) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          subscriptions.value = data;
+        });
+      });
     });
   }
 

@@ -49,7 +49,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
               child: Image.asset(
                 'assets/system_hud.png',
                 fit: BoxFit.cover,
-                color: isDark ? null : colorScheme.primary.withOpacity(0.3),
+                color: isDark ? null : colorScheme.primary.withValues(alpha: 0.3),
                 colorBlendMode: isDark ? BlendMode.dst : BlendMode.srcATop,
               ),
             ),
@@ -69,12 +69,12 @@ class _UserInformationPageState extends State<UserInformationPage> {
                       end: Alignment.bottomRight,
                       colors: [
                         colorScheme.surfaceContainerHighest,
-                        colorScheme.surface.withOpacity(0.8),
+                        colorScheme.surface.withValues(alpha: 0.8),
                       ],
                     ),
                     border: Border(
                       bottom: BorderSide(
-                        color: colorScheme.primary.withOpacity(0.2),
+                        color: colorScheme.primary.withValues(alpha: 0.2),
                         width: 1,
                       ),
                     ),
@@ -146,7 +146,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                           Expanded(
                             child: Container(
                               height: 1,
-                              color: const Color(0xFF00E5FF).withOpacity(0.2),
+                              color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
                             ),
                           ),
                         ],
@@ -185,15 +185,15 @@ class _UserInformationPageState extends State<UserInformationPage> {
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF1E293B).withOpacity(0.5),
+          color: const Color(0xFF1E293B).withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: const Color(0xFF00E5FF).withOpacity(0.2),
+            color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
             width: 1.5,
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.3),
+              color: Colors.black.withValues(alpha: 0.3),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -232,8 +232,8 @@ class _UserInformationPageState extends State<UserInformationPage> {
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          const Color(0xFF1E293B).withOpacity(0.2),
-                          const Color(0xFF1E293B).withOpacity(0.8),
+                          const Color(0xFF1E293B).withValues(alpha: 0.2),
+                          const Color(0xFF1E293B).withValues(alpha: 0.8),
                         ],
                       ),
                     ),
@@ -247,7 +247,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                   width: 80,
                   height: 30,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF00E5FF).withOpacity(0.1),
+                    color: const Color(0xFF00E5FF).withValues(alpha: 0.1),
                     borderRadius: const BorderRadius.only(
                       bottomLeft: Radius.circular(24),
                     ),
@@ -278,7 +278,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF00E5FF).withOpacity(0.2),
+                            color: const Color(0xFF00E5FF).withValues(alpha: 0.2),
                             blurRadius: 15,
                           ),
                         ],
@@ -335,7 +335,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                                 ? "@${user.username.toLowerCase()}"
                                 : "Awaiting Credentials...",
                             style: TextStyle(
-                              color: const Color(0xFF00E5FF).withOpacity(0.6),
+                              color: const Color(0xFF00E5FF).withValues(alpha: 0.6),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
@@ -355,7 +355,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                               borderRadius: BorderRadius.circular(8),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.orange.withOpacity(0.4),
+                                  color: Colors.orange.withValues(alpha: 0.4),
                                   blurRadius: 12,
                                   spreadRadius: 1,
                                 ),
@@ -408,7 +408,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
           ),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: colorScheme.onSurface.withOpacity(0.1),
+            color: colorScheme.onSurface.withValues(alpha: 0.1),
             width: 1,
           ),
         ),
@@ -418,14 +418,14 @@ class _UserInformationPageState extends State<UserInformationPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
-                color: colorScheme.onSurface.withOpacity(0.03),
+                color: colorScheme.onSurface.withValues(alpha: 0.03),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(24),
                   topRight: Radius.circular(24),
                 ),
                 border: Border(
                   bottom: BorderSide(
-                    color: colorScheme.onSurface.withOpacity(0.05),
+                    color: colorScheme.onSurface.withValues(alpha: 0.05),
                   ),
                 ),
               ),
@@ -451,7 +451,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                     'v4.12.0',
                     style: TextStyle(
                       fontSize: 10,
-                      color: colorScheme.onSurface.withOpacity(0.2),
+                      color: colorScheme.onSurface.withValues(alpha: 0.2),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -466,7 +466,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                     context,
                     'STRENGTH',
                     142,
-                    const Color(0xFFFF3D00).withOpacity(isDark ? 1.0 : 0.7),
+                    const Color(0xFFFF3D00).withValues(alpha: isDark ? 1.0 : 0.7),
                     Icons.bolt_rounded,
                   ),
                   const SizedBox(height: 20),
@@ -474,7 +474,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                     context,
                     'INTELLIGENCE',
                     188,
-                    const Color(0xFF2979FF).withOpacity(isDark ? 1.0 : 0.7),
+                    const Color(0xFF2979FF).withValues(alpha: isDark ? 1.0 : 0.7),
                     Icons.auto_awesome_motion_rounded,
                   ),
                   const SizedBox(height: 20),
@@ -482,7 +482,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                     context,
                     'AGILITY',
                     156,
-                    const Color(0xFF00E676).withOpacity(isDark ? 1.0 : 0.7),
+                    const Color(0xFF00E676).withValues(alpha: isDark ? 1.0 : 0.7),
                     Icons.speed_rounded,
                   ),
                   const SizedBox(height: 20),
@@ -490,7 +490,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                     context,
                     'SENSORY',
                     110,
-                    const Color(0xFFFFEA00).withOpacity(isDark ? 1.0 : 0.7),
+                    const Color(0xFFFFEA00).withValues(alpha: isDark ? 1.0 : 0.7),
                     Icons.visibility_rounded,
                   ),
                 ],
@@ -527,7 +527,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                   label,
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    color: colorScheme.onSurface.withOpacity(0.7),
+                    color: colorScheme.onSurface.withValues(alpha: 0.7),
                     fontSize: 11,
                     letterSpacing: 1.0,
                   ),
@@ -551,7 +551,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
             Container(
               height: 6,
               decoration: BoxDecoration(
-                color: colorScheme.onSurface.withOpacity(0.05),
+                color: colorScheme.onSurface.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -564,7 +564,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                   borderRadius: BorderRadius.circular(2),
                   boxShadow: [
                     BoxShadow(
-                      color: color.withOpacity(0.4),
+                      color: color.withValues(alpha: 0.4),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -639,12 +639,12 @@ class _UserInformationPageState extends State<UserInformationPage> {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withOpacity(0.1),
-            Colors.white.withOpacity(0.05),
+            Colors.white.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.05),
           ],
         ),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.2), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.2), width: 1),
       ),
       padding: const EdgeInsets.all(20.0),
       child: Column(
@@ -660,7 +660,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
-                      color: gradient[0].withOpacity(0.3),
+                      color: gradient[0].withValues(alpha: 0.3),
                       blurRadius: 8,
                       spreadRadius: 1,
                     ),
@@ -674,7 +674,7 @@ class _UserInformationPageState extends State<UserInformationPage> {
                   title,
                   style: TextStyle(
                     fontSize: 14,
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontWeight: FontWeight.w500,
                   ),
                   overflow: TextOverflow.ellipsis,
@@ -725,10 +725,10 @@ class _UserInformationPageState extends State<UserInformationPage> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.1),
+              color: Colors.white.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 width: 1,
               ),
             ),
@@ -737,14 +737,14 @@ class _UserInformationPageState extends State<UserInformationPage> {
               children: [
                 Icon(
                   Icons.touch_app,
-                  color: Colors.white.withOpacity(0.8),
+                  color: Colors.white.withValues(alpha: 0.8),
                   size: 16,
                 ),
                 const SizedBox(width: 6),
                 Text(
                   'Double tap to toggle',
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.8),
+                    color: Colors.white.withValues(alpha: 0.8),
                     fontSize: 12,
                   ),
                 ),
@@ -765,10 +765,10 @@ class _UserInformationPageState extends State<UserInformationPage> {
       decoration: BoxDecoration(
         color: const Color(0xFF1A1F3A),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.3),
+            color: Colors.black.withValues(alpha: 0.3),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -924,7 +924,7 @@ class _DraggableCardState extends State<DraggableCard> {
                                 (onDragMode
                                         ? const Color(0xFF8B5CF6)
                                         : const Color(0xFFF59E0B))
-                                    .withOpacity(0.5),
+                                    .withValues(alpha: 0.5),
                             blurRadius: 8,
                             spreadRadius: 1,
                           ),

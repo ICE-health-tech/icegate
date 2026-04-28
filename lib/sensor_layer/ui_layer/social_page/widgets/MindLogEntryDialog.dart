@@ -1,9 +1,7 @@
-import 'dart:convert';
-import 'package:drift/drift.dart' as drift;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
@@ -68,20 +66,15 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     setState(() => _isSaving = true);
 
     try {
-      final entry = MindLogsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        tenantID: const drift.Value('00000000-0000-0000-0000-000000000001'),
-        personID: drift.Value(personId),
+      print("entry: mood=$_selectedMood, activities=$_selectedActivities");
+      
+      await context.read<MindBlock>().addMindLog(
         moodScore: _selectedMood,
-        activities: jsonEncode(_selectedActivities),
-        note: _noteController.text.trim().isEmpty
-            ? const drift.Value.absent()
-            : drift.Value(_noteController.text.trim()),
-        logDate: drift.Value(DateTime.now()),
-        createdAt: drift.Value(DateTime.now()),
+        activities: _selectedActivities,
+        note: _noteController.text.trim(),
+        personId: personId,
+        tenantId: tenantId,
       );
-      print("entry oke: $entry");
-      await context.read<MindLogsDAO>().insertLog(entry);
       
       // Double insert into project_notes for Journal visibility
       final activitiesStr = _selectedActivities.isNotEmpty 

@@ -3,30 +3,12 @@
 part of 'database.dart';
 
 // ignore_for_file: type=lint
-mixin _$InternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $InternalWidgetsTableTable get internalWidgetsTable =>
-      attachedDatabase.internalWidgetsTable;
-}
-mixin _$HourlyActivityLogDAOMixin on DatabaseAccessor<AppDatabase> {
-  $HourlyActivityLogTableTable get hourlyActivityLogTable =>
-      attachedDatabase.hourlyActivityLogTable;
-}
-mixin _$MindLogsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $MindLogsTableTable get mindLogsTable => attachedDatabase.mindLogsTable;
-}
 mixin _$PersonDAOMixin on DatabaseAccessor<AppDatabase> {
   $PersonsTableTable get personsTable => attachedDatabase.personsTable;
 }
 mixin _$ScoreDAOMixin on DatabaseAccessor<AppDatabase> {
   $ScoresTableTable get scoresTable => attachedDatabase.scoresTable;
   $PersonsTableTable get personsTable => attachedDatabase.personsTable;
-}
-mixin _$ExternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $ExternalWidgetsTableTable get externalWidgetsTable =>
-      attachedDatabase.externalWidgetsTable;
-}
-mixin _$ThemesTableDAOMixin on DatabaseAccessor<AppDatabase> {
-  $ThemesTableTable get themesTable => attachedDatabase.themesTable;
 }
 mixin _$ProjectNoteDAOMixin on DatabaseAccessor<AppDatabase> {
   $ProjectNotesTableTable get projectNotesTable =>
@@ -56,11 +38,6 @@ mixin _$FinanceDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.transactionsTable;
   $SubscriptionsTableTable get subscriptionsTable =>
       attachedDatabase.subscriptionsTable;
-}
-mixin _$GrowthDAOMixin on DatabaseAccessor<AppDatabase> {
-  $GoalsTableTable get goalsTable => attachedDatabase.goalsTable;
-  $HabitsTableTable get habitsTable => attachedDatabase.habitsTable;
-  $SkillsTableTable get skillsTable => attachedDatabase.skillsTable;
 }
 mixin _$AiAnalysisDAOMixin on DatabaseAccessor<AppDatabase> {
   $AiAnalysisTableTable get aiAnalysisTable => attachedDatabase.aiAnalysisTable;
@@ -110,9 +87,6 @@ mixin _$SSHHostsDAOMixin on DatabaseAccessor<AppDatabase> {
 mixin _$FeedbackDAOMixin on DatabaseAccessor<AppDatabase> {
   $FeedbacksTableTable get feedbacksTable => attachedDatabase.feedbacksTable;
 }
-mixin _$QuestDAOMixin on DatabaseAccessor<AppDatabase> {
-  $QuestsTableTable get questsTable => attachedDatabase.questsTable;
-}
 mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
   $WaterLogsTableTable get waterLogsTable => attachedDatabase.waterLogsTable;
   $SleepLogsTableTable get sleepLogsTable => attachedDatabase.sleepLogsTable;
@@ -125,20 +99,6 @@ mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
       attachedDatabase.heartRateLogsTable;
   $OxygenSaturationLogsTableTable get oxygenSaturationLogsTable =>
       attachedDatabase.oxygenSaturationLogsTable;
-}
-mixin _$AiPromptsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $AiPromptsTableTable get aiPromptsTable => attachedDatabase.aiPromptsTable;
-}
-mixin _$ConfigsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $ConfigsTableTable get configsTable => attachedDatabase.configsTable;
-}
-mixin _$SSHSessionsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $SSHSessionsTableTable get sSHSessionsTable =>
-      attachedDatabase.sSHSessionsTable;
-}
-mixin _$AchievementsDAOMixin on DatabaseAccessor<AppDatabase> {
-  $AchievementsTableTable get achievementsTable =>
-      attachedDatabase.achievementsTable;
 }
 
 class $OrganizationsTableTable extends OrganizationsTable
@@ -33668,9 +33628,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $OxygenSaturationLogsTableTable(this);
   late final $AppUsageHistoryTableTable appUsageHistoryTable =
       $AppUsageHistoryTableTable(this);
-  late final ThemesTableDAO themesTableDAO = ThemesTableDAO(
-    this as AppDatabase,
-  );
+  late final ThemeDAO themeDAO = ThemeDAO(this as AppDatabase);
   late final ExternalWidgetsDAO externalWidgetsDAO = ExternalWidgetsDAO(
     this as AppDatabase,
   );
@@ -50044,7 +50002,47 @@ class $AppDatabaseManager {
       $$AppUsageHistoryTableTableTableManager(_db, _db.appUsageHistoryTable);
 }
 
+mixin _$ThemeDAOMixin on DatabaseAccessor<AppDatabase> {
+  $ThemesTableTable get themesTable => attachedDatabase.themesTable;
+}
+mixin _$ExternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $ExternalWidgetsTableTable get externalWidgetsTable =>
+      attachedDatabase.externalWidgetsTable;
+}
+mixin _$InternalWidgetsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $InternalWidgetsTableTable get internalWidgetsTable =>
+      attachedDatabase.internalWidgetsTable;
+}
 mixin _$PortfolioSnapshotsDAOMixin on DatabaseAccessor<AppDatabase> {
   $PortfolioSnapshotsTableTable get portfolioSnapshotsTable =>
       attachedDatabase.portfolioSnapshotsTable;
+}
+mixin _$GrowthDAOMixin on DatabaseAccessor<AppDatabase> {
+  $GoalsTableTable get goalsTable => attachedDatabase.goalsTable;
+  $HabitsTableTable get habitsTable => attachedDatabase.habitsTable;
+  $SkillsTableTable get skillsTable => attachedDatabase.skillsTable;
+}
+mixin _$AiPromptsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $AiPromptsTableTable get aiPromptsTable => attachedDatabase.aiPromptsTable;
+}
+mixin _$ConfigsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $ConfigsTableTable get configsTable => attachedDatabase.configsTable;
+}
+mixin _$QuestDAOMixin on DatabaseAccessor<AppDatabase> {
+  $QuestsTableTable get questsTable => attachedDatabase.questsTable;
+}
+mixin _$SSHSessionsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $SSHSessionsTableTable get sSHSessionsTable =>
+      attachedDatabase.sSHSessionsTable;
+}
+mixin _$HourlyActivityLogDAOMixin on DatabaseAccessor<AppDatabase> {
+  $HourlyActivityLogTableTable get hourlyActivityLogTable =>
+      attachedDatabase.hourlyActivityLogTable;
+}
+mixin _$AchievementsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $AchievementsTableTable get achievementsTable =>
+      attachedDatabase.achievementsTable;
+}
+mixin _$MindLogsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $MindLogsTableTable get mindLogsTable => attachedDatabase.mindLogsTable;
 }

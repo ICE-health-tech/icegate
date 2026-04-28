@@ -10,6 +10,7 @@ abstract class CaloriesProtocol with _$CaloriesProtocol {
     required int protein,
     required int carbs,
     required int fat,
+    String? imageUrl,
   }) = _CaloriesProtocol;
 
   // factory CaloriesProtocol.fromJson(Map<String, dynamic> json) =>
@@ -24,12 +25,13 @@ abstract class CaloriesProtocol with _$CaloriesProtocol {
     final carbs = (json['carbs'] as num? ?? 0).toInt();
     final protein = (json['protein'] as num? ?? 0).toInt();
     final calories = (json['calories'] as num? ?? 0).toInt();
+    final imageUrl = (json['imageUrl'] ?? json['image_url']) as String?;
     return CaloriesProtocol(
-      // Using 'as num?' handles both int and double, then ?? 0 catches the Null
       fat: fat,
       carbs: carbs,
       protein: protein,
       calories: calories,
+      imageUrl: imageUrl,
     );
   }
 }

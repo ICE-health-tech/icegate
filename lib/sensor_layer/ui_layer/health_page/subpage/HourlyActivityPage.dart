@@ -107,7 +107,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withOpacity(0.3),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -155,7 +155,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
         decoration: BoxDecoration(
           color: colorScheme.surfaceContainer,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+          border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
         ),
         child: Column(
           children: [
@@ -209,7 +209,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
                         margin: const EdgeInsets.symmetric(horizontal: 2),
                         height: (120 * heightFactor).toDouble(),
                         decoration: BoxDecoration(
-                          color: log.stepsCount > 0 ? colorScheme.primary : colorScheme.outlineVariant.withOpacity(0.3),
+                          color: log.stepsCount > 0 ? colorScheme.primary : colorScheme.outlineVariant.withValues(alpha: 0.3),
                           borderRadius: BorderRadius.circular(4),
                         ),
                       ),
@@ -242,7 +242,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
         ),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
-          BoxShadow(color: colorScheme.primary.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 4)),
+          BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 10, offset: const Offset(0, 4)),
         ],
       ),
       child: Column(
@@ -295,7 +295,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: ListTile(
           leading: CircleAvatar(
-            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
             child: Text('${log.startTime.hour}', style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.bold)),
           ),
           title: Text('${log.stepsCount} steps', style: const TextStyle(fontWeight: FontWeight.bold)),
@@ -311,7 +311,7 @@ class _HourlyActivityPageState extends State<HourlyActivityPage> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.bedtime_outlined, size: 64, color: colorScheme.outline.withOpacity(0.5)),
+          Icon(Icons.bedtime_outlined, size: 64, color: colorScheme.outline.withValues(alpha: 0.5)),
           const SizedBox(height: 16),
           Text('No hourly logs for this day', style: TextStyle(color: colorScheme.outline)),
         ],

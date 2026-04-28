@@ -3,6 +3,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
 import 'package:auto_size_text/auto_size_text.dart';
@@ -138,6 +139,7 @@ class CanvasDynamicIsland extends StatelessWidget {
     final healthBlock = context.read<HealthBlock>();
     final financeBlock = context.read<FinanceBlock>();
     final socialBlock = context.read<SocialBlock>();
+    final foodAnalysisBlock = context.read<FoodAnalysisBlock>();
     final sshService = SSHService();
 
     return Watch((context) {
@@ -150,6 +152,8 @@ class CanvasDynamicIsland extends StatelessWidget {
       final syncStatus = docBlock.syncStatus.value;
       final sessionType = focusBlock.currentSessionType.value;
       final useTmux = sshService.useTmuxSignal.value;
+      final isFoodAnalyzing = foodAnalysisBlock.isAnalyzing.value;
+      final foodAnalysisStatus = foodAnalysisBlock.analysisStatus.value;
 
       // Time formatting helper
       String formatTime(int seconds) {
@@ -159,15 +163,18 @@ class CanvasDynamicIsland extends StatelessWidget {
       }
 
       // Calculate width based on screen size
+      // isFoodAnalyzing needs extra width for the status text
       final double targetWidth = isAnyTabOpen
           ? 320
           : (currentRoute.startsWith('/widgets/ssh')
                 ? 340
                 : (currentRoute.startsWith('/finance') || currentRoute.startsWith('/social')
                     ? screenWidth * 0.92
-                    : ((isSyncing || syncStatus != null)
-                          ? 320
-                          : (isFocusRunning ? 280 : (useTmux ? 260 : 240)))));
+                    : (isFoodAnalyzing
+                          ? 300
+                          : ((isSyncing || syncStatus != null)
+                                ? 320
+                                : (isFocusRunning ? 280 : (useTmux ? 260 : 240))))));
                           
       final double width = (targetWidth * scalingFactor).clamp(
         0.0,
@@ -272,6 +279,13 @@ class CanvasDynamicIsland extends StatelessWidget {
                           scalingFactor,
                           colorScheme,
                         )
+                      : isFoodAnalyzing
+                      ? _buildFoodAnalysisStatus(
+                          context,
+                          foodAnalysisStatus,
+                          scalingFactor,
+                          colorScheme,
+                        )
                       : isFocusRunning
                       ? _buildFocusTimer(
                           context,
@@ -316,6 +330,14 @@ class CanvasDynamicIsland extends StatelessWidget {
                     if (currentRoute != '/widgets/ssh' &&
                         !currentRoute.startsWith('/finance') &&
                         !currentRoute.startsWith('/social')) ...[
+                      // AI Meal Analysis shortcut — only on health routes
+                      if (currentRoute.startsWith('/health'))
+                        _buildAIMealButton(
+                          context,
+                          foodAnalysisBlock,
+                          scalingFactor,
+                          colorScheme,
+                        ),
                       // Focus Shortcut
                       GestureDetector(
                         onTap: () {
@@ -716,6 +738,86 @@ class CanvasDynamicIsland extends StatelessWidget {
     );
   }
 
+  /// Builds the center content when AI food analysis is in progress.
+  /// Shows a pulsing food icon + status text (e.g., "Analyzing pizza...")
+  Widget _buildFoodAnalysisStatus(
+    BuildContext context,
+    String status,
+    double scalingFactor,
+    ColorScheme colorScheme,
+  ) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to the food dashboard to see the analysis result
+        HapticFeedback.mediumImpact();
+        context.push('/health/food/dashboard');
+      },
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const SizedBox(width: 8),
+          // Pulsing food analysis indicator
+          _PulseFoodIcon(
+            scalingFactor: scalingFactor,
+            colorScheme: colorScheme,
+          ),
+          const SizedBox(width: 10),
+          Flexible(
+            child: AutoSizeText(
+              (status.isNotEmpty ? status : "ANALYZING MEAL...").toUpperCase(),
+              style: TextStyle(
+                color: Colors.orangeAccent,
+                fontSize: 9 * scalingFactor,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 1.0,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Builds the AI meal scan shortcut button for health routes.
+  /// Shows a camera icon that navigates to /health/food for meal input.
+  /// When analysis is running, the icon pulses orange.
+  Widget _buildAIMealButton(
+    BuildContext context,
+    FoodAnalysisBlock foodBlock,
+    double scalingFactor,
+    ColorScheme colorScheme,
+  ) {
+    return Watch((context) {
+      final isAnalyzing = foodBlock.isAnalyzing.value;
+      return GestureDetector(
+        onTap: () {
+          HapticFeedback.selectionClick();
+          // Navigate to the food input page for AI meal analysis
+          context.push('/health/food');
+        },
+        child: Container(
+          padding: EdgeInsets.all(4 * scalingFactor),
+          decoration: const BoxDecoration(
+            color: Colors.transparent,
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            // Show different icon when analyzing vs idle
+            isAnalyzing
+                ? Icons.restaurant_rounded
+                : Icons.photo_camera_rounded,
+            color: isAnalyzing
+                ? Colors.orangeAccent
+                : colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
+            size: 20 * scalingFactor,
+          ),
+        ),
+      );
+    });
+  }
+
   Widget _buildSSHMetrics(
     BuildContext context,
     ColorScheme colorScheme,
@@ -938,53 +1040,56 @@ class CanvasDynamicIsland extends StatelessWidget {
   ) {
     return Watch((context) {
       final activeIndex = financeBlock.activeTab.value;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildAdaptiveTabIcon(
-            context,
-            index: 0,
-            icon: Icons.dashboard_rounded,
-            label: "OVERVIEW",
-            activeIndex: activeIndex,
-            onTap: (idx) => financeBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-          SizedBox(width: 16 * scalingFactor),
-          _buildAdaptiveTabIcon(
-            context,
-            index: 1,
-            icon: Icons.history_rounded,
-            label: "HISTORY",
-            activeIndex: activeIndex,
-            onTap: (idx) => financeBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-          SizedBox(width: 16 * scalingFactor),
-          _buildAdaptiveTabIcon(
-            context,
-            index: 2,
-            icon: Icons.receipt_long_rounded,
-            label: "BILLING",
-            activeIndex: activeIndex,
-            onTap: (idx) => financeBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-          SizedBox(width: 16 * scalingFactor),
-          _buildAdaptiveTabIcon(
-            context,
-            index: 3,
-            icon: Icons.show_chart_rounded,
-            label: "STOCKS",
-            activeIndex: activeIndex,
-            onTap: (idx) => financeBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-        ],
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildAdaptiveTabIcon(
+              context,
+              index: 0,
+              icon: Icons.dashboard_rounded,
+              label: "OVERVIEW",
+              activeIndex: activeIndex,
+              onTap: (idx) => financeBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+            SizedBox(width: 16 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 1,
+              icon: Icons.history_rounded,
+              label: "HISTORY",
+              activeIndex: activeIndex,
+              onTap: (idx) => financeBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+            SizedBox(width: 16 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 2,
+              icon: Icons.receipt_long_rounded,
+              label: "BILLING",
+              activeIndex: activeIndex,
+              onTap: (idx) => financeBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+            SizedBox(width: 16 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 3,
+              icon: Icons.show_chart_rounded,
+              label: "STOCKS",
+              activeIndex: activeIndex,
+              onTap: (idx) => financeBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+          ],
+        ),
       );
     });
   }
@@ -997,42 +1102,45 @@ class CanvasDynamicIsland extends StatelessWidget {
   ) {
     return Watch((context) {
       final activeIndex = socialBlock.activeTab.value;
-      return Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildAdaptiveTabIcon(
-            context,
-            index: 0,
-            icon: Icons.sentiment_satisfied_rounded,
-            label: "JOURNAL",
-            activeIndex: activeIndex,
-            onTap: (idx) => socialBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-          SizedBox(width: 32 * scalingFactor),
-          _buildAdaptiveTabIcon(
-            context,
-            index: 1,
-            icon: Icons.spa_rounded,
-            label: "ACHIEVEMENTS",
-            activeIndex: activeIndex,
-            onTap: (idx) => socialBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-          SizedBox(width: 32 * scalingFactor),
-          _buildAdaptiveTabIcon(
-            context,
-            index: 2,
-            icon: Icons.bar_chart_rounded,
-            label: "ANALYSIS",
-            activeIndex: activeIndex,
-            onTap: (idx) => socialBlock.activeTab.value = idx,
-            scalingFactor: scalingFactor,
-            colorScheme: colorScheme,
-          ),
-        ],
+      return FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildAdaptiveTabIcon(
+              context,
+              index: 0,
+              icon: Icons.sentiment_satisfied_rounded,
+              label: "JOURNAL",
+              activeIndex: activeIndex,
+              onTap: (idx) => socialBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+            SizedBox(width: 32 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 1,
+              icon: Icons.sentiment_satisfied_rounded,
+              label: "ACHIEVEMENTS",
+              activeIndex: activeIndex,
+              onTap: (idx) => socialBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+            SizedBox(width: 32 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 2,
+              icon: Icons.bar_chart_rounded,
+              label: "ANALYSIS",
+              activeIndex: activeIndex,
+              onTap: (idx) => socialBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+            ),
+          ],
+        ),
       );
     });
   }
@@ -1183,6 +1291,58 @@ class _PulseHeartIconState extends State<_PulseHeartIcon>
         Icons.favorite_rounded,
         size: 16 * widget.scalingFactor,
         color: Colors.redAccent,
+      ),
+    );
+  }
+}
+
+/// Pulsing food icon — shown in the Dynamic Island center when AI meal analysis is running.
+/// Uses the same scale-pulse animation as _PulseHeartIcon but with a restaurant icon + orange color.
+class _PulseFoodIcon extends StatefulWidget {
+  final double scalingFactor;
+  final ColorScheme colorScheme;
+
+  const _PulseFoodIcon({
+    required this.scalingFactor,
+    required this.colorScheme,
+  });
+
+  @override
+  State<_PulseFoodIcon> createState() => _PulseFoodIconState();
+}
+
+class _PulseFoodIconState extends State<_PulseFoodIcon>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+  late Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    // Slightly faster pulse than heart — conveys "processing" urgency
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _animation = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _animation,
+      child: Icon(
+        Icons.restaurant_rounded,
+        size: 14 * widget.scalingFactor,
+        color: Colors.orangeAccent,
       ),
     );
   }

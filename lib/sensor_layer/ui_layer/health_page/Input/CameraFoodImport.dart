@@ -141,7 +141,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
                 height: 4,
                 margin: const EdgeInsets.only(bottom: 20),
                 decoration: BoxDecoration(
-                  color: colorScheme.onSurface.withOpacity(0.3),
+                  color: colorScheme.onSurface.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -244,7 +244,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
                   Text(
                     'Loading...',
                     style: textTheme.bodyLarge?.copyWith(
-                      color: colorScheme.onSurface.withOpacity(0.6),
+                      color: colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
                   ),
                 ],
@@ -282,7 +282,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
             Container(
               padding: const EdgeInsets.all(32),
               decoration: BoxDecoration(
-                color: colorScheme.primaryContainer.withOpacity(0.3),
+                color: colorScheme.primaryContainer.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -303,7 +303,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
               'Take a photo of your food or select one from your gallery to track your meal',
               textAlign: TextAlign.center,
               style: textTheme.bodyLarge?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 32),
@@ -342,7 +342,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -386,7 +386,7 @@ class _CameraFoodImportState extends State<CameraFoodImport> {
                           Text(
                             'Tap confirm to use this photo',
                             style: textTheme.bodySmall?.copyWith(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                             ),
                           ),
                         ],

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:signals/signals.dart';
+import 'package:rxdart/rxdart.dart';
 
 class InternalWidgetBlock {
   final listInternalWidgetHomePage = signal<List<InternalWidgetProtocol>>([]);
@@ -41,6 +42,7 @@ class InternalWidgetBlock {
 
     final newSubscription = internalWidgetDAO
         .watchScopedWidgets(personID, scope)
+        .debounceTime(const Duration(milliseconds: 300))
         .listen(
           (driftData) {
             final List<InternalWidgetProtocol> protocolData = driftData
@@ -50,7 +52,14 @@ class InternalWidgetBlock {
                 )
                 .toList();
 
-            updateListBlockFromDatabase(protocolData, scope);
+
+            Timer(Duration.zero, () {
+              untracked(() {
+                batch(() {
+                  updateListBlockFromDatabase(protocolData, scope);
+                });
+              });
+            });
           },
           onError: (e, stackTrace) {
             debugPrint("InternalWidgetBlock ($scope): Error watching: $e");

@@ -194,7 +194,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
             ),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
-              value: selectedCategory,
+              initialValue: selectedCategory,
               decoration: InputDecoration(
                 labelText: l10n.finance_label_category,
                 labelStyle: const TextStyle(fontSize: 12),

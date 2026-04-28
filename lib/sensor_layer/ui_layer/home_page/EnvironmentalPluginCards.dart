@@ -196,6 +196,8 @@ class _BasePluginCard extends StatelessWidget {
 }
 
 class AQISourceSheet extends StatelessWidget {
+  const AQISourceSheet({super.key});
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;

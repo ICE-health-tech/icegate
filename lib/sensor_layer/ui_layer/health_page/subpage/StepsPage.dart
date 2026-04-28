@@ -487,23 +487,23 @@ class _StepsPageState extends State<StepsPage>
             height: containerHeight + 20,
             padding: const EdgeInsets.all(28),
             decoration: BoxDecoration(
-              color: colorScheme.surface.withOpacity(0.035),
+              color: colorScheme.surface.withValues(alpha: 0.035),
               borderRadius: BorderRadius.circular(36),
               border: Border.all(
-                color: Colors.white.withOpacity(0.07),
+                color: Colors.white.withValues(alpha: 0.07),
                 width: 1.5,
               ),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.07),
-                  Colors.white.withOpacity(0.015),
+                  Colors.white.withValues(alpha: 0.07),
+                  Colors.white.withValues(alpha: 0.015),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 40,
                   offset: const Offset(0, 20),
                 ),
@@ -543,10 +543,10 @@ class _StepsPageState extends State<StepsPage>
                           vertical: 8,
                         ),
                         decoration: BoxDecoration(
-                          color: colorScheme.primary.withOpacity(0.2),
+                          color: colorScheme.primary.withValues(alpha: 0.2),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: colorScheme.primary.withOpacity(0.3),
+                            color: colorScheme.primary.withValues(alpha: 0.3),
                           ),
                         ),
                         child: Row(
@@ -667,7 +667,7 @@ class _StepsPageState extends State<StepsPage>
                                         ? [
                                             BoxShadow(
                                               color: colorScheme.primary
-                                                  .withOpacity(0.35),
+                                                  .withValues(alpha: 0.35),
                                               blurRadius: 15,
                                               spreadRadius: 2,
                                             ),

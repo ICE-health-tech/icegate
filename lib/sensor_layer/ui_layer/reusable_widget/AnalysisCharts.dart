@@ -44,8 +44,8 @@ class _LineChartPainter extends CustomPainter {
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
           colors: [
-            color.withOpacity(0.3),
-            color.withOpacity(0.0),
+            color.withValues(alpha: 0.3),
+            color.withValues(alpha: 0.0),
           ]).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
 
     final path = Path();

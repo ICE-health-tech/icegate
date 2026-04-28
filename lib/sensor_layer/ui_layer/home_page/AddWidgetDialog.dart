@@ -186,7 +186,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -216,8 +216,8 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                         icon: const Icon(Icons.close_rounded),
                         style: IconButton.styleFrom(
                           backgroundColor: colorScheme.surfaceContainerHighest
-                              .withOpacity(0.5),
-                          highlightColor: colorScheme.primary.withOpacity(0.1),
+                              .withValues(alpha: 0.5),
+                          highlightColor: colorScheme.primary.withValues(alpha: 0.1),
                         ),
                       ),
                     ],
@@ -251,7 +251,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -282,7 +282,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: colorScheme.primary.withOpacity(0.3),
+                      color: colorScheme.primary.withValues(alpha: 0.3),
                       blurRadius: 8,
                       offset: const Offset(0, 2),
                     ),
@@ -332,13 +332,13 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
             Icon(
               Icons.check_circle_rounded,
               size: 64,
-              color: colorScheme.primary.withOpacity(0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
             ),
             const SizedBox(height: 16),
             Text(
               "All plugins added",
               style: TextStyle(
-                color: colorScheme.onSurface.withOpacity(0.5),
+                color: colorScheme.onSurface.withValues(alpha: 0.5),
                 fontWeight: FontWeight.bold,
                 fontSize: 16,
               ),
@@ -367,10 +367,10 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(24),
                 border: Border.all(
-                  color: colorScheme.outlineVariant.withOpacity(0.2),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.2),
                 ),
               ),
               child: Column(
@@ -383,7 +383,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                       borderRadius: BorderRadius.circular(16),
                       boxShadow: [
                         BoxShadow(
-                          color: colorScheme.shadow.withOpacity(0.05),
+                          color: colorScheme.shadow.withValues(alpha: 0.05),
                           blurRadius: 10,
                           offset: const Offset(0, 4),
                         ),
@@ -444,13 +444,13 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                   borderRadius: BorderRadius.circular(22),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 15,
                       offset: const Offset(0, 8),
                     ),
                   ],
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.4),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.4),
                   ),
                 ),
                 child: Column(
@@ -459,7 +459,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: colorScheme.tertiaryContainer.withOpacity(0.15),
+                        color: colorScheme.tertiaryContainer.withValues(alpha: 0.15),
                         borderRadius: BorderRadius.circular(14),
                       ),
                       child: Icon(
@@ -524,7 +524,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Wrap(
@@ -547,13 +547,13 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                         border: Border.all(
                           color: isSelected
                               ? colorScheme.primary
-                              : colorScheme.outlineVariant.withOpacity(0.2),
+                              : colorScheme.outlineVariant.withValues(alpha: 0.2),
                           width: isSelected ? 0 : 1,
                         ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: colorScheme.primary.withOpacity(0.3),
+                                  color: colorScheme.primary.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
@@ -582,7 +582,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(16),
                   ),
-                  shadowColor: colorScheme.primary.withOpacity(0.3),
+                  shadowColor: colorScheme.primary.withValues(alpha: 0.3),
                   elevation: 4,
                 ),
                 child: const Text(
@@ -615,7 +615,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
         labelText: label,
         hintText: hint,
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide.none,
@@ -628,7 +628,7 @@ class _AddWidgetDialogState extends State<AddWidgetDialog> {
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.primary, width: 1.5),
         ),
-        prefixIcon: Icon(icon, color: colorScheme.primary.withOpacity(0.7)),
+        prefixIcon: Icon(icon, color: colorScheme.primary.withValues(alpha: 0.7)),
         floatingLabelBehavior: FloatingLabelBehavior.auto,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: 20,

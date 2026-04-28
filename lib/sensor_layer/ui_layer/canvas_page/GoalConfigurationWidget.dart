@@ -193,16 +193,17 @@ class GoalConfigurationWidget extends StatelessWidget {
   }
 
   Widget _buildAmbientGlow(Color color, double size) {
+    final clampedSize = size.clamp(0.0, double.infinity);
     return Container(
-      width: size,
-      height: size,
+      width: clampedSize,
+      height: clampedSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.15),
-            blurRadius: size / 2,
-            spreadRadius: size / 4,
+            color: color.withValues(alpha: 0.15),
+            blurRadius: (clampedSize / 2).clamp(0.0, double.infinity),
+            spreadRadius: (clampedSize / 4).clamp(0.0, double.infinity),
           ),
         ],
       ),
@@ -218,10 +219,10 @@ class GoalConfigurationWidget extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(28),
           decoration: BoxDecoration(
-            color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.02),
+            color: isDark ? Colors.white.withValues(alpha: 0.03) : Colors.black.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: isDark ? Colors.white.withOpacity(0.08) : Colors.black.withOpacity(0.05),
+              color: isDark ? Colors.white.withValues(alpha: 0.08) : Colors.black.withValues(alpha: 0.05),
               width: 1,
             ),
           ),
@@ -252,7 +253,7 @@ class GoalConfigurationWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -262,7 +263,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                 child: Text(
                   label.toUpperCase(),
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
@@ -310,7 +311,7 @@ class GoalConfigurationWidget extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 20),
@@ -320,7 +321,7 @@ class GoalConfigurationWidget extends StatelessWidget {
                 child: Text(
                   label.toUpperCase(),
                   style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                    color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
@@ -360,10 +361,10 @@ class GoalConfigurationWidget extends StatelessWidget {
       data: SliderTheme.of(context).copyWith(
         trackHeight: 6,
         activeTrackColor: color,
-        inactiveTrackColor: color.withOpacity(0.1),
+        inactiveTrackColor: color.withValues(alpha: 0.1),
         thumbColor: Colors.white,
         thumbShape: TacticalThumbShape(color: color),
-        overlayColor: color.withOpacity(0.2),
+        overlayColor: color.withValues(alpha: 0.2),
         trackShape: const RoundedRectSliderTrackShape(),
       ),
       child: Slider(
@@ -408,7 +409,7 @@ class TacticalThumbShape extends SliderComponentShape {
 
     // Outer Glow
     final Paint glowPaint = Paint()
-      ..color = color.withOpacity(0.3)
+      ..color = color.withValues(alpha: 0.3)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
     canvas.drawCircle(center, 12, glowPaint);
 
@@ -441,7 +442,7 @@ class TacticalGridPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.05)
+      ..color = color.withValues(alpha: 0.05)
       ..strokeWidth = 0.5;
 
     const spacing = 40.0;
@@ -455,7 +456,7 @@ class TacticalGridPainter extends CustomPainter {
 
     // Small cross markers at intersections
     final markerPaint = Paint()
-      ..color = color.withOpacity(0.1)
+      ..color = color.withValues(alpha: 0.1)
       ..strokeWidth = 1;
     
     for (double i = spacing; i < size.width; i += spacing * 4) {

@@ -38,8 +38,8 @@ class RadialPremiumBackground extends StatelessWidget {
                   center: center,
                   radius: radius,
                   colors: [
-                    primaryColor.withOpacity(0.12),
-                    primaryColor.withOpacity(0.05),
+                    primaryColor.withValues(alpha: 0.12),
+                    primaryColor.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                   stops: const [0.0, 0.4, 1.0],

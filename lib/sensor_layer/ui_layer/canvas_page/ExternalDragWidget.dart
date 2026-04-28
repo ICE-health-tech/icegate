@@ -97,7 +97,7 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
             duration: const Duration(milliseconds: 200),
             decoration: BoxDecoration(
               color: isEmpty
-                  ? Colors.white.withOpacity(0.05)
+                  ? Colors.white.withValues(alpha: 0.05)
                   : Colors.transparent,
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
@@ -122,7 +122,7 @@ class _ExternalDragWidgetState extends State<ExternalDragWidget> {
                     ),
                     childWhenDragging: Container(
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
@@ -238,7 +238,7 @@ class _BuildCard extends StatelessWidget {
 
     return Card(
       elevation: isDragging ? 12 : 4,
-      shadowColor: color.withOpacity(0.6),
+      shadowColor: color.withValues(alpha: 0.6),
       color: Colors.transparent, // Transparent to show gradient
       margin: EdgeInsets.zero, // Remove default margin
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -248,12 +248,12 @@ class _BuildCard extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [color.withOpacity(0.9), color.withOpacity(0.7)],
+            colors: [color.withValues(alpha: 0.9), color.withValues(alpha: 0.7)],
           ),
           image: item.url.isNotEmpty ? _buildUrlImage(item.url) : null,
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.4),
+              color: color.withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -280,7 +280,7 @@ class _BuildCard extends StatelessWidget {
                       vertical: 4,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.black.withOpacity(0.4),
+                      color: Colors.black.withValues(alpha: 0.4),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Column(
@@ -319,7 +319,7 @@ class _BuildCard extends StatelessWidget {
   Widget _buildMapWidget() {
     return Card(
       elevation: isDragging ? 12 : 4,
-      shadowColor: Colors.blue.withOpacity(0.6),
+      shadowColor: Colors.blue.withValues(alpha: 0.6),
       color: Colors.transparent,
       margin: EdgeInsets.zero, // Remove default margin
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -330,13 +330,13 @@ class _BuildCard extends StatelessWidget {
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              Colors.blue.withOpacity(0.9),
-              Colors.blue.withOpacity(0.7),
+              Colors.blue.withValues(alpha: 0.9),
+              Colors.blue.withValues(alpha: 0.7),
             ],
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.blue.withOpacity(0.4),
+              color: Colors.blue.withValues(alpha: 0.4),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -357,7 +357,7 @@ class _BuildCard extends StatelessWidget {
 
     return Card(
       elevation: isDragging ? 12 : 4,
-      shadowColor: Colors.black.withOpacity(0.3),
+      shadowColor: Colors.black.withValues(alpha: 0.3),
       color: Colors.white,
       margin: EdgeInsets.zero, // Remove default margin
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),

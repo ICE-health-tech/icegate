@@ -213,7 +213,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
             Container(
               padding: const EdgeInsets.all(8),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, size: 18, color: colorScheme.primary),
@@ -224,7 +224,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
               style: theme.textTheme.labelLarge?.copyWith(
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2.0,
-                color: colorScheme.onSurface.withOpacity(0.8),
+                color: colorScheme.onSurface.withValues(alpha: 0.8),
               ),
             ),
             const SizedBox(width: 16),
@@ -234,8 +234,8 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      colorScheme.onSurface.withOpacity(0.1),
-                      colorScheme.onSurface.withOpacity(0.0),
+                      colorScheme.onSurface.withValues(alpha: 0.1),
+                      colorScheme.onSurface.withValues(alpha: 0.0),
                     ],
                   ),
                 ),
@@ -268,8 +268,8 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        colorScheme.primary.withOpacity(0.2),
-                        colorScheme.primary.withOpacity(0.0),
+                        colorScheme.primary.withValues(alpha: 0.2),
+                        colorScheme.primary.withValues(alpha: 0.0),
                       ],
                     ),
                   ),
@@ -277,7 +277,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                 Icon(
                   Icons.cloud_off_rounded,
                   size: 80,
-                  color: colorScheme.primary.withOpacity(0.4),
+                  color: colorScheme.primary.withValues(alpha: 0.4),
                 ),
               ],
             ),
@@ -288,7 +288,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
               'Connect to a host first to manage live sessions.',
               textAlign: TextAlign.center,
               style: theme.textTheme.bodyMedium?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 height: 1.5,
               ),
             ),
@@ -298,7 +298,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.2),
+                    color: colorScheme.primary.withValues(alpha: 0.2),
                     blurRadius: 20,
                     offset: const Offset(0, 10),
                   ),
@@ -448,15 +448,15 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
               borderRadius: BorderRadius.circular(12),
               child: Container(
                 decoration: BoxDecoration(
-                  color: colorScheme.surface.withOpacity(0.5),
+                  color: colorScheme.surface.withValues(alpha: 0.5),
                   borderRadius: BorderRadius.circular(20),
                   border: Border.all(
-                    color: colorScheme.onSurface.withOpacity(0.08),
+                    color: colorScheme.onSurface.withValues(alpha: 0.08),
                     width: 1.5,
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.03),
+                      color: Colors.black.withValues(alpha: 0.03),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -488,7 +488,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                           child: Container(
                             padding: const EdgeInsets.all(4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.05),
+                              color: Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(6),
                             ),
                             child: const Icon(
@@ -530,7 +530,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
+                            color: Colors.green.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(

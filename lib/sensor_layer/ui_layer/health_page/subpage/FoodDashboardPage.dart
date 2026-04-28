@@ -160,9 +160,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.restaurant_menu_rounded, size: 80, color: colorScheme.primary.withOpacity(0.1)),
+                          Icon(Icons.restaurant_menu_rounded, size: 80, color: colorScheme.primary.withValues(alpha: 0.1)),
                           const SizedBox(height: 16),
-                          Text(l10n.nutri_no_meals, style: TextStyle(color: colorScheme.onSurfaceVariant.withOpacity(0.5))),
+                          Text(l10n.nutri_no_meals, style: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5))),
                         ],
                       ),
                     ),
@@ -184,7 +184,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colorScheme.primary, colorScheme.secondary.withOpacity(0.8)],
+          colors: [colorScheme.primary, colorScheme.secondary.withValues(alpha: 0.8)],
         ),
       ),
       child: SafeArea(
@@ -218,7 +218,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     return Column(
       children: [
         Text('${value.toInt()}g', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.bold, fontSize: 10)),
+        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.bold, fontSize: 10)),
       ],
     );
   }
@@ -244,7 +244,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
       margin: const EdgeInsets.all(16),
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(32),
       ),
       child: Column(
@@ -313,9 +313,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: adviceColor.withOpacity(0.05),
+        color: adviceColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: adviceColor.withOpacity(0.1)),
+        border: Border.all(color: adviceColor.withValues(alpha: 0.1)),
       ),
       child: Row(
         children: [
@@ -349,7 +349,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
@@ -422,7 +422,7 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                   )
                 else
                   Text(DateFormat('h:mm a').format(meal.eatenAt), 
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withOpacity(0.6))),
+                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6))),
               ],
             ),
           ),

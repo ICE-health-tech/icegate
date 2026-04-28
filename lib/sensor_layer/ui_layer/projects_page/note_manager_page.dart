@@ -37,13 +37,13 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
           Positioned(
             top: -150,
             right: -100,
-            child: _buildBlurCircle(colorScheme.primary.withOpacity(0.12), 400),
+            child: _buildBlurCircle(colorScheme.primary.withValues(alpha: 0.12), 400),
           ),
           Positioned(
             bottom: -50,
             left: -100,
             child: _buildBlurCircle(
-              colorScheme.secondary.withOpacity(0.08),
+              colorScheme.secondary.withValues(alpha: 0.08),
               350,
             ),
           ),
@@ -86,7 +86,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                             fontSize: 12,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1.5,
-                            color: colorScheme.onSurface.withOpacity(0.4),
+                            color: colorScheme.onSurface.withValues(alpha: 0.4),
                           ),
                         ),
                         const Spacer(),
@@ -233,7 +233,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                   'Manage your document sources',
                   style: TextStyle(
                     fontSize: 14,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -245,7 +245,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.3),
+                    color: colorScheme.primary.withValues(alpha: 0.3),
                     blurRadius: 12,
                     offset: const Offset(0, 4),
                   ),
@@ -304,9 +304,9 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -318,7 +318,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
               Icon(
                 Icons.north_east_rounded,
                 size: 12,
-                color: colorScheme.onSurface.withOpacity(0.2),
+                color: colorScheme.onSurface.withValues(alpha: 0.2),
               ),
             ],
           ),
@@ -337,7 +337,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
             style: TextStyle(
               fontSize: 9,
               fontWeight: FontWeight.bold,
-              color: colorScheme.onSurface.withOpacity(0.4),
+              color: colorScheme.onSurface.withValues(alpha: 0.4),
               letterSpacing: 0.2,
             ),
           ),
@@ -350,21 +350,21 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
       ),
       child: TextField(
         controller: _searchController,
         decoration: InputDecoration(
           icon: Icon(
             Icons.search_rounded,
-            color: colorScheme.onSurface.withOpacity(0.3),
+            color: colorScheme.onSurface.withValues(alpha: 0.3),
             size: 20,
           ),
           hintText: 'Search sources...',
           hintStyle: TextStyle(
-            color: colorScheme.onSurface.withOpacity(0.3),
+            color: colorScheme.onSurface.withValues(alpha: 0.3),
             fontSize: 14,
           ),
           border: InputBorder.none,
@@ -408,7 +408,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: color.withOpacity(0.1),
+                  color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(icon, color: color, size: 24),
@@ -442,7 +442,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                           subtitle,
                           style: TextStyle(
                             fontSize: 11,
-                            color: colorScheme.onSurface.withOpacity(0.4),
+                            color: colorScheme.onSurface.withValues(alpha: 0.4),
                             fontWeight: FontWeight.w500,
                           ),
                         ),
@@ -456,7 +456,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                   onPressed: isLoading ? null : onAction,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isConnected
-                        ? colorScheme.primary.withOpacity(0.1)
+                        ? colorScheme.primary.withValues(alpha: 0.1)
                         : colorScheme.primary,
                     foregroundColor: isConnected
                         ? colorScheme.primary
@@ -491,7 +491,7 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
                 Icon(
                   Icons.lock_clock_rounded,
                   size: 18,
-                  color: colorScheme.onSurface.withOpacity(0.2),
+                  color: colorScheme.onSurface.withValues(alpha: 0.2),
                 ),
             ],
           ),

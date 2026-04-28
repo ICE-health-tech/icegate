@@ -9,6 +9,13 @@ import 'package:drift/drift.dart' as drift;
 class AddAssetDialog extends StatefulWidget {
   const AddAssetDialog({super.key});
 
+  static Future<void> show(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => const AddAssetDialog(),
+    );
+  }
+
   @override
   State<AddAssetDialog> createState() => _AddAssetDialogState();
 }
@@ -65,7 +72,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -114,7 +121,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                     Container(
                       padding: const EdgeInsets.all(4),
                       decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withOpacity(
+                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 
                           0.5,
                         ),
                         borderRadius: BorderRadius.circular(16),
@@ -147,7 +154,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                             : "e.g. BTC, ETH",
                         filled: true,
                         fillColor: colorScheme.surfaceContainerHighest
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -168,7 +175,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                               hintText: "0.0",
                               filled: true,
                               fillColor: colorScheme.surfaceContainerHighest
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -187,7 +194,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                               hintText: "0.0",
                               filled: true,
                               fillColor: colorScheme.surfaceContainerHighest
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -246,7 +253,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
             boxShadow: isSelected
                 ? [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Colors.black.withValues(alpha: 0.05),
                       blurRadius: 4,
                       offset: const Offset(0, 2),
                     ),

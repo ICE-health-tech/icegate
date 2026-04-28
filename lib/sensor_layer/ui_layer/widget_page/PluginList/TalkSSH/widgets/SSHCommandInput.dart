@@ -22,8 +22,8 @@ class SSHCommandInput extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        border: Border(top: BorderSide(color: colorScheme.primary.withOpacity(0.1))),
+        color: Colors.black.withValues(alpha: 0.4),
+        border: Border(top: BorderSide(color: colorScheme.primary.withValues(alpha: 0.1))),
       ),
       child: Row(
         children: [
@@ -31,12 +31,12 @@ class SSHCommandInput extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.3),
+                color: Colors.black.withValues(alpha: 0.3),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+                border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.05),
+                    color: colorScheme.primary.withValues(alpha: 0.05),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),
@@ -56,7 +56,7 @@ class SSHCommandInput extends StatelessWidget {
                     ? IconButton(
                         icon: Icon(
                           Icons.note_add_rounded,
-                          color: colorScheme.primary.withOpacity(0.8),
+                          color: colorScheme.primary.withValues(alpha: 0.8),
                           size: 20,
                         ),
                         onPressed: onNoteImportPressed,
@@ -64,12 +64,12 @@ class SSHCommandInput extends StatelessWidget {
                       )
                     : Icon(
                         Icons.terminal_rounded,
-                        color: colorScheme.primary.withOpacity(0.6),
+                        color: colorScheme.primary.withValues(alpha: 0.6),
                         size: 18,
                       ),
                   hintText: l10n.ssh_type_command.toUpperCase(),
                   hintStyle: TextStyle(
-                    color: colorScheme.onSurface.withOpacity(0.2), 
+                    color: colorScheme.onSurface.withValues(alpha: 0.2), 
                     fontSize: 11,
                     fontFamily: 'Courier',
                     letterSpacing: 2,
@@ -100,12 +100,12 @@ class SSHCommandInput extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.1),
+            color: colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+            border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
             boxShadow: [
               BoxShadow(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: colorScheme.primary.withValues(alpha: 0.1),
                 blurRadius: 10,
                 spreadRadius: 1,
               ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
@@ -105,9 +106,11 @@ class SocialBlockerBlock {
 
       // Update the active state signal and trigger native sync ONLY on state change
       if (shouldBeActive != isAnyBlockActive.value) {
-        untracked(() {
-          isAnyBlockActive.value = shouldBeActive;
-          _toggleSystemShield(shouldBeActive);
+        Timer(Duration.zero, () {
+          untracked(() {
+            isAnyBlockActive.value = shouldBeActive;
+            _toggleSystemShield(shouldBeActive);
+          });
         });
       }
     });

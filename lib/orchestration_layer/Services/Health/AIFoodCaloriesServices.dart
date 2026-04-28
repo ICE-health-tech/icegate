@@ -28,33 +28,22 @@ class AIFoodCaloriesService {
         print("AIFoodCaloriesService: Image uploaded to S3: $imageUrl");
       }
 
-      // 2. Prepare the prompt for the LangChain Agent
-      final String promptText = """
-Please analyze this food and calculate calories. 
-Name: "$foodName"
-LiDAR Volume: ${volume?.toStringAsFixed(1) ?? "N/A"} cm³
-Reference Data: ${fdcData != null ? jsonEncode(fdcData) : "None"}
-""";
+      // 2. Log the food name for debugging
+      print("AIFoodCaloriesService: Analyzing food '$foodName'");
 
-      // 3. Construct Request Body for /food_agent/invoke
+      // 3. Construct Request Body for /analyze_food_url
+      // The deployed agent expects { s3_url, volume_cm3 } format,
+      // NOT the old LangServe /food_agent/invoke format.
       final requestBody = {
-        "input": {
-          "input": [
-            {"type": "text", "text": promptText},
-            if (imageUrl != null)
-              {
-                "type": "image_url",
-                "image_url": imageUrl, // Assuming the agent handles S3 URLs
-              },
-          ],
-          "chat_history": []
-        }
+        "s3_url": imageUrl ?? "",
+        "volume_cm3": volume ?? 250.0,
       };
 
       print("AIFoodCaloriesService: Invoking Food Agent at $_agentUrl");
 
+      // Call the correct endpoint: /analyze_food_url
       final response = await http.post(
-        Uri.parse("$_agentUrl/food_agent/invoke"),
+        Uri.parse("$_agentUrl/analyze_food_url"),
         headers: {'Content-Type': 'application/json'},
         body: jsonEncode(requestBody),
       );
@@ -63,30 +52,63 @@ Reference Data: ${fdcData != null ? jsonEncode(fdcData) : "None"}
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
-        // The agent's final answer is in output
+        // The agent returns { output, intermediate_steps, image_url }
         final dynamic output = responseData['output'];
         
-        // If output is a string (common for agents), we might need to parse it if it's JSON
-        // Or if the agent returns a structured object, we use it directly.
-        // For now, let's assume the agent returns a string that we need to extract data from,
-        // or a JSON object that matches CaloriesProtocol.
+        // Try to parse structured data from intermediate_steps
+        // Each step has { tool, args, result } with nutrition info
+        final List? steps = responseData['intermediate_steps'] as List?;
         
+        if (steps != null && steps.isNotEmpty) {
+          double totalCalories = 0;
+          double totalProtein = 0;
+          double totalCarbs = 0;
+          double totalFat = 0;
+          
+          // Sum up all calculated food items from intermediate steps
+          for (final step in steps) {
+            final result = step['result'] as String? ?? '';
+            // Parse macros from get_food_nutrition step results
+            final proteinMatch = RegExp(r'Protein:\s*([\d.]+)g').firstMatch(result);
+            final carbsMatch = RegExp(r'Carbs:\s*([\d.]+)g').firstMatch(result);
+            final fatMatch = RegExp(r'Fat:\s*([\d.]+)g').firstMatch(result);
+            
+            // Only sum from calculate_volume_calories steps (they have total calories)
+            if (step['tool'] == 'calculate_volume_calories') {
+              final totalCalMatch = RegExp(r'Total Calories:\s*([\d.]+)').firstMatch(result);
+              if (totalCalMatch != null) {
+                totalCalories += double.tryParse(totalCalMatch.group(1)!) ?? 0;
+              }
+            }
+            
+            if (proteinMatch != null) totalProtein += double.tryParse(proteinMatch.group(1)!) ?? 0;
+            if (carbsMatch != null) totalCarbs += double.tryParse(carbsMatch.group(1)!) ?? 0;
+            if (fatMatch != null) totalFat += double.tryParse(fatMatch.group(1)!) ?? 0;
+          }
+          
+          // CaloriesProtocol expects int fields, so round the sums
+          return CaloriesProtocol(
+            calories: totalCalories.round(),
+            protein: totalProtein.round(),
+            carbs: totalCarbs.round(),
+            fat: totalFat.round(),
+            imageUrl: imageUrl,
+          );
+        }
+
         if (output is Map<String, dynamic>) {
-          return CaloriesProtocol.fromJson(output);
+          final result = CaloriesProtocol.fromJson(output);
+          return result.copyWith(imageUrl: imageUrl);
         } else if (output is String) {
-          // Attempt to find JSON in string if needed, but for simplicity:
-          print("Agent returned string output: $output");
-          // Fallback to direct Gemini if agent output is not structured yet
-          // (Or you can implement a regex parser here)
+          print("Agent returned text output: $output");
         }
         
-        // Mocking a successful return from the agent's text for now 
-        // to show how it fits into the protocol.
-        return const CaloriesProtocol(
-          calories: 0, // Should be parsed from agent output
+        return CaloriesProtocol(
+          calories: 0,
           protein: 0,
           carbs: 0,
           fat: 0,
+          imageUrl: imageUrl,
         );
       } else {
         print("Agent Error: ${response.body}");

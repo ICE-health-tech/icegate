@@ -30,8 +30,17 @@ class MarketService {
     try {
       final response = await http.get(Uri.parse('$baseUrl/market/gold'));
       if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        final result = data.cast<Map<String, dynamic>>();
+        final dynamic decoded = json.decode(response.body);
+        List<dynamic> data;
+        if (decoded is Map && decoded.containsKey('data')) {
+          final dynamic rawData = decoded['data'];
+          data = rawData is List ? rawData : [rawData];
+        } else if (decoded is List) {
+          data = decoded;
+        } else {
+          data = [decoded];
+        }
+        final result = data.whereType<Map<String, dynamic>>().toList();
         _cache[cacheKey] = MarketCachedData(result, DateTime.now());
         return result;
       }

@@ -77,6 +77,8 @@ class SSHStorageService {
         password: password,
         remoteFilePath: path,
         lastUsed: host.lastUsed,
+        aiMode: host.aiMode,
+        aiPromptPrefix: host.aiPromptPrefix,
       ));
     }
     

@@ -213,8 +213,10 @@ class BluetoothGPSService {
         _updateLocation(location);
       },
       onError: (error) {
-        Future.microtask(() {
-          errorMessage.value = 'GPS error: $error';
+        Timer(Duration.zero, () {
+          untracked(() {
+            errorMessage.value = 'GPS error: $error';
+          });
         });
       },
     );
@@ -224,15 +226,17 @@ class BluetoothGPSService {
   void _updateLocation(GpsLocation location) {
     // Run in microtask and batch to avoid SignalEffectException if stream
     // fires synchronously during an active effect/computed context.
-    Future.microtask(() {
-      batch(() {
-        currentLocation.value = location;
+    Timer(Duration.zero, () {
+      untracked(() {
+        batch(() {
+          currentLocation.value = location;
 
-        // Add to history (keep last 100 locations)
-        locationHistory.insert(0, location);
-        if (locationHistory.length > 100) {
-          locationHistory.removeLast();
-        }
+          // Add to history (keep last 100 locations)
+          locationHistory.insert(0, location);
+          if (locationHistory.length > 100) {
+            locationHistory.removeLast();
+          }
+        });
       });
     });
   }

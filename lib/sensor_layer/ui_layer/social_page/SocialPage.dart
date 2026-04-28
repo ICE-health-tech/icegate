@@ -42,7 +42,7 @@ class SocialPage extends StatefulWidget {
           action = () => MindLogEntryDialog.show(context);
           break;
         case 1: // Achievements
-          iconData = Icons.spa_rounded;
+          iconData = Icons.sentiment_satisfied_rounded;
           action = () => AchievementBuilderDialog.show(context);
           break;
         case 2: // Analysis

@@ -107,13 +107,13 @@ class ProjectNotesPage extends StatelessWidget {
                         Icon(
                           Icons.note_alt_outlined,
                           size: 64,
-                          color: colorScheme.onSurface.withOpacity(0.2),
+                          color: colorScheme.onSurface.withValues(alpha: 0.2),
                         ),
                         const SizedBox(height: 16),
                         Text(
                           AppLocalizations.of(context)!.project_no_notes_list,
                           style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                             fontSize: 16,
                           ),
                         ),
@@ -161,12 +161,12 @@ class _NoteCard extends StatelessWidget {
       },
       child: Container(
         decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+          border: Border.all(color: colorScheme.outline.withValues(alpha: 0.1)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -198,7 +198,7 @@ class _NoteCard extends StatelessWidget {
                 _getPreviewText(context, note.content ?? ''),
                 style: TextStyle(
                   fontSize: 14,
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                   height: 1.5,
                 ),
                 maxLines: 5,
@@ -213,7 +213,7 @@ class _NoteCard extends StatelessWidget {
                   DateFormat.MMMd().format(note.updatedAt),
                   style: TextStyle(
                     fontSize: 12,
-                    color: colorScheme.onSurface.withOpacity(0.4),
+                    color: colorScheme.onSurface.withValues(alpha: 0.4),
                   ),
                 ),
                 GestureDetector(
@@ -246,7 +246,7 @@ class _NoteCard extends StatelessWidget {
                   child: Icon(
                     Icons.delete_outline,
                     size: 20,
-                    color: colorScheme.error.withOpacity(0.6),
+                    color: colorScheme.error.withValues(alpha: 0.6),
                   ),
                 ),
               ],

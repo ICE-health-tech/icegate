@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
@@ -128,12 +127,12 @@ class FinanceStocksPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            EntryColors.iceCyan.withOpacity(0.1),
-            Colors.white.withOpacity(0.02),
+            EntryColors.iceCyan.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.02),
           ],
         ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: EntryColors.iceCyan.withOpacity(0.2)),
+        border: Border.all(color: EntryColors.iceCyan.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -190,8 +189,9 @@ class FinanceStocksPage extends StatelessWidget {
   Widget _buildStockTile(BuildContext context, String ticker, List<TransactionData> txns) {
     double invested = 0;
     for (final t in txns) {
-      if (t.type == 'expense' || t.type == 'investment') invested += t.amount;
-      else if (t.type == 'income') invested -= t.amount;
+      if (t.type == 'expense' || t.type == 'investment') {
+        invested += t.amount;
+      } else if (t.type == 'income') invested -= t.amount;
     }
 
     return FutureBuilder<StockFullInfo?>(
@@ -204,12 +204,12 @@ class FinanceStocksPage extends StatelessWidget {
         return Container(
           margin: const EdgeInsets.only(bottom: 12),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.02),
+            color: Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
               color: priceData != null 
-                ? (isLoss ? Colors.redAccent.withOpacity(0.2) : Colors.greenAccent.withOpacity(0.2))
-                : Colors.white.withOpacity(0.05)
+                ? (isLoss ? Colors.redAccent.withValues(alpha: 0.2) : Colors.greenAccent.withValues(alpha: 0.2))
+                : Colors.white.withValues(alpha: 0.05)
             ),
           ),
           child: InkWell(
@@ -223,7 +223,7 @@ class FinanceStocksPage extends StatelessWidget {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: EntryColors.iceCyan.withOpacity(0.1),
+                      color: EntryColors.iceCyan.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(14),
                     ),
                     child: Center(
@@ -253,7 +253,7 @@ class FinanceStocksPage extends StatelessWidget {
                                     dotData: const FlDotData(show: false),
                                     belowBarData: BarAreaData(
                                       show: true,
-                                      color: (isLoss ? Colors.redAccent : Colors.greenAccent).withOpacity(0.1),
+                                      color: (isLoss ? Colors.redAccent : Colors.greenAccent).withValues(alpha: 0.1),
                                     ),
                                   ),
                                 ],
@@ -285,7 +285,7 @@ class FinanceStocksPage extends StatelessWidget {
                                 child: Text(
                                   "(${_stockService.getStockName(ticker)})",
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.3),
+                                    color: Colors.white.withValues(alpha: 0.3),
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
                                   ),
@@ -421,9 +421,9 @@ class FinanceStocksPage extends StatelessWidget {
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -434,7 +434,7 @@ class FinanceStocksPage extends StatelessWidget {
               Icon(icon, color: color, size: 14),
               Text(
                 type,
-                style: TextStyle(color: color.withOpacity(0.5), fontSize: 8, fontWeight: FontWeight.bold),
+                style: TextStyle(color: color.withValues(alpha: 0.5), fontSize: 8, fontWeight: FontWeight.bold),
               ),
             ],
           ),
@@ -463,14 +463,14 @@ class FinanceStocksPage extends StatelessWidget {
       width: double.infinity,
       height: 160,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.inventory_2_outlined, color: Colors.white.withOpacity(0.1), size: 40),
+          Icon(Icons.inventory_2_outlined, color: Colors.white.withValues(alpha: 0.1), size: 40),
           const SizedBox(height: 16),
           const Text(
             "NO STOCKS TRACKED",
@@ -484,7 +484,7 @@ class FinanceStocksPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             "Add transactions with category 'Stock'",
-            style: TextStyle(color: Colors.white.withOpacity(0.1), fontSize: 11),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.1), fontSize: 11),
           ),
         ],
       ),

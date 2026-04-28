@@ -145,7 +145,7 @@ class _WeightInputPageState extends State<WeightInputPage> {
                   hintText: "0.0",
                   suffixText: "kg",
                   suffixStyle: textTheme.titleLarge?.copyWith(
-                    color: colorScheme.onSurface.withOpacity(0.3),
+                    color: colorScheme.onSurface.withValues(alpha: 0.3),
                     fontWeight: FontWeight.bold,
                   ),
                   border: InputBorder.none,

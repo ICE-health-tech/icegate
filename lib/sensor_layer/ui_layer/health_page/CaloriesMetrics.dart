@@ -43,7 +43,7 @@ class CaloriesBreakdownCard extends StatelessWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(12.0),
         border: Border.all(color: color, width: 1),
       ),
@@ -109,7 +109,7 @@ class CaloriesStatCard extends StatelessWidget {
             Text(
               label,
               style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 4),
@@ -123,7 +123,7 @@ class CaloriesStatCard extends StatelessWidget {
             Text(
               unit,
               style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],
@@ -190,7 +190,7 @@ class CaloriesMainDisplay extends StatelessWidget {
               Text(
                 'kcal',
                 style: textTheme.titleLarge?.copyWith(
-                  color: colorScheme.onSurface.withOpacity(0.6),
+                  color: colorScheme.onSurface.withValues(alpha: 0.6),
                 ),
               ),
             ],
@@ -199,14 +199,14 @@ class CaloriesMainDisplay extends StatelessWidget {
           Text(
             'Goal: $dailyGoal kcal',
             style: textTheme.bodyLarge?.copyWith(
-              color: colorScheme.onSurface.withOpacity(0.6),
+              color: colorScheme.onSurface.withValues(alpha: 0.6),
             ),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
-              color: statusColor.withOpacity(0.2),
+              color: statusColor.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: statusColor, width: 2),
             ),
@@ -302,7 +302,7 @@ class MacronutrientCard extends StatelessWidget {
                     Text(
                       ' / ${macro.goal}g',
                       style: textTheme.bodyLarge?.copyWith(
-                        color: macro.color.withOpacity(0.7),
+                        color: macro.color.withValues(alpha: 0.7),
                       ),
                     ),
                   ],
@@ -322,7 +322,7 @@ class MacronutrientCard extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: (macro.current / macro.goal).clamp(0, 1),
                 minHeight: 10,
-                backgroundColor: macro.color.withOpacity(0.2),
+                backgroundColor: macro.color.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(
                   macro.isOverGoal ? Colors.red : macro.color,
                 ),
@@ -336,7 +336,7 @@ class MacronutrientCard extends StatelessWidget {
               style: textTheme.bodySmall?.copyWith(
                 color: macro.isOverGoal
                     ? Colors.red
-                    : macro.color.withOpacity(0.7),
+                    : macro.color.withValues(alpha: 0.7),
               ),
             ),
           ],
@@ -452,7 +452,7 @@ class MacronutrientSummary extends StatelessWidget {
               CircularProgressIndicator(
                 value: percentage / 100,
                 strokeWidth: 6,
-                backgroundColor: color.withOpacity(0.2),
+                backgroundColor: color.withValues(alpha: 0.2),
                 valueColor: AlwaysStoppedAnimation<Color>(color),
               ),
               Text(
@@ -468,11 +468,11 @@ class MacronutrientSummary extends StatelessWidget {
         const SizedBox(height: 4),
         Text(
           '$current/$goal',
-          style: textTheme.bodySmall?.copyWith(color: color.withOpacity(0.8)),
+          style: textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.8)),
         ),
         Text(
           'g',
-          style: textTheme.bodySmall?.copyWith(color: color.withOpacity(0.6)),
+          style: textTheme.bodySmall?.copyWith(color: color.withValues(alpha: 0.6)),
         ),
       ],
     );

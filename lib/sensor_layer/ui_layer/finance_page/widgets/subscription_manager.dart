@@ -80,9 +80,9 @@ class SubscriptionManager extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.05),
+          color: Colors.white.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.1)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
         ),
         child: const Icon(Icons.add_rounded, color: EntryColors.financeYellow, size: 20),
       ),
@@ -95,20 +95,20 @@ class SubscriptionManager extends StatelessWidget {
       height: 140,
       margin: const EdgeInsets.symmetric(horizontal: 24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.layers_clear_rounded, color: Colors.white.withOpacity(0.1), size: 32),
+            Icon(Icons.layers_clear_rounded, color: Colors.white.withValues(alpha: 0.1), size: 32),
             const SizedBox(height: 12),
             Text(
               "NO RECURRING BILLS",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
@@ -130,10 +130,10 @@ class SubscriptionManager extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFF16161E),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.4),
+            color: Colors.black.withValues(alpha: 0.4),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -156,7 +156,7 @@ class SubscriptionManager extends StatelessWidget {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: EntryColors.financeYellow.withOpacity(0.1),
+                          color: EntryColors.financeYellow.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(14),
                         ),
                         child: Icon(
@@ -204,7 +204,7 @@ class SubscriptionManager extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
@@ -219,9 +219,9 @@ class SubscriptionManager extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isSoon ? Colors.red.withOpacity(0.1) : Colors.white.withOpacity(0.05),
+        color: isSoon ? Colors.red.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isSoon ? Colors.red.withOpacity(0.2) : Colors.white.withOpacity(0.05)),
+        border: Border.all(color: isSoon ? Colors.red.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05)),
       ),
       child: Text(
         days == 0 ? "DUE TODAY" : "$days DAYS LEFT",
@@ -330,7 +330,7 @@ class SubscriptionManager extends StatelessWidget {
         labelStyle: const TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.w900),
         prefixIcon: Icon(icon, color: Colors.white24, size: 18),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.03),
+        fillColor: Colors.white.withValues(alpha: 0.03),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
       ),
     );
@@ -339,7 +339,7 @@ class SubscriptionManager extends StatelessWidget {
   Widget _buildDayPicker(int current, Function(int) onChanged) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.03), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.03), borderRadius: BorderRadius.circular(16)),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<int>(
           value: current,
@@ -362,9 +362,9 @@ class SubscriptionManager extends StatelessWidget {
               margin: EdgeInsets.only(right: cycle == 'monthly' ? 8 : 0),
               padding: const EdgeInsets.symmetric(vertical: 12),
               decoration: BoxDecoration(
-                color: isSel ? EntryColors.financeYellow.withOpacity(0.1) : Colors.white.withOpacity(0.02),
+                color: isSel ? EntryColors.financeYellow.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.02),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSel ? EntryColors.financeYellow.withOpacity(0.3) : Colors.white10),
+                border: Border.all(color: isSel ? EntryColors.financeYellow.withValues(alpha: 0.3) : Colors.white10),
               ),
               child: Center(child: Text(cycle.toUpperCase(), style: TextStyle(color: isSel ? Colors.white : Colors.white24, fontSize: 10, fontWeight: FontWeight.w900))),
             ),
@@ -390,9 +390,9 @@ class SubscriptionManager extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSel ? Colors.white.withOpacity(0.1) : Colors.white.withOpacity(0.02),
+                  color: isSel ? Colors.white.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.02),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: isSel ? Colors.white24 : Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: isSel ? Colors.white24 : Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Text(cat.toUpperCase(), style: TextStyle(color: isSel ? Colors.white : Colors.white24, fontSize: 9, fontWeight: FontWeight.bold)),
               ),

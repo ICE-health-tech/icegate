@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:rxdart/rxdart.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
@@ -33,7 +34,11 @@ class GrowthBlock {
     _personId = personId;
 
     _goalsSubscription?.cancel();
-    _goalsSubscription = dao.watchGoals(personId).listen((data) {
+    _goalsSubscription = dao
+        .watchGoals(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data) {
+      Timer(Duration.zero, () {
       untracked(() {
         updateGoals(
           data
@@ -55,11 +60,16 @@ class GrowthBlock {
               )
               .toList(),
         );
+        });
       });
     });
 
     _habitsSubscription?.cancel();
-    _habitsSubscription = dao.watchHabits(personId).listen((data) {
+    _habitsSubscription = dao
+        .watchHabits(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data) {
+      Timer(Duration.zero, () {
       untracked(() {
         updateHabits(
           data
@@ -80,11 +90,16 @@ class GrowthBlock {
               )
               .toList(),
         );
+        });
       });
     });
 
     _skillsSubscription?.cancel();
-    _skillsSubscription = dao.watchSkills(personId).listen((data) {
+    _skillsSubscription = dao
+        .watchSkills(personId)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen((data) {
+      Timer(Duration.zero, () {
       untracked(() {
         updateSkills(
           data
@@ -103,6 +118,7 @@ class GrowthBlock {
               )
               .toList(),
         );
+        });
       });
     });
   }

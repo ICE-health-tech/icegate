@@ -19,10 +19,10 @@ class ManaNotificationWidget extends StatelessWidget {
         height: 26,
         padding: const EdgeInsets.symmetric(horizontal: 10),
         decoration: BoxDecoration(
-          color: Colors.blueAccent.withOpacity(0.15),
+          color: Colors.blueAccent.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
-            color: Colors.blueAccent.withOpacity(0.3),
+            color: Colors.blueAccent.withValues(alpha: 0.3),
             width: 1,
           ),
         ),
@@ -46,7 +46,7 @@ class ManaNotificationWidget extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.1),
+                color: Colors.white.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(2),
               ),
               child: Stack(
@@ -59,7 +59,7 @@ class ManaNotificationWidget extends StatelessWidget {
                         borderRadius: BorderRadius.circular(2),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.blueAccent.withOpacity(0.5),
+                            color: Colors.blueAccent.withValues(alpha: 0.5),
                             blurRadius: 4,
                           ),
                         ],

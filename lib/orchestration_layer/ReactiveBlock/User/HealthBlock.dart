@@ -113,8 +113,7 @@ class HealthBlock {
   final HealthMealDAO _healthMealDao;
   StreamSubscription? _waterSubscription;
   StreamSubscription? _mealSubscription;
-  StreamSubscription?
-  _exerciseSubscription;
+  StreamSubscription? _exerciseSubscription;
   StreamSubscription? _weightSubscription;
 
   String? _initializedPersonId;
@@ -169,132 +168,146 @@ class HealthBlock {
           .debounceTime(const Duration(milliseconds: 500))
           .listen(
             (metrics) {
-              final today = DateTime.now();
-              final todayStr =
-                  "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
-              final yesterday = today.subtract(const Duration(days: 1));
-              final yesterdayStr =
-                  "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
+              Timer(Duration.zero, () {
+                untracked(() {
+                  final today = DateTime.now();
+                  final todayStr =
+                      "${today.year}-${today.month.toString().padLeft(2, '0')}-${today.day.toString().padLeft(2, '0')}";
+                  final yesterday = today.subtract(const Duration(days: 1));
+                  final yesterdayStr =
+                      "${yesterday.year}-${yesterday.month.toString().padLeft(2, '0')}-${yesterday.day.toString().padLeft(2, '0')}";
 
-              final sevenDaysAgo = DateTime(
-                today.year,
-                today.month,
-                today.day,
-              ).subtract(const Duration(days: 7));
+                  final sevenDaysAgo = DateTime(
+                    today.year,
+                    today.month,
+                    today.day,
+                  ).subtract(const Duration(days: 7));
 
-              int totalHistorical = 0;
-              int foundTodaySteps = 0;
-              double foundTodaySleep = 0.0;
-              int foundTodayHeartRate = 0;
-              double foundTodayOxygenSaturation = 0.0;
-              int foundTodayCaloriesBurned = 0;
-              int foundTodayCaloriesConsumed = 0;
-              int foundTodayExerciseMinutes = 0;
-              int foundTodayFocusMinutes = 0;
-              final Map<String, int> stepsLast7Days = {};
-              final Map<String, double> weightHistory = {};
-              final Map<String, int> waterHistory = {};
+                  int totalHistorical = 0;
+                  int foundTodaySteps = 0;
+                  double foundTodaySleep = 0.0;
+                  int foundTodayHeartRate = 0;
+                  double foundTodayOxygenSaturation = 0.0;
+                  int foundTodayCaloriesBurned = 0;
+                  int foundTodayCaloriesConsumed = 0;
+                  int foundTodayExerciseMinutes = 0;
+                  int foundTodayFocusMinutes = 0;
+                  final Map<String, int> stepsLast7Days = {};
+                  final Map<String, double> weightHistory = {};
+                  final Map<String, int> waterHistory = {};
 
-              for (var m in metrics) {
-                final dateStr =
-                    "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}";
-                final isTodayMatch = dateStr == todayStr;
-                final steps = m.steps ?? 0;
+                  for (var m in metrics) {
+                    final dateStr =
+                        "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}";
+                    final isTodayMatch = dateStr == todayStr;
+                    final steps = m.steps ?? 0;
 
-                if (isTodayMatch) {
-                  if (steps > foundTodaySteps) foundTodaySteps = steps;
-                  if ((m.sleepHours ?? 0.0) > foundTodaySleep) {
-                    foundTodaySleep = m.sleepHours ?? 0.0;
+                    if (isTodayMatch) {
+                      if (steps > foundTodaySteps) foundTodaySteps = steps;
+                      if ((m.sleepHours ?? 0.0) > foundTodaySleep) {
+                        foundTodaySleep = m.sleepHours ?? 0.0;
+                      }
+                      if ((m.heartRate ?? 0) > foundTodayHeartRate) {
+                        foundTodayHeartRate = m.heartRate ?? 0;
+                      }
+                      if ((m.oxygenSaturation ?? 0.0) >
+                          foundTodayOxygenSaturation) {
+                        foundTodayOxygenSaturation = m.oxygenSaturation ?? 0.0;
+                      }
+                      if ((m.caloriesBurned ?? 0) > foundTodayCaloriesBurned) {
+                        foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
+                      }
+                      if ((m.caloriesConsumed ?? 0) >
+                          foundTodayCaloriesConsumed) {
+                        foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
+                      }
+                      if ((m.weightKg ?? 0.0) > 0) {
+                        todayWeight.value = m.weightKg ?? 0.0;
+                      }
+                      if ((m.exerciseMinutes ?? 0) > 0) {
+                        foundTodayExerciseMinutes += (m.exerciseMinutes ?? 0)
+                            .toInt();
+                      }
+                      if ((m.focusMinutes ?? 0) > 0) {
+                        foundTodayFocusMinutes += (m.focusMinutes ?? 0).toInt();
+                      }
+                    } else {
+                      totalHistorical += steps.toInt();
+                    }
+
+                    final normalizedDate = DateTime(
+                      m.date.year,
+                      m.date.month,
+                      m.date.day,
+                    );
+                    if (normalizedDate.isAfter(sevenDaysAgo) ||
+                        normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
+                      stepsLast7Days[dateStr] =
+                          (stepsLast7Days[dateStr] ?? 0) + steps.toInt();
+                    }
+
+                    final thirtyDaysAgo = today.subtract(
+                      const Duration(days: 30),
+                    );
+                    if (m.date.isAfter(thirtyDaysAgo)) {
+                      if ((m.weightKg ?? 0) > 0) {
+                        weightHistory[dateStr] = m.weightKg!;
+                      }
+                      if ((m.waterGlasses ?? 0) > 0) {
+                        waterHistory[dateStr] = m.waterGlasses!;
+                      }
+                    }
                   }
-                  if ((m.heartRate ?? 0) > foundTodayHeartRate) {
-                    foundTodayHeartRate = m.heartRate ?? 0;
-                  }
-                  if ((m.oxygenSaturation ?? 0.0) >
-                      foundTodayOxygenSaturation) {
-                    foundTodayOxygenSaturation = m.oxygenSaturation ?? 0.0;
-                  }
-                  if ((m.caloriesBurned ?? 0) > foundTodayCaloriesBurned) {
-                    foundTodayCaloriesBurned = m.caloriesBurned ?? 0;
-                  }
-                  if ((m.caloriesConsumed ?? 0) > foundTodayCaloriesConsumed) {
-                    foundTodayCaloriesConsumed = m.caloriesConsumed ?? 0;
-                  }
-                  if ((m.weightKg ?? 0.0) > 0)
-                    todayWeight.value = m.weightKg ?? 0.0;
-                  if ((m.exerciseMinutes ?? 0) > 0) {
-                    foundTodayExerciseMinutes += (m.exerciseMinutes ?? 0)
-                        .toInt();
-                  }
-                  if ((m.focusMinutes ?? 0) > 0) {
-                    foundTodayFocusMinutes += (m.focusMinutes ?? 0).toInt();
-                  }
-                } else {
-                  totalHistorical += steps.toInt();
-                }
 
-                final normalizedDate = DateTime(
-                  m.date.year,
-                  m.date.month,
-                  m.date.day,
-                );
-                if (normalizedDate.isAfter(sevenDaysAgo) ||
-                    normalizedDate.isAtSameMomentAs(sevenDaysAgo)) {
-                  stepsLast7Days[dateStr] =
-                      (stepsLast7Days[dateStr] ?? 0) + steps.toInt();
-                }
+                  batch(() {
+                    historicalSteps.value = totalHistorical;
 
-                final thirtyDaysAgo = today.subtract(const Duration(days: 30));
-                if (m.date.isAfter(thirtyDaysAgo)) {
-                  if ((m.weightKg ?? 0) > 0)
-                    weightHistory[dateStr] = m.weightKg!;
-                  if ((m.waterGlasses ?? 0) > 0)
-                    waterHistory[dateStr] = m.waterGlasses!;
-                }
-              }
+                    if (foundTodaySteps > todaySteps.value) {
+                      todaySteps.value = foundTodaySteps;
+                    }
+                    if (foundTodaySleep > todaySleep.value) {
+                      todaySleep.value = foundTodaySleep;
+                    }
+                    if (foundTodayHeartRate > todayHeartRate.value) {
+                      todayHeartRate.value = foundTodayHeartRate;
+                    }
+                    if (foundTodayOxygenSaturation >
+                        todayOxygenSaturation.value) {
+                      todayOxygenSaturation.value = foundTodayOxygenSaturation;
+                    }
+                    if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
+                      todayCaloriesBurned.value = foundTodayCaloriesBurned;
+                    }
+                    if (foundTodayCaloriesConsumed >
+                        todayCaloriesConsumed.value) {
+                      todayCaloriesConsumed.value = foundTodayCaloriesConsumed;
+                    }
 
-              historicalSteps.value = totalHistorical;
+                    todayExerciseMinutes.value = foundTodayExerciseMinutes;
+                    todayFocusMinutes.value = foundTodayFocusMinutes;
 
-              if (foundTodaySteps > todaySteps.value) {
-                todaySteps.value = foundTodaySteps;
-              }
-              if (foundTodaySleep > todaySleep.value) {
-                todaySleep.value = foundTodaySleep;
-              }
-              if (foundTodayHeartRate > todayHeartRate.value) {
-                todayHeartRate.value = foundTodayHeartRate;
-              }
-              if (foundTodayOxygenSaturation > todayOxygenSaturation.value) {
-                todayOxygenSaturation.value = foundTodayOxygenSaturation;
-              }
-              if (foundTodayCaloriesBurned > todayCaloriesBurned.value) {
-                todayCaloriesBurned.value = foundTodayCaloriesBurned;
-              }
-              if (foundTodayCaloriesConsumed > todayCaloriesConsumed.value) {
-                todayCaloriesConsumed.value = foundTodayCaloriesConsumed;
-              }
+                    final bestTodaySteps =
+                        (stepsLast7Days[todayStr] ?? 0) > todaySteps.value
+                        ? (stepsLast7Days[todayStr] ?? 0)
+                        : todaySteps.value;
+                    stepsLast7Days[todayStr] = bestTodaySteps;
 
-              todayExerciseMinutes.value = foundTodayExerciseMinutes;
-              todayFocusMinutes.value = foundTodayFocusMinutes;
+                    dailyStepsLast7Days.value = Map.from(stepsLast7Days);
+                    dailyWeightLast30Days.value = Map.from(weightHistory);
+                    dailyWaterLast30Days.value = Map.from(waterHistory);
 
-              final bestTodaySteps =
-                  (stepsLast7Days[todayStr] ?? 0) > todaySteps.value
-                  ? (stepsLast7Days[todayStr] ?? 0)
-                  : todaySteps.value;
-              stepsLast7Days[todayStr] = bestTodaySteps;
+                    if (!hasInitialSync.value) {
+                      debugPrint("HealthBlock: ✅ Initial DB sync complete.");
+                      hasInitialSync.value = true;
+                    }
+                  });
 
-              dailyStepsLast7Days.value = Map.from(stepsLast7Days);
-              dailyWeightLast30Days.value = Map.from(weightHistory);
-              dailyWaterLast30Days.value = Map.from(waterHistory);
-
-              if (!hasInitialSync.value) {
-                debugPrint("HealthBlock: ✅ Initial DB sync complete.");
-                hasInitialSync.value = true;
-              }
-
-              final yesterdayVal = stepsLast7Days[yesterdayStr] ?? 0;
-              debugPrint(
-                "📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical",
-              );
+                  final yesterdayVal = stepsLast7Days[yesterdayStr] ?? 0;
+                  debugPrint(
+                    "📊 [HealthBlock] UI Update - Today: ${todaySteps.value}, Yesterday ($yesterdayStr): $yesterdayVal, Historical Total: $totalHistorical",
+                  );
+                });
+              });
             },
             onError: (e) =>
                 debugPrint("HealthBlock: Error watching health metrics: $e"),
@@ -305,28 +318,32 @@ class HealthBlock {
           .debounceTime(const Duration(milliseconds: 500))
           .listen(
             (logs) {
-              final Map<int, int> hourlyMap = {
-                for (var i = 0; i < 24; i++) i: 0,
-              };
-              for (var log in logs) {
-                final hour = log.startTime.hour;
-                hourlyMap[hour] =
-                    (hourlyMap[hour] ?? 0) + log.stepsCount.toInt();
-              }
+              Timer(Duration.zero, () {
+                untracked(() {
+                  final Map<int, int> hourlyMap = {
+                    for (var i = 0; i < 24; i++) i: 0,
+                  };
+                  for (var log in logs) {
+                    final hour = log.startTime.hour;
+                    hourlyMap[hour] = ((hourlyMap[hour] ?? 0) + log.stepsCount)
+                        .toInt();
+                  }
 
-              final currentMap = Map<int, int>.from(hourlySteps.value);
-              bool changed = false;
+                  final currentMap = Map<int, int>.from(hourlySteps.value);
+                  bool changed = false;
 
-              hourlyMap.forEach((hour, steps) {
-                if (steps > (currentMap[hour] ?? 0)) {
-                  currentMap[hour] = steps;
-                  changed = true;
-                }
+                  hourlyMap.forEach((hour, steps) {
+                    if (steps > (currentMap[hour] ?? 0)) {
+                      currentMap[hour] = steps;
+                      changed = true;
+                    }
+                  });
+
+                  if (changed || hourlySteps.value.isEmpty) {
+                    hourlySteps.value = currentMap;
+                  }
+                });
               });
-
-              if (changed || hourlySteps.value.isEmpty) {
-                hourlySteps.value = currentMap;
-              }
             },
             onError: (e) =>
                 debugPrint("HealthBlock: Error watching hourly logs: $e"),
@@ -337,11 +354,18 @@ class HealthBlock {
         .watchDailyWaterLogs(personId, DateTime.now())
         .listen(
           (logs) {
-            todayWater.value = logs.fold<int>(
-              0,
-              (sum, log) => sum + log.amount,
-            );
-            _saveWater(todayWater.value, source: HealthSourceService.sourceManual);
+            Timer(Duration.zero, () {
+              untracked(() {
+                todayWater.value = logs.fold<int>(
+                  0,
+                  (sum, log) => sum + log.amount,
+                );
+                _saveWater(
+                  todayWater.value,
+                  source: HealthSourceService.sourceManual,
+                );
+              });
+            });
           },
           onError: (e) =>
               debugPrint("HealthBlock: Error watching water logs: $e"),
@@ -351,9 +375,11 @@ class HealthBlock {
         .watchDailyCalories(personId, DateTime.now())
         .listen(
           (cals) {
-            untracked(() {
-              todayCaloriesConsumed.value = cals.toInt();
-              _saveCaloriesConsumed(cals.toInt());
+            Timer(Duration.zero, () {
+              untracked(() {
+                todayCaloriesConsumed.value = cals.toInt();
+                _saveCaloriesConsumed(cals.toInt());
+              });
             });
           },
 
@@ -365,12 +391,19 @@ class HealthBlock {
         .watchDailyExerciseLogs(personId, DateTime.now())
         .listen(
           (logs) {
-            final totalMinutes = logs.fold<int>(
-              0,
-              (sum, log) => sum + log.durationMinutes,
-            );
-            todayExerciseMinutes.value = totalMinutes;
-            _saveExercise(totalMinutes, source: HealthSourceService.sourceGT6);
+            Timer(Duration.zero, () {
+              untracked(() {
+                final totalMinutes = logs.fold<int>(
+                  0,
+                  (sum, log) => sum + log.durationMinutes,
+                );
+                todayExerciseMinutes.value = totalMinutes;
+                _saveExercise(
+                  totalMinutes,
+                  source: HealthSourceService.sourceGT6,
+                );
+              });
+            });
           },
           onError: (e) =>
               debugPrint("HealthBlock: Error watching exercise logs: $e"),
@@ -378,11 +411,15 @@ class HealthBlock {
 
     _weightSubscription = _healthLogsDao.watchLatestWeightLog(personId).listen(
       (log) {
-        if (log != null) {
-          latestWeight.value = log.weightKg;
-        } else {
-          latestWeight.value = 0.0;
-        }
+        Timer(Duration.zero, () {
+          untracked(() {
+            if (log != null) {
+              latestWeight.value = log.weightKg;
+            } else {
+              latestWeight.value = 0.0;
+            }
+          });
+        });
       },
       onError: (e) =>
           debugPrint("HealthBlock: Error watching latest weight logs: $e"),
@@ -418,7 +455,8 @@ class HealthBlock {
           );
         })
         .catchError((e) {
-          debugPrint("HealthBlock: ⚠️ Silent sync oxygen saturation failed: $e",
+          debugPrint(
+            "HealthBlock: ⚠️ Silent sync oxygen saturation failed: $e",
           );
         });
 
@@ -490,7 +528,12 @@ class HealthBlock {
       todaySteps.value = steps;
     }
 
-    _saveSteps(steps, date: day, force: force, source: HealthSourceService.sourceAppleHealth);
+    _saveSteps(
+      steps,
+      date: day,
+      force: force,
+      source: HealthSourceService.sourceAppleHealth,
+    );
   }
 
   bool get _isDesktop =>
@@ -612,8 +655,10 @@ class HealthBlock {
       final bpm = await fetcher();
       if (bpm > 0) {
         updateHeartRate(bpm);
-        
-        syncHeartRateSamples(DateTime.now()).catchError((e) => debugPrint("Background HR sync error: $e"));
+
+        syncHeartRateSamples(
+          DateTime.now(),
+        ).catchError((e) => debugPrint("Background HR sync error: $e"));
       }
     } finally {
       isHeartRateLoading.value = false;
@@ -628,8 +673,10 @@ class HealthBlock {
       final saturation = await fetcher();
       if (saturation > 0) {
         updateOxygenSaturation(saturation);
-        
-        syncOxygenSamples(DateTime.now()).catchError((e) => debugPrint("Background SpO2 sync error: $e"));
+
+        syncOxygenSamples(
+          DateTime.now(),
+        ).catchError((e) => debugPrint("Background SpO2 sync error: $e"));
       }
     } finally {
       isOxygenLoading.value = false;
@@ -856,7 +903,10 @@ class HealthBlock {
     if (saturation > 0) {
       todayOxygenSaturation.value = saturation;
 
-      _saveOxygenSaturation(saturation, source: HealthSourceService.sourceAppleHealth);
+      _saveOxygenSaturation(
+        saturation,
+        source: HealthSourceService.sourceAppleHealth,
+      );
     }
   }
 
@@ -879,10 +929,20 @@ class HealthBlock {
     if (isToday) {
       if (force || weight > 0) {
         todayWeight.value = weight;
-        _saveWeight(weight, date: targetDate, force: force, source: HealthSourceService.sourceManual);
+        _saveWeight(
+          weight,
+          date: targetDate,
+          force: force,
+          source: HealthSourceService.sourceManual,
+        );
       }
     } else {
-      _saveWeight(weight, date: targetDate, force: force, source: HealthSourceService.sourceManual);
+      _saveWeight(
+        weight,
+        date: targetDate,
+        force: force,
+        source: HealthSourceService.sourceManual,
+      );
     }
   }
 
@@ -977,7 +1037,11 @@ class HealthBlock {
     );
   }
 
-  Future<void> _saveSleep(double hours, {bool force = false, String? source}) async {
+  Future<void> _saveSleep(
+    double hours, {
+    bool force = false,
+    String? source,
+  }) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -1025,7 +1089,11 @@ class HealthBlock {
   /// health_metrics.exercise_minutes. Called by _exerciseSubscription on every
   /// stream update (i.e. whenever a new exercise log is inserted or deleted).
   /// Strong data wins: insertOrUpdateMetrics only updates when minutes > existing value.
-  Future<void> _saveExercise(int minutes, {bool force = false, String? source}) async {
+  Future<void> _saveExercise(
+    int minutes, {
+    bool force = false,
+    String? source,
+  }) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -1115,7 +1183,11 @@ class HealthBlock {
     await _healthLogsDao.deleteWaterLog(id);
   }
 
-  Future<void> _saveHeartRate(int bpm, {bool force = false, String? source}) async {
+  Future<void> _saveHeartRate(
+    int bpm, {
+    bool force = false,
+    String? source,
+  }) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);

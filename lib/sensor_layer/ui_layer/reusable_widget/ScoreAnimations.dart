@@ -232,11 +232,11 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                 width: 300,
                 padding: const EdgeInsets.all(2),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(0.8),
+                  color: primaryColor.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(4),
                   boxShadow: [
                     BoxShadow(
-                      color: primaryColor.withOpacity(0.5),
+                      color: primaryColor.withValues(alpha: 0.5),
                       blurRadius: 20,
                       spreadRadius: 2,
                     ),
@@ -276,7 +276,7 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                           Text(
                             "LV.${widget.level}",
                             style: TextStyle(
-                              color: primaryColor.withOpacity(0.5),
+                              color: primaryColor.withValues(alpha: 0.5),
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -286,7 +286,7 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                       const SizedBox(height: 8),
                       Container(
                         height: 1,
-                        color: primaryColor.withOpacity(0.3),
+                        color: primaryColor.withValues(alpha: 0.3),
                       ),
                       const SizedBox(height: 24),
 
@@ -313,7 +313,7 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                         "You have reached a new stage of growth.",
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 14,
                           letterSpacing: 0.5,
                         ),
@@ -329,7 +329,7 @@ class _LevelUpCelebrationState extends State<LevelUpCelebration>
                         ),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: primaryColor.withOpacity(0.5),
+                            color: primaryColor.withValues(alpha: 0.5),
                           ),
                           borderRadius: BorderRadius.circular(4),
                         ),

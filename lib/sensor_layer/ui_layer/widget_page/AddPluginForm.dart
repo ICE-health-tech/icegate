@@ -197,7 +197,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
             borderRadius: BorderRadius.circular(28),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.12),
+                color: Colors.black.withValues(alpha: 0.12),
                 blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
@@ -342,7 +342,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
       decoration: BoxDecoration(
         color: Theme.of(
           context,
-        ).colorScheme.surfaceContainerHighest.withOpacity(0.5),
+        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -424,7 +424,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
             decoration: BoxDecoration(
               color: isSelected
                   ? colorScheme.primaryContainer
-                  : colorScheme.surfaceContainerHighest.withOpacity(0.4),
+                  : colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
                 color: isSelected ? colorScheme.primary : Colors.transparent,
@@ -490,7 +490,7 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         padding: const EdgeInsets.symmetric(vertical: 16),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 8,
-        shadowColor: Theme.of(context).colorScheme.primary.withOpacity(0.4),
+        shadowColor: Theme.of(context).colorScheme.primary.withValues(alpha: 0.4),
       ),
       child: Text(
         l10n.add_widget,

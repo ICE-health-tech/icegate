@@ -140,7 +140,7 @@ class _OverallStats extends StatelessWidget {
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: colorScheme.primary.withOpacity(0.3),
+            color: colorScheme.primary.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -158,7 +158,7 @@ class _OverallStats extends StatelessWidget {
           Container(
             width: 1,
             height: 40,
-            color: colorScheme.onPrimary.withOpacity(0.2),
+            color: colorScheme.onPrimary.withValues(alpha: 0.2),
           ),
           _StatTile(
             label: "Total Time",
@@ -189,7 +189,7 @@ class _StatTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        Icon(icon, color: onPrimary.withOpacity(0.8), size: 20),
+        Icon(icon, color: onPrimary.withValues(alpha: 0.8), size: 20),
         const SizedBox(height: 4),
         Text(
           value,
@@ -201,7 +201,7 @@ class _StatTile extends StatelessWidget {
         ),
         Text(
           label,
-          style: TextStyle(color: onPrimary.withOpacity(0.7), fontSize: 11),
+          style: TextStyle(color: onPrimary.withValues(alpha: 0.7), fontSize: 11),
         ),
       ],
     );
@@ -258,7 +258,7 @@ class _DateHeader extends StatelessWidget {
             style: TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w600,
-              color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -301,11 +301,11 @@ class _HistoryItem extends StatelessWidget {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.3),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.3),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withValues(alpha: 0.02),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -316,7 +316,7 @@ class _HistoryItem extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: modeColor.withOpacity(0.12),
+                color: modeColor.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(14),
               ),
               child: Icon(
@@ -345,7 +345,7 @@ class _HistoryItem extends StatelessWidget {
                       session.notes!,
                       style: TextStyle(
                         fontSize: 12,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.8),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
                         fontStyle: FontStyle.italic,
                       ),
                       maxLines: 1,
@@ -362,7 +362,7 @@ class _HistoryItem extends StatelessWidget {
                   DateFormat('HH:mm').format(session.startTime),
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
-                    color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                    color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                     fontSize: 12,
                   ),
                 ),
@@ -374,7 +374,7 @@ class _HistoryItem extends StatelessWidget {
                       vertical: 2,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.redAccent.withOpacity(0.1),
+                      color: Colors.redAccent.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(4),
                     ),
                     child: const Text(
@@ -408,13 +408,13 @@ class _EmptyState extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(32),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.05),
+              color: colorScheme.primary.withValues(alpha: 0.05),
               shape: BoxShape.circle,
             ),
             child: Icon(
               Icons.history_rounded,
               size: 80,
-              color: colorScheme.primary.withOpacity(0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
             ),
           ),
           const SizedBox(height: 24),
@@ -429,7 +429,7 @@ class _EmptyState extends StatelessWidget {
               "Your focus sessions will be listed here once you complete them. Start your first session to build your streak!",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                 fontSize: 14,
                 height: 1.5,
               ),

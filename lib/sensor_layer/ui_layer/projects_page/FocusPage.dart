@@ -286,14 +286,14 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
                 ? Colors.orange
                 : (sessionType == 'Focus' ? themeStyle.color : Colors.teal)));
     final modeBg = isSyncing
-        ? Colors.amber.withOpacity(0.1)
+        ? Colors.amber.withValues(alpha: 0.1)
         : (isMuskMode 
-            ? const Color(0xFFFCEE0A).withOpacity(0.1)
+            ? const Color(0xFFFCEE0A).withValues(alpha: 0.1)
             : (isExerciseMode
-                ? Colors.orange.withOpacity(0.1)
+                ? Colors.orange.withValues(alpha: 0.1)
                 : (sessionType == 'Focus'
-                    ? themeStyle.color.withOpacity(0.1)
-                    : Colors.teal.withOpacity(0.1))));
+                    ? themeStyle.color.withValues(alpha: 0.1)
+                    : Colors.teal.withValues(alpha: 0.1))));
 
     int totalDuration = focusMin * 60;
     if (sessionType == 'Short Break') totalDuration = shortMin * 60;
@@ -322,12 +322,12 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
           Positioned(
             top: -50,
             left: -50,
-            child: _BlurCircle(color: modeColor.withOpacity(0.15), size: 350),
+            child: _BlurCircle(color: modeColor.withValues(alpha: 0.15), size: 350),
           ),
           Positioned(
             bottom: 100,
             right: -100,
-            child: _BlurCircle(color: modeColor.withOpacity(0.1), size: 350),
+            child: _BlurCircle(color: modeColor.withValues(alpha: 0.1), size: 350),
           ),
 
           SafeArea(
@@ -350,7 +350,7 @@ class _FocusPageState extends State<FocusPage> with TickerProviderStateMixin {
                             color: Theme.of(context)
                                 .colorScheme
                                 .surfaceContainerHighest
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                             shape: BoxShape.circle,
                           ),
                           child: IconButton(
@@ -493,8 +493,8 @@ class _BlurCircle extends StatelessWidget {
         shape: BoxShape.circle,
         gradient: RadialGradient(
           colors: [
-            color.withOpacity(0.4),
-            color.withOpacity(0.1),
+            color.withValues(alpha: 0.4),
+            color.withValues(alpha: 0.1),
             Colors.transparent,
           ],
           stops: const [0.0, 0.5, 1.0],
@@ -690,7 +690,7 @@ class _SpecialOpsRow extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const SizedBox(height: 12),
-              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withOpacity(0.3), borderRadius: BorderRadius.circular(2))),
+              Container(width: 40, height: 4, decoration: BoxDecoration(color: Colors.grey.withValues(alpha: 0.3), borderRadius: BorderRadius.circular(2))),
               const Padding(
                 padding: EdgeInsets.all(20),
                 child: Text("SELECT EXERCISE", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
@@ -752,7 +752,7 @@ class _OpButton extends StatelessWidget {
         duration: const Duration(milliseconds: 300),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? color.withOpacity(0.2) : Theme.of(context).colorScheme.surfaceContainerHigh.withOpacity(0.5),
+          color: isActive ? color.withValues(alpha: 0.2) : Theme.of(context).colorScheme.surfaceContainerHigh.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isActive ? color : Colors.transparent,
@@ -854,7 +854,7 @@ class _ActiveSessionContext extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -863,7 +863,7 @@ class _ActiveSessionContext extends StatelessWidget {
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.2,
-                  color: Theme.of(context).colorScheme.primary.withOpacity(0.7),
+                  color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.7),
                 ),
               ),
             ),
@@ -915,7 +915,7 @@ class _ActiveSessionContext extends StatelessWidget {
                     size: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.primary.withOpacity(0.5),
+                    ).colorScheme.primary.withValues(alpha: 0.5),
                   ),
                 ],
               ],
@@ -942,7 +942,7 @@ class _ActiveSessionContext extends StatelessWidget {
                           )
                         : Theme.of(
                             context,
-                          ).colorScheme.primary.withOpacity(0.4),
+                          ).colorScheme.primary.withValues(alpha: 0.4),
                   ),
                   textAlign: TextAlign.center,
                   maxLines: 1,
@@ -955,7 +955,7 @@ class _ActiveSessionContext extends StatelessWidget {
                     size: 14,
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.3),
+                    ).colorScheme.onSurface.withValues(alpha: 0.3),
                   ),
                 ],
               ],
@@ -1245,12 +1245,12 @@ class _TimerCircle extends StatelessWidget {
               ),
               boxShadow: [
                 BoxShadow(
-                  color: modeColor.withOpacity(0.08),
+                  color: modeColor.withValues(alpha: 0.08),
                   blurRadius: 100,
                   spreadRadius: 20,
                 ),
                 BoxShadow(
-                  color: modeColor.withOpacity(0.04),
+                  color: modeColor.withValues(alpha: 0.04),
                   blurRadius: 150,
                   spreadRadius: 40,
                 ),
@@ -1263,7 +1263,7 @@ class _TimerCircle extends StatelessWidget {
             size: Size(trackSize, trackSize),
             painter: _GloriousTimerPainter(
               progress: 1.0,
-              color: modeColor.withOpacity(0.05),
+              color: modeColor.withValues(alpha: 0.05),
               strokeWidth: 4,
               isTrack: true,
               themeName: themeName,
@@ -1300,7 +1300,7 @@ class _TimerCircle extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               gradient: RadialGradient(
-                colors: [modeColor.withOpacity(0.03), Colors.transparent],
+                colors: [modeColor.withValues(alpha: 0.03), Colors.transparent],
               ),
             ),
           ),
@@ -1379,7 +1379,7 @@ class _TimerCircle extends StatelessWidget {
                       children: [
                         LinearProgressIndicator(
                           value: musicBlock.downloadProgress.watch(context),
-                          backgroundColor: modeColor.withOpacity(0.1),
+                          backgroundColor: modeColor.withValues(alpha: 0.1),
                           valueColor: AlwaysStoppedAnimation<Color>(modeColor),
                           borderRadius: BorderRadius.circular(2),
                           minHeight: 2,
@@ -1390,7 +1390,7 @@ class _TimerCircle extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 8,
                             fontWeight: FontWeight.bold,
-                            color: modeColor.withOpacity(0.7),
+                            color: modeColor.withValues(alpha: 0.7),
                             letterSpacing: 1,
                           ),
                         ),
@@ -1406,7 +1406,7 @@ class _TimerCircle extends StatelessWidget {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: modeColor.withOpacity(0.1),
+                      color: modeColor.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -1491,7 +1491,7 @@ class _GloriousTimerPainter extends CustomPainter {
     // Theme-specific glow
     if (progress > 0) {
       final glowPaint = Paint()
-        ..color = color.withOpacity(0.3)
+        ..color = color.withValues(alpha: 0.3)
         ..strokeWidth = strokeWidth + 4
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round
@@ -1507,9 +1507,9 @@ class _GloriousTimerPainter extends CustomPainter {
       final iridescentPaint = Paint()
         ..shader = SweepGradient(
           colors: [
-            color.withOpacity(0.1),
-            Colors.white.withOpacity(0.4),
-            color.withOpacity(0.1),
+            color.withValues(alpha: 0.1),
+            Colors.white.withValues(alpha: 0.4),
+            color.withValues(alpha: 0.1),
           ],
           stops: const [0.0, 0.5, 1.0],
           transform: GradientRotation(startAngle + sweepAngle - 0.2),
@@ -1602,7 +1602,7 @@ class _GloriousTimerPainter extends CustomPainter {
       canvas.scale(scale);
 
       final flowerPaint = Paint()
-        ..color = const Color(0xFFFFB7C5).withOpacity(0.9)
+        ..color = const Color(0xFFFFB7C5).withValues(alpha: 0.9)
         ..style = PaintingStyle.fill;
 
       // Draw 5 Petals (Based on user snippet logic)
@@ -1669,7 +1669,7 @@ class _GloriousTimerPainter extends CustomPainter {
 
     // Subtle edge highlight
     final strokePaint = Paint()
-      ..color = Colors.white.withOpacity(0.2)
+      ..color = Colors.white.withValues(alpha: 0.2)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.5;
     canvas.drawPath(path, strokePaint);
@@ -1784,7 +1784,7 @@ class _GloriousTimerPainter extends CustomPainter {
       canvas.drawCircle(
         pos,
         5,
-        pulsePaint..color = pulsePaint.color.withOpacity(0.2),
+        pulsePaint..color = pulsePaint.color.withValues(alpha: 0.2),
       );
     }
   }
@@ -1808,7 +1808,7 @@ class _GloriousTimerPainter extends CustomPainter {
         center.dy + (radius + drift) * math.sin(angle),
       );
 
-      sparkPaint.color = Colors.orangeAccent.withOpacity(0.8 - (drift / 20));
+      sparkPaint.color = Colors.orangeAccent.withValues(alpha: 0.8 - (drift / 20));
       canvas.drawCircle(pos, 1.5 + random.nextDouble() * 2, sparkPaint);
     }
   }
@@ -1851,7 +1851,7 @@ class _GloriousTimerPainter extends CustomPainter {
     final pulseCount = (sweepAngle * radius / 40).floor();
     final random = math.Random(21);
     final linePaint = Paint()
-      ..color = const Color(0xFF00FFFF).withOpacity(0.6)
+      ..color = const Color(0xFF00FFFF).withValues(alpha: 0.6)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
 
@@ -1895,7 +1895,7 @@ class _GloriousTimerPainter extends CustomPainter {
         center.dy + (radius + drift) * math.sin(angle),
       );
 
-      sporePaint.color = Colors.lightGreenAccent.withOpacity(0.6);
+      sporePaint.color = Colors.lightGreenAccent.withValues(alpha: 0.6);
       sporePaint.maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
       canvas.drawCircle(pos, 1.5, sporePaint);
     }
@@ -1919,7 +1919,7 @@ class _GloriousTimerPainter extends CustomPainter {
       );
 
       final partPaint = Paint()
-        ..color = color.withOpacity(1.0 - (i / 8))
+        ..color = color.withValues(alpha: 1.0 - (i / 8))
         ..style = PaintingStyle.fill
         ..maskFilter = MaskFilter.blur(
           BlurStyle.normal,
@@ -2013,7 +2013,7 @@ class _RipplePainter extends CustomPainter {
 
       final paint = Paint()
         ..color = color
-            .withOpacity(opacity * 0.3) // Higher opacity
+            .withValues(alpha: opacity * 0.3) // Higher opacity
         ..style = PaintingStyle.stroke
         ..strokeWidth = 2.0; // Thicker stroke
 
@@ -2022,7 +2022,7 @@ class _RipplePainter extends CustomPainter {
 
       // Optional: Add a second filled circle with very low opacity for "glow" feel
       final glowPaint = Paint()
-        ..color = color.withOpacity(opacity * 0.1)
+        ..color = color.withValues(alpha: opacity * 0.1)
         ..style = PaintingStyle.fill;
       canvas.drawCircle(center, currentRadius, glowPaint);
     }
@@ -2237,7 +2237,7 @@ class _SnowPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = Colors.white.withOpacity(0.6);
+    final paint = Paint()..color = Colors.white.withValues(alpha: 0.6);
     for (var flake in snowflakes) {
       final yProgress = (animationValue * flake.speed + flake.y) % 1.0;
       final xOffset = (animationValue * 0.2 + flake.x) % 1.0;
@@ -2263,7 +2263,7 @@ class _ForestPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = color.withOpacity(0.3);
+    final paint = Paint()..color = color.withValues(alpha: 0.3);
     for (var leaf in leaves) {
       final yProgress = (animationValue * 0.1 * leaf.speed + leaf.y) % 1.0;
       final xOffset = (animationValue * 0.05 + leaf.x) % 1.0;
@@ -2293,7 +2293,7 @@ class _FirePainter extends CustomPainter {
       final xOffset = (ember.x + 0.1 * (animationValue - 0.5)) % 1.0;
 
       final paint = Paint()
-        ..color = Colors.orangeAccent.withOpacity((1.0 - yProgress) * 0.8)
+        ..color = Colors.orangeAccent.withValues(alpha: (1.0 - yProgress) * 0.8)
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
 
       canvas.drawCircle(
@@ -2363,8 +2363,8 @@ class _AuroraPainter extends CustomPainter {
         end: Alignment.topCenter,
         colors: [
           Colors.transparent,
-          const Color(0xFF00FFCC).withOpacity(0.3 * (1 - progress)),
-          const Color(0xFF6600FF).withOpacity(0.1 * (1 - progress)),
+          const Color(0xFF00FFCC).withValues(alpha: 0.3 * (1 - progress)),
+          const Color(0xFF6600FF).withValues(alpha: 0.1 * (1 - progress)),
           Colors.transparent,
         ],
       );
@@ -2442,7 +2442,7 @@ class _SakuraPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()..color = const Color(0xFFFFB7C5).withOpacity(0.6);
+    final paint = Paint()..color = const Color(0xFFFFB7C5).withValues(alpha: 0.6);
     for (var petal in petals) {
       final yProgress = (animationValue * 0.4 * petal.speed + petal.y) % 1.0;
       final xOffset =
@@ -2504,13 +2504,13 @@ class _GlitchPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final rand = animationValue;
     if (rand > 0.8) {
-      final paint = Paint()..color = const Color(0xFFFCEE0A).withOpacity(0.2);
+      final paint = Paint()..color = const Color(0xFFFCEE0A).withValues(alpha: 0.2);
       canvas.drawRect(
         Rect.fromLTWH(0, size.height * rand, size.width, 2.0),
         paint,
       );
 
-      final paint2 = Paint()..color = Colors.cyanAccent.withOpacity(0.1);
+      final paint2 = Paint()..color = Colors.cyanAccent.withValues(alpha: 0.1);
       canvas.drawRect(
         Rect.fromLTWH(0, size.height * (1 - rand), size.width, 10.0),
         paint2,
@@ -2571,7 +2571,7 @@ class _StarfieldPainter extends CustomPainter {
           (math.sin(animationValue * 6.28 * star.speed * 5 + star.angle) +
               1.0) /
           2.0;
-      paint.color = Colors.white.withOpacity(opacity * 0.8);
+      paint.color = Colors.white.withValues(alpha: opacity * 0.8);
       canvas.drawCircle(
         Offset(star.x * size.width, star.y * size.height),
         star.size / 4,
@@ -2631,7 +2631,7 @@ class _SparklePainter extends CustomPainter {
     for (var sparkle in sparkles) {
       final progress = (animationValue * sparkle.speed + sparkle.y) % 1.0;
       final opacity = math.sin(progress * 3.14);
-      paint.color = const Color(0xFFFFD700).withOpacity(opacity * 0.6);
+      paint.color = const Color(0xFFFFD700).withValues(alpha: opacity * 0.6);
 
       final center = Offset(sparkle.x * size.width, sparkle.y * size.height);
       final s = sparkle.size * opacity;
@@ -2707,12 +2707,12 @@ class _BubblePainter extends CustomPainter {
       final xOffset = (bubble.x + 0.05 * (animationValue - 0.5)) % 1.0;
 
       final paint = Paint()
-        ..color = color.withOpacity((1.0 - yProgress) * 0.3)
+        ..color = color.withValues(alpha: (1.0 - yProgress) * 0.3)
         ..style = PaintingStyle.stroke
         ..strokeWidth = 1.5;
 
       final fillPaint = Paint()
-        ..color = color.withOpacity((1.0 - yProgress) * 0.1)
+        ..color = color.withValues(alpha: (1.0 - yProgress) * 0.1)
         ..style = PaintingStyle.fill;
 
       final center = Offset(xOffset * size.width, yProgress * size.height);
@@ -2723,7 +2723,7 @@ class _BubblePainter extends CustomPainter {
       canvas.drawCircle(
         center - Offset(bubble.size * 0.3, bubble.size * 0.3),
         bubble.size * 0.2,
-        Paint()..color = Colors.white.withOpacity((1.0 - yProgress) * 0.4),
+        Paint()..color = Colors.white.withValues(alpha: (1.0 - yProgress) * 0.4),
       );
     }
   }
@@ -2754,7 +2754,7 @@ class _TimerSettingsSheet extends StatelessWidget {
 
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, -5),
           ),
@@ -2871,7 +2871,7 @@ class _TimerSettingsSheet extends StatelessWidget {
                       ),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? t.color.withOpacity(0.15)
+                            ? t.color.withValues(alpha: 0.15)
                             : theme.colorScheme.surfaceContainerHigh,
                         borderRadius: BorderRadius.circular(16),
                         border: Border.all(
@@ -2953,10 +2953,10 @@ class _DurationSlider extends StatelessWidget {
         ),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
-            activeTrackColor: color.withOpacity(0.5),
-            inactiveTrackColor: color.withOpacity(0.1),
+            activeTrackColor: color.withValues(alpha: 0.5),
+            inactiveTrackColor: color.withValues(alpha: 0.1),
             thumbColor: color,
-            overlayColor: color.withOpacity(0.2),
+            overlayColor: color.withValues(alpha: 0.2),
           ),
           child: Slider(
             value: value.toDouble(),
@@ -3044,7 +3044,7 @@ class _StatBox extends StatelessWidget {
             fontSize: 10,
             color: Theme.of(
               context,
-            ).colorScheme.onSurfaceVariant.withOpacity(0.7),
+            ).colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -3089,11 +3089,11 @@ class _HistoryItem extends StatelessWidget {
         color: Theme.of(context).colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: Theme.of(context).colorScheme.outlineVariant.withOpacity(0.2),
+          color: Theme.of(context).colorScheme.outlineVariant.withValues(alpha: 0.2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: Colors.black.withValues(alpha: 0.03),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -3104,7 +3104,7 @@ class _HistoryItem extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: modeColor.withOpacity(0.1),
+              color: modeColor.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(Icons.history_rounded, color: modeColor, size: 18),
@@ -3137,7 +3137,7 @@ class _HistoryItem extends StatelessWidget {
                       fontStyle: FontStyle.italic,
                       color: Theme.of(
                         context,
-                      ).colorScheme.primary.withOpacity(0.8),
+                      ).colorScheme.primary.withValues(alpha: 0.8),
                     ),
                   ),
                 ],
@@ -3199,7 +3199,7 @@ class _BreathingCircleState extends State<_BreathingCircle>
         height: 260,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: widget.color.withOpacity(0.05),
+          color: widget.color.withValues(alpha: 0.05),
         ),
       ),
     );
@@ -3487,11 +3487,11 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(32),
           border: Border.all(
-            color: colorScheme.outlineVariant.withOpacity(0.5),
+            color: colorScheme.outlineVariant.withValues(alpha: 0.5),
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withValues(alpha: 0.1),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -3505,8 +3505,8 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: isFocus
-                    ? Colors.orange.withOpacity(0.1)
-                    : Colors.teal.withOpacity(0.1),
+                    ? Colors.orange.withValues(alpha: 0.1)
+                    : Colors.teal.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -3552,10 +3552,10 @@ class _SessionResultDialogState extends State<_SessionResultDialog> {
               const SizedBox(height: 16),
               Container(
                 decoration: BoxDecoration(
-                  color: colorScheme.secondaryContainer.withOpacity(0.3),
+                  color: colorScheme.secondaryContainer.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(
-                    color: colorScheme.outlineVariant.withOpacity(0.3),
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                   ),
                 ),
                 child: CheckboxListTile(

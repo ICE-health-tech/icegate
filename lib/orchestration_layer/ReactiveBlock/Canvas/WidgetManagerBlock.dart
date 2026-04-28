@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
@@ -81,8 +82,10 @@ class WidgetManagerBlock {
 
       // Cập nhật signal MỘT LẦN DUY NHẤT ở cuối
       // Dùng Future.microtask để đảm bảo không xung đột với chu kỳ build hiện tại
-      Future.microtask(() {
-        widgets.value = nextGrid;
+      Timer(Duration.zero, () {
+        untracked(() {
+          widgets.value = nextGrid;
+        });
       });
     } catch (e) {
       print("Error loading widgets from database: $e");

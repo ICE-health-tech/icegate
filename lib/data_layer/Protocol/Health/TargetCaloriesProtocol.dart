@@ -1,7 +1,4 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-// import 'package:ice_gate/initial_layer/DuyLongServices/GeminiAPI.dart';
-import 'package:ice_gate/orchestration_layer/Models/HumanEvaluation.dart';
-// import 'package:ice_gate/initial_layer/Services/PersonHealthEvaluation.dart';
 
 // Standard Dart naming convention uses snake_case for file names
 part 'TargetCaloriesProtocol.freezed.dart';
@@ -26,20 +23,6 @@ abstract class TargetCaloriesProtocol with _$TargetCaloriesProtocol {
       protein: 0,
       carbs: 0,
       fat: 0,
-    );
-  }
-  factory TargetCaloriesProtocol.fromEvaluation(HumanInputValues inputValues) {
-    HumanTargetValues humanTargetValues = HumanTargetValues.fromEvaluation(
-      bodyMetrics: inputValues.humanBodyMetrics,
-      bloodMetrics: inputValues.bloodTestMetrics,
-      calories: inputValues.caloriesProtocol,
-    );
-
-    return TargetCaloriesProtocol(
-      calories: humanTargetValues.caloriesProtocol.calories,
-      protein: humanTargetValues.caloriesProtocol.protein,
-      carbs: humanTargetValues.caloriesProtocol.carbs,
-      fat: humanTargetValues.caloriesProtocol.fat,
     );
   }
 }

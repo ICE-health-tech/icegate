@@ -536,7 +536,7 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                   labelText: "Activity Type",
                   hintText: "e.g. Boxing, HIIT",
                   filled: true,
-                  fillColor: Colors.orange.withOpacity(0.05),
+                  fillColor: Colors.orange.withValues(alpha: 0.05),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),
@@ -547,7 +547,7 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                 decoration: InputDecoration(
                   labelText: "Duration (min)",
                   filled: true,
-                  fillColor: Colors.orange.withOpacity(0.05),
+                  fillColor: Colors.orange.withValues(alpha: 0.05),
                   border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
                 ),
               ),

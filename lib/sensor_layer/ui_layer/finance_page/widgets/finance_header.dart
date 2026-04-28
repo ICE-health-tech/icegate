@@ -32,7 +32,7 @@ class FinanceHeader extends StatelessWidget {
           borderRadius: const BorderRadius.vertical(bottom: Radius.circular(40)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 0.5),
               blurRadius: 30,
               offset: const Offset(0, 15),
             ),
@@ -44,7 +44,7 @@ class FinanceHeader extends StatelessWidget {
             Text(
               l10n.balance.toUpperCase(),
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 12,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 2,
@@ -70,14 +70,14 @@ class FinanceHeader extends StatelessWidget {
                   financeBlock.formatCurrency(income),
                   Colors.blueAccent,
                 ),
-                Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
+                Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.1)),
                 _buildStatItem(
                   context,
                   l10n.spent,
                   financeBlock.formatCurrency(spending),
                   Colors.redAccent,
                 ),
-                Container(width: 1, height: 40, color: Colors.white.withOpacity(0.1)),
+                Container(width: 1, height: 40, color: Colors.white.withValues(alpha: 0.1)),
                 _buildStatItem(
                   context,
                   l10n.savings,
@@ -98,7 +98,7 @@ class FinanceHeader extends StatelessWidget {
         Text(
           label.toUpperCase(),
           style: TextStyle(
-            color: Colors.white.withOpacity(0.3),
+            color: Colors.white.withValues(alpha: 0.3),
             fontSize: 10,
             fontWeight: FontWeight.bold,
             letterSpacing: 1,

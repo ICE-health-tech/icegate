@@ -31,6 +31,7 @@ class SupabaseService {
     'mind_logs': {'created_at', 'updated_at'},
     'oxygen_saturation_logs': {'id'},
     'feedbacks': {'status'},
+    'project_notes': {'extension'},
   };
 
   /// Pushes local changes to Supabase.
@@ -56,11 +57,42 @@ class SupabaseService {
 
       // 1. Clean the data (remove local-only columns)
       final transformed = _transformOpData(table, payload);
-      
+
       // 2. Prepare the payload for Supabase
       final Map<String, dynamic> encodablePayload = {};
 
       transformed.forEach((key, value) {
+        transformed.forEach((key, value) {
+          // 1. Handle "persons" table specific null-safety
+          if (table == 'persons') {
+            if ((key == 'first_name' || key == 'last_name') &&
+                (value == null || value.toString().isEmpty)) {
+              encodablePayload[key] = ''; // Sends empty string instead of null
+              return;
+            }
+          }
+
+          // 2. Handle 'oxygen_saturation_logs' timestamp logic
+          if (table == 'oxygen_saturation_logs' && key == 'timestamp') {
+            if (value is String && value.contains('T') && value.endsWith('Z')) {
+              final parsed = DateTime.tryParse(value);
+              if (parsed != null) {
+                encodablePayload[key] = parsed.millisecondsSinceEpoch;
+                return;
+              }
+            } else if (value is DateTime) {
+              encodablePayload[key] = value.millisecondsSinceEpoch;
+              return;
+            }
+          }
+
+          // 3. Standard conversion for everything else
+          if (value is DateTime) {
+            encodablePayload[key] = value.toUtc().toIso8601String();
+          } else {
+            encodablePayload[key] = value;
+          }
+        });
         // --- THE FIX: Only convert 'timestamp' to BigInt for Oxygen (to match your int8 schema) ---
         // For heart_rate_logs, we use standard strings to avoid the "out of range" error.
         if (table == 'oxygen_saturation_logs' && key == 'timestamp') {
@@ -68,12 +100,14 @@ class SupabaseService {
             final parsed = DateTime.tryParse(value);
             if (parsed != null) {
               encodablePayload[key] = parsed.millisecondsSinceEpoch;
-              return; 
+              return;
             }
           } else if (value is DateTime) {
             encodablePayload[key] = value.millisecondsSinceEpoch;
             return;
           }
+
+          // else if ()
         }
 
         // Standard DateTime conversion for all other columns (including created_at)
@@ -84,15 +118,21 @@ class SupabaseService {
         }
       });
 
-      // DEBUG: Log exactly what we are sending for the problematic table
-      if (table == 'oxygen_saturation_logs') {
-        debugPrint("📡 [Supabase-Fix] Sending payload to $table: $encodablePayload");
+      // DEBUG: Log exactly what we are sending
+      if (kDebugMode) {
+        debugPrint(
+          "📡 [Supabase] Pushing to $table (ID: $idValue). Keys: ${encodablePayload.keys.toList()}",
+        );
       }
 
       await client.from(table).upsert(encodablePayload);
-      
     } catch (e) {
       debugPrint("❌ [SupabaseService] Error pushing to $table: $e");
+      if (e is PostgrestException) {
+        debugPrint(
+          "   Code: ${e.code}, Message: ${e.message}, Hint: ${e.hint}",
+        );
+      }
     }
   }
 
@@ -163,6 +203,8 @@ class SupabaseService {
     List<Map<String, dynamic>> records,
   ) async {
     switch (table) {
+      // Iterate records and call individual upsert methods on each DAO.
+      // This avoids needing separate batch wrappers.
       case 'mind_logs':
         for (final r in records) {
           await database.mindLogsDAO.upsertFromSupabase(r);

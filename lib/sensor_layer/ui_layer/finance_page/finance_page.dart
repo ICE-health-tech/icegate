@@ -1,4 +1,3 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
@@ -11,7 +10,6 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:live_activities/live_activities.dart';
-import 'package:flutter/foundation.dart';
 
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_builder_dialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/finance_overview_page.dart';
@@ -83,7 +81,7 @@ class FinancePage extends StatefulWidget {
       type: "finance",
       destination: "/finance",
       size: size,
-      backgroundColor: EntryColors.financeYellow.withOpacity(0.9),
+      backgroundColor: EntryColors.financeYellow.withValues(alpha: 0.9),
       iconColor: const Color(0xFF0D0D12),
       icon: Icons.add,
       mainFunction: () {
@@ -168,8 +166,6 @@ class _FinancePageState extends State<FinancePage>
       }
     });
 
-    _createLiveActivity();
-
     _disposeEffect = effect(() {
       final index = _financeBlock.activeTab.value.clamp(0, 3);
       if (mounted) _updateLiveActivity(context, index);
@@ -177,6 +173,15 @@ class _FinancePageState extends State<FinancePage>
         if (mounted) _tabController.animateTo(index);
       }
     });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Move activity creation here to safely access AppLocalizations
+    if (_activityId == null) {
+      _createLiveActivity();
+    }
   }
 
   Future<void> _createLiveActivity() async {
@@ -260,7 +265,7 @@ class _FinancePageState extends State<FinancePage>
             direction: SwipeablePageDirection.leftToRight,
             child: Column(
               children: [
-                _buildHeader(context, financeBlock),
+                const SizedBox(height: 120),
                 Expanded(
                   child: TabBarView(
                     controller: _tabController,
@@ -270,6 +275,63 @@ class _FinancePageState extends State<FinancePage>
                       FinanceSubscriptionsPage(financeBlock: financeBlock),
                       FinanceStocksPage(financeBlock: financeBlock),
                     ],
+                  ),
+                ),
+                SafeArea(
+                  top: false,
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 20, right: 24),
+                    child: Align(
+                      alignment: Alignment.bottomRight,
+                      child: Watch((context) {
+                        final useVnd = financeBlock.useVnd.value;
+                        return GestureDetector(
+                          onTap: () {
+                            HapticFeedback.mediumImpact();
+                            financeBlock.toggleCurrency();
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
+                            decoration: BoxDecoration(
+                              color: EntryColors.financeYellow.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(
+                                color: EntryColors.financeYellow.withValues(alpha: 0.3),
+                                width: 1,
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _buildCurrencyIndicator(
+                                  "USD",
+                                  !useVnd,
+                                  EntryColors.financeYellow,
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
+                                  child: Icon(
+                                    Icons.sync_alt_rounded,
+                                    size: 14,
+                                    color: EntryColors.financeYellow.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                _buildCurrencyIndicator(
+                                  "VND",
+                                  useVnd,
+                                  EntryColors.financeYellow,
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
                   ),
                 ),
               ],
@@ -289,27 +351,66 @@ class _FinancePageState extends State<FinancePage>
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              SizedBox(width: 40),
+              GestureDetector(
+                onTap: () {
+                  HapticFeedback.lightImpact();
+                  Navigator.maybePop(context);
+                },
+                child: Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_ios_new,
+                    color: Colors.white70,
+                    size: 16,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 16),
+              const Text(
+                "FINANCE",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                ),
+              ),
+              const Spacer(),
               Row(
                 children: [
+                  IconButton(
+                    onPressed: () {
+                      HapticFeedback.mediumImpact();
+                      TransactionBuilderDialog.show(
+                        context,
+                        financeBlock: block,
+                      );
+                    },
+                    icon: const Icon(
+                      Icons.add_box_rounded,
+                      color: EntryColors.financeYellow,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 4),
                   Watch((context) {
-                    final syncing = block.isSyncing.value;
+                    final isSyncing = block.isSyncing.value;
                     return IconButton(
-                      onPressed: syncing
-                          ? null
-                          : () {
-                              HapticFeedback.mediumImpact();
-                              block.sync();
-                            },
-                      icon: syncing
+                      onPressed: isSyncing ? null : () => block.sync(),
+                      icon: isSyncing
                           ? SizedBox(
                               width: 14,
                               height: 14,
                               child: CircularProgressIndicator(
                                 strokeWidth: 1.5,
-                                color: EntryColors.financeYellow.withOpacity(
-                                  0.5,
-                                ),
+                                color: EntryColors.financeYellow.withValues(alpha: 0.5),
                               ),
                             )
                           : const Icon(
@@ -319,24 +420,36 @@ class _FinancePageState extends State<FinancePage>
                             ),
                     );
                   }),
-                  Watch((context) {
-                    return IconButton(
-                      onPressed: () {
-                        HapticFeedback.lightImpact();
-                        block.toggleCurrency();
-                      },
-                      icon: Text(
-                        block.useVnd.value ? 'VND' : 'USD',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.w900,
-                          fontSize: 10,
-                          color: EntryColors.financeYellow,
-                        ),
-                      ),
-                    );
-                  }),
                 ],
               ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          TabBar(
+            controller: _tabController,
+            isScrollable: true,
+            tabAlignment: TabAlignment.start,
+            indicatorSize: TabBarIndicatorSize.label,
+            labelColor: EntryColors.financeYellow,
+            unselectedLabelColor: Colors.white24,
+            dividerColor: Colors.transparent,
+            indicator: UnderlineTabIndicator(
+              borderSide: BorderSide(
+                width: 3,
+                color: EntryColors.financeYellow,
+              ),
+              borderRadius: BorderRadius.circular(3),
+            ),
+            labelStyle: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.2,
+            ),
+            tabs: [
+              Tab(text: "OVERVIEW"),
+              Tab(text: "HISTORY"),
+              Tab(text: "BILLING"),
+              Tab(text: "STOCKS"),
             ],
           ),
         ],
@@ -353,7 +466,7 @@ class _FinancePageState extends State<FinancePage>
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.3),
+            color: color.withValues(alpha: 0.3),
             blurRadius: 100,
             spreadRadius: 20,
           ),
@@ -376,6 +489,24 @@ class _FinancePageState extends State<FinancePage>
       },
     );
   }
+  Widget _buildCurrencyIndicator(String label, bool isActive, Color color) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: isActive ? color : Colors.transparent,
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontWeight: FontWeight.w900,
+          fontSize: 10,
+          color: isActive ? Colors.black : color.withValues(alpha: 0.5),
+        ),
+      ),
+    );
+  }
 }
 
 class _ScanlinePainter extends CustomPainter {
@@ -391,7 +522,7 @@ class _ScanlinePainter extends CustomPainter {
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              EntryColors.financeYellow.withOpacity(0.03),
+              EntryColors.financeYellow.withValues(alpha: 0.03),
               Colors.transparent,
             ],
             stops: const [0.0, 0.5, 1.0],

@@ -69,7 +69,7 @@ class HealthAnalysisPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withOpacity(0.5),
+                        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -273,13 +273,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -303,7 +303,7 @@ class HealthAnalysisPage extends StatelessWidget {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -330,7 +330,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 width: 1,
                 height: 30,
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -361,7 +361,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 width: 1,
                 height: 30,
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -414,13 +414,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -511,13 +511,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -538,7 +538,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: hrColor.withOpacity(0.1),
+                  color: hrColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(
@@ -609,13 +609,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -656,7 +656,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 width: 1,
                 height: 40,
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
               ),
               const SizedBox(width: 20),
               Expanded(
@@ -688,7 +688,7 @@ class HealthAnalysisPage extends StatelessWidget {
                 height: 12,
                 width: double.infinity,
                 decoration: BoxDecoration(
-                  color: colorScheme.outlineVariant.withOpacity(0.2),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(6),
                 ),
               ),
@@ -755,13 +755,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -842,7 +842,7 @@ class HealthAnalysisPage extends StatelessWidget {
           width: 28,
           height: 80 * height,
           decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.2 + height * 0.6),
+            color: colorScheme.primary.withValues(alpha: 0.2 + height * 0.6),
             borderRadius: BorderRadius.circular(8),
           ),
         ),
@@ -878,13 +878,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -968,7 +968,7 @@ class HealthAnalysisPage extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
           child: Icon(icon, color: color, size: 16),
@@ -989,7 +989,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Text(
                 description,
                 style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                 ),
               ),
             ],
@@ -1019,13 +1019,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -1037,7 +1037,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1106,13 +1106,13 @@ class HealthAnalysisPage extends StatelessWidget {
         borderRadius: BorderRadius.circular(32.0),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 20,
             offset: const Offset(0, 8),
           ),
         ],
         border: Border.all(
-          color: colorScheme.outlineVariant.withOpacity(0.2),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -1124,7 +1124,7 @@ class HealthAnalysisPage extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.cyan.withOpacity(0.1),
+                  color: Colors.cyan.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Icon(
@@ -1179,7 +1179,7 @@ class HealthAnalysisPage extends StatelessWidget {
           Icon(
             icon,
             size: 64,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.2),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.2),
           ),
           const SizedBox(height: 24),
           Text(
@@ -1206,7 +1206,7 @@ class HealthAnalysisPage extends StatelessWidget {
         Text(
           label,
           style: textTheme.labelSmall?.copyWith(
-            color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             fontWeight: FontWeight.w900,
             fontSize: 9,
             letterSpacing: 0.5,

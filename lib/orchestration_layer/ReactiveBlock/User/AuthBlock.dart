@@ -39,16 +39,17 @@ class AuthBlock {
   final username = signal<String?>(null);
   final user = signal<Map<String, dynamic>?>(null);
   final showWelcomeBack = signal<bool>(false);
-  
+
   // Security Identity State
   final hasLocalPassword = signal<bool>(true); // Default true to avoid flash
   final isPasskeyEnrolled = signal<bool>(false);
-  
+
   // Remembered user for "Identity Glance" on entry page
-  final rememberedUser = signal<Map<String, String?>?> (null);
+  final rememberedUser = signal<Map<String, String?>?>(null);
 
   /// Resolved Person ID from current session or user signal
-  String? get personId => Supabase.instance.client.auth.currentUser?.id ?? user.value?['id'];
+  String? get personId =>
+      Supabase.instance.client.auth.currentUser?.id ?? user.value?['id'];
 
   AuthBlock({
     required CustomAuthService authService,
@@ -65,7 +66,8 @@ class AuthBlock {
        _personDao = personDao;
 
   StreamSubscription? _accountSubscription;
-  bool _isLocked = false; // Reentrancy lock to prevent double-login race conditions
+  bool _isLocked =
+      false; // Reentrancy lock to prevent double-login race conditions
 
   /// Helper to persist session locally (e.g. after Google OAuth)
   Future<void> persistSession(String token, String name) async {
@@ -94,7 +96,7 @@ class AuthBlock {
       // 🛠️ PROACTIVE REPAIR: Force-correct the tenant_id for this user
       // We do this for EVERY session sync to ensure consistency across devices/legacy accounts.
       const forcedTenantId = "00000000-0000-0000-0000-000000000001";
-      
+
       try {
         // 1. Update Supabase
         await client
@@ -102,7 +104,7 @@ class AuthBlock {
             .update({'tenant_id': forcedTenantId})
             .eq('id', userId);
         print('✅ [Auth] Super-correcting Supabase tenant_id to ...0001');
-        
+
         // 2. Update Local Database via DAO
         await _personDao.updateTenantId(userId, forcedTenantId);
         print('✅ [Auth] Super-correcting Local tenant_id to ...0001');
@@ -112,7 +114,9 @@ class AuthBlock {
         await _personDao.migrateGuestData(userId, forcedTenantId);
         print('✅ [Auth] Migrated orphaned guest data to user $userId');
       } catch (e) {
-        print('⚠️ [Auth] Minor error during tenant repair (expected for offline/guest): $e');
+        print(
+          '⚠️ [Auth] Minor error during tenant repair (expected for offline/guest): $e',
+        );
       }
 
       if (existingPerson != null) {
@@ -219,16 +223,27 @@ class AuthBlock {
 
   String _mapError(Object e) {
     final str = e.toString().toLowerCase();
-    if (str.contains("invalid login credentials")) return "err_invalid_credentials";
+    if (str.contains("invalid login credentials"))
+      return "err_invalid_credentials";
     if (str.contains("email not confirmed")) return "err_email_not_confirmed";
     if (str.contains("user not found")) return "err_user_not_found";
-    if (str.contains("network") || str.contains("connection")) return "err_network_fail";
-    if (str.contains("too many requests") || str.contains("rate limit")) return "err_too_many_attempts";
-    if (str.contains("biometric") && (str.contains("not supported") || str.contains("available"))) return "err_biometric_unsupported";
-    if (str.contains("biometric") && str.contains("not enabled")) return "err_biometric_disabled";
-    if (str.contains("passkey") && (str.contains("canceled") || str.contains("dismissed") || str.contains("1001"))) return "err_passkey_canceled";
-    if (str.contains("passkey") || str.contains("assertion")) return "err_passkey_failed";
-    
+    if (str.contains("network") || str.contains("connection"))
+      return "err_network_fail";
+    if (str.contains("too many requests") || str.contains("rate limit"))
+      return "err_too_many_attempts";
+    if (str.contains("biometric") &&
+        (str.contains("not supported") || str.contains("available")))
+      return "err_biometric_unsupported";
+    if (str.contains("biometric") && str.contains("not enabled"))
+      return "err_biometric_disabled";
+    if (str.contains("passkey") &&
+        (str.contains("canceled") ||
+            str.contains("dismissed") ||
+            str.contains("1001")))
+      return "err_passkey_canceled";
+    if (str.contains("passkey") || str.contains("assertion"))
+      return "err_passkey_failed";
+
     return "err_unexpected";
   }
 
@@ -260,13 +275,20 @@ class AuthBlock {
 
       if (authenticated) {
         // HARDENING: Check if we should use the Passkey Hub instead of legacy passwords
-        final isPasskeyRegistered = await _secureStorage.isBiometricEnabled(); // Re-using this flag for passkey context
+        final isPasskeyRegistered = await _secureStorage
+            .isBiometricEnabled(); // Re-using this flag for passkey context
         final credentials = await _secureStorage.getCredentials();
         final email = credentials['username'];
 
         if (isPasskeyRegistered && email != null) {
-          print("🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...");
-          return await loginWithPasskey(context, email: email, isInternal: true);
+          print(
+            "🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...",
+          );
+          return await loginWithPasskey(
+            context,
+            email: email,
+            isInternal: true,
+          );
         }
 
         // Fallback for users who haven't migrated to Passkey yet
@@ -303,7 +325,9 @@ class AuthBlock {
     // Only apply lock if not an internal redirect (e.g. from Biometrics)
     if (!isInternal) {
       if (_isLocked) {
-        print("🔐 [AuthBlock] Passkey Login blocked: Another auth process in progress.");
+        print(
+          "🔐 [AuthBlock] Passkey Login blocked: Another auth process in progress.",
+        );
         return false;
       }
       _isLocked = true;
@@ -330,7 +354,9 @@ class AuthBlock {
 
       // 1. Get Challenge / Options - pass the identifier (email/username)
       // CustomAuthService now returns the full publicKey JSON options string
-      final optionsJson = await _authService.getPasskeyChallenge(email: targetEmail);
+      final optionsJson = await _authService.getPasskeyChallenge(
+        email: targetEmail,
+      );
       // print("🔑 Challenge received: $challenge");
 
       // 2. Perform Passkey Assertion
@@ -390,17 +416,21 @@ class AuthBlock {
     final authUser = Supabase.instance.client.auth.currentUser;
     if (authUser == null) return "User session not found";
 
-    print("🔑 [AuthBlock] Initiating Passkey Enrollment for ${authUser.email}...");
+    print(
+      "🔑 [AuthBlock] Initiating Passkey Enrollment for ${authUser.email}...",
+    );
     try {
       // 1. Get Registration Options from Backend
-      final registrationOptionsJson = await _authService.getPasskeyRegistrationOptions(authUser.email!, authUser.id);
-      
+      final registrationOptionsJson = await _authService
+          .getPasskeyRegistrationOptions(authUser.email!, authUser.id);
+
       // 2. Perform Passkey Registration on device
       // Pass the JSON directly as the plugin expects standard creation options
       final credential = await _passkeyService.registerRequest(
         userId: authUser.id,
         username: authUser.email ?? "Ice_User",
-        challenge: "", // Not used as challenge is inside registrationOptionsJson now
+        challenge:
+            "", // Not used as challenge is inside registrationOptionsJson now
         optionsJson: registrationOptionsJson,
       );
 
@@ -417,19 +447,19 @@ class AuthBlock {
 
       print("✅ [AuthBlock] Passkey Enrollment successful.");
       isPasskeyEnrolled.value = true;
-      
+
       // Save info that we have a passkey for this user
       await _secureStorage.setBiometricEnabled(true);
-      
+
       return "success";
     } catch (e) {
       final errorStr = e.toString();
       print("❌ [AuthBlock] Passkey Enrollment failed: $errorStr");
-      
+
       if (errorStr.contains('1001') || errorStr.contains('canceled')) {
         return "canceled";
       }
-      
+
       final mappedError = _mapError(e);
       error.value = mappedError;
       return mappedError;
@@ -442,7 +472,7 @@ class AuthBlock {
   Future<void> checkSession(BuildContext context) async {
     status.value = AuthStatus.checkingSession;
     print("🔍 [AuthBlock] Checking for Supabase session...");
-    
+
     // Load remembered identity for UI preview
     await _loadRememberedUser();
 
@@ -456,7 +486,7 @@ class AuthBlock {
         username.value = session.user.email ?? "SupabaseUser";
 
         status.value = AuthStatus.authenticated;
-        unawaited(_authService.appSync(session.accessToken));
+        // unawaited(_authService.appSync(session.accessToken));
         await fetchUser();
       } else {
         print("⚠️ [AuthBlock] No Supabase session found. Checking fallback...");
@@ -562,7 +592,7 @@ class AuthBlock {
           await persistSession(token, user);
         }
         await syncUserWithSupabase(session.user);
-        unawaited(_authService.appSync(session.accessToken));
+        // unawaited(_authService.appSync(session.accessToken));
 
         status.value = AuthStatus.authenticated;
         print("✅ [AuthBlock] Authentication successful.");
@@ -570,9 +600,11 @@ class AuthBlock {
         // Securely store credentials if biometric login is not yet confirmed
         // For production, you might want to ask the user before enabling this.
         await _secureStorage.saveCredentials(
-          email, 
+          email,
           password,
-          displayName: session.user.userMetadata?['full_name'] ?? session.user.userMetadata?['name'],
+          displayName:
+              session.user.userMetadata?['full_name'] ??
+              session.user.userMetadata?['name'],
           avatarUrl: session.user.userMetadata?['avatar_url'],
         );
         await _secureStorage.setBiometricEnabled(true);
@@ -632,15 +664,16 @@ class AuthBlock {
         await syncUserWithSupabase(user);
         final session = Supabase.instance.client.auth.currentSession;
         if (session != null) {
-          unawaited(_authService.appSync(session.accessToken));
+          // unawaited(_authService.appSync(session.accessToken));
         }
 
         // Save metadata for credential persistence
         final email = user.email ?? "AppleUser";
         await _secureStorage.saveCredentials(
-          email, 
+          email,
           "APPLE_AUTH",
-          displayName: user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
+          displayName:
+              user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
           avatarUrl: user.userMetadata?['avatar_url'],
         );
         await _secureStorage.setBiometricEnabled(true);
@@ -682,15 +715,16 @@ class AuthBlock {
         await syncUserWithSupabase(user);
         final session = Supabase.instance.client.auth.currentSession;
         if (session != null) {
-          unawaited(_authService.appSync(session.accessToken));
+          // unawaited(_authService.appSync(session.accessToken));
         }
 
         // Save metadata for credential persistence
         final email = user.email ?? "GoogleUser";
         await _secureStorage.saveCredentials(
-          email, 
+          email,
           "GOOGLE_AUTH",
-          displayName: user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
+          displayName:
+              user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
           avatarUrl: user.userMetadata?['avatar_url'],
         );
         await _secureStorage.setBiometricEnabled(true);
@@ -734,12 +768,12 @@ class AuthBlock {
           username.value = payload.userName;
           await persistSession(jwt.value!, username.value!);
           await syncUserWithSupabase(response.user!);
-          unawaited(_authService.appSync(response.session!.accessToken));
+          // unawaited(_authService.appSync(response.session!.accessToken));
           status.value = AuthStatus.authenticated;
 
           // Save credentials after registration
           await _secureStorage.saveCredentials(
-            payload.email, 
+            payload.email,
             payload.password,
             displayName: payload.userName,
           );
@@ -826,17 +860,18 @@ class AuthBlock {
             session.user.email ??
             "SupabaseUser";
         user.value!['email'] = session.user.email;
-        
+
         final hash = accountResponse?['password_hash'];
-        hasLocalPassword.value = hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
-        
+        hasLocalPassword.value =
+            hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
+
         // Check for passkey enrollment on this device/account
         final passkeyEnrolled = await _secureStorage.isBiometricEnabled();
         isPasskeyEnrolled.value = passkeyEnrolled;
         hasLocalPassword.value = true;
-        
+
         // isPasskeyEnrolled.value = passkeyEnrolled; // Already set above
-        
+
         status.value = AuthStatus.authenticated;
         print(
           "✅ [AuthBlock] Profile fetched for ${username.value} with email ${session.user.email}",
@@ -954,7 +989,7 @@ class AuthBlock {
     try {
       final String personId = session.user.id;
       const String tenantId = "00000000-0000-0000-0000-000000000001";
-      
+
       print("🛰️ [Auth] Manual repair triggered for $personId");
       // Use the internal DAO reference
       await _personDao.migrateGuestData(personId, tenantId);
@@ -987,7 +1022,9 @@ class AuthBlock {
     final data = await _secureStorage.getRememberedUser();
     if (data['username'] != null) {
       rememberedUser.value = data;
-      print("🧊 [AuthBlock] Remembered user loaded: ${data['displayName'] ?? data['username']}");
+      print(
+        "🧊 [AuthBlock] Remembered user loaded: ${data['displayName'] ?? data['username']}",
+      );
     } else {
       rememberedUser.value = null;
     }

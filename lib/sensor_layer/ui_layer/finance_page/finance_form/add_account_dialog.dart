@@ -5,8 +5,30 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:drift/drift.dart' as drift;
 
+extension CurrencyTypeExtension on CurrencyType {
+  String get symbol {
+    switch (this) {
+      case CurrencyType.USD: return '\$';
+      case CurrencyType.EUR: return '€';
+      case CurrencyType.VND: return '₫';
+      case CurrencyType.JPY: return '¥';
+      case CurrencyType.GBP: return '£';
+      case CurrencyType.CNY: return '¥';
+    }
+  }
+
+  String get displayName => name;
+}
+
 class AddAccountDialog extends StatefulWidget {
   const AddAccountDialog({super.key});
+
+  static Future<void> show(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) => const AddAccountDialog(),
+    );
+  }
 
   @override
   State<AddAccountDialog> createState() => _AddAccountDialogState();
@@ -27,25 +49,62 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
 
   void _saveAccount() {
     final name = _nameController.text.trim();
-    if (name.isEmpty) return;
+    if (name.isEmpty) {
+      _showSnackBar("Please enter an account name", isError: true);
+      return;
+    }
 
-    final balance = double.tryParse(_balanceController.text) ?? 0.0;
+    final balanceText = _balanceController.text.trim();
+    final balance = double.tryParse(balanceText) ?? 0.0;
+    
+    if (balanceText.isNotEmpty && double.tryParse(balanceText) == null) {
+      _showSnackBar("Please enter a valid balance", isError: true);
+      return;
+    }
+
     final personID = context.read<PersonBlock>().currentPersonID.value;
 
-    if (personID == null) return;
+    if (personID == null) {
+      _showSnackBar("Authentication error. Please try again.", isError: true);
+      return;
+    }
 
-    context.read<AppDatabase>().financeDAO.createAccount(
-      FinancialAccountsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
-        personID: drift.Value(personID),
-        accountName: name,
-        accountType: drift.Value(_selectedType),
-        balance: drift.Value(balance),
-        currency: drift.Value(_selectedCurrency),
+    try {
+      context.read<AppDatabase>().financeDAO.createAccount(
+        FinancialAccountsTableCompanion.insert(
+          id: IDGen.UUIDV7(),
+          personID: drift.Value(personID),
+          accountName: name,
+          accountType: drift.Value(_selectedType),
+          balance: drift.Value(balance),
+          currency: drift.Value(_selectedCurrency),
+        ),
+      );
+
+      _showSnackBar("Account '$name' created successfully");
+      Navigator.of(context).pop();
+    } catch (e) {
+      _showSnackBar("Failed to save account: $e", isError: true);
+    }
+  }
+
+  void _showSnackBar(String message, {bool isError = false}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          style: TextStyle(
+            color: isError ? colorScheme.onError : colorScheme.onPrimaryContainer,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: isError ? colorScheme.error : colorScheme.primaryContainer,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        margin: const EdgeInsets.all(16),
       ),
     );
-
-    Navigator.of(context).pop();
   }
 
   @override
@@ -62,7 +121,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
           borderRadius: BorderRadius.circular(28),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 20,
               offset: const Offset(0, 10),
             ),
@@ -115,7 +174,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                         hintText: "e.g. Main Wallet",
                         filled: true,
                         fillColor: colorScheme.surfaceContainerHighest
-                            .withOpacity(0.3),
+                            .withValues(alpha: 0.3),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
@@ -136,7 +195,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                               hintText: "0.00",
                               filled: true,
                               fillColor: colorScheme.surfaceContainerHighest
-                                  .withOpacity(0.3),
+                                  .withValues(alpha: 0.3),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(16),
                                 borderSide: BorderSide.none,
@@ -152,7 +211,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                           padding: const EdgeInsets.symmetric(horizontal: 12),
                           decoration: BoxDecoration(
                             color: colorScheme.surfaceContainerHighest
-                                .withOpacity(0.3),
+                                .withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: DropdownButtonHideUnderline(
@@ -167,7 +226,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                                 return DropdownMenuItem(
                                   value: type,
                                   child: Text(
-                                    type.name,
+                                    "${type.symbol} ${type.name}",
                                     style: const TextStyle(
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -189,10 +248,10 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
                       spacing: 8,
                       runSpacing: 8,
                       children: [
-                        _buildTypeChip("checking", "Checking"),
-                        _buildTypeChip("savings", "Savings"),
-                        _buildTypeChip("cash", "Cash"),
-                        _buildTypeChip("credit_card", "Credit"),
+                        _buildTypeChip("checking", "Checking", Icons.account_balance_rounded),
+                        _buildTypeChip("savings", "Savings", Icons.savings_rounded),
+                        _buildTypeChip("cash", "Cash", Icons.payments_rounded),
+                        _buildTypeChip("credit_card", "Credit", Icons.credit_card_rounded),
                       ],
                     ),
                     const SizedBox(height: 24),
@@ -221,11 +280,16 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
     );
   }
 
-  Widget _buildTypeChip(String value, String label) {
+  Widget _buildTypeChip(String value, String label, IconData icon) {
     final isSelected = _selectedType == value;
     final colorScheme = Theme.of(context).colorScheme;
 
     return ChoiceChip(
+      avatar: Icon(
+        icon,
+        size: 18,
+        color: isSelected ? colorScheme.onPrimary : colorScheme.primary,
+      ),
       label: Text(label),
       selected: isSelected,
       onSelected: (selected) {
@@ -240,7 +304,7 @@ class _AddAccountDialogState extends State<AddAccountDialog> {
             : colorScheme.onSurfaceVariant,
       ),
       selectedColor: colorScheme.primary,
-      backgroundColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+      backgroundColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide.none,

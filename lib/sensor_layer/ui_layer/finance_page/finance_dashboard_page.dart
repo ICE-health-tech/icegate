@@ -31,12 +31,12 @@ class FinanceDashboardPage extends StatelessWidget {
             Positioned(
               top: -100,
               right: -50,
-              child: _buildGlowSphere(EntryColors.financeYellow.withOpacity(0.08), 350),
+              child: _buildGlowSphere(EntryColors.financeYellow.withValues(alpha: 0.08), 350),
             ),
             Positioned(
               bottom: 100,
               left: -80,
-              child: _buildGlowSphere(const Color(0xFF6366F1).withOpacity(0.05), 400),
+              child: _buildGlowSphere(const Color(0xFF6366F1).withValues(alpha: 0.05), 400),
             ),
 
             SafeArea(
@@ -108,7 +108,7 @@ class FinanceDashboardPage extends StatelessWidget {
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.5),
+            color: color.withValues(alpha: 0.5),
             blurRadius: 100,
             spreadRadius: 20,
           ),
@@ -129,9 +129,9 @@ class FinanceDashboardPage extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: Colors.white.withOpacity(0.1)),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
             ),
             child: const Icon(Icons.chevron_left_rounded, color: Colors.white, size: 20),
           ),
@@ -175,9 +175,9 @@ class FinanceDashboardPage extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: child,
       ),
@@ -193,11 +193,11 @@ class FinanceDashboardPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            Colors.white.withOpacity(0.08),
-            Colors.white.withOpacity(0.03),
+            Colors.white.withValues(alpha: 0.08),
+            Colors.white.withValues(alpha: 0.03),
           ],
         ),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: ClipRRect(
         borderRadius: BorderRadius.circular(32),
@@ -238,9 +238,9 @@ class FinanceDashboardPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                       decoration: BoxDecoration(
-                        color: Colors.green.withOpacity(0.1),
+                        color: Colors.green.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
-                        border: Border.all(color: Colors.green.withOpacity(0.2)),
+                        border: Border.all(color: Colors.green.withValues(alpha: 0.2)),
                       ),
                       child: const Row(
                         children: [
@@ -302,21 +302,21 @@ class FinanceDashboardPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.08)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(icon, color: color.withOpacity(0.6), size: 14),
+              Icon(icon, color: color.withValues(alpha: 0.6), size: 14),
               const SizedBox(width: 6),
               Text(
                 label,
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
+                  color: Colors.white.withValues(alpha: 0.4),
                   fontSize: 9,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1,
@@ -345,7 +345,7 @@ class FinanceDashboardPage extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: const Color(0xFF0D0D12).withOpacity(0.8),
+          color: const Color(0xFF0D0D12).withValues(alpha: 0.8),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: [
@@ -377,10 +377,10 @@ class FinanceDashboardPage extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: isBig ? color.withOpacity(0.08) : Colors.white.withOpacity(0.03),
+        color: isBig ? color.withValues(alpha: 0.08) : Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: isBig ? color.withOpacity(0.2) : Colors.white.withOpacity(0.08),
+          color: isBig ? color.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.08),
         ),
       ),
       child: ListTile(
@@ -388,7 +388,7 @@ class FinanceDashboardPage extends StatelessWidget {
         leading: Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.1),
+            color: color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(16),
           ),
           child: Icon(
@@ -400,7 +400,7 @@ class FinanceDashboardPage extends StatelessWidget {
         title: Text(
           txn.description?.toUpperCase() ?? txn.category.toUpperCase(),
           style: TextStyle(
-            color: Colors.white.withOpacity(0.9),
+            color: Colors.white.withValues(alpha: 0.9),
             fontWeight: FontWeight.w900,
             fontSize: 13,
             letterSpacing: 0.5,

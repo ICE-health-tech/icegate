@@ -92,7 +92,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Positioned.fill(
               child: BackdropFilter(
                 filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(color: Colors.black.withOpacity(0.2)),
+                child: Container(color: Colors.black.withValues(alpha: 0.2)),
               ),
             ),
             SafeArea(
@@ -137,7 +137,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Text(
               AppLocalizations.of(context)!.notification_manager_title,
               style: TextStyle(
-                color: Colors.blueAccent.withOpacity(0.8),
+                color: Colors.blueAccent.withValues(alpha: 0.8),
                 fontSize: 12,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2.0,
@@ -166,11 +166,11 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 size: 26,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: Colors.blueAccent.withOpacity(0.1),
+                backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
                 padding: const EdgeInsets.all(12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.blueAccent.withOpacity(0.2)),
+                  side: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.2)),
                 ),
               ),
             ),
@@ -183,12 +183,12 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 size: 28,
               ),
               style: IconButton.styleFrom(
-                backgroundColor: colorScheme.onSurface.withOpacity(0.05),
+                backgroundColor: colorScheme.onSurface.withValues(alpha: 0.05),
                 padding: const EdgeInsets.all(12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
                   side: BorderSide(
-                    color: colorScheme.onSurface.withOpacity(0.1),
+                    color: colorScheme.onSurface.withValues(alpha: 0.1),
                   ),
                 ),
               ),
@@ -204,9 +204,9 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colorScheme.surface.withOpacity(0.5),
+        color: colorScheme.surface.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
       ),
       child: TabBar(
         indicator: BoxDecoration(
@@ -216,7 +216,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.blueAccent.withOpacity(0.3),
+              color: Colors.blueAccent.withValues(alpha: 0.3),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -224,7 +224,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.white,
-        unselectedLabelColor: colorScheme.onSurface.withOpacity(0.5),
+        unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
         dividerColor: Colors.transparent,
         tabs: tabs.map((t) => Tab(text: t['title'] as String)).toList(),
@@ -270,7 +270,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     final hasLiveData = latest != null;
 
     return _buildGlassCard(
-      borderColor: Colors.blueAccent.withOpacity(0.3),
+      borderColor: Colors.blueAccent.withValues(alpha: 0.3),
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
@@ -278,7 +278,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Colors.blueAccent.withOpacity(0.1), Colors.transparent],
+            colors: [Colors.blueAccent.withValues(alpha: 0.1), Colors.transparent],
           ),
         ),
         child: Column(
@@ -306,7 +306,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   Icons.sensors_rounded,
                   color: hasLiveData
                       ? Colors.greenAccent
-                      : Colors.greenAccent.withOpacity(0.3),
+                      : Colors.greenAccent.withValues(alpha: 0.3),
                   size: 16,
                 ),
               ],
@@ -325,7 +325,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Text(
               subtitle,
               style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
+                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
                 fontSize: 11,
                 fontStyle: FontStyle.italic,
               ),
@@ -347,7 +347,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Text(
           "${AppLocalizations.of(context)!.notification_daily_quest}: ",
           style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.8),
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.0,
@@ -421,7 +421,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         style: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 13,
                         ),
                       ),
@@ -446,10 +446,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                       child: Container(
                         padding: const EdgeInsets.all(4),
                         decoration: BoxDecoration(
-                          color: Colors.greenAccent.withOpacity(0.1),
+                          color: Colors.greenAccent.withValues(alpha: 0.1),
                           shape: BoxShape.circle,
                           border: Border.all(
-                            color: Colors.greenAccent.withOpacity(0.5),
+                            color: Colors.greenAccent.withValues(alpha: 0.5),
                           ),
                         ),
                         child: const Icon(
@@ -470,7 +470,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 value: percent,
                 backgroundColor: Theme.of(
                   context,
-                ).colorScheme.onSurface.withOpacity(0.1),
+                ).colorScheme.onSurface.withValues(alpha: 0.1),
                 valueColor: const AlwaysStoppedAnimation(Colors.blueAccent),
                 minHeight: 4,
               ),
@@ -512,7 +512,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               quest.rewardExp ?? 0,
             ),
           ),
-          backgroundColor: Colors.blueAccent.withOpacity(0.8),
+          backgroundColor: Colors.blueAccent.withValues(alpha: 0.8),
           duration: const Duration(seconds: 2),
         ),
       );
@@ -610,14 +610,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   Icon(
                     Icons.notifications_off_rounded,
                     size: 48,
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.of(context)!.notification_disabled_desc,
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withValues(alpha: 0.3),
                       fontSize: 14,
                       fontStyle: FontStyle.italic,
                     ),
@@ -644,7 +644,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Text(
           "SYSTEM PREFERENCES",
           style: TextStyle(
-            color: colorScheme.onSurface.withOpacity(0.5),
+            color: colorScheme.onSurface.withValues(alpha: 0.5),
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
@@ -663,14 +663,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               Text(
                 "on",
                 style: TextStyle(
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                   fontSize: 13,
                 ),
               ),
               const SizedBox(width: 8),
               Icon(
                 Icons.chevron_right_rounded,
-                color: colorScheme.onSurface.withOpacity(0.3),
+                color: colorScheme.onSurface.withValues(alpha: 0.3),
               ),
             ],
           ),
@@ -708,7 +708,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 20),
@@ -729,7 +729,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   Text(
                     subtitle,
                     style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
+                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 12,
                     ),
                   ),
@@ -853,7 +853,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   style: TextStyle(
                     color: Theme.of(
                       context,
-                    ).colorScheme.onSurface.withOpacity(0.5),
+                    ).colorScheme.onSurface.withValues(alpha: 0.5),
                     fontSize: 13,
                     fontWeight: FontWeight.bold,
                   ),
@@ -868,7 +868,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                   onPressed: () => dao.deleteQuote(quote.id),
                   icon: Icon(
                     Icons.delete_outline_rounded,
-                    color: Colors.redAccent.withOpacity(0.6),
+                    color: Colors.redAccent.withValues(alpha: 0.6),
                     size: 20,
                   ),
                 ),
@@ -892,7 +892,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           backgroundColor: const Color(0xFF161B33),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(24),
-            side: BorderSide(color: Colors.white.withOpacity(0.1)),
+            side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
           ),
           title: Text(
             AppLocalizations.of(context)!.notification_add_wisdom_title,
@@ -965,7 +965,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 20,
             offset: const Offset(0, 10),
           ),
@@ -981,15 +981,15 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Theme.of(context).colorScheme.onSurface.withOpacity(0.08),
-                  Theme.of(context).colorScheme.onSurface.withOpacity(0.03),
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
+                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
                 ],
               ),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
                 color:
                     borderColor ??
-                    Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
                 width: 1.5,
               ),
             ),
@@ -1034,7 +1034,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.blueAccent.withOpacity(0.1),
+                    color: Colors.blueAccent.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -1062,7 +1062,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         style: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.6),
+                          ).colorScheme.onSurface.withValues(alpha: 0.6),
                           fontSize: 14,
                         ),
                       ),
@@ -1092,10 +1092,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.05),
+                        color: Colors.white.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.1),
+                          color: Colors.white.withValues(alpha: 0.1),
                         ),
                       ),
                       child: Row(
@@ -1124,10 +1124,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: _getPriorityColor(priority).withOpacity(0.1),
+                        color: _getPriorityColor(priority).withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: _getPriorityColor(priority).withOpacity(0.2),
+                          color: _getPriorityColor(priority).withValues(alpha: 0.2),
                         ),
                       ),
                       child: Text(
@@ -1146,7 +1146,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     IconButton(
                       icon: Icon(
                         Icons.edit_rounded,
-                        color: Colors.blueAccent.withOpacity(0.6),
+                        color: Colors.blueAccent.withValues(alpha: 0.6),
                         size: 20,
                       ),
                       onPressed: () => _showAddNotificationDialog(
@@ -1157,7 +1157,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     IconButton(
                       icon: Icon(
                         Icons.delete_outline_rounded,
-                        color: Colors.redAccent.withOpacity(0.6),
+                        color: Colors.redAccent.withValues(alpha: 0.6),
                         size: 20,
                       ),
                       onPressed: () async {
@@ -1216,7 +1216,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               backgroundColor: const Color(0xFF161B33),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(24),
-                side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
               ),
               title: Text(
                 existing == null
@@ -1287,13 +1287,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                             ),
                             decoration: BoxDecoration(
                               color: isSelected
-                                  ? Colors.blueAccent.withOpacity(0.2)
-                                  : Colors.white.withOpacity(0.05),
+                                  ? Colors.blueAccent.withValues(alpha: 0.2)
+                                  : Colors.white.withValues(alpha: 0.05),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
                                 color: isSelected
                                     ? Colors.blueAccent
-                                    : Colors.white.withOpacity(0.1),
+                                    : Colors.white.withValues(alpha: 0.1),
                               ),
                             ),
                             child: Row(
@@ -1362,13 +1362,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                                 ),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? color.withOpacity(0.2)
-                                      : Colors.white.withOpacity(0.05),
+                                      ? color.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
                                     color: isSelected
                                         ? color
-                                        : Colors.white.withOpacity(0.1),
+                                        : Colors.white.withValues(alpha: 0.1),
                                   ),
                                 ),
                                 alignment: Alignment.center,
@@ -1643,7 +1643,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       labelStyle: const TextStyle(color: Colors.white54, fontSize: 13),
       prefixIcon: Icon(icon, color: Colors.blueAccent, size: 20),
       enabledBorder: UnderlineInputBorder(
-        borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+        borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
       ),
       focusedBorder: const UnderlineInputBorder(
         borderSide: BorderSide(color: Colors.blueAccent),
@@ -1692,12 +1692,12 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             decoration: BoxDecoration(
               color: isSelected
                   ? Colors.blueAccent
-                  : Colors.white.withOpacity(0.05),
+                  : Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(10),
               border: Border.all(
                 color: isSelected
                     ? Colors.blueAccent
-                    : Colors.white.withOpacity(0.1),
+                    : Colors.white.withValues(alpha: 0.1),
               ),
             ),
             alignment: Alignment.center,

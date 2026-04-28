@@ -1,44 +1,11 @@
 part of '../database.dart';
 
-@DriftAccessor(tables: [GoalsTable])
-class GoalDAO extends DatabaseAccessor<AppDatabase> with _$GoalDAOMixin {
-  GoalDAO(super.db);
-
-  Future<int> insertGoal(GoalsTableCompanion entry) => into(goalsTable).insert(entry);
-
-  Future<bool> updateGoal(GoalData entry) => update(goalsTable).replace(entry);
-
-  Future<int> deleteGoal(String id) =>
-      (delete(goalsTable)..where((t) => t.id.equals(id))).go();
-
-  Stream<List<GoalData>> watchAllGoals(String personId) =>
-      (select(goalsTable)..where((t) => t.personID.equals(personId))).watch();
-
-  Stream<List<GoalData>> watchGoalsByProject(String projectId) =>
-      (select(goalsTable)..where((t) => t.projectID.equals(projectId))).watch();
-}
-
-@DriftAccessor(tables: [HabitsTable])
-class HabitDAO extends DatabaseAccessor<AppDatabase> with _$HabitDAOMixin {
-  HabitDAO(super.db);
-
-  Future<int> insertHabit(HabitsTableCompanion entry) =>
-      into(habitsTable).insert(entry);
-
-  Future<bool> updateHabit(HabitData entry) => update(habitsTable).replace(entry);
-
-  Future<int> deleteHabit(String id) =>
-      (delete(habitsTable)..where((t) => t.id.equals(id))).go();
-
-  Stream<List<HabitData>> watchAllHabits(String personId) =>
-      (select(habitsTable)..where((t) => t.personID.equals(personId))).watch();
-}
-
 @DriftAccessor(tables: [QuestsTable])
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   QuestDAO(super.db);
 
   Future<void> insertQuest(QuestsTableCompanion entry) async {
+    // Force category to lowercase if present
     var updatedEntry = entry;
     if (entry.category.present) {
       final categoryValue = entry.category.value;
@@ -48,6 +15,7 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
     }
     await into(questsTable).insert(updatedEntry);
 
+    // Direct push to Supabase using shared helper
     await db.pushToSupabase(
       table: 'quests',
       payload: db.companionToMap(updatedEntry, questsTable),
@@ -100,20 +68,73 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
     return count;
   }
 
-  Future<int> deleteIncompleteDailyQuestsForPerson(String personId) {
-    return (delete(questsTable)..where(
+  /// Clears stale auto-generated dailies before inserting a new day's batch.
+  Future<void> deleteIncompleteDailyQuestsForPerson(String personId) async {
+    final toDelete =
+        await (select(questsTable)..where(
+              (t) =>
+                  t.personID.equals(personId) &
+                  t.isCompleted.equals(false) &
+                  t.type.equals('daily'),
+            ))
+            .get();
+
+    await (delete(questsTable)..where(
           (t) =>
               t.personID.equals(personId) &
               t.isCompleted.equals(false) &
               t.type.equals('daily'),
         ))
         .go();
+
+    for (final q in toDelete) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': q.id},
+        isDelete: true,
+      );
+    }
   }
 
-  Future<int> deleteSecretQuestsForPerson(String personId) {
-    return (delete(questsTable)
+  /// Permanently removes all quests for a person (both active and completed).
+  Future<void> deleteAllQuestsForPerson(String personId) async {
+    // 1. Get all local quests for this person first to sync deletion
+    final localQuests = await (select(
+      questsTable,
+    )..where((t) => t.personID.equals(personId))).get();
+
+    // 2. Delete locally
+    await (delete(questsTable)..where((t) => t.personID.equals(personId))).go();
+
+    // 3. Sync deletions to Supabase
+    for (final quest in localQuests) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': quest.id},
+        isDelete: true,
+      );
+    }
+  }
+
+  /// Removes all secret quests for a person. Used to clean up mock mysterious quests.
+  Future<void> deleteSecretQuestsForPerson(String personId) async {
+    final toDelete =
+        await (select(questsTable)..where(
+              (t) => t.personID.equals(personId) & t.type.equals('secret'),
+            ))
+            .get();
+
+    await (delete(questsTable)
           ..where((t) => t.personID.equals(personId) & t.type.equals('secret')))
         .go();
+
+    for (final q in toDelete) {
+      await db.pushToSupabase(
+        table: 'quests',
+        payload: {'id': q.id},
+        isDelete: true,
+      );
+    }
   }
 
   Stream<List<QuestData>> watchActiveQuests(String personId) {
@@ -124,6 +145,16 @@ class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {
   }
 
   Stream<List<QuestData>> watchAllQuests(String personId) {
+    return (select(questsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Stream<List<QuestData>> watchQuestsByPerson(String personId) {
     return (select(questsTable)
           ..where((t) => t.personID.equals(personId))
           ..orderBy([

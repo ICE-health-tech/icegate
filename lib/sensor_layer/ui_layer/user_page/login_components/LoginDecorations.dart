@@ -238,8 +238,7 @@ class _ParticlePainter extends CustomPainter {
   static final math.Random _random = math.Random();
 
   _ParticlePainter({required this.progress}) {
-    if (_particles == null) {
-      _particles = List.generate(40, (index) {
+    _particles ??= List.generate(40, (index) {
         return _Particle(
           x: _random.nextDouble(),
           y: _random.nextDouble(),
@@ -248,7 +247,6 @@ class _ParticlePainter extends CustomPainter {
           opacity: _random.nextDouble() * 0.5 + 0.1,
         );
       });
-    }
   }
 
   @override

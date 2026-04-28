@@ -5,6 +5,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_c
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
+import '../finance_form/add_account_dialog.dart';
+import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -26,9 +28,14 @@ class FinanceOverviewPage extends StatelessWidget {
           }),
           const SizedBox(height: 24),
 
-          // Summary Cards
           Watch((context) {
             return _buildSummaryCardRow(context, financeBlock);
+          }),
+          const SizedBox(height: 32),
+
+          // Accounts Section
+          Watch((context) {
+            return _buildAccountsSection(context, financeBlock);
           }),
           const SizedBox(height: 40),
 
@@ -61,12 +68,12 @@ class FinanceOverviewPage extends StatelessWidget {
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: EntryColors.glassBorder.withOpacity(0.1)),
+        border: Border.all(color: EntryColors.glassBorder.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 40,
             offset: const Offset(0, 20),
           ),
@@ -88,7 +95,7 @@ class FinanceOverviewPage extends StatelessWidget {
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        EntryColors.primaryIceBlue.withOpacity(0.12),
+                        EntryColors.primaryIceBlue.withValues(alpha: 0.12),
                         Colors.transparent,
                       ],
                     ),
@@ -113,13 +120,16 @@ class FinanceOverviewPage extends StatelessWidget {
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Text(
-                          block.formatCurrency(burnRate),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 42,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -1,
+                        Flexible(
+                          child: Text(
+                            block.formatCurrency(burnRate),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 42,
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -1,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         const Padding(
@@ -166,7 +176,7 @@ class FinanceOverviewPage extends StatelessWidget {
                       child: LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
                         minHeight: 6,
-                        backgroundColor: Colors.white.withOpacity(0.05),
+                        backgroundColor: Colors.white.withValues(alpha: 0.05),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           progress > 0.9
                               ? Colors.redAccent
@@ -262,9 +272,9 @@ class FinanceOverviewPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: color.withOpacity(0.3), width: 1.2),
+        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -274,7 +284,7 @@ class FinanceOverviewPage extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: color.withOpacity(0.7),
+              color: color.withValues(alpha: 0.7),
               fontSize: 8,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -331,9 +341,9 @@ class FinanceOverviewPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: EntryColors.primaryIceBlue.withOpacity(0.05),
+        color: EntryColors.primaryIceBlue.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: EntryColors.primaryIceBlue.withOpacity(0.1)),
+        border: Border.all(color: EntryColors.primaryIceBlue.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +354,7 @@ class FinanceOverviewPage extends StatelessWidget {
               fontWeight: FontWeight.w900,
               fontSize: 10,
               letterSpacing: 1.5,
-              color: EntryColors.primaryIceBlue.withOpacity(0.7),
+              color: EntryColors.primaryIceBlue.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),
@@ -379,6 +389,200 @@ class FinanceOverviewPage extends StatelessWidget {
     );
   }
 
+  Widget _buildAccountsSection(BuildContext context, FinanceBlock block) {
+    final accounts = block.accounts.value;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text(
+              "LIQUID ASSETS",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.w900,
+                letterSpacing: 2,
+              ),
+            ),
+            GestureDetector(
+              onTap: () => AddAccountDialog.show(context),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                decoration: BoxDecoration(
+                  color: EntryColors.financeYellow.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: EntryColors.financeYellow.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.add_rounded, color: EntryColors.financeYellow, size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      "ADD",
+                      style: TextStyle(
+                        color: EntryColors.financeYellow,
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        if (accounts.isEmpty)
+          _buildEmptyState(
+            context,
+            icon: Icons.account_balance_wallet_rounded,
+            title: "No accounts linked",
+            subtitle: "Add your first bank account or wallet",
+            onTap: () => AddAccountDialog.show(context),
+          )
+        else
+          SizedBox(
+            height: 100,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              physics: const BouncingScrollPhysics(),
+              itemCount: accounts.length,
+              separatorBuilder: (_, __) => const SizedBox(width: 12),
+              itemBuilder: (context, index) {
+                final account = accounts[index];
+                return _buildAccountCard(context, account, block);
+              },
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildAccountCard(
+    BuildContext context,
+    FinancialAccountProtocol account,
+    FinanceBlock block,
+  ) {
+    return Container(
+      width: 160,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.white.withValues(alpha: 0.05),
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Row(
+            children: [
+              _getAccountIcon(account.accountType),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  account.accountName.toUpperCase(),
+                  style: const TextStyle(
+                    color: Colors.white38,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 0.5,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+          Text(
+            block.formatCurrency(account.balance, compact: true),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: -0.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _getAccountIcon(String type) {
+    IconData icon;
+    Color color;
+    switch (type.toLowerCase()) {
+      case 'savings':
+        icon = Icons.savings_rounded;
+        color = Colors.greenAccent;
+        break;
+      case 'credit_card':
+        icon = Icons.credit_card_rounded;
+        color = Colors.orangeAccent;
+        break;
+      case 'cash':
+        icon = Icons.payments_rounded;
+        color = Colors.yellowAccent;
+        break;
+      default:
+        icon = Icons.account_balance_rounded;
+        color = EntryColors.primaryIceBlue;
+    }
+    return Icon(icon, color: color.withValues(alpha: 0.5), size: 14);
+  }
+
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required VoidCallback onTap,
+  }) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 32),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.02),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.05),
+            style: BorderStyle.solid,
+          ),
+        ),
+        child: Column(
+          children: [
+            Icon(icon, color: Colors.white12, size: 32),
+            const SizedBox(height: 12),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white38,
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              style: const TextStyle(
+                color: Colors.white24,
+                fontSize: 11,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildComparisonSection(BuildContext context, FinanceBlock block) {
     final categories = block.spendingByCategory.value;
 
@@ -386,9 +590,9 @@ class FinanceOverviewPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -399,7 +603,7 @@ class FinanceOverviewPage extends StatelessWidget {
               fontWeight: FontWeight.w900,
               fontSize: 10,
               letterSpacing: 1.5,
-              color: Colors.white.withOpacity(0.5),
+              color: Colors.white.withValues(alpha: 0.5),
             ),
           ),
           const SizedBox(height: 20),

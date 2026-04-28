@@ -517,7 +517,7 @@ class _BlockReminderPageState extends State<BlockReminderPage>
               icon,
               color: active
                   ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).iconTheme.color?.withOpacity(0.3) ??
+                  : Theme.of(context).iconTheme.color?.withValues(alpha: 0.3) ??
                         Colors.white24,
               size: 20,
             ),

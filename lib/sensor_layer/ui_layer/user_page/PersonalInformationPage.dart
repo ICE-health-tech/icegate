@@ -530,7 +530,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                 ),
                                 borderRadius: BorderRadius.circular(24),
                                 border: Border.all(
-                                  color: colorScheme.primary.withOpacity(0.1),
+                                  color: colorScheme.primary.withValues(alpha: 0.1),
                                 ),
                               ),
                               child: Text(
@@ -723,10 +723,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                               ),
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white.withOpacity(0.03),
+                                color: Colors.white.withValues(alpha: 0.03),
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
-                                  color: colorScheme.primary.withOpacity(0.2),
+                                  color: colorScheme.primary.withValues(alpha: 0.2),
                                   width: 1,
                                 ),
                               ),
@@ -833,14 +833,14 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                   style: OutlinedButton.styleFrom(
                                     padding: const EdgeInsets.symmetric(vertical: 20),
                                     side: BorderSide(
-                                      color: Colors.red.withOpacity(0.3),
+                                      color: Colors.red.withValues(alpha: 0.3),
                                       width: 1.5,
                                     ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(24),
                                     ),
-                                    backgroundColor: Colors.red.withOpacity(0.05),
-                                    shadowColor: Colors.red.withOpacity(0.2),
+                                    backgroundColor: Colors.red.withValues(alpha: 0.05),
+                                    shadowColor: Colors.red.withValues(alpha: 0.2),
                                     elevation: 0,
                                   ),
                                   onPressed: () {
@@ -853,7 +853,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                       Container(
                                         padding: const EdgeInsets.all(6),
                                         decoration: BoxDecoration(
-                                          color: Colors.red.withOpacity(0.1),
+                                          color: Colors.red.withValues(alpha: 0.1),
                                           shape: BoxShape.circle,
                                         ),
                                         child: const Icon(
@@ -922,8 +922,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          colorScheme.primary.withOpacity(0.8),
-                          colorScheme.secondary.withOpacity(0.8),
+                          colorScheme.primary.withValues(alpha: 0.8),
+                          colorScheme.secondary.withValues(alpha: 0.8),
                         ],
                       )
                     : null,
@@ -956,8 +956,8 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
                         colors: [
-                          Colors.black.withOpacity(0.2),
-                          Colors.black.withOpacity(0.6),
+                          Colors.black.withValues(alpha: 0.2),
+                          Colors.black.withValues(alpha: 0.6),
                         ],
                       ),
                     ),
@@ -1012,12 +1012,12 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 Container(
                   padding: const EdgeInsets.all(5),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.1),
+                    color: Colors.white.withValues(alpha: 0.1),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.1), width: 1),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.1), width: 1),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.4),
+                        color: Colors.black.withValues(alpha: 0.4),
                         blurRadius: 30,
                         offset: const Offset(0, 15),
                       ),
@@ -1081,9 +1081,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.03),
+                        color: Colors.white.withValues(alpha: 0.03),
                         borderRadius: BorderRadius.circular(30),
-                        border: Border.all(color: Colors.white.withOpacity(0.05)),
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                       ),
                       child: Column(
                         children: [
@@ -1134,12 +1134,12 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.1),
+              color: colorScheme.primary.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.primary.withOpacity(0.2)),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
               boxShadow: [
                 BoxShadow(
-                  color: colorScheme.primary.withOpacity(0.1),
+                  color: colorScheme.primary.withValues(alpha: 0.1),
                   blurRadius: 10,
                   spreadRadius: 1,
                 ),
@@ -1155,9 +1155,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.03),
+                  color: Colors.white.withValues(alpha: 0.03),
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.white.withOpacity(0.05)),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
                 ),
                 child: Text(
                   title.toUpperCase(),
@@ -1165,10 +1165,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2.0,
-                    color: colorScheme.primary.withOpacity(0.8),
+                    color: colorScheme.primary.withValues(alpha: 0.8),
                     shadows: [
                       Shadow(
-                        color: colorScheme.primary.withOpacity(0.5),
+                        color: colorScheme.primary.withValues(alpha: 0.5),
                         blurRadius: 8,
                       ),
                     ],
@@ -1184,7 +1184,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    colorScheme.primary.withOpacity(0.3),
+                    colorScheme.primary.withValues(alpha: 0.3),
                     Colors.transparent,
                   ],
                 ),
@@ -1208,9 +1208,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           return Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: colorScheme.primary.withOpacity(0.05),
+              color: colorScheme.primary.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+              border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -1270,18 +1270,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           child: Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.02),
+              color: Colors.white.withValues(alpha: 0.02),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 width: 1,
               ),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
                 colors: [
-                  Colors.white.withOpacity(0.05),
-                  Colors.white.withOpacity(0.01),
+                  Colors.white.withValues(alpha: 0.05),
+                  Colors.white.withValues(alpha: 0.01),
                 ],
               ),
             ),
@@ -1290,11 +1290,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.08),
+                    color: colorScheme.primary.withValues(alpha: 0.08),
                     borderRadius: BorderRadius.circular(16),
                     boxShadow: [
                       BoxShadow(
-                        color: colorScheme.primary.withOpacity(0.05),
+                        color: colorScheme.primary.withValues(alpha: 0.05),
                         blurRadius: 8,
                         spreadRadius: 1,
                       ),
@@ -1313,7 +1313,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1347,7 +1347,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.1),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -1381,18 +1381,18 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.02),
+            color: Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               width: 1,
             ),
             gradient: LinearGradient(
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
               colors: [
-                Colors.white.withOpacity(0.04),
-                Colors.white.withOpacity(0.01),
+                Colors.white.withValues(alpha: 0.04),
+                Colors.white.withValues(alpha: 0.01),
               ],
             ),
           ),
@@ -1402,11 +1402,11 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
             leading: Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.08),
+                color: colorScheme.primary.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(16),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.05),
+                    color: colorScheme.primary.withValues(alpha: 0.05),
                     blurRadius: 8,
                     spreadRadius: 1,
                   ),
@@ -1427,7 +1427,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
               child: Text(
                 subtitle,
                 style: textTheme.bodySmall?.copyWith(
-                  color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
                   fontWeight: FontWeight.w500,
                 ),
               ),

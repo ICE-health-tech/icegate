@@ -57,15 +57,15 @@ class SSHShortcutKeyRow extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 14),
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  color: isSpecial ? color.withOpacity(0.1) : Colors.black.withOpacity(0.2),
+                  color: isSpecial ? color.withValues(alpha: 0.1) : Colors.black.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSpecial ? color.withOpacity(0.5) : colorScheme.onSurface.withOpacity(0.05),
+                    color: isSpecial ? color.withValues(alpha: 0.5) : colorScheme.onSurface.withValues(alpha: 0.05),
                     width: isSpecial ? 1.5 : 1,
                   ),
                   boxShadow: [
                     if (isSpecial) BoxShadow(
-                      color: color.withOpacity(0.2),
+                      color: color.withValues(alpha: 0.2),
                       blurRadius: 4,
                       spreadRadius: 0,
                     ),
@@ -74,7 +74,7 @@ class SSHShortcutKeyRow extends StatelessWidget {
                 child: Text(
                   key['label'],
                   style: TextStyle(
-                    color: isSpecial ? color : colorScheme.onSurface.withOpacity(0.6),
+                    color: isSpecial ? color : colorScheme.onSurface.withValues(alpha: 0.6),
                     fontSize: 11,
                     fontWeight: FontWeight.w900,
                     fontFamily: 'Courier',

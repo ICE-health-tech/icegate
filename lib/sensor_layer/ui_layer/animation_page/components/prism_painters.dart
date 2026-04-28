@@ -476,8 +476,9 @@ class BrokenGlassPanePainter extends CustomPainter {
 
         // Only draw if both endpoints are roughly inside bounds
         if (!bounds.inflate(20).contains(p1) &&
-            !bounds.inflate(20).contains(p2))
+            !bounds.inflate(20).contains(p2)) {
           continue;
+        }
 
         canvas.drawLine(
           p1,
@@ -745,10 +746,11 @@ class SymmetricPetalPainter extends CustomPainter {
       final double radius = i.isEven ? size : size * 0.25;
       final px = center.dx + math.cos(angle) * radius;
       final py = center.dy + math.sin(angle) * radius;
-      if (i == 0)
+      if (i == 0) {
         starPath.moveTo(px, py);
-      else
+      } else {
         starPath.lineTo(px, py);
+      }
     }
     starPath.close();
 

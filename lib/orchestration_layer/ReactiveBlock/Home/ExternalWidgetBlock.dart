@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:signals/signals.dart';
+import 'package:rxdart/rxdart.dart';
 
 class ExternalWidgetBlock {
   final listExternalWidgets = signal<List<ExternalWidgetData>>([]);
@@ -9,13 +10,19 @@ class ExternalWidgetBlock {
 
   void refreshBlock(ExternalWidgetsDAO dao, String personID) {
     _subscription?.cancel();
-    _subscription = dao.watchAllWidgets(personID).listen(
-      (data) {
-        listExternalWidgets.value = data;
-      },
-      onError: (e) =>
-          debugPrint("ExternalWidgetBlock: Error watching widgets: $e"),
-    );
+    _subscription = dao
+        .watchAllWidgets(personID)
+        .debounceTime(const Duration(milliseconds: 300))
+        .listen(
+          (data) {
+            // Use batch to ensure the signal update is atomic and safe
+            batch(() {
+              listExternalWidgets.value = data;
+            });
+          },
+          onError: (e) =>
+              debugPrint("ExternalWidgetBlock: Error watching widgets: $e"),
+        );
   }
 
   void dispose() {

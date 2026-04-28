@@ -125,9 +125,9 @@ class SocialAnalysisPage extends StatelessWidget {
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withOpacity(0.3),
+                  color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.2)),
+                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -158,7 +158,7 @@ class SocialAnalysisPage extends StatelessWidget {
                       Text(
                         log.note!,
                         style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withOpacity(0.8),
+                          color: colorScheme.onSurface.withValues(alpha: 0.8),
                           fontStyle: FontStyle.italic,
                         ),
                       ),
@@ -236,7 +236,7 @@ class SocialAnalysisPage extends StatelessWidget {
                           decoration: BoxDecoration(
                             color: isCurrent 
                                 ? colorScheme.primary 
-                                : colorScheme.primary.withOpacity(0.3),
+                                : colorScheme.primary.withValues(alpha: 0.3),
                             borderRadius: BorderRadius.circular(barWidth / 2),
                           ),
                         ),
@@ -266,9 +266,9 @@ class SocialAnalysisPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withOpacity(0.3),
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.primary.withOpacity(0.1)),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -298,7 +298,7 @@ class SocialAnalysisPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 10,
             fontWeight: FontWeight.bold,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.6),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
             letterSpacing: 1,
           ),
         ),
@@ -336,7 +336,7 @@ class SocialAnalysisPage extends StatelessWidget {
                       AppLocalizations.of(context)!.no_records_last_7_days,
                       style: TextStyle(
                         fontSize: 10,
-                        color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                       ),
                     ),
                   );
@@ -373,7 +373,7 @@ class SocialAnalysisPage extends StatelessWidget {
             builder: (context, snapshot) {
               if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return Text(AppLocalizations.of(context)!.track_patterns_msg, 
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant.withOpacity(0.5)));
+                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)));
               }
               final activities = snapshot.data!.entries.toList()
                 ..sort((a, b) => b.value.compareTo(a.value));
@@ -383,7 +383,7 @@ class SocialAnalysisPage extends StatelessWidget {
                 runSpacing: 8,
                 children: activities.take(6).map((e) => Chip(
                   label: Text("${e.key} (${e.value})"),
-                  backgroundColor: colorScheme.primaryContainer.withOpacity(0.3),
+                  backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
                   side: BorderSide.none,
                 )).toList(),
               );
@@ -414,9 +414,9 @@ class SocialAnalysisPage extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: colorScheme.tertiaryContainer.withOpacity(0.3),
+        color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.tertiary.withOpacity(0.3)),
+        border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

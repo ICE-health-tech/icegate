@@ -23,16 +23,16 @@ class SSHSearchBar extends StatelessWidget {
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
       ),
       child: TextField(
         controller: controller,
         onChanged: onSearch,
         style: TextStyle(color: colorScheme.onSurface, fontSize: 14),
         decoration: InputDecoration(
-          icon: Icon(Icons.search, color: colorScheme.onSurface.withOpacity(0.4), size: 18),
+          icon: Icon(Icons.search, color: colorScheme.onSurface.withValues(alpha: 0.4), size: 18),
           hintText: l10n.ssh_search_hint,
-          hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.3), fontSize: 14),
+          hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 14),
           border: InputBorder.none,
           isDense: true,
           contentPadding: const EdgeInsets.symmetric(vertical: 12),

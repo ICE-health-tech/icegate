@@ -498,8 +498,10 @@ class PersonBlock {
           localPerson?.tenantID,
     );
 
-    batch(() {
-      information.value = UserInformation(profiles: profile, details: details);
+    untracked(() {
+      batch(() {
+        information.value = UserInformation(profiles: profile, details: details);
+      });
     });
   }
 

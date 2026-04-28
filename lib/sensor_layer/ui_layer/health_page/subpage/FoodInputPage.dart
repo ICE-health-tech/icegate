@@ -8,6 +8,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
@@ -76,8 +78,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
   late HealthMealDAO _healthMealDAO;
   Timer? _analysisTimer;
   bool _isSaving = false;
-
-
 
   @override
   void initState() {
@@ -230,10 +230,19 @@ class _FoodInputPageState extends State<FoodInputPage> {
           _carbsController.text = result.carbs.toString();
           _fatController.text = result.fat.toString();
           _kcalController.text = result.calories.toString();
+          if (result.imageUrl != null && result.imageUrl!.isNotEmpty) {
+            _imagePath = result.imageUrl!;
+          }
           _isAnalyzing = false;
         });
         _analysisTimer?.cancel();
+        
+        // Auto-save the record now that analysis is complete
+        if (!_isSaving) {
+          _addMeal();
+        }
       }
+
     } catch (e) {
       debugPrint('FoodInputPage: Analysis error: $e');
       if (mounted) setState(() => _isAnalyzing = false);
@@ -241,9 +250,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
       _analysisTimer?.cancel();
     }
   }
-
-
-
 
   Future<void> _startLidarScan() async {
     final result = await Navigator.push(
@@ -350,13 +356,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
       // Delegate further analysis to background orchestrator
       if (!mounted) return;
       context.read<FoodAnalysisBlock>().analyzeAndSave(
-            mealId: mealId,
-            foodName: _foodController.text,
-            image: _pickedImage,
-            volume: _measuredVolume,
-            distance: _dimensions?['length'],
-            personId: personID,
-          );
+        mealId: mealId,
+        foodName: _foodController.text,
+        image: _pickedImage,
+        volume: _measuredVolume,
+        distance: _dimensions?['length'],
+        personId: personID,
+      );
 
       messenger?.showSnackBar(
         SnackBar(
@@ -373,7 +379,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
               const SizedBox(width: 12),
               const Expanded(
                 child: Text(
-                  "AI is analyzing your meal in background... it will update automatically.",
+                  "AI is analyzing your meal...",
                   style: TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.bold,
@@ -392,7 +398,6 @@ class _FoodInputPageState extends State<FoodInputPage> {
         ),
       );
     }
-
 
     await _healthMealDAO.upsertDay(
       DaysTableCompanion.insert(
@@ -604,7 +609,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
         border: Border.all(color: border, width: 2),
         boxShadow: [
           BoxShadow(
-            color: accent.withOpacity(0.05),
+            color: accent.withValues(alpha: 0.05),
             blurRadius: 20,
             spreadRadius: 5,
           ),
@@ -622,6 +627,18 @@ class _FoodInputPageState extends State<FoodInputPage> {
                 fit: BoxFit.cover,
               ),
             )
+          else if (_imagePath.isNotEmpty)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: LocalFirstImage(
+                localPath: _imagePath.startsWith('http') ? "" : _imagePath,
+                remoteUrl: _imagePath.startsWith('http') ? _imagePath : "",
+                width: double.infinity,
+                height: double.infinity,
+                fit: BoxFit.cover,
+                subFolder: 'meals',
+              ),
+            )
           else
             Center(
               child: Column(
@@ -630,13 +647,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
                   Icon(
                     Icons.camera_enhance_rounded,
                     size: 48,
-                    color: accent.withOpacity(0.3),
+                    color: accent.withValues(alpha: 0.3),
                   ),
                   const SizedBox(height: 12),
                   Text(
                     'Tap to Capture or 3D Scan',
                     style: TextStyle(
-                      color: accent.withOpacity(0.5),
+                      color: accent.withValues(alpha: 0.5),
                       fontWeight: FontWeight.bold,
                     ),
                   ),
@@ -697,13 +714,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
         decoration: BoxDecoration(
           color: isScan
               ? Colors.deepPurple
-              : (isClose ? Colors.red.withOpacity(0.8) : Colors.black54),
+              : (isClose ? Colors.red.withValues(alpha: 0.8) : Colors.black54),
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white24),
           boxShadow: isScan
               ? [
                   BoxShadow(
-                    color: Colors.deepPurple.withOpacity(0.5),
+                    color: Colors.deepPurple.withValues(alpha: 0.5),
                     blurRadius: 10,
                   ),
                 ]
@@ -739,7 +756,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
         ),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
+          hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
           prefixIcon: Icon(
             icon,
             color: isCalories ? Colors.orange : Colors.white70,
@@ -786,12 +803,12 @@ class _FoodInputPageState extends State<FoodInputPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
         decoration: BoxDecoration(
-          color: obsidianBg.withOpacity(0.5),
+          color: obsidianBg.withValues(alpha: 0.5),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withOpacity(0.3), width: 1),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               blurRadius: 10,
               spreadRadius: -2,
             ),
@@ -802,7 +819,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
             Text(
               label.toUpperCase(),
               style: TextStyle(
-                color: color.withOpacity(0.7),
+                color: color.withValues(alpha: 0.7),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 1,

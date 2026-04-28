@@ -58,7 +58,7 @@ class _LidarFoodScannerState extends State<LidarFoodScanner> {
               height: 100,
               decoration: BoxDecoration(
                 border: Border.all(
-                  color: _isScanning ? Colors.red.withOpacity(0.5) : Colors.white24,
+                  color: _isScanning ? Colors.red.withValues(alpha: 0.5) : Colors.white24,
                   width: 2,
                 ),
                 borderRadius: BorderRadius.circular(12),
@@ -97,7 +97,7 @@ class _LidarFoodScannerState extends State<LidarFoodScanner> {
                       color: Colors.black87,
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(color: colorScheme.primary, width: 1),
-                      boxShadow: [BoxShadow(color: colorScheme.primary.withOpacity(0.3), blurRadius: 15)],
+                      boxShadow: [BoxShadow(color: colorScheme.primary.withValues(alpha: 0.3), blurRadius: 15)],
                     ),
                     child: Column(
                       children: [
@@ -112,7 +112,7 @@ class _LidarFoodScannerState extends State<LidarFoodScanner> {
                         ),
                         Text(
                           '${_points.length} scan points',
-                          style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 11),
+                          style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 11),
                         ),
                       ],
                     ),
@@ -132,7 +132,7 @@ class _LidarFoodScannerState extends State<LidarFoodScanner> {
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: (_isScanning ? Colors.red : Colors.white).withOpacity(0.4),
+                              color: (_isScanning ? Colors.red : Colors.white).withValues(alpha: 0.4),
                               blurRadius: 20,
                             ),
                           ],

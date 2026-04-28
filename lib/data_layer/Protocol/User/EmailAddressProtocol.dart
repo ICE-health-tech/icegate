@@ -1,5 +1,6 @@
 import 'package:freezed_annotation/freezed_annotation.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+// EmailStatus enum now lives in database.dart (enums.dart was an orphaned duplicate).
+import 'package:ice_gate/data_layer/DataSources/local_database/database.dart' show EmailStatus;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 part 'EmailAddressProtocol.freezed.dart';

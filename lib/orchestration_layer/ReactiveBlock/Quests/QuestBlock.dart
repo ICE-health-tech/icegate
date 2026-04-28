@@ -24,7 +24,7 @@ class QuestBlock {
 
     // Generate daily quests if needed
     // _questService.generateDailyQuestsIfNeeded(personId);
-    
+
     // Cleanup mysterious quests if any were already seeded
     dao.deleteSecretQuestsForPerson(personId);
 

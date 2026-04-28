@@ -21,6 +21,7 @@ mixin _$CaloriesProtocol {
   int get protein => throw _privateConstructorUsedError;
   int get carbs => throw _privateConstructorUsedError;
   int get fat => throw _privateConstructorUsedError;
+  String? get imageUrl => throw _privateConstructorUsedError;
 
   /// Create a copy of CaloriesProtocol
   /// with the given fields replaced by the non-null parameter values.
@@ -36,7 +37,7 @@ abstract class $CaloriesProtocolCopyWith<$Res> {
     $Res Function(CaloriesProtocol) then,
   ) = _$CaloriesProtocolCopyWithImpl<$Res, CaloriesProtocol>;
   @useResult
-  $Res call({int calories, int protein, int carbs, int fat});
+  $Res call({int calories, int protein, int carbs, int fat, String? imageUrl});
 }
 
 /// @nodoc
@@ -58,6 +59,7 @@ class _$CaloriesProtocolCopyWithImpl<$Res, $Val extends CaloriesProtocol>
     Object? protein = null,
     Object? carbs = null,
     Object? fat = null,
+    Object? imageUrl = freezed,
   }) {
     return _then(
       _value.copyWith(
@@ -77,6 +79,10 @@ class _$CaloriesProtocolCopyWithImpl<$Res, $Val extends CaloriesProtocol>
                 ? _value.fat
                 : fat // ignore: cast_nullable_to_non_nullable
                       as int,
+            imageUrl: freezed == imageUrl
+                ? _value.imageUrl
+                : imageUrl // ignore: cast_nullable_to_non_nullable
+                      as String?,
           )
           as $Val,
     );
@@ -92,7 +98,7 @@ abstract class _$$CaloriesProtocolImplCopyWith<$Res>
   ) = __$$CaloriesProtocolImplCopyWithImpl<$Res>;
   @override
   @useResult
-  $Res call({int calories, int protein, int carbs, int fat});
+  $Res call({int calories, int protein, int carbs, int fat, String? imageUrl});
 }
 
 /// @nodoc
@@ -113,6 +119,7 @@ class __$$CaloriesProtocolImplCopyWithImpl<$Res>
     Object? protein = null,
     Object? carbs = null,
     Object? fat = null,
+    Object? imageUrl = freezed,
   }) {
     return _then(
       _$CaloriesProtocolImpl(
@@ -132,6 +139,10 @@ class __$$CaloriesProtocolImplCopyWithImpl<$Res>
             ? _value.fat
             : fat // ignore: cast_nullable_to_non_nullable
                   as int,
+        imageUrl: freezed == imageUrl
+            ? _value.imageUrl
+            : imageUrl // ignore: cast_nullable_to_non_nullable
+                  as String?,
       ),
     );
   }
@@ -145,6 +156,7 @@ class _$CaloriesProtocolImpl implements _CaloriesProtocol {
     required this.protein,
     required this.carbs,
     required this.fat,
+    this.imageUrl,
   });
 
   @override
@@ -155,10 +167,12 @@ class _$CaloriesProtocolImpl implements _CaloriesProtocol {
   final int carbs;
   @override
   final int fat;
+  @override
+  final String? imageUrl;
 
   @override
   String toString() {
-    return 'CaloriesProtocol(calories: $calories, protein: $protein, carbs: $carbs, fat: $fat)';
+    return 'CaloriesProtocol(calories: $calories, protein: $protein, carbs: $carbs, fat: $fat, imageUrl: $imageUrl)';
   }
 
   @override
@@ -170,11 +184,14 @@ class _$CaloriesProtocolImpl implements _CaloriesProtocol {
                 other.calories == calories) &&
             (identical(other.protein, protein) || other.protein == protein) &&
             (identical(other.carbs, carbs) || other.carbs == carbs) &&
-            (identical(other.fat, fat) || other.fat == fat));
+            (identical(other.fat, fat) || other.fat == fat) &&
+            (identical(other.imageUrl, imageUrl) ||
+                other.imageUrl == imageUrl));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, calories, protein, carbs, fat);
+  int get hashCode =>
+      Object.hash(runtimeType, calories, protein, carbs, fat, imageUrl);
 
   /// Create a copy of CaloriesProtocol
   /// with the given fields replaced by the non-null parameter values.
@@ -194,6 +211,7 @@ abstract class _CaloriesProtocol implements CaloriesProtocol {
     required final int protein,
     required final int carbs,
     required final int fat,
+    final String? imageUrl,
   }) = _$CaloriesProtocolImpl;
 
   @override
@@ -204,6 +222,8 @@ abstract class _CaloriesProtocol implements CaloriesProtocol {
   int get carbs;
   @override
   int get fat;
+  @override
+  String? get imageUrl;
 
   /// Create a copy of CaloriesProtocol
   /// with the given fields replaced by the non-null parameter values.

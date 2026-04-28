@@ -214,7 +214,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                         Text(
                           'kcal',
                           style: textTheme.titleLarge?.copyWith(
-                            color: colorScheme.onSurface.withOpacity(0.6),
+                            color: colorScheme.onSurface.withValues(alpha: 0.6),
                           ),
                         ),
                       ],
@@ -223,7 +223,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                     Text(
                       AppLocalizations.of(context)!.goal_kcal(dailyGoal),
                       style: textTheme.bodyLarge?.copyWith(
-                        color: colorScheme.onSurface.withOpacity(0.6),
+                        color: colorScheme.onSurface.withValues(alpha: 0.6),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -233,7 +233,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
                         vertical: 8,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
+                        color: statusColor.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(color: statusColor, width: 2),
                       ),
@@ -468,7 +468,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
 
     return Card(
       elevation: 4.0,
-      color: color.withOpacity(0.1),
+      color: color.withValues(alpha: 0.1),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16.0),
         side: BorderSide(color: color, width: 2),
@@ -517,7 +517,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
             Text(
               label,
               style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
             const SizedBox(height: 4),
@@ -531,7 +531,7 @@ class _CaloriesCardState extends State<CaloriesPage> {
             Text(
               unit,
               style: textTheme.bodySmall?.copyWith(
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
               ),
             ),
           ],

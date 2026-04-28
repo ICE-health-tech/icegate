@@ -274,25 +274,27 @@ class FocusBlock {
       });
 
       // 2. RUN SETUP IN BACKGROUND
-      Future.microtask(() async {
-        if (!fromSystem) {
-          try {
-            await _musicBlock?.updateAudioSource(isRunning: true);
-            if (isRunning.value) {
-              _musicBlock?.play();
+      Timer(Duration.zero, () {
+        untracked(() async {
+          if (!fromSystem) {
+            try {
+              await _musicBlock?.updateAudioSource(isRunning: true);
+              if (isRunning.value) {
+                _musicBlock?.play();
+              }
+            } catch (audioError) {
+              print(
+                "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
+              );
             }
-          } catch (audioError) {
-            print(
-              "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
-            );
           }
-        }
 
-        try {
-          await _createLiveActivity();
-        } catch (e) {
-          print("FocusBlock: Live Activity skipped: $e");
-        }
+          try {
+            await _createLiveActivity();
+          } catch (e) {
+            print("FocusBlock: Live Activity skipped: $e");
+          }
+        });
       });
     } finally {
       _isStarting = false;

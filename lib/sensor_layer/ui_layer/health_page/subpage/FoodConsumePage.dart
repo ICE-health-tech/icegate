@@ -179,13 +179,13 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
           Icon(
             Icons.restaurant_menu_rounded,
             size: 80,
-            color: colorScheme.primary.withOpacity(0.1),
+            color: colorScheme.primary.withValues(alpha: 0.1),
           ),
           const SizedBox(height: 16),
           Text(
             l10n.nutri_no_meals,
             style: TextStyle(
-              color: colorScheme.onSurfaceVariant.withOpacity(0.5),
+              color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
               fontSize: 16,
             ),
           ),
@@ -232,7 +232,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withOpacity(0.5)),
+        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
       ),
       child: Column(
         children: [
@@ -241,8 +241,8 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  colorScheme.primaryContainer.withOpacity(0.4),
-                  colorScheme.primaryContainer.withOpacity(0.1),
+                  colorScheme.primaryContainer.withValues(alpha: 0.4),
+                  colorScheme.primaryContainer.withValues(alpha: 0.1),
                 ],
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
@@ -252,7 +252,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
               ),
               border: Border(
                 bottom: BorderSide(
-                  color: colorScheme.primary.withOpacity(0.2),
+                  color: colorScheme.primary.withValues(alpha: 0.2),
                 ),
               ),
             ),
@@ -279,9 +279,9 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+                    border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
                   ),
                   child: Text(
                     '${totalCals.toInt()} ${l10n.nutri_kcal}',
@@ -302,7 +302,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
             decoration: BoxDecoration(
               border: Border(
                 top: BorderSide(
-                  color: colorScheme.outlineVariant.withOpacity(0.3),
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
                 ),
               ),
             ),
@@ -364,7 +364,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
           label,
           style: TextStyle(
             fontSize: 10,
-            color: colorScheme.onSurfaceVariant.withOpacity(0.7),
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.7),
           ),
         ),
       ],
@@ -415,7 +415,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
           ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.2),
+              color: Colors.black.withValues(alpha: 0.2),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -432,8 +432,8 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                   borderRadius: BorderRadius.circular(12),
                   child: LocalFirstImage(
                     ownerId: meal.personID,
-                    localPath: meal.mealImageUrl ?? '',
-                    remoteUrl: '',
+                    localPath: (meal.mealImageUrl?.startsWith('http') ?? false) ? "" : (meal.mealImageUrl ?? ""),
+                    remoteUrl: (meal.mealImageUrl?.startsWith('http') ?? false) ? (meal.mealImageUrl!) : "",
                     subFolder: 'meals',
                     width: 60,
                     height: 60,
@@ -444,7 +444,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                       color: const Color(0xFF322244),
                       child: Icon(
                         Icons.restaurant_rounded,
-                        color: Colors.white.withOpacity(0.2),
+                        color: Colors.white.withValues(alpha: 0.2),
                       ),
                     ),
                   ),
@@ -482,7 +482,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                         Text(
                           "Analyzing components...",
                           style: TextStyle(
-                            color: const Color(0xFFD499D4).withOpacity(0.7),
+                            color: const Color(0xFFD499D4).withValues(alpha: 0.7),
                             fontSize: 10,
                             fontStyle: FontStyle.italic,
                           ),
@@ -523,7 +523,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
                     Text(
                       meal.isAnalyzing ? 'WAITING' : 'cal',
                       style: TextStyle(
-                        color: Colors.white.withOpacity(0.5),
+                        color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,
                         fontWeight: meal.isAnalyzing ? FontWeight.bold : FontWeight.normal,
                       ),
@@ -542,9 +542,9 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color.withOpacity(0.3)),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

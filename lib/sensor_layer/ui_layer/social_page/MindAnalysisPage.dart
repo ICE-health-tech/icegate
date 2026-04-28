@@ -96,7 +96,7 @@ class MindAnalysisPage extends StatelessWidget {
                           Text(
                             'COGNITIVE LAYER'.toUpperCase(),
                             style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.5),
+                              color: colorScheme.onSurface.withValues(alpha: 0.5),
                               fontSize: 10,
                               fontWeight: FontWeight.w900,
                               letterSpacing: 4,
@@ -298,7 +298,7 @@ class MindAnalysisPage extends StatelessWidget {
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
@@ -314,7 +314,7 @@ class MindAnalysisPage extends StatelessWidget {
                         Text(
                           'CURRENT COGNITIVE POLARITY',
                           style: TextStyle(
-                            color: colorScheme.onSurface.withOpacity(0.5),
+                            color: colorScheme.onSurface.withValues(alpha: 0.5),
                             fontSize: 8,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 1,
@@ -353,13 +353,13 @@ class MindAnalysisPage extends StatelessWidget {
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: colorScheme.onSurface.withOpacity(0.05),
+                            color: colorScheme.onSurface.withValues(alpha: 0.05),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: Text(
                             a.toString().toUpperCase(),
                             style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.6),
+                              color: colorScheme.onSurface.withValues(alpha: 0.6),
                               fontSize: 8,
                               fontWeight: FontWeight.w900,
                             ),
@@ -425,7 +425,7 @@ class MindAnalysisPage extends StatelessWidget {
             Text(
               label.toUpperCase(),
               style: TextStyle(
-                color: colorScheme.onSurface.withOpacity(0.4),
+                color: colorScheme.onSurface.withValues(alpha: 0.4),
                 fontSize: 9,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2,
@@ -447,7 +447,7 @@ class MindAnalysisPage extends StatelessWidget {
           borderRadius: BorderRadius.circular(4),
           child: LinearProgressIndicator(
             value: value,
-            backgroundColor: colorScheme.primary.withOpacity(0.1),
+            backgroundColor: colorScheme.primary.withValues(alpha: 0.1),
             valueColor: AlwaysStoppedAnimation(colorScheme.primary),
             minHeight: 4,
           ),
@@ -457,16 +457,17 @@ class MindAnalysisPage extends StatelessWidget {
   }
 
   Widget _buildAmbientGlow(Color color, double size) {
+    final clampedSize = size.clamp(0.0, double.infinity);
     return Container(
-      width: size,
-      height: size,
+      width: clampedSize,
+      height: clampedSize,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-            color: color.withOpacity(0.1),
-            blurRadius: size / 2,
-            spreadRadius: size / 4,
+            color: color.withValues(alpha: 0.1),
+            blurRadius: (clampedSize / 2).clamp(0.0, double.infinity),
+            spreadRadius: (clampedSize / 4).clamp(0.0, double.infinity),
           ),
         ],
       ),
@@ -490,13 +491,13 @@ class MindAnalysisPage extends StatelessWidget {
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
             color: isDark
-                ? Colors.white.withOpacity(0.03)
-                : Colors.black.withOpacity(0.02),
+                ? Colors.white.withValues(alpha: 0.03)
+                : Colors.black.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
               color: isDark
-                  ? Colors.white.withOpacity(0.08)
-                  : Colors.black.withOpacity(0.05),
+                  ? Colors.white.withValues(alpha: 0.08)
+                  : Colors.black.withValues(alpha: 0.05),
               width: 1,
             ),
           ),
@@ -507,14 +508,14 @@ class MindAnalysisPage extends StatelessWidget {
                 children: [
                   Icon(
                     icon,
-                    color: colorScheme.onSurface.withOpacity(0.5),
+                    color: colorScheme.onSurface.withValues(alpha: 0.5),
                     size: 14,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     title.toUpperCase(),
                     style: TextStyle(
-                      color: colorScheme.onSurface.withOpacity(0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2,
@@ -541,9 +542,9 @@ class MindAnalysisPage extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -557,7 +558,7 @@ class MindAnalysisPage extends StatelessWidget {
                 child: Text(
                   label.toUpperCase(),
                   style: TextStyle(
-                    color: color.withOpacity(0.7),
+                    color: color.withValues(alpha: 0.7),
                     fontSize: 8,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1,
@@ -602,7 +603,7 @@ class MindAnalysisPage extends StatelessWidget {
           child: Text(
             label,
             style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
               fontSize: 11,
               fontWeight: FontWeight.w700,
             ),
@@ -631,10 +632,10 @@ class MindAnalysisPage extends StatelessWidget {
         filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
         child: Container(
           decoration: BoxDecoration(
-            color: colorScheme.primary.withOpacity(0.05),
+            color: colorScheme.primary.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: colorScheme.primary.withOpacity(0.2),
+              color: colorScheme.primary.withValues(alpha: 0.2),
               width: 1.5,
             ),
           ),
@@ -671,7 +672,7 @@ class MindAnalysisPage extends StatelessWidget {
                         ),
                         Icon(
                           Icons.arrow_forward_ios_rounded,
-                          color: colorScheme.primary.withOpacity(0.5),
+                          color: colorScheme.primary.withValues(alpha: 0.5),
                           size: 14,
                         ),
                       ],
@@ -706,7 +707,7 @@ class MindAnalysisPage extends StatelessWidget {
                               style: TextStyle(
                                 color: Theme.of(
                                   context,
-                                ).colorScheme.onSurface.withOpacity(0.6),
+                                ).colorScheme.onSurface.withValues(alpha: 0.6),
                                 fontSize: 13,
                                 height: 1.4,
                               ),

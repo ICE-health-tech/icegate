@@ -70,13 +70,13 @@ class _InternalDragIconWidgetState extends State<InternalDragIconWidget> {
         builder: (context, candidateData, rejectedData) {
           final Color borderColor = isHovering
               ? Colors.cyanAccent
-              : Colors.white.withAlpha(25);
+              : Colors.white.withValues(alpha: 25 / 255);
 
           return AnimatedContainer(
             duration: const Duration(milliseconds: 250),
             curve: Curves.easeOutCubic,
             decoration: BoxDecoration(
-              color: isEmpty ? Colors.white.withAlpha(10) : Colors.transparent,
+              color: isEmpty ? Colors.white.withValues(alpha: 10 / 255) : Colors.transparent,
               borderRadius: BorderRadius.circular(28),
               border: Border.all(
                 color: borderColor,
@@ -89,7 +89,7 @@ class _InternalDragIconWidgetState extends State<InternalDragIconWidget> {
               boxShadow: isHovering
                   ? [
                       BoxShadow(
-                        color: Colors.cyanAccent.withOpacity(0.4),
+                        color: Colors.cyanAccent.withValues(alpha: 0.4),
                         blurRadius: 12,
                         spreadRadius: 2,
                       ),
@@ -155,7 +155,7 @@ class _InternalDragIconWidgetState extends State<InternalDragIconWidget> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),
@@ -186,7 +186,7 @@ class _InternalDragIconWidgetState extends State<InternalDragIconWidget> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.2),
+                                    color: Colors.black.withValues(alpha: 0.2),
                                     blurRadius: 4,
                                     offset: const Offset(0, 2),
                                   ),

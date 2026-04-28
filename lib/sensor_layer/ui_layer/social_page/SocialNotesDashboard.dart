@@ -47,9 +47,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: StreamBuilder<List<MindLogData>>(
-                      stream: context.read<MindBlock>().watchMindLogsByDay(
+                      stream: context.read<MindBlock>().watchMindLogsRange(
                         personId,
-                        DateTime.now(),
+                        7,
                       ),
                       builder: (context, snapshot) {
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
@@ -304,10 +304,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
               children: [
                 Row(
                   children: [
-                    Text(
-                      _getMoodEmoji(log.moodScore),
-                      style: const TextStyle(fontSize: 20),
-                    ),
+                    _buildMoodIcon(context, log.moodScore),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -336,21 +333,59 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     );
   }
 
-  String _getMoodEmoji(int score) {
+  Widget _buildMoodIcon(BuildContext context, int score) {
+    final Color color;
+    final IconData icon;
+
     switch (score) {
       case 1:
-        return "😫";
+        color = const Color(0xFF8000FF);
+        icon = Icons.sentiment_very_dissatisfied_rounded;
+        break;
       case 2:
-        return "😔";
+        color = const Color(0xFF2C3E50);
+        icon = Icons.sentiment_dissatisfied_rounded;
+        break;
       case 3:
-        return "😐";
+        color = const Color(0xFFE0E0E0);
+        icon = Icons.sentiment_neutral_rounded;
+        break;
       case 4:
-        return "😊";
+        color = const Color(0xFF00FF88);
+        icon = Icons.sentiment_satisfied_alt_rounded;
+        break;
       case 5:
-        return "🤩";
+        color = const Color(0xFF00FFFF);
+        icon = Icons.sentiment_very_satisfied_rounded;
+        break;
       default:
-        return "😐";
+        color = const Color(0xFFE0E0E0);
+        icon = Icons.sentiment_neutral_rounded;
     }
+
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color.withValues(alpha: 0.1),
+        border: Border.all(
+          color: color.withValues(alpha: 0.3),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.2),
+            blurRadius: 4,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        size: 16,
+        color: color,
+      ),
+    );
   }
 
   void _createNewNote(BuildContext context) {

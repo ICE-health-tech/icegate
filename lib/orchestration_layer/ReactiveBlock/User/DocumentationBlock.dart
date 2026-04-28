@@ -97,7 +97,9 @@ class DocumentationBlock {
   void _startUptimeCounter() {
     _uptimeTimer?.cancel();
     _uptimeTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      uptimeSeconds.value++;
+      untracked(() {
+        uptimeSeconds.value++;
+      });
     });
   }
 
@@ -568,46 +570,50 @@ class DocumentationBlock {
   void _loadFiles() {
     if (_docDir == null) return;
 
-    final allEntities = _docDir!.listSync(recursive: true);
-    
-    // Load Files
-    final allFiles = allEntities.whereType<File>().where((file) {
-      final pathStr = file.path.toLowerCase();
-      // Skip hidden/system files in subfolders
-      if (pathStr.contains('/.') || pathStr.contains('\\.')) return false;
-      
-      return pathStr.endsWith('.md') ||
-          pathStr.endsWith('.txt') ||
-          pathStr.endsWith('.json') ||
-          pathStr.endsWith('.log') ||
-          pathStr.endsWith('.sql') ||
-          pathStr.endsWith('.pdf') ||
-          pathStr.endsWith('.docx') ||
-          pathStr.endsWith('.doc');
-    }).toList();
+    untracked(() {
+      batch(() {
+        final allEntities = _docDir!.listSync(recursive: true);
+        
+        // Load Files
+        final allFiles = allEntities.whereType<File>().where((file) {
+          final pathStr = file.path.toLowerCase();
+          // Skip hidden/system files in subfolders
+          if (pathStr.contains('/.') || pathStr.contains('\\.')) return false;
+          
+          return pathStr.endsWith('.md') ||
+              pathStr.endsWith('.txt') ||
+              pathStr.endsWith('.json') ||
+              pathStr.endsWith('.log') ||
+              pathStr.endsWith('.sql') ||
+              pathStr.endsWith('.pdf') ||
+              pathStr.endsWith('.docx') ||
+              pathStr.endsWith('.doc');
+        }).toList();
 
-    allFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
-    
-    // Filter by selected directory and avoid duplicates
-    final filteredFiles = allFiles.where((file) {
-      if (selectedDirectory.value == null) return true;
-      // Ensure file is inside the selected directory (or its subfolders)
-      return p.isWithin(selectedDirectory.value!.path, file.path);
-    }).toList();
-    
-    files.value = filteredFiles;
+        allFiles.sort((a, b) => b.lastModifiedSync().compareTo(a.lastModifiedSync()));
+        
+        // Filter by selected directory and avoid duplicates
+        final filteredFiles = allFiles.where((file) {
+          if (selectedDirectory.value == null) return true;
+          // Ensure file is inside the selected directory (or its subfolders)
+          return p.isWithin(selectedDirectory.value!.path, file.path);
+        }).toList();
+        
+        files.value = filteredFiles;
 
-    // Load Folders (Children of current directory)
-    final allDirs = allEntities.whereType<Directory>().where((dir) {
-      final name = p.basename(dir.path);
-      if (_shouldIgnore(name)) return false;
-      
-      final parentPath = selectedDirectory.value?.path ?? _docDir!.path;
-      // Only show immediate children of the parent path
-      return p.equals(dir.parent.path, parentPath);
-    }).toList();
-    
-    directories.value = allDirs;
+        // Load Folders (Children of current directory)
+        final allDirs = allEntities.whereType<Directory>().where((dir) {
+          final name = p.basename(dir.path);
+          if (_shouldIgnore(name)) return false;
+          
+          final parentPath = selectedDirectory.value?.path ?? _docDir!.path;
+          // Only show immediate children of the parent path
+          return p.equals(dir.parent.path, parentPath);
+        }).toList();
+        
+        directories.value = allDirs;
+      });
+    });
   }
 
   void _startWatching() {

@@ -39,7 +39,7 @@ class _WebViewPageState extends State<WebViewPage> {
               widget.url,
               style: TextStyle(
                 fontSize: 10,
-                color: colorScheme.onSurface.withOpacity(0.6),
+                color: colorScheme.onSurface.withValues(alpha: 0.6),
                 fontWeight: FontWeight.normal,
               ),
               overflow: TextOverflow.ellipsis,

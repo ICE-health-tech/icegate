@@ -97,7 +97,7 @@ class _StockPageState extends State<StockPage> {
               Text(
                 "(${StockService().getStockName(widget.symbol)})",
                 style: TextStyle(
-                  color: Colors.white.withOpacity(0.3),
+                  color: Colors.white.withValues(alpha: 0.3),
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
                 ),
@@ -163,7 +163,7 @@ class _StockPageState extends State<StockPage> {
             const SizedBox(width: 10),
             Text(
               'Today',
-              style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14),
+              style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14),
             ),
           ],
         ),
@@ -186,16 +186,16 @@ class _StockPageState extends State<StockPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                 decoration: BoxDecoration(
-                  color: isSelected ? EntryColors.iceCyan.withOpacity(0.2) : Colors.transparent,
+                  color: isSelected ? EntryColors.iceCyan.withValues(alpha: 0.2) : Colors.transparent,
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: isSelected ? EntryColors.iceCyan : Colors.white.withOpacity(0.1),
+                    color: isSelected ? EntryColors.iceCyan : Colors.white.withValues(alpha: 0.1),
                   ),
                 ),
                 child: Text(
                   range,
                   style: TextStyle(
-                    color: isSelected ? EntryColors.iceCyan : Colors.white.withOpacity(0.5),
+                    color: isSelected ? EntryColors.iceCyan : Colors.white.withValues(alpha: 0.5),
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -241,8 +241,8 @@ class _StockPageState extends State<StockPage> {
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  EntryColors.iceCyan.withOpacity(0.3),
-                  EntryColors.iceCyan.withOpacity(0.0),
+                  EntryColors.iceCyan.withValues(alpha: 0.3),
+                  EntryColors.iceCyan.withValues(alpha: 0.0),
                 ],
               ),
             ),
@@ -256,9 +256,9 @@ class _StockPageState extends State<StockPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Colors.white.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.1)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
       ),
       child: Column(
         children: [
@@ -292,7 +292,7 @@ class _StockPageState extends State<StockPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12)),
+        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 12)),
         const SizedBox(height: 5),
         Text(value, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
       ],
@@ -315,7 +315,7 @@ class _StockPageState extends State<StockPage> {
         const SizedBox(height: 15),
         Text(
           description,
-          style: TextStyle(color: Colors.white.withOpacity(0.7), fontSize: 14, height: 1.5),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 14, height: 1.5),
         ),
       ],
     );
@@ -333,7 +333,7 @@ class _StockPageState extends State<StockPage> {
           foregroundColor: Colors.black,
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           elevation: 10,
-          shadowColor: EntryColors.iceCyan.withOpacity(0.5),
+          shadowColor: EntryColors.iceCyan.withValues(alpha: 0.5),
         ),
         child: const Text(
           'TRADE NOW',

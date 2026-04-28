@@ -85,6 +85,7 @@ class FoodAnalysisBlock {
           carbs: Value(result.carbs.toDouble()),
           fat: Value(result.fat.toDouble()),
           calories: Value(result.calories.toDouble()),
+          mealImageUrl: result.imageUrl != null ? Value(result.imageUrl) : const Value.absent(),
           isAnalyzing: const Value(false),
         ),
       );

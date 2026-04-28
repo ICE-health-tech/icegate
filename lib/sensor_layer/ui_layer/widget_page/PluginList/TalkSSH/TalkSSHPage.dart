@@ -324,15 +324,21 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       }
     }
     
-    // Reload prompt for new mode from global database if not host-specific
+    // Reload prompt for new mode from global database
     final personBlock = context.read<PersonBlock>();
     final personID = personBlock.information.value.profiles.id;
     if (personID != null && nextMode != 'standard') {
       final dao = context.read<AppDatabase>().aiPromptsDAO;
       final data = await dao.getPrompt(personID, nextMode);
-      if (data != null && _sshService.aiPromptPrefix.value.isEmpty) {
+      if (data != null) {
         _sshService.aiPromptPrefix.value = data.prompt;
+        debugPrint('🔄 [RemoteSSH] Loaded AI prompt for mode $nextMode: ${data.prompt.substring(0, data.prompt.length > 20 ? 20 : data.prompt.length)}...');
+      } else {
+        // Clear if no prompt found for this mode
+        _sshService.aiPromptPrefix.value = '';
       }
+    } else if (nextMode == 'standard') {
+      _sshService.aiPromptPrefix.value = '';
     }
   }
 
@@ -365,13 +371,34 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     );
   }
 
-  void applyHostAndConnect(SSHHostModel host) {
+  void applyHostAndConnect(SSHHostModel host) async {
     _sshService.currentHostId = host.id;
     // Prefer explicitly passed aiMode if it's already set to something non-standard
     if (_sshService.aiMode.value == 'standard') {
       _sshService.aiMode.value = host.aiMode ?? 'standard';
     }
-    _sshService.aiPromptPrefix.value = host.aiPromptPrefix ?? '';
+    
+    final mode = _sshService.aiMode.value;
+    final prefix = host.aiPromptPrefix;
+    
+    if (prefix != null && prefix.isNotEmpty) {
+      _sshService.aiPromptPrefix.value = prefix;
+    } else if (mode != 'standard') {
+      // Try to load global prompt for this mode
+      final personBlock = context.read<PersonBlock>();
+      final personID = personBlock.information.value.profiles.id;
+      if (personID != null) {
+        final dao = context.read<AppDatabase>().aiPromptsDAO;
+        final data = await dao.getPrompt(personID, mode);
+        if (data != null) {
+          _sshService.aiPromptPrefix.value = data.prompt;
+        } else {
+          _sshService.aiPromptPrefix.value = '';
+        }
+      }
+    } else {
+      _sshService.aiPromptPrefix.value = '';
+    }
 
     _sshService.hostSignal.value = host.host;
     _sshService.portSignal.value = host.port;
@@ -701,7 +728,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                 end: Alignment.bottomCenter,
                 colors: List.generate(
                   200,
-                  (index) => index % 2 == 0 ? Colors.black.withOpacity(0.05) : Colors.transparent,
+                  (index) => index % 2 == 0 ? Colors.black.withValues(alpha: 0.05) : Colors.transparent,
                 ),
                 stops: List.generate(200, (index) => index / 200),
               ),
@@ -715,7 +742,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               gradient: RadialGradient(
                 colors: [
                   Colors.transparent,
-                  Colors.black.withOpacity(0.4),
+                  Colors.black.withValues(alpha: 0.4),
                 ],
                 stops: const [0.7, 1.0],
               ),
@@ -739,9 +766,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
-            color: Colors.black.withOpacity(0.8),
+            color: Colors.black.withValues(alpha: 0.8),
             borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
+            border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -752,7 +779,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               const SizedBox(height: 4),
               _hudLine('TRAFFIC', '${kbitsIn}kbps', colorScheme.secondary),
               const SizedBox(height: 4),
-              _hudLine('UPTIME', uptime, Colors.white.withOpacity(0.5)),
+              _hudLine('UPTIME', uptime, Colors.white.withValues(alpha: 0.5)),
             ],
           ),
         );
@@ -766,7 +793,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       children: [
         Text(
           label,
-          style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1),
+          style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 8, fontWeight: FontWeight.bold, letterSpacing: 1),
         ),
         const SizedBox(width: 8),
         Text(
@@ -783,7 +810,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 5, sigmaY: 5),
         child: Container(
-          color: Colors.black.withOpacity(0.7),
+          color: Colors.black.withValues(alpha: 0.7),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
@@ -796,13 +823,13 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
               const SizedBox(height: 8),
               Text(
                 'INITIATING AUTO-RECOVERY PROTOCOL...',
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, fontWeight: FontWeight.bold),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 10, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 24),
               SizedBox(
                 width: 120,
                 child: LinearProgressIndicator(
-                  backgroundColor: Colors.white.withOpacity(0.1),
+                  backgroundColor: Colors.white.withValues(alpha: 0.1),
                   valueColor: const AlwaysStoppedAnimation(Colors.redAccent),
                   minHeight: 2,
                 ),
@@ -844,11 +871,11 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
                 color: Colors.black,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.15),
+                  color: colorScheme.primary.withValues(alpha: 0.15),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: colorScheme.primary.withOpacity(0.05),
+                    color: colorScheme.primary.withValues(alpha: 0.05),
                     blurRadius: 32,
                     spreadRadius: 2,
                   ),
@@ -928,7 +955,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     return Padding(
       padding: const EdgeInsets.only(right: 4.0),
       child: Material(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
         child: InkWell(
           onTap: () => _sshService.write(value),
@@ -936,7 +963,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
             decoration: BoxDecoration(
-              border: Border.all(color: color.withOpacity(0.3)),
+              border: Border.all(color: color.withValues(alpha: 0.3)),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Text(

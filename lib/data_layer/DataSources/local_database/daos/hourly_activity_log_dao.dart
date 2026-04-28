@@ -53,4 +53,20 @@ class HourlyActivityLogDAO extends DatabaseAccessor<AppDatabase>
               t.personID.equals(personId) & t.logDate.isBetweenValues(start, end)))
         .get();
   }
+
+  /// Alias used by HealthBlock & HourlyActivityPage.
+  /// Watches all hourly-activity rows for [personId] on the calendar day of [date].
+  Stream<List<HourlyActivityLogData>> watchHourlyLogs(
+      String personId, DateTime date) {
+    return watchLogsByDay(personId, date);
+  }
+
+  /// Insert-or-replace a single hourly log row.
+  /// Used by HealthBlock when syncing pedometer data.
+  Future<void> upsertHourlyLog(HourlyActivityLogTableCompanion entry) async {
+    await into(hourlyActivityLogTable).insert(
+      entry,
+      mode: InsertMode.insertOrReplace,
+    );
+  }
 }

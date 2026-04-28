@@ -59,18 +59,20 @@ class CustomAuthService {
     // Passkey related operations now use our dedicated Go Hub on Northflank
     const authHubUrl = "https://passkey.duylong.art/v1";
     final url = Uri.parse('$authHubUrl/login/begin');
-    
+
     // Fallback email if not provided (should ideally be passed from AuthBlock)
     final targetEmail = email ?? "duylong.art@gmail.com";
     try {
       _logger.info('Fetching passkey challenge from $url');
       // Pass the user email to the Hub to get specific credentials
-      final response = await http.post(
-        url, 
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'email': targetEmail})
-      ).timeout(const Duration(seconds: 10));
-      
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': targetEmail}),
+          )
+          .timeout(const Duration(seconds: 10));
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         // The Hub returns { "publicKey": { ... options ... } }
@@ -79,8 +81,12 @@ class CustomAuthService {
         _logger.info('Successfully received login options from Hub');
         return jsonEncode(options);
       } else {
-        _logger.warning('Passkey Hub returned ${response.statusCode} for challenge');
-        throw Exception('Passkey Hub rejected request (Status: ${response.statusCode})');
+        _logger.warning(
+          'Passkey Hub returned ${response.statusCode} for challenge',
+        );
+        throw Exception(
+          'Passkey Hub rejected request (Status: ${response.statusCode})',
+        );
       }
     } catch (e) {
       _logger.severe('Error getting passkey challenge: $e');
@@ -89,19 +95,21 @@ class CustomAuthService {
   }
 
   /// Get passkey registration options from backend
-  Future<String> getPasskeyRegistrationOptions(String email, String userId) async {
+  Future<String> getPasskeyRegistrationOptions(
+    String email,
+    String userId,
+  ) async {
     const authHubUrl = "https://passkey.duylong.art/v1";
     final url = Uri.parse('$authHubUrl/register/begin');
     try {
       _logger.info('Fetching registration options from $url for $email');
-      final response = await http.post(
-        url,
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': email,
-          'user_id': userId,
-        }),
-      ).timeout(const Duration(seconds: 10));
+      final response = await http
+          .post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({'email': email, 'user_id': userId}),
+          )
+          .timeout(const Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
@@ -109,14 +117,15 @@ class CustomAuthService {
         final options = data['publicKey'];
         return jsonEncode(options);
       } else {
-        throw Exception('Hub returned ${response.statusCode} for registration options');
+        throw Exception(
+          'Hub returned ${response.statusCode} for registration options',
+        );
       }
     } catch (e) {
       _logger.severe('Error getting registration options: $e');
       rethrow;
     }
   }
-
 
   /// Verify passkey login assertion
   Future<Map<String, dynamic>> verifyPasskeyLogin({
@@ -129,10 +138,7 @@ class CustomAuthService {
       // Flatten the credential data into the root of the request body
       // This is required so go-webauthn can parse the credential from the raw request
       final Map<String, dynamic> credentialMap = jsonDecode(credential);
-      final Map<String, dynamic> body = {
-        'email': email,
-        'data': credentialMap,
-      };
+      final Map<String, dynamic> body = {'email': email, 'data': credentialMap};
 
       final response = await http.post(
         url,
@@ -143,8 +149,12 @@ class CustomAuthService {
       if (response.statusCode == 200) {
         return jsonDecode(response.body);
       } else {
-        _logger.warning('Passkey verification failed with status: ${response.statusCode}');
-        throw Exception('Server rejected passkey assertion (Status: ${response.statusCode})');
+        _logger.warning(
+          'Passkey verification failed with status: ${response.statusCode}',
+        );
+        throw Exception(
+          'Server rejected passkey assertion (Status: ${response.statusCode})',
+        );
       }
     } catch (e) {
       _logger.severe('Error verifying passkey: $e');
@@ -179,7 +189,9 @@ class CustomAuthService {
         final error = jsonDecode(response.body);
         final details = error['details'] ?? 'No extra details';
         _logger.severe('Registration verification failed: $details');
-        throw Exception(error['error'] ?? 'Registration verification failed: $details');
+        throw Exception(
+          error['error'] ?? 'Registration verification failed: $details',
+        );
       }
     } catch (e) {
       _logger.severe('Error verifying passkey registration: $e');
@@ -214,39 +226,39 @@ class CustomAuthService {
   /// Optional: Check for session JWT (similar to the TS machine's getJWT)
 
   /// Trigger backend user synchronization with retry logic
-  Future<Map<String, dynamic>> appSync(String token) async {
-    final url = Uri.parse('$baseUrl/backend/person/app_sync');
-    int retryCount = 0;
-    const maxRetries = 3;
+  // Future<Map<String, dynamic>> appSync(String token) async {
+  //   final url = Uri.parse('$baseUrl/backend/person/app_sync');
+  //   int retryCount = 0;
+  //   const maxRetries = 3;
 
-    while (retryCount < maxRetries) {
-      try {
-        _logger.info('Triggering app_sync to $url (Attempt ${retryCount + 1})');
-        final response = await http.get(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer $token',
-          },
-        ).timeout(const Duration(seconds: 30));
+  //   while (retryCount < maxRetries) {
+  //     try {
+  //       _logger.info('Triggering app_sync to $url (Attempt ${retryCount + 1})');
+  //       final response = await http.get(
+  //         url,
+  //         headers: {
+  //           'Content-Type': 'application/json',
+  //           'Authorization': 'Bearer $token',
+  //         },
+  //       ).timeout(const Duration(seconds: 30));
 
-        return _handleJsonResponse(response);
-      } catch (e) {
-        retryCount++;
-        _logger.warning('Attempt $retryCount of app_sync failed: $e');
-        
-        if (retryCount >= maxRetries) {
-          _logger.severe('All $maxRetries attempts for app_sync failed: $e');
-          throw Exception('Sync failed after $maxRetries attempts: $e');
-        }
-        
-        // Wait before retrying (exponential backoff)
-        int delay = math.pow(2, retryCount).toInt();
-        await Future.delayed(Duration(seconds: delay));
-      }
-    }
-    throw Exception('Unreachable state in appSync');
-  }
+  //       return _handleJsonResponse(response);
+  //     } catch (e) {
+  //       retryCount++;
+  //       _logger.warning('Attempt $retryCount of app_sync failed: $e');
+
+  //       if (retryCount >= maxRetries) {
+  //         _logger.severe('All $maxRetries attempts for app_sync failed: $e');
+  //         throw Exception('Sync failed after $maxRetries attempts: $e');
+  //       }
+
+  //       // Wait before retrying (exponential backoff)
+  //       int delay = math.pow(2, retryCount).toInt();
+  //       await Future.delayed(Duration(seconds: delay));
+  //     }
+  //   }
+  //   throw Exception('Unreachable state in appSync');
+  // }
 
   /// Fetch current user profile from backend
   Future<Map<String, dynamic>> fetchCurrentUser(String token) async {
@@ -266,7 +278,6 @@ class CustomAuthService {
       throw Exception('Connection error: $e');
     }
   }
-
 
   /// Logout from backend (optional but recommended)
   Future<void> logout(String token) async {
@@ -401,17 +412,27 @@ class CustomAuthService {
 
     if (!contentType.contains('application/json')) {
       _logger.warning('Expected JSON but got: $contentType');
-      
+
       // Handle HTML/Text error pages (like Cloudflare 530 or Nginx errors)
       if (response.statusCode == 530) {
-        _logger.warning('Backend is offline (530). Returning offline sentinel.');
-        return {'status': 'offline', 'error': '530', 'message': 'The backend is currently unreachable.'};
+        _logger.warning(
+          'Backend is offline (530). Returning offline sentinel.',
+        );
+        return {
+          'status': 'offline',
+          'error': '530',
+          'message': 'The backend is currently unreachable.',
+        };
       }
-      
+
       if (response.statusCode >= 500) {
-        throw Exception('Server error (${response.statusCode}). The backend might be offline.');
+        throw Exception(
+          'Server error (${response.statusCode}). The backend might be offline.',
+        );
       } else if (response.statusCode >= 400) {
-        throw Exception('Client error (${response.statusCode}). Please check your connection.');
+        throw Exception(
+          'Client error (${response.statusCode}). Please check your connection.',
+        );
       }
       throw Exception('Unexpected response format ($contentType)');
     }
@@ -433,7 +454,9 @@ class CustomAuthService {
       }
     } catch (e) {
       _logger.severe('Failed to parse JSON response: $e');
-      throw Exception('Failed to parse server response: ${response.body.substring(0, math.min(response.body.length, 100))}');
+      throw Exception(
+        'Failed to parse server response: ${response.body.substring(0, math.min(response.body.length, 100))}',
+      );
     }
   }
 }

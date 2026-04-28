@@ -35,12 +35,12 @@ class ThemeManager {
               color: colorScheme.surface,
               borderRadius: BorderRadius.circular(24), // Softer, modern corners
               border: Border.all(
-                color: colorScheme.outlineVariant.withOpacity(0.5),
+                color: colorScheme.outlineVariant.withValues(alpha: 0.5),
                 width: 1,
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.2),
+                  color: Colors.black.withValues(alpha: 0.2),
                   blurRadius: 20,
                   offset: const Offset(0, 10),
                 ),
@@ -319,7 +319,7 @@ class ThemeManager {
 
       onPressed: () {
         Provider.of<ThemeStore>(context, listen: false).loadTheme(assetPath);
-        ThemeDAO themeDAO = ThemeDAO(context.read<AppDatabase>());
+        LegacyThemeDAO themeDAO = LegacyThemeDAO(context.read<AppDatabase>());
         themeDAO.saveCurrentTheme(CurrentThemeData(themePath: assetPath));
 
         // var currentThemeData = themeDAO.getCurrentTheme();

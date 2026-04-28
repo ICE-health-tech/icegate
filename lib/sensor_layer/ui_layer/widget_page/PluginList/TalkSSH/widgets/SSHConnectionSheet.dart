@@ -75,7 +75,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: colorScheme.onSurface.withOpacity(0.1),
+                  color: colorScheme.onSurface.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -103,7 +103,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
               Text(
                 'SAVED CONNECTIONS',
                 style: TextStyle(
-                  color: colorScheme.onSurface.withOpacity(0.5),
+                  color: colorScheme.onSurface.withValues(alpha: 0.5),
                   fontFamily: 'Courier',
                   fontSize: 12,
                   fontWeight: FontWeight.bold,
@@ -125,7 +125,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                       ),
                       avatar: const Icon(Icons.computer, size: 16),
                       backgroundColor: colorScheme.surfaceContainerHighest,
-                      side: BorderSide(color: colorScheme.outline.withOpacity(0.2)),
+                      side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.2)),
                       onPressed: () {
                         widget.hostController.text = host.host;
                         widget.portController.text = host.port.toString();
@@ -155,9 +155,9 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
             const SizedBox(height: 16),
             Container(
               decoration: BoxDecoration(
-                color: colorScheme.surfaceContainerHighest.withOpacity(0.2),
+                color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+                border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
               ),
               child: Column(
                 children: [
@@ -174,7 +174,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                     subtitle: Text(
                       'Keeps shell alive on server if app closes',
                       style: TextStyle(
-                        color: colorScheme.onSurface.withOpacity(0.5),
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
                         fontSize: 10,
                       ),
                     ),
@@ -187,13 +187,13 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     child: Row(
                       children: [
-                        Icon(Icons.terminal_rounded, size: 16, color: colorScheme.onSurface.withOpacity(0.5)),
+                        Icon(Icons.terminal_rounded, size: 16, color: colorScheme.onSurface.withValues(alpha: 0.5)),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
                             'SESSION TOOLS',
                             style: TextStyle(
-                              color: colorScheme.onSurface.withOpacity(0.5),
+                              color: colorScheme.onSurface.withValues(alpha: 0.5),
                               fontFamily: 'Courier',
                               fontSize: 10,
                               fontWeight: FontWeight.bold,
@@ -229,7 +229,7 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
                   foregroundColor: colorScheme.onPrimary,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                   elevation: 4,
-                  shadowColor: colorScheme.primary.withOpacity(0.4),
+                  shadowColor: colorScheme.primary.withValues(alpha: 0.4),
                 ),
                 child: Text(
                   l10n.ssh_connect.toUpperCase(),
@@ -256,18 +256,18 @@ class _SSHConnectionSheetState extends State<SSHConnectionSheet> {
       ),
       decoration: InputDecoration(
         labelText: label,
-        prefixIcon: Icon(icon, size: 18, color: colorScheme.primary.withOpacity(0.5)),
-        labelStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.4)),
+        prefixIcon: Icon(icon, size: 18, color: colorScheme.primary.withValues(alpha: 0.5)),
+        labelStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.4)),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: colorScheme.onSurface.withOpacity(0.1)),
+          borderSide: BorderSide(color: colorScheme.onSurface.withValues(alpha: 0.1)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
           borderSide: BorderSide(color: colorScheme.primary, width: 2),
         ),
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       ),
     );

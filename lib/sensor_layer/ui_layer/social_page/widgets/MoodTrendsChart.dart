@@ -49,12 +49,17 @@ class MoodTrendsChart extends StatelessWidget {
                   if (index % 3 != 0 && index != recentLogs.length - 1) return const SizedBox.shrink();
                   
                   final date = recentLogs[index].logDate;
+                  final now = DateTime.now();
+                  final isToday = date.year == now.year && 
+                                 date.month == now.month && 
+                                 date.day == now.day;
+                  
                   return Padding(
                     padding: const EdgeInsets.only(top: 8.0),
                     child: Text(
-                      DateFormat('MM/dd').format(date),
+                      isToday ? DateFormat('HH:mm').format(date) : DateFormat('MM/dd').format(date),
                       style: TextStyle(
-                        fontSize: 9,
+                        fontSize: 8,
                         color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
                         fontWeight: FontWeight.bold,
                       ),

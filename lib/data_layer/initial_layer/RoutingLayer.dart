@@ -36,7 +36,8 @@ class _adapterState extends State<Adapter> {
   void _initAsyncDatabaseLink() async {
     final dao = appDatabase.internalWidgetsDAO;
     final externalDao = appDatabase.externalWidgetsDAO;
-    final themeDao = appDatabase.themeDAO;
+    // Use LegacyThemeDAO for SharedPreferences-based theme persistence (not Drift).
+    final themeDao = LegacyThemeDAO(appDatabase);
 
     // Load the saved theme from SharedPreferences (local-only, never synced).
     final savedTheme = await themeDao.getCurrentTheme();

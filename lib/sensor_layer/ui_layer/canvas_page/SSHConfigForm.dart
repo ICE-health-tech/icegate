@@ -139,7 +139,7 @@ class _SSHConfigFormState extends State<SSHConfigForm> {
                           useTmux ? Icons.toggle_on : Icons.toggle_off,
                           color: useTmux
                               ? Colors.greenAccent
-                              : widget.colorScheme.onSurfaceVariant.withOpacity(0.5),
+                              : widget.colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
                           size: 16 * widget.scalingFactor,
                         ),
                       ],
@@ -158,7 +158,7 @@ class _SSHConfigFormState extends State<SSHConfigForm> {
                         vertical: 2 * widget.scalingFactor,
                       ),
                       decoration: BoxDecoration(
-                        color: widget.colorScheme.primary.withOpacity(0.1),
+                        color: widget.colorScheme.primary.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
@@ -222,7 +222,7 @@ class _SSHConfigFormState extends State<SSHConfigForm> {
                 vertical: 4 * widget.scalingFactor,
               ),
               decoration: BoxDecoration(
-                color: Colors.greenAccent.withOpacity(0.8),
+                color: Colors.greenAccent.withValues(alpha: 0.8),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(
@@ -291,7 +291,7 @@ class _SSHConfigFormState extends State<SSHConfigForm> {
       width: 0.5,
       height: 12,
       margin: const EdgeInsets.symmetric(horizontal: 4),
-      color: colorScheme.outlineVariant.withOpacity(0.3),
+      color: colorScheme.outlineVariant.withValues(alpha: 0.3),
     );
   }
 
@@ -312,9 +312,9 @@ class _SSHConfigFormState extends State<SSHConfigForm> {
           vertical: 2 * scalingFactor,
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.15),
+          color: color.withValues(alpha: 0.15),
           borderRadius: BorderRadius.circular(4),
-          border: Border.all(color: color.withOpacity(0.3), width: 0.5),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 0.5),
         ),
         child: Text(
           label,

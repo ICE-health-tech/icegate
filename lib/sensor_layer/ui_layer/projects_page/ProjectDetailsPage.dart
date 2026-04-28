@@ -887,7 +887,7 @@ class _DocumentTypePicker extends StatelessWidget {
             width: 40,
             height: 4,
             decoration: BoxDecoration(
-              color: colorScheme.onSurface.withOpacity(0.1),
+              color: colorScheme.onSurface.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -948,16 +948,16 @@ class _DocumentTypePicker extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.05),
+          color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withOpacity(0.1)),
+          border: Border.all(color: color.withValues(alpha: 0.1)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: color, size: 24),
@@ -978,7 +978,7 @@ class _DocumentTypePicker extends StatelessWidget {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: colorScheme.onSurface.withOpacity(0.5),
+                      color: colorScheme.onSurface.withValues(alpha: 0.5),
                     ),
                   ),
                 ],
@@ -986,7 +986,7 @@ class _DocumentTypePicker extends StatelessWidget {
             ),
             Icon(
               Icons.add_circle_outline_rounded,
-              color: colorScheme.onSurface.withOpacity(0.2),
+              color: colorScheme.onSurface.withValues(alpha: 0.2),
             ),
           ],
         ),

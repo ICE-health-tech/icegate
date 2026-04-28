@@ -1,6 +1,5 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HuaweiCloudService.dart';
 import 'package:go_router/go_router.dart';
@@ -71,12 +70,12 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
           Positioned(
             top: -100,
             right: -100,
-            child: _buildBlurOrb(colorScheme.primary.withOpacity(0.15), 400),
+            child: _buildBlurOrb(colorScheme.primary.withValues(alpha: 0.15), 400),
           ),
           Positioned(
             bottom: 100,
             left: -150,
-            child: _buildBlurOrb(colorScheme.secondary.withOpacity(0.1), 500),
+            child: _buildBlurOrb(colorScheme.secondary.withValues(alpha: 0.1), 500),
           ),
 
           SafeArea(
@@ -113,7 +112,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                 gradient: LinearGradient(
                   colors: [
                     Colors.transparent,
-                    colorScheme.primary.withOpacity(0.5),
+                    colorScheme.primary.withValues(alpha: 0.5),
                     Colors.transparent,
                   ],
                 ),
@@ -151,9 +150,9 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.05),
+                      color: Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: const Icon(
                       Icons.arrow_back_ios_new_rounded,
@@ -169,10 +168,10 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: colorScheme.primary.withOpacity(0.1),
+                    color: colorScheme.primary.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.2),
+                      color: colorScheme.primary.withValues(alpha: 0.2),
                     ),
                   ),
                   child: Row(
@@ -210,7 +209,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Text(
               "Connect hardware, wearables and IoT streams",
               style: TextStyle(
-                color: Colors.white.withOpacity(0.5),
+                color: Colors.white.withValues(alpha: 0.5),
                 fontSize: 16,
                 fontWeight: FontWeight.w500,
               ),
@@ -228,9 +227,9 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: TextField(
             controller: _searchController,
@@ -238,12 +237,12 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             decoration: InputDecoration(
               icon: Icon(
                 Icons.search_rounded,
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 size: 20,
               ),
               hintText: "Search for a device or sensor...",
               hintStyle: TextStyle(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 fontSize: 14,
               ),
               border: InputBorder.none,
@@ -263,7 +262,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Text(
               title,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.4),
+                color: Colors.white.withValues(alpha: 0.4),
                 fontSize: 11,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
@@ -272,7 +271,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             const SizedBox(width: 12),
             Expanded(
               child: Divider(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 thickness: 1,
               ),
             ),
@@ -349,9 +348,9 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.05),
+        color: color.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.1)),
+        border: Border.all(color: color.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -428,16 +427,16 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
+              color: color.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Icon(
@@ -462,7 +461,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                 Text(
                   type,
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.4),
+                    color: Colors.white.withValues(alpha: 0.4),
                     fontSize: 10,
                   ),
                 ),
@@ -473,7 +472,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
               decoration: BoxDecoration(
-                color: Colors.greenAccent.withOpacity(0.1),
+                color: Colors.greenAccent.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -541,7 +540,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.red.withOpacity(0.1),
+                      color: Colors.red.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: const Icon(Icons.cloud_sync_rounded, color: Colors.red, size: 32),
@@ -561,7 +560,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
               const SizedBox(height: 8),
               Text(
                 "Synchronize high-fidelity sleep and heart rate data directly from Huawei Cloud servers.",
-                style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, height: 1.5),
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14, height: 1.5),
               ),
               const SizedBox(height: 32),
               
@@ -604,7 +603,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                   width: double.infinity,
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.white.withOpacity(0.1)),
+                      side: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     onPressed: () async {
@@ -631,7 +630,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                    width: double.infinity,
                    child: ElevatedButton(
                      style: ElevatedButton.styleFrom(
-                       backgroundColor: Colors.white.withOpacity(0.05),
+                       backgroundColor: Colors.white.withValues(alpha: 0.05),
                        padding: const EdgeInsets.all(18),
                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                      ),
@@ -681,7 +680,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
   Widget _buildConnectionInfo(String label, String value, Color color) {
     return Row(
       children: [
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 12)),
+        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 12)),
         const Spacer(),
         Text(value, style: TextStyle(color: color, fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1)),
       ],
@@ -697,9 +696,9 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 16),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.03),
+            color: Colors.white.withValues(alpha: 0.03),
             borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: TextField(
             controller: controller,
@@ -707,7 +706,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             style: const TextStyle(color: Colors.white, fontSize: 13),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.1)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.1)),
               border: InputBorder.none,
             ),
           ),
@@ -752,7 +751,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             name: "Add Device",
             brand: "Bluetooth/ANT+",
             icon: Icons.add_rounded,
-            color: Colors.white.withOpacity(0.5),
+            color: Colors.white.withValues(alpha: 0.5),
             isPlaceholder: true,
             onTap: () {},
           ),
@@ -808,16 +807,16 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -838,7 +837,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                   Text(
                     description,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 12,
                     ),
                   ),
@@ -850,7 +849,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
               style: TextStyle(
                 color: status == "Connected"
                     ? Colors.greenAccent
-                    : Colors.white.withOpacity(0.3),
+                    : Colors.white.withValues(alpha: 0.3),
                 fontSize: 9,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.0,
@@ -876,17 +875,17 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(isPlaceholder ? 0.01 : 0.03),
+          color: Colors.white.withValues(alpha: isPlaceholder ? 0.01 : 0.03),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(isPlaceholder ? 0.02 : 0.05),
+            color: Colors.white.withValues(alpha: isPlaceholder ? 0.02 : 0.05),
           ),
           gradient: isPlaceholder
               ? null
               : LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: [color.withOpacity(0.05), Colors.transparent],
+                  colors: [color.withValues(alpha: 0.05), Colors.transparent],
                 ),
         ),
         child: Column(
@@ -895,7 +894,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: color.withOpacity(0.1),
+                color: color.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Icon(icon, color: color, size: 24),
@@ -912,7 +911,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Text(
               brand,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.3),
+                color: Colors.white.withValues(alpha: 0.3),
                 fontSize: 10,
                 fontWeight: FontWeight.bold,
               ),
@@ -936,9 +935,9 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -968,7 +967,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                     Text(
                       protocol,
                       style: TextStyle(
-                        color: color.withOpacity(0.5),
+                        color: color.withValues(alpha: 0.5),
                         fontSize: 10,
                         fontWeight: FontWeight.bold,
                       ),
@@ -981,7 +980,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             Text(
               id,
               style: TextStyle(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 fontSize: 10,
                 fontFamily: 'Courier',
               ),
@@ -989,7 +988,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             const SizedBox(width: 12),
             Icon(
               Icons.chevron_right_rounded,
-              color: Colors.white.withOpacity(0.2),
+              color: Colors.white.withValues(alpha: 0.2),
             ),
           ],
         ),
