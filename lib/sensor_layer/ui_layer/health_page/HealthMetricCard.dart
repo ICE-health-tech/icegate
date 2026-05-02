@@ -122,6 +122,10 @@ class _HealthMetricCardState extends State<HealthMetricCard>
       case "oxygen":
       case "oxygen_saturation":
         return l10n.health_metrics_oxygen_saturation;
+      case "weather":
+        return l10n.health_metrics_weather;
+      case "air_quality":
+        return l10n.health_metrics_air_quality;
       default:
         return metricName.replaceAll('_', ' ').toUpperCase();
     }

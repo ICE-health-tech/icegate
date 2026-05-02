@@ -2,6 +2,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 
+Color _particleWinterColor(math.Random r) {
+  final roll = r.nextDouble();
+  if (roll > 0.66) return EntryLandscapePalette.icyWhiteBlue;
+  if (roll > 0.33) return EntryLandscapePalette.dustySkyBlue;
+  return EntryLandscapePalette.steelBlue;
+}
+
 class IceDiamondBackground extends StatefulWidget {
   final Widget? child;
   final int particleCount;
@@ -47,9 +54,7 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
           opacity: 0.05 + _random.nextDouble() * 0.3,
           rotation: _random.nextDouble() * math.pi * 2,
           spinSpeed: (_random.nextDouble() - 0.5) * 0.015,
-          color: _random.nextDouble() > 0.7 
-              ? EntryColors.iceCyan 
-              : EntryColors.diamondWhite,
+          color: _particleWinterColor(_random),
         ),
       );
     }
@@ -65,11 +70,11 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // 1. Deep Glacier Gradient Base
+        // 1. Winter landscape radial (same family as Prism entry)
         Positioned.fill(
           child: Container(
             decoration: const BoxDecoration(
-              gradient: EntryColors.iceGradient,
+              gradient: EntryColors.winterLandscapeRadial,
             ),
           ),
         ),
@@ -98,8 +103,8 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
                 center: Alignment.center,
                 radius: 1.4,
                 colors: [
-                  EntryColors.iceCyan.withValues(alpha: 0.05),
-                  EntryColors.glacierBase.withValues(alpha: 0.4),
+                  EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.07),
+                  EntryLandscapePalette.midnightNavy.withValues(alpha: 0.42),
                 ],
                 stops: const [0.3, 1.0],
               ),
@@ -129,7 +134,7 @@ class _IceDiamondPainter extends CustomPainter {
     // 0. Tactical Ice Grid
     if (showGrid) {
       final gridPaint = Paint()
-        ..color = EntryColors.iceCyan.withValues(alpha: 0.03)
+        ..color = EntryLandscapePalette.steelBlue.withValues(alpha: 0.045)
         ..strokeWidth = 0.5;
 
       const double step = 80.0;

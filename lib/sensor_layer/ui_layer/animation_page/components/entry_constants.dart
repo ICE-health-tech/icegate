@@ -1,5 +1,34 @@
 import 'package:flutter/material.dart';
 
+/// Reference palette from the winter cabin landscape (5 swatches, deep → light accent).
+abstract final class EntryLandscapePalette {
+  static const Color midnightNavy = Color(0xFF1A1C2C);
+  static const Color mutedSlateBlue = Color(0xFF4A6583);
+  static const Color dustySkyBlue = Color(0xFFA1C1D6);
+  static const Color icyWhiteBlue = Color(0xFFD6E4F0);
+  static const Color steelBlue = Color(0xFF82A1B1);
+
+  /// Left → right as in the reference strip (for accents / debug swatches).
+  static const List<Color> swatches = <Color>[
+    midnightNavy,
+    mutedSlateBlue,
+    dustySkyBlue,
+    icyWhiteBlue,
+    steelBlue,
+  ];
+}
+
+/// Layout tokens for Prism entry / animation surfaces.
+abstract final class EntryConstraints {
+  /// Floating snack bar clears bottom controls / home indicator on entry.
+  static const EdgeInsets snackBarFloatingMargin =
+      EdgeInsets.fromLTRB(24, 0, 24, 120);
+
+  /// Login scroll column inset (matches Prism entry rhythm).
+  static const EdgeInsets loginScrollPadding =
+      EdgeInsets.symmetric(horizontal: 24);
+}
+
 class EntryColors {
   // --- Silver Elegance Palette ---
   static const Color arcticSilver = Color(0xFFE5E5EA);    // Brightest metallic
@@ -87,6 +116,20 @@ class EntryColors {
       winterEdge,
     ],
     stops: [0.0, 0.22, 0.48, 0.78, 1.0],
+  );
+
+  /// Radial backdrop aligned with [EntryLandscapePalette] (icy center → midnight rim).
+  static const Gradient winterLandscapeRadial = RadialGradient(
+    center: Alignment(0, -0.12),
+    radius: 1.38,
+    colors: [
+      EntryLandscapePalette.icyWhiteBlue,
+      EntryLandscapePalette.dustySkyBlue,
+      EntryLandscapePalette.steelBlue,
+      EntryLandscapePalette.mutedSlateBlue,
+      EntryLandscapePalette.midnightNavy,
+    ],
+    stops: [0.0, 0.22, 0.48, 0.72, 1.0],
   );
 
   static const Color frostBloomMist = Color(0xFFDCEEF9);

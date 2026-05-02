@@ -1,8 +1,10 @@
 import 'dart:async';
+import 'dart:math' show min;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
+import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
 
 /// SupabaseService handles data synchronization between the local Drift database
 /// and the Supabase cloud backend. It replaces direct database-to-cloud calls
@@ -32,7 +34,31 @@ class SupabaseService {
     'oxygen_saturation_logs': {'id'},
     'feedbacks': {'status'},
     'project_notes': {'extension'},
+    // Local Drift has tenant_id; public.subscriptions on Supabase does not (see migrations).
+    'subscriptions': {'tenant_id'},
   };
+
+  Map<String, dynamic> _encodeTransformedRow(
+    String table,
+    Map<String, dynamic> transformed,
+  ) {
+    final encodablePayload = <String, dynamic>{};
+    transformed.forEach((key, value) {
+      if (table == 'persons') {
+        if ((key == 'first_name' || key == 'last_name') &&
+            (value == null || value.toString().isEmpty)) {
+          encodablePayload[key] = '';
+          return;
+        }
+      }
+      encodablePayload[key] = encodeForSupabaseUpsert(
+        table: table,
+        key: key,
+        value: value,
+      );
+    });
+    return encodablePayload;
+  }
 
   /// Pushes local changes to Supabase.
   /// Used by DAOs after a local write operation.
@@ -55,70 +81,9 @@ class SupabaseService {
         return;
       }
 
-      // 1. Clean the data (remove local-only columns)
       final transformed = _transformOpData(table, payload);
+      final encodablePayload = _encodeTransformedRow(table, transformed);
 
-      // 2. Prepare the payload for Supabase
-      final Map<String, dynamic> encodablePayload = {};
-
-      transformed.forEach((key, value) {
-        transformed.forEach((key, value) {
-          // 1. Handle "persons" table specific null-safety
-          if (table == 'persons') {
-            if ((key == 'first_name' || key == 'last_name') &&
-                (value == null || value.toString().isEmpty)) {
-              encodablePayload[key] = ''; // Sends empty string instead of null
-              return;
-            }
-          }
-
-          // 2. Handle 'oxygen_saturation_logs' timestamp logic
-          if (table == 'oxygen_saturation_logs' && key == 'timestamp') {
-            if (value is String && value.contains('T') && value.endsWith('Z')) {
-              final parsed = DateTime.tryParse(value);
-              if (parsed != null) {
-                encodablePayload[key] = parsed.millisecondsSinceEpoch;
-                return;
-              }
-            } else if (value is DateTime) {
-              encodablePayload[key] = value.millisecondsSinceEpoch;
-              return;
-            }
-          }
-
-          // 3. Standard conversion for everything else
-          if (value is DateTime) {
-            encodablePayload[key] = value.toUtc().toIso8601String();
-          } else {
-            encodablePayload[key] = value;
-          }
-        });
-        // --- THE FIX: Only convert 'timestamp' to BigInt for Oxygen (to match your int8 schema) ---
-        // For heart_rate_logs, we use standard strings to avoid the "out of range" error.
-        if (table == 'oxygen_saturation_logs' && key == 'timestamp') {
-          if (value is String && value.contains('T') && value.endsWith('Z')) {
-            final parsed = DateTime.tryParse(value);
-            if (parsed != null) {
-              encodablePayload[key] = parsed.millisecondsSinceEpoch;
-              return;
-            }
-          } else if (value is DateTime) {
-            encodablePayload[key] = value.millisecondsSinceEpoch;
-            return;
-          }
-
-          // else if ()
-        }
-
-        // Standard DateTime conversion for all other columns (including created_at)
-        if (value is DateTime) {
-          encodablePayload[key] = value.toUtc().toIso8601String();
-        } else {
-          encodablePayload[key] = value;
-        }
-      });
-
-      // DEBUG: Log exactly what we are sending
       if (kDebugMode) {
         debugPrint(
           "📡 [Supabase] Pushing to $table (ID: $idValue). Keys: ${encodablePayload.keys.toList()}",
@@ -128,6 +93,46 @@ class SupabaseService {
       await client.from(table).upsert(encodablePayload);
     } catch (e) {
       debugPrint("❌ [SupabaseService] Error pushing to $table: $e");
+      if (e is PostgrestException) {
+        debugPrint(
+          "   Code: ${e.code}, Message: ${e.message}, Hint: ${e.hint}",
+        );
+      }
+    }
+  }
+
+  /// Batch upsert (e.g. high-frequency [heart_rate_logs]) to reduce HTTP round-trips.
+  static const int _batchUpsertChunkSize = 150;
+
+  Future<void> pushDataBatch({
+    required String table,
+    required List<Map<String, dynamic>> payloads,
+  }) async {
+    if (payloads.isEmpty) return;
+
+    final rows = <Map<String, dynamic>>[];
+    for (final payload in payloads) {
+      final idValue = payload['id']?.toString() ?? '';
+      if (_isGuest(idValue, payload)) continue;
+      final transformed = _transformOpData(table, payload);
+      rows.add(_encodeTransformedRow(table, transformed));
+    }
+    if (rows.isEmpty) return;
+
+    try {
+      for (var i = 0; i < rows.length; i += _batchUpsertChunkSize) {
+        final end = min(i + _batchUpsertChunkSize, rows.length);
+        final chunk = rows.sublist(i, end);
+        if (kDebugMode) {
+          debugPrint(
+            "📡 [Supabase] Batch upsert $table rows ${chunk.length} "
+            "(chunk ${i ~/ _batchUpsertChunkSize + 1})",
+          );
+        }
+        await client.from(table).upsert(chunk);
+      }
+    } catch (e) {
+      debugPrint("❌ [SupabaseService] Error batch pushing to $table: $e");
       if (e is PostgrestException) {
         debugPrint(
           "   Code: ${e.code}, Message: ${e.message}, Hint: ${e.hint}",
@@ -188,11 +193,26 @@ class SupabaseService {
       debugPrint(
         "📦 [SupabaseSync] Received ${response.length} records for $table",
       );
-      if (response.isNotEmpty) {
-        // Delegate to specific DAO upserts based on table name
-        await _upsertToLocal(table, List<Map<String, dynamic>>.from(response));
+      final rows = List<Map<String, dynamic>>.from(response);
+      if (table == 'subscriptions') {
+        if (rows.isEmpty) {
+          await database.financeDAO.deleteSubscriptionsForPerson(personId);
+        } else {
+          await _upsertToLocal(table, rows);
+        }
+      } else if (rows.isNotEmpty) {
+        await _upsertToLocal(table, rows);
       }
     } catch (e) {
+      if (e is PostgrestException &&
+          e.code == 'PGRST205' &&
+          table == 'ai_prompts') {
+        debugPrint(
+          "⚠️ [SupabaseService] Skipping $table: table not in "
+          "PostgREST schema (apply supabase/migrations/20260502120000_ai_prompts.sql).",
+        );
+        return;
+      }
       debugPrint("❌ [SupabaseService] Failed to sync $table: $e");
     }
   }
@@ -331,7 +351,10 @@ class SupabaseService {
     String table,
     Map<String, dynamic> data,
   ) {
-    final result = Map<String, dynamic>.from(data);
+    var result = Map<String, dynamic>.from(data);
+    if (table == 'project_notes') {
+      result = _projectNotesToRemoteColumns(result);
+    }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
     if (tableSpecific != null) {
@@ -340,10 +363,29 @@ class SupabaseService {
     return result;
   }
 
+  /// PostgREST expects snake_case; Drift [toJson] / some maps use Dart names.
+  Map<String, dynamic> _projectNotesToRemoteColumns(Map<String, dynamic> row) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'noteID': 'note_id',
+      'personID': 'person_id',
+      'projectID': 'project_id',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      final remoteKey = dartToSql[key] ?? key;
+      out[remoteKey] = value;
+    });
+    return out;
+  }
+
   bool _isGuest(String id, Map<String, dynamic> opData) {
     const guestId = DataSeeder.guestPersonId;
     return id == guestId ||
         opData['person_id']?.toString() == guestId ||
+        opData['personID']?.toString() == guestId ||
         opData['author_id']?.toString() == guestId ||
         opData['user_id']?.toString() == guestId ||
         opData['owner_id']?.toString() == guestId;

@@ -432,6 +432,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   personId,
                   configBlock: configBlock,
                 );
+                Future.microtask(() => financeBlock.refreshFromLocalDatabase());
                 configBlock.init(database.configsDAO, personId);
                 widgetSettingsBlock.init(database.widgetDAO, personId);
                 questBlock.init(database, personId);
@@ -458,6 +459,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   debugPrint("📡 [CloudSync] Initial full sync completed.");
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
+                  financeBlock.refreshFromLocalDatabase();
                 });
 
                 // Initialize Remote Controller

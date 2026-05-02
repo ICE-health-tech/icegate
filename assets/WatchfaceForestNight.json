@@ -1,0 +1,59 @@
+{
+    "theme_name": "Watchface Forest Night",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF4E7C59",
+    "color_scheme": {
+        "primary": "0xFF6B9E7A",
+        "onPrimary": "0xFF061208",
+        "primaryContainer": "0xFF163220",
+        "onPrimaryContainer": "0xFFD8F0DD",
+        "secondary": "0xFFB0CFB8",
+        "onSecondary": "0xFF0D1810",
+        "surface": "0xFF081208",
+        "onSurface": "0xFFE8F2EA",
+        "surfaceContainer": "0xFF142419",
+        "outline": "0xFF3D5C44",
+        "outlineVariant": "0xFF556B58"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF081208",
+            "foregroundColor": "0xFF6B9E7A",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF6B9E7A",
+            "foregroundColor": "0xFF061208",
+            "borderRadius": 12.0,
+            "elevation": 0.0
+        },
+        "card": {
+            "backgroundColor": "0xFF142419",
+            "elevation": 0.0,
+            "borderRadius": 16.0
+        },
+        "icon": {
+            "color": "0xFF6B9E7A",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Roboto",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFE8F2EA"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFB8D4C0"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFF6B9E7A"
+        }
+    }
+}

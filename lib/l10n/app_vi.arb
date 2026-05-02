@@ -162,6 +162,9 @@
   "nutri_delete_confirm": "Bạn có chắc chắn muốn xóa bữa ăn này không?",
   "nutri_meal_deleted": "Đã xóa bữa ăn",
   "nutri_yesterday": "Hôm qua",
+  "nutri_ai_saved_retry_later": "Đã lưu bữa ăn trên máy. Máy chủ AI tạm lỗi — chạm Thử lại phân tích trên bảng điều khiển khi hệ thống sẵn sàng.",
+  "nutri_ai_retry": "Thử lại phân tích AI",
+  "nutri_calories_pending": "Chưa tính calo",
   "common_cancel": "Hủy",
   "common_delete": "Xóa",
   "todays_gains": "Điểm Hôm Nay",
@@ -182,7 +185,21 @@
   "health_air_quality": "AQI",
   "health_weather": "Thời tiết",
   "health_temperature_subtitle": "Nhiệt độ hiện tại",
-  "health_aqi_unit": "Chỉ số AQI",
+  "health_temperature_env_title": "Thời tiết & không khí",
+  "health_env_condition": "Điều kiện",
+  "health_env_particles": "Hạt bụi",
+  "health_env_pm25": "PM2.5",
+  "health_env_pm10": "PM10",
+  "health_env_sources": "Open-Meteo · WAQI",
+  "health_env_updated": "Cập nhật {time}",
+  "@health_env_updated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "health_aqi_unit": "AQI",
   "health_metrics_detail_coming_soon": "Trang chi tiết cho {name} sắp ra mắt!",
   "@health_metrics_detail_coming_soon": {
     "placeholders": {
@@ -314,6 +331,13 @@
   "err_biometric_disabled": "Đăng nhập sinh trắc học chưa được bật cho tài khoản này.",
   "err_too_many_attempts": "Quá nhiều lần thử thất bại. Vui lòng thử lại sau.",
   "msg_enter_credentials": "Vui lòng nhập thông tin đăng nhập",
+  "forgot_password": "Quên mật khẩu?",
+  "forgot_password_title": "Đặt lại mật khẩu",
+  "forgot_password_body": "Nhập email tài khoản. Chúng tôi sẽ gửi liên kết để đặt mật khẩu mới.",
+  "forgot_password_send": "Gửi liên kết",
+  "forgot_password_success": "Nếu tồn tại tài khoản với email này, bạn sẽ nhận liên kết đặt lại mật khẩu.",
+  "err_forgot_password_empty_email": "Vui lòng nhập địa chỉ email.",
+  "err_forgot_password_invalid_email": "Vui lòng nhập email hợp lệ.",
   "analysis_user_title": "Phân tích của {name}",
   "@analysis_user_title": {
     "placeholders": {
@@ -429,7 +453,7 @@
   "identity_evolution": "TIẾN HÓA ĐỊNH DANH",
   "identity_evolution_desc": "Cấp 1: Google. Thiết lập mật khẩu cục bộ để nâng cấp bậc bảo mật.",
   "btn_set": "THIẾT LẬP",
-  "security_accuracy": "Bảo mật & Chính xác",
+  "security_accuracy": "Bảo mật",
   "passkey_settings": "Cài đặt Passkey",
   "fast_track_active": "Truy cập nhanh đang hoạt động (Bảo mật)",
   "upgrade_biometric": "Nâng cấp lên Truy cập nhanh Sinh trắc học",
@@ -1016,6 +1040,18 @@
   "msg_sign_in_to_sync": "Đăng nhập để đồng bộ dữ liệu",
   "member_status": "Thành viên",
   "change_username": "Thay đổi tên người dùng",
+  "delete_account": "Xóa tài khoản",
+  "delete_account_subtitle": "Đăng xuất và xóa hồ sơ đám mây",
+  "delete_account_plan_title": "Kế hoạch đề xuất trước khi xóa",
+  "delete_account_plan_intro": "Xem các bước khi bạn tiếp tục:",
+  "delete_account_plan_step1": "Bạn sẽ đăng xuất trên thiết bị này và dữ liệu đăng nhập đã lưu trong bộ nhớ bảo mật sẽ bị xóa.",
+  "delete_account_plan_step2": "Nếu dự án triển khai Edge Function Supabase \"delete-account\", tài khoản xác thực và dòng liên quan có thể được xóa phía máy chủ.",
+  "delete_account_plan_step3": "Trước khi có endpoint đó, dữ liệu đám mây có thể vẫn tồn tại — liên hệ hỗ trợ hoặc yêu cầu xóa đầy đủ theo chính sách bảo mật.",
+  "delete_account_acknowledge": "Tôi hiểu tài khoản có thể chưa bị xóa hoàn toàn trên máy chủ cho đến khi backend bật xóa.",
+  "delete_account_confirm": "Xóa và đăng xuất",
+  "delete_account_cancel": "Hủy",
+  "delete_account_success": "Bạn đã đăng xuất. Việc xóa hoàn toàn trên đám mây có thể mất tới 48 giờ sau khi bật.",
+  "delete_account_err_not_signed_in": "Không có phiên đăng nhập.",
   "remaining": "Còn lại",
   "notification_manager_title": "Thông báo",
   "notification_hunter_hub": "Trung tâm Thợ săn",

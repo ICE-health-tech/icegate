@@ -15004,6 +15004,17 @@ class $FeedbacksTableTable extends FeedbacksTable
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -15014,6 +15025,7 @@ class $FeedbacksTableTable extends FeedbacksTable
     systemContext,
     status,
     createdAt,
+    tenantID,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -15084,6 +15096,12 @@ class $FeedbacksTableTable extends FeedbacksTable
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
     return context;
   }
 
@@ -15125,6 +15143,10 @@ class $FeedbacksTableTable extends FeedbacksTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
     );
   }
 
@@ -15144,6 +15166,7 @@ class FeedbackLocalData extends DataClass
   final String? systemContext;
   final String status;
   final DateTime createdAt;
+  final String? tenantID;
   const FeedbackLocalData({
     required this.id,
     this.personID,
@@ -15153,6 +15176,7 @@ class FeedbackLocalData extends DataClass
     this.systemContext,
     required this.status,
     required this.createdAt,
+    this.tenantID,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -15171,6 +15195,9 @@ class FeedbackLocalData extends DataClass
     }
     map['status'] = Variable<String>(status);
     map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
     return map;
   }
 
@@ -15190,6 +15217,9 @@ class FeedbackLocalData extends DataClass
           : Value(systemContext),
       status: Value(status),
       createdAt: Value(createdAt),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
     );
   }
 
@@ -15207,6 +15237,7 @@ class FeedbackLocalData extends DataClass
       systemContext: serializer.fromJson<String?>(json['systemContext']),
       status: serializer.fromJson<String>(json['status']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
     );
   }
   @override
@@ -15221,6 +15252,7 @@ class FeedbackLocalData extends DataClass
       'systemContext': serializer.toJson<String?>(systemContext),
       'status': serializer.toJson<String>(status),
       'createdAt': serializer.toJson<DateTime>(createdAt),
+      'tenantID': serializer.toJson<String?>(tenantID),
     };
   }
 
@@ -15233,6 +15265,7 @@ class FeedbackLocalData extends DataClass
     Value<String?> systemContext = const Value.absent(),
     String? status,
     DateTime? createdAt,
+    Value<String?> tenantID = const Value.absent(),
   }) => FeedbackLocalData(
     id: id ?? this.id,
     personID: personID.present ? personID.value : this.personID,
@@ -15246,6 +15279,7 @@ class FeedbackLocalData extends DataClass
         : this.systemContext,
     status: status ?? this.status,
     createdAt: createdAt ?? this.createdAt,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
   );
   FeedbackLocalData copyWithCompanion(FeedbacksTableCompanion data) {
     return FeedbackLocalData(
@@ -15261,6 +15295,7 @@ class FeedbackLocalData extends DataClass
           : this.systemContext,
       status: data.status.present ? data.status.value : this.status,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
     );
   }
 
@@ -15274,7 +15309,8 @@ class FeedbackLocalData extends DataClass
           ..write('localImagePath: $localImagePath, ')
           ..write('systemContext: $systemContext, ')
           ..write('status: $status, ')
-          ..write('createdAt: $createdAt')
+          ..write('createdAt: $createdAt, ')
+          ..write('tenantID: $tenantID')
           ..write(')'))
         .toString();
   }
@@ -15289,6 +15325,7 @@ class FeedbackLocalData extends DataClass
     systemContext,
     status,
     createdAt,
+    tenantID,
   );
   @override
   bool operator ==(Object other) =>
@@ -15301,7 +15338,8 @@ class FeedbackLocalData extends DataClass
           other.localImagePath == this.localImagePath &&
           other.systemContext == this.systemContext &&
           other.status == this.status &&
-          other.createdAt == this.createdAt);
+          other.createdAt == this.createdAt &&
+          other.tenantID == this.tenantID);
 }
 
 class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
@@ -15313,6 +15351,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
   final Value<String?> systemContext;
   final Value<String> status;
   final Value<DateTime> createdAt;
+  final Value<String?> tenantID;
   final Value<int> rowid;
   const FeedbacksTableCompanion({
     this.id = const Value.absent(),
@@ -15323,6 +15362,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
     this.systemContext = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.tenantID = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   FeedbacksTableCompanion.insert({
@@ -15334,6 +15374,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
     this.systemContext = const Value.absent(),
     this.status = const Value.absent(),
     this.createdAt = const Value.absent(),
+    this.tenantID = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        message = Value(message),
@@ -15347,6 +15388,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
     Expression<String>? systemContext,
     Expression<String>? status,
     Expression<DateTime>? createdAt,
+    Expression<String>? tenantID,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -15358,6 +15400,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
       if (systemContext != null) 'system_context': systemContext,
       if (status != null) 'status': status,
       if (createdAt != null) 'created_at': createdAt,
+      if (tenantID != null) 'tenant_id': tenantID,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -15371,6 +15414,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
     Value<String?>? systemContext,
     Value<String>? status,
     Value<DateTime>? createdAt,
+    Value<String?>? tenantID,
     Value<int>? rowid,
   }) {
     return FeedbacksTableCompanion(
@@ -15382,6 +15426,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
       systemContext: systemContext ?? this.systemContext,
       status: status ?? this.status,
       createdAt: createdAt ?? this.createdAt,
+      tenantID: tenantID ?? this.tenantID,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -15413,6 +15458,9 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -15430,6 +15478,7 @@ class FeedbacksTableCompanion extends UpdateCompanion<FeedbackLocalData> {
           ..write('systemContext: $systemContext, ')
           ..write('status: $status, ')
           ..write('createdAt: $createdAt, ')
+          ..write('tenantID: $tenantID, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -17682,6 +17731,21 @@ class $MealsTableTable extends MealsTable
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _needsAiRetryMeta = const VerificationMeta(
+    'needsAiRetry',
+  );
+  @override
+  late final GeneratedColumn<bool> needsAiRetry = GeneratedColumn<bool>(
+    'needs_ai_retry',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("needs_ai_retry" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -17696,6 +17760,7 @@ class $MealsTableTable extends MealsTable
     calories,
     eatenAt,
     isAnalyzing,
+    needsAiRetry,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -17782,6 +17847,15 @@ class $MealsTableTable extends MealsTable
         ),
       );
     }
+    if (data.containsKey('needs_ai_retry')) {
+      context.handle(
+        _needsAiRetryMeta,
+        needsAiRetry.isAcceptableOrUnknown(
+          data['needs_ai_retry']!,
+          _needsAiRetryMeta,
+        ),
+      );
+    }
     return context;
   }
 
@@ -17841,6 +17915,10 @@ class $MealsTableTable extends MealsTable
         DriftSqlType.bool,
         data['${effectivePrefix}is_analyzing'],
       )!,
+      needsAiRetry: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}needs_ai_retry'],
+      )!,
     );
   }
 
@@ -17866,6 +17944,7 @@ class MealData extends DataClass implements Insertable<MealData> {
   final double calories;
   final DateTime eatenAt;
   final bool isAnalyzing;
+  final bool needsAiRetry;
   const MealData({
     required this.id,
     this.tenantID,
@@ -17879,6 +17958,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     required this.calories,
     required this.eatenAt,
     required this.isAnalyzing,
+    required this.needsAiRetry,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -17907,6 +17987,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       );
     }
     map['is_analyzing'] = Variable<bool>(isAnalyzing);
+    map['needs_ai_retry'] = Variable<bool>(needsAiRetry);
     return map;
   }
 
@@ -17932,6 +18013,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       calories: Value(calories),
       eatenAt: Value(eatenAt),
       isAnalyzing: Value(isAnalyzing),
+      needsAiRetry: Value(needsAiRetry),
     );
   }
 
@@ -17953,6 +18035,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       calories: serializer.fromJson<double>(json['calories']),
       eatenAt: serializer.fromJson<DateTime>(json['eatenAt']),
       isAnalyzing: serializer.fromJson<bool>(json['isAnalyzing']),
+      needsAiRetry: serializer.fromJson<bool>(json['needsAiRetry']),
     );
   }
   @override
@@ -17971,6 +18054,7 @@ class MealData extends DataClass implements Insertable<MealData> {
       'calories': serializer.toJson<double>(calories),
       'eatenAt': serializer.toJson<DateTime>(eatenAt),
       'isAnalyzing': serializer.toJson<bool>(isAnalyzing),
+      'needsAiRetry': serializer.toJson<bool>(needsAiRetry),
     };
   }
 
@@ -17987,6 +18071,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     double? calories,
     DateTime? eatenAt,
     bool? isAnalyzing,
+    bool? needsAiRetry,
   }) => MealData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -18000,6 +18085,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     calories: calories ?? this.calories,
     eatenAt: eatenAt ?? this.eatenAt,
     isAnalyzing: isAnalyzing ?? this.isAnalyzing,
+    needsAiRetry: needsAiRetry ?? this.needsAiRetry,
   );
   MealData copyWithCompanion(MealsTableCompanion data) {
     return MealData(
@@ -18019,6 +18105,9 @@ class MealData extends DataClass implements Insertable<MealData> {
       isAnalyzing: data.isAnalyzing.present
           ? data.isAnalyzing.value
           : this.isAnalyzing,
+      needsAiRetry: data.needsAiRetry.present
+          ? data.needsAiRetry.value
+          : this.needsAiRetry,
     );
   }
 
@@ -18036,7 +18125,8 @@ class MealData extends DataClass implements Insertable<MealData> {
           ..write('protein: $protein, ')
           ..write('calories: $calories, ')
           ..write('eatenAt: $eatenAt, ')
-          ..write('isAnalyzing: $isAnalyzing')
+          ..write('isAnalyzing: $isAnalyzing, ')
+          ..write('needsAiRetry: $needsAiRetry')
           ..write(')'))
         .toString();
   }
@@ -18055,6 +18145,7 @@ class MealData extends DataClass implements Insertable<MealData> {
     calories,
     eatenAt,
     isAnalyzing,
+    needsAiRetry,
   );
   @override
   bool operator ==(Object other) =>
@@ -18071,7 +18162,8 @@ class MealData extends DataClass implements Insertable<MealData> {
           other.protein == this.protein &&
           other.calories == this.calories &&
           other.eatenAt == this.eatenAt &&
-          other.isAnalyzing == this.isAnalyzing);
+          other.isAnalyzing == this.isAnalyzing &&
+          other.needsAiRetry == this.needsAiRetry);
 }
 
 class MealsTableCompanion extends UpdateCompanion<MealData> {
@@ -18087,6 +18179,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
   final Value<double> calories;
   final Value<DateTime> eatenAt;
   final Value<bool> isAnalyzing;
+  final Value<bool> needsAiRetry;
   final Value<int> rowid;
   const MealsTableCompanion({
     this.id = const Value.absent(),
@@ -18101,6 +18194,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     this.calories = const Value.absent(),
     this.eatenAt = const Value.absent(),
     this.isAnalyzing = const Value.absent(),
+    this.needsAiRetry = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MealsTableCompanion.insert({
@@ -18116,6 +18210,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     this.calories = const Value.absent(),
     this.eatenAt = const Value.absent(),
     this.isAnalyzing = const Value.absent(),
+    this.needsAiRetry = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        mealName = Value(mealName);
@@ -18132,6 +18227,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     Expression<double>? calories,
     Expression<DateTime>? eatenAt,
     Expression<bool>? isAnalyzing,
+    Expression<bool>? needsAiRetry,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -18147,6 +18243,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
       if (calories != null) 'calories': calories,
       if (eatenAt != null) 'eaten_at': eatenAt,
       if (isAnalyzing != null) 'is_analyzing': isAnalyzing,
+      if (needsAiRetry != null) 'needs_ai_retry': needsAiRetry,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -18164,6 +18261,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     Value<double>? calories,
     Value<DateTime>? eatenAt,
     Value<bool>? isAnalyzing,
+    Value<bool>? needsAiRetry,
     Value<int>? rowid,
   }) {
     return MealsTableCompanion(
@@ -18179,6 +18277,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
       calories: calories ?? this.calories,
       eatenAt: eatenAt ?? this.eatenAt,
       isAnalyzing: isAnalyzing ?? this.isAnalyzing,
+      needsAiRetry: needsAiRetry ?? this.needsAiRetry,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -18224,6 +18323,9 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
     if (isAnalyzing.present) {
       map['is_analyzing'] = Variable<bool>(isAnalyzing.value);
     }
+    if (needsAiRetry.present) {
+      map['needs_ai_retry'] = Variable<bool>(needsAiRetry.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -18245,6 +18347,7 @@ class MealsTableCompanion extends UpdateCompanion<MealData> {
           ..write('calories: $calories, ')
           ..write('eatenAt: $eatenAt, ')
           ..write('isAnalyzing: $isAnalyzing, ')
+          ..write('needsAiRetry: $needsAiRetry, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -33625,6 +33728,17 @@ class $AppTimeSpendingTableTable extends AppTimeSpendingTable
     requiredDuringInsert: false,
     defaultValue: const Constant(0.0),
   );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
       GeneratedColumn<DateTime>(
@@ -33644,6 +33758,7 @@ class $AppTimeSpendingTableTable extends AppTimeSpendingTable
     sector,
     pagePath,
     durationMinutes,
+    tenantID,
     createdAt,
   ];
   @override
@@ -33694,6 +33809,12 @@ class $AppTimeSpendingTableTable extends AppTimeSpendingTable
         ),
       );
     }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
     return context;
   }
 
@@ -33735,6 +33856,10 @@ class $AppTimeSpendingTableTable extends AppTimeSpendingTable
         DriftSqlType.double,
         data['${effectivePrefix}duration_minutes'],
       )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
       createdAt: $AppTimeSpendingTableTable.$convertercreatedAt.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime,
@@ -33768,6 +33893,7 @@ class AppTimeSpendingData extends DataClass
   final String sector;
   final String? pagePath;
   final double durationMinutes;
+  final String? tenantID;
   final DateTime createdAt;
   const AppTimeSpendingData({
     required this.id,
@@ -33777,6 +33903,7 @@ class AppTimeSpendingData extends DataClass
     required this.sector,
     this.pagePath,
     required this.durationMinutes,
+    this.tenantID,
     required this.createdAt,
   });
   @override
@@ -33799,6 +33926,9 @@ class AppTimeSpendingData extends DataClass
       map['page_path'] = Variable<String>(pagePath);
     }
     map['duration_minutes'] = Variable<double>(durationMinutes);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
     {
       map['created_at'] = Variable<DateTime>(
         $AppTimeSpendingTableTable.$convertercreatedAt.toSql(createdAt),
@@ -33820,6 +33950,9 @@ class AppTimeSpendingData extends DataClass
           ? const Value.absent()
           : Value(pagePath),
       durationMinutes: Value(durationMinutes),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
       createdAt: Value(createdAt),
     );
   }
@@ -33837,6 +33970,7 @@ class AppTimeSpendingData extends DataClass
       sector: serializer.fromJson<String>(json['sector']),
       pagePath: serializer.fromJson<String?>(json['pagePath']),
       durationMinutes: serializer.fromJson<double>(json['durationMinutes']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -33851,6 +33985,7 @@ class AppTimeSpendingData extends DataClass
       'sector': serializer.toJson<String>(sector),
       'pagePath': serializer.toJson<String?>(pagePath),
       'durationMinutes': serializer.toJson<double>(durationMinutes),
+      'tenantID': serializer.toJson<String?>(tenantID),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -33863,6 +33998,7 @@ class AppTimeSpendingData extends DataClass
     String? sector,
     Value<String?> pagePath = const Value.absent(),
     double? durationMinutes,
+    Value<String?> tenantID = const Value.absent(),
     DateTime? createdAt,
   }) => AppTimeSpendingData(
     id: id ?? this.id,
@@ -33872,6 +34008,7 @@ class AppTimeSpendingData extends DataClass
     sector: sector ?? this.sector,
     pagePath: pagePath.present ? pagePath.value : this.pagePath,
     durationMinutes: durationMinutes ?? this.durationMinutes,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
     createdAt: createdAt ?? this.createdAt,
   );
   AppTimeSpendingData copyWithCompanion(AppTimeSpendingTableCompanion data) {
@@ -33885,6 +34022,7 @@ class AppTimeSpendingData extends DataClass
       durationMinutes: data.durationMinutes.present
           ? data.durationMinutes.value
           : this.durationMinutes,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -33899,6 +34037,7 @@ class AppTimeSpendingData extends DataClass
           ..write('sector: $sector, ')
           ..write('pagePath: $pagePath, ')
           ..write('durationMinutes: $durationMinutes, ')
+          ..write('tenantID: $tenantID, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -33913,6 +34052,7 @@ class AppTimeSpendingData extends DataClass
     sector,
     pagePath,
     durationMinutes,
+    tenantID,
     createdAt,
   );
   @override
@@ -33926,6 +34066,7 @@ class AppTimeSpendingData extends DataClass
           other.sector == this.sector &&
           other.pagePath == this.pagePath &&
           other.durationMinutes == this.durationMinutes &&
+          other.tenantID == this.tenantID &&
           other.createdAt == this.createdAt);
 }
 
@@ -33938,6 +34079,7 @@ class AppTimeSpendingTableCompanion
   final Value<String> sector;
   final Value<String?> pagePath;
   final Value<double> durationMinutes;
+  final Value<String?> tenantID;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const AppTimeSpendingTableCompanion({
@@ -33948,6 +34090,7 @@ class AppTimeSpendingTableCompanion
     this.sector = const Value.absent(),
     this.pagePath = const Value.absent(),
     this.durationMinutes = const Value.absent(),
+    this.tenantID = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -33959,6 +34102,7 @@ class AppTimeSpendingTableCompanion
     required String sector,
     this.pagePath = const Value.absent(),
     this.durationMinutes = const Value.absent(),
+    this.tenantID = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -33973,6 +34117,7 @@ class AppTimeSpendingTableCompanion
     Expression<String>? sector,
     Expression<String>? pagePath,
     Expression<double>? durationMinutes,
+    Expression<String>? tenantID,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -33984,6 +34129,7 @@ class AppTimeSpendingTableCompanion
       if (sector != null) 'sector': sector,
       if (pagePath != null) 'page_path': pagePath,
       if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (tenantID != null) 'tenant_id': tenantID,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -33997,6 +34143,7 @@ class AppTimeSpendingTableCompanion
     Value<String>? sector,
     Value<String?>? pagePath,
     Value<double>? durationMinutes,
+    Value<String?>? tenantID,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -34008,6 +34155,7 @@ class AppTimeSpendingTableCompanion
       sector: sector ?? this.sector,
       pagePath: pagePath ?? this.pagePath,
       durationMinutes: durationMinutes ?? this.durationMinutes,
+      tenantID: tenantID ?? this.tenantID,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -34041,6 +34189,9 @@ class AppTimeSpendingTableCompanion
     if (durationMinutes.present) {
       map['duration_minutes'] = Variable<double>(durationMinutes.value);
     }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(
         $AppTimeSpendingTableTable.$convertercreatedAt.toSql(createdAt.value),
@@ -34062,6 +34213,7 @@ class AppTimeSpendingTableCompanion
           ..write('sector: $sector, ')
           ..write('pagePath: $pagePath, ')
           ..write('durationMinutes: $durationMinutes, ')
+          ..write('tenantID: $tenantID, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -41234,6 +41386,7 @@ typedef $$FeedbacksTableTableCreateCompanionBuilder =
       Value<String?> systemContext,
       Value<String> status,
       Value<DateTime> createdAt,
+      Value<String?> tenantID,
       Value<int> rowid,
     });
 typedef $$FeedbacksTableTableUpdateCompanionBuilder =
@@ -41246,6 +41399,7 @@ typedef $$FeedbacksTableTableUpdateCompanionBuilder =
       Value<String?> systemContext,
       Value<String> status,
       Value<DateTime> createdAt,
+      Value<String?> tenantID,
       Value<int> rowid,
     });
 
@@ -41295,6 +41449,11 @@ class $$FeedbacksTableTableFilterComposer
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -41347,6 +41506,11 @@ class $$FeedbacksTableTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$FeedbacksTableTableAnnotationComposer
@@ -41385,6 +41549,9 @@ class $$FeedbacksTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
 }
 
 class $$FeedbacksTableTableTableManager
@@ -41432,6 +41599,7 @@ class $$FeedbacksTableTableTableManager
                 Value<String?> systemContext = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FeedbacksTableCompanion(
                 id: id,
@@ -41442,6 +41610,7 @@ class $$FeedbacksTableTableTableManager
                 systemContext: systemContext,
                 status: status,
                 createdAt: createdAt,
+                tenantID: tenantID,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -41454,6 +41623,7 @@ class $$FeedbacksTableTableTableManager
                 Value<String?> systemContext = const Value.absent(),
                 Value<String> status = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => FeedbacksTableCompanion.insert(
                 id: id,
@@ -41464,6 +41634,7 @@ class $$FeedbacksTableTableTableManager
                 systemContext: systemContext,
                 status: status,
                 createdAt: createdAt,
+                tenantID: tenantID,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -42525,6 +42696,7 @@ typedef $$MealsTableTableCreateCompanionBuilder =
       Value<double> calories,
       Value<DateTime> eatenAt,
       Value<bool> isAnalyzing,
+      Value<bool> needsAiRetry,
       Value<int> rowid,
     });
 typedef $$MealsTableTableUpdateCompanionBuilder =
@@ -42541,6 +42713,7 @@ typedef $$MealsTableTableUpdateCompanionBuilder =
       Value<double> calories,
       Value<DateTime> eatenAt,
       Value<bool> isAnalyzing,
+      Value<bool> needsAiRetry,
       Value<int> rowid,
     });
 
@@ -42613,6 +42786,11 @@ class $$MealsTableTableFilterComposer
     column: $table.isAnalyzing,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<bool> get needsAiRetry => $composableBuilder(
+    column: $table.needsAiRetry,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$MealsTableTableOrderingComposer
@@ -42683,6 +42861,11 @@ class $$MealsTableTableOrderingComposer
     column: $table.isAnalyzing,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<bool> get needsAiRetry => $composableBuilder(
+    column: $table.needsAiRetry,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$MealsTableTableAnnotationComposer
@@ -42733,6 +42916,11 @@ class $$MealsTableTableAnnotationComposer
     column: $table.isAnalyzing,
     builder: (column) => column,
   );
+
+  GeneratedColumn<bool> get needsAiRetry => $composableBuilder(
+    column: $table.needsAiRetry,
+    builder: (column) => column,
+  );
 }
 
 class $$MealsTableTableTableManager
@@ -42775,6 +42963,7 @@ class $$MealsTableTableTableManager
                 Value<double> calories = const Value.absent(),
                 Value<DateTime> eatenAt = const Value.absent(),
                 Value<bool> isAnalyzing = const Value.absent(),
+                Value<bool> needsAiRetry = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MealsTableCompanion(
                 id: id,
@@ -42789,6 +42978,7 @@ class $$MealsTableTableTableManager
                 calories: calories,
                 eatenAt: eatenAt,
                 isAnalyzing: isAnalyzing,
+                needsAiRetry: needsAiRetry,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -42805,6 +42995,7 @@ class $$MealsTableTableTableManager
                 Value<double> calories = const Value.absent(),
                 Value<DateTime> eatenAt = const Value.absent(),
                 Value<bool> isAnalyzing = const Value.absent(),
+                Value<bool> needsAiRetry = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MealsTableCompanion.insert(
                 id: id,
@@ -42819,6 +43010,7 @@ class $$MealsTableTableTableManager
                 calories: calories,
                 eatenAt: eatenAt,
                 isAnalyzing: isAnalyzing,
+                needsAiRetry: needsAiRetry,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
@@ -50420,6 +50612,7 @@ typedef $$AppTimeSpendingTableTableCreateCompanionBuilder =
       required String sector,
       Value<String?> pagePath,
       Value<double> durationMinutes,
+      Value<String?> tenantID,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -50432,6 +50625,7 @@ typedef $$AppTimeSpendingTableTableUpdateCompanionBuilder =
       Value<String> sector,
       Value<String?> pagePath,
       Value<double> durationMinutes,
+      Value<String?> tenantID,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -50479,6 +50673,11 @@ class $$AppTimeSpendingTableTableFilterComposer
 
   ColumnFilters<double> get durationMinutes => $composableBuilder(
     column: $table.durationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -50533,6 +50732,11 @@ class $$AppTimeSpendingTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -50570,6 +50774,9 @@ class $$AppTimeSpendingTableTableAnnotationComposer
     column: $table.durationMinutes,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -50625,6 +50832,7 @@ class $$AppTimeSpendingTableTableTableManager
                 Value<String> sector = const Value.absent(),
                 Value<String?> pagePath = const Value.absent(),
                 Value<double> durationMinutes = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppTimeSpendingTableCompanion(
@@ -50635,6 +50843,7 @@ class $$AppTimeSpendingTableTableTableManager
                 sector: sector,
                 pagePath: pagePath,
                 durationMinutes: durationMinutes,
+                tenantID: tenantID,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -50647,6 +50856,7 @@ class $$AppTimeSpendingTableTableTableManager
                 required String sector,
                 Value<String?> pagePath = const Value.absent(),
                 Value<double> durationMinutes = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AppTimeSpendingTableCompanion.insert(
@@ -50657,6 +50867,7 @@ class $$AppTimeSpendingTableTableTableManager
                 sector: sector,
                 pagePath: pagePath,
                 durationMinutes: durationMinutes,
+                tenantID: tenantID,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

@@ -143,19 +143,23 @@ class ScanlinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
     final paint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topCenter,
         end: Alignment.bottomCenter,
         colors: [
-          EntryColors.iceCyan.withValues(alpha: 0.0),
-          EntryColors.iceCyan.withValues(alpha: 0.15),
-          EntryColors.iceCyan.withValues(alpha: 0.0),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.0),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.12),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.5, 1.0],
       ).createShader(Rect.fromLTWH(0, (progress * size.height) - 40, size.width, 80));
 
     canvas.drawRect(Rect.fromLTWH(0, (progress * size.height) - 40, size.width, 80), paint);
+    canvas.restore();
   }
 
   @override
@@ -169,28 +173,44 @@ class ShinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
+    canvas.save();
+    // Keep diagonal shine inside the card; unclipped rotation drew bands above/below (mirror-like).
+    canvas.clipRect(Rect.fromLTWH(0, 0, size.width, size.height));
+
     final paint = Paint()
       ..shader = LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
         colors: [
-          Colors.white.withValues(alpha: 0.0),
-          Colors.white.withValues(alpha: 0.15),
-          Colors.white.withValues(alpha: 0.0),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.0),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.12),
+          EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.0),
         ],
         stops: const [0.0, 0.5, 1.0],
-      ).createShader(Rect.fromLTWH((progress * size.width * 2) - size.width, 0, size.width, size.height));
+      ).createShader(
+        Rect.fromLTWH(
+          (progress * size.width * 2) - size.width,
+          0,
+          size.width,
+          size.height,
+        ),
+      );
 
-    // Rotate the canvas to create a diagonal shine sweep
     canvas.save();
     canvas.translate(size.width / 2, size.height / 2);
     canvas.rotate(math.pi / 4);
     canvas.translate(-size.width / 2, -size.height / 2);
-    
+
     canvas.drawRect(
-      Rect.fromLTWH((progress * size.width * 2) - size.width, -size.height, size.width, size.height * 3),
+      Rect.fromLTWH(
+        (progress * size.width * 2) - size.width,
+        -size.height,
+        size.width,
+        size.height * 3,
+      ),
       paint,
     );
+    canvas.restore();
     canvas.restore();
   }
 
@@ -259,7 +279,7 @@ class _ParticlePainter extends CustomPainter {
       final double displayY = currentY - 0.1;
 
       final offset = Offset(p.x * size.width, displayY * size.height);
-      paint.color = EntryColors.iceCyan.withValues(alpha: p.opacity);
+      paint.color = EntryLandscapePalette.dustySkyBlue.withValues(alpha: p.opacity);
       
       canvas.drawRect(
         Rect.fromCenter(center: offset, width: p.size, height: p.size),

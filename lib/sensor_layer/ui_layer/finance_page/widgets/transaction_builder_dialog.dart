@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/finance_currency_toggle.dart';
 
 class TransactionBuilderDialog extends StatefulWidget {
   final TransactionData? initialData;
@@ -65,8 +67,13 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
   @override
   void initState() {
     super.initState();
+    final fb = widget.financeBlock;
     if (widget.initialData != null) {
-      amountController.text = widget.initialData!.amount.toString();
+      final displayAmount =
+          fb.convertToDisplay(widget.initialData!.amount);
+      amountController.text = fb.useVnd.peek()
+          ? displayAmount.toStringAsFixed(0)
+          : displayAmount.toStringAsFixed(2);
       descController.text = widget.initialData!.description ?? '';
       selectedType = widget.initialData!.type;
       selectedCategory = widget.initialData!.category;
@@ -179,19 +186,34 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 ),
               ),
             const SizedBox(height: 16),
-            TextField(
-              controller: amountController,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(fontSize: 14),
-              decoration: InputDecoration(
-                labelText: l10n.finance_label_amount,
-                labelStyle: const TextStyle(fontSize: 12),
-                prefixText: !widget.financeBlock.useVnd.value ? '\$ ' : null,
-                suffixText: widget.financeBlock.useVnd.value ? ' ₫' : null,
-                border: const OutlineInputBorder(),
+            Align(
+              alignment: Alignment.centerRight,
+              child: FinanceInlineCurrencyToggle(
+                financeBlock: widget.financeBlock,
+                onTap: () => toggleFinanceCurrencyWithAmountField(
+                  financeBlock: widget.financeBlock,
+                  amountController: amountController,
+                  setState: setState,
+                ),
               ),
             ),
+            const SizedBox(height: 8),
+            Watch((context) {
+              final useVnd = widget.financeBlock.useVnd.value;
+              return TextField(
+                controller: amountController,
+                keyboardType:
+                    const TextInputType.numberWithOptions(decimal: true),
+                style: const TextStyle(fontSize: 14),
+                decoration: InputDecoration(
+                  labelText: l10n.finance_label_amount,
+                  labelStyle: const TextStyle(fontSize: 12),
+                  prefixText: !useVnd ? '\$ ' : null,
+                  suffixText: useVnd ? ' ₫' : null,
+                  border: const OutlineInputBorder(),
+                ),
+              );
+            }),
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: selectedCategory,
@@ -241,8 +263,11 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
         ),
         FilledButton(
           onPressed: () async {
-            final amount = double.tryParse(amountController.text);
-            if (amount == null || amount <= 0) return;
+            final rawAmount =
+                double.tryParse(amountController.text.replaceFirst(',', '.'));
+            if (rawAmount == null || rawAmount <= 0) return;
+            final amount =
+                widget.financeBlock.convertToBase(rawAmount);
 
             if (isEdit) {
               await widget.financeBlock.updateTransaction(

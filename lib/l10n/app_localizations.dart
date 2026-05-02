@@ -902,6 +902,24 @@ abstract class AppLocalizations {
   /// **'Yesterday'**
   String get nutri_yesterday;
 
+  /// No description provided for @nutri_ai_saved_retry_later.
+  ///
+  /// In en, this message translates to:
+  /// **'Meal saved locally. AI server unavailable — use Retry on the dashboard when it is back.'**
+  String get nutri_ai_saved_retry_later;
+
+  /// No description provided for @nutri_ai_retry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry AI analysis'**
+  String get nutri_ai_retry;
+
+  /// No description provided for @nutri_calories_pending.
+  ///
+  /// In en, this message translates to:
+  /// **'Calories pending'**
+  String get nutri_calories_pending;
+
   /// No description provided for @common_cancel.
   ///
   /// In en, this message translates to:
@@ -1033,6 +1051,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Current Temperature'**
   String get health_temperature_subtitle;
+
+  /// No description provided for @health_temperature_env_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weather & air'**
+  String get health_temperature_env_title;
+
+  /// No description provided for @health_env_condition.
+  ///
+  /// In en, this message translates to:
+  /// **'Conditions'**
+  String get health_env_condition;
+
+  /// No description provided for @health_env_particles.
+  ///
+  /// In en, this message translates to:
+  /// **'Particles'**
+  String get health_env_particles;
+
+  /// No description provided for @health_env_pm25.
+  ///
+  /// In en, this message translates to:
+  /// **'PM2.5'**
+  String get health_env_pm25;
+
+  /// No description provided for @health_env_pm10.
+  ///
+  /// In en, this message translates to:
+  /// **'PM10'**
+  String get health_env_pm10;
+
+  /// No description provided for @health_env_sources.
+  ///
+  /// In en, this message translates to:
+  /// **'Open-Meteo · WAQI'**
+  String get health_env_sources;
+
+  /// No description provided for @health_env_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Updated {time}'**
+  String health_env_updated(String time);
 
   /// No description provided for @health_aqi_unit.
   ///
@@ -1489,6 +1549,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter your credentials'**
   String get msg_enter_credentials;
+
+  /// No description provided for @forgot_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Forgot password?'**
+  String get forgot_password;
+
+  /// No description provided for @forgot_password_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Reset password'**
+  String get forgot_password_title;
+
+  /// No description provided for @forgot_password_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your account email. We will send you a link to set a new password.'**
+  String get forgot_password_body;
+
+  /// No description provided for @forgot_password_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send reset link'**
+  String get forgot_password_send;
+
+  /// No description provided for @forgot_password_success.
+  ///
+  /// In en, this message translates to:
+  /// **'If an account exists for this email, you will receive a reset link shortly.'**
+  String get forgot_password_success;
+
+  /// No description provided for @err_forgot_password_empty_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter your email address.'**
+  String get err_forgot_password_empty_email;
+
+  /// No description provided for @err_forgot_password_invalid_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Please enter a valid email address.'**
+  String get err_forgot_password_invalid_email;
 
   /// No description provided for @analysis_user_title.
   ///
@@ -4201,6 +4303,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Change Username'**
   String get change_username;
+
+  /// No description provided for @delete_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete account'**
+  String get delete_account;
+
+  /// No description provided for @delete_account_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign out and remove your cloud profile when supported'**
+  String get delete_account_subtitle;
+
+  /// No description provided for @delete_account_plan_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Suggested plan before you delete'**
+  String get delete_account_plan_title;
+
+  /// No description provided for @delete_account_plan_intro.
+  ///
+  /// In en, this message translates to:
+  /// **'Review what happens when you continue:'**
+  String get delete_account_plan_intro;
+
+  /// No description provided for @delete_account_plan_step1.
+  ///
+  /// In en, this message translates to:
+  /// **'You will be signed out on this device and saved login data cleared from secure storage.'**
+  String get delete_account_plan_step1;
+
+  /// No description provided for @delete_account_plan_step2.
+  ///
+  /// In en, this message translates to:
+  /// **'If your project deploys the Supabase Edge Function \"delete-account\", your auth user and linked rows can be removed server-side.'**
+  String get delete_account_plan_step2;
+
+  /// No description provided for @delete_account_plan_step3.
+  ///
+  /// In en, this message translates to:
+  /// **'Until that endpoint exists, cloud data may remain — contact support or use the dashboard to request full erasure under applicable privacy laws.'**
+  String get delete_account_plan_step3;
+
+  /// No description provided for @delete_account_acknowledge.
+  ///
+  /// In en, this message translates to:
+  /// **'I understand my account may not be fully erased from the server until backend deletion is enabled.'**
+  String get delete_account_acknowledge;
+
+  /// No description provided for @delete_account_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete and sign out'**
+  String get delete_account_confirm;
+
+  /// No description provided for @delete_account_cancel.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancel'**
+  String get delete_account_cancel;
+
+  /// No description provided for @delete_account_success.
+  ///
+  /// In en, this message translates to:
+  /// **'You have been signed out. Complete cloud deletion may take up to 48 hours once enabled.'**
+  String get delete_account_success;
+
+  /// No description provided for @delete_account_err_not_signed_in.
+  ///
+  /// In en, this message translates to:
+  /// **'No active session.'**
+  String get delete_account_err_not_signed_in;
 
   /// No description provided for @remaining.
   ///

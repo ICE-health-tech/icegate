@@ -70,6 +70,90 @@ class ThemeManager {
                       physics: const BouncingScrollPhysics(),
                       child: Column(
                         children: [
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Text(
+                                    "Watch-style",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          letterSpacing: 1.2,
+                                          fontWeight: FontWeight.w700,
+                                        ),
+                                  ),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                          ),
+                          _buildThemeOption(
+                            context,
+                            'Watchface Noir ⌚',
+                            'assets/WatchfaceNoir.json',
+                            Icons.watch_rounded,
+                          ),
+                          _buildThemeOption(
+                            context,
+                            'Watchface Rose Gold',
+                            'assets/WatchfaceRoseGold.json',
+                            Icons.watch_outlined,
+                          ),
+                          _buildThemeOption(
+                            context,
+                            'Watchface Sterling',
+                            'assets/WatchfaceSterling.json',
+                            Icons.schedule_rounded,
+                          ),
+                          _buildThemeOption(
+                            context,
+                            'Watchface Midnight Navy',
+                            'assets/WatchfaceMidnightNavy.json',
+                            Icons.water_drop_rounded,
+                          ),
+                          _buildThemeOption(
+                            context,
+                            'Watchface Forest Night',
+                            'assets/WatchfaceForestNight.json',
+                            Icons.forest_rounded,
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 12,
+                            ),
+                            child: Row(
+                              children: [
+                                const Expanded(child: Divider()),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 10,
+                                  ),
+                                  child: Text(
+                                    "Presets",
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .labelLarge
+                                        ?.copyWith(
+                                          letterSpacing: 0.8,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                  ),
+                                ),
+                                const Expanded(child: Divider()),
+                              ],
+                            ),
+                          ),
                           _buildThemeOption(
                             context,
                             'Data Dashboard 📊',

@@ -53,7 +53,7 @@ class _ModernAuthFieldState extends State<ModernAuthField> {
         boxShadow: _isFocused
             ? [
                 BoxShadow(
-                  color: EntryColors.iceCyan.withValues(alpha: 0.2),
+                  color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.28),
                   blurRadius: 15,
                   spreadRadius: 2,
                 )
@@ -70,14 +70,16 @@ class _ModernAuthFieldState extends State<ModernAuthField> {
             obscureText: widget.obscureText,
             keyboardType: widget.keyboardType,
             style: const TextStyle(
-              color: Color(0xFFE5E5EA),
+              color: EntryLandscapePalette.icyWhiteBlue,
               fontWeight: FontWeight.w600,
               letterSpacing: 1.2,
             ),
             decoration: InputDecoration(
               hintText: widget.hint.toUpperCase(),
               hintStyle: TextStyle(
-                color: const Color(0xFFE5E5EA).withValues(alpha: _isFocused ? 0.6 : 0.4),
+                color: EntryLandscapePalette.icyWhiteBlue.withValues(
+                  alpha: _isFocused ? 0.55 : 0.38,
+                ),
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2.0,
@@ -89,8 +91,8 @@ class _ModernAuthFieldState extends State<ModernAuthField> {
                   widget.icon,
                   size: 20,
                   color: _isFocused 
-                    ? EntryColors.iceCyan 
-                    : EntryColors.arcticSilver.withValues(alpha: 0.8),
+                    ? EntryLandscapePalette.dustySkyBlue 
+                    : EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.72),
                 ),
               ),
               filled: true,
@@ -116,7 +118,7 @@ class _ModernAuthFieldState extends State<ModernAuthField> {
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
                 borderSide: const BorderSide(
-                  color: EntryColors.iceCyan,
+                  color: EntryLandscapePalette.steelBlue,
                   width: 1.5,
                 ),
               ),

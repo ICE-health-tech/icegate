@@ -178,7 +178,17 @@ extension HealthBlockActions on HealthBlock {
     return IDGen.generateDeterministicUuid(personId, "$dateStr:General");
   }
 
-  Future<void> _saveCaloriesConsumed(int calories, {bool force = false}) async {
+  /// Call before saving a **manual edit** to an existing meal so [health_metrics] stays local only.
+  void skipCloudSyncForNextMealDerivedMetrics([int n = 1]) {
+    if (n <= 0) return;
+    _mealDerivedMetricsCloudSkipCount += n;
+  }
+
+  Future<void> _saveCaloriesConsumed(
+    int calories, {
+    bool force = false,
+    bool pushToCloud = true,
+  }) async {
     if (personId.isEmpty) return;
     final today = DateTime.now();
     final normalizedToday = DateTime(today.year, today.month, today.day, 12);
@@ -194,6 +204,7 @@ extension HealthBlockActions on HealthBlock {
         caloriesConsumed: Value(calories),
       ),
       force: force,
+      pushToCloud: pushToCloud,
     );
   }
 

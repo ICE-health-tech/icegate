@@ -218,19 +218,37 @@ extension HealthBlockSync on HealthBlock {
 
   Future<void> syncHeartRateSamples(DateTime date) async {
     if (_isDesktop) return;
+    if (personId.isEmpty) return;
     final samples = await HealthService.fetchHeartRateSamplesForDay(date);
     debugPrint(
       "HealthBlock: 🫀 Syncing ${samples.length} heart rate samples...",
     );
-    for (var sample in samples) {
+    final companions = <HeartRateLogsTableCompanion>[];
+    for (final sample in samples) {
       try {
         final value = sample.value;
         if (value is NumericHealthValue) {
-          await _saveHeartRateLog(value.numericValue.round(), sample.dateFrom);
+          final bpm = value.numericValue.round();
+          final id = IDGen.generateDeterministicUuid(
+            personId,
+            "hr_log:${sample.dateFrom.toIso8601String()}",
+          );
+          companions.add(
+            HeartRateLogsTableCompanion.insert(
+              id: id,
+              personID: Value(personId),
+              bpm: bpm,
+              timestamp: sample.dateFrom,
+              createdAt: Value(DateTime.now()),
+            ),
+          );
         }
       } catch (e) {
-        debugPrint("HealthBlock: Error syncing individual HR sample: $e");
+        debugPrint("HealthBlock: Error building HR sample row: $e");
       }
+    }
+    if (companions.isNotEmpty) {
+      await _healthLogsDao.insertHeartRateLogsBatch(companions);
     }
   }
 

@@ -237,16 +237,19 @@ extension HealthBlockInit on HealthBlock {
 
     _waterSubscription = _healthLogsDao
         .watchDailyWaterLogs(personId, DateTime.now())
+        .debounceTime(const Duration(milliseconds: 400))
         .listen(
           (logs) {
             Timer(Duration.zero, () {
               untracked(() {
-                todayWater.value = logs.fold<int>(
+                final totalMl = logs.fold<int>(
                   0,
                   (sum, log) => sum + log.amount,
                 );
+                if (totalMl == todayWater.value) return;
+                todayWater.value = totalMl;
                 _saveWater(
-                  todayWater.value,
+                  totalMl,
                   source: HealthSourceService.sourceManual,
                 );
               });
@@ -258,12 +261,22 @@ extension HealthBlockInit on HealthBlock {
 
     _mealSubscription = _healthMealDao
         .watchDailyCalories(personId, DateTime.now())
+        .debounceTime(const Duration(milliseconds: 400))
         .listen(
           (cals) {
             Timer(Duration.zero, () {
               untracked(() {
-                todayCaloriesConsumed.value = cals.toInt();
-                _saveCaloriesConsumed(cals.toInt());
+                final kcal = cals.toInt();
+                if (kcal == todayCaloriesConsumed.value) return;
+                todayCaloriesConsumed.value = kcal;
+                final pushCloud = _mealDerivedMetricsCloudSkipCount == 0;
+                if (!pushCloud) {
+                  _mealDerivedMetricsCloudSkipCount--;
+                }
+                _saveCaloriesConsumed(
+                  kcal,
+                  pushToCloud: pushCloud,
+                );
               });
             });
           },
@@ -274,6 +287,7 @@ extension HealthBlockInit on HealthBlock {
 
     _exerciseSubscription = _healthLogsDao
         .watchDailyExerciseLogs(personId, DateTime.now())
+        .debounceTime(const Duration(milliseconds: 400))
         .listen(
           (logs) {
             Timer(Duration.zero, () {
@@ -282,6 +296,7 @@ extension HealthBlockInit on HealthBlock {
                   0,
                   (sum, log) => sum + log.durationMinutes,
                 );
+                if (totalMinutes == todayExerciseMinutes.value) return;
                 todayExerciseMinutes.value = totalMinutes;
                 _saveExercise(
                   totalMinutes,

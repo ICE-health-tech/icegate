@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
       return Scaffold(
         resizeToAvoidBottomInset: false,
-        backgroundColor: EntryColors.glacierBase,
+        backgroundColor: EntryLandscapePalette.midnightNavy,
         body: IceDiamondBackground(
           particleCount: 80,
           child: Stack(
@@ -145,7 +145,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       ),
                     ),
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      padding: EntryConstraints.loginScrollPadding,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -200,7 +200,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               turns: _hudRotationController,
               child: CoolerHUD(
                 size: 400,
-                color: EntryColors.iceCyan.withValues(alpha: 0.1),
+                color: EntryLandscapePalette.mutedSlateBlue.withValues(
+                  alpha: 0.12,
+                ),
               ),
             ),
           ),
@@ -213,7 +215,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               turns: Tween<double>(begin: 1.0, end: 0.0).animate(_hudRotationController),
               child: CoolerHUD(
                 size: 500,
-                color: const Color(0xFF6679BE).withValues(alpha: 0.1),
+                color: EntryLandscapePalette.dustySkyBlue.withValues(
+                  alpha: 0.1,
+                ),
               ),
             ),
           ),
@@ -223,111 +227,125 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildPremiumMainCard(bool isLoading, String? error, BuildContext context) {
-    return Transform(
-      transform: Matrix4.identity()
-        ..setEntry(3, 2, 0.0015) // Increased Perspective
-        ..rotateX(-0.08) // More tilt back
-        ..rotateY(0.04), // More tilt side
-      alignment: Alignment.center,
+    // No 3D transform: perspective + BackdropFilter causes mirrored backdrop artifacts on iOS.
+    // Shine/scan overlays use Positioned.fill so they cannot paint outside the card or over the footer.
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(32),
+      clipBehavior: Clip.hardEdge,
       child: Stack(
+        clipBehavior: Clip.hardEdge,
         children: [
-          // Main Glass Container
-          ClipRRect(
-            borderRadius: BorderRadius.circular(32),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(32),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(32),
-                  border: Border.all(
-                    color: EntryColors.iceCyan.withValues(alpha: 0.3),
-                    width: 1.5,
-                  ),
-                  boxShadow: [
-                    // Deep 3D Shadow - More pronounced
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.6),
-                      blurRadius: 50,
-                      offset: const Offset(20, 35),
-                      spreadRadius: -8,
-                    ),
-                    BoxShadow(
-                      color: EntryColors.iceCyan.withValues(alpha: 0.15),
-                      blurRadius: 80,
-                      offset: const Offset(-8, -8),
-                      spreadRadius: -15,
-                    ),
-                  ],
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
+            child: Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(32),
+                border: Border.all(
+                  color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.38),
+                  width: 1.5,
                 ),
-                child: Column(
-                  children: [
-                    _buildAnimatedLogo(),
-                    const SizedBox(height: 10),
-                    Text(
-                      AppLocalizations.of(context)!.app_title.toUpperCase(),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 8.0,
-                        color: EntryColors.diamondWhite,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.55),
+                    blurRadius: 50,
+                    offset: const Offset(20, 35),
+                    spreadRadius: -8,
+                  ),
+                  BoxShadow(
+                    color: EntryLandscapePalette.dustySkyBlue.withValues(
+                      alpha: 0.14,
+                    ),
+                    blurRadius: 80,
+                    offset: const Offset(-8, -8),
+                    spreadRadius: -15,
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  _buildAnimatedLogo(),
+                  const SizedBox(height: 10),
+                  Text(
+                    AppLocalizations.of(context)!.app_title.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 32,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 8.0,
+                      color: EntryLandscapePalette.icyWhiteBlue,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+                  if (error != null) _buildErrorMessage(error),
+
+                  ModernAuthField(
+                    controller: _emailController,
+                    hint: AppLocalizations.of(context)!.username_email_hint,
+                    icon: Icons.alternate_email_rounded,
+                    keyboardType: TextInputType.emailAddress,
+                  ),
+                  const SizedBox(height: 20),
+                  ModernAuthField(
+                    controller: _passwordController,
+                    hint: AppLocalizations.of(context)!.password_hint,
+                    icon: Icons.lock_outline_rounded,
+                    obscureText: true,
+                  ),
+                  const SizedBox(height: 4),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      onPressed:
+                          isLoading
+                              ? null
+                              : () => _showForgotPasswordDialog(context),
+                      child: Text(
+                        AppLocalizations.of(context)!.forgot_password,
+                        style: TextStyle(
+                          color: EntryLandscapePalette.dustySkyBlue.withValues(
+                            alpha: 0.95,
+                          ),
+                          fontSize: 12,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    if (error != null) _buildErrorMessage(error),
-                    
-                    // Form Fields
-                    ModernAuthField(
-                      controller: _emailController,
-                      hint: AppLocalizations.of(context)!.username_email_hint,
-                      icon: Icons.alternate_email_rounded,
-                      keyboardType: TextInputType.emailAddress,
-                    ),
-                    const SizedBox(height: 20),
-                    ModernAuthField(
-                      controller: _passwordController,
-                      hint: AppLocalizations.of(context)!.password_hint,
-                      icon: Icons.lock_outline_rounded,
-                      obscureText: true,
-                    ),
-                    
-                    const SizedBox(height: 40),
-                    
-                    // Primary Login Action
-                    ShimmerButton(
-                      label: AppLocalizations.of(context)!.btn_enter,
-                      isLoading: isLoading,
-                      onPressed: _handleLogin,
-                    ),
-                    
-                    const SizedBox(height: 24),
-                    
-                    // Alternative Auth Methods
-                    _buildAlternativeAuthRow(isLoading, context),
-                  ],
+                  ),
+                  const SizedBox(height: 28),
+
+                  ShimmerButton(
+                    label: AppLocalizations.of(context)!.btn_enter,
+                    isLoading: isLoading,
+                    onPressed: _handleLogin,
+                  ),
+
+                  const SizedBox(height: 24),
+
+                  _buildAlternativeAuthRow(isLoading, context),
+                ],
+              ),
+            ),
+          ),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _shineController,
+                builder: (context, child) => CustomPaint(
+                  painter: ShinePainter(progress: _shineController.value),
                 ),
               ),
             ),
           ),
-          
-          // Scan and Shine Effects
-          IgnorePointer(
-            child: AnimatedBuilder(
-              animation: _shineController,
-              builder: (context, child) => CustomPaint(
-                size: const Size(double.infinity, 580),
-                painter: ShinePainter(progress: _shineController.value),
-              ),
-            ),
-          ),
-          IgnorePointer(
-            child: AnimatedBuilder(
-              animation: _scanController,
-              builder: (context, child) => CustomPaint(
-                size: const Size(double.infinity, 580),
-                painter: ScanlinePainter(progress: _scanController.value),
+          Positioned.fill(
+            child: IgnorePointer(
+              child: AnimatedBuilder(
+                animation: _scanController,
+                builder: (context, child) => CustomPaint(
+                  painter: ScanlinePainter(progress: _scanController.value),
+                ),
               ),
             ),
           ),
@@ -350,7 +368,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: EntryColors.iceCyan.withValues(alpha: 0.15),
+                color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.22),
                 blurRadius: glow,
                 spreadRadius: 2,
               ),
@@ -376,7 +394,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             icon: Icons.fingerprint_rounded,
             label: "",
             onPressed: isLoading ? null : _handleSecureLogin,
-            color: EntryColors.iceCyan,
+            color: const Color.fromARGB(235, 211, 249, 200),
           ),
         ),
         const SizedBox(width: 12),
@@ -385,7 +403,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             icon: Icons.apple_rounded,
             label: AppLocalizations.of(context)!.apple_login,
             onPressed: isLoading ? null : _handleAppleSignIn,
-            color: EntryColors.diamondWhite,
+            color: EntryLandscapePalette.icyWhiteBlue,
           ),
         ),
         const SizedBox(width: 12),
@@ -395,7 +413,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             label: AppLocalizations.of(context)!.google_login,
             onPressed: isLoading ? null : _handleGoogleSignIn,
             isLargeIcon: true,
-            color: EntryColors.projectBlue,
+            color: const Color.fromARGB(255, 255, 255, 255),
           ),
         ),
       ],
@@ -443,8 +461,119 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       case "err_biometric_disabled": return l10n.err_biometric_disabled;
       case "err_too_many_attempts": return l10n.err_too_many_attempts;
       case "err_unexpected": return l10n.err_unexpected("System Error");
+      case "err_forgot_password_empty_email":
+        return l10n.err_forgot_password_empty_email;
+      case "err_forgot_password_invalid_email":
+        return l10n.err_forgot_password_invalid_email;
       default: return key;
     }
+  }
+
+  Future<void> _showForgotPasswordDialog(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final emailCtrl = TextEditingController(text: _emailController.text.trim());
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: EntryLandscapePalette.midnightNavy,
+          surfaceTintColor: Colors.transparent,
+          title: Text(
+            l10n.forgot_password_title,
+            style: const TextStyle(
+              color: EntryLandscapePalette.icyWhiteBlue,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  l10n.forgot_password_body,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: EntryLandscapePalette.dustySkyBlue.withValues(alpha: 0.92),
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                TextField(
+                  controller: emailCtrl,
+                  keyboardType: TextInputType.emailAddress,
+                  autocorrect: false,
+                  style: const TextStyle(
+                    color: EntryLandscapePalette.icyWhiteBlue,
+                  ),
+                  decoration: InputDecoration(
+                    labelText: l10n.username_email_hint,
+                    labelStyle: TextStyle(
+                      color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.95),
+                    ),
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: BorderSide(
+                        color: EntryLandscapePalette.mutedSlateBlue.withValues(
+                          alpha: 0.65,
+                        ),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      borderSide: const BorderSide(
+                        color: EntryLandscapePalette.steelBlue,
+                        width: 1.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(
+                l10n.cancel,
+                style: TextStyle(
+                  color: EntryLandscapePalette.dustySkyBlue.withValues(alpha: 0.95),
+                ),
+              ),
+            ),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: EntryLandscapePalette.steelBlue,
+                foregroundColor: EntryLandscapePalette.midnightNavy,
+              ),
+              onPressed: () async {
+                final err = await _authBlock.requestPasswordReset(
+                  emailCtrl.text,
+                );
+                if (!dialogContext.mounted) return;
+                Navigator.of(dialogContext).pop();
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      err == null
+                          ? l10n.forgot_password_success
+                          : _getLocalizedError(context, err),
+                    ),
+                    backgroundColor:
+                        err == null ? Colors.green.shade800 : Colors.red.shade800,
+                  ),
+                );
+              },
+              child: Text(l10n.forgot_password_send),
+            ),
+          ],
+        );
+      },
+    );
+
+    emailCtrl.dispose();
   }
 
   Widget _buildLoginFooter(bool isLoading, BuildContext context) {
@@ -456,7 +585,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           child: Text(
             AppLocalizations.of(context)!.guest_access.toUpperCase(),
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.4),
+              color: EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.42),
               fontWeight: FontWeight.bold,
               fontSize: 10,
               letterSpacing: 2.0,
@@ -466,8 +595,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         const SizedBox(width: 10),
         Container(
           width: 4, height: 4,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.1),
+            decoration: BoxDecoration(
+            color: EntryLandscapePalette.steelBlue.withValues(alpha: 0.35),
             shape: BoxShape.circle,
           ),
         ),
@@ -477,7 +606,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           child: Text(
             AppLocalizations.of(context)!.enroll_hub.toUpperCase(),
             style: const TextStyle(
-              color: EntryColors.iceCyan,
+              color: EntryLandscapePalette.dustySkyBlue,
               fontWeight: FontWeight.w900,
               fontSize: 10,
               letterSpacing: 2.0,

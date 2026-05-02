@@ -822,60 +822,54 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           }),
                           const SizedBox(height: 48),
 
-                          // Danger Zone / Logout
+                          // Sign out — flat pill (no gradient / shadow)
                           SizedBox(
                             width: MediaQuery.of(context).size.width / 1.5,
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: BackdropFilter(
-                                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-                                child: OutlinedButton(
-                                  style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(vertical: 20),
-                                    side: BorderSide(
-                                      color: Colors.red.withValues(alpha: 0.3),
-                                      width: 1.5,
+                            height: 48,
+                            child: Material(
+                              color: Colors.transparent,
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(999),
+                                onTap: () {
+                                  HapticFeedback.mediumImpact();
+                                  _authBlock.logout();
+                                  context.go("/login");
+                                },
+                                splashColor: const Color(0xFFE07A7A)
+                                    .withValues(alpha: 0.12),
+                                highlightColor: const Color(0xFFE07A7A)
+                                    .withValues(alpha: 0.06),
+                                child: Ink(
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFF2A2226),
+                                    borderRadius: BorderRadius.circular(999),
+                                    border: Border.all(
+                                      color: const Color(0xFF6B454A)
+                                          .withValues(alpha: 0.85),
+                                      width: 1,
                                     ),
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(24),
-                                    ),
-                                    backgroundColor: Colors.red.withValues(alpha: 0.05),
-                                    shadowColor: Colors.red.withValues(alpha: 0.2),
-                                    elevation: 0,
                                   ),
-                                  onPressed: () {
-                                    _authBlock.logout();
-                                    context.go("/login");
-                                  },
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Container(
-                                        padding: const EdgeInsets.all(6),
-                                        decoration: BoxDecoration(
-                                          color: Colors.red.withValues(alpha: 0.1),
-                                          shape: BoxShape.circle,
-                                        ),
-                                        child: const Icon(
-                                          Icons.power_settings_new_rounded,
-                                          color: Colors.white,
-                                          size: 18,
-                                        ),
+                                      Icon(
+                                        Icons.logout_rounded,
+                                        size: 20,
+                                        color: const Color(0xFFE8A8AE)
+                                            .withValues(alpha: 0.95),
                                       ),
-                                      const SizedBox(width: 12),
+                                      const SizedBox(width: 10),
                                       Text(
-                                        AppLocalizations.of(context)!.logout.toUpperCase(),
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.w900,
-                                          fontSize: 12,
-                                          letterSpacing: 3,
-                                          shadows: [
-                                            Shadow(
-                                              color: Colors.red,
-                                              blurRadius: 10,
-                                            ),
-                                          ],
+                                        AppLocalizations.of(context)!
+                                            .logout
+                                            .toUpperCase(),
+                                        style: TextStyle(
+                                          color: EntryLandscapePalette
+                                              .icyWhiteBlue
+                                              .withValues(alpha: 0.9),
+                                          fontWeight: FontWeight.w800,
+                                          fontSize: 11.5,
+                                          letterSpacing: 4.8,
                                         ),
                                       ),
                                     ],

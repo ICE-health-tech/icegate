@@ -135,7 +135,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
         backgroundColor: Colors.red.withValues(alpha: 0.8),
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.fromLTRB(24, 0, 24, 120),
+        margin: EntryConstraints.snackBarFloatingMargin,
         duration: const Duration(seconds: 4),
       ),
     );
@@ -287,10 +287,10 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntryColors.winterEdge,
+      backgroundColor: EntryLandscapePalette.midnightNavy,
       body: Container(
         decoration: const BoxDecoration(
-          gradient: EntryColors.winterNightGradient,
+          gradient: EntryColors.winterLandscapeRadial,
         ),
         child: Listener(
           onPointerMove: (event) {

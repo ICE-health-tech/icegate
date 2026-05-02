@@ -429,6 +429,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get nutri_yesterday => 'Hôm qua';
 
   @override
+  String get nutri_ai_saved_retry_later =>
+      'Đã lưu bữa ăn trên máy. Máy chủ AI tạm lỗi — chạm Thử lại phân tích trên bảng điều khiển khi hệ thống sẵn sàng.';
+
+  @override
+  String get nutri_ai_retry => 'Thử lại phân tích AI';
+
+  @override
+  String get nutri_calories_pending => 'Chưa tính calo';
+
+  @override
   String get common_cancel => 'Hủy';
 
   @override
@@ -495,7 +505,30 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_temperature_subtitle => 'Nhiệt độ hiện tại';
 
   @override
-  String get health_aqi_unit => 'Chỉ số AQI';
+  String get health_temperature_env_title => 'Thời tiết & không khí';
+
+  @override
+  String get health_env_condition => 'Điều kiện';
+
+  @override
+  String get health_env_particles => 'Hạt bụi';
+
+  @override
+  String get health_env_pm25 => 'PM2.5';
+
+  @override
+  String get health_env_pm10 => 'PM10';
+
+  @override
+  String get health_env_sources => 'Open-Meteo · WAQI';
+
+  @override
+  String health_env_updated(String time) {
+    return 'Cập nhật $time';
+  }
+
+  @override
+  String get health_aqi_unit => 'AQI';
 
   @override
   String health_metrics_detail_coming_soon(String name) {
@@ -748,6 +781,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get msg_enter_credentials => 'Vui lòng nhập thông tin đăng nhập';
 
   @override
+  String get forgot_password => 'Quên mật khẩu?';
+
+  @override
+  String get forgot_password_title => 'Đặt lại mật khẩu';
+
+  @override
+  String get forgot_password_body =>
+      'Nhập email tài khoản. Chúng tôi sẽ gửi liên kết để đặt mật khẩu mới.';
+
+  @override
+  String get forgot_password_send => 'Gửi liên kết';
+
+  @override
+  String get forgot_password_success =>
+      'Nếu tồn tại tài khoản với email này, bạn sẽ nhận liên kết đặt lại mật khẩu.';
+
+  @override
+  String get err_forgot_password_empty_email => 'Vui lòng nhập địa chỉ email.';
+
+  @override
+  String get err_forgot_password_invalid_email => 'Vui lòng nhập email hợp lệ.';
+
+  @override
   String analysis_user_title(String name) {
     return 'Phân tích của $name';
   }
@@ -953,7 +1009,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get btn_set => 'THIẾT LẬP';
 
   @override
-  String get security_accuracy => 'Bảo mật & Chính xác';
+  String get security_accuracy => 'Bảo mật';
 
   @override
   String get passkey_settings => 'Cài đặt Passkey';
@@ -2200,6 +2256,47 @@ class AppLocalizationsVi extends AppLocalizations {
   String get change_username => 'Thay đổi tên người dùng';
 
   @override
+  String get delete_account => 'Xóa tài khoản';
+
+  @override
+  String get delete_account_subtitle => 'Đăng xuất và xóa hồ sơ đám mây';
+
+  @override
+  String get delete_account_plan_title => 'Kế hoạch đề xuất trước khi xóa';
+
+  @override
+  String get delete_account_plan_intro => 'Xem các bước khi bạn tiếp tục:';
+
+  @override
+  String get delete_account_plan_step1 =>
+      'Bạn sẽ đăng xuất trên thiết bị này và dữ liệu đăng nhập đã lưu trong bộ nhớ bảo mật sẽ bị xóa.';
+
+  @override
+  String get delete_account_plan_step2 =>
+      'Nếu dự án triển khai Edge Function Supabase \"delete-account\", tài khoản xác thực và dòng liên quan có thể được xóa phía máy chủ.';
+
+  @override
+  String get delete_account_plan_step3 =>
+      'Trước khi có endpoint đó, dữ liệu đám mây có thể vẫn tồn tại — liên hệ hỗ trợ hoặc yêu cầu xóa đầy đủ theo chính sách bảo mật.';
+
+  @override
+  String get delete_account_acknowledge =>
+      'Tôi hiểu tài khoản có thể chưa bị xóa hoàn toàn trên máy chủ cho đến khi backend bật xóa.';
+
+  @override
+  String get delete_account_confirm => 'Xóa và đăng xuất';
+
+  @override
+  String get delete_account_cancel => 'Hủy';
+
+  @override
+  String get delete_account_success =>
+      'Bạn đã đăng xuất. Việc xóa hoàn toàn trên đám mây có thể mất tới 48 giờ sau khi bật.';
+
+  @override
+  String get delete_account_err_not_signed_in => 'Không có phiên đăng nhập.';
+
+  @override
   String get remaining => 'Còn lại';
 
   @override
@@ -2218,10 +2315,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_tab_wisdom => 'TRÍ TUỆ';
 
   @override
-  String get notification_ai_no_data => 'Không có dữ liệu chiến thuật.';
+  String get notification_ai_no_data => 'Không có dữ liệu.';
 
   @override
-  String get notification_ai_advice => 'LỜI KHUYÊN CHIẾN THUẬT';
+  String get notification_ai_advice => 'LỜI KHUYÊN';
 
   @override
   String get notification_ai_waiting => 'Đang thu thập tình báo...';

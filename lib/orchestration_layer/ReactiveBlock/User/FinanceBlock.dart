@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'package:ice_gate/orchestration_layer/Constraint/FinanceConstraint.dart';
-import 'package:rxdart/rxdart.dart';
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
@@ -260,10 +259,10 @@ class FinanceBlock {
     );
   });
 
-  /// Budget usage percentage (0.0 to 100.0+)
+  /// Budget usage %: active **subscriptions** burn rate vs [monthlyBudgetLimit] (same base currency as DB).
   late final budgetUsagePercent = computed(() {
     if (monthlyBudgetLimit.value <= 0) return 0.0;
-    return (monthlySpending.value / monthlyBudgetLimit.value) * 100;
+    return (monthlyBurnRate.value / monthlyBudgetLimit.value) * 100;
   });
 
   /// Next major milestone (next $5000 or $10000 depending on current balance)
@@ -359,10 +358,7 @@ class FinanceBlock {
     });
 
     _accountsSubscription?.cancel();
-    _accountsSubscription = dao
-        .watchAccounts(personId)
-        .debounceTime(const Duration(milliseconds: 300))
-        .listen((data) {
+    _accountsSubscription = dao.watchAccounts(personId).listen((data) {
           Timer(Duration.zero, () {
             untracked(() {
               batch(() {
@@ -387,10 +383,7 @@ class FinanceBlock {
         });
 
     _assetsSubscription?.cancel();
-    _assetsSubscription = dao
-        .watchAssets(personId)
-        .debounceTime(const Duration(milliseconds: 300))
-        .listen((data) {
+    _assetsSubscription = dao.watchAssets(personId).listen((data) {
           Timer(Duration.zero, () {
             untracked(() {
               batch(() {
@@ -419,10 +412,7 @@ class FinanceBlock {
         });
 
     _transactionsSubscription?.cancel();
-    _transactionsSubscription = dao
-        .watchAllTransactions(personId)
-        .debounceTime(const Duration(milliseconds: 300))
-        .listen((data) {
+    _transactionsSubscription = dao.watchAllTransactions(personId).listen((data) {
           Timer(Duration.zero, () {
             untracked(() {
               transactions.value = data;
@@ -431,16 +421,92 @@ class FinanceBlock {
         });
 
     _subscriptionsSubscription?.cancel();
-    _subscriptionsSubscription = dao
-        .watchSubscriptions(personId)
-        .debounceTime(const Duration(milliseconds: 300))
-        .listen((data) {
-          Timer(Duration.zero, () {
-            untracked(() {
-              subscriptions.value = data;
-            });
-          });
+    _subscriptionsSubscription = dao.watchSubscriptions(personId).listen((data) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          subscriptions.value = data;
         });
+      });
+    });
+    unawaited(_reloadSubscriptionsFromDb());
+  }
+
+  /// One-shot load + call after local writes so the list updates even if table [watch] lags (e.g. sync/replication).
+  Future<void> _reloadSubscriptionsFromDb() async {
+    if (_personId.isEmpty) return;
+    final rows = await (_dao.select(_dao.subscriptionsTable)
+          ..where((t) => t.personID.equals(_personId))
+          ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
+        .get();
+    Timer(Duration.zero, () {
+      untracked(() {
+        subscriptions.value = rows;
+      });
+    });
+  }
+
+  /// Re-query local Drift `subscriptions` for the current person (open Billing tab, pull-to-refresh, etc.).
+  Future<void> refreshSubscriptions() => _reloadSubscriptionsFromDb();
+
+  /// Reload accounts, assets, transactions, and subscriptions from Drift (home finance card, cold start).
+  Future<void> refreshFromLocalDatabase() async {
+    if (_personId.isEmpty) return;
+    final accRows = await (_dao.select(_dao.financialAccountsTable)
+          ..where((t) => t.personID.equals(_personId)))
+        .get();
+    final assetRows =
+        await (_dao.select(_dao.assetsTable)
+              ..where((t) => t.personID.equals(_personId)))
+            .get();
+    final txnRows = await (_dao.select(_dao.transactionsTable)
+          ..where((t) => t.personID.equals(_personId))
+          ..orderBy([(t) => OrderingTerm.desc(t.transactionDate)]))
+        .get();
+
+    Timer(Duration.zero, () {
+      untracked(() {
+        batch(() {
+          updateAccounts(
+            accRows
+                .map(
+                  (e) => FinancialAccountProtocol(
+                    financialAccountID: e.accountID ?? "",
+                    personID: e.personID ?? "",
+                    accountName: e.accountName,
+                    accountType: e.accountType,
+                    balance: e.balance,
+                    currency: e.currency.name,
+                    isPrimary: e.isPrimary,
+                    isActive: e.isActive,
+                  ),
+                )
+                .toList(),
+          );
+          updateAssets(
+            assetRows
+                .map(
+                  (e) => AssetProtocol(
+                    id: e.assetID ?? "",
+                    personId: e.personID ?? "",
+                    assetName: e.assetName,
+                    assetCategory: e.assetCategory,
+                    purchaseDate: e.purchaseDate,
+                    purchasePrice: e.purchasePrice,
+                    currentEstimatedValue: e.currentEstimatedValue,
+                    currency: e.currency.name,
+                    condition: e.condition,
+                    location: e.location,
+                    notes: e.notes,
+                    isInsured: e.isInsured,
+                  ),
+                )
+                .toList(),
+          );
+          transactions.value = txnRows;
+        });
+      });
+    });
+    await _reloadSubscriptionsFromDb();
   }
 
   Future<void> sync() async {
@@ -453,6 +519,7 @@ class FinanceBlock {
       // For now, I'll call the DAOs if they have sync methods or the db directly.
       await _dao.db.syncTableDown('transactions', _personId);
       await _dao.db.syncTableDown('subscriptions', _personId);
+      await _reloadSubscriptionsFromDb();
     } catch (e) {
       debugPrint("FinanceBlock: Sync failed: $e");
     } finally {
@@ -515,21 +582,20 @@ class FinanceBlock {
     String billingCycle = 'monthly',
   }) async {
     if (_personId.isEmpty) return;
-    await _dao.customStatement(
-      'INSERT INTO subscriptions (id, person_id, name, amount, billing_day, category, is_active, billing_cycle, created_at) '
-      'VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [
-        IDGen.UUIDV7(),
-        _personId,
-        name,
-        amount,
-        billingDay,
-        category,
-        1,
-        billingCycle,
-        DateTime.now().toIso8601String(),
-      ],
+    await _dao.insertSubscription(
+      SubscriptionsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: _personId,
+        name: name,
+        amount: amount,
+        billingDay: billingDay,
+        category: Value(category),
+        isActive: const Value(true),
+        billingCycle: Value(billingCycle),
+        createdAt: Value(DateTime.now()),
+      ),
     );
+    await _reloadSubscriptionsFromDb();
   }
 
   Future<void> updateSubscription({
@@ -542,14 +608,31 @@ class FinanceBlock {
     bool isActive = true,
   }) async {
     if (_personId.isEmpty) return;
-    await _dao.customStatement(
-      'UPDATE subscriptions SET name = ?, amount = ?, billing_day = ?, category = ?, billing_cycle = ?, is_active = ? WHERE id = ?',
-      [name, amount, billingDay, category, billingCycle, isActive ? 1 : 0, id],
+    final existing =
+        await (_dao.select(_dao.subscriptionsTable)
+              ..where((t) => t.id.equals(id)))
+            .getSingleOrNull();
+    if (existing == null) return;
+    await _dao.updateSubscription(
+      SubscriptionsTableCompanion(
+        id: Value(existing.id),
+        tenantID: Value(existing.tenantID),
+        personID: Value(existing.personID),
+        name: Value(name),
+        amount: Value(amount),
+        billingDay: Value(billingDay),
+        category: Value(category),
+        isActive: Value(isActive),
+        billingCycle: Value(billingCycle),
+        createdAt: Value(existing.createdAt),
+      ),
     );
+    await _reloadSubscriptionsFromDb();
   }
 
   Future<void> deleteSubscription(String id) async {
     await _dao.deleteSubscription(id);
+    await _reloadSubscriptionsFromDb();
   }
 
   Future<void> deleteTransaction(String id) async {

@@ -23,6 +23,7 @@ import 'dart:convert';
 // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
@@ -1273,6 +1274,8 @@ class MealsTable extends Table {
       .named("eaten_at")();
   BoolColumn get isAnalyzing =>
       boolean().withDefault(const Constant(false)).named("is_analyzing")();
+  BoolColumn get needsAiRetry =>
+      boolean().withDefault(const Constant(false)).named("needs_ai_retry")();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -3477,13 +3480,22 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     );
   }
 
+  Future<void> deleteSubscriptionsForPerson(String personId) async {
+    await (delete(subscriptionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .go();
+  }
+
   Future<void> upsertFromSupabaseSubscription(
     Map<String, dynamic> record,
   ) async {
+    final personId = record['person_id']?.toString();
+    if (personId == null || personId.isEmpty) return;
+
     await into(subscriptionsTable).insert(
       SubscriptionsTableCompanion(
         id: Value(record['id'] as String),
-        personID: Value(record['person_id'] as String),
+        personID: Value(personId),
         name: Value(record['name'] as String),
         amount: Value((record['amount'] as num).toDouble()),
         billingDay: Value((record['billing_day'] as num).toInt()),
@@ -4157,6 +4169,7 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
   Future<void> insertOrUpdateMetrics(
     HealthMetricsTableCompanion entry, {
     bool force = false,
+    bool pushToCloud = true,
   }) async {
     final d = entry.date.value;
     final normalized = DateTime(d.year, d.month, d.day, 12, 0, 0);
@@ -4383,8 +4396,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         }
       }
 
-      // Direct push to Supabase
-      await db.pushToSupabase(table: 'health_metrics', payload: payload);
+      if (pushToCloud) {
+        await db.pushToSupabase(table: 'health_metrics', payload: payload);
+      }
     } else {
       debugPrint(
         "HealthMetricsDAO: Inserting new record (ID: $deterministicId)...",
@@ -4409,8 +4423,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
         }
       }
 
-      // Direct push to Supabase
-      await db.pushToSupabase(table: 'health_metrics', payload: payload);
+      if (pushToCloud) {
+        await db.pushToSupabase(table: 'health_metrics', payload: payload);
+      }
     }
   }
 
@@ -5571,27 +5586,37 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<DayWithMeal>> watchDaysWithMeals(String personId) {
-    // We join meals by their eaten_at DATE truncated to midnight
-    // to match daysTable.dayID which is also truncated to midnight.
-    final query = select(daysTable).join([
-      innerJoin(
-        mealsTable,
-        mealsTable.eatenAt.year.equalsExp(daysTable.dayID.year) &
-            mealsTable.eatenAt.month.equalsExp(daysTable.dayID.month) &
-            mealsTable.eatenAt.day.equalsExp(daysTable.dayID.day),
-      ),
-    ])..where(mealsTable.personID.equals(personId));
-    // final query=select
-    print("watchDaysWithMeals: executing query...");
-    return query.watch().map((rows) {
-      final seenMealIds = <String>{};
+    // List from `meals` only so rows show even if `days` was never upserted
+    // (inner join on `days` previously hid those meals).
+    return (select(mealsTable)
+          ..where((m) => m.personID.equals(personId))
+          ..orderBy([
+            (m) => OrderingTerm(
+                  expression: m.eatenAt,
+                  mode: OrderingMode.desc,
+                ),
+          ]))
+        .watch()
+        .map((meals) {
       final results = <DayWithMeal>[];
-
-      for (var row in rows) {
-        final meal = row.readTable(mealsTable);
-        if (seenMealIds.add(meal.id)) {
-          results.add(DayWithMeal(day: row.readTable(daysTable), meal: meal));
-        }
+      for (final meal in meals) {
+        final at = meal.eatenAt;
+        final dayStart = DateTime(at.year, at.month, at.day);
+        final dayKey =
+            "${at.year}-${at.month.toString().padLeft(2, '0')}-${at.day.toString().padLeft(2, '0')}";
+        final dayRowId = IDGen.generateDeterministicUuid(personId, dayKey);
+        results.add(
+          DayWithMeal(
+            day: DayData(
+              id: dayRowId,
+              tenantID: DEFAULT_TENANT_ID,
+              dayID: dayStart,
+              weight: 0,
+              caloriesOut: 0,
+            ),
+            meal: meal,
+          ),
+        );
       }
       return results;
     });
@@ -6508,6 +6533,53 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     }
   }
 
+  static const int _hrBatchIdInChunk = 500;
+
+  /// Inserts only **new** rows (by id) in one local batch, then one Supabase batch upsert.
+  Future<void> insertHeartRateLogsBatch(
+    List<HeartRateLogsTableCompanion> entries,
+  ) async {
+    if (entries.isEmpty) return;
+    try {
+      final ids = entries.map((e) => e.id.value).toList();
+      final existingIds = <String>{};
+      for (var i = 0; i < ids.length; i += _hrBatchIdInChunk) {
+        final slice = ids.sublist(
+          i,
+          min(i + _hrBatchIdInChunk, ids.length),
+        );
+        final rows = await (select(heartRateLogsTable)
+              ..where((t) => t.id.isIn(slice)))
+            .get();
+        existingIds.addAll(rows.map((r) => r.id));
+      }
+      final toInsert = entries
+          .where((e) => !existingIds.contains(e.id.value))
+          .toList();
+      if (toInsert.isEmpty) return;
+
+      await batch((b) {
+        for (final entry in toInsert) {
+          b.insert(
+            heartRateLogsTable,
+            entry,
+            mode: InsertMode.insertOrReplace,
+          );
+        }
+      });
+
+      final payloads = toInsert
+          .map((e) => db.companionToMap(e, heartRateLogsTable))
+          .toList();
+      await db.pushToSupabaseBatch(
+        table: 'heart_rate_logs',
+        payloads: payloads,
+      );
+    } catch (e) {
+      debugPrint("HealthLogsDAO: Error batch inserting heart rate logs: $e");
+    }
+  }
+
   Stream<List<HeartRateLogData>> watchDailyHeartRateLogs(
     String personId,
     DateTime date,
@@ -6769,14 +6841,13 @@ class AppDatabase extends _$AppDatabase {
 
       // 2. Transform payload (remove local-only columns)
       final transformed = _transformOpData(table, payload);
-      final Map<String, dynamic> encodablePayload = Map.from(transformed).map((
-        key,
-        value,
-      ) {
-        if (value is DateTime) {
-          return MapEntry(key, value.toIso8601String());
-        }
-        return MapEntry(key, value);
+      final Map<String, dynamic> encodablePayload = {};
+      transformed.forEach((key, value) {
+        encodablePayload[key] = encodeForSupabaseUpsert(
+          table: table,
+          key: key,
+          value: value,
+        );
       });
       if (isDelete) {
         debugPrint(
@@ -6810,6 +6881,60 @@ class AppDatabase extends _$AppDatabase {
       }
     } catch (e) {
       debugPrint("❌ [Supabase] Direct push FAILED for $table: $e");
+      rethrow;
+    }
+  }
+
+  static const int _supabaseBatchChunkSize = 150;
+
+  Future<void> pushToSupabaseBatch({
+    required String table,
+    required List<Map<String, dynamic>> payloads,
+  }) async {
+    if (payloads.isEmpty) return;
+    if (supabaseSync != null) {
+      await supabaseSync!.pushDataBatch(table: table, payloads: payloads);
+      return;
+    }
+    try {
+      final client = Supabase.instance.client;
+      final isMetricsTable = [
+        'health_metrics',
+        'financial_metrics',
+        'project_metrics',
+        'social_metrics',
+        'scores',
+      ].contains(table);
+
+      for (var i = 0; i < payloads.length; i += _supabaseBatchChunkSize) {
+        final end = min(i + _supabaseBatchChunkSize, payloads.length);
+        final chunkPayloads = payloads.sublist(i, end);
+        final rows = <Map<String, dynamic>>[];
+        for (final payload in chunkPayloads) {
+          final idValue = payload['id']?.toString() ?? '';
+          if (_isGuest(idValue, payload)) continue;
+          final transformed = _transformOpData(table, payload);
+          final encodablePayload = <String, dynamic>{};
+          transformed.forEach((key, value) {
+            encodablePayload[key] = encodeForSupabaseUpsert(
+              table: table,
+              key: key,
+              value: value,
+            );
+          });
+          rows.add(encodablePayload);
+        }
+        if (rows.isEmpty) continue;
+        if (isMetricsTable) {
+          await client
+              .from(table)
+              .upsert(rows, onConflict: 'person_id,date,category');
+        } else {
+          await client.from(table).upsert(rows);
+        }
+      }
+    } catch (e) {
+      debugPrint("❌ [Supabase] Direct batch push FAILED for $table: $e");
       rethrow;
     }
   }
@@ -6858,13 +6983,17 @@ class AppDatabase extends _$AppDatabase {
     'focus_sessions': {'created_at', 'updated_at'},
     'mind_logs': {'created_at', 'updated_at'},
     'feedbacks': {'status'},
+    'subscriptions': {'tenant_id'},
   };
 
   Map<String, dynamic> _transformOpData(
     String table,
     Map<String, dynamic> data,
   ) {
-    final result = Map<String, dynamic>.from(data);
+    var result = Map<String, dynamic>.from(data);
+    if (table == 'project_notes') {
+      result = _mapProjectNotesPayloadToSqlColumns(result);
+    }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
     if (tableSpecific != null) {
@@ -6873,10 +7002,30 @@ class AppDatabase extends _$AppDatabase {
     return result;
   }
 
+  /// Aligns Drift / [ProjectNoteData.toJson] keys with Postgres column names.
+  Map<String, dynamic> _mapProjectNotesPayloadToSqlColumns(
+    Map<String, dynamic> row,
+  ) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'noteID': 'note_id',
+      'personID': 'person_id',
+      'projectID': 'project_id',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      out[dartToSql[key] ?? key] = value;
+    });
+    return out;
+  }
+
   bool _isGuest(String id, Map<String, dynamic> opData) {
     const guestId = DataSeeder.guestPersonId;
     return id == guestId ||
         opData['person_id']?.toString() == guestId ||
+        opData['personID']?.toString() == guestId ||
         opData['author_id']?.toString() == guestId ||
         opData['user_id']?.toString() == guestId ||
         opData['owner_id']?.toString() == guestId;
@@ -6922,7 +7071,8 @@ class AppDatabase extends _$AppDatabase {
   // v68 → adds is_analyzing to meals table for background AI tracking
   // v69 → adds source column to sleep_logs, water_logs, exercise_logs
   // v70 → ensures source column exists in all health log tables (water, sleep, exercise, weight)
-  int get schemaVersion => 71;
+  // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
+  int get schemaVersion => 72;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7028,6 +7178,11 @@ class AppDatabase extends _$AppDatabase {
         if (from < 68) {
           try {
             await m.addColumn(mealsTable, mealsTable.isAnalyzing);
+          } catch (_) {}
+        }
+        if (from < 72) {
+          try {
+            await m.addColumn(mealsTable, mealsTable.needsAiRetry);
           } catch (_) {}
         }
         if (from < 60) {

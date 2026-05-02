@@ -1025,6 +1025,51 @@ class AuthBlock {
     });
   }
 
+  /// Deep link must be allowlisted in Supabase Dashboard → Auth → URL config.
+  static const String _passwordResetRedirect = 'io.supabase.icegate://reset-callback';
+
+  /// Sends Supabase password recovery email ([resetPasswordForEmail]).
+  /// Returns `null` on success, or an error key from [_mapError].
+  Future<String?> requestPasswordReset(String email) async {
+    final t = email.trim();
+    if (t.isEmpty) return 'err_forgot_password_empty_email';
+    if (!t.contains('@') || t.length < 5) {
+      return 'err_forgot_password_invalid_email';
+    }
+    try {
+      await Supabase.instance.client.auth.resetPasswordForEmail(
+        t,
+        redirectTo: _passwordResetRedirect,
+      );
+      return null;
+    } catch (e) {
+      print('❌ [AuthBlock] resetPasswordForEmail: $e');
+      return _mapError(e);
+    }
+  }
+
+  /// Signs out, clears secure credentials, and optionally invokes Edge Function
+  /// `delete-account` when deployed (server-side user + row deletion).
+  Future<String?> deleteAccount() async {
+    final client = Supabase.instance.client;
+    if (client.auth.currentUser == null) {
+      return 'delete_account_err_not_signed_in';
+    }
+    try {
+      await client.functions.invoke('delete-account');
+    } catch (e) {
+      print('⚠️ [AuthBlock] delete-account Edge Function: $e');
+    }
+    try {
+      await client.auth.signOut();
+    } catch (e) {
+      print('⚠️ [AuthBlock] Supabase signOut: $e');
+    }
+    await _secureStorage.clearCredentials();
+    await logout();
+    return null;
+  }
+
   Future<void> _loadRememberedUser() async {
     final data = await _secureStorage.getRememberedUser();
     if (data['username'] != null) {

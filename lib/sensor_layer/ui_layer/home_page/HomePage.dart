@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -36,6 +38,9 @@ import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart'
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/AvailablePlugins.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
+
+/// Avoids re-running heavy bootstrap when returning to Home (same session / same user).
+String? _homePageBootstrapUserId;
 
 class HomePage extends StatefulWidget {
   // final String title;
@@ -151,7 +156,6 @@ class _HomePageState extends State<HomePage> {
     externalWidgetBlock = context.read<ExternalWidgetBlock>();
     authBlock = context.read<AuthBlock>();
     scoreBlock = context.read<ScoreBlock>();
-    authBlock.fetchUser();
     personBlock = context.read<PersonBlock>();
     growthBlock = context.read<GrowthBlock>();
     healthMetricsDAO = context.read<HealthMetricsDAO>();
@@ -162,7 +166,14 @@ class _HomePageState extends State<HomePage> {
     mindBlock = context.read<MindBlock>();
     configBlock = context.read<ConfigBlock>();
 
-    _fetchInitialData();
+    final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
+    if (userId.isEmpty) {
+      _homePageBootstrapUserId = null;
+    } else if (_homePageBootstrapUserId != userId) {
+      _homePageBootstrapUserId = userId;
+      authBlock.fetchUser();
+      _fetchInitialData();
+    }
 
     // Level Up effect
     // Future.microtask(() {
@@ -178,6 +189,7 @@ class _HomePageState extends State<HomePage> {
 
     Future.microtask(() {
       print("DUYLONG>>");
+      unawaited(financeBlock.refreshFromLocalDatabase());
       final String personIdToUse =
           Supabase.instance.client.auth.currentUser?.id ?? "";
       internalWidgetBlock.refreshBlock(
@@ -289,6 +301,7 @@ class _HomePageState extends State<HomePage> {
                 direction: SwipeablePageDirection.leftToRight,
                 onSwipe: () => context.pop(),
                 child: SingleChildScrollView(
+                  key: const PageStorageKey<String>('home_feed_scroll'),
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 20.0,
@@ -391,6 +404,10 @@ class _HomePageState extends State<HomePage> {
                               );
                             }),
                             Watch((context) {
+                              financeBlock.accounts.value;
+                              financeBlock.assets.value;
+                              financeBlock.transactions.value;
+                              financeBlock.subscriptions.value;
                               final balance = financeBlock.totalBalance.value;
                               final spending =
                                   financeBlock.monthlySpending.value;
@@ -1356,9 +1373,13 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  /// Outdoor temperature & AQI from [EnvironmentalBlock]; opens `/health/temperature`.
   Widget _buildEnvironmentalSummary(BuildContext context) {
     final configBlock = context.read<ConfigBlock>();
     final envBlock = context.read<EnvironmentalBlock>();
+
+    const tempTint = Color(0xFF8BD4F0);
+    const aqiTint = Color(0xFF8FD9A8);
 
     return Watch((context) {
       final showAqi = configBlock.showAqi.value;
@@ -1366,72 +1387,145 @@ class _HomePageState extends State<HomePage> {
 
       if (!showAqi && !showWeather) return const SizedBox.shrink();
 
-      final envData = envBlock.currentData.value;
-      final textTheme = Theme.of(context).textTheme;
-      final colorScheme = Theme.of(context).colorScheme;
+      final envData = envBlock.currentData.watch(context);
+      final loading = envBlock.isLoading.watch(context);
+      final l10n = AppLocalizations.of(context)!;
 
-      return InkWell(
-        onTap: () {
-          showModalBottomSheet(
-            context: context,
-            backgroundColor: Colors.transparent,
-            builder: (context) => AQISourceSheet(),
-          );
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-          decoration: BoxDecoration(
-            color: colorScheme.surface.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: colorScheme.primary.withValues(alpha: 0.05),
-            ),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (showWeather) ...[
-                Icon(
-                  Icons.thermostat_rounded,
-                  size: 14,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "${envData?.temperature.toStringAsFixed(1) ?? '--'}°C",
-                  style: textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: colorScheme.primary,
-                  ),
-                ),
-              ],
-              if (showAqi && showWeather)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Container(
+      final tempLabel = loading
+          ? '…'
+          : (envData != null
+              ? '${envData.temperature.toStringAsFixed(0)}°C'
+              : '--°C');
+      final aqiLabel = loading
+          ? '…'
+          : (envData != null
+              ? '${l10n.health_aqi_unit} ${envData.aqi}'
+              : '${l10n.health_aqi_unit} --');
+
+      final bool showCondition =
+          showWeather &&
+          envData != null &&
+          !loading &&
+          envData.weatherDescription.isNotEmpty;
+
+      return Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: SizedBox(
+          width: double.infinity,
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: () => context.push('/health/temperature'),
+              splashColor: EntryLandscapePalette.steelBlue.withValues(
+                alpha: 0.2,
+              ),
+              highlightColor: EntryLandscapePalette.midnightNavy.withValues(
+                alpha: 0.15,
+              ),
+              child: Ink(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  color: const Color(0xFF252A38).withValues(alpha: 0.92),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.1),
                     width: 1,
-                    height: 10,
-                    color: colorScheme.primary.withValues(alpha: 0.15),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.35),
+                      blurRadius: 16,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 11,
+                  ),
+                  child: Row(
+                    children: [
+                      if (showWeather) ...[
+                        Icon(
+                          Icons.thermostat_rounded,
+                          color: tempTint,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          tempLabel,
+                          style: const TextStyle(
+                            color: tempTint,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            letterSpacing: 0.2,
+                          ),
+                        ),
+                      ],
+                      if (showAqi && showWeather)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 10),
+                          child: Container(
+                            width: 1,
+                            height: 22,
+                            color: Colors.white.withValues(alpha: 0.18),
+                          ),
+                        ),
+                      if (showAqi) ...[
+                        Icon(
+                          Icons.waves_rounded,
+                          size: 20,
+                          color: envData != null
+                              ? _getAQIColor(envData.aqi)
+                              : aqiTint,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          aqiLabel,
+                          style: TextStyle(
+                            color: envData != null
+                                ? _getAQIColor(envData.aqi)
+                                : aqiTint,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                            letterSpacing: 0.15,
+                          ),
+                        ),
+                      ],
+                      if (showCondition) ...[
+                        Padding(
+                          padding: const EdgeInsets.only(left: 10),
+                          child: Container(
+                            width: 1,
+                            height: 22,
+                            color: Colors.white.withValues(alpha: 0.14),
+                          ),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.only(left: 10),
+                            child: Text(
+                              envData.weatherDescription,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                color: EntryLandscapePalette.dustySkyBlue
+                                    .withValues(alpha: 0.9),
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w600,
+                                height: 1.2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-              if (showAqi) ...[
-                Icon(
-                  Icons.air_rounded,
-                  size: 14,
-                  color: _getAQIColor(envData?.aqi ?? 0),
-                ),
-                const SizedBox(width: 4),
-                Text(
-                  "AQI ${envData?.aqi ?? '--'}",
-                  style: textTheme.labelMedium?.copyWith(
-                    fontWeight: FontWeight.w800,
-                    color: _getAQIColor(envData?.aqi ?? 0),
-                  ),
-                ),
-              ],
-            ],
+              ),
+            ),
           ),
         ),
       );

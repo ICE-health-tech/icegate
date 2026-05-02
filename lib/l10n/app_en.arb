@@ -162,6 +162,9 @@
   "nutri_delete_confirm": "Are you sure you want to delete this meal?",
   "nutri_meal_deleted": "Meal deleted",
   "nutri_yesterday": "Yesterday",
+  "nutri_ai_saved_retry_later": "Meal saved locally. AI server unavailable — use Retry on the dashboard when it is back.",
+  "nutri_ai_retry": "Retry AI analysis",
+  "nutri_calories_pending": "Calories pending",
   "common_cancel": "Cancel",
   "common_delete": "Delete",
   "todays_gains": "Today's Gains",
@@ -186,6 +189,20 @@
   "health_air_quality": "Air Quality",
   "health_weather": "Weather",
   "health_temperature_subtitle": "Current Temperature",
+  "health_temperature_env_title": "Weather & air",
+  "health_env_condition": "Conditions",
+  "health_env_particles": "Particles",
+  "health_env_pm25": "PM2.5",
+  "health_env_pm10": "PM10",
+  "health_env_sources": "Open-Meteo · WAQI",
+  "health_env_updated": "Updated {time}",
+  "@health_env_updated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
   "health_aqi_unit": "AQI",
   "health_metrics_detail_coming_soon": "Detail page for {name} coming soon!",
   "@health_metrics_detail_coming_soon": {
@@ -318,6 +335,13 @@
   "err_biometric_disabled": "Biometric login is not enabled for this account.",
   "err_too_many_attempts": "Too many failed attempts. Please try again later.",
   "msg_enter_credentials": "Please enter your credentials",
+  "forgot_password": "Forgot password?",
+  "forgot_password_title": "Reset password",
+  "forgot_password_body": "Enter your account email. We will send you a link to set a new password.",
+  "forgot_password_send": "Send reset link",
+  "forgot_password_success": "If an account exists for this email, you will receive a reset link shortly.",
+  "err_forgot_password_empty_email": "Please enter your email address.",
+  "err_forgot_password_invalid_email": "Please enter a valid email address.",
   "analysis_user_title": "{name}'s Analysis",
   "@analysis_user_title": {
     "placeholders": {
@@ -1040,6 +1064,18 @@
   "msg_sign_in_to_sync": "Sign in to sync your data",
   "member_status": "Member",
   "change_username": "Change Username",
+  "delete_account": "Delete account",
+  "delete_account_subtitle": "Sign out and remove your cloud profile when supported",
+  "delete_account_plan_title": "Suggested plan before you delete",
+  "delete_account_plan_intro": "Review what happens when you continue:",
+  "delete_account_plan_step1": "You will be signed out on this device and saved login data cleared from secure storage.",
+  "delete_account_plan_step2": "If your project deploys the Supabase Edge Function \"delete-account\", your auth user and linked rows can be removed server-side.",
+  "delete_account_plan_step3": "Until that endpoint exists, cloud data may remain — contact support or use the dashboard to request full erasure under applicable privacy laws.",
+  "delete_account_acknowledge": "I understand my account may not be fully erased from the server until backend deletion is enabled.",
+  "delete_account_confirm": "Delete and sign out",
+  "delete_account_cancel": "Cancel",
+  "delete_account_success": "You have been signed out. Complete cloud deletion may take up to 48 hours once enabled.",
+  "delete_account_err_not_signed_in": "No active session.",
   "remaining": "Remaining",
   "notification_manager_title": "NOTIFICATION HUB",
   "notification_hunter_hub": "Hunter Hub",

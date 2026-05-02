@@ -1,3 +1,5 @@
+import 'dart:async' show unawaited;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
@@ -16,6 +18,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOvervie
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceStocksPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/subscription_manager.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -77,55 +80,62 @@ class FinancePage extends StatefulWidget {
     final l10n = AppLocalizations.of(context)!;
     final financeBlock = context.read<FinanceBlock>();
 
-    return MainButton(
-      type: "finance",
-      destination: "/finance",
-      size: size,
-      backgroundColor: EntryColors.financeYellow.withValues(alpha: 0.9),
-      iconColor: const Color(0xFF0D0D12),
-      icon: Icons.add,
-      mainFunction: () {
-        TransactionBuilderDialog.show(context, financeBlock: financeBlock);
-      },
-      onSwipeUp: () => WidgetNavigatorAction.smartPop(context),
-      onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
-      onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
-      subButtons: [
-        SubButton(
-          icon: Icons.savings_rounded,
-          backgroundColor: Colors.green,
-          label: l10n.finance_label_save,
-          tooltip: l10n.finance_tooltip_add_savings,
-          onPressed: () => TransactionBuilderDialog.show(
-            context,
-            preferredType: 'savings',
-            financeBlock: financeBlock,
+    return Watch((context) {
+      final isBilling = financeBlock.activeTab.value == 2;
+      return MainButton(
+        type: "finance",
+        destination: "/finance",
+        size: size,
+        backgroundColor: EntryColors.financeYellow.withValues(alpha: 0.9),
+        iconColor: const Color(0xFF0D0D12),
+        icon: Icons.add,
+        mainFunction: () {
+          if (isBilling) {
+            showSubscriptionEditor(context, financeBlock);
+          } else {
+            TransactionBuilderDialog.show(context, financeBlock: financeBlock);
+          }
+        },
+        onSwipeUp: () => WidgetNavigatorAction.smartPop(context),
+        onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
+        onSwipeLeft: () => WidgetNavigatorAction.smartPop(context),
+        subButtons: [
+          SubButton(
+            icon: Icons.savings_rounded,
+            backgroundColor: Colors.green,
+            label: l10n.finance_label_save,
+            tooltip: l10n.finance_tooltip_add_savings,
+            onPressed: () => TransactionBuilderDialog.show(
+              context,
+              preferredType: 'savings',
+              financeBlock: financeBlock,
+            ),
           ),
-        ),
-        SubButton(
-          icon: Icons.shopping_cart_rounded,
-          backgroundColor: Colors.red,
-          label: l10n.finance_label_spend,
-          tooltip: l10n.finance_tooltip_add_expense,
-          onPressed: () => TransactionBuilderDialog.show(
-            context,
-            preferredType: 'expense',
-            financeBlock: financeBlock,
+          SubButton(
+            icon: Icons.shopping_cart_rounded,
+            backgroundColor: Colors.red,
+            label: l10n.finance_label_spend,
+            tooltip: l10n.finance_tooltip_add_expense,
+            onPressed: () => TransactionBuilderDialog.show(
+              context,
+              preferredType: 'expense',
+              financeBlock: financeBlock,
+            ),
           ),
-        ),
-        SubButton(
-          icon: Icons.attach_money_rounded,
-          backgroundColor: Colors.blue,
-          label: l10n.finance_label_income,
-          tooltip: l10n.finance_tooltip_add_income,
-          onPressed: () => TransactionBuilderDialog.show(
-            context,
-            preferredType: 'income',
-            financeBlock: financeBlock,
+          SubButton(
+            icon: Icons.attach_money_rounded,
+            backgroundColor: Colors.blue,
+            label: l10n.finance_label_income,
+            tooltip: l10n.finance_tooltip_add_income,
+            onPressed: () => TransactionBuilderDialog.show(
+              context,
+              preferredType: 'income',
+              financeBlock: financeBlock,
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   @override
@@ -164,6 +174,14 @@ class _FinancePageState extends State<FinancePage>
           _financeBlock.activeTab.value = newIndex;
         });
       }
+      if (newIndex == 2) {
+        unawaited(_financeBlock.refreshSubscriptions());
+      }
+    });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(_financeBlock.refreshSubscriptions());
     });
 
     _disposeEffect = effect(() {

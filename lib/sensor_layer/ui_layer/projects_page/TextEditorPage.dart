@@ -64,6 +64,27 @@ class _TextEditorPageState extends State<TextEditorPage>
     'Awful',
   ];
 
+  /// Maps legacy DB values (emoji / old labels) to current [_moodOptions].
+  static String? _normalizeMoodForDropdown(String? stored) {
+    if (stored == null || stored.isEmpty) return null;
+    if (_moodOptions.contains(stored)) return stored;
+    const legacy = <String, String>{
+      '🤩': 'Awesome',
+      '😄': 'Awesome',
+      '✨': 'Awesome',
+      '😊': 'Good',
+      '🙂': 'Good',
+      '😐': 'Meh',
+      '😑': 'Meh',
+      '😕': 'Bad',
+      '😟': 'Bad',
+      '😢': 'Awful',
+      '😭': 'Awful',
+      '😫': 'Awful',
+    };
+    return legacy[stored] ?? legacy[stored.trim()];
+  }
+
   // Undo/Redo State
   final List<String> _undoStack = [];
   final List<String> _redoStack = [];
@@ -204,7 +225,12 @@ class _TextEditorPageState extends State<TextEditorPage>
 
     // Initialize selected mood from existing note if editing
     if (widget.note != null && widget.note!.mood != null) {
-      _selectedMood = widget.note!.mood;
+      final normalized = _normalizeMoodForDropdown(widget.note!.mood);
+      if (mounted) {
+        setState(() => _selectedMood = normalized);
+      } else {
+        _selectedMood = normalized;
+      }
     }
   }
 
@@ -454,7 +480,11 @@ class _TextEditorPageState extends State<TextEditorPage>
               ),
               duration: const Duration(seconds: 1),
               behavior: SnackBarBehavior.floating,
-              width: 140,
+              margin: EdgeInsets.only(
+                left: 16,
+                right: 16,
+                bottom: MediaQuery.of(context).padding.bottom + 16,
+              ),
             ),
           );
         }
@@ -850,9 +880,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Hero(
-      tag: 'note_${widget.note?.id ?? "new"}',
-      child: PopScope(
+    return PopScope(
         canPop: !_hasUnsavedChanges,
         onPopInvokedWithResult: (didPop, result) async {
           if (didPop) return;
@@ -996,108 +1024,147 @@ class _TextEditorPageState extends State<TextEditorPage>
                                   ValueListenableBuilder(
                                     valueListenable: syncStatus,
                                     builder: (context, status, child) {
-                                      return Row(
-                                        children: [
-                                          if (_lastSaved != null) ...[
-                                            Icon(
-                                              Icons.access_time_rounded,
-                                              size: 12,
-                                              color: colorScheme.onSurface
-                                                  .withValues(alpha: 0.3),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Saved ${_formatRelativeTime(_lastSaved!)}',
-                                              style: TextStyle(
-                                                color: colorScheme.onSurface
-                                                    .withValues(alpha: 0.3),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w500,
+                                      return LayoutBuilder(
+                                        builder: (context, constraints) {
+                                          return SingleChildScrollView(
+                                            scrollDirection: Axis.horizontal,
+                                            physics:
+                                                const BouncingScrollPhysics(),
+                                            child: Row(
+                                              children: [
+                                                  if (_lastSaved != null) ...[
+                                                    Icon(
+                                                      Icons.access_time_rounded,
+                                                      size: 12,
+                                                      color: colorScheme
+                                                          .onSurface
+                                                          .withValues(
+                                                              alpha: 0.3),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Saved ${_formatRelativeTime(_lastSaved!)}',
+                                                      style: TextStyle(
+                                                        color: colorScheme
+                                                            .onSurface
+                                                            .withValues(
+                                                                alpha: 0.3),
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (_openedFile !=
+                                                      null) ...[
+                                                    const SizedBox(width: 8),
+                                                    Icon(
+                                                      Icons.folder_open_rounded,
+                                                      size: 12,
+                                                      color: colorScheme.primary
+                                                          .withValues(
+                                                              alpha: 0.5),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    ConstrainedBox(
+                                                      constraints:
+                                                          BoxConstraints(
+                                                        maxWidth: constraints
+                                                                .maxWidth *
+                                                            0.45,
+                                                      ),
+                                                      child: Text(
+                                                        _openedFile!.path,
+                                                        style: TextStyle(
+                                                          color: colorScheme
+                                                              .primary
+                                                              .withValues(
+                                                                  alpha: 0.5),
+                                                          fontSize: 10,
+                                                          fontWeight:
+                                                              FontWeight.w500,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        maxLines: 1,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (_hasUnsavedChanges) ...[
+                                                    const SizedBox(width: 8),
+                                                    Container(
+                                                      width: 6,
+                                                      height: 6,
+                                                      decoration:
+                                                          const BoxDecoration(
+                                                        color: Colors.orange,
+                                                        shape: BoxShape.circle,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Unsaved',
+                                                      style: TextStyle(
+                                                        color: Colors.orange
+                                                            .withValues(
+                                                                alpha: 0.7),
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (_isSaving) ...[
+                                                    const SizedBox(width: 8),
+                                                    SizedBox(
+                                                      width: 10,
+                                                      height: 10,
+                                                      child:
+                                                          CircularProgressIndicator(
+                                                        strokeWidth: 1.5,
+                                                        color: colorScheme
+                                                            .primary,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      'Saving...',
+                                                      style: TextStyle(
+                                                        color: colorScheme
+                                                            .primary
+                                                            .withValues(
+                                                                alpha: 0.7),
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                    ),
+                                                  ],
+                                                  if (status != null) ...[
+                                                    const SizedBox(width: 8),
+                                                    const Icon(
+                                                      Icons.auto_awesome_rounded,
+                                                      size: 12,
+                                                      color: Colors.amber,
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Text(
+                                                      status,
+                                                      style: const TextStyle(
+                                                        color: Colors.amber,
+                                                        fontSize: 11,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                      ),
+                                                      maxLines: 1,
+                                                      overflow: TextOverflow
+                                                          .ellipsis,
+                                                    ),
+                                                  ],
+                                                ],
                                               ),
-                                            ),
-                                          ],
-                                          if (_openedFile != null) ...[
-                                            const SizedBox(width: 8),
-                                            Icon(
-                                              Icons.folder_open_rounded,
-                                              size: 12,
-                                              color: colorScheme.primary
-                                                  .withValues(alpha: 0.5),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Expanded(
-                                              child: Text(
-                                                _openedFile!.path,
-                                                style: TextStyle(
-                                                  color: colorScheme.primary
-                                                      .withValues(alpha: 0.5),
-                                                  fontSize: 10,
-                                                  fontWeight: FontWeight.w500,
-                                                ),
-                                                overflow: TextOverflow.ellipsis,
-                                              ),
-                                            ),
-                                          ],
-                                          if (_hasUnsavedChanges) ...[
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              width: 6,
-                                              height: 6,
-                                              decoration: const BoxDecoration(
-                                                color: Colors.orange,
-                                                shape: BoxShape.circle,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Unsaved',
-                                              style: TextStyle(
-                                                color: Colors.orange
-                                                    .withValues(alpha: 0.7),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                          if (_isSaving) ...[
-                                            const SizedBox(width: 8),
-                                            SizedBox(
-                                              width: 10,
-                                              height: 10,
-                                              child: CircularProgressIndicator(
-                                                strokeWidth: 1.5,
-                                                color: colorScheme.primary,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              'Saving...',
-                                              style: TextStyle(
-                                                color: colorScheme.primary
-                                                    .withValues(alpha: 0.7),
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                          if (status != null) ...[
-                                            const SizedBox(width: 8),
-                                            const Icon(
-                                              Icons.auto_awesome_rounded,
-                                              size: 12,
-                                              color: Colors.amber,
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              status,
-                                              style: const TextStyle(
-                                                color: Colors.amber,
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.w600,
-                                              ),
-                                            ),
-                                          ],
-                                        ],
+                                          );
+                                        },
                                       );
                                     },
                                   ),
@@ -1178,7 +1245,6 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           ),
         ),
-      ),
     );
   }
 
@@ -1279,11 +1345,15 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Widget _buildMoodSelector(ColorScheme colorScheme) {
+    final validValue =
+        _selectedMood != null && _moodOptions.contains(_selectedMood)
+            ? _selectedMood
+            : null;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 8),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: _selectedMood,
+          value: validValue,
           hint: Text(
             'Mood',
             style: TextStyle(

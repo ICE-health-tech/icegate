@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/ThemeManager.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class HomePageSettings extends StatelessWidget {
@@ -47,21 +48,40 @@ class HomePageSettings extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            l10n.settings_title ?? "Home Page Settings",
-            style: const TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              letterSpacing: -0.5,
-            ),
-          ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 36),
+         
 
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
+                  ListTile(
+                    contentPadding: EdgeInsets.zero,
+                    leading: Icon(
+                      Icons.palette_outlined,
+                      color: colorScheme.primary,
+                    ),
+                    title: Text(
+                      l10n.change_theme,
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    subtitle: Text(
+                      'Watch-style & presets',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: colorScheme.onSurface.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    trailing: Icon(
+                      Icons.chevron_right_rounded,
+                      color: colorScheme.outline,
+                    ),
+                    onTap: () =>
+                        ThemeManager.showThemeSelectionDialog(context),
+                  ),
+                  const SizedBox(height: 20),
+                  const Divider(height: 1),
+                  const SizedBox(height: 16),
                   _buildToggleTile(
                     context,
                     icon: Icons.air_rounded,
@@ -198,7 +218,7 @@ class HomePageSettings extends StatelessWidget {
                 ),
               ),
               child: Text(
-                l10n.common_done ?? "Done",
+                l10n.common_done,
                 style: const TextStyle(fontWeight: FontWeight.w800),
               ),
             ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:intl/intl.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/components/NutritionRingChart.dart';
@@ -40,6 +42,20 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     _healthMealDAO = context.read<HealthMealDAO>();
   }
 
+  String _mealsPersonIdForQuery(BuildContext context) {
+    final userData = context.read<AuthBlock>().user.value;
+    final fromAuth = userData?['person_id']?.toString() ??
+        userData?['id']?.toString();
+    if (fromAuth != null && fromAuth.isNotEmpty) {
+      return fromAuth;
+    }
+    final fromProfile = context.read<PersonBlock>().currentPersonID.value;
+    if (fromProfile != null && fromProfile.isNotEmpty) {
+      return fromProfile;
+    }
+    return '1';
+  }
+
   Map<String, List<DayWithMeal>> _groupMealsByDay(List<DayWithMeal> meals) {
     final Map<String, List<DayWithMeal>> grouped = {};
     for (var meal in meals) {
@@ -57,8 +73,6 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
-    final personID = context.read<PersonBlock>().currentPersonID.value;
-
     return Scaffold(
       backgroundColor: colorScheme.surface,
       floatingActionButton: FloatingActionButton.extended(
@@ -74,32 +88,36 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
         backgroundColor: colorScheme.primary,
         elevation: 4,
       ),
-      body: StreamBuilder<List<DayWithMeal>>(
-        stream: _healthMealDAO.watchDaysWithMeals(personID ?? ""),
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          final data = snapshot.data ?? [];
-          final groupedMeals = _groupMealsByDay(data);
-          final sortedDays = groupedMeals.keys.toList()
-            ..sort((a, b) => b.compareTo(a));
-
-          // Calculate today's totals
-          double p = 0, c = 0, f = 0, kcal = 0;
-          final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
-          for (var entry in data) {
-            if (DateFormat('yyyy-MM-dd').format(entry.meal.eatenAt) ==
-                todayKey) {
-              p += entry.meal.protein;
-              c += entry.meal.carbs;
-              f += entry.meal.fat;
-              kcal += entry.meal.calories;
+      body: Watch((context) {
+        context.read<AuthBlock>().user.value;
+        context.read<PersonBlock>().information.value;
+        final personId = _mealsPersonIdForQuery(context);
+        return StreamBuilder<List<DayWithMeal>>(
+          stream: _healthMealDAO.watchDaysWithMeals(personId),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
             }
-          }
 
-          return SwipeablePage(
+            final data = snapshot.data ?? [];
+            final groupedMeals = _groupMealsByDay(data);
+            final sortedDays = groupedMeals.keys.toList()
+              ..sort((a, b) => b.compareTo(a));
+
+            // Calculate today's totals
+            double p = 0, c = 0, f = 0, kcal = 0;
+            final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
+            for (var entry in data) {
+              if (DateFormat('yyyy-MM-dd').format(entry.meal.eatenAt) ==
+                  todayKey) {
+                p += entry.meal.protein;
+                c += entry.meal.carbs;
+                f += entry.meal.fat;
+                kcal += entry.meal.calories;
+              }
+            }
+
+            return SwipeablePage(
             direction: SwipeablePageDirection.leftToRight,
             onSwipe: () => WidgetNavigatorAction.smartPop(context),
             child: CustomScrollView(
@@ -195,8 +213,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
               ],
             ),
           );
-        },
-      ),
+          },
+        );
+      }),
     );
   }
 

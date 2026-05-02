@@ -84,7 +84,7 @@ class WeatherPluginCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
 
     return _BasePluginCard(
-      onTap: () => context.go('/health'),
+      onTap: () => context.push('/health/temperature'),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [

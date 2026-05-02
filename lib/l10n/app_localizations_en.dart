@@ -429,6 +429,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get nutri_yesterday => 'Yesterday';
 
   @override
+  String get nutri_ai_saved_retry_later =>
+      'Meal saved locally. AI server unavailable — use Retry on the dashboard when it is back.';
+
+  @override
+  String get nutri_ai_retry => 'Retry AI analysis';
+
+  @override
+  String get nutri_calories_pending => 'Calories pending';
+
+  @override
   String get common_cancel => 'Cancel';
 
   @override
@@ -493,6 +503,29 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get health_temperature_subtitle => 'Current Temperature';
+
+  @override
+  String get health_temperature_env_title => 'Weather & air';
+
+  @override
+  String get health_env_condition => 'Conditions';
+
+  @override
+  String get health_env_particles => 'Particles';
+
+  @override
+  String get health_env_pm25 => 'PM2.5';
+
+  @override
+  String get health_env_pm10 => 'PM10';
+
+  @override
+  String get health_env_sources => 'Open-Meteo · WAQI';
+
+  @override
+  String health_env_updated(String time) {
+    return 'Updated $time';
+  }
 
   @override
   String get health_aqi_unit => 'AQI';
@@ -746,6 +779,31 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get msg_enter_credentials => 'Please enter your credentials';
+
+  @override
+  String get forgot_password => 'Forgot password?';
+
+  @override
+  String get forgot_password_title => 'Reset password';
+
+  @override
+  String get forgot_password_body =>
+      'Enter your account email. We will send you a link to set a new password.';
+
+  @override
+  String get forgot_password_send => 'Send reset link';
+
+  @override
+  String get forgot_password_success =>
+      'If an account exists for this email, you will receive a reset link shortly.';
+
+  @override
+  String get err_forgot_password_empty_email =>
+      'Please enter your email address.';
+
+  @override
+  String get err_forgot_password_invalid_email =>
+      'Please enter a valid email address.';
 
   @override
   String analysis_user_title(String name) {
@@ -2194,6 +2252,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get change_username => 'Change Username';
+
+  @override
+  String get delete_account => 'Delete account';
+
+  @override
+  String get delete_account_subtitle =>
+      'Sign out and remove your cloud profile when supported';
+
+  @override
+  String get delete_account_plan_title => 'Suggested plan before you delete';
+
+  @override
+  String get delete_account_plan_intro =>
+      'Review what happens when you continue:';
+
+  @override
+  String get delete_account_plan_step1 =>
+      'You will be signed out on this device and saved login data cleared from secure storage.';
+
+  @override
+  String get delete_account_plan_step2 =>
+      'If your project deploys the Supabase Edge Function \"delete-account\", your auth user and linked rows can be removed server-side.';
+
+  @override
+  String get delete_account_plan_step3 =>
+      'Until that endpoint exists, cloud data may remain — contact support or use the dashboard to request full erasure under applicable privacy laws.';
+
+  @override
+  String get delete_account_acknowledge =>
+      'I understand my account may not be fully erased from the server until backend deletion is enabled.';
+
+  @override
+  String get delete_account_confirm => 'Delete and sign out';
+
+  @override
+  String get delete_account_cancel => 'Cancel';
+
+  @override
+  String get delete_account_success =>
+      'You have been signed out. Complete cloud deletion may take up to 48 hours once enabled.';
+
+  @override
+  String get delete_account_err_not_signed_in => 'No active session.';
 
   @override
   String get remaining => 'Remaining';

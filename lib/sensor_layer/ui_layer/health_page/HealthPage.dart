@@ -126,7 +126,7 @@ class _HealthPageState extends State<HealthPage>
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final healthBlock = context.read<HealthBlock>();
     if (state == AppLifecycleState.resumed) {
-      _loadHealthData();
+      if (mounted) _loadHealthData();
       healthBlock.startRealtimeSync();
     } else if (state == AppLifecycleState.paused) {
       healthBlock.stopRealtimeSync();
@@ -175,6 +175,8 @@ class _HealthPageState extends State<HealthPage>
       } catch (e) {
         debugPrint('Background sync failed: $e');
       }
+
+      if (!mounted) return;
 
       // 3. Final refresh of local data after sync completes
       final syncedData = await HealthMetricsData.getMetricsByDay(
@@ -495,6 +497,7 @@ class _HealthPageState extends State<HealthPage>
                               isLoading: envLoading,
                               source: 'Open-Meteo',
                               sourceIcon: Icons.cloud_queue_rounded,
+                              detailPage: '/health/temperature',
                             ));
 
                             displayMetrics.add(HealthMetric(
@@ -508,6 +511,7 @@ class _HealthPageState extends State<HealthPage>
                               isLoading: envLoading,
                               source: 'Open-Meteo',
                               sourceIcon: Icons.eco_rounded,
+                              detailPage: '/health/temperature',
                             ));
                           }
 

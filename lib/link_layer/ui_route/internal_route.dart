@@ -44,6 +44,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WaterPage.dar
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightInputPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/OxygenSaturationPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/TemperaturePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/DataIntegrationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/BlockReminderPage.dart';
@@ -298,6 +299,10 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'oxygen_saturation',
               builder: (context, state) => const OxygenSaturationPage(),
+            ),
+            GoRoute(
+              path: 'temperature',
+              builder: (context, state) => const TemperaturePage(),
             ),
             GoRoute(
               path: 'weight',

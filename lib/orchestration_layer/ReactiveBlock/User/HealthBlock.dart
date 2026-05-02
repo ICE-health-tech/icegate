@@ -47,6 +47,9 @@ class HealthBlock with HealthBlockState {
 
   String? _initializedPersonId;
 
+  /// When > 0, the next [watchDailyCalories]–driven [\_saveCaloriesConsumed] skips Supabase.
+  int _mealDerivedMetricsCloudSkipCount = 0;
+
   HealthBlock({
     required String personId,
     required HealthMetricsDAO healthDao,

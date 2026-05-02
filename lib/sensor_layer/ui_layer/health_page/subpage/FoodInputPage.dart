@@ -18,6 +18,8 @@ import 'package:drift/drift.dart' hide Column;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -78,6 +80,22 @@ class _FoodInputPageState extends State<FoodInputPage> {
   late HealthMealDAO _healthMealDAO;
   Timer? _analysisTimer;
   bool _isSaving = false;
+  bool _needsAiRetry = false;
+
+  /// Must match [FoodConsumePage] / [FoodDashboardPage] list query or rows disappear.
+  String _mealsPersonIdForQuery() {
+    final userData = context.read<AuthBlock>().user.value;
+    final fromAuth =
+        userData?['person_id']?.toString() ?? userData?['id']?.toString();
+    if (fromAuth != null && fromAuth.isNotEmpty) {
+      return fromAuth;
+    }
+    final fromProfile = context.read<PersonBlock>().currentPersonID.value;
+    if (fromProfile != null && fromProfile.isNotEmpty) {
+      return fromProfile;
+    }
+    return '1';
+  }
 
   @override
   void initState() {
@@ -98,12 +116,8 @@ class _FoodInputPageState extends State<FoodInputPage> {
     if (_pickedImage == null) return;
 
     try {
-      final authBlock = context.read<AuthBlock>();
-      final userData = authBlock.user.value;
-      final String personID =
-          userData?['person_id']?.toString() ??
-          userData?['id']?.toString() ??
-          '1';
+      if (!mounted) return;
+      final String personID = _mealsPersonIdForQuery();
       final objectBlock = context.read<ObjectDatabaseBlock>();
 
       final String savedFileName = await objectBlock.saveAnyLocalImage(
@@ -132,6 +146,7 @@ class _FoodInputPageState extends State<FoodInputPage> {
           _fatController.text = meal.fat.toString();
           _kcalController.text = meal.calories.toString();
           _imagePath = meal.mealImageUrl ?? '';
+          _needsAiRetry = meal.needsAiRetry;
         });
       }
     } catch (e) {
@@ -161,12 +176,8 @@ class _FoodInputPageState extends State<FoodInputPage> {
 
       if (image == null) return;
 
-      final authBlock = context.read<AuthBlock>();
-      final userData = authBlock.user.value;
-      final String personID =
-          userData?['person_id']?.toString() ??
-          userData?['id']?.toString() ??
-          '1';
+      if (!mounted) return;
+      final String personID = _mealsPersonIdForQuery();
       final objectBlock = context.read<ObjectDatabaseBlock>();
 
       final String savedFileName = await objectBlock.saveAnyLocalImage(
@@ -208,15 +219,11 @@ class _FoodInputPageState extends State<FoodInputPage> {
     });
 
     try {
-      final authBlock = context.read<AuthBlock>();
-      final userData = authBlock.user.value;
-      final String personID =
-          userData?['person_id']?.toString() ??
-          userData?['id']?.toString() ??
-          '1';
+      if (!mounted) return;
+      final String personID = _mealsPersonIdForQuery();
 
       final analysisBlock = context.read<FoodAnalysisBlock>();
-      final result = await analysisBlock.analyze(
+      final outcome = await analysisBlock.analyze(
         foodName: _foodController.text,
         image: _pickedImage,
         volume: _measuredVolume,
@@ -225,29 +232,63 @@ class _FoodInputPageState extends State<FoodInputPage> {
       );
 
       if (mounted) {
+        final r = outcome.protocol;
         setState(() {
-          _proteinController.text = result.protein.toString();
-          _carbsController.text = result.carbs.toString();
-          _fatController.text = result.fat.toString();
-          _kcalController.text = result.calories.toString();
-          if (result.imageUrl != null && result.imageUrl!.isNotEmpty) {
-            _imagePath = result.imageUrl!;
+          _proteinController.text = r.protein.toString();
+          _carbsController.text = r.carbs.toString();
+          _fatController.text = r.fat.toString();
+          _kcalController.text = r.calories.toString();
+          if (r.imageUrl != null && r.imageUrl!.isNotEmpty) {
+            _imagePath = r.imageUrl!;
           }
           _isAnalyzing = false;
+          _needsAiRetry = !outcome.aiSucceeded;
         });
         _analysisTimer?.cancel();
-        
-        // Auto-save the record now that analysis is complete
+
         if (!_isSaving) {
-          _addMeal();
+          await _addMeal();
+        }
+
+        if (!outcome.aiSucceeded) {
+          ScaffoldMessenger.maybeOf(context)?.showSnackBar(
+            SnackBar(
+              content: Text(
+                AppLocalizations.of(context)!.nutri_ai_saved_retry_later,
+              ),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 5),
+            ),
+          );
         }
       }
 
     } catch (e) {
       debugPrint('FoodInputPage: Analysis error: $e');
-      if (mounted) setState(() => _isAnalyzing = false);
+      if (mounted) {
+        setState(() {
+          _isAnalyzing = false;
+          _needsAiRetry = true;
+        });
+      }
+      _analysisTimer?.cancel();
+      if (mounted && !_isSaving) {
+        await _addMeal();
+      }
     } finally {
       _analysisTimer?.cancel();
+    }
+  }
+
+  Future<void> _retryAiFromEditor() async {
+    final mealId = widget.mealId;
+    if (mealId == null) return;
+    setState(() => _isAnalyzing = true);
+    try {
+      await context.read<FoodAnalysisBlock>().retryAnalysisForMeal(mealId);
+      await _loadMealData();
+    } finally {
+      if (mounted) setState(() => _isAnalyzing = false);
     }
   }
 
@@ -291,131 +332,133 @@ class _FoodInputPageState extends State<FoodInputPage> {
     _isSaving = true;
     _analysisTimer?.cancel();
 
-    final protein = double.tryParse(_proteinController.text) ?? 0.0;
-    final carbs = double.tryParse(_carbsController.text) ?? 0.0;
-    final fat = double.tryParse(_fatController.text) ?? 0.0;
-    final calories = double.tryParse(_kcalController.text) ?? 0.0;
+    try {
+      final protein = double.tryParse(_proteinController.text) ?? 0.0;
+      final carbs = double.tryParse(_carbsController.text) ?? 0.0;
+      final fat = double.tryParse(_fatController.text) ?? 0.0;
+      final calories = double.tryParse(_kcalController.text) ?? 0.0;
 
-    if (!mounted) return;
-    final authBlock = context.read<AuthBlock>();
-    final userData = authBlock.user.value;
-    final String personID =
-        userData?['person_id']?.toString() ??
-        userData?['id']?.toString() ??
-        '1';
-
-    final now = DateTime.now();
-    final normalizedDate = DateTime(now.year, now.month, now.day);
-    final dayDeterministicId = IDGen.generateDeterministicUuid(
-      personID,
-      DateFormat('yyyy-MM-dd').format(normalizedDate),
-    );
-
-    final String mealId = widget.mealId ?? IDGen.UUIDV7();
-
-    final messenger = ScaffoldMessenger.maybeOf(context);
-
-    if (widget.mealId != null) {
       if (!mounted) return;
-      final db = context.read<AppDatabase>();
-      await (db.update(
-        db.mealsTable,
-      )..where((t) => t.id.equals(widget.mealId!))).write(
-        MealsTableCompanion(
-          mealName: Value(
-            _foodController.text.isEmpty ? "Meal" : _foodController.text,
+
+      final String personID = _mealsPersonIdForQuery();
+
+      final now = DateTime.now();
+      final normalizedDate = DateTime(now.year, now.month, now.day);
+      final dayDeterministicId = IDGen.generateDeterministicUuid(
+        personID,
+        DateFormat('yyyy-MM-dd').format(normalizedDate),
+      );
+
+      final String mealId = widget.mealId ?? IDGen.UUIDV7();
+
+      final messenger = ScaffoldMessenger.maybeOf(context);
+
+      if (widget.mealId != null) {
+        context.read<HealthBlock>().skipCloudSyncForNextMealDerivedMetrics();
+        final db = context.read<AppDatabase>();
+        await (db.update(
+          db.mealsTable,
+        )..where((t) => t.id.equals(widget.mealId!))).write(
+          MealsTableCompanion(
+            mealName: Value(
+              _foodController.text.isEmpty ? "Meal" : _foodController.text,
+            ),
+            mealImageUrl: Value(_imagePath),
+            carbs: Value(carbs),
+            protein: Value(protein),
+            fat: Value(fat),
+            calories: Value(calories),
+            isAnalyzing: Value(_isAnalyzing),
+            needsAiRetry: Value(_needsAiRetry),
           ),
-          mealImageUrl: Value(_imagePath),
-          carbs: Value(carbs),
-          protein: Value(protein),
-          fat: Value(fat),
-          calories: Value(calories),
-          isAnalyzing: Value(_isAnalyzing),
+        );
+      } else {
+        await _healthMealDAO.insertMeal(
+          MealsTableCompanion.insert(
+            id: mealId,
+            mealName: _foodController.text.isEmpty
+                ? "Meal"
+                : _foodController.text,
+            personID: Value(personID),
+            mealImageUrl: Value(_imagePath),
+            carbs: Value(carbs),
+            protein: Value(protein),
+            fat: Value(fat),
+            calories: Value(calories),
+            eatenAt: Value(now),
+            isAnalyzing: Value(_isAnalyzing),
+            needsAiRetry: Value(_needsAiRetry),
+          ),
+        );
+      }
+
+      // Required for [HealthMealDAO.watchDaysWithMeals] (inner join on `days`).
+      // Must run even when AI is running and the sheet is dismissed (no `mounted` skip).
+      await _healthMealDAO.upsertDay(
+        DaysTableCompanion.insert(
+          id: dayDeterministicId,
+          dayID: normalizedDate,
+          caloriesOut: const Value(0),
+          weight: const Value(0),
         ),
       );
-    } else {
-      await _healthMealDAO.insertMeal(
-        MealsTableCompanion.insert(
-          id: mealId,
-          mealName: _foodController.text.isEmpty
-              ? "Meal"
-              : _foodController.text,
-          personID: Value(personID),
-          mealImageUrl: Value(_imagePath),
-          carbs: Value(carbs),
-          protein: Value(protein),
-          fat: Value(fat),
-          calories: Value(calories),
-          eatenAt: Value(now),
-          isAnalyzing: Value(_isAnalyzing),
-        ),
-      );
-    }
 
-    if (_isAnalyzing) {
-      // Delegate further analysis to background orchestrator
-      if (!mounted) return;
-      context.read<FoodAnalysisBlock>().analyzeAndSave(
-        mealId: mealId,
-        foodName: _foodController.text,
-        image: _pickedImage,
-        volume: _measuredVolume,
-        distance: _dimensions?['length'],
-        personId: personID,
-      );
+      if (_isAnalyzing && mounted) {
+        context.read<FoodAnalysisBlock>().analyzeAndSave(
+          mealId: mealId,
+          foodName: _foodController.text,
+          image: _pickedImage,
+          volume: _measuredVolume,
+          distance: _dimensions?['length'],
+          personId: personID,
+        );
 
-      messenger?.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const SizedBox(
-                width: 16,
-                height: 16,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: Color(0xFFD499D4),
-                ),
-              ),
-              const SizedBox(width: 12),
-              const Expanded(
-                child: Text(
-                  "AI is analyzing your meal...",
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.bold,
+        messenger?.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: Color(0xFFD499D4),
                   ),
                 ),
-              ),
-            ],
+                const SizedBox(width: 12),
+                const Expanded(
+                  child: Text(
+                    "AI is analyzing your meal...",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF1A1024),
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+              side: const BorderSide(color: Color(0xFF322244)),
+            ),
+            duration: const Duration(seconds: 4),
           ),
-          backgroundColor: const Color(0xFF1A1024),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-            side: const BorderSide(color: Color(0xFF322244)),
-          ),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    }
-
-    await _healthMealDAO.upsertDay(
-      DaysTableCompanion.insert(
-        id: dayDeterministicId,
-        dayID: normalizedDate,
-        caloriesOut: const Value(0),
-        weight: const Value(0),
-      ),
-    );
-
-    if (mounted) {
-      if (widget.isPopUp) {
-        if (Navigator.of(context).canPop()) {
-          Navigator.of(context).pop();
-        }
-      } else {
-        context.go("/health/food/consume");
+        );
       }
+
+      if (mounted) {
+        if (widget.isPopUp) {
+          if (Navigator.of(context).canPop()) {
+            Navigator.of(context).pop();
+          }
+        } else {
+          context.go("/health/food/consume");
+        }
+      }
+    } finally {
+      _isSaving = false;
     }
   }
 
@@ -552,6 +595,60 @@ class _FoodInputPageState extends State<FoodInputPage> {
               ),
 
               const SizedBox(height: 32),
+
+              if (widget.mealId != null && _needsAiRetry) ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: obsidianCard,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: Colors.orange.withValues(alpha: 0.5),
+                    ),
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Icon(
+                            Icons.cloud_off_rounded,
+                            color: Colors.orange.withValues(alpha: 0.9),
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.nutri_ai_saved_retry_later,
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.85),
+                                fontSize: 12,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton.icon(
+                          onPressed: _isAnalyzing ? null : _retryAiFromEditor,
+                          icon: const Icon(Icons.auto_awesome, size: 18),
+                          label: Text(l10n.nutri_ai_retry),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: premiumPink,
+                            side: const BorderSide(color: obsidianBorder),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+              ],
 
               // 6. Save Button
               SizedBox(

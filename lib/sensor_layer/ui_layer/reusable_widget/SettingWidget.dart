@@ -13,6 +13,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsWidget extends StatelessWidget {
   final String? title;
@@ -24,7 +25,7 @@ class SettingsWidget extends StatelessWidget {
       icon: const Icon(Icons.settings),
       iconSize: size,
       onPressed: () {
-        context.go('/settings');
+        context.push('/settings');
       },
     );
   }
@@ -251,6 +252,29 @@ class SettingsWidget extends StatelessWidget {
                     context.push('/settings/change-username');
                   },
                 ),
+                Watch((context) {
+                  final authBlock = context.read<AuthBlock>();
+                  authBlock.jwt.watch(context);
+                  final session =
+                      Supabase.instance.client.auth.currentSession;
+                  if (session == null) return const SizedBox.shrink();
+                  return Column(
+                    children: [
+                      const Divider(height: 1),
+                      _buildPremiumSettingTile(
+                        context: context,
+                        title: AppLocalizations.of(context)!.delete_account,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        )!.delete_account_subtitle,
+                        icon: Icons.person_off_rounded,
+                        color: Colors.red,
+                        onTap: () =>
+                            _showDeleteAccountPlanDialog(context, authBlock),
+                      ),
+                    ],
+                  );
+                }),
               ],
             ),
 
@@ -476,6 +500,153 @@ class SettingsWidget extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+
+  void _showDeleteAccountPlanDialog(BuildContext context, AuthBlock authBlock) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        var acknowledged = false;
+        var busy = false;
+
+        return StatefulBuilder(
+          builder: (context, setLocalState) {
+            return AlertDialog(
+              icon: Icon(
+                Icons.warning_amber_rounded,
+                color: colorScheme.error,
+                size: 32,
+              ),
+              title: Text(l10n.delete_account),
+              content: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.delete_account_plan_title,
+                      style: TextStyle(
+                        fontWeight: FontWeight.w800,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.delete_account_plan_intro,
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _planBullet(context, '1', l10n.delete_account_plan_step1),
+                    const SizedBox(height: 8),
+                    _planBullet(context, '2', l10n.delete_account_plan_step2),
+                    const SizedBox(height: 8),
+                    _planBullet(context, '3', l10n.delete_account_plan_step3),
+                    const SizedBox(height: 16),
+                    CheckboxListTile(
+                      contentPadding: EdgeInsets.zero,
+                      value: acknowledged,
+                      onChanged: busy
+                          ? null
+                          : (v) =>
+                              setLocalState(() => acknowledged = v ?? false),
+                      title: Text(
+                        l10n.delete_account_acknowledge,
+                        style: const TextStyle(fontSize: 13),
+                      ),
+                      controlAffinity: ListTileControlAffinity.leading,
+                    ),
+                  ],
+                ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: busy
+                      ? null
+                      : () => Navigator.of(dialogContext).pop(),
+                  child: Text(l10n.delete_account_cancel),
+                ),
+                FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: colorScheme.error,
+                    foregroundColor: colorScheme.onError,
+                  ),
+                  onPressed:
+                      (!acknowledged || busy)
+                          ? null
+                          : () async {
+                              setLocalState(() => busy = true);
+                              final err = await authBlock.deleteAccount();
+                              if (!dialogContext.mounted) return;
+                              Navigator.of(dialogContext).pop();
+                              if (!context.mounted) return;
+                              if (err != null) {
+                                final msg = err == 'delete_account_err_not_signed_in'
+                                    ? l10n.delete_account_err_not_signed_in
+                                    : err;
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text(msg)),
+                                );
+                                return;
+                              }
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(l10n.delete_account_success),
+                                  backgroundColor: Colors.green.shade700,
+                                ),
+                              );
+                              context.go('/login');
+                            },
+                  child: busy
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2,
+                            color: Colors.white,
+                          ),
+                        )
+                      : Text(l10n.delete_account_confirm),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _planBullet(BuildContext context, String index, String text) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$index.',
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: colorScheme.primary,
+          ),
+        ),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(
+              fontSize: 13,
+              height: 1.35,
+              color: colorScheme.onSurface,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
