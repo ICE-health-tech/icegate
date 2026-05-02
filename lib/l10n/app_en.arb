@@ -329,6 +329,7 @@
   "err_email_not_confirmed": "Please check your inbox to verify your email.",
   "err_user_not_found": "We couldn't find an account with that email.",
   "err_network_fail": "Unable to connect to the server. Check your internet.",
+  "err_auth_timeout": "Sign-in took too long. Please try again.",
   "err_passkey_canceled": "Passkey login was canceled.",
   "err_passkey_failed": "Security check failed. Please try again.",
   "err_biometric_unsupported": "Biometric login is not available on this device.",
@@ -342,6 +343,26 @@
   "forgot_password_success": "If an account exists for this email, you will receive a reset link shortly.",
   "err_forgot_password_empty_email": "Please enter your email address.",
   "err_forgot_password_invalid_email": "Please enter a valid email address.",
+  "register_page_title": "Create account",
+  "register_username_hint": "Username",
+  "register_first_name": "First name",
+  "register_last_name": "Last name",
+  "register_password_confirm": "Confirm password",
+  "btn_create_account": "Create account",
+  "msg_register_check_email": "We sent a confirmation link to {email}. Open it in this app to finish signing up.",
+  "@msg_register_check_email": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "msg_resend_confirm_sent": "If that address is valid, a new confirmation email was sent.",
+  "register_resend_email": "Resend email",
+  "register_back_to_login": "Back to sign in",
+  "err_register_password_mismatch": "Passwords do not match.",
+  "title_set_new_password": "Set new password",
+  "msg_password_recovery_body": "Choose a new password for your account.",
   "analysis_user_title": "{name}'s Analysis",
   "@analysis_user_title": {
     "placeholders": {
@@ -549,6 +570,8 @@
   "social_delete_bond": "Delete Bond",
   "social_no_achievements": "No achievements yet",
   "social_no_achievements_msg": "No achievements logged yet.",
+  "social_delete_feat_title": "Delete feat",
+  "social_delete_feat_body": "Remove this achievement? This cannot be undone.",
   "social_feat": "Feat",
   "mind_how_feeling": "How are you feeling?",
   "mind_what_up_to": "What have you been up to?",
@@ -1188,8 +1211,72 @@
   "finance_cat_emergency": "Emergency",
   "finance_cat_goal": "Goal",
   "finance_cat_retirement": "Retirement",
+  "finance_cat_impulse": "Impulse win",
+  "finance_quick_save_title": "Log savings",
+  "finance_quick_save_subtitle": "Money you set aside—often because you said no to spending.",
+  "finance_quick_note_label": "What you didn’t buy (optional)",
+  "finance_quick_full_form": "All fields",
+  "finance_quick_log": "Save",
+  "finance_quick_chip_impulse": "Resisted urge",
+  "finance_quick_chip_coffee": "Skipped treat",
+  "finance_quick_chip_shopping": "Walked away",
+  "finance_quick_chip_sale": "Passed on sale",
+  "finance_quick_chip_goal": "To a goal",
+  "finance_quick_chip_emergency": "Safety net",
+  "finance_quick_desc_impulse": "Resisted an impulse buy",
+  "finance_quick_desc_coffee": "Skipped a coffee or snack run",
+  "finance_quick_desc_shopping": "Walked away from a purchase",
+  "finance_quick_desc_sale": "Didn’t chase a sale",
+  "finance_quick_desc_goal": "Stashed toward a goal",
+  "finance_quick_desc_emergency": "Added to emergency fund",
+  "finance_quick_affirm_impulse": "You just paid your future self.",
+  "finance_quick_affirm_coffee": "Small skip, big discipline.",
+  "finance_quick_affirm_shopping": "You chose calm over cart.",
+  "finance_quick_affirm_sale": "You didn’t let a discount decide for you.",
+  "finance_quick_affirm_goal": "One step closer.",
+  "finance_quick_affirm_emergency": "Your safety net got stronger.",
+  "finance_quick_affirm_default": "Saved. Consistency compounds.",
+  "finance_quick_chip_custom": "Custom",
+  "finance_award_unlocked": "AWARD UNLOCKED",
+  "finance_award_first_save_title": "First Brick Laid",
+  "finance_award_first_save_desc": "You logged your first savings entry.",
+  "finance_award_three_streak_title": "Three in a Row",
+  "finance_award_three_streak_desc": "Three days in a row choosing to save.",
+  "finance_award_seven_streak_title": "Iron Will Week",
+  "finance_award_seven_streak_desc": "Seven consecutive days of saving.",
+  "finance_award_thirty_streak_title": "Compounding Mind",
+  "finance_award_thirty_streak_desc": "Thirty days of showing up for yourself.",
+  "finance_award_hundred_title": "First Hundred",
+  "finance_award_hundred_desc": "Your lifetime savings log crossed a hundred.",
+  "finance_award_thousand_title": "Four Figures",
+  "finance_award_thousand_desc": "Over a thousand set aside. That’s momentum.",
+  "finance_award_impulse_ten_title": "Master of Urges",
+  "finance_award_impulse_ten_desc": "Ten impulse wins logged. Your wiring is changing.",
+  "finance_streak_best": "Best: {count} days",
+  "@finance_streak_best": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_streak_day_one": "Start the chain",
+  "finance_streak_keep": "Don’t break it",
+  "finance_streak_strong": "You’re building something real.",
+  "finance_overview_streak_accessibility": "Open savings streak",
+  "finance_streak_label": "STREAK",
+  "@finance_streak_days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "finance_streak_days": "{count} day streak",
+  "finance_quick_mood_prompt": "How do you feel right now?",
+  "finance_quick_why_label": "Why this save?",
   "finance_cat_crypto": "Crypto",
-  "finance_cat_stock": "Stock",
+  "finance_cat_stock": "Saving",
   "finance_cat_real_estate": "Real Estate",
   "finance_power_points": "FINANCE POWER",
   "finance_goal": "Goal",

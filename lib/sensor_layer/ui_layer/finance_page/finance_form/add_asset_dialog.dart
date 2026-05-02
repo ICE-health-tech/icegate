@@ -130,7 +130,7 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                         children: [
                           _buildTypeTab(
                             AssetType.stock,
-                            "Stock",
+                            "Saving",
                             Icons.business,
                           ),
                           _buildTypeTab(

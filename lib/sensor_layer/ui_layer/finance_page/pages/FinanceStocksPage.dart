@@ -1,17 +1,16 @@
-import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/link_layer/finnace_services/stock_service.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/services/market_service.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/stock_page/models/stock_data.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
 import 'package:go_router/go_router.dart';
 
 class FinanceStocksPage extends StatelessWidget {
   final FinanceBlock financeBlock;
-  final _stockService = StockService();
 
   FinanceStocksPage({super.key, required this.financeBlock});
 
@@ -37,6 +36,42 @@ class FinanceStocksPage extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const SizedBox(height: 16),
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () {
+                  HapticFeedback.mediumImpact();
+                  QuickSaveSheet.show(context, financeBlock);
+                },
+                borderRadius: BorderRadius.circular(20),
+                child: Ink(
+                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 18),
+                  decoration: BoxDecoration(
+                    color: Colors.greenAccent.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.greenAccent.withValues(alpha: 0.35)),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(Icons.savings_rounded, color: Colors.greenAccent.withValues(alpha: 0.95), size: 26),
+                      const SizedBox(width: 12),
+                      const Expanded(
+                        child: Text(
+                          'Log savings (opens quick save)',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                            fontSize: 15,
+                          ),
+                        ),
+                      ),
+                      Icon(Icons.chevron_right_rounded, color: Colors.white.withValues(alpha: 0.35)),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
             _buildStockSummary(context, groupedStocks),
             const SizedBox(height: 32),
             _buildMarketPulse(context),
@@ -47,7 +82,7 @@ class FinanceStocksPage extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   const Text(
-                    "YOUR HOLDINGS",
+                    "YOUR SAVINGS",
                     style: TextStyle(
                       color: Colors.white54,
                       fontSize: 10,
@@ -188,160 +223,120 @@ class FinanceStocksPage extends StatelessWidget {
 
   Widget _buildStockTile(BuildContext context, String ticker, List<TransactionData> txns) {
     double invested = 0;
+    double grossPurchases = 0;
     for (final t in txns) {
       if (t.type == 'expense' || t.type == 'investment') {
         invested += t.amount;
-      } else if (t.type == 'income') invested -= t.amount;
+        grossPurchases += t.amount;
+      } else if (t.type == 'income') {
+        invested -= t.amount;
+      }
     }
 
-    return FutureBuilder<StockFullInfo?>(
-      future: _stockService.fetchAllStockInfo(ticker),
-      builder: (context, snapshot) {
-        final info = snapshot.data;
-        final priceData = info?.price;
-        final bool isLoss = (priceData?.change ?? 0) < 0;
+    final String statusSubtitle;
+    if (invested > 0) {
+      statusSubtitle = 'Invested';
+    } else if (grossPurchases > 0) {
+      // Net position is flat or closed, but buys existed (e.g. sold entire stake).
+      statusSubtitle = 'Position closed';
+    } else {
+      statusSubtitle = 'No buys logged';
+    }
 
-        return Container(
-          margin: const EdgeInsets.only(bottom: 12),
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.02),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: priceData != null 
-                ? (isLoss ? Colors.redAccent.withValues(alpha: 0.2) : Colors.greenAccent.withValues(alpha: 0.2))
-                : Colors.white.withValues(alpha: 0.05)
-            ),
-          ),
-          child: InkWell(
-            onTap: () => context.push('/finance/stock/$ticker'),
-            borderRadius: BorderRadius.circular(20),
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: EntryColors.iceCyan.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    child: Center(
-                      child: FutureBuilder<StockHistoricalData?>(
-                        future: _stockService.fetchHistoricalData(ticker, startDate: DateTime.now().subtract(const Duration(days: 7)).toIso8601String().split('T')[0]),
-                        builder: (context, histSnapshot) {
-                          final hist = histSnapshot.data;
-                          if (hist == null || hist.data.isEmpty) {
-                            return const Icon(Icons.show_chart_rounded, color: EntryColors.iceCyan, size: 24);
-                          }
-                          
-                          return Padding(
-                            padding: const EdgeInsets.all(4),
-                            child: LineChart(
-                              LineChartData(
-                                gridData: const FlGridData(show: false),
-                                titlesData: const FlTitlesData(show: false),
-                                borderData: FlBorderData(show: false),
-                                minX: 0,
-                                maxX: hist.data.length.toDouble() - 1,
-                                lineBarsData: [
-                                  LineChartBarData(
-                                    spots: hist.data.asMap().entries.map((e) => FlSpot(e.key.toDouble(), e.value.close ?? 0)).toList(),
-                                    isCurved: true,
-                                    color: isLoss ? Colors.redAccent : Colors.greenAccent,
-                                    barWidth: 2,
-                                    dotData: const FlDotData(show: false),
-                                    belowBarData: BarAreaData(
-                                      show: true,
-                                      color: (isLoss ? Colors.redAccent : Colors.greenAccent).withValues(alpha: 0.1),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+    final stockService = StockService();
+    final displayName = stockService.getStockName(ticker);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+      ),
+      child: InkWell(
+        onTap: () => context.push('/finance/stock/$ticker'),
+        borderRadius: BorderRadius.circular(20),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: EntryColors.iceCyan.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: const Center(
+                  child: Icon(Icons.show_chart_rounded, color: EntryColors.iceCyan, size: 24),
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              ticker,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                                fontSize: 16,
-                              ),
-                            ),
-                            if (_stockService.getStockName(ticker).isNotEmpty)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 6),
-                                child: Text(
-                                  "(${_stockService.getStockName(ticker)})",
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.3),
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                          ],
+                        Text(
+                          ticker,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w900,
+                            fontSize: 16,
+                          ),
                         ),
-                        if (priceData != null)
-                          Text(
-                            "${priceData.changePercent > 0 ? '+' : ''}${priceData.changePercent.toStringAsFixed(2)}%",
-                            style: TextStyle(
-                              color: isLoss ? Colors.redAccent : Colors.greenAccent,
-                              fontSize: 11,
-                              fontWeight: FontWeight.bold,
+                        if (displayName.isNotEmpty)
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6),
+                            child: Text(
+                              "($displayName)",
+                              style: TextStyle(
+                                color: Colors.white.withValues(alpha: 0.3),
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        else
-                          const Text(
-                            "Market Asset",
-                            style: TextStyle(color: Colors.white38, fontSize: 11),
                           ),
                       ],
                     ),
+                    const Text(
+                      "From your transactions",
+                      style: TextStyle(color: Colors.white38, fontSize: 11),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Text(
+                    invested > 0
+                        ? financeBlock.formatCurrency(invested)
+                        : "—",
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                      fontFamily: 'JetBrainsMono',
+                    ),
                   ),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.end,
-                    children: [
-                      Text(
-                        priceData != null 
-                          ? financeBlock.formatCurrency(priceData.price / 24000) 
-                          : (snapshot.connectionState == ConnectionState.waiting 
-                              ? "Loading..." 
-                              : (invested > 0 ? financeBlock.formatCurrency(invested) : "Fetch Error")),
-                        style: TextStyle(
-                          color: priceData != null ? Colors.white : Colors.white38,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15,
-                          fontFamily: 'JetBrainsMono',
-                        ),
-                      ),
-                      Text(
-                        priceData != null 
-                          ? "Current Price" 
-                          : (invested > 0 ? "Invested (Offline)" : "No Data"),
-                        style: const TextStyle(color: Colors.white24, fontSize: 10, fontWeight: FontWeight.bold),
-                      ),
-                    ],
+                  Text(
+                    statusSubtitle,
+                    style: const TextStyle(
+                      color: Colors.white24,
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
-                  const SizedBox(width: 8),
-                  const Icon(Icons.chevron_right_rounded, color: Colors.white12, size: 20),
                 ],
               ),
-            ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right_rounded, color: Colors.white12, size: 20),
+            ],
           ),
-        );
-      }
+        ),
+      ),
     );
   }
 
@@ -473,7 +468,7 @@ class FinanceStocksPage extends StatelessWidget {
           Icon(Icons.inventory_2_outlined, color: Colors.white.withValues(alpha: 0.1), size: 40),
           const SizedBox(height: 16),
           const Text(
-            "NO STOCKS TRACKED",
+            "NO SAVINGS TRACKED",
             style: TextStyle(
               color: Colors.white24,
               fontSize: 10,
@@ -483,7 +478,7 @@ class FinanceStocksPage extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            "Add transactions with category 'Stock'",
+            "Add transactions with category Saving",
             style: TextStyle(color: Colors.white.withValues(alpha: 0.1), fontSize: 11),
           ),
         ],

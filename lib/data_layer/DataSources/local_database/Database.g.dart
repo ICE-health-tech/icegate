@@ -21513,6 +21513,17 @@ class $TransactionsTableTable extends TransactionsTable
     type: DriftSqlType.double,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _moodScoreMeta = const VerificationMeta(
+    'moodScore',
+  );
+  @override
+  late final GeneratedColumn<int> moodScore = GeneratedColumn<int>(
+    'mood_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _descriptionMeta = const VerificationMeta(
     'description',
   );
@@ -21567,6 +21578,7 @@ class $TransactionsTableTable extends TransactionsTable
     category,
     type,
     amount,
+    moodScore,
     description,
     transactionDate,
     createdAt,
@@ -21634,6 +21646,12 @@ class $TransactionsTableTable extends TransactionsTable
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
+    if (data.containsKey('mood_score')) {
+      context.handle(
+        _moodScoreMeta,
+        moodScore.isAcceptableOrUnknown(data['mood_score']!, _moodScoreMeta),
+      );
+    }
     if (data.containsKey('description')) {
       context.handle(
         _descriptionMeta,
@@ -21695,6 +21713,10 @@ class $TransactionsTableTable extends TransactionsTable
         DriftSqlType.double,
         data['${effectivePrefix}amount'],
       )!,
+      moodScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mood_score'],
+      ),
       description: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}description'],
@@ -21733,6 +21755,9 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
   final String category;
   final String type;
   final double amount;
+
+  /// 1-5 mood at log time (savings); optional.
+  final int? moodScore;
   final String? description;
   final DateTime transactionDate;
   final DateTime createdAt;
@@ -21745,6 +21770,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     required this.category,
     required this.type,
     required this.amount,
+    this.moodScore,
     this.description,
     required this.transactionDate,
     required this.createdAt,
@@ -21766,6 +21792,9 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     map['category'] = Variable<String>(category);
     map['type'] = Variable<String>(type);
     map['amount'] = Variable<double>(amount);
+    if (!nullToAbsent || moodScore != null) {
+      map['mood_score'] = Variable<int>(moodScore);
+    }
     if (!nullToAbsent || description != null) {
       map['description'] = Variable<String>(description);
     }
@@ -21796,6 +21825,9 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       category: Value(category),
       type: Value(type),
       amount: Value(amount),
+      moodScore: moodScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodScore),
       description: description == null && nullToAbsent
           ? const Value.absent()
           : Value(description),
@@ -21820,6 +21852,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       category: serializer.fromJson<String>(json['category']),
       type: serializer.fromJson<String>(json['type']),
       amount: serializer.fromJson<double>(json['amount']),
+      moodScore: serializer.fromJson<int?>(json['moodScore']),
       description: serializer.fromJson<String?>(json['description']),
       transactionDate: serializer.fromJson<DateTime>(json['transactionDate']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
@@ -21837,6 +21870,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       'category': serializer.toJson<String>(category),
       'type': serializer.toJson<String>(type),
       'amount': serializer.toJson<double>(amount),
+      'moodScore': serializer.toJson<int?>(moodScore),
       'description': serializer.toJson<String?>(description),
       'transactionDate': serializer.toJson<DateTime>(transactionDate),
       'createdAt': serializer.toJson<DateTime>(createdAt),
@@ -21852,6 +21886,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     String? category,
     String? type,
     double? amount,
+    Value<int?> moodScore = const Value.absent(),
     Value<String?> description = const Value.absent(),
     DateTime? transactionDate,
     DateTime? createdAt,
@@ -21866,6 +21901,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     category: category ?? this.category,
     type: type ?? this.type,
     amount: amount ?? this.amount,
+    moodScore: moodScore.present ? moodScore.value : this.moodScore,
     description: description.present ? description.value : this.description,
     transactionDate: transactionDate ?? this.transactionDate,
     createdAt: createdAt ?? this.createdAt,
@@ -21882,6 +21918,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
       category: data.category.present ? data.category.value : this.category,
       type: data.type.present ? data.type.value : this.type,
       amount: data.amount.present ? data.amount.value : this.amount,
+      moodScore: data.moodScore.present ? data.moodScore.value : this.moodScore,
       description: data.description.present
           ? data.description.value
           : this.description,
@@ -21903,6 +21940,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
           ..write('category: $category, ')
           ..write('type: $type, ')
           ..write('amount: $amount, ')
+          ..write('moodScore: $moodScore, ')
           ..write('description: $description, ')
           ..write('transactionDate: $transactionDate, ')
           ..write('createdAt: $createdAt, ')
@@ -21920,6 +21958,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
     category,
     type,
     amount,
+    moodScore,
     description,
     transactionDate,
     createdAt,
@@ -21936,6 +21975,7 @@ class TransactionData extends DataClass implements Insertable<TransactionData> {
           other.category == this.category &&
           other.type == this.type &&
           other.amount == this.amount &&
+          other.moodScore == this.moodScore &&
           other.description == this.description &&
           other.transactionDate == this.transactionDate &&
           other.createdAt == this.createdAt &&
@@ -21950,6 +21990,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
   final Value<String> category;
   final Value<String> type;
   final Value<double> amount;
+  final Value<int?> moodScore;
   final Value<String?> description;
   final Value<DateTime> transactionDate;
   final Value<DateTime> createdAt;
@@ -21963,6 +22004,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     this.category = const Value.absent(),
     this.type = const Value.absent(),
     this.amount = const Value.absent(),
+    this.moodScore = const Value.absent(),
     this.description = const Value.absent(),
     this.transactionDate = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -21977,6 +22019,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     required String category,
     required String type,
     required double amount,
+    this.moodScore = const Value.absent(),
     this.description = const Value.absent(),
     this.transactionDate = const Value.absent(),
     this.createdAt = const Value.absent(),
@@ -21994,6 +22037,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     Expression<String>? category,
     Expression<String>? type,
     Expression<double>? amount,
+    Expression<int>? moodScore,
     Expression<String>? description,
     Expression<DateTime>? transactionDate,
     Expression<DateTime>? createdAt,
@@ -22008,6 +22052,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
       if (category != null) 'category': category,
       if (type != null) 'type': type,
       if (amount != null) 'amount': amount,
+      if (moodScore != null) 'mood_score': moodScore,
       if (description != null) 'description': description,
       if (transactionDate != null) 'transaction_date': transactionDate,
       if (createdAt != null) 'created_at': createdAt,
@@ -22024,6 +22069,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     Value<String>? category,
     Value<String>? type,
     Value<double>? amount,
+    Value<int?>? moodScore,
     Value<String?>? description,
     Value<DateTime>? transactionDate,
     Value<DateTime>? createdAt,
@@ -22038,6 +22084,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
       category: category ?? this.category,
       type: type ?? this.type,
       amount: amount ?? this.amount,
+      moodScore: moodScore ?? this.moodScore,
       description: description ?? this.description,
       transactionDate: transactionDate ?? this.transactionDate,
       createdAt: createdAt ?? this.createdAt,
@@ -22070,6 +22117,9 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
     if (amount.present) {
       map['amount'] = Variable<double>(amount.value);
     }
+    if (moodScore.present) {
+      map['mood_score'] = Variable<int>(moodScore.value);
+    }
     if (description.present) {
       map['description'] = Variable<String>(description.value);
     }
@@ -22100,6 +22150,7 @@ class TransactionsTableCompanion extends UpdateCompanion<TransactionData> {
           ..write('category: $category, ')
           ..write('type: $type, ')
           ..write('amount: $amount, ')
+          ..write('moodScore: $moodScore, ')
           ..write('description: $description, ')
           ..write('transactionDate: $transactionDate, ')
           ..write('createdAt: $createdAt, ')
@@ -26843,6 +26894,17 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _moodScoreMeta = const VerificationMeta(
+    'moodScore',
+  );
+  @override
+  late final GeneratedColumn<int> moodScore = GeneratedColumn<int>(
+    'mood_score',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -26879,6 +26941,7 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
     timestamp,
     focusSessionID,
     source,
+    moodScore,
     createdAt,
     updatedAt,
   ];
@@ -26960,6 +27023,12 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
         source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
       );
     }
+    if (data.containsKey('mood_score')) {
+      context.handle(
+        _moodScoreMeta,
+        moodScore.isAcceptableOrUnknown(data['mood_score']!, _moodScoreMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -27023,6 +27092,10 @@ class $ExerciseLogsTableTable extends ExerciseLogsTable
         DriftSqlType.string,
         data['${effectivePrefix}source'],
       ),
+      moodScore: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}mood_score'],
+      ),
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -27054,6 +27127,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
   final DateTime timestamp;
   final String? focusSessionID;
   final String? source;
+
+  /// 1–5 mood after session (optional); aligns with savings mood_score scale.
+  final int? moodScore;
   final DateTime? createdAt;
   final DateTime? updatedAt;
   const ExerciseLogData({
@@ -27067,6 +27143,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     required this.timestamp,
     this.focusSessionID,
     this.source,
+    this.moodScore,
     this.createdAt,
     this.updatedAt,
   });
@@ -27096,6 +27173,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     }
     if (!nullToAbsent || source != null) {
       map['source'] = Variable<String>(source);
+    }
+    if (!nullToAbsent || moodScore != null) {
+      map['mood_score'] = Variable<int>(moodScore);
     }
     if (!nullToAbsent || createdAt != null) {
       map['created_at'] = Variable<DateTime>(createdAt);
@@ -27128,6 +27208,9 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       source: source == null && nullToAbsent
           ? const Value.absent()
           : Value(source),
+      moodScore: moodScore == null && nullToAbsent
+          ? const Value.absent()
+          : Value(moodScore),
       createdAt: createdAt == null && nullToAbsent
           ? const Value.absent()
           : Value(createdAt),
@@ -27153,6 +27236,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       timestamp: serializer.fromJson<DateTime>(json['timestamp']),
       focusSessionID: serializer.fromJson<String?>(json['focusSessionID']),
       source: serializer.fromJson<String?>(json['source']),
+      moodScore: serializer.fromJson<int?>(json['moodScore']),
       createdAt: serializer.fromJson<DateTime?>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
     );
@@ -27171,6 +27255,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
       'timestamp': serializer.toJson<DateTime>(timestamp),
       'focusSessionID': serializer.toJson<String?>(focusSessionID),
       'source': serializer.toJson<String?>(source),
+      'moodScore': serializer.toJson<int?>(moodScore),
       'createdAt': serializer.toJson<DateTime?>(createdAt),
       'updatedAt': serializer.toJson<DateTime?>(updatedAt),
     };
@@ -27187,6 +27272,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     DateTime? timestamp,
     Value<String?> focusSessionID = const Value.absent(),
     Value<String?> source = const Value.absent(),
+    Value<int?> moodScore = const Value.absent(),
     Value<DateTime?> createdAt = const Value.absent(),
     Value<DateTime?> updatedAt = const Value.absent(),
   }) => ExerciseLogData(
@@ -27204,6 +27290,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
         ? focusSessionID.value
         : this.focusSessionID,
     source: source.present ? source.value : this.source,
+    moodScore: moodScore.present ? moodScore.value : this.moodScore,
     createdAt: createdAt.present ? createdAt.value : this.createdAt,
     updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
   );
@@ -27225,6 +27312,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
           ? data.focusSessionID.value
           : this.focusSessionID,
       source: data.source.present ? data.source.value : this.source,
+      moodScore: data.moodScore.present ? data.moodScore.value : this.moodScore,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
     );
@@ -27243,6 +27331,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
           ..write('timestamp: $timestamp, ')
           ..write('focusSessionID: $focusSessionID, ')
           ..write('source: $source, ')
+          ..write('moodScore: $moodScore, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt')
           ..write(')'))
@@ -27261,6 +27350,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
     timestamp,
     focusSessionID,
     source,
+    moodScore,
     createdAt,
     updatedAt,
   );
@@ -27278,6 +27368,7 @@ class ExerciseLogData extends DataClass implements Insertable<ExerciseLogData> {
           other.timestamp == this.timestamp &&
           other.focusSessionID == this.focusSessionID &&
           other.source == this.source &&
+          other.moodScore == this.moodScore &&
           other.createdAt == this.createdAt &&
           other.updatedAt == this.updatedAt);
 }
@@ -27293,6 +27384,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
   final Value<DateTime> timestamp;
   final Value<String?> focusSessionID;
   final Value<String?> source;
+  final Value<int?> moodScore;
   final Value<DateTime?> createdAt;
   final Value<DateTime?> updatedAt;
   final Value<int> rowid;
@@ -27307,6 +27399,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     this.timestamp = const Value.absent(),
     this.focusSessionID = const Value.absent(),
     this.source = const Value.absent(),
+    this.moodScore = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -27322,6 +27415,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     this.timestamp = const Value.absent(),
     this.focusSessionID = const Value.absent(),
     this.source = const Value.absent(),
+    this.moodScore = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -27339,6 +27433,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     Expression<DateTime>? timestamp,
     Expression<String>? focusSessionID,
     Expression<String>? source,
+    Expression<int>? moodScore,
     Expression<DateTime>? createdAt,
     Expression<DateTime>? updatedAt,
     Expression<int>? rowid,
@@ -27354,6 +27449,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
       if (timestamp != null) 'timestamp': timestamp,
       if (focusSessionID != null) 'focus_session_id': focusSessionID,
       if (source != null) 'source': source,
+      if (moodScore != null) 'mood_score': moodScore,
       if (createdAt != null) 'created_at': createdAt,
       if (updatedAt != null) 'updated_at': updatedAt,
       if (rowid != null) 'rowid': rowid,
@@ -27371,6 +27467,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     Value<DateTime>? timestamp,
     Value<String?>? focusSessionID,
     Value<String?>? source,
+    Value<int?>? moodScore,
     Value<DateTime?>? createdAt,
     Value<DateTime?>? updatedAt,
     Value<int>? rowid,
@@ -27386,6 +27483,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
       timestamp: timestamp ?? this.timestamp,
       focusSessionID: focusSessionID ?? this.focusSessionID,
       source: source ?? this.source,
+      moodScore: moodScore ?? this.moodScore,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
       rowid: rowid ?? this.rowid,
@@ -27427,6 +27525,9 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
     if (source.present) {
       map['source'] = Variable<String>(source.value);
     }
+    if (moodScore.present) {
+      map['mood_score'] = Variable<int>(moodScore.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -27452,6 +27553,7 @@ class ExerciseLogsTableCompanion extends UpdateCompanion<ExerciseLogData> {
           ..write('timestamp: $timestamp, ')
           ..write('focusSessionID: $focusSessionID, ')
           ..write('source: $source, ')
+          ..write('moodScore: $moodScore, ')
           ..write('createdAt: $createdAt, ')
           ..write('updatedAt: $updatedAt, ')
           ..write('rowid: $rowid')
@@ -44529,6 +44631,7 @@ typedef $$TransactionsTableTableCreateCompanionBuilder =
       required String category,
       required String type,
       required double amount,
+      Value<int?> moodScore,
       Value<String?> description,
       Value<DateTime> transactionDate,
       Value<DateTime> createdAt,
@@ -44544,6 +44647,7 @@ typedef $$TransactionsTableTableUpdateCompanionBuilder =
       Value<String> category,
       Value<String> type,
       Value<double> amount,
+      Value<int?> moodScore,
       Value<String?> description,
       Value<DateTime> transactionDate,
       Value<DateTime> createdAt,
@@ -44592,6 +44696,11 @@ class $$TransactionsTableTableFilterComposer
 
   ColumnFilters<double> get amount => $composableBuilder(
     column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -44661,6 +44770,11 @@ class $$TransactionsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get description => $composableBuilder(
     column: $table.description,
     builder: (column) => ColumnOrderings(column),
@@ -44713,6 +44827,9 @@ class $$TransactionsTableTableAnnotationComposer
 
   GeneratedColumn<double> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<int> get moodScore =>
+      $composableBuilder(column: $table.moodScore, builder: (column) => column);
 
   GeneratedColumn<String> get description => $composableBuilder(
     column: $table.description,
@@ -44778,6 +44895,7 @@ class $$TransactionsTableTableTableManager
                 Value<String> category = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<double> amount = const Value.absent(),
+                Value<int?> moodScore = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime> transactionDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -44791,6 +44909,7 @@ class $$TransactionsTableTableTableManager
                 category: category,
                 type: type,
                 amount: amount,
+                moodScore: moodScore,
                 description: description,
                 transactionDate: transactionDate,
                 createdAt: createdAt,
@@ -44806,6 +44925,7 @@ class $$TransactionsTableTableTableManager
                 required String category,
                 required String type,
                 required double amount,
+                Value<int?> moodScore = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime> transactionDate = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
@@ -44819,6 +44939,7 @@ class $$TransactionsTableTableTableManager
                 category: category,
                 type: type,
                 amount: amount,
+                moodScore: moodScore,
                 description: description,
                 transactionDate: transactionDate,
                 createdAt: createdAt,
@@ -47114,6 +47235,7 @@ typedef $$ExerciseLogsTableTableCreateCompanionBuilder =
       Value<DateTime> timestamp,
       Value<String?> focusSessionID,
       Value<String?> source,
+      Value<int?> moodScore,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -47130,6 +47252,7 @@ typedef $$ExerciseLogsTableTableUpdateCompanionBuilder =
       Value<DateTime> timestamp,
       Value<String?> focusSessionID,
       Value<String?> source,
+      Value<int?> moodScore,
       Value<DateTime?> createdAt,
       Value<DateTime?> updatedAt,
       Value<int> rowid,
@@ -47192,6 +47315,11 @@ class $$ExerciseLogsTableTableFilterComposer
 
   ColumnFilters<String> get source => $composableBuilder(
     column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -47265,6 +47393,11 @@ class $$ExerciseLogsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get moodScore => $composableBuilder(
+    column: $table.moodScore,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -47320,6 +47453,9 @@ class $$ExerciseLogsTableTableAnnotationComposer
 
   GeneratedColumn<String> get source =>
       $composableBuilder(column: $table.source, builder: (column) => column);
+
+  GeneratedColumn<int> get moodScore =>
+      $composableBuilder(column: $table.moodScore, builder: (column) => column);
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -47378,6 +47514,7 @@ class $$ExerciseLogsTableTableTableManager
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> focusSessionID = const Value.absent(),
                 Value<String?> source = const Value.absent(),
+                Value<int?> moodScore = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -47392,6 +47529,7 @@ class $$ExerciseLogsTableTableTableManager
                 timestamp: timestamp,
                 focusSessionID: focusSessionID,
                 source: source,
+                moodScore: moodScore,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,
@@ -47408,6 +47546,7 @@ class $$ExerciseLogsTableTableTableManager
                 Value<DateTime> timestamp = const Value.absent(),
                 Value<String?> focusSessionID = const Value.absent(),
                 Value<String?> source = const Value.absent(),
+                Value<int?> moodScore = const Value.absent(),
                 Value<DateTime?> createdAt = const Value.absent(),
                 Value<DateTime?> updatedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -47422,6 +47561,7 @@ class $$ExerciseLogsTableTableTableManager
                 timestamp: timestamp,
                 focusSessionID: focusSessionID,
                 source: source,
+                moodScore: moodScore,
                 createdAt: createdAt,
                 updatedAt: updatedAt,
                 rowid: rowid,

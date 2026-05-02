@@ -1,7 +1,9 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'AchievementBuilderDialog.dart';
 
 class AchievementTimeline extends StatefulWidget {
@@ -171,10 +173,27 @@ class _AchievementTimelineState extends State<AchievementTimeline> {
                           color: Theme.of(context).colorScheme.onPrimaryContainer),
                     ),
                   ),
-                  Text(dateStr,
-                      style: TextStyle(
-                          fontSize: 12,
-                          color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(dateStr,
+                          style: TextStyle(
+                              fontSize: 12,
+                              color: Theme.of(context).colorScheme.onSurfaceVariant)),
+                      IconButton(
+                        icon: Icon(
+                          Icons.delete_outline_rounded,
+                          size: 22,
+                          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
+                        ),
+                        tooltip: AppLocalizations.of(context)!.social_delete_feat_title,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                        visualDensity: VisualDensity.compact,
+                        onPressed: () => _confirmDeleteAchievement(context, a),
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 12),
@@ -238,6 +257,32 @@ class _AchievementTimelineState extends State<AchievementTimeline> {
         ),
       ),
     );
+  }
+
+  Future<void> _confirmDeleteAchievement(BuildContext context, AchievementData a) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text(l10n.social_delete_feat_title),
+        content: Text(l10n.social_delete_feat_body),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: Text(l10n.common_cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(
+              foregroundColor: Theme.of(ctx).colorScheme.error,
+            ),
+            child: Text(l10n.common_delete),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !context.mounted) return;
+    await context.read<AchievementsDAO>().deleteAchievement(a.id);
   }
 
   Widget _buildNavArrow({

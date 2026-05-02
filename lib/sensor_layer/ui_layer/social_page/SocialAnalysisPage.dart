@@ -10,6 +10,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 
@@ -77,7 +78,7 @@ class SocialAnalysisPage extends StatelessWidget {
                               ),
                             ),
                             const SizedBox(height: 32),
-                            _buildMonthlyReflectionCard(context, personId),
+                            // _buildMonthlyReflectionCard(context, personId),
                             const SizedBox(height: 24),
                             _buildSummaryCard(context, notes, sentiment),
                             const SizedBox(height: 24),
@@ -121,13 +122,21 @@ class SocialAnalysisPage extends StatelessWidget {
             ),
             const SizedBox(height: 16),
             ...logs.take(5).map((log) {
+              final mood = mindMoodAccent(log.moodScore);
               return Container(
                 margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.2)),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      mood.withValues(alpha: 0.14),
+                      colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
+                    ],
+                  ),
+                  border: Border.all(color: mood.withValues(alpha: 0.4)),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -145,8 +154,11 @@ class SocialAnalysisPage extends StatelessWidget {
                                 style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
                               ),
                               Text(
-                                DateFormat('MMMM d, yyyy • HH:mm').format(log.logDate),
-                                style: textTheme.labelSmall?.copyWith(color: colorScheme.onSurfaceVariant),
+                                DateFormat('MMMM d, yyyy • HH:mm')
+                                    .format(log.createdAt.toLocal()),
+                                style: textTheme.labelSmall?.copyWith(
+                                  color: colorScheme.onSurfaceVariant,
+                                ),
                               ),
                             ],
                           ),

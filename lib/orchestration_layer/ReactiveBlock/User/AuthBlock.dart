@@ -47,6 +47,9 @@ class AuthBlock {
   // Remembered user for "Identity Glance" on entry page
   final rememberedUser = signal<Map<String, String?>?>(null);
 
+  /// Set after [signUp] when Supabase returns no session (email confirmation required).
+  final registerPendingEmail = signal<String?>(null);
+
   /// Resolved Person ID from current session or user signal
   String? get personId =>
       Supabase.instance.client.auth.currentUser?.id ?? user.value?['id'];
@@ -68,6 +71,29 @@ class AuthBlock {
   StreamSubscription? _accountSubscription;
   bool _isLocked =
       false; // Reentrancy lock to prevent double-login race conditions
+
+  Timer? _authInteractionTimer;
+
+  /// Clears the 10s OAuth / login spinner watchdog (call when session is ready).
+  void cancelAuthInteractionTimeout() {
+    _authInteractionTimer?.cancel();
+    _authInteractionTimer = null;
+  }
+
+  /// Starts a 10s watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering],
+  /// resets to unauthenticated so the user can try again (covers stuck OAuth / hung API).
+  void armAuthInteractionTimeout() {
+    cancelAuthInteractionTimeout();
+    _authInteractionTimer = Timer(const Duration(seconds: 10), () {
+      if (status.value == AuthStatus.authenticating ||
+          status.value == AuthStatus.registering) {
+        status.value = AuthStatus.unauthenticated;
+        error.value = error.value ?? 'err_auth_timeout';
+        debugPrint('⏱️ [AuthBlock] Auth interaction timed out after 10s');
+      }
+      _authInteractionTimer = null;
+    });
+  }
 
   /// Helper to persist session locally (e.g. after Google OAuth)
   Future<void> persistSession(String token, String name) async {
@@ -540,6 +566,7 @@ class AuthBlock {
   ) async {
     status.value = AuthStatus.authenticating;
     error.value = null;
+    armAuthInteractionTimeout();
     print("🔐 [AuthBlock] Authenticating: $ident");
 
     try {
@@ -625,6 +652,8 @@ class AuthBlock {
       print("❌ [AuthBlock] Authentication failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
+    } finally {
+      cancelAuthInteractionTimeout();
     }
   }
 
@@ -632,6 +661,7 @@ class AuthBlock {
   Future<void> signInWithApple() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
+    armAuthInteractionTimeout();
     print("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
 
     try {
@@ -692,10 +722,15 @@ class AuthBlock {
       print(
         "✅ [AuthBlock] Apple OAuth command sent. State change will be handled in DataLayer.",
       );
+
+      if (Supabase.instance.client.auth.currentSession != null) {
+        cancelAuthInteractionTimeout();
+      }
     } catch (e) {
       print("❌ [AuthBlock] Apple Sign-In initiation failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
+      cancelAuthInteractionTimeout();
     }
   }
 
@@ -703,6 +738,7 @@ class AuthBlock {
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
+    armAuthInteractionTimeout();
     print("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
 
     try {
@@ -743,23 +779,34 @@ class AuthBlock {
       print(
         "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
       );
+
+      if (Supabase.instance.client.auth.currentSession != null) {
+        cancelAuthInteractionTimeout();
+      }
     } catch (e) {
       print("❌ [AuthBlock] Google Sign-In initiation failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
+      cancelAuthInteractionTimeout();
     }
   }
 
-  /// Registration logic using Supabase
+  /// Deep link for confirmation / OAuth / recovery — allowlist in Supabase Dashboard → Auth → URL config.
+  static const String authEmailRedirect = 'io.supabase.icegate://login-callback';
+
+  /// Registration logic using Supabase (sends confirmation email when enabled in project settings).
   Future<void> register(RegistrationPayload payload) async {
     status.value = AuthStatus.registering;
     error.value = null;
+    registerPendingEmail.value = null;
+    armAuthInteractionTimeout();
     print("📝 [AuthBlock] Registering user with Supabase: ${payload.userName}");
 
     try {
       final AuthResponse response = await Supabase.instance.client.auth.signUp(
         email: payload.email,
         password: payload.password,
+        emailRedirectTo: authEmailRedirect,
         data: {
           'user_name': payload.userName,
           'first_name': payload.firstName,
@@ -790,14 +837,41 @@ class AuthBlock {
           await fetchUser();
         } else {
           status.value = AuthStatus.unauthenticated;
-          print("📬 [AuthBlock] Please check your email for confirmation.");
+          registerPendingEmail.value = payload.email.trim();
+          print("📬 [AuthBlock] Confirmation email sent; awaiting verification.");
         }
       }
     } catch (e) {
       print("❌ [AuthBlock] Registration failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
+    } finally {
+      cancelAuthInteractionTimeout();
     }
+  }
+
+  /// Resend signup confirmation (same redirect as [register]).
+  Future<String?> resendSignupConfirmation(String email) async {
+    final t = email.trim();
+    if (t.isEmpty) return 'err_forgot_password_empty_email';
+    if (!t.contains('@') || t.length < 5) {
+      return 'err_forgot_password_invalid_email';
+    }
+    try {
+      await Supabase.instance.client.auth.resend(
+        type: OtpType.signup,
+        email: t,
+        emailRedirectTo: authEmailRedirect,
+      );
+      return null;
+    } catch (e) {
+      print('❌ [AuthBlock] resend signup: $e');
+      return _mapError(e);
+    }
+  }
+
+  void clearRegisterPending() {
+    registerPendingEmail.value = null;
   }
 
   /// Step 7 & Logout
@@ -810,6 +884,7 @@ class AuthBlock {
     jwt.value = null;
     username.value = null;
     error.value = null;
+    registerPendingEmail.value = null;
     status.value = AuthStatus.logout;
 
     // 2. Clear Database
@@ -1025,9 +1100,6 @@ class AuthBlock {
     });
   }
 
-  /// Deep link must be allowlisted in Supabase Dashboard → Auth → URL config.
-  static const String _passwordResetRedirect = 'io.supabase.icegate://reset-callback';
-
   /// Sends Supabase password recovery email ([resetPasswordForEmail]).
   /// Returns `null` on success, or an error key from [_mapError].
   Future<String?> requestPasswordReset(String email) async {
@@ -1039,7 +1111,7 @@ class AuthBlock {
     try {
       await Supabase.instance.client.auth.resetPasswordForEmail(
         t,
-        redirectTo: _passwordResetRedirect,
+        redirectTo: authEmailRedirect,
       );
       return null;
     } catch (e) {

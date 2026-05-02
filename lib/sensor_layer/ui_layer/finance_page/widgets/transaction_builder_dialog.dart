@@ -61,7 +61,14 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
       'general',
     ],
     'income': ['salary', 'freelance', 'investment', 'gift', 'bonus', 'general'],
-    'savings': ['emergency', 'goal', 'retirement', 'investment', 'general'],
+    'savings': [
+      'emergency',
+      'goal',
+      'retirement',
+      'investment',
+      'impulse',
+      'general',
+    ],
   };
 
   @override
@@ -134,6 +141,8 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
         return l10n.finance_cat_goal;
       case 'retirement':
         return l10n.finance_cat_retirement;
+      case 'impulse':
+        return l10n.finance_cat_impulse;
       default:
         return category.isNotEmpty
             ? category[0].toUpperCase() + category.substring(1)
@@ -278,6 +287,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 description: descController.text,
                 date: widget.initialData!.transactionDate,
                 projectID: widget.initialData!.projectID,
+                moodScore: widget.initialData!.moodScore,
               );
             } else {
               await widget.financeBlock.addTransaction(

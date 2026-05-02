@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 import 'package:intl/intl.dart';
 
 class MoodTrendsChart extends StatelessWidget {
@@ -8,107 +9,163 @@ class MoodTrendsChart extends StatelessWidget {
 
   const MoodTrendsChart({super.key, required this.logs});
 
+  static const double _chartHeight = 200;
+
+  /// Which x-indices get a bottom label (max ~4 labels to avoid overlap).
+  static Set<int> _labelIndices(int n) {
+    if (n <= 0) return {};
+    if (n == 1) return {0};
+    if (n == 2) return {0, 1};
+    if (n == 3) return {0, 1, 2};
+    if (n == 4) return {0, 1, 2, 3};
+    return {
+      0,
+      ((n - 1) * 0.33).round(),
+      ((n - 1) * 0.67).round(),
+      n - 1,
+    };
+  }
+
+  static String _axisLabel(MindLogData log) {
+    final local = log.createdAt.toLocal();
+    final now = DateTime.now();
+    final dayLog = DateTime(local.year, local.month, local.day);
+    final dayNow = DateTime(now.year, now.month, now.day);
+    if (dayLog == dayNow) {
+      return DateFormat('HH:mm').format(local);
+    }
+    return DateFormat('MM/dd').format(local);
+  }
+
   @override
   Widget build(BuildContext context) {
     if (logs.isEmpty) return const SizedBox.shrink();
 
-    // Sort logs by date
     final sortedLogs = List<MindLogData>.from(logs)
-      ..sort((a, b) => a.logDate.compareTo(b.logDate));
+      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-    // Get last 7 days or all if less
-    final recentLogs = sortedLogs.length > 14 
-        ? sortedLogs.sublist(sortedLogs.length - 14) 
+    final recentLogs = sortedLogs.length > 14
+        ? sortedLogs.sublist(sortedLogs.length - 14)
         : sortedLogs;
+
+    final n = recentLogs.length;
+    final labelAt = _labelIndices(n);
+    final spots = recentLogs.asMap().entries.map((e) {
+      return FlSpot(e.key.toDouble(), e.value.moodScore.toDouble());
+    }).toList();
+
+    final accentColors = recentLogs.map((l) => mindMoodAccent(l.moodScore)).toList();
+    final lineGradientColors = accentColors.length >= 2
+        ? accentColors
+        : [accentColors.first, accentColors.first];
 
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      height: 180, // Provide finite constraints for fl_chart
-      padding: const EdgeInsets.fromLTRB(16, 24, 24, 8),
+      height: _chartHeight,
+      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
       decoration: BoxDecoration(
         color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(24),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
         ),
       ),
-      child: LineChart(
-        LineChartData(
-          gridData: const FlGridData(show: false),
-          titlesData: FlTitlesData(
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final index = value.toInt();
-                  if (index < 0 || index >= recentLogs.length) return const SizedBox.shrink();
-                  if (index % 3 != 0 && index != recentLogs.length - 1) return const SizedBox.shrink();
-                  
-                  final date = recentLogs[index].logDate;
-                  final now = DateTime.now();
-                  final isToday = date.year == now.year && 
-                                 date.month == now.month && 
-                                 date.day == now.day;
-                  
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      isToday ? DateFormat('HH:mm').format(date) : DateFormat('MM/dd').format(date),
-                      style: TextStyle(
-                        fontSize: 8,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                        fontWeight: FontWeight.bold,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+        child: LineChart(
+          LineChartData(
+            clipData: const FlClipData.all(),
+            minX: 0,
+            maxX: (n - 1).toDouble().clamp(0, double.infinity),
+            gridData: FlGridData(
+              show: true,
+              drawVerticalLine: false,
+              horizontalInterval: 1,
+              getDrawingHorizontalLine: (value) => FlLine(
+                color: colorScheme.outlineVariant.withValues(alpha: 0.12),
+                strokeWidth: 1,
+              ),
+            ),
+            titlesData: FlTitlesData(
+              leftTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              rightTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              topTitles: const AxisTitles(
+                sideTitles: SideTitles(showTitles: false),
+              ),
+              bottomTitles: AxisTitles(
+                sideTitles: SideTitles(
+                  showTitles: true,
+                  interval: 1,
+                  reservedSize: 26,
+                  getTitlesWidget: (value, meta) {
+                    final i = value.round();
+                    if (i < 0 || i >= n || !labelAt.contains(i)) {
+                      return const SizedBox.shrink();
+                    }
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 6),
+                      child: Text(
+                        _axisLabel(recentLogs[i]),
+                        maxLines: 1,
+                        overflow: TextOverflow.fade,
+                        softWrap: false,
+                        style: TextStyle(
+                          fontSize: 9,
+                          letterSpacing: 0.2,
+                          color: colorScheme.onSurfaceVariant.withValues(
+                            alpha: 0.75,
+                          ),
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                  );
-                },
-                reservedSize: 22,
+                    );
+                  },
+                ),
               ),
             ),
+            borderData: FlBorderData(show: false),
+            minY: 0.5,
+            maxY: 5.5,
+            lineBarsData: [
+              LineChartBarData(
+                spots: spots,
+                isCurved: true,
+                curveSmoothness: 0.35,
+                gradient: LinearGradient(colors: lineGradientColors),
+                barWidth: 3,
+                isStrokeCapRound: true,
+                dotData: FlDotData(
+                  show: true,
+                  getDotPainter: (spot, percent, barData, index) {
+                    final idx = spot.x.round().clamp(0, n - 1);
+                    final c = mindMoodAccent(recentLogs[idx].moodScore);
+                    return FlDotCirclePainter(
+                      radius: 5,
+                      color: c,
+                      strokeWidth: 2,
+                      strokeColor: Colors.white.withValues(alpha: 0.85),
+                    );
+                  },
+                ),
+                belowBarData: BarAreaData(
+                  show: true,
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      mindMoodSoft(recentLogs.last.moodScore),
+                      Colors.transparent,
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
-          borderData: FlBorderData(show: false),
-          minY: 0.5,
-          maxY: 5.5,
-          lineBarsData: [
-            LineChartBarData(
-              spots: recentLogs.asMap().entries.map((e) {
-                return FlSpot(e.key.toDouble(), e.value.moodScore.toDouble());
-              }).toList(),
-              isCurved: true,
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.tertiary,
-                ],
-              ),
-              barWidth: 4,
-              isStrokeCapRound: true,
-              dotData: FlDotData(
-                show: true,
-                getDotPainter: (spot, percent, barData, index) => FlDotCirclePainter(
-                  radius: 4,
-                  color: Colors.white,
-                  strokeWidth: 2,
-                  strokeColor: colorScheme.primary,
-                ),
-              ),
-              belowBarData: BarAreaData(
-                show: true,
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    colorScheme.primary.withValues(alpha: 0.2),
-                    colorScheme.primary.withValues(alpha: 0),
-                  ],
-                ),
-              ),
-            ),
-          ],
         ),
       ),
     );

@@ -1514,6 +1514,12 @@ abstract class AppLocalizations {
   /// **'Unable to connect to the server. Check your internet.'**
   String get err_network_fail;
 
+  /// No description provided for @err_auth_timeout.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign-in took too long. Please try again.'**
+  String get err_auth_timeout;
+
   /// No description provided for @err_passkey_canceled.
   ///
   /// In en, this message translates to:
@@ -1591,6 +1597,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Please enter a valid email address.'**
   String get err_forgot_password_invalid_email;
+
+  /// No description provided for @register_page_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get register_page_title;
+
+  /// No description provided for @register_username_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Username'**
+  String get register_username_hint;
+
+  /// No description provided for @register_first_name.
+  ///
+  /// In en, this message translates to:
+  /// **'First name'**
+  String get register_first_name;
+
+  /// No description provided for @register_last_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Last name'**
+  String get register_last_name;
+
+  /// No description provided for @register_password_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirm password'**
+  String get register_password_confirm;
+
+  /// No description provided for @btn_create_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Create account'**
+  String get btn_create_account;
+
+  /// No description provided for @msg_register_check_email.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent a confirmation link to {email}. Open it in this app to finish signing up.'**
+  String msg_register_check_email(String email);
+
+  /// No description provided for @msg_resend_confirm_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'If that address is valid, a new confirmation email was sent.'**
+  String get msg_resend_confirm_sent;
+
+  /// No description provided for @register_resend_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Resend email'**
+  String get register_resend_email;
+
+  /// No description provided for @register_back_to_login.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to sign in'**
+  String get register_back_to_login;
+
+  /// No description provided for @err_register_password_mismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords do not match.'**
+  String get err_register_password_mismatch;
+
+  /// No description provided for @title_set_new_password.
+  ///
+  /// In en, this message translates to:
+  /// **'Set new password'**
+  String get title_set_new_password;
+
+  /// No description provided for @msg_password_recovery_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose a new password for your account.'**
+  String get msg_password_recovery_body;
 
   /// No description provided for @analysis_user_title.
   ///
@@ -2311,6 +2395,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No achievements logged yet.'**
   String get social_no_achievements_msg;
+
+  /// No description provided for @social_delete_feat_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete feat'**
+  String get social_delete_feat_title;
+
+  /// No description provided for @social_delete_feat_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove this achievement? This cannot be undone.'**
+  String get social_delete_feat_body;
 
   /// No description provided for @social_feat.
   ///
@@ -4820,6 +4916,306 @@ abstract class AppLocalizations {
   /// **'Retirement'**
   String get finance_cat_retirement;
 
+  /// No description provided for @finance_cat_impulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Impulse win'**
+  String get finance_cat_impulse;
+
+  /// No description provided for @finance_quick_save_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Log savings'**
+  String get finance_quick_save_title;
+
+  /// No description provided for @finance_quick_save_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Money you set aside—often because you said no to spending.'**
+  String get finance_quick_save_subtitle;
+
+  /// No description provided for @finance_quick_note_label.
+  ///
+  /// In en, this message translates to:
+  /// **'What you didn’t buy (optional)'**
+  String get finance_quick_note_label;
+
+  /// No description provided for @finance_quick_full_form.
+  ///
+  /// In en, this message translates to:
+  /// **'All fields'**
+  String get finance_quick_full_form;
+
+  /// No description provided for @finance_quick_log.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get finance_quick_log;
+
+  /// No description provided for @finance_quick_chip_impulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Resisted urge'**
+  String get finance_quick_chip_impulse;
+
+  /// No description provided for @finance_quick_chip_coffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped treat'**
+  String get finance_quick_chip_coffee;
+
+  /// No description provided for @finance_quick_chip_shopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Walked away'**
+  String get finance_quick_chip_shopping;
+
+  /// No description provided for @finance_quick_chip_sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Passed on sale'**
+  String get finance_quick_chip_sale;
+
+  /// No description provided for @finance_quick_chip_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'To a goal'**
+  String get finance_quick_chip_goal;
+
+  /// No description provided for @finance_quick_chip_emergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Safety net'**
+  String get finance_quick_chip_emergency;
+
+  /// No description provided for @finance_quick_desc_impulse.
+  ///
+  /// In en, this message translates to:
+  /// **'Resisted an impulse buy'**
+  String get finance_quick_desc_impulse;
+
+  /// No description provided for @finance_quick_desc_coffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Skipped a coffee or snack run'**
+  String get finance_quick_desc_coffee;
+
+  /// No description provided for @finance_quick_desc_shopping.
+  ///
+  /// In en, this message translates to:
+  /// **'Walked away from a purchase'**
+  String get finance_quick_desc_shopping;
+
+  /// No description provided for @finance_quick_desc_sale.
+  ///
+  /// In en, this message translates to:
+  /// **'Didn’t chase a sale'**
+  String get finance_quick_desc_sale;
+
+  /// No description provided for @finance_quick_desc_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Stashed toward a goal'**
+  String get finance_quick_desc_goal;
+
+  /// No description provided for @finance_quick_desc_emergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Added to emergency fund'**
+  String get finance_quick_desc_emergency;
+
+  /// No description provided for @finance_quick_affirm_impulse.
+  ///
+  /// In en, this message translates to:
+  /// **'You just paid your future self.'**
+  String get finance_quick_affirm_impulse;
+
+  /// No description provided for @finance_quick_affirm_coffee.
+  ///
+  /// In en, this message translates to:
+  /// **'Small skip, big discipline.'**
+  String get finance_quick_affirm_coffee;
+
+  /// No description provided for @finance_quick_affirm_shopping.
+  ///
+  /// In en, this message translates to:
+  /// **'You chose calm over cart.'**
+  String get finance_quick_affirm_shopping;
+
+  /// No description provided for @finance_quick_affirm_sale.
+  ///
+  /// In en, this message translates to:
+  /// **'You didn’t let a discount decide for you.'**
+  String get finance_quick_affirm_sale;
+
+  /// No description provided for @finance_quick_affirm_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'One step closer.'**
+  String get finance_quick_affirm_goal;
+
+  /// No description provided for @finance_quick_affirm_emergency.
+  ///
+  /// In en, this message translates to:
+  /// **'Your safety net got stronger.'**
+  String get finance_quick_affirm_emergency;
+
+  /// No description provided for @finance_quick_affirm_default.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved. Consistency compounds.'**
+  String get finance_quick_affirm_default;
+
+  /// No description provided for @finance_quick_chip_custom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get finance_quick_chip_custom;
+
+  /// No description provided for @finance_award_unlocked.
+  ///
+  /// In en, this message translates to:
+  /// **'AWARD UNLOCKED'**
+  String get finance_award_unlocked;
+
+  /// No description provided for @finance_award_first_save_title.
+  ///
+  /// In en, this message translates to:
+  /// **'First Brick Laid'**
+  String get finance_award_first_save_title;
+
+  /// No description provided for @finance_award_first_save_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'You logged your first savings entry.'**
+  String get finance_award_first_save_desc;
+
+  /// No description provided for @finance_award_three_streak_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Three in a Row'**
+  String get finance_award_three_streak_title;
+
+  /// No description provided for @finance_award_three_streak_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Three days in a row choosing to save.'**
+  String get finance_award_three_streak_desc;
+
+  /// No description provided for @finance_award_seven_streak_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Iron Will Week'**
+  String get finance_award_seven_streak_title;
+
+  /// No description provided for @finance_award_seven_streak_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Seven consecutive days of saving.'**
+  String get finance_award_seven_streak_desc;
+
+  /// No description provided for @finance_award_thirty_streak_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Compounding Mind'**
+  String get finance_award_thirty_streak_title;
+
+  /// No description provided for @finance_award_thirty_streak_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Thirty days of showing up for yourself.'**
+  String get finance_award_thirty_streak_desc;
+
+  /// No description provided for @finance_award_hundred_title.
+  ///
+  /// In en, this message translates to:
+  /// **'First Hundred'**
+  String get finance_award_hundred_title;
+
+  /// No description provided for @finance_award_hundred_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Your lifetime savings log crossed a hundred.'**
+  String get finance_award_hundred_desc;
+
+  /// No description provided for @finance_award_thousand_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Four Figures'**
+  String get finance_award_thousand_title;
+
+  /// No description provided for @finance_award_thousand_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Over a thousand set aside. That’s momentum.'**
+  String get finance_award_thousand_desc;
+
+  /// No description provided for @finance_award_impulse_ten_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Master of Urges'**
+  String get finance_award_impulse_ten_title;
+
+  /// No description provided for @finance_award_impulse_ten_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Ten impulse wins logged. Your wiring is changing.'**
+  String get finance_award_impulse_ten_desc;
+
+  /// No description provided for @finance_streak_best.
+  ///
+  /// In en, this message translates to:
+  /// **'Best: {count} days'**
+  String finance_streak_best(int count);
+
+  /// No description provided for @finance_streak_day_one.
+  ///
+  /// In en, this message translates to:
+  /// **'Start the chain'**
+  String get finance_streak_day_one;
+
+  /// No description provided for @finance_streak_keep.
+  ///
+  /// In en, this message translates to:
+  /// **'Don’t break it'**
+  String get finance_streak_keep;
+
+  /// No description provided for @finance_streak_strong.
+  ///
+  /// In en, this message translates to:
+  /// **'You’re building something real.'**
+  String get finance_streak_strong;
+
+  /// No description provided for @finance_overview_streak_accessibility.
+  ///
+  /// In en, this message translates to:
+  /// **'Open savings streak'**
+  String get finance_overview_streak_accessibility;
+
+  /// No description provided for @finance_streak_label.
+  ///
+  /// In en, this message translates to:
+  /// **'STREAK'**
+  String get finance_streak_label;
+
+  /// No description provided for @finance_streak_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String finance_streak_days(int count);
+
+  /// No description provided for @finance_quick_mood_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'How do you feel right now?'**
+  String get finance_quick_mood_prompt;
+
+  /// No description provided for @finance_quick_why_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Why this save?'**
+  String get finance_quick_why_label;
+
   /// No description provided for @finance_cat_crypto.
   ///
   /// In en, this message translates to:
@@ -4829,7 +5225,7 @@ abstract class AppLocalizations {
   /// No description provided for @finance_cat_stock.
   ///
   /// In en, this message translates to:
-  /// **'Stock'**
+  /// **'Saving'**
   String get finance_cat_stock;
 
   /// No description provided for @finance_cat_real_estate.

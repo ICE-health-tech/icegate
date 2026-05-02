@@ -7,6 +7,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -33,6 +34,12 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Future<void> _checkPasswordRequirement() async {
+    if (pendingPasswordRecoveryNotifier.value) {
+      if (mounted) {
+        setState(() => _requiresCurrentPassword = false);
+      }
+      return;
+    }
     try {
       final db = context.read<AppDatabase>();
       final userId = Supabase.instance.client.auth.currentUser?.id;
@@ -184,6 +191,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     }
 
     if (mounted) {
+      pendingPasswordRecoveryNotifier.value = false;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(AppLocalizations.of(context)!.msg_password_success),
@@ -239,16 +247,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 child: Column(
                   children: [
                     Icon(
-                      _requiresCurrentPassword ? Icons.lock_reset_rounded : Icons.security_outlined,
+                      pendingPasswordRecoveryNotifier.value ||
+                              _requiresCurrentPassword
+                          ? Icons.lock_reset_rounded
+                          : Icons.security_outlined,
                       size: 64,
                       color: colorScheme.primary,
                     ),
                     const SizedBox(height: 16),
                     // Tiêu đề thay đổi hoặc thiết lập mật khẩu
                     Text(
-                      _requiresCurrentPassword
-                          ? AppLocalizations.of(context)!.change_password
-                          : "IDENTITY UPGRADE",
+                      pendingPasswordRecoveryNotifier.value
+                          ? AppLocalizations.of(context)!.title_set_new_password
+                          : _requiresCurrentPassword
+                              ? AppLocalizations.of(context)!.change_password
+                              : "IDENTITY UPGRADE",
                       style: textTheme.headlineSmall?.copyWith(
                         fontWeight: FontWeight.w900,
                         color: colorScheme.onSurface,
@@ -258,7 +271,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     const SizedBox(height: 8),
                     // Mô tả yêu cầu mật khẩu
                     Text(
-                      _requiresCurrentPassword
+                      pendingPasswordRecoveryNotifier.value
+                          ? AppLocalizations.of(context)!.msg_password_recovery_body
+                          : _requiresCurrentPassword
                           ? AppLocalizations.of(
                               context,
                             )!.msg_password_requirement

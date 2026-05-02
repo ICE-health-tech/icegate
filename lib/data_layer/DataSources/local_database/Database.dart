@@ -736,6 +736,9 @@ class TransactionsTable extends Table {
   TextColumn get type =>
       text().named('type')(); // 'income', 'expense', 'savings'
   RealColumn get amount => real().named('amount')();
+  /// 1-5 mood at log time (savings); optional.
+  IntColumn get moodScore =>
+      integer().nullable().named('mood_score')();
   TextColumn get description => text().nullable().named('description')();
   DateTimeColumn get transactionDate =>
       dateTime().withDefault(currentDateAndTime).named('transaction_date')();
@@ -1517,6 +1520,9 @@ class ExerciseLogsTable extends Table {
   TextColumn get focusSessionID =>
       text().nullable().named('focus_session_id')();
   TextColumn get source => text().nullable().named('source')();
+  /// 1–5 mood after session (optional); aligns with savings mood_score scale.
+  IntColumn get moodScore =>
+      integer().nullable().named('mood_score')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .named('created_at')
@@ -3766,6 +3772,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
         category: Value(record['category'] as String? ?? 'uncategorized'),
         type: Value(record['type'] as String? ?? 'expense'),
         amount: Value((record['amount'] as num?)?.toDouble() ?? 0.0),
+        moodScore: Value((record['mood_score'] as num?)?.toInt()),
         description: Value(record['description'] as String?),
         transactionDate: Value(
           record['transaction_date'] != null
@@ -3842,6 +3849,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
             category: (row.data['category'] as String?) ?? 'uncategorized',
             type: (row.data['type'] as String?) ?? 'expense',
             amount: (row.data['amount'] as num?)?.toDouble() ?? 0.0,
+            moodScore: (row.data['mood_score'] as num?)?.toInt(),
             description: row.data['description'] as String?,
             transactionDate: row.data['transaction_date'] != null
                 ? DateTime.tryParse(row.data['transaction_date'].toString()) ??
@@ -5489,6 +5497,33 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
   Future<MealData?> getMealById(String id) =>
       (select(mealsTable)..where((t) => t.id.equals(id))).getSingleOrNull();
 
+  /// Maps a snake_case Supabase row to [MealsTableCompanion] and writes it
+  /// locally. Used by [SupabaseService.syncTableDown] when pulling `meals`.
+  Future<void> upsertFromSupabase(Map<String, dynamic> record) async {
+    await into(mealsTable).insert(
+      MealsTableCompanion(
+        id: Value(record['id'] as String),
+        tenantID: Value(record['tenant_id'] as String?),
+        mealID: Value(record['meal_id'] as String?),
+        personID: Value(record['person_id'] as String?),
+        mealName: Value((record['meal_name'] as String?) ?? ''),
+        mealImageUrl: Value(record['meal_image_url'] as String?),
+        fat: Value(((record['fat'] as num?) ?? 0).toDouble()),
+        carbs: Value(((record['carbs'] as num?) ?? 0).toDouble()),
+        protein: Value(((record['protein'] as num?) ?? 0).toDouble()),
+        calories: Value(((record['calories'] as num?) ?? 0).toDouble()),
+        eatenAt: Value(
+          record['eaten_at'] != null
+              ? DateTime.parse(record['eaten_at'].toString()).toUtc()
+              : DateTime.now().toUtc(),
+        ),
+        isAnalyzing: Value((record['is_analyzing'] as bool?) ?? false),
+        needsAiRetry: Value((record['needs_ai_retry'] as bool?) ?? false),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
   // Days (Meal Logs)
   Future<int> insertDay(DaysTableCompanion day) =>
       into(attachedDatabase.daysTable).insert(day);
@@ -6312,6 +6347,21 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     );
   }
 
+  Future<void> updateExerciseLogMood(String id, int moodScore) async {
+    final row = await (select(exerciseLogsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+    final updated = row.copyWith(moodScore: Value(moodScore));
+    await update(exerciseLogsTable).replace(updated);
+    await db.pushToSupabase(
+      table: 'exercise_logs',
+      payload: db.companionToMap(
+        updated.toCompanion(false),
+        exerciseLogsTable,
+      ),
+    );
+  }
+
   Future<void> upsertFromSupabaseExercise(Map<String, dynamic> record) async {
     await into(exerciseLogsTable).insert(
       ExerciseLogsTableCompanion(
@@ -6324,6 +6374,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
         focusSessionID: Value(record['focus_session_id'] as String?),
         healthMetricID: Value(record['health_metric_id'] as String?),
         source: Value(record['source'] as String?),
+        moodScore: Value((record['mood_score'] as num?)?.toInt()),
       ),
       mode: InsertMode.insertOrReplace,
     );
@@ -6981,7 +7032,6 @@ class AppDatabase extends _$AppDatabase {
     'sleep_logs': {'created_at', 'updated_at'},
     'exercise_logs': {'created_at', 'updated_at'},
     'focus_sessions': {'created_at', 'updated_at'},
-    'mind_logs': {'created_at', 'updated_at'},
     'feedbacks': {'status'},
     'subscriptions': {'tenant_id'},
   };
@@ -7072,7 +7122,8 @@ class AppDatabase extends _$AppDatabase {
   // v69 → adds source column to sleep_logs, water_logs, exercise_logs
   // v70 → ensures source column exists in all health log tables (water, sleep, exercise, weight)
   // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
-  int get schemaVersion => 72;
+  // v74 → adds mood_score to exercise_logs (manual log / sync)
+  int get schemaVersion => 74;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7183,6 +7234,20 @@ class AppDatabase extends _$AppDatabase {
         if (from < 72) {
           try {
             await m.addColumn(mealsTable, mealsTable.needsAiRetry);
+          } catch (_) {}
+        }
+        if (from < 73) {
+          try {
+            await customStatement(
+              'ALTER TABLE transactions ADD COLUMN mood_score INTEGER;',
+            );
+          } catch (_) {}
+        }
+        if (from < 74) {
+          try {
+            await customStatement(
+              'ALTER TABLE exercise_logs ADD COLUMN mood_score INTEGER;',
+            );
           } catch (_) {}
         }
         if (from < 60) {

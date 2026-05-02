@@ -526,6 +526,13 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
         );
 
+        if (event == AuthChangeEvent.passwordRecovery && session != null) {
+          pendingPasswordRecoveryNotifier.value = true;
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            router.go('/change-password');
+          });
+        }
+
         if (session != null) {
           Future.microtask(() {
             batch(() {
@@ -539,6 +546,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
               if (authBlock.status.value != AuthStatus.authenticated) {
                 authBlock.status.value = AuthStatus.authenticated;
               }
+              authBlock.cancelAuthInteractionTimeout();
             });
           });
 

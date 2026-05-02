@@ -1,7 +1,4 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/models/FinanceAsset.dart';
 
 class FinanceService {
@@ -115,32 +112,8 @@ class FinanceService {
     return 1.48;
   }
 
+  /// Live VN stock quotes are disabled; returns a placeholder row.
   static Future<FinanceAsset> fetchVnStock(String ticker) async {
-    const baseUrl = 'https://vnstock.finance.duylong.art';
-    final url = Uri.parse('$baseUrl/stock/price?symbol=$ticker');
-    try {
-      final response = await http.get(url);
-      if (response.statusCode == 200) {
-        final data = json.decode(response.body);
-        
-        // Use either the top-level price map or the data if it's wrapped
-        final priceData = data.containsKey('price') ? data['price'] : data;
-
-        return FinanceAsset(
-          id: ticker.toLowerCase(),
-          name: ticker.toUpperCase(),
-          symbol: ticker.toUpperCase(),
-          price: (priceData['price'] as num).toDouble(),
-          change24h: (priceData['changePercent'] as num).toDouble(),
-          icon: Icons.show_chart,
-          color: (priceData['change'] >= 0) ? Colors.green : Colors.red,
-          type: AssetType.stock,
-          sparkline: [priceData['price'] * 0.98, priceData['price']], // Placeholder for sparkline
-        );
-      }
-    } catch (e) {
-      debugPrint('Error fetching $ticker: $e');
-    }
     return empty;
   }
 }

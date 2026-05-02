@@ -760,6 +760,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Unable to connect to the server. Check your internet.';
 
   @override
+  String get err_auth_timeout => 'Sign-in took too long. Please try again.';
+
+  @override
   String get err_passkey_canceled => 'Passkey login was canceled.';
 
   @override
@@ -804,6 +807,49 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get err_forgot_password_invalid_email =>
       'Please enter a valid email address.';
+
+  @override
+  String get register_page_title => 'Create account';
+
+  @override
+  String get register_username_hint => 'Username';
+
+  @override
+  String get register_first_name => 'First name';
+
+  @override
+  String get register_last_name => 'Last name';
+
+  @override
+  String get register_password_confirm => 'Confirm password';
+
+  @override
+  String get btn_create_account => 'Create account';
+
+  @override
+  String msg_register_check_email(String email) {
+    return 'We sent a confirmation link to $email. Open it in this app to finish signing up.';
+  }
+
+  @override
+  String get msg_resend_confirm_sent =>
+      'If that address is valid, a new confirmation email was sent.';
+
+  @override
+  String get register_resend_email => 'Resend email';
+
+  @override
+  String get register_back_to_login => 'Back to sign in';
+
+  @override
+  String get err_register_password_mismatch => 'Passwords do not match.';
+
+  @override
+  String get title_set_new_password => 'Set new password';
+
+  @override
+  String get msg_password_recovery_body =>
+      'Choose a new password for your account.';
 
   @override
   String analysis_user_title(String name) {
@@ -1190,6 +1236,13 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get social_no_achievements_msg => 'No achievements logged yet.';
+
+  @override
+  String get social_delete_feat_title => 'Delete feat';
+
+  @override
+  String get social_delete_feat_body =>
+      'Remove this achievement? This cannot be undone.';
 
   @override
   String get social_feat => 'Feat';
@@ -2531,10 +2584,173 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_cat_retirement => 'Retirement';
 
   @override
+  String get finance_cat_impulse => 'Impulse win';
+
+  @override
+  String get finance_quick_save_title => 'Log savings';
+
+  @override
+  String get finance_quick_save_subtitle =>
+      'Money you set aside—often because you said no to spending.';
+
+  @override
+  String get finance_quick_note_label => 'What you didn’t buy (optional)';
+
+  @override
+  String get finance_quick_full_form => 'All fields';
+
+  @override
+  String get finance_quick_log => 'Save';
+
+  @override
+  String get finance_quick_chip_impulse => 'Resisted urge';
+
+  @override
+  String get finance_quick_chip_coffee => 'Skipped treat';
+
+  @override
+  String get finance_quick_chip_shopping => 'Walked away';
+
+  @override
+  String get finance_quick_chip_sale => 'Passed on sale';
+
+  @override
+  String get finance_quick_chip_goal => 'To a goal';
+
+  @override
+  String get finance_quick_chip_emergency => 'Safety net';
+
+  @override
+  String get finance_quick_desc_impulse => 'Resisted an impulse buy';
+
+  @override
+  String get finance_quick_desc_coffee => 'Skipped a coffee or snack run';
+
+  @override
+  String get finance_quick_desc_shopping => 'Walked away from a purchase';
+
+  @override
+  String get finance_quick_desc_sale => 'Didn’t chase a sale';
+
+  @override
+  String get finance_quick_desc_goal => 'Stashed toward a goal';
+
+  @override
+  String get finance_quick_desc_emergency => 'Added to emergency fund';
+
+  @override
+  String get finance_quick_affirm_impulse => 'You just paid your future self.';
+
+  @override
+  String get finance_quick_affirm_coffee => 'Small skip, big discipline.';
+
+  @override
+  String get finance_quick_affirm_shopping => 'You chose calm over cart.';
+
+  @override
+  String get finance_quick_affirm_sale =>
+      'You didn’t let a discount decide for you.';
+
+  @override
+  String get finance_quick_affirm_goal => 'One step closer.';
+
+  @override
+  String get finance_quick_affirm_emergency => 'Your safety net got stronger.';
+
+  @override
+  String get finance_quick_affirm_default => 'Saved. Consistency compounds.';
+
+  @override
+  String get finance_quick_chip_custom => 'Custom';
+
+  @override
+  String get finance_award_unlocked => 'AWARD UNLOCKED';
+
+  @override
+  String get finance_award_first_save_title => 'First Brick Laid';
+
+  @override
+  String get finance_award_first_save_desc =>
+      'You logged your first savings entry.';
+
+  @override
+  String get finance_award_three_streak_title => 'Three in a Row';
+
+  @override
+  String get finance_award_three_streak_desc =>
+      'Three days in a row choosing to save.';
+
+  @override
+  String get finance_award_seven_streak_title => 'Iron Will Week';
+
+  @override
+  String get finance_award_seven_streak_desc =>
+      'Seven consecutive days of saving.';
+
+  @override
+  String get finance_award_thirty_streak_title => 'Compounding Mind';
+
+  @override
+  String get finance_award_thirty_streak_desc =>
+      'Thirty days of showing up for yourself.';
+
+  @override
+  String get finance_award_hundred_title => 'First Hundred';
+
+  @override
+  String get finance_award_hundred_desc =>
+      'Your lifetime savings log crossed a hundred.';
+
+  @override
+  String get finance_award_thousand_title => 'Four Figures';
+
+  @override
+  String get finance_award_thousand_desc =>
+      'Over a thousand set aside. That’s momentum.';
+
+  @override
+  String get finance_award_impulse_ten_title => 'Master of Urges';
+
+  @override
+  String get finance_award_impulse_ten_desc =>
+      'Ten impulse wins logged. Your wiring is changing.';
+
+  @override
+  String finance_streak_best(int count) {
+    return 'Best: $count days';
+  }
+
+  @override
+  String get finance_streak_day_one => 'Start the chain';
+
+  @override
+  String get finance_streak_keep => 'Don’t break it';
+
+  @override
+  String get finance_streak_strong => 'You’re building something real.';
+
+  @override
+  String get finance_overview_streak_accessibility => 'Open savings streak';
+
+  @override
+  String get finance_streak_label => 'STREAK';
+
+  @override
+  String finance_streak_days(int count) {
+    return '$count day streak';
+  }
+
+  @override
+  String get finance_quick_mood_prompt => 'How do you feel right now?';
+
+  @override
+  String get finance_quick_why_label => 'Why this save?';
+
+  @override
   String get finance_cat_crypto => 'Crypto';
 
   @override
-  String get finance_cat_stock => 'Stock';
+  String get finance_cat_stock => 'Saving';
 
   @override
   String get finance_cat_real_estate => 'Real Estate';

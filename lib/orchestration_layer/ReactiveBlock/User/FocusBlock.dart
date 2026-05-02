@@ -81,6 +81,13 @@ class FocusBlock {
   final exerciseType = signal<String>('');
   final stopwatchElapsedSeconds = signal<int>(0);
 
+  /// Set when an `exercise_logs` row is written from a focus timer; [ExercisePage] shows mood then clears.
+  final pendingExerciseLogForMood = signal<String?>(null);
+
+  void clearPendingExerciseLogForMood() {
+    pendingExerciseLogForMood.value = null;
+  }
+
   // Elon Musk 5-Minute Block Mode Signals
   final isMuskMode = signal<bool>(false);
   final muskHapticIntensity = signal<int>(3); // 1-5
@@ -696,8 +703,9 @@ class FocusBlock {
     if (isExerciseMode.value &&
         duration > 0 &&
         (status == 'completed' || status == 'interrupted')) {
+      final exerciseLogId = IDGen.UUIDV7();
       final exerciseLog = ExerciseLogsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
+        id: exerciseLogId,
         personID: drift.Value(_currentPersonId),
         type: exerciseType.value,
         durationMinutes: exerciseMinutesLogged,
@@ -709,6 +717,7 @@ class FocusBlock {
         focusSessionID: drift.Value(sessionId),
       );
       await _healthLogsDao.insertExerciseLog(exerciseLog);
+      pendingExerciseLogForMood.value = exerciseLogId;
       print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
 
       // --- Sync to Apple Health / Google Fit ---

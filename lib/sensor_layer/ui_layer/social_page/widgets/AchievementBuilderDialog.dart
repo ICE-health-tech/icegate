@@ -27,7 +27,6 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
   final _impactWhoController = TextEditingController();
-  final _impactHowController = TextEditingController();
 
   String _selectedDomain = 'project';
   int _meaningScore = 5;
@@ -53,21 +52,18 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
       _meaningScore = a.meaningScore ?? 5;
       _impactScore = a.impactScore;
       _impactWhoController.text = a.impactDescWho;
-      _impactHowController.text = a.impactDescHow;
     }
   }
 
-  bool get _isValid {
-    if (_titleController.text.trim().isEmpty) return false;
-    if (_impactScore == 0) return false; // Mandatory Impact Score
-    if (_impactWhoController.text.trim().isEmpty) return false;
-    if (_impactHowController.text.trim().isEmpty) return false;
-    return true;
+  /// `title` column requires min length 1 — use a dash placeholder when left blank for fast saves.
+  static const _emptyTitlePlaceholder = '—';
+
+  String get _resolvedTitle {
+    final t = _titleController.text.trim();
+    return t.isEmpty ? _emptyTitlePlaceholder : t;
   }
 
   Future<void> _saveAchievement() async {
-    if (!_isValid) return;
-
     final personBlock = context.read<PersonBlock>();
     final personId = personBlock.currentPersonID.value;
     final dao = context.read<AchievementsDAO>();
@@ -75,13 +71,13 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
     if (widget.initialData != null) {
       // Edit mode
       final updated = widget.initialData!.copyWith(
-        title: _titleController.text.trim(),
+        title: _resolvedTitle,
         description: drift.Value(_descriptionController.text.trim()),
         domain: _selectedDomain,
         meaningScore: drift.Value(_meaningScore),
         impactScore: _impactScore,
         impactDescWho: _impactWhoController.text.trim(),
-        impactDescHow: _impactHowController.text.trim(),
+        impactDescHow: widget.initialData!.impactDescHow,
       );
       await dao.updateAchievement(updated);
     } else {
@@ -89,13 +85,13 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
       final entry = AchievementsTableCompanion(
         id: drift.Value(IDGen.UUIDV7()),
         personID: drift.Value(personId),
-        title: drift.Value(_titleController.text.trim()),
+        title: drift.Value(_resolvedTitle),
         description: drift.Value(_descriptionController.text.trim()),
         domain: drift.Value(_selectedDomain),
         meaningScore: drift.Value(_meaningScore),
         impactScore: drift.Value(_impactScore),
         impactDescWho: drift.Value(_impactWhoController.text.trim()),
-        impactDescHow: drift.Value(_impactHowController.text.trim()),
+        impactDescHow: drift.Value(''),
       );
       await dao.insertAchievement(entry);
     }
@@ -110,7 +106,6 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
     _titleController.dispose();
     _descriptionController.dispose();
     _impactWhoController.dispose();
-    _impactHowController.dispose();
     super.dispose();
   }
 
@@ -170,7 +165,7 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
               onChanged: (_) => setState(() {}),
               style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               decoration: const InputDecoration(
-                labelText: "What did you accomplish? *",
+                labelText: "What did you accomplish? (optional)",
                 border: OutlineInputBorder(),
               ),
             ),
@@ -240,14 +235,14 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    "Your philosophy dictates that your actions must have a good impact on others. This is mandatory.",
+                    "Reflect on how your actions affected others (optional details below).",
                     style: TextStyle(
                       color: Theme.of(context).colorScheme.onSurfaceVariant,
                       fontSize: 13,
                     ),
                   ),
                   const SizedBox(height: 12),
-                  Text("Impact Score (1-10) *", style: TextStyle(fontWeight: FontWeight.bold)),
+                  Text("Impact Score (1-10)", style: TextStyle(fontWeight: FontWeight.bold)),
                   Slider(
                     value: _impactScore.toDouble(),
                     min: 0,
@@ -262,18 +257,7 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
                     onChanged: (_) => setState(() {}),
                     style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                     decoration: const InputDecoration(
-                      labelText: "Who did this help? *",
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: _impactHowController,
-                    onChanged: (_) => setState(() {}),
-                    maxLines: 2,
-                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
-                    decoration: const InputDecoration(
-                      labelText: "How did it make a positive impact? *",
+                      labelText: "Who did this help? (optional)",
                       border: OutlineInputBorder(),
                     ),
                   ),
@@ -292,7 +276,7 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
           ),
         ),
         ElevatedButton(
-          onPressed: _isValid ? _saveAchievement : null,
+          onPressed: _saveAchievement,
           style: ElevatedButton.styleFrom(
             backgroundColor: Theme.of(context).colorScheme.primary,
             foregroundColor: Theme.of(context).colorScheme.onPrimary,

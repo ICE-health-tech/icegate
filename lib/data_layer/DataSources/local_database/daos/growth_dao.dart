@@ -11,6 +11,9 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
           ..orderBy([
             (tbl) =>
                 OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+            (tbl) =>
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+            (tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -30,6 +33,9 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
           ..orderBy([
             (tbl) =>
                 OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+            (tbl) =>
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+            (tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -60,12 +66,14 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
     );
   }
 
+  /// Latest log by wall-clock time (same calendar day ties on [logDate] only).
   Stream<MindLogData?> watchLatestLog(String personId) {
     return (select(mindLogsTable)
           ..where((tbl) => tbl.personID.equals(personId))
           ..orderBy([
             (tbl) =>
-                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+            (tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc),
           ])
           ..limit(1))
         .watchSingleOrNull();
@@ -80,6 +88,9 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
           ..orderBy([
             (tbl) =>
                 OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+            (tbl) =>
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+            (tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -91,9 +102,9 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<MindLogData>> watchLogsByDay(String personId, DateTime date) {
-    // We normalize to UTC to avoid timezone shifts during sync.
-    // If Supabase stores '2026-04-18', it's exactly what we want to find.
-    final startOfDay = DateTime.utc(date.year, date.month, date.day);
+    // Match [MindBlock.addMindLog]: logDate is local calendar midnight for that day.
+    // Using DateTime.utc(y,m,d) here broke non-UTC zones (day bucket vs query range).
+    final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
     return (select(mindLogsTable)
@@ -104,7 +115,8 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
           )
           ..orderBy([
             (tbl) =>
-                OrderingTerm(expression: tbl.logDate, mode: OrderingMode.desc),
+                OrderingTerm(expression: tbl.createdAt, mode: OrderingMode.desc),
+            (tbl) => OrderingTerm(expression: tbl.id, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -203,6 +215,15 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
   Stream<List<AchievementData>> watchAchievementsByPerson(String personId) {
     return (select(achievementsTable)..where((t) => t.personID.equals(personId)))
         .watch();
+  }
+
+  Future<void> deleteAchievement(String id) async {
+    await (delete(achievementsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'achievements',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   /// Deletes all achievements for a given person from local DB.

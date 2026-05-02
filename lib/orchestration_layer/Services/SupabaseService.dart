@@ -28,7 +28,6 @@ class SupabaseService {
     'sleep_logs': {'created_at', 'updated_at'},
     'exercise_logs': {'created_at', 'updated_at'},
     'focus_sessions': {'created_at', 'updated_at'},
-    'mind_logs': {'created_at', 'updated_at'},
     'feedbacks': {'status'},
   };
 

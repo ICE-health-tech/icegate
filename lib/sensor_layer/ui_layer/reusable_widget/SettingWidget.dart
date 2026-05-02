@@ -355,20 +355,20 @@ class SettingsWidget extends StatelessWidget {
                     context.go("/manual");
                   },
                 ),
-                _buildPremiumSettingTile(
-                  context: context,
-                  title: AppLocalizations.of(context)!.btn_send_feedback,
-                  subtitle: AppLocalizations.of(context)!.feedback_subtitle,
-                  icon: Icons.feedback_rounded,
-                  color: Colors.orange,
-                  onTap: () {
-                    _showFeedbackDialog(context);
-                  },
-                ),
+                // _buildPremiumSettingTile(
+                //   context: context,
+                //   title: AppLocalizations.of(context)!.btn_send_feedback,
+                //   subtitle: AppLocalizations.of(context)!.feedback_subtitle,
+                //   icon: Icons.feedback_rounded,
+                //   color: Colors.orange,
+                //   onTap: () {
+                //     _showFeedbackDialog(context);
+                //   },
+                // ),
                 _buildPremiumSettingTile(
                   context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '3.1.0',
+                  subtitle: '3.2.1',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

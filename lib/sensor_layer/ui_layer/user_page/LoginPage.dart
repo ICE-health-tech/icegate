@@ -455,6 +455,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       case "err_email_not_confirmed": return l10n.err_email_not_confirmed;
       case "err_user_not_found": return l10n.err_user_not_found;
       case "err_network_fail": return l10n.err_network_fail;
+      case "err_auth_timeout": return l10n.err_auth_timeout;
       case "err_passkey_canceled": return l10n.err_passkey_canceled;
       case "err_passkey_failed": return l10n.err_passkey_failed;
       case "err_biometric_unsupported": return l10n.err_biometric_unsupported;
@@ -475,6 +476,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
     await showDialog<void>(
       context: context,
+      barrierDismissible: true,
+      useRootNavigator: true,
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: EntryLandscapePalette.midnightNavy,
@@ -602,7 +605,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
         ),
         const SizedBox(width: 10),
         TextButton(
-          onPressed: () {},
+          onPressed: isLoading ? null : () => context.push('/register'),
           child: Text(
             AppLocalizations.of(context)!.enroll_hub.toUpperCase(),
             style: const TextStyle(

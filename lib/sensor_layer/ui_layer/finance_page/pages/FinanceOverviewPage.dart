@@ -7,6 +7,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
 import '../finance_form/add_account_dialog.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/savings_streak_card.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -22,6 +23,13 @@ class FinanceOverviewPage extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 16),
+          Watch((context) {
+            return Align(
+              alignment: Alignment.centerRight,
+              child: FinanceOverviewStreakChip(financeBlock: financeBlock),
+            );
+          }),
+          const SizedBox(height: 10),
           // Main Billing Card
           Watch((context) {
             return _buildPremiumIceCard(context, financeBlock);

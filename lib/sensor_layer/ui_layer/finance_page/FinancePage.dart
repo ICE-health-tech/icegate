@@ -13,11 +13,12 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:live_activities/live_activities.dart';
 
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_builder_dialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceStocksPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/subscription_manager.dart';
 
 class FinancePage extends StatefulWidget {
@@ -65,6 +66,8 @@ class FinancePage extends StatefulWidget {
         return l10n.finance_cat_goal;
       case 'retirement':
         return l10n.finance_cat_retirement;
+      case 'impulse':
+        return l10n.finance_cat_impulse;
       case 'crypto':
         return l10n.finance_cat_crypto;
       case 'stock':
@@ -81,7 +84,7 @@ class FinancePage extends StatefulWidget {
     final financeBlock = context.read<FinanceBlock>();
 
     return Watch((context) {
-      final isBilling = financeBlock.activeTab.value == 2;
+      final tab = financeBlock.activeTab.value;
       return MainButton(
         type: "finance",
         destination: "/finance",
@@ -90,8 +93,10 @@ class FinancePage extends StatefulWidget {
         iconColor: const Color(0xFF0D0D12),
         icon: Icons.add,
         mainFunction: () {
-          if (isBilling) {
+          if (tab == 2) {
             showSubscriptionEditor(context, financeBlock);
+          } else if (tab == 3) {
+            QuickSaveSheet.show(context, financeBlock);
           } else {
             TransactionBuilderDialog.show(context, financeBlock: financeBlock);
           }
@@ -245,7 +250,7 @@ class _FinancePageState extends State<FinancePage>
       case 2:
         return "BILLING";
       case 3:
-        return "STOCKS";
+        return "SAVINGS";
       default:
         return "FINANCE";
     }
@@ -291,7 +296,7 @@ class _FinancePageState extends State<FinancePage>
                       FinanceOverviewPage(financeBlock: financeBlock),
                       FinanceTransactionsPage(financeBlock: financeBlock),
                       FinanceSubscriptionsPage(financeBlock: financeBlock),
-                      FinanceStocksPage(financeBlock: financeBlock),
+                      FinanceSavingsPage(financeBlock: financeBlock),
                     ],
                   ),
                 ),
@@ -467,7 +472,7 @@ class _FinancePageState extends State<FinancePage>
               Tab(text: "OVERVIEW"),
               Tab(text: "HISTORY"),
               Tab(text: "BILLING"),
-              Tab(text: "STOCKS"),
+              Tab(text: "SAVINGS"),
             ],
           ),
         ],

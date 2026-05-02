@@ -24,6 +24,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthIntegrationPage
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/LoginPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/user_page/RegisterPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/ChangePasswordPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/ChangeUsernamePage.dart';
@@ -77,15 +78,31 @@ final ValueNotifier<bool?> showIntroNotifier = ValueNotifier(null);
 
 final ValueNotifier<String?> intendedPathNotifier = ValueNotifier(null);
 
+/// True while the user must complete [ChangePasswordPage] after email recovery deep link.
+final ValueNotifier<bool> pendingPasswordRecoveryNotifier = ValueNotifier(false);
+
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
   initialLocation: '/',
-  refreshListenable: Listenable.merge([authStatusNotifier, showIntroNotifier]),
+  refreshListenable: Listenable.merge([
+    authStatusNotifier,
+    showIntroNotifier,
+    pendingPasswordRecoveryNotifier,
+  ]),
   redirect: (context, state) {
     final status = authStatusNotifier.value;
     final isLoggingIn = state.uri.path == '/login';
+    final isRegister = state.uri.path == '/register';
 
     debugPrint("🛣️ [GoRouter] Path: ${state.uri.path}, Status: $status");
+
+    if (pendingPasswordRecoveryNotifier.value &&
+        state.uri.path != '/change-password') {
+      debugPrint(
+        '🛣️ [GoRouter] Password recovery pending → /change-password',
+      );
+      return '/change-password';
+    }
 
     if (showIntroNotifier.value == null) {
       SessionTracker.shouldShowIntro().then((shouldShow) {
@@ -94,7 +111,15 @@ final GoRouter router = GoRouter(
       return null;
     }
 
-    if (showIntroNotifier.value == true && state.uri.path != '/intro') {
+    if (showIntroNotifier.value == true &&
+        state.uri.path != '/intro' &&
+        !pendingPasswordRecoveryNotifier.value) {
+      // Never navigate away from login/register for intro — avoids tearing down the
+      // route while a dialog (e.g. forgot password) is open → black screen / orphan overlay.
+      if (state.uri.path == '/login' || state.uri.path == '/register') {
+        showIntroNotifier.value = false;
+        return null;
+      }
       showIntroNotifier.value = false;
       return '/intro';
     }
@@ -105,6 +130,7 @@ final GoRouter router = GoRouter(
         status == AuthStatus.init) {
       if (state.uri.path != '/' &&
           state.uri.path != '/login' &&
+          state.uri.path != '/register' &&
           state.uri.path != '/intro') {
         debugPrint(
           "📌 [GoRouter] Capturing intended path: ${state.uri.toString()}",
@@ -115,6 +141,9 @@ final GoRouter router = GoRouter(
     }
 
     if (status == AuthStatus.authenticated) {
+      if (state.uri.path == '/register') {
+        return '/';
+      }
       if (isLoggingIn) {
         debugPrint(
           "🛣️ [GoRouter] Authenticated from login, redirecting to /intro first",
@@ -125,7 +154,9 @@ final GoRouter router = GoRouter(
         return null;
       }
     } else {
-      if (!isLoggingIn && state.uri.path != '/intro') {
+      if (!isLoggingIn &&
+          !isRegister &&
+          state.uri.path != '/intro') {
         debugPrint("🛣️ [GoRouter] Unauthenticated, redirecting to /login");
         intendedPathNotifier.value = state.uri.toString();
         return '/login';
@@ -141,6 +172,17 @@ final GoRouter router = GoRouter(
       pageBuilder: (context, state) => CustomTransitionPage(
         key: state.pageKey,
         child: const LoginPage(),
+        transitionsBuilder: (context, animation, secondaryAnimation, child) {
+          return FadeTransition(opacity: animation, child: child);
+        },
+      ),
+    ),
+    GoRoute(
+      path: '/register',
+      parentNavigatorKey: _rootNavigatorKey,
+      pageBuilder: (context, state) => CustomTransitionPage(
+        key: state.pageKey,
+        child: const RegisterPage(),
         transitionsBuilder: (context, animation, secondaryAnimation, child) {
           return FadeTransition(opacity: animation, child: child);
         },

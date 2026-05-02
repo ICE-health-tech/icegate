@@ -30,7 +30,6 @@ class SupabaseService {
     'sleep_logs': {'created_at', 'updated_at'},
     'exercise_logs': {'created_at', 'updated_at'},
     'focus_sessions': {'created_at', 'updated_at'},
-    'mind_logs': {'created_at', 'updated_at'},
     'oxygen_saturation_logs': {'id'},
     'feedbacks': {'status'},
     'project_notes': {'extension'},
@@ -152,6 +151,7 @@ class SupabaseService {
       'projects',
       'focus_sessions',
       'health_metrics',
+      'meals',
       'hourly_activity_log',
       'scores',
       'financial_accounts',
@@ -338,6 +338,11 @@ class SupabaseService {
       case 'achievements':
         for (final r in records) {
           await database.achievementsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'meals':
+        for (final r in records) {
+          await database.healthMealDAO.upsertFromSupabase(r);
         }
         break;
       default:

@@ -759,6 +759,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.';
 
   @override
+  String get err_auth_timeout => 'Đăng nhập quá lâu. Vui lòng thử lại.';
+
+  @override
   String get err_passkey_canceled => 'Đã hủy đăng nhập bằng Passkey.';
 
   @override
@@ -802,6 +805,49 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get err_forgot_password_invalid_email => 'Vui lòng nhập email hợp lệ.';
+
+  @override
+  String get register_page_title => 'Tạo tài khoản';
+
+  @override
+  String get register_username_hint => 'Tên đăng nhập';
+
+  @override
+  String get register_first_name => 'Tên';
+
+  @override
+  String get register_last_name => 'Họ';
+
+  @override
+  String get register_password_confirm => 'Xác nhận mật khẩu';
+
+  @override
+  String get btn_create_account => 'Đăng ký';
+
+  @override
+  String msg_register_check_email(String email) {
+    return 'Chúng tôi đã gửi liên kết xác nhận tới $email. Mở liên kết trong ứng dụng này để hoàn tất đăng ký.';
+  }
+
+  @override
+  String get msg_resend_confirm_sent =>
+      'Nếu địa chỉ hợp lệ, email xác nhận mới đã được gửi.';
+
+  @override
+  String get register_resend_email => 'Gửi lại email';
+
+  @override
+  String get register_back_to_login => 'Quay lại đăng nhập';
+
+  @override
+  String get err_register_password_mismatch => 'Mật khẩu nhập lại không khớp.';
+
+  @override
+  String get title_set_new_password => 'Đặt mật khẩu mới';
+
+  @override
+  String get msg_password_recovery_body =>
+      'Chọn mật khẩu mới cho tài khoản của bạn.';
 
   @override
   String analysis_user_title(String name) {
@@ -1190,6 +1236,12 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get social_no_achievements_msg =>
       'Chưa có thành tích nào được ghi nhận.';
+
+  @override
+  String get social_delete_feat_title => 'Xóa thành tích';
+
+  @override
+  String get social_delete_feat_body => 'Xóa mục này? Không thể hoàn tác.';
 
   @override
   String get social_feat => 'Chiến công';
@@ -2530,10 +2582,171 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_cat_retirement => 'Hưu trí';
 
   @override
+  String get finance_cat_impulse => 'Thắng xung động';
+
+  @override
+  String get finance_quick_save_title => 'Ghi tiết kiệm';
+
+  @override
+  String get finance_quick_save_subtitle =>
+      'Số tiền bạn giữ lại—thường vì đã không chi.';
+
+  @override
+  String get finance_quick_note_label => 'Đã không mua gì (tuỳ chọn)';
+
+  @override
+  String get finance_quick_full_form => 'Đầy đủ thông tin';
+
+  @override
+  String get finance_quick_log => 'Lưu';
+
+  @override
+  String get finance_quick_chip_impulse => 'Cưỡng lại';
+
+  @override
+  String get finance_quick_chip_coffee => 'Bỏ món nhỏ';
+
+  @override
+  String get finance_quick_chip_shopping => 'Không mua';
+
+  @override
+  String get finance_quick_chip_sale => 'Bỏ sale';
+
+  @override
+  String get finance_quick_chip_goal => 'Gửi mục tiêu';
+
+  @override
+  String get finance_quick_chip_emergency => 'Dự phòng';
+
+  @override
+  String get finance_quick_desc_impulse => 'Cưỡng lại cơn muốn mua';
+
+  @override
+  String get finance_quick_desc_coffee => 'Bỏ cà phê/ăn vặt';
+
+  @override
+  String get finance_quick_desc_shopping => 'Từ bỏ một món định mua';
+
+  @override
+  String get finance_quick_desc_sale => 'Không mua theo sale';
+
+  @override
+  String get finance_quick_desc_goal => 'Gửi thêm cho mục tiêu';
+
+  @override
+  String get finance_quick_desc_emergency => 'Thêm quỹ dự phòng';
+
+  @override
+  String get finance_quick_affirm_impulse => 'Bạn vừa trả cho tương lai.';
+
+  @override
+  String get finance_quick_affirm_coffee => 'Bỏ một món nhỏ, giữ kỷ luật lớn.';
+
+  @override
+  String get finance_quick_affirm_shopping =>
+      'Bạn chọn bình yên thay vì giỏ hàng.';
+
+  @override
+  String get finance_quick_affirm_sale =>
+      'Bạn không để giảm giá quyết định thay bạn.';
+
+  @override
+  String get finance_quick_affirm_goal => 'Thêm một bước.';
+
+  @override
+  String get finance_quick_affirm_emergency => 'Lưới an toàn vững hơn.';
+
+  @override
+  String get finance_quick_affirm_default => 'Đã tiết kiệm. Kiên trì sinh lãi.';
+
+  @override
+  String get finance_quick_chip_custom => 'Tuỳ chỉnh';
+
+  @override
+  String get finance_award_unlocked => 'PHẦN THƯỞNG MỚI';
+
+  @override
+  String get finance_award_first_save_title => 'Viên gạch đầu tiên';
+
+  @override
+  String get finance_award_first_save_desc =>
+      'Bạn vừa ghi lần tiết kiệm đầu tiên.';
+
+  @override
+  String get finance_award_three_streak_title => 'Ba ngày liên tiếp';
+
+  @override
+  String get finance_award_three_streak_desc => 'Ba ngày liền chọn tiết kiệm.';
+
+  @override
+  String get finance_award_seven_streak_title => 'Tuần ý chí';
+
+  @override
+  String get finance_award_seven_streak_desc => 'Bảy ngày liên tiếp tiết kiệm.';
+
+  @override
+  String get finance_award_thirty_streak_title => 'Tâm trí gộp lãi';
+
+  @override
+  String get finance_award_thirty_streak_desc =>
+      'Ba mươi ngày đứng về phía bản thân.';
+
+  @override
+  String get finance_award_hundred_title => 'Trăm đầu tiên';
+
+  @override
+  String get finance_award_hundred_desc => 'Tổng tiết kiệm đã vượt một trăm.';
+
+  @override
+  String get finance_award_thousand_title => 'Bốn chữ số';
+
+  @override
+  String get finance_award_thousand_desc =>
+      'Hơn một nghìn để dành. Đà đang lên.';
+
+  @override
+  String get finance_award_impulse_ten_title => 'Bậc thầy cơn thèm';
+
+  @override
+  String get finance_award_impulse_ten_desc =>
+      'Mười lần thắng xung động. Dần đổi cách phản ứng.';
+
+  @override
+  String finance_streak_best(int count) {
+    return 'Kỷ lục: $count ngày';
+  }
+
+  @override
+  String get finance_streak_day_one => 'Bắt đầu chuỗi';
+
+  @override
+  String get finance_streak_keep => 'Đừng đứt chuỗi';
+
+  @override
+  String get finance_streak_strong => 'Bạn đang xây thứ thật sự.';
+
+  @override
+  String get finance_overview_streak_accessibility => 'Mở chuỗi tiết kiệm';
+
+  @override
+  String get finance_streak_label => 'CHUỖI';
+
+  @override
+  String finance_streak_days(int count) {
+    return '$count ngày liên tiếp';
+  }
+
+  @override
+  String get finance_quick_mood_prompt => 'Bạn đang cảm thấy thế nào?';
+
+  @override
+  String get finance_quick_why_label => 'Vì sao bạn tiết kiệm?';
+
+  @override
   String get finance_cat_crypto => 'Tiền điện tử';
 
   @override
-  String get finance_cat_stock => 'Chứng khoán';
+  String get finance_cat_stock => 'Tiết kiệm';
 
   @override
   String get finance_cat_real_estate => 'Bất động sản';

@@ -6,10 +6,12 @@ import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 
 class ExercisePage extends StatefulWidget {
   const ExercisePage({super.key});
@@ -20,18 +22,32 @@ class ExercisePage extends StatefulWidget {
 
 class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderStateMixin {
   late AnimationController _timerAnimationController;
+  late FocusBlock _focusBlock;
+  EffectCleanup? _disposeMoodEffect;
 
   @override
   void initState() {
     super.initState();
+    _focusBlock = context.read<FocusBlock>();
     _timerAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat(reverse: true);
+
+    _disposeMoodEffect = effect(() {
+      final id = _focusBlock.pendingExerciseLogForMood.value;
+      if (id == null || !mounted) return;
+      _focusBlock.clearPendingExerciseLogForMood();
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        if (!mounted) return;
+        await _showPostExerciseMoodSheet(context, id);
+      });
+    });
   }
 
   @override
   void dispose() {
+    _disposeMoodEffect?.call();
     _timerAnimationController.dispose();
     super.dispose();
   }
@@ -465,6 +481,14 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
                               ],
                             ),
                           ),
+                          if (log.moodScore != null)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 10),
+                              child: Text(
+                                _moodEmoji(log.moodScore!),
+                                style: const TextStyle(fontSize: 22),
+                              ),
+                            ),
                           Text("+${log.durationMinutes}m", 
                             style: const TextStyle(fontWeight: FontWeight.w900, color: Colors.orangeAccent, fontSize: 20, letterSpacing: -1)),
                         ],
@@ -511,94 +535,289 @@ class _ExercisePageState extends State<ExercisePage> with SingleTickerProviderSt
   void _showCustomManualAdd(BuildContext context, HealthBlock healthBlock) {
     final typeController = TextEditingController();
     final minsController = TextEditingController();
-    String intensity = 'medium';
+    const intensity = 'medium';
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => Padding(
-        padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-        child: Container(
-          padding: const EdgeInsets.all(32),
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text("LOG MANUAL ACTIVITY", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
-              const SizedBox(height: 24),
-              TextField(
-                controller: typeController,
-                decoration: InputDecoration(
-                  labelText: "Activity Type",
-                  hintText: "e.g. Boxing, HIIT",
-                  filled: true,
-                  fillColor: Colors.orange.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+      builder: (sheetContext) {
+        final moodBox = <int?>[null];
+        final l10n = AppLocalizations.of(sheetContext)!;
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.all(32),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.surface,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
                 ),
-              ),
-              const SizedBox(height: 16),
-              TextField(
-                controller: minsController,
-                keyboardType: TextInputType.number,
-                decoration: InputDecoration(
-                  labelText: "Duration (min)",
-                  filled: true,
-                  fillColor: Colors.orange.withValues(alpha: 0.05),
-                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
-                ),
-              ),
-              const SizedBox(height: 32),
-              SizedBox(
-                width: double.infinity,
-                height: 56,
-                child: ElevatedButton(
-                  onPressed: () async {
-                    final type = typeController.text.trim();
-                    final mins = int.tryParse(minsController.text.trim()) ?? 0;
-                    if (type.isNotEmpty && mins > 0) {
-                      final personId = context.read<PersonBlock>().information.value.profiles.id ?? "";
-                      final logsDao = context.read<HealthLogsDAO>();
-                      final healthDao = context.read<HealthMetricsDAO>();
-                      
-                      await logsDao.insertExerciseLog(
-                        ExerciseLogsTableCompanion.insert(
-                          id: IDGen.UUIDV7(),
-                          personID: drift.Value(personId),
-                          type: type,
-                          durationMinutes: mins,
-                          intensity: drift.Value(intensity),
-                          timestamp: drift.Value(DateTime.now()),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text("LOG MANUAL ACTIVITY", style: TextStyle(fontWeight: FontWeight.w900, letterSpacing: 2)),
+                    const SizedBox(height: 24),
+                    TextField(
+                      controller: typeController,
+                      decoration: InputDecoration(
+                        labelText: "Activity Type",
+                        hintText: "e.g. Boxing, HIIT",
+                        filled: true,
+                        fillColor: Colors.orange.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    TextField(
+                      controller: minsController,
+                      keyboardType: TextInputType.number,
+                      decoration: InputDecoration(
+                        labelText: "Duration (min)",
+                        filled: true,
+                        fillColor: Colors.orange.withValues(alpha: 0.05),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        l10n.finance_quick_mood_prompt,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.55),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
                         ),
-                      );
-                      // Update health metrics manually for legacy support
-                      await healthDao.insertOrUpdateMetrics(
-                        HealthMetricsTableCompanion(
-                          personID: drift.Value(personId),
-                          date: drift.Value(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)),
-                          exerciseMinutes: drift.Value(mins),
-                          updatedAt: drift.Value(DateTime.now()),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(5, (i) {
+                        final score = i + 1;
+                        final on = moodBox[0] == score;
+                        const emojis = ['😖', '😕', '😐', '🙂', '😄'];
+                        return Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 3),
+                            child: InkWell(
+                              onTap: () => setModalState(() => moodBox[0] = score),
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 10),
+                                decoration: BoxDecoration(
+                                  color: on
+                                      ? EntryColors.financeYellow.withValues(alpha: 0.2)
+                                      : Colors.white.withValues(alpha: 0.05),
+                                  borderRadius: BorderRadius.circular(14),
+                                  border: Border.all(
+                                    color: on
+                                        ? EntryColors.financeYellow.withValues(alpha: 0.6)
+                                        : Colors.white12,
+                                  ),
+                                ),
+                                child: Column(
+                                  children: [
+                                    Text(emojis[i], style: const TextStyle(fontSize: 22)),
+                                    Text(
+                                      '$score',
+                                      style: TextStyle(
+                                        color: on ? EntryColors.financeYellow : Colors.white38,
+                                        fontSize: 10,
+                                        fontWeight: FontWeight.w800,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+                    const SizedBox(height: 28),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          final type = typeController.text.trim();
+                          final mins = int.tryParse(minsController.text.trim()) ?? 0;
+                          if (type.isNotEmpty && mins > 0) {
+                            final personId = context.read<PersonBlock>().information.value.profiles.id ?? "";
+                            final logsDao = context.read<HealthLogsDAO>();
+                            final healthDao = context.read<HealthMetricsDAO>();
+
+                            await logsDao.insertExerciseLog(
+                              ExerciseLogsTableCompanion.insert(
+                                id: IDGen.UUIDV7(),
+                                personID: drift.Value(personId),
+                                type: type,
+                                durationMinutes: mins,
+                                intensity: drift.Value(intensity),
+                                timestamp: drift.Value(DateTime.now()),
+                                moodScore: moodBox[0] != null
+                                    ? drift.Value(moodBox[0]!)
+                                    : const drift.Value.absent(),
+                              ),
+                            );
+                            await healthDao.insertOrUpdateMetrics(
+                              HealthMetricsTableCompanion(
+                                personID: drift.Value(personId),
+                                date: drift.Value(DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day)),
+                                exerciseMinutes: drift.Value(mins),
+                                updatedAt: drift.Value(DateTime.now()),
+                              ),
+                            );
+                          }
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.orange,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                         ),
-                      );
-                    }
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  ),
-                  child: const Text("LOG ACTIVITY", style: TextStyle(fontWeight: FontWeight.bold)),
+                        child: const Text("LOG ACTIVITY", style: TextStyle(fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
+            );
+          },
+        );
+      },
     );
+  }
+
+  Future<void> _showPostExerciseMoodSheet(BuildContext context, String exerciseLogId) async {
+    final l10n = AppLocalizations.of(context)!;
+    final moodBox = <int?>[null];
+
+    await showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF1A1A1A),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+                ),
+                child: SafeArea(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        l10n.finance_quick_mood_prompt,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(5, (i) {
+                          final score = i + 1;
+                          final on = moodBox[0] == score;
+                          const emojis = ['😖', '😕', '😐', '🙂', '😄'];
+                          return Expanded(
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 3),
+                              child: InkWell(
+                                onTap: () => setModalState(() => moodBox[0] = score),
+                                borderRadius: BorderRadius.circular(14),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: on
+                                        ? EntryColors.financeYellow.withValues(alpha: 0.2)
+                                        : Colors.white.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(14),
+                                    border: Border.all(
+                                      color: on
+                                          ? EntryColors.financeYellow.withValues(alpha: 0.65)
+                                          : Colors.white12,
+                                    ),
+                                  ),
+                                  child: Column(
+                                    children: [
+                                      Text(emojis[i], style: const TextStyle(fontSize: 22)),
+                                      Text(
+                                        '$score',
+                                        style: TextStyle(
+                                          color: on ? EntryColors.financeYellow : Colors.white38,
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.w800,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        }),
+                      ),
+                      const SizedBox(height: 22),
+                      Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                              onPressed: () => Navigator.pop(sheetCtx),
+                              child: Text(l10n.common_cancel),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: FilledButton(
+                              style: FilledButton.styleFrom(
+                                backgroundColor: Colors.orangeAccent,
+                                foregroundColor: Colors.black,
+                              ),
+                              onPressed: () async {
+                                final m = moodBox[0];
+                                if (m != null) {
+                                  await sheetCtx.read<HealthLogsDAO>().updateExerciseLogMood(
+                                        exerciseLogId,
+                                        m,
+                                      );
+                                }
+                                if (sheetCtx.mounted) Navigator.pop(sheetCtx);
+                              },
+                              child: Text(
+                                l10n.finance_quick_log,
+                                style: const TextStyle(fontWeight: FontWeight.w900),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  static String _moodEmoji(int score) {
+    const emojis = ['😖', '😕', '😐', '🙂', '😄'];
+    final i = score.clamp(1, 5) - 1;
+    return emojis[i];
   }
 }
 

@@ -75,6 +75,10 @@ class HealthPage extends StatefulWidget {
   State<HealthPage> createState() => _HealthPageState();
 }
 
+/// Horizontal inset and grid gutters — keep in sync so row gaps match section gaps.
+const double _healthPageGutter = 16;
+const double _healthGridSpacing = 16;
+
 class _HealthPageState extends State<HealthPage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AppDatabase database;
@@ -259,6 +263,9 @@ class _HealthPageState extends State<HealthPage>
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
     compact = MediaQuery.of(context).size.width < 600;
+    final topSafe = MediaQuery.paddingOf(context).top;
+    // Clear floating shell header + status bar (fixed 80 was short on some notches).
+    final headerClearance = topSafe + 72;
 
     return SwipeablePage(
       onSwipe: () => Navigator.maybePop(context),
@@ -318,12 +325,17 @@ class _HealthPageState extends State<HealthPage>
                 ),
                 slivers: [
                   // 0. Top spacing to clear the floating header
-                  const SliverToBoxAdapter(child: SizedBox(height: 80)),
+                  SliverToBoxAdapter(child: SizedBox(height: headerClearance)),
 
-                  // 1. Greeting / Date Section
+                  // 1. Greeting / Date Section (bottom padding 0: grid top padding = row gap)
                   SliverToBoxAdapter(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(24, 40, 24, 8),
+                      padding: const EdgeInsets.fromLTRB(
+                        _healthPageGutter,
+                        24,
+                        _healthPageGutter,
+                        0,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -382,7 +394,6 @@ class _HealthPageState extends State<HealthPage>
                           final currentHR = healthBlock.todayHeartRate.value;
 
                           final currentWeight = healthBlock.latestWeight.value;
-                          print("current weight: $currentWeight");
                           final currentWaterMl = healthBlock.todayWater.value;
 
                           // todayExerciseMinutes is the SUM of exercise_logs.duration_minutes for today.
@@ -516,13 +527,18 @@ class _HealthPageState extends State<HealthPage>
                           }
 
                           return SliverPadding(
-                            padding: const EdgeInsets.all(16.0),
+                            padding: const EdgeInsets.fromLTRB(
+                              _healthPageGutter,
+                              _healthGridSpacing,
+                              _healthPageGutter,
+                              _healthGridSpacing,
+                            ),
                             sliver: SliverGrid(
                               gridDelegate:
                                   SliverGridDelegateWithFixedCrossAxisCount(
                                     crossAxisCount: compact ? 2 : 3,
-                                    crossAxisSpacing: 16,
-                                    mainAxisSpacing: 16,
+                                    crossAxisSpacing: _healthGridSpacing,
+                                    mainAxisSpacing: _healthGridSpacing,
                                     childAspectRatio: compact ? 0.88 : 1.1,
                                   ),
                               delegate: SliverChildBuilderDelegate((

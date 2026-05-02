@@ -26,7 +26,10 @@ class FinanceBlock {
 
   late FinanceDAO _dao;
   late PortfolioSnapshotsDAO _snapshotDao;
-  late String _personId;
+  String _personId = '';
+
+  /// Logged-in person; empty before [init] or when unauthenticated.
+  String get personId => _personId;
 
   final _persistedAth = signal<double>(0.0);
 
@@ -311,13 +314,13 @@ class FinanceBlock {
     String personId, {
     ConfigBlock? configBlock,
   }) async {
+    _personId = personId;
     if (personId.isEmpty) {
       debugPrint("FinanceBlock: Skipping init, personId is empty.");
       return;
     }
     _dao = dao;
     _snapshotDao = snapshotDao;
-    _personId = personId;
     _configBlock.value = configBlock;
 
     // Load persistent ATH and latest timestamp
@@ -534,6 +537,7 @@ class FinanceBlock {
     String? description,
     DateTime? date,
     String? projectID,
+    int? moodScore,
   }) async {
     if (_personId.isEmpty) return;
     await _dao.insertTransaction(
@@ -543,6 +547,9 @@ class FinanceBlock {
         category: category,
         type: type,
         amount: amount,
+        moodScore: moodScore != null
+            ? Value(moodScore)
+            : const Value.absent(),
         description: Value(description),
         transactionDate: Value(date ?? DateTime.now()),
         projectID: Value(projectID),
@@ -558,6 +565,7 @@ class FinanceBlock {
     String? description,
     DateTime? date,
     String? projectID,
+    int? moodScore,
   }) async {
     if (_personId.isEmpty) return;
     await _dao.updateTransaction(
@@ -567,6 +575,7 @@ class FinanceBlock {
         category: Value(category),
         type: Value(type),
         amount: Value(amount),
+        moodScore: Value(moodScore),
         description: Value(description),
         transactionDate: Value(date ?? DateTime.now()),
         projectID: Value(projectID),

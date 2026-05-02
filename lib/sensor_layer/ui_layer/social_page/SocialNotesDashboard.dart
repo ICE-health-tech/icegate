@@ -12,6 +12,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialNotesDashboard extends StatefulWidget {
@@ -273,9 +274,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    // Sort by logDate descending
+    // Sort by when the entry was saved (createdAt); logDate is only the day bucket.
     final sortedLogs = List<MindLogData>.from(logs)
-      ..sort((a, b) => b.logDate.compareTo(a.logDate));
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
     return SizedBox(
       height: 100,
@@ -287,15 +288,24 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           final log = sortedLogs[index];
           final activities = jsonDecode(log.activities) as List;
 
+          final mood = mindMoodAccent(log.moodScore);
           return Container(
             width: 160,
             margin: const EdgeInsets.only(right: 12),
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  mood.withValues(alpha: 0.18),
+                  colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
+                ],
+              ),
               border: Border.all(
-                color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                color: mood.withValues(alpha: 0.45),
+                width: 1,
               ),
             ),
             child: Column(
@@ -308,8 +318,12 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                        DateFormat('MMM d, HH:mm').format(log.logDate),
-                        style: textTheme.labelSmall?.copyWith(fontSize: 9),
+                        DateFormat('MMM d, HH:mm').format(log.createdAt.toLocal()),
+                        style: textTheme.labelSmall?.copyWith(
+                          fontSize: 9,
+                          color: colorScheme.onSurface.withValues(alpha: 0.88),
+                          fontWeight: FontWeight.w600,
+                        ),
                         maxLines: 1,
                       ),
                     ),
@@ -334,32 +348,26 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   }
 
   Widget _buildMoodIcon(BuildContext context, int score) {
-    final Color color;
+    final Color color = mindMoodAccent(score);
     final IconData icon;
 
     switch (score) {
       case 1:
-        color = const Color(0xFF8000FF);
         icon = Icons.sentiment_very_dissatisfied_rounded;
         break;
       case 2:
-        color = const Color(0xFF2C3E50);
         icon = Icons.sentiment_dissatisfied_rounded;
         break;
       case 3:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
         break;
       case 4:
-        color = const Color(0xFF00FF88);
         icon = Icons.sentiment_satisfied_alt_rounded;
         break;
       case 5:
-        color = const Color(0xFF00FFFF);
         icon = Icons.sentiment_very_satisfied_rounded;
         break;
       default:
-        color = const Color(0xFFE0E0E0);
         icon = Icons.sentiment_neutral_rounded;
     }
 

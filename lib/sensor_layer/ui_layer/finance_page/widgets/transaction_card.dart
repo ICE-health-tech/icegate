@@ -58,10 +58,12 @@ class TransactionCard extends StatelessWidget {
         return Icons.flag_rounded;
       case 'retirement':
         return Icons.elderly_rounded;
+      case 'impulse':
+        return Icons.shield_moon_rounded;
       case 'crypto':
         return Icons.currency_bitcoin_rounded;
       case 'stock':
-        return Icons.show_chart_rounded;
+        return Icons.savings_rounded;
       case 'real_estate':
         return Icons.apartment_rounded;
       default:
@@ -113,6 +115,15 @@ class TransactionCard extends StatelessWidget {
         return l10n.finance_cat_goal;
       case 'retirement':
         return l10n.finance_cat_retirement;
+      case 'impulse':
+        return l10n.finance_cat_impulse;
+      case 'crypto':
+        return l10n.finance_cat_crypto;
+      case 'stock':
+        return l10n.finance_cat_stock;
+      case 'real_estate':
+      case 'real estate':
+        return l10n.finance_cat_real_estate;
       default:
         return category.isNotEmpty
             ? category[0].toUpperCase() + category.substring(1)
@@ -182,7 +193,7 @@ class TransactionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    txn.category.toUpperCase(),
+                    _getCategoryNameDisplay(l10n, txn.category).toUpperCase(),
                     style: const TextStyle(
                       fontSize: 8,
                       color: Colors.white24,
@@ -198,6 +209,14 @@ class TransactionCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.end,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                if (_moodEmoji(txn.moodScore) != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 2),
+                    child: Text(
+                      _moodEmoji(txn.moodScore)!,
+                      style: const TextStyle(fontSize: 14),
+                    ),
+                  ),
                 Text(
                   "$prefix${block.formatCurrency(txn.amount, compact: true)}",
                   style: TextStyle(
@@ -224,5 +243,11 @@ class TransactionCard extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     return "${date.day}/${date.month}";
+  }
+
+  static String? _moodEmoji(int? score) {
+    if (score == null || score < 1 || score > 5) return null;
+    const emojis = ['😖', '😕', '😐', '🙂', '😄'];
+    return emojis[score - 1];
   }
 }
