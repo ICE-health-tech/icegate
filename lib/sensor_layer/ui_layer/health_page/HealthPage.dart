@@ -83,6 +83,10 @@ class _HealthPageState extends State<HealthPage>
   late bool compact;
   late AnimationController _gridAnimationController;
 
+  /// Cached in [didChangeDependencies] so [dispose] can call
+  /// [HealthBlock.stopRealtimeSync] without using a deactivated [context].
+  HealthBlock? _healthBlock;
+
   @override
   void initState() {
     super.initState();
@@ -105,7 +109,7 @@ class _HealthPageState extends State<HealthPage>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    context.read<HealthBlock>().stopRealtimeSync();
+    _healthBlock?.stopRealtimeSync();
     _gridAnimationController.dispose();
     super.dispose();
   }
@@ -113,6 +117,7 @@ class _HealthPageState extends State<HealthPage>
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _healthBlock = context.read<HealthBlock>();
     // No retry logic needed here — initState schedules load via addPostFrameCallback.
     // didChangeAppLifecycleState handles app-resume reloads.
   }
@@ -367,8 +372,8 @@ class _HealthPageState extends State<HealthPage>
                         : Watch((context) {
                           final healthBlock = context.read<HealthBlock>();
                           final envBlock = context.read<EnvironmentalBlock>();
-                          final envData = envBlock.currentData.watch(context);
-                          final envLoading = envBlock.isLoading.watch(context);
+                          final envData = envBlock.currentData.value;
+                          final envLoading = envBlock.isLoading.value;
 
                           final currentSteps = healthBlock.todaySteps.value;
                           final currentSleep = healthBlock.todaySleep.value;

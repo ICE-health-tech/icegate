@@ -12,10 +12,10 @@ import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_c
 import 'package:live_activities/live_activities.dart';
 
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_builder_dialog.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/finance_overview_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/finance_transactions_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/finance_subscriptions_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/finance_stocks_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceStocksPage.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});

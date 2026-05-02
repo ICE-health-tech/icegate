@@ -3,12 +3,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SnowfallOverlay.dart';
 import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 
 import 'components/entry_constants.dart';
+import 'components/entry_geometry.dart';
+import 'components/prism_background.dart';
 import 'components/prism_painters.dart';
 
 class PrismEntryPage extends StatefulWidget {
@@ -22,25 +23,18 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     with TickerProviderStateMixin {
   late AnimationController _assemblyController;
   late AnimationController _pulseController;
-  late AnimationController _crackController;
-  late AnimationController _scanController;
   late AnimationController _auroraController;
-  late AnimationController _chargeController;
+  late AnimationController _scanController;
   late AnimationController _spinController;
-  late AnimationController _brokenGlassController; // Broken pane slide-out
+  late AnimationController _crackController;
+  late AnimationController _chargeController;
 
   final ValueNotifier<Offset> _pointerOffset = ValueNotifier(Offset.zero);
-
-  final List<PrismShard> _shards = [];
-  final int _shardCount = 450; // Balanced count for cleaner crystalline bloom
-  final math.Random _random = math.Random();
+  late final List<PrismShard> _assemblyShards;
 
   final List<ScatteringParticleData> _cachedParticles = [];
-  final List<GlassCrackData> _cachedGlassCracks = [];
-  late final List<BrokenGlassPaneData>
-  _cachedPanes; // Pre-baked Voronoi glass panes
 
-  bool _isCracking = false;
+  bool _exitInProgress = false;
   bool _isAssemblyDone = false;
   late AuthBlock _authBlock;
   late final void Function() _disposeStatusEffect;
@@ -50,10 +44,12 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void initState() {
     super.initState();
     _authBlock = context.read<AuthBlock>();
-    _precalculateGeometry();
-    _cachedPanes = BrokenGlassPaneData.generate(
-      seed: 7,
-    ); // Pre-bake pane geometry
+    _assemblyShards = EntryGeometry.generateShardsOnly(
+      80,
+      seed: 17,
+      winterShardHints: true,
+    );
+    _precalculateExitParticles();
 
     _assemblyController = AnimationController(
       vsync: this,
@@ -65,38 +61,30 @@ class _PrismEntryPageState extends State<PrismEntryPage>
       duration: const Duration(seconds: 3),
     )..repeat(reverse: true);
 
-    _crackController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2200),
-    );
-
-    _scanController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 3),
-    )..repeat();
-
     _auroraController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 12),
     )..repeat();
 
-    _chargeController = AnimationController(
+    _scanController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
-    );
+      duration: const Duration(seconds: 10),
+    )..repeat();
 
     _spinController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
 
-    // Broken glass panes slide out after the crack peaks
-    _brokenGlassController = AnimationController(
+    _crackController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 2100),
     );
 
-    _initShards();
+    _chargeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
 
     _assemblyController.forward().then((_) {
       if (mounted) {
@@ -109,8 +97,8 @@ class _PrismEntryPageState extends State<PrismEntryPage>
       final status = _authBlock.status.value;
       if (status == AuthStatus.authenticated &&
           _isAssemblyDone &&
-          !_isCracking) {
-        _triggerCrackAndNavigate();
+          !_exitInProgress) {
+        _playElegantExit();
       }
     });
 
@@ -183,182 +171,54 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     }
   }
 
-  void _initShards() {
-    for (int i = 0; i < _shardCount; i++) {
-      final double angle = _random.nextDouble() * 2 * math.pi;
-      final double distance = 600 + _random.nextDouble() * 700;
+  void _onAssemblyComplete() async {
+    HapticFeedback.heavyImpact();
 
-      _shards.add(
-        PrismShard(
-          startOffset: Offset(
-            math.cos(angle) * distance,
-            math.sin(angle) * distance,
-          ),
-          targetOffset: Offset.zero,
-          size: 2 + _random.nextDouble() * 12,
-          color: _random.nextBool()
-              ? EntryColors.arcticSilver
-              : EntryColors.frostedWhite,
-          rotation: _random.nextDouble() * 2 * math.pi,
-          delay: _random.nextDouble() * 0.5,
-          speed: 0.4 + _random.nextDouble() * 0.5,
-        ),
-      );
+    final status = _authBlock.status.value;
+
+    if (status == AuthStatus.authenticated) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) _playElegantExit();
+      });
+      return;
+    }
+
+    // AUTO-LOGIN DISABLED: The user should click "Fingerprint" or "Gmail" manually
+    // to avoid intrusive popups upon entry.
+  }
+
+  /// Charge pulse, flash / shatter VFX, then route (no fracture lines).
+  void _playElegantExit() async {
+    if (_exitInProgress) return;
+    setState(() => _exitInProgress = true);
+
+    HapticFeedback.lightImpact();
+    await _chargeController.forward();
+    if (!mounted) return;
+    HapticFeedback.heavyImpact();
+    _crackController.forward();
+    await Future.delayed(const Duration(milliseconds: 1220));
+    if (!mounted) return;
+    if (_authBlock.status.value == AuthStatus.authenticated) {
+      context.go('/', extra: 'from_entry');
+    } else {
+      context.go('/login');
     }
   }
 
-  void _precalculateGeometry() {
-    final random = math.Random(42);
+  void _precalculateExitParticles() {
+    final random = math.Random(
+      DateTime.now().millisecondsSinceEpoch ^
+          DateTime.now().microsecondsSinceEpoch,
+    );
 
-    // 1. Glass Cracks - High Fidelity Shattered Web (Destructive Fragmentation)
-    const int crackCount = 6; // Reduced for a cleaner look
-    final List<List<Offset>> allRadialPoints = [];
-
-    // A. Primary Radial Fractures (Jagged, branching paths)
-    for (int i = 0; i < crackCount; i++) {
-      final impactOrigin = Offset.zero;
-      final double baseAngle = (i / crackCount) * 2 * math.pi;
-
-      void growBranch(
-        Offset start,
-        double angle,
-        double dist,
-        int depth, {
-        bool isMain = false,
-      }) {
-        if (depth > 3 || dist > 6.0) return;
-
-        final List<Offset> branchPoints = [start];
-        double bDist = dist;
-        double bAngle = angle;
-
-        // More segments per branch for "jaggedness"
-        int segments = 8 + random.nextInt(6);
-        for (int j = 0; j < segments; j++) {
-          // Sharper jitter for that jagged look
-          final double jitter = 0.15 + (bDist * 0.08);
-          bAngle += (random.nextDouble() - 0.5) * jitter;
-          bDist += 0.15 + random.nextDouble() * 0.35;
-
-          final nextPoint =
-              impactOrigin +
-              Offset(math.cos(bAngle) * bDist, math.sin(bAngle) * bDist);
-          branchPoints.add(nextPoint);
-
-          // RECURSIVE BRANCHING: more frequent splits for "frosty" density
-          if (random.nextDouble() > 0.65 - (depth * 0.12)) {
-            growBranch(
-              nextPoint,
-              bAngle + (random.nextBool() ? 0.45 : -0.45),
-              bDist,
-              depth + 1,
-            );
-          }
-          if (bDist > 7.0) break;
-        }
-
-        if (isMain) allRadialPoints.add(branchPoints);
-        _cachedGlassCracks.add(GlassCrackData(points: branchPoints));
-      }
-
-      growBranch(impactOrigin, baseAngle, 0.0, 0, isMain: true);
-    }
-
-    // B. Impact Point Micro-Shatter (Central Crunch)
-    for (int i = 0; i < 15; i++) {
-      final angle = random.nextDouble() * 2 * math.pi;
-      final dist = 0.02 + random.nextDouble() * 0.25;
-      final p1 = Offset(math.cos(angle) * dist, math.sin(angle) * dist);
-      final p2 = Offset(
-        math.cos(angle + (random.nextDouble() - 0.5)) * (dist + 0.15),
-        math.sin(angle + (random.nextDouble() - 0.5)) * (dist + 0.15),
-      );
-      _cachedGlassCracks.add(GlassCrackData(points: [p1, p2]));
-    }
-
-    // C. Concentric Stress Rings (Spiderweb Connections) - MORE JAGGED
-    for (int layer = 1; layer < 4; layer++) {
-      final double radiusFactor = (layer / 12.0);
-      for (int i = 0; i < allRadialPoints.length; i++) {
-        // Inner rings (layer < 4) are much more likely to be complete and pronounced
-        final double spawnChance = layer < 4 ? 0.95 : 0.75;
-
-        if (random.nextDouble() < spawnChance) {
-          final r1 = allRadialPoints[i];
-          final r2 = allRadialPoints[(i + 1) % allRadialPoints.length];
-
-          final p1 = r1[layer.clamp(0, r1.length - 1)];
-          final p2 = r2[layer.clamp(0, r2.length - 1)];
-
-          // Multiple jagged segments between radials
-          final Offset mid1 = Offset.lerp(p1, p2, 0.33)!;
-          final Offset mid2 = Offset.lerp(p1, p2, 0.66)!;
-
-          final Offset normal = Offset(-(p2.dy - p1.dy), p2.dx - p1.dx);
-          // Inner rings are less jittery (more circular), outer rings more chaotic
-          final double jitterScale = (layer < 4 ? 0.15 : 0.45) * radiusFactor;
-
-          final j1 = mid1 + normal * (random.nextDouble() - 0.5) * jitterScale;
-          final j2 = mid2 + normal * (random.nextDouble() - 0.5) * jitterScale;
-
-          _cachedGlassCracks.add(GlassCrackData(points: [p1, j1, j2, p2]));
-        }
-      }
-    }
-
-    // 2. Thin Glass Splinters — needle-like slivers
-    const int largeParticleCount = 120;
-    for (int i = 0; i < largeParticleCount; i++) {
-      final double angle = random.nextDouble() * 2 * math.pi;
-      final double startDist = 80 + random.nextDouble() * 250;
-      final double velocity = 2400 + random.nextDouble() * 3000;
-
-      // CRYSTALLINE JAGGED SHARD: faceted irregular shape
-      final double length = 120 + random.nextDouble() * 130;
-      final double width =
-          3.0 + random.nextDouble() * 5.0; // Slightly wider for facets
-
-      final List<Offset> points = [
-        Offset(0, -length / 2), // top tip
-        Offset(
-          width / 2 + random.nextDouble() * 4,
-          -length * 0.2,
-        ), // upper-right facet
-        Offset(width / 3, length * 0.1), // mid-right
-        Offset(0, length / 2), // bottom tip
-        Offset(-width / 3, length * 0.1), // mid-left
-        Offset(
-          -width / 2 - random.nextDouble() * 4,
-          -length * 0.2,
-        ), // upper-left facet
-      ];
-
-      _cachedParticles.add(
-        ScatteringParticleData(
-          angle: angle,
-          velocity: velocity,
-          points: points,
-          rotationSpeed:
-              (random.nextDouble() - 0.5) * 45, // Slightly more energy
-          color: _random.nextBool()
-              ? EntryColors.primaryIceBlue
-              : EntryColors.frostedWhite,
-          delay: random.nextDouble() * 0.1,
-          initialDistance: startDist,
-          distRank: (startDist / 330.0).clamp(0.0, 1.0),
-          tier: ParticleTier.large,
-          noiseSeed: random.nextDouble() * 100.0,
-        ),
-      );
-    }
-
-    // Tier 2: Micro needle-splinters (ice needle spray)
-    const int dustCount = 120;
+    const int dustCount = 52;
     for (int i = 0; i < dustCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
-      final double velocity = 1200 + random.nextDouble() * 2000;
-      final double w = 0.5 + random.nextDouble() * 1.0; // razor thin
-      final double l = 8 + random.nextDouble() * 18; // was 15-40
+      final double velocity = 1100 + random.nextDouble() * 1900;
+      final double w = 0.45 + random.nextDouble() * 0.85;
+      final double l = 7 + random.nextDouble() * 14;
+      final startDist = 50 + random.nextDouble() * 140;
       _cachedParticles.add(
         ScatteringParticleData(
           angle: angle,
@@ -369,85 +229,43 @@ class _PrismEntryPageState extends State<PrismEntryPage>
             Offset(0, l / 2),
             Offset(-w / 2, 0),
           ],
-          rotationSpeed: 80, // fast spin for tiny needles
-          color: EntryColors.iceCyan.withValues(alpha: 0.4),
-          delay: random.nextDouble() * 0.4,
+          rotationSpeed: 72,
+          color: EntryColors.iceCyan.withValues(alpha: 0.35),
+          delay: random.nextDouble() * 0.35,
+          initialDistance: startDist,
+          distRank: (startDist / 190.0).clamp(0.0, 1.0),
           tier: ParticleTier.dust,
           noiseSeed: random.nextDouble() * 100.0,
         ),
       );
     }
 
-    // Tier 3: Shrapnel (Medium jagged shards)
-    const int shrapnelCount = 35;
+    const int shrapnelCount = 30;
     for (int i = 0; i < shrapnelCount; i++) {
       final double angle = random.nextDouble() * 2 * math.pi;
-      final double velocity = 1800 + random.nextDouble() * 2500;
-      final double size = 12 + random.nextDouble() * 20;
+      final double velocity = 1700 + random.nextDouble() * 2200;
+      final double size = 11 + random.nextDouble() * 16;
 
-      final points = [
-        Offset(0, -size / 2),
-        Offset(size / 3, 0),
-        Offset(0, size / 2),
-        Offset(-size / 3, -size / 4),
-      ];
-
+      final startDist = 55 + random.nextDouble() * 120;
       _cachedParticles.add(
         ScatteringParticleData(
           angle: angle,
           velocity: velocity,
-          points: points,
-          rotationSpeed: (random.nextDouble() - 0.5) * 45,
+          points: [
+            Offset(0, -size / 2),
+            Offset(size / 3, 0),
+            Offset(0, size / 2),
+            Offset(-size / 3, -size / 4),
+          ],
+          rotationSpeed: (random.nextDouble() - 0.5) * 40,
           color: EntryColors.primaryIceLight,
-          delay: random.nextDouble() * 0.2,
+          delay: random.nextDouble() * 0.18,
+          initialDistance: startDist,
+          distRank: (startDist / 175.0).clamp(0.0, 1.0),
           tier: ParticleTier.shrapnel,
           noiseSeed: random.nextDouble() * 100.0,
         ),
       );
-    }
-  }
-
-  void _onAssemblyComplete() async {
-    HapticFeedback.heavyImpact();
-
-    final status = _authBlock.status.value;
-
-    if (status == AuthStatus.authenticated) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) _triggerCrackAndNavigate();
-      });
-      return;
-    }
-
-    // AUTO-LOGIN DISABLED: The user should click "Fingerprint" or "Gmail" manually
-    // to avoid intrusive popups upon entry.
-  }
-
-  void _triggerCrackAndNavigate() async {
-    if (_isCracking) return;
-    setState(() => _isCracking = true);
-
-    HapticFeedback.lightImpact(); // gentle tap
-    await _chargeController.forward();
-
-    HapticFeedback.mediumImpact(); // soft confirmation
-    await Future.delayed(const Duration(milliseconds: 50));
-    // vibrate removed — too jarring
-
-    _crackController.forward();
-
-    // After crack lines peak (~400ms), trigger the broken pane slide-out
-    Future.delayed(const Duration(milliseconds: 380), () {
-      if (mounted) _brokenGlassController.forward();
-    });
-
-    await Future.delayed(const Duration(milliseconds: 2000));
-    if (mounted) {
-      if (_authBlock.status.value == AuthStatus.authenticated) {
-        context.go('/', extra: 'from_entry');
-      } else {
-        context.go('/login');
-      }
     }
   }
 
@@ -457,12 +275,11 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     _disposeErrorEffect();
     _assemblyController.dispose();
     _pulseController.dispose();
-    _crackController.dispose();
-    _scanController.dispose();
     _auroraController.dispose();
-    _chargeController.dispose();
+    _scanController.dispose();
     _spinController.dispose();
-    _brokenGlassController.dispose();
+    _crackController.dispose();
+    _chargeController.dispose();
     _pointerOffset.dispose();
     super.dispose();
   }
@@ -470,9 +287,11 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: EntryColors.winterEdge,
       body: Container(
-        decoration: const BoxDecoration(gradient: EntryColors.obsidianGradient),
+        decoration: const BoxDecoration(
+          gradient: EntryColors.winterNightGradient,
+        ),
         child: Listener(
           onPointerMove: (event) {
             final size = MediaQuery.of(context).size;
@@ -484,24 +303,40 @@ class _PrismEntryPageState extends State<PrismEntryPage>
           child: MouseRegion(
             child: Stack(
               children: [
+                IgnorePointer(
+                  child: ValueListenableBuilder<Offset>(
+                    valueListenable: _pointerOffset,
+                    builder: (context, pOffset, _) {
+                      return AnimatedBuilder(
+                        animation: _chargeController,
+                        builder: (context, _) {
+                          if (_chargeController.value <= 0) {
+                            return const SizedBox.shrink();
+                          }
+                          return CustomPaint(
+                            painter: IceGateChargePulsePainter(
+                              progress: _chargeController.value,
+                              pointerOffset: pOffset,
+                            ),
+                            size: Size.infinite,
+                          );
+                        },
+                      );
+                    },
+                  ),
+                ),
                 AnimatedBuilder(
                   animation: _crackController,
                   builder: (context, child) {
-                    final double crackVal = _crackController.value;
-                    final double bgOpacity = (1.0 - (crackVal * 1.5)).clamp(
-                      0.0,
-                      1.0,
-                    );
-
-                    // SCREEN SETTLE: Gentle displacement for premium feel
+                    final double c = _crackController.value;
+                    final double bgOpacity = (1.0 - (c * 1.12)).clamp(0.0, 1.0);
                     double shakeX = 0;
                     double shakeY = 0;
-                    if (crackVal > 0 && crackVal < 0.15) {
-                      final double intensity = (1.0 - (crackVal / 0.15)) * 5;
-                      shakeX = (math.sin(crackVal * 80) * intensity);
-                      shakeY = (math.cos(crackVal * 90) * intensity);
+                    if (c > 0 && c < 0.17) {
+                      final double k = (1.0 - (c / 0.17)) * 6.2;
+                      shakeX = math.sin(c * 86) * k;
+                      shakeY = math.cos(c * 94) * k;
                     }
-
                     return Opacity(
                       opacity: bgOpacity,
                       child: Transform.translate(
@@ -513,54 +348,14 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                   child: Stack(
                     children: [
                       Positioned.fill(
-                        child: ValueListenableBuilder<Offset>(
-                          valueListenable: _pointerOffset,
-                          builder: (context, pOffset, child) {
-                            return RepaintBoundary(
-                              child: AnimatedBuilder(
-                                animation: Listenable.merge([
-                                  _auroraController,
-                                  _scanController,
-                                ]),
-                                builder: (context, child) {
-                                  return CustomPaint(
-                                    painter: TacticalGridPainter(
-                                      scanProgress: _scanController.value,
-                                      auroraProgress: _auroraController.value,
-                                      pointerOffset: pOffset,
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
+                        child: PrismBackground(
+                          auroraController: _auroraController,
+                          scanController: _scanController,
+                          assemblyController: _assemblyController,
+                          pulseController: _pulseController,
+                          shards: _assemblyShards,
+                          pointerOffset: _pointerOffset,
                         ),
-                      ),
-
-                      const Positioned.fill(
-                        child: SnowfallOverlay(snowCount: 60, opacity: 0.4),
-                      ),
-
-                      ValueListenableBuilder<Offset>(
-                        valueListenable: _pointerOffset,
-                        builder: (context, pOffset, child) {
-                          return RepaintBoundary(
-                            child: AnimatedBuilder(
-                              animation: _assemblyController,
-                              builder: (context, child) {
-                                return CustomPaint(
-                                  painter: PrismPainter(
-                                    shards: _shards,
-                                    progress: _assemblyController.value,
-                                    pulse: _pulseController.value,
-                                    pointerOffset: pOffset,
-                                  ),
-                                  size: Size.infinite,
-                                );
-                              },
-                            ),
-                          );
-                        },
                       ),
 
                       Center(
@@ -573,7 +368,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                               return Opacity(
                                 opacity: opacity,
                                 child: GestureDetector(
-                                  onTap: _triggerCrackAndNavigate,
+                                  onTap: _playElegantExit,
                                   behavior: HitTestBehavior.opaque,
                                   child: _buildPremiumLogo(),
                                 ),
@@ -583,27 +378,6 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                         ),
                       ),
                     ],
-                  ),
-                ),
-
-                // 3. Scanning Status Overlay
-                Positioned(
-                  bottom: 80,
-                  left: 0,
-                  right: 0,
-                  child: Center(
-                    child: AnimatedBuilder(
-                      animation: _assemblyController,
-                      builder: (context, child) {
-                        final double opacity = Curves.easeIn.transform(
-                          (_assemblyController.value / 0.5).clamp(0.0, 1.0),
-                        );
-                        return Opacity(
-                          opacity: opacity,
-                          child: const AuthStatusPulse(),
-                        );
-                      },
-                    ),
                   ),
                 ),
 
@@ -618,23 +392,9 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                               animation: _crackController,
                               builder: (context, child) {
                                 return CustomPaint(
-                                  painter: GlassCrackPainter(
-                                    progress: _crackController.value,
-                                    cracks: _cachedGlassCracks,
-                                    pointerOffset: pOffset,
-                                  ),
-                                  size: Size.infinite,
-                                );
-                              },
-                            ),
-                          ),
-                          RepaintBoundary(
-                            child: AnimatedBuilder(
-                              animation: _crackController,
-                              builder: (context, child) {
-                                return CustomPaint(
                                   painter: ShockwavePainter(
                                     progress: _crackController.value,
+                                    refined: true,
                                   ),
                                   size: Size.infinite,
                                 );
@@ -648,6 +408,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                                 return CustomPaint(
                                   painter: IceFlashPainter(
                                     progress: _crackController.value,
+                                    refined: true,
                                   ),
                                   size: Size.infinite,
                                 );
@@ -663,22 +424,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                                     progress: _crackController.value,
                                     particles: _cachedParticles,
                                     pointerOffset: pOffset,
-                                  ),
-                                  size: Size.infinite,
-                                );
-                              },
-                            ),
-                          ),
-                          // --- BROKEN GLASS PANES: elegant large-frag slide-out ---
-                          RepaintBoundary(
-                            child: AnimatedBuilder(
-                              animation: _brokenGlassController,
-                              builder: (context, child) {
-                                return CustomPaint(
-                                  painter: BrokenGlassPanePainter(
-                                    progress: _brokenGlassController.value,
-                                    panes: _cachedPanes,
-                                    pointerOffset: pOffset,
+                                    refined: true,
                                   ),
                                   size: Size.infinite,
                                 );
@@ -691,21 +437,42 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                   ),
                 ),
 
-                if (_isCracking)
+                if (_exitInProgress)
                   AnimatedBuilder(
                     animation: _crackController,
                     builder: (context, child) {
-                      final double flashOpacity = Curves.easeInQuint.transform(
-                        ((_crackController.value - 0.85) / 0.15).clamp(
+                      final double flashOpacity = Curves.easeOut.transform(
+                        ((_crackController.value - 0.76) / 0.22).clamp(
                           0.0,
                           1.0,
                         ),
                       );
                       return Container(
-                        color: Colors.white.withValues(alpha: flashOpacity),
+                        color: Colors.white.withValues(alpha: flashOpacity * 0.55),
                       );
                     },
                   ),
+
+                // 3. Scanning Status Overlay
+                // Positioned(
+                //   bottom: 80,
+                //   left: 0,
+                //   right: 0,
+                //   child: Center(
+                //     child: AnimatedBuilder(
+                //       animation: _assemblyController,
+                //       builder: (context, child) {
+                //         final double opacity = Curves.easeIn.transform(
+                //           (_assemblyController.value / 0.5).clamp(0.0, 1.0),
+                //         );
+                //         return Opacity(
+                //           opacity: opacity,
+                //           child: const AuthStatusPulse(),
+                //         );
+                //       },
+                //     ),
+                //   ),
+                // ),
               ],
             ),
           ),
@@ -718,49 +485,49 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     return AnimatedBuilder(
       animation: Listenable.merge([
         _pulseController,
-        _crackController,
-        _chargeController,
         _spinController,
         _auroraController,
-        _assemblyController, // Ensure we respond to the fade-in threshold
+        _assemblyController,
         _pointerOffset,
+        _crackController,
+        _chargeController,
       ]),
       builder: (context, child) {
+        final Offset pOffset = _pointerOffset.value;
         final double crackVal = _crackController.value;
         final double chargeVal = _chargeController.value;
-        final Offset pOffset = _pointerOffset.value;
 
         final double snapScale = (crackVal > 0 && crackVal < 0.2)
-            ? (1.0 - math.sin(crackVal * math.pi * 5) * 0.1)
+            ? (1.0 - math.sin(crackVal * math.pi * 5.5) * 0.09)
             : 1.0;
 
         final double scale =
             (1.0 + math.sin(_pulseController.value * math.pi) * 0.1) *
-            (1.0 + chargeVal * 0.2) *
-            (1.0 - crackVal * 0.15) *
+            (1.0 + chargeVal * 0.16) *
+            (1.0 - crackVal * 0.14) *
             snapScale;
 
-        final double shake = chargeVal > 0 && crackVal < 0.1
-            ? (math.sin(chargeVal * 50) * 5 * chargeVal)
-            : 0;
+        final double shake =
+            chargeVal > 0 && crackVal < 0.1
+                ? (math.sin(chargeVal * 52) * 5.2 * chargeVal)
+                : 0;
 
-        final double opacity = (1.0 - (crackVal * 2.8)).clamp(0.0, 1.0);
+        final double opacity = (1.0 - (crackVal * 2.35)).clamp(0.0, 1.0);
 
         return Opacity(
           opacity: opacity,
           child: Transform.translate(
-            offset: Offset(shake + pOffset.dx * 20, pOffset.dy * 20),
+            offset: Offset(shake + pOffset.dx * 18, pOffset.dy * 18),
             child: Transform.scale(
               scale: scale,
               child: Stack(
                 alignment: Alignment.center,
                 children: [
                   Transform.rotate(
-                    angle:
-                        (_spinController.value * 2 * math.pi) +
+                    angle: (_spinController.value * 2 * math.pi) +
                         (_auroraController.value * 0.5 * math.pi) +
-                        (chargeVal * 2 * math.pi) +
-                        (crackVal * math.pi),
+                        (chargeVal * 1.45 * math.pi) +
+                        (crackVal * 1.05 * math.pi),
                     child: Stack(
                       alignment: Alignment.center,
                       children: [
@@ -772,11 +539,18 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: EntryColors.arcticSilver.withValues(
-                                  alpha: 0.3,
+                                color: EntryColors.winterMoonCore.withValues(
+                                  alpha: 0.45,
                                 ),
-                                blurRadius: 40,
-                                spreadRadius: 10,
+                                blurRadius: 48,
+                                spreadRadius: 12,
+                              ),
+                              BoxShadow(
+                                color: EntryColors.primaryIceLight.withValues(
+                                  alpha: 0.2,
+                                ),
+                                blurRadius: 28,
+                                spreadRadius: 4,
                               ),
                             ],
                           ),
@@ -833,9 +607,15 @@ class _AuthStatusPulseState extends State<AuthStatusPulse>
         child: Container(
           width: 4,
           height: 4,
-          decoration: const BoxDecoration(
-            color: Color.fromARGB(255, 51, 65, 137),
+          decoration: BoxDecoration(
+            color: const Color.fromARGB(255, 72, 64, 218).withValues(alpha: 0.85),
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: EntryColors.winterMoonCore.withValues(alpha: 0.9),
+                blurRadius: 6,
+              ),
+            ],
           ),
         ),
       ),

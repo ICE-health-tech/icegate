@@ -1,10 +1,10 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
@@ -42,10 +42,12 @@ class HealthAnalysisPage extends StatelessWidget {
           child: Column(
             children: [
               const SizedBox(height: 80), // Dynamic Island Gap
-              
               // Custom Header
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 child: Row(
                   children: [
                     IconButton(
@@ -69,7 +71,9 @@ class HealthAnalysisPage extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: colorScheme.primaryContainer.withValues(alpha: 0.5),
+                        color: colorScheme.primaryContainer.withValues(
+                          alpha: 0.5,
+                        ),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -84,171 +88,182 @@ class HealthAnalysisPage extends StatelessWidget {
 
               Expanded(
                 child: StreamBuilder<List<HealthMetricsLocal>>(
-          stream: healthMetricsDao.watchAllMetrics(personID),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData) {
-              return const Center(child: CircularProgressIndicator());
-            }
+                  stream: healthMetricsDao.watchAllMetrics(personID),
+                  builder: (context, snapshot) {
+                    if (!snapshot.hasData) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
 
-            final allMetrics = snapshot.data!;
-            if (allMetrics.isEmpty) {
-              return _buildEmptyState(
-                context,
-                AppLocalizations.of(context)!.health_no_data,
-                Icons.health_and_safety_outlined,
-              );
-            }
+                    final allMetrics = snapshot.data!;
+                    if (allMetrics.isEmpty) {
+                      return _buildEmptyState(
+                        context,
+                        AppLocalizations.of(context)!.health_no_data,
+                        Icons.health_and_safety_outlined,
+                      );
+                    }
 
-            // --- DATA ANALYSIS ---
-            final now = DateTime.now();
-            final todayKey =
-                "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
-            final todayMetric = allMetrics.firstWhere(
-              (m) =>
-                  "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}" ==
-                  todayKey,
-              orElse: () => HealthMetricsLocal(
-                id: '',
-                date: now,
-                steps: 0,
-                caloriesBurned: 0,
-                caloriesConsumed: 0,
-                sleepHours: 0.0,
-                heartRate: 0,
-                waterGlasses: 0,
-                exerciseMinutes: 0,
-                focusMinutes: 0,
-                category: 'General',
-                updatedAt: now,
-                createdAt: DateTime.now(),
-              ),
-            );
+                    // --- DATA ANALYSIS ---
+                    final now = DateTime.now();
+                    final todayKey =
+                        "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+                    final todayMetric = allMetrics.firstWhere(
+                      (m) =>
+                          "${m.date.year}-${m.date.month.toString().padLeft(2, '0')}-${m.date.day.toString().padLeft(2, '0')}" ==
+                          todayKey,
+                      orElse: () => HealthMetricsLocal(
+                        id: '',
+                        date: now,
+                        steps: 0,
+                        caloriesBurned: 0,
+                        caloriesConsumed: 0,
+                        sleepHours: 0.0,
+                        heartRate: 0,
+                        waterGlasses: 0,
+                        exerciseMinutes: 0,
+                        focusMinutes: 0,
+                        category: 'General',
+                        updatedAt: now,
+                        createdAt: DateTime.now(),
+                      ),
+                    );
 
-            final latest = todayMetric;
-            final last7Days = allMetrics.take(7).toList();
+                    final latest = todayMetric;
+                    final last7Days = allMetrics.take(7).toList();
 
-            // Efficiency (Steps vs Goal)
-            final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
-              0.0,
-              1.0,
-            );
+                    // Efficiency (Steps vs Goal)
+                    final efficiency = ((latest.steps ?? 0) / STEP_GOAL).clamp(
+                      0.0,
+                      1.0,
+                    );
 
-            // Consistency (Average variation in last 7 days)
-            double avgSteps = last7Days.isEmpty
-                ? 0.0
-                : last7Days.fold(0.0, (sum, m) => sum + (m.steps ?? 0)) /
-                      last7Days.length;
+                    // Consistency (Average variation in last 7 days)
+                    double avgSteps = last7Days.isEmpty
+                        ? 0.0
+                        : last7Days.fold(
+                                0.0,
+                                (sum, m) => sum + (m.steps ?? 0),
+                              ) /
+                              last7Days.length;
 
-            double consistency = 0.0;
-            if (last7Days.length > 1) {
-              double variance =
-                  last7Days.fold(
-                    0.0,
-                    (sum, m) => sum + math.pow((m.steps ?? 0) - avgSteps, 2),
-                  ) /
-                  last7Days.length;
-              consistency =
-                  (1.0 -
-                          (math.sqrt(variance) /
-                              (avgSteps > 0 ? avgSteps : 1.0)))
-                      .clamp(0.0, 1.0);
-            }
+                    double consistency = 0.0;
+                    if (last7Days.length > 1) {
+                      double variance =
+                          last7Days.fold(
+                            0.0,
+                            (sum, m) =>
+                                sum + math.pow((m.steps ?? 0) - avgSteps, 2),
+                          ) /
+                          last7Days.length;
+                      consistency =
+                          (1.0 -
+                                  (math.sqrt(variance) /
+                                      (avgSteps > 0 ? avgSteps : 1.0)))
+                              .clamp(0.0, 1.0);
+                    }
 
-            return SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // --- PERFORMANCE ANALYSIS SECTION ---
-                  _buildPerformanceCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    efficiency: efficiency,
-                    consistency: consistency,
-                    metabolism: (latest.caloriesBurned ?? 0) > 2000
-                        ? AppLocalizations.of(context)!.health_metabolism_active
-                        : AppLocalizations.of(
+                    return SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 10,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // --- PERFORMANCE ANALYSIS SECTION ---
+                          _buildPerformanceCard(
                             context,
-                          )!.health_metabolism_normal,
-                    intensity: (latest.exerciseMinutes ?? 0) > 45
-                        ? AppLocalizations.of(context)!.health_intensity_high
-                        : AppLocalizations.of(
+                            colorScheme,
+                            textTheme,
+                            efficiency: efficiency,
+                            consistency: consistency,
+                            metabolism: (latest.caloriesBurned ?? 0) > 2000
+                                ? AppLocalizations.of(
+                                    context,
+                                  )!.health_metabolism_active
+                                : AppLocalizations.of(
+                                    context,
+                                  )!.health_metabolism_normal,
+                            intensity: (latest.exerciseMinutes ?? 0) > 45
+                                ? AppLocalizations.of(
+                                    context,
+                                  )!.health_intensity_high
+                                : AppLocalizations.of(
+                                    context,
+                                  )!.health_intensity_moderate,
+                          ),
+
+                          const SizedBox(height: 32),
+                          // --- ACTIVITY BALANCE SECTION ---
+                          _buildActivityBalanceCard(
                             context,
-                          )!.health_intensity_moderate,
-                  ),
+                            colorScheme,
+                            textTheme,
+                            latest: latest,
+                          ),
+                          const SizedBox(height: 24),
 
-                  const SizedBox(height: 32),
-                  // --- ACTIVITY BALANCE SECTION ---
-                  _buildActivityBalanceCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    latest: latest,
-                  ),
-                  const SizedBox(height: 24),
+                          // --- CALORIE & ENERGY SECTION ---
+                          _buildCalorieBalanceCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            latest: latest,
+                          ),
+                          const SizedBox(height: 24),
 
-                  // --- CALORIE & ENERGY SECTION ---
-                  _buildCalorieBalanceCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    latest: latest,
-                  ),
-                  const SizedBox(height: 24),
+                          // --- HEART RATE SECTION ---
+                          _buildHeartRateCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            latest: latest,
+                          ),
+                          const SizedBox(height: 24),
 
-                  // --- HEART RATE SECTION ---
-                  _buildHeartRateCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    latest: latest,
-                  ),
-                  const SizedBox(height: 24),
+                          // --- WEEKLY TRENDS SECTION ---
+                          _buildWeeklyTrendsCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            last7Days: last7Days,
+                          ),
+                          const SizedBox(height: 24),
 
-                  // --- WEEKLY TRENDS SECTION ---
-                  _buildWeeklyTrendsCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    last7Days: last7Days,
-                  ),
-                  const SizedBox(height: 24),
+                          // --- WEIGHT TREND SECTION ---
+                          _buildWeightTrendCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            healthBlock,
+                          ),
+                          const SizedBox(height: 24),
 
-                  // --- WEIGHT TREND SECTION ---
-                  _buildWeightTrendCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    healthBlock,
-                  ),
-                  const SizedBox(height: 24),
+                          // --- WATER TREND SECTION ---
+                          _buildWaterTrendCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            healthBlock,
+                          ),
+                          const SizedBox(height: 24),
 
-                  // --- WATER TREND SECTION ---
-                  _buildWaterTrendCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    healthBlock,
-                  ),
-                  const SizedBox(height: 24),
-
-                  // --- HEALTH INSIGHTS SECTION ---
-                  _buildInsightsCard(
-                    context,
-                    colorScheme,
-                    textTheme,
-                    latest: latest,
-                    avgSteps: avgSteps,
-                    last7Days: last7Days,
-                  ),
-                  const SizedBox(height: 40),
-                ],
-              ),
-            );
-          },
-        ),
+                          // --- HEALTH INSIGHTS SECTION ---
+                          _buildInsightsCard(
+                            context,
+                            colorScheme,
+                            textTheme,
+                            latest: latest,
+                            avgSteps: avgSteps,
+                            last7Days: last7Days,
+                          ),
+                          const SizedBox(height: 40),
+                        ],
+                      ),
+                    );
+                  },
+                ),
               ),
             ],
           ),
@@ -385,28 +400,6 @@ class HealthAnalysisPage extends StatelessWidget {
     TextTheme textTheme, {
     required HealthMetricsLocal latest,
   }) {
-    final stepsPoints = (latest.steps ?? 0) / STEPS_PER_POINT;
-    final exercisePoints = (latest.exerciseMinutes ?? 0) / EXERCISE_PER_POINT;
-    final focusPoints = (latest.focusMinutes ?? 0) / FOCUS_MINUTES_PER_POINT;
-    final waterPoints = (latest.waterGlasses ?? 0) >= WATER_GOAL
-        ? WATER_BONUS_POINTS.toDouble()
-        : 0.0;
-
-    final totalPoints =
-        stepsPoints + exercisePoints + focusPoints + waterPoints;
-
-    final stepsWeight = totalPoints > 0
-        ? (stepsPoints / totalPoints * 100).round()
-        : 0;
-    final exerciseWeight = totalPoints > 0
-        ? (exercisePoints / totalPoints * 100).round()
-        : 0;
-    final focusWeight = totalPoints > 0
-        ? (focusPoints / totalPoints * 100).round()
-        : 0;
-    final otherWeight = (100 - stepsWeight - exerciseWeight - focusWeight)
-        .clamp(0, 100);
-
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -438,23 +431,6 @@ class HealthAnalysisPage extends StatelessWidget {
           const SizedBox(height: 20),
           Row(
             children: [
-              SimplePieChart(
-                data: {
-                  AppLocalizations.of(context)!.health_metrics_steps:
-                      stepsWeight.toDouble(),
-                  AppLocalizations.of(context)!.health_metrics_exercise:
-                      exerciseWeight.toDouble(),
-                  AppLocalizations.of(context)!.health_metrics_focus:
-                      focusWeight.toDouble(),
-                  'Other': otherWeight.toDouble(),
-                },
-                colors: [
-                  colorScheme.primary,
-                  colorScheme.secondary,
-                  colorScheme.tertiary,
-                ],
-                size: 80,
-              ),
               const SizedBox(width: 24),
               Expanded(
                 child: Column(
@@ -536,7 +512,10 @@ class HealthAnalysisPage extends StatelessWidget {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: hrColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
@@ -870,7 +849,7 @@ class HealthAnalysisPage extends StatelessWidget {
     final avgSleep = last7Days.isEmpty
         ? 0.0
         : last7Days.fold(0.0, (sum, m) => sum + (m.sleepHours ?? 0)) /
-            last7Days.length;
+              last7Days.length;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1245,9 +1224,10 @@ class _HeartPulseIconState extends State<_HeartPulseIcon>
       duration: const Duration(milliseconds: 1000),
       vsync: this,
     )..repeat(reverse: true);
-    _animation = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
+    _animation = Tween<double>(
+      begin: 1.0,
+      end: 1.2,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeInOut));
   }
 
   @override

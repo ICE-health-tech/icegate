@@ -2,22 +2,21 @@ import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:io';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/utils/l10n_extensions.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_page.dart';
-import 'TaskItem.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
+    
+import 'task_item.dart';
 import 'ProjectNoteItem.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SnowfallOverlay.dart';
@@ -58,18 +57,6 @@ class ProjectDetailsPage extends StatelessWidget {
                         await projectBlock.completeProject(context, project);
                         if (context.mounted) {
                           Navigator.pop(context);
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                AppLocalizations.of(
-                                  context,
-                                )!.project_completed_msg(
-                                  PROJECT_SCORE_INCREMENT.toInt(),
-                                ),
-                              ),
-                              duration: const Duration(seconds: 1),
-                            ),
-                          );
                         }
                       },
                     ),
@@ -199,7 +186,9 @@ class ProjectDetailsPage extends StatelessWidget {
                       letterSpacing: -1.0,
                       shadows: [
                         Shadow(
-                          color: colorScheme.surface.withValues(alpha: 0.5),
+                          color: colorScheme.surfaceContainerHighest.withValues(
+                            alpha: 0.3,
+                          ),
                           blurRadius: 10,
                         ),
                       ],
@@ -349,7 +338,8 @@ class ProjectDetailsPage extends StatelessWidget {
                                           ),
                                           child: Icon(
                                             Icons.auto_awesome_mosaic_rounded,
-                                            color: colorScheme.primary,
+                                            color: colorScheme.primary
+                                                .withValues(alpha: 0.1),
                                             size: 20,
                                           ),
                                         ),
@@ -455,10 +445,8 @@ class ProjectDetailsPage extends StatelessWidget {
                           children: sortedTasks.map((protocol) {
                             return TaskItem(
                               task: protocol,
-                              onComplete: () => growthBlock.completeGoal(
-                                protocol.id,
-                                scoreBlock: context.read<ScoreBlock>(),
-                              ),
+                              onComplete: () =>
+                                  growthBlock.completeGoal(protocol.id),
                             );
                           }).toList(),
                         );
@@ -950,7 +938,7 @@ class _DocumentTypePicker extends StatelessWidget {
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.05),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: color.withValues(alpha: 0.1)),
+          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.2)),
         ),
         child: Row(
           children: [

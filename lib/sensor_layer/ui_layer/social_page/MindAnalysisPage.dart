@@ -1,8 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
@@ -20,7 +18,6 @@ class MindAnalysisPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final scoreBlock = context.watch<ScoreBlock>();
     final noteDAO = context.watch<ProjectNoteDAO>();
     final personBlock = context.read<PersonBlock>();
 
@@ -126,12 +123,6 @@ class MindAnalysisPage extends StatelessWidget {
 
                       final notes = snapshot.data!;
                       final strategyNotesCount = notes.length;
-                      final breakdown = scoreBlock.socialBreakdown.value;
-                      final mentalPoints = breakdown['Mental'] ?? 0.0;
-                      final strategyPoints = breakdown['Strategy'] ?? 0.0;
-                      final questPoints = breakdown['Quests'] ?? 0.0;
-                      final totalPoints =
-                          mentalPoints + strategyPoints + questPoints;
 
                       return SliverToBoxAdapter(
                         child: Padding(
@@ -166,87 +157,6 @@ class MindAnalysisPage extends StatelessWidget {
                                       '$strategyNotesCount ENTRIES',
                                       Icons.auto_awesome_mosaic_rounded,
                                       const Color(0xFF00B2FF),
-                                    ),
-                                    _buildTacticalMetric(
-                                      context,
-                                      'NEURAL LOAD',
-                                      '${(questPoints % 100).toInt()}%',
-                                      Icons.self_improvement_rounded,
-                                      const Color(0xFFFF2D55),
-                                    ),
-                                    _buildTacticalMetric(
-                                      context,
-                                      'COGNITIVE GAIN',
-                                      '+${mentalPoints.toInt()} XP',
-                                      Icons.lightbulb_rounded,
-                                      const Color(0xFFFFD600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              _buildGlassCard(
-                                context,
-                                title: 'COGNITIVE BALANCE',
-                                icon: Icons.pie_chart_rounded,
-                                child: Column(
-                                  children: [
-                                    Row(
-                                      children: [
-                                        SizedBox(
-                                          width: 100,
-                                          height: 100,
-                                          child: SimplePieChart(
-                                            data: {
-                                              'Core': mentalPoints,
-                                              'Strategy': strategyPoints,
-                                              'Quests': questPoints,
-                                            },
-                                            colors: [
-                                              colorScheme.primary,
-                                              const Color(0xFF00B2FF),
-                                              const Color(0xFFFFD600),
-                                            ],
-                                            size: 100,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 24),
-                                        Expanded(
-                                          child: Column(
-                                            children: [
-                                              _buildLegendRow(
-                                                context,
-                                                colorScheme.primary,
-                                                'Core Mental',
-                                                mentalPoints,
-                                                totalPoints,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              _buildLegendRow(
-                                                context,
-                                                const Color(0xFF00B2FF),
-                                                'Strategy',
-                                                strategyPoints,
-                                                totalPoints,
-                                              ),
-                                              const SizedBox(height: 8),
-                                              _buildLegendRow(
-                                                context,
-                                                const Color(0xFFFFD600),
-                                                'Quests',
-                                                questPoints,
-                                                totalPoints,
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 32),
-                                    _buildStabilityGauge(
-                                      context,
-                                      'Processing Fidelity',
-                                      0.92,
                                     ),
                                   ],
                                 ),
@@ -580,44 +490,6 @@ class MindAnalysisPage extends StatelessWidget {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildLegendRow(
-    BuildContext context,
-    Color color,
-    String label,
-    double points,
-    double total,
-  ) {
-    final percent = total > 0 ? (points / total * 100).round() : 0;
-    return Row(
-      children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ),
-        Text(
-          '$percent%',
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w900,
-            fontFamily: 'Monospace',
-          ),
-        ),
-      ],
     );
   }
 

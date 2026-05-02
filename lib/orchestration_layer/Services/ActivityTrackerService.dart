@@ -51,47 +51,31 @@ class ActivityTrackerService with WidgetsBindingObserver {
 
   void _processAccumulatedTime() {
     if (_startTime == null || _scoreBlock == null || _authBlock == null) return;
-    
+
     // We don't reward Guest users to encourage login
     if (_authBlock!.username.value == 'Guest') return;
 
     final now = DateTime.now();
     final diff = now.difference(_startTime!);
-    
+
     // Logic: 1 point per minute of active engagement
     final minutes = diff.inSeconds / 60.0;
 
     if (minutes >= 0.1) {
       final sector = _getSectorFromPath(_currentPath);
-      debugPrint("🕒 [ActivityTracker] Sector: $sector | Minutes: $minutes in $_currentPath");
-      
-      // 1. Reward engagement points (System category)
-      // 2. Track screen time (screentime category)
-      // 3. Track detailed app usage history
-      
-      switch (sector) {
-        case 'health':
-          _scoreBlock!.persistentHealthIncrement(minutes, label: 'System');
-          _scoreBlock!.persistentHealthIncrement(minutes, label: 'screentime');
-          break;
-        case 'finance':
-          _scoreBlock!.persistentFinanceIncrement(minutes, label: 'System');
-          _scoreBlock!.persistentFinanceIncrement(minutes, label: 'screentime');
-          break;
-        case 'projects':
-          _scoreBlock!.persistentCareerIncrement(minutes, label: 'System');
-          _scoreBlock!.persistentCareerIncrement(minutes, label: 'screentime');
-          break;
-        case 'social':
-        default:
-          _scoreBlock!.manualMindIncrement(minutes, label: 'System');
-          _scoreBlock!.manualMindIncrement(minutes, label: 'screentime');
-          break;
-      }
+      debugPrint(
+        "🕒 [ActivityTracker] Sector: $sector | Minutes: $minutes in $_currentPath",
+      );
 
       // Track detailed history for the new table
-      _scoreBlock!.trackAppUsage(minutes, sector: sector, pagePath: _currentPath);
-      
+      _scoreBlock!.trackAppUsage(
+        minutes,
+        sector: sector,
+        pagePath: _currentPath,
+        startTime: _startTime,
+        endTime: now,
+      );
+
       _startTime = now;
     }
   }
@@ -101,7 +85,9 @@ class ActivityTrackerService with WidgetsBindingObserver {
     final p = path.toLowerCase();
     if (p.contains('health')) return 'health';
     if (p.contains('finance')) return 'finance';
-    if (p.contains('project') || p.contains('focus') || p.contains('task')) return 'projects';
+    if (p.contains('project') || p.contains('focus') || p.contains('task')) {
+      return 'projects';
+    }
     return 'social';
   }
 

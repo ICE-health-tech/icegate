@@ -87,7 +87,9 @@ class _SnowPainter extends CustomPainter {
       final double currentX = (snow.x + totalMoveY * snow.drift * 50) % 1.0;
       final double currentRotation = snow.rotation + progress * math.pi * 2;
 
-      final snowPaint = Paint()..color = Colors.white.withValues(alpha: snow.opacity);
+      // Cool moonlit snow (not flat RGB white).
+      final snowPaint = Paint()
+        ..color = const Color(0xFFE8F4FF).withValues(alpha: snow.opacity);
       canvas.save();
       canvas.translate(currentX * size.width, currentY * size.height);
       canvas.rotate(currentRotation);

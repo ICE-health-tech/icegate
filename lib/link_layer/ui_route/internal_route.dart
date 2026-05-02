@@ -12,8 +12,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/CaloriesPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/StepsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/StepsDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/text_editor_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/prism_entry_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TextEditorPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/PrismEntryPage.dart';
 import 'package:ice_gate/orchestration_layer/Services/session_tracker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
@@ -44,25 +44,25 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WaterPage.dar
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightInputPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/OxygenSaturationPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/data_integration_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/DataIntegrationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FocusPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/BlockReminderPage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WebView/WebViewPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/info_page/ScoringRulesPage.dart';
+// import 'package:ice_gate/sensor_layer/ui_layer/info_page/ScoringRulesPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SSHManagerPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_dashboard_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/projects_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/note_manager_page.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/folder_details_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FolderDetailsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/SyncEnginePage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/stock_page/stock_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/stock_page/StockPage.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -433,7 +433,7 @@ final GoRouter router = GoRouter(
               path: 'documents',
               builder: (context, state) => const NoteManagerPage(),
               routes: [
-                // folder_details_page.dart and note_manager_page.dart both push
+                // FolderDetailsPage.dart and NoteManagerPage.dart both push
                 // '/projects/documents/folder' — this sub-route was missing, causing
                 // GoRouter to throw "no routes for location".
                 GoRoute(
@@ -538,10 +538,7 @@ final GoRouter router = GoRouter(
           path: "/project_notes",
           builder: (context, state) => const ProjectNotesPage(),
         ),
-        GoRoute(
-          path: '/manual',
-          builder: (context, state) => const ScoringRulesPage(),
-        ),
+
         GoRoute(
           path: '/sync-engine',
           builder: (context, state) => const SyncEnginePage(),

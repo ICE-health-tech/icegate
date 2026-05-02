@@ -65,6 +65,8 @@ mixin _$MetricsDAOMixin on DatabaseAccessor<AppDatabase> {
   $WeightLogsTableTable get weightLogsTable => attachedDatabase.weightLogsTable;
   $AppUsageHistoryTableTable get appUsageHistoryTable =>
       attachedDatabase.appUsageHistoryTable;
+  $AppTimeSpendingTableTable get appTimeSpendingTable =>
+      attachedDatabase.appTimeSpendingTable;
 }
 mixin _$HealthMealDAOMixin on DatabaseAccessor<AppDatabase> {
   $MealsTableTable get mealsTable => attachedDatabase.mealsTable;
@@ -95,6 +97,9 @@ mixin _$HealthLogsDAOMixin on DatabaseAccessor<AppDatabase> {
   $WeightLogsTableTable get weightLogsTable => attachedDatabase.weightLogsTable;
   $FocusSessionsTableTable get focusSessionsTable =>
       attachedDatabase.focusSessionsTable;
+  $MindLogsTableTable get mindLogsTable => attachedDatabase.mindLogsTable;
+  $AppTimeSpendingTableTable get appTimeSpendingTable =>
+      attachedDatabase.appTimeSpendingTable;
   $HeartRateLogsTableTable get heartRateLogsTable =>
       attachedDatabase.heartRateLogsTable;
   $OxygenSaturationLogsTableTable get oxygenSaturationLogsTable =>
@@ -33544,6 +33549,526 @@ class AppUsageHistoryTableCompanion
   }
 }
 
+class $AppTimeSpendingTableTable extends AppTimeSpendingTable
+    with TableInfo<$AppTimeSpendingTableTable, AppTimeSpendingData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $AppTimeSpendingTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> startTime =
+      GeneratedColumn<DateTime>(
+        'start_time',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      ).withConverter<DateTime>($AppTimeSpendingTableTable.$converterstartTime);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime> endTime =
+      GeneratedColumn<DateTime>(
+        'end_time',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>($AppTimeSpendingTableTable.$converterendTimen);
+  static const VerificationMeta _sectorMeta = const VerificationMeta('sector');
+  @override
+  late final GeneratedColumn<String> sector = GeneratedColumn<String>(
+    'sector',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _pagePathMeta = const VerificationMeta(
+    'pagePath',
+  );
+  @override
+  late final GeneratedColumn<String> pagePath = GeneratedColumn<String>(
+    'page_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _durationMinutesMeta = const VerificationMeta(
+    'durationMinutes',
+  );
+  @override
+  late final GeneratedColumn<double> durationMinutes = GeneratedColumn<double>(
+    'duration_minutes',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0.0),
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($AppTimeSpendingTableTable.$convertercreatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    startTime,
+    endTime,
+    sector,
+    pagePath,
+    durationMinutes,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'app_time_spending';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<AppTimeSpendingData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_personIDMeta);
+    }
+    if (data.containsKey('sector')) {
+      context.handle(
+        _sectorMeta,
+        sector.isAcceptableOrUnknown(data['sector']!, _sectorMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_sectorMeta);
+    }
+    if (data.containsKey('page_path')) {
+      context.handle(
+        _pagePathMeta,
+        pagePath.isAcceptableOrUnknown(data['page_path']!, _pagePathMeta),
+      );
+    }
+    if (data.containsKey('duration_minutes')) {
+      context.handle(
+        _durationMinutesMeta,
+        durationMinutes.isAcceptableOrUnknown(
+          data['duration_minutes']!,
+          _durationMinutesMeta,
+        ),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  AppTimeSpendingData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return AppTimeSpendingData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      startTime: $AppTimeSpendingTableTable.$converterstartTime.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}start_time'],
+        )!,
+      ),
+      endTime: $AppTimeSpendingTableTable.$converterendTimen.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}end_time'],
+        ),
+      ),
+      sector: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sector'],
+      )!,
+      pagePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}page_path'],
+      ),
+      durationMinutes: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}duration_minutes'],
+      )!,
+      createdAt: $AppTimeSpendingTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $AppTimeSpendingTableTable createAlias(String alias) {
+    return $AppTimeSpendingTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterstartTime =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterendTime =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterendTimen =
+      NullAwareTypeConverter.wrap($converterendTime);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+}
+
+class AppTimeSpendingData extends DataClass
+    implements Insertable<AppTimeSpendingData> {
+  final String id;
+  final String personID;
+  final DateTime startTime;
+  final DateTime? endTime;
+  final String sector;
+  final String? pagePath;
+  final double durationMinutes;
+  final DateTime createdAt;
+  const AppTimeSpendingData({
+    required this.id,
+    required this.personID,
+    required this.startTime,
+    this.endTime,
+    required this.sector,
+    this.pagePath,
+    required this.durationMinutes,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['person_id'] = Variable<String>(personID);
+    {
+      map['start_time'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$converterstartTime.toSql(startTime),
+      );
+    }
+    if (!nullToAbsent || endTime != null) {
+      map['end_time'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$converterendTimen.toSql(endTime),
+      );
+    }
+    map['sector'] = Variable<String>(sector);
+    if (!nullToAbsent || pagePath != null) {
+      map['page_path'] = Variable<String>(pagePath);
+    }
+    map['duration_minutes'] = Variable<double>(durationMinutes);
+    {
+      map['created_at'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    return map;
+  }
+
+  AppTimeSpendingTableCompanion toCompanion(bool nullToAbsent) {
+    return AppTimeSpendingTableCompanion(
+      id: Value(id),
+      personID: Value(personID),
+      startTime: Value(startTime),
+      endTime: endTime == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endTime),
+      sector: Value(sector),
+      pagePath: pagePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(pagePath),
+      durationMinutes: Value(durationMinutes),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory AppTimeSpendingData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return AppTimeSpendingData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String>(json['personID']),
+      startTime: serializer.fromJson<DateTime>(json['startTime']),
+      endTime: serializer.fromJson<DateTime?>(json['endTime']),
+      sector: serializer.fromJson<String>(json['sector']),
+      pagePath: serializer.fromJson<String?>(json['pagePath']),
+      durationMinutes: serializer.fromJson<double>(json['durationMinutes']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String>(personID),
+      'startTime': serializer.toJson<DateTime>(startTime),
+      'endTime': serializer.toJson<DateTime?>(endTime),
+      'sector': serializer.toJson<String>(sector),
+      'pagePath': serializer.toJson<String?>(pagePath),
+      'durationMinutes': serializer.toJson<double>(durationMinutes),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  AppTimeSpendingData copyWith({
+    String? id,
+    String? personID,
+    DateTime? startTime,
+    Value<DateTime?> endTime = const Value.absent(),
+    String? sector,
+    Value<String?> pagePath = const Value.absent(),
+    double? durationMinutes,
+    DateTime? createdAt,
+  }) => AppTimeSpendingData(
+    id: id ?? this.id,
+    personID: personID ?? this.personID,
+    startTime: startTime ?? this.startTime,
+    endTime: endTime.present ? endTime.value : this.endTime,
+    sector: sector ?? this.sector,
+    pagePath: pagePath.present ? pagePath.value : this.pagePath,
+    durationMinutes: durationMinutes ?? this.durationMinutes,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  AppTimeSpendingData copyWithCompanion(AppTimeSpendingTableCompanion data) {
+    return AppTimeSpendingData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      startTime: data.startTime.present ? data.startTime.value : this.startTime,
+      endTime: data.endTime.present ? data.endTime.value : this.endTime,
+      sector: data.sector.present ? data.sector.value : this.sector,
+      pagePath: data.pagePath.present ? data.pagePath.value : this.pagePath,
+      durationMinutes: data.durationMinutes.present
+          ? data.durationMinutes.value
+          : this.durationMinutes,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppTimeSpendingData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('sector: $sector, ')
+          ..write('pagePath: $pagePath, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    personID,
+    startTime,
+    endTime,
+    sector,
+    pagePath,
+    durationMinutes,
+    createdAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is AppTimeSpendingData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.startTime == this.startTime &&
+          other.endTime == this.endTime &&
+          other.sector == this.sector &&
+          other.pagePath == this.pagePath &&
+          other.durationMinutes == this.durationMinutes &&
+          other.createdAt == this.createdAt);
+}
+
+class AppTimeSpendingTableCompanion
+    extends UpdateCompanion<AppTimeSpendingData> {
+  final Value<String> id;
+  final Value<String> personID;
+  final Value<DateTime> startTime;
+  final Value<DateTime?> endTime;
+  final Value<String> sector;
+  final Value<String?> pagePath;
+  final Value<double> durationMinutes;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const AppTimeSpendingTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.startTime = const Value.absent(),
+    this.endTime = const Value.absent(),
+    this.sector = const Value.absent(),
+    this.pagePath = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  AppTimeSpendingTableCompanion.insert({
+    required String id,
+    required String personID,
+    required DateTime startTime,
+    this.endTime = const Value.absent(),
+    required String sector,
+    this.pagePath = const Value.absent(),
+    this.durationMinutes = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       personID = Value(personID),
+       startTime = Value(startTime),
+       sector = Value(sector);
+  static Insertable<AppTimeSpendingData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<DateTime>? startTime,
+    Expression<DateTime>? endTime,
+    Expression<String>? sector,
+    Expression<String>? pagePath,
+    Expression<double>? durationMinutes,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (startTime != null) 'start_time': startTime,
+      if (endTime != null) 'end_time': endTime,
+      if (sector != null) 'sector': sector,
+      if (pagePath != null) 'page_path': pagePath,
+      if (durationMinutes != null) 'duration_minutes': durationMinutes,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  AppTimeSpendingTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? personID,
+    Value<DateTime>? startTime,
+    Value<DateTime?>? endTime,
+    Value<String>? sector,
+    Value<String?>? pagePath,
+    Value<double>? durationMinutes,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return AppTimeSpendingTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      startTime: startTime ?? this.startTime,
+      endTime: endTime ?? this.endTime,
+      sector: sector ?? this.sector,
+      pagePath: pagePath ?? this.pagePath,
+      durationMinutes: durationMinutes ?? this.durationMinutes,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (startTime.present) {
+      map['start_time'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$converterstartTime.toSql(startTime.value),
+      );
+    }
+    if (endTime.present) {
+      map['end_time'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$converterendTimen.toSql(endTime.value),
+      );
+    }
+    if (sector.present) {
+      map['sector'] = Variable<String>(sector.value);
+    }
+    if (pagePath.present) {
+      map['page_path'] = Variable<String>(pagePath.value);
+    }
+    if (durationMinutes.present) {
+      map['duration_minutes'] = Variable<double>(durationMinutes.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $AppTimeSpendingTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('AppTimeSpendingTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('startTime: $startTime, ')
+          ..write('endTime: $endTime, ')
+          ..write('sector: $sector, ')
+          ..write('pagePath: $pagePath, ')
+          ..write('durationMinutes: $durationMinutes, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -33628,6 +34153,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
       $OxygenSaturationLogsTableTable(this);
   late final $AppUsageHistoryTableTable appUsageHistoryTable =
       $AppUsageHistoryTableTable(this);
+  late final $AppTimeSpendingTableTable appTimeSpendingTable =
+      $AppTimeSpendingTableTable(this);
   late final ThemeDAO themeDAO = ThemeDAO(this as AppDatabase);
   late final ExternalWidgetsDAO externalWidgetsDAO = ExternalWidgetsDAO(
     this as AppDatabase,
@@ -33732,6 +34259,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     heartRateLogsTable,
     oxygenSaturationLogsTable,
     appUsageHistoryTable,
+    appTimeSpendingTable,
   ];
 }
 
@@ -49883,6 +50411,284 @@ typedef $$AppUsageHistoryTableTableProcessedTableManager =
       AppUsageHistoryData,
       PrefetchHooks Function()
     >;
+typedef $$AppTimeSpendingTableTableCreateCompanionBuilder =
+    AppTimeSpendingTableCompanion Function({
+      required String id,
+      required String personID,
+      required DateTime startTime,
+      Value<DateTime?> endTime,
+      required String sector,
+      Value<String?> pagePath,
+      Value<double> durationMinutes,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+typedef $$AppTimeSpendingTableTableUpdateCompanionBuilder =
+    AppTimeSpendingTableCompanion Function({
+      Value<String> id,
+      Value<String> personID,
+      Value<DateTime> startTime,
+      Value<DateTime?> endTime,
+      Value<String> sector,
+      Value<String?> pagePath,
+      Value<double> durationMinutes,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$AppTimeSpendingTableTableFilterComposer
+    extends Composer<_$AppDatabase, $AppTimeSpendingTableTable> {
+  $$AppTimeSpendingTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get startTime =>
+      $composableBuilder(
+        column: $table.startTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime> get endTime =>
+      $composableBuilder(
+        column: $table.endTime,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnFilters<String> get sector => $composableBuilder(
+    column: $table.sector,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get pagePath => $composableBuilder(
+    column: $table.pagePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$AppTimeSpendingTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $AppTimeSpendingTableTable> {
+  $$AppTimeSpendingTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get startTime => $composableBuilder(
+    column: $table.startTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get endTime => $composableBuilder(
+    column: $table.endTime,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get sector => $composableBuilder(
+    column: $table.sector,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get pagePath => $composableBuilder(
+    column: $table.pagePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$AppTimeSpendingTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $AppTimeSpendingTableTable> {
+  $$AppTimeSpendingTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get startTime =>
+      $composableBuilder(column: $table.startTime, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get endTime =>
+      $composableBuilder(column: $table.endTime, builder: (column) => column);
+
+  GeneratedColumn<String> get sector =>
+      $composableBuilder(column: $table.sector, builder: (column) => column);
+
+  GeneratedColumn<String> get pagePath =>
+      $composableBuilder(column: $table.pagePath, builder: (column) => column);
+
+  GeneratedColumn<double> get durationMinutes => $composableBuilder(
+    column: $table.durationMinutes,
+    builder: (column) => column,
+  );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$AppTimeSpendingTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $AppTimeSpendingTableTable,
+          AppTimeSpendingData,
+          $$AppTimeSpendingTableTableFilterComposer,
+          $$AppTimeSpendingTableTableOrderingComposer,
+          $$AppTimeSpendingTableTableAnnotationComposer,
+          $$AppTimeSpendingTableTableCreateCompanionBuilder,
+          $$AppTimeSpendingTableTableUpdateCompanionBuilder,
+          (
+            AppTimeSpendingData,
+            BaseReferences<
+              _$AppDatabase,
+              $AppTimeSpendingTableTable,
+              AppTimeSpendingData
+            >,
+          ),
+          AppTimeSpendingData,
+          PrefetchHooks Function()
+        > {
+  $$AppTimeSpendingTableTableTableManager(
+    _$AppDatabase db,
+    $AppTimeSpendingTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$AppTimeSpendingTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$AppTimeSpendingTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$AppTimeSpendingTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> personID = const Value.absent(),
+                Value<DateTime> startTime = const Value.absent(),
+                Value<DateTime?> endTime = const Value.absent(),
+                Value<String> sector = const Value.absent(),
+                Value<String?> pagePath = const Value.absent(),
+                Value<double> durationMinutes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppTimeSpendingTableCompanion(
+                id: id,
+                personID: personID,
+                startTime: startTime,
+                endTime: endTime,
+                sector: sector,
+                pagePath: pagePath,
+                durationMinutes: durationMinutes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String personID,
+                required DateTime startTime,
+                Value<DateTime?> endTime = const Value.absent(),
+                required String sector,
+                Value<String?> pagePath = const Value.absent(),
+                Value<double> durationMinutes = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => AppTimeSpendingTableCompanion.insert(
+                id: id,
+                personID: personID,
+                startTime: startTime,
+                endTime: endTime,
+                sector: sector,
+                pagePath: pagePath,
+                durationMinutes: durationMinutes,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$AppTimeSpendingTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $AppTimeSpendingTableTable,
+      AppTimeSpendingData,
+      $$AppTimeSpendingTableTableFilterComposer,
+      $$AppTimeSpendingTableTableOrderingComposer,
+      $$AppTimeSpendingTableTableAnnotationComposer,
+      $$AppTimeSpendingTableTableCreateCompanionBuilder,
+      $$AppTimeSpendingTableTableUpdateCompanionBuilder,
+      (
+        AppTimeSpendingData,
+        BaseReferences<
+          _$AppDatabase,
+          $AppTimeSpendingTableTable,
+          AppTimeSpendingData
+        >,
+      ),
+      AppTimeSpendingData,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -50000,6 +50806,8 @@ class $AppDatabaseManager {
       );
   $$AppUsageHistoryTableTableTableManager get appUsageHistoryTable =>
       $$AppUsageHistoryTableTableTableManager(_db, _db.appUsageHistoryTable);
+  $$AppTimeSpendingTableTableTableManager get appTimeSpendingTable =>
+      $$AppTimeSpendingTableTableTableManager(_db, _db.appTimeSpendingTable);
 }
 
 mixin _$ThemeDAOMixin on DatabaseAccessor<AppDatabase> {

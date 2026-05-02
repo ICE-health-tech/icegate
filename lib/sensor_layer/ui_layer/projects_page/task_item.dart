@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 
 class TaskItem extends StatelessWidget {
   final GoalProtocol task;
@@ -136,29 +135,6 @@ class TaskItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                if (!isDone)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFB2EBF2).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: const Color(0xFFB2EBF2).withValues(alpha: 0.2),
-                      ),
-                    ),
-                    child: Text(
-                      '+$TASK_SCORE_INCREMENT XP',
-                      style: const TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        color: Color(0xFFB2EBF2),
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                  ),
               ],
             ),
           ),

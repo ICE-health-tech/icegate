@@ -223,26 +223,33 @@ class AuthBlock {
 
   String _mapError(Object e) {
     final str = e.toString().toLowerCase();
-    if (str.contains("invalid login credentials"))
+    if (str.contains("invalid login credentials")) {
       return "err_invalid_credentials";
+    }
     if (str.contains("email not confirmed")) return "err_email_not_confirmed";
     if (str.contains("user not found")) return "err_user_not_found";
-    if (str.contains("network") || str.contains("connection"))
+    if (str.contains("network") || str.contains("connection")) {
       return "err_network_fail";
-    if (str.contains("too many requests") || str.contains("rate limit"))
+    }
+    if (str.contains("too many requests") || str.contains("rate limit")) {
       return "err_too_many_attempts";
+    }
     if (str.contains("biometric") &&
-        (str.contains("not supported") || str.contains("available")))
+        (str.contains("not supported") || str.contains("available"))) {
       return "err_biometric_unsupported";
-    if (str.contains("biometric") && str.contains("not enabled"))
+    }
+    if (str.contains("biometric") && str.contains("not enabled")) {
       return "err_biometric_disabled";
+    }
     if (str.contains("passkey") &&
         (str.contains("canceled") ||
             str.contains("dismissed") ||
-            str.contains("1001")))
+            str.contains("1001"))) {
       return "err_passkey_canceled";
-    if (str.contains("passkey") || str.contains("assertion"))
+    }
+    if (str.contains("passkey") || str.contains("assertion")) {
       return "err_passkey_failed";
+    }
 
     return "err_unexpected";
   }

@@ -10,7 +10,6 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 
 class AnalysisDashboardPage extends StatefulWidget {
@@ -79,18 +78,14 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       _viewedScoreBlock = ScoreBlock();
 
       final db = context.read<AppDatabase>();
-      final healthBlock = context.read<HealthBlock>();
 
       _viewedScoreBlock!.init(
         db.scoreDAO,
-        db.personManagementDAO,
         db.financeDAO,
-        healthBlock,
         db.healthMealDAO,
         db.metricsDAO,
         db.projectNoteDAO,
         widget.personId!,
-        tenantID: personBlock.viewedInformation.value?.profiles.tenantId,
       );
     } else {
       _isOther = false;
@@ -294,110 +289,6 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
     );
   }
 
-  Widget _buildHeroSection(
-    BuildContext context,
-    int level,
-    String rank,
-    double progress,
-    double totalXP,
-  ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [colorScheme.primary, colorScheme.primary.withOpacity(0.8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: colorScheme.primary.withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "LEVEL $level",
-                    style: TextStyle(
-                      color: colorScheme.onPrimary.withOpacity(0.7),
-                      fontWeight: FontWeight.w900,
-                      fontSize: 12,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  Text(
-                    rank,
-                    style: TextStyle(
-                      color: colorScheme.onPrimary,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 28,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: colorScheme.onPrimary.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.auto_awesome_rounded,
-                  color: colorScheme.onPrimary,
-                  size: 32,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(10),
-            child: LinearProgressIndicator(
-              value: progress,
-              minHeight: 12,
-              backgroundColor: colorScheme.onPrimary.withOpacity(0.1),
-              valueColor: AlwaysStoppedAnimation<Color>(colorScheme.onPrimary),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                AppLocalizations.of(
-                  context,
-                )!.percent_to_level((progress * 100).toInt(), level + 1),
-                style: TextStyle(
-                  color: colorScheme.onPrimary.withOpacity(0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-              Text(
-                AppLocalizations.of(context)!.total_xp(totalXP.toInt()),
-                style: TextStyle(
-                  color: colorScheme.onPrimary.withOpacity(0.8),
-                  fontSize: 12,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildSectorGrid(BuildContext context, ScoreBlock scoreBlock) {
     final score = scoreBlock.score;
@@ -409,49 +300,37 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       crossAxisSpacing: 16,
       childAspectRatio: 0.85, // Adjusted for breakdown text
       children: [
-        Watch(
-          (signalsContext) => _buildSectorCard(
-            context,
-            title: AppLocalizations.of(context)!.scoring_health.toUpperCase(),
-            value: score.healthGlobalScore.toInt().toString(),
-            icon: Icons.favorite_rounded,
-            color: Colors.green,
-            breakdown: scoreBlock.healthBreakdown.watch(signalsContext),
-            onTap: () => context.push('/health/dashboard'),
-          ),
+        _buildSectorCard(
+          context,
+          title: AppLocalizations.of(context)!.scoring_health.toUpperCase(),
+          value: score.healthGlobalScore.toInt().toString(),
+          icon: Icons.favorite_rounded,
+          color: Colors.green,
+          onTap: () => context.push('/health/dashboard'),
         ),
-        Watch(
-          (signalsContext) => _buildSectorCard(
-            context,
-            title: AppLocalizations.of(context)!.scoring_finance.toUpperCase(),
-            value: score.financialGlobalScore.toInt().toString(),
-            icon: Icons.account_balance_wallet_rounded,
-            color: Colors.blue,
-            breakdown: scoreBlock.financeBreakdown.watch(signalsContext),
-            onTap: () => context.push('/finance/dashboard'),
-          ),
+        _buildSectorCard(
+          context,
+          title: AppLocalizations.of(context)!.scoring_finance.toUpperCase(),
+          value: score.financialGlobalScore.toInt().toString(),
+          icon: Icons.account_balance_wallet_rounded,
+          color: Colors.blue,
+          onTap: () => context.push('/finance/dashboard'),
         ),
-        Watch(
-          (signalsContext) => _buildSectorCard(
-            context,
-            title: AppLocalizations.of(context)!.scoring_social.toUpperCase(),
-            value: score.socialGlobalScore.toInt().toString(),
-            icon: Icons.psychology_rounded,
-            color: Colors.purple,
-            breakdown: scoreBlock.socialBreakdown.watch(signalsContext),
-            onTap: () => context.push('/social/dashboard'),
-          ),
+        _buildSectorCard(
+          context,
+          title: AppLocalizations.of(context)!.scoring_social.toUpperCase(),
+          value: score.socialGlobalScore.toInt().toString(),
+          icon: Icons.psychology_rounded,
+          color: Colors.purple,
+          onTap: () => context.push('/social/dashboard'),
         ),
-        Watch(
-          (signalsContext) => _buildSectorCard(
-            context,
-            title: AppLocalizations.of(context)!.scoring_career.toUpperCase(),
-            value: score.careerGlobalScore.toInt().toString(),
-            icon: Icons.rocket_launch_rounded,
-            color: Colors.orange,
-            breakdown: scoreBlock.projectsBreakdown.watch(signalsContext),
-            onTap: () => context.push('/projects/dashboard'),
-          ),
+        _buildSectorCard(
+          context,
+          title: AppLocalizations.of(context)!.scoring_career.toUpperCase(),
+          value: score.careerGlobalScore.toInt().toString(),
+          icon: Icons.rocket_launch_rounded,
+          color: Colors.orange,
+          onTap: () => context.push('/projects/dashboard'),
         ),
       ],
     );
@@ -463,91 +342,10 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
     required String value,
     required IconData icon,
     required Color color,
-    required Map<String, double> breakdown,
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    // Fallback for non-zero scores with empty breakdowns (e.g. at startup)
-    final displayBreakdown = Map<String, double>.from(breakdown);
-    if (displayBreakdown.isEmpty && (double.tryParse(value) ?? 0) > 0) {
-      displayBreakdown['Base'] = double.tryParse(value) ?? 0;
-    }
-
-    IconData getBreakdownIcon(String key) {
-      switch (key.toLowerCase()) {
-        case 'steps':
-          return Icons.directions_walk_rounded;
-        case 'diet':
-          return Icons.restaurant_rounded;
-        case 'exercise':
-          return Icons.fitness_center_rounded;
-        case 'focus':
-          return Icons.timer_rounded;
-        case 'water':
-          return Icons.water_drop_rounded;
-        case 'sleep':
-          return Icons.bedtime_rounded;
-        case 'contacts':
-          return Icons.person_rounded;
-        case 'affection':
-          return Icons.favorite_rounded;
-        case 'quests':
-          return Icons.auto_awesome_rounded;
-        case 'accounts':
-          return Icons.savings_rounded;
-        case 'assets':
-          return Icons.inventory_2_rounded;
-        case 'tasks':
-          return Icons.task_alt_rounded;
-        case 'projects':
-          return Icons.rocket_rounded;
-        case 'system':
-          return Icons.history_rounded;
-        case 'screentime':
-          return Icons.screen_lock_portrait_rounded;
-        default:
-          return Icons.adjust_rounded;
-      }
-    }
-
-    String getLocalizedBreakdownTitle(String key) {
-      final l10n = AppLocalizations.of(context)!;
-      switch (key.toLowerCase()) {
-        case 'steps':
-          return l10n.breakdown_steps;
-        case 'diet':
-          return l10n.breakdown_diet;
-        case 'exercise':
-          return l10n.breakdown_exercise;
-        case 'focus':
-          return l10n.breakdown_focus;
-        case 'water':
-          return l10n.breakdown_water;
-        case 'sleep':
-          return l10n.breakdown_sleep;
-        case 'contacts':
-          return l10n.breakdown_contacts;
-        case 'affection':
-          return l10n.breakdown_affection;
-        case 'quests':
-          return l10n.breakdown_quests;
-        case 'accounts':
-          return l10n.breakdown_accounts;
-        case 'assets':
-          return l10n.breakdown_assets;
-        case 'tasks':
-          return l10n.breakdown_tasks;
-        case 'projects':
-          return l10n.breakdown_projects;
-        case 'system':
-          return l10n.breakdown_system;
-        case 'screentime':
-          return l10n.breakdown_screentime;
-        default:
-          return key.toUpperCase();
-      }
-    }
 
     return GestureDetector(
       onTap: onTap,
@@ -593,49 +391,6 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                 color: colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
-            const Divider(height: 16, thickness: 0.5),
-            ...displayBreakdown.entries
-                .where((e) => e.value != 0)
-                .map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 3.0),
-                    child: Row(
-                      children: [
-                        Icon(
-                          getBreakdownIcon(e.key),
-                          size: 10,
-                          color: colorScheme.onSurfaceVariant.withOpacity(0.5),
-                        ),
-                        const SizedBox(width: 6),
-                        Expanded(
-                          child: Text(
-                            getLocalizedBreakdownTitle(e.key),
-                            style: TextStyle(
-                              fontSize: 8,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.4,
-                              color: colorScheme.onSurfaceVariant.withOpacity(
-                                0.8,
-                              ),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          e.key.toLowerCase() == 'screentime'
-                              ? _formatScreenTime(e.value)
-                              : e.value > 0
-                                  ? "+${e.value.toInt()}"
-                                  : e.value.toInt().toString(),
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w900,
-                            color: e.value > 0 ? color : Colors.red,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
           ],
         ),
       ),

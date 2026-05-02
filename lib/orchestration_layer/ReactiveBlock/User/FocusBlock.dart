@@ -7,12 +7,10 @@ import 'package:drift/drift.dart' as drift;
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:live_activities/live_activities.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 
 enum FocusStatus { idle, running, paused, completed }
@@ -99,7 +97,6 @@ class FocusBlock {
   // Theme
   // External Blocks for Automation
   GrowthBlock? growthBlock;
-  ScoreBlock? scoreBlock;
 
   // Timer
   Timer? _timer;
@@ -512,14 +509,9 @@ class FocusBlock {
       if (markTaskDone && selectedTaskId.value != null && growthBlock != null) {
         await growthBlock!.completeGoalByGoalId(
           selectedTaskId.value!,
-          scoreBlock: scoreBlock,
         );
       }
 
-      // Add focus session bonus points
-      if (scoreBlock != null && !isExerciseMode.value) {
-        scoreBlock!.addPoints(FOCUS_SESSION_POINTS.toDouble());
-      }
 
       // We keep the selectedTaskId so they can run another session on the same task,
       // UNLESS they explicitly marked it as done.
@@ -748,12 +740,6 @@ class FocusBlock {
         print("⚠️ [FocusBlock] Failed to sync workout to platform: $e");
       }
 
-      // Auto-increase points for exercise bonus
-      if (scoreBlock != null) {
-        scoreBlock!.addPoints(
-          25.0,
-        ); // Keep old bonus or use new constant if requested
-      }
     }
 
     await fetchDailyStats();

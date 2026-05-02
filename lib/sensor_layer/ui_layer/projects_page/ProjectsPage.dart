@@ -12,9 +12,8 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'TaskItem.dart';
+import 'task_item.dart';
 import 'CreateProjectDialog.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
@@ -70,7 +69,6 @@ class ProjectsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final growthBlock = context.watch<GrowthBlock>();
-    final scoreBlock = context.read<ScoreBlock>();
     final internalWidgetBlock = context.read<InternalWidgetBlock>();
     final database = context.read<AppDatabase>();
 
@@ -467,14 +465,13 @@ class ProjectsPage extends StatelessWidget {
                       onComplete: () async {
                         await growthBlock.completeGoal(
                           task.id,
-                          scoreBlock: scoreBlock,
                         );
 
                         if (context.mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: const Text(
-                                'Task complete! XP Awarded 🚀',
+                                'Task complete! 🚀',
                               ),
                               behavior: SnackBarBehavior.floating,
                               duration: const Duration(seconds: 1),

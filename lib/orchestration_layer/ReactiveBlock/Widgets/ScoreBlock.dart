@@ -1,13 +1,9 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:ice_gate/orchestration_layer/Services/GamificationService.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:rxdart/rxdart.dart';
-
 
 part 'ScoreBlock_State.dart';
 part 'ScoreBlock_Init.dart';
@@ -25,7 +21,9 @@ class ScoreBlock with ScoreBlockState {
     );
 
     if (initialScore != null) {
-      updateScore(initialScore);
+      batch(() {
+        updateScore(initialScore);
+      });
     }
   }
 
@@ -37,28 +35,7 @@ class ScoreBlock with ScoreBlockState {
 
   void _processScoreUpdate(ScoreData scoreValue) {
     untracked(() {
-      batch(() {
-        // 1. Update the primary signal
-        _score.value = scoreValue;
-
-        // 2. Calculate local variables
-        final double xp = scoreValue.healthGlobalScore +
-            scoreValue.socialGlobalScore +
-            scoreValue.financialGlobalScore +
-            scoreValue.careerGlobalScore;
-
-        final double avg = xp / 4;
-        final int level = GamificationService.getLevel(xp.toInt());
-        final double progress = GamificationService.getProgressToNextLevel(
-          xp.toInt(),
-        );
-
-        // 3. Update related signals
-        totalXP.value = xp;
-        averageScore.value = avg;
-        globalLevel.value = level;
-        levelProgress.value = progress;
-      });
+      _score.value = scoreValue;
     });
   }
 
@@ -73,30 +50,13 @@ class ScoreBlock with ScoreBlockState {
     _subscriptions.clear();
     _scoreUpdateTimer?.cancel();
     _todaySocialUpdateTimer?.cancel();
-    _healthUpdateSubject.close();
-    _careerUpdateSubject.close();
-    _financeUpdateSubject.close();
-    _mindUpdateSubject.close();
+
     _score.dispose();
-    averageScore.dispose();
-    totalXP.dispose();
-    globalLevel.dispose();
-    levelProgress.dispose();
-    rankTitle.dispose();
+    // Computed signals are automatically managed
     _latestMeals.dispose();
-    _totalHealthQuestPoints.dispose();
-    _totalSocialQuestPoints.dispose();
-    _totalProjectQuestPoints.dispose();
-    _totalFinanceQuestPoints.dispose();
-    _historicalHealthMetricPoints.dispose();
-    todayHealthPoints.dispose();
-    todaySocialPoints.dispose();
-    todayFinancePoints.dispose();
-    todayProjectPoints.dispose();
     _latestAccounts.dispose();
     _latestAssets.dispose();
     _latestTransactions.dispose();
     _updateScoreSubject.close();
   }
 }
-

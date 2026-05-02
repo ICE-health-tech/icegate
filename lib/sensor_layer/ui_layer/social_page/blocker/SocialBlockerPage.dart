@@ -39,7 +39,7 @@ class SocialBlockerPage extends StatelessWidget {
                   // ),
                   SizedBox(width: 60),
                   Watch((context) {
-                    final isActive = blocker.isAnyBlockActive.watch(context);
+                    final isActive = blocker.isAnyBlockActive.value;
                     if (!isActive) return const SizedBox.shrink();
                     return Container(
                       padding: const EdgeInsets.symmetric(
@@ -91,7 +91,7 @@ class SocialBlockerPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: _buildSection(context, [
               Watch((context) {
-                final isEnabled = blocker.isAppBlacklistEnabled.watch(context);
+                final isEnabled = blocker.isAppBlacklistEnabled.value;
 
                 return _buildTile(
                   context,
@@ -209,7 +209,7 @@ class SocialBlockerPage extends StatelessWidget {
             ),
           ),
           Watch((context) {
-            final rules = blocker.rules.watch(context);
+            final rules = blocker.rules.value;
             if (rules.isEmpty) {
               return SliverToBoxAdapter(
                 child: Container(
@@ -463,7 +463,7 @@ class SocialBlockerPage extends StatelessWidget {
 
           // Add Rule Button (if not empty)
           Watch((context) {
-            final rules = blocker.rules.watch(context);
+            final rules = blocker.rules.value;
             if (rules.isEmpty) {
               return const SliverToBoxAdapter(child: SizedBox.shrink());
             }

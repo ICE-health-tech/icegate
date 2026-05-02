@@ -24,7 +24,6 @@ class ConfigBlock {
   final showIndexFinanceDaily = signal<bool>(true);
   final showIndexFinanceUsage = signal<bool>(true);
   final showIndexFocus = signal<bool>(true);
-  final showIndexXP = signal<bool>(true);
   final showIndexMoodNote = signal<bool>(true);
 
   void init(ConfigsDAO dao, String personId) async {
@@ -65,7 +64,6 @@ class ConfigBlock {
     showIndexFinanceDaily.value = await _getBoolConfig('show_index_finance_daily', true);
     showIndexFinanceUsage.value = await _getBoolConfig('show_index_finance_usage', true);
     showIndexFocus.value = await _getBoolConfig('show_index_focus', true);
-    showIndexXP.value = await _getBoolConfig('show_index_xp', true);
     showIndexMoodNote.value = await _getBoolConfig('show_index_mood_note', true);
   }
 
@@ -126,10 +124,6 @@ class ConfigBlock {
       case 'focus':
         showIndexFocus.value = visible;
         await _setBoolConfig('show_index_focus', visible);
-        break;
-      case 'xp':
-        showIndexXP.value = visible;
-        await _setBoolConfig('show_index_xp', visible);
         break;
       case 'mood_note':
         showIndexMoodNote.value = visible;

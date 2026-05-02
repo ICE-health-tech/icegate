@@ -439,14 +439,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
                 scoreBlock.init(
                   database.scoreDAO,
-                  database.personManagementDAO,
                   database.financeDAO,
-                  healthBlock,
                   database.healthMealDAO,
                   database.metricsDAO,
                   database.projectNoteDAO,
                   personId,
-                  tenantID: personBlock.information.value.profiles.tenantId,
                 );
 
                 focusBlock.personId = personId;
@@ -489,8 +486,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       );
 
       focusBlock
-        ..growthBlock = growthBlock
-        ..scoreBlock = scoreBlock;
+        .growthBlock = growthBlock;
 
       await focusBlock.init();
 

@@ -5,7 +5,7 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/text_editor_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 

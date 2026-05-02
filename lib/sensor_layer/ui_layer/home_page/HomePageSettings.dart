@@ -174,13 +174,6 @@ class HomePageSettings extends StatelessWidget {
                       ),
                       _buildCompactToggle(
                         context,
-                        title: l10n.home_index_xp,
-                        value: configBlock.showIndexXP.watch(context),
-                        onChanged: (v) => configBlock.setIndexVisibility('xp', v),
-                        color: Colors.deepPurple,
-                      ),
-                      _buildCompactToggle(
-                        context,
                         title: l10n.mind_latest_note,
                         value: configBlock.showIndexMoodNote.watch(context),
                         onChanged: (v) => configBlock.setIndexVisibility('mood_note', v),

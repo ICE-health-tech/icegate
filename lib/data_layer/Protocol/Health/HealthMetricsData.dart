@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
+// import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:ice_gate/l10n/app_localizations.dart';
 
@@ -389,8 +390,12 @@ class HealthMetricsData {
         trend: trendStr(currentSteps, ySteps, '%'),
         trendPositive: trendPositive(currentSteps, ySteps),
         detailPage: '/health/steps',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceAppleHealth),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceAppleHealth),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceAppleHealth,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceAppleHealth,
+        ),
       ),
       'weight': HealthMetric(
         id: 'weight',
@@ -403,8 +408,13 @@ class HealthMetricsData {
         trend: null,
         trendPositive: null,
         detailPage: '/health/weight',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6, fallback: Icons.monitor_weight_rounded),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceGT6,
+          fallback: Icons.monitor_weight_rounded,
+        ),
       ),
       'water': HealthMetric(
         id: 'water',
@@ -433,8 +443,12 @@ class HealthMetricsData {
         trend: trendStr(exerciseMin, yExercise, l10n.health_min_label),
         trendPositive: trendPositive(exerciseMin, yExercise),
         detailPage: '/health/exercise',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
       ),
       'heart_rate': HealthMetric(
         id: 'heart_rate',
@@ -453,8 +467,12 @@ class HealthMetricsData {
         trend: null,
         trendPositive: null,
         detailPage: '/health/heart_rate',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
       ),
       'sleep': HealthMetric(
         id: 'sleep',
@@ -470,8 +488,12 @@ class HealthMetricsData {
             : null,
         trendPositive: sleepHrs > 0 ? trendPositive(sleepHrs, ySleep) : null,
         detailPage: '/health/sleep',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
       ),
       'focus': HealthMetric(
         id: 'focus',
@@ -508,8 +530,12 @@ class HealthMetricsData {
         trend: null,
         trendPositive: null,
         detailPage: '/health/oxygen_saturation',
-        source: HealthSourceService.getLabel(rawSource ?? HealthSourceService.sourceGT6),
-        sourceIcon: HealthSourceService.getIcon(rawSource ?? HealthSourceService.sourceGT6),
+        source: HealthSourceService.getLabel(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
+        sourceIcon: HealthSourceService.getIcon(
+          rawSource ?? HealthSourceService.sourceGT6,
+        ),
       ),
     };
   }

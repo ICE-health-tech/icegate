@@ -133,8 +133,12 @@ class _SocialPageState extends State<SocialPage>
       if (!mounted || _tabController.indexIsChanging) return;
       final newIndex = _tabController.index;
       if (_socialBlock.activeTab.peek() != newIndex) {
-        untracked(() {
-          _socialBlock.activeTab.value = newIndex;
+        // Use microtask to break out of synchronous feedback loop (effect -> animateTo -> listener -> signal update)
+        Future.microtask(() {
+          if (!mounted) return;
+          untracked(() {
+            _socialBlock.activeTab.value = newIndex;
+          });
         });
       }
     });

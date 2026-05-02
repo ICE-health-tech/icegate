@@ -15,9 +15,10 @@ class ExternalWidgetBlock {
         .debounceTime(const Duration(milliseconds: 300))
         .listen(
           (data) {
-            // Use batch to ensure the signal update is atomic and safe
-            batch(() {
-              listExternalWidgets.value = data;
+            untracked(() {
+              batch(() {
+                listExternalWidgets.value = data;
+              });
             });
           },
           onError: (e) =>

@@ -469,4 +469,20 @@ const Schema schema = Schema([
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),
+  Table('app_usage_history', [
+    Column.text('person_id'),
+    Column.text('date'),
+    Column.text('sector'),
+    Column.text('page_path'),
+    Column.real('duration_minutes'),
+    Column.text('updated_at'),
+  ]),
+  Table('app_time_spending', [
+    Column.text('person_id'),
+    Column.text('start_time'),
+    Column.text('end_time'),
+    Column.text('sector'),
+    Column.text('page_path'),
+    Column.real('duration_minutes'),
+  ]),
 ]);

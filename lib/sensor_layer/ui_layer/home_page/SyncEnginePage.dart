@@ -2,7 +2,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/google_drive_folder_picker_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/GoogleDriveFolderPickerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SnowfallOverlay.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/utils/l10n_extensions.dart';

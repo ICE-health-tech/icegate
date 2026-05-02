@@ -261,7 +261,7 @@ class PersonBlock {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") return;
 
-    isSyncing.value = true;
+    untracked(() => isSyncing.value = true);
     try {
       const baseUrl = 'https://backend.duylong.art';
       final url = Uri.parse('$baseUrl/api/v1/users/me');
@@ -294,7 +294,7 @@ class PersonBlock {
     } catch (e) {
       debugPrint('⚠️ [PersonBlock] app_sync failed: $e');
     } finally {
-      isSyncing.value = false;
+      untracked(() => isSyncing.value = false);
     }
   }
 
@@ -507,38 +507,42 @@ class PersonBlock {
 
   void _applyGuestFallback() {
     print("👤 [PersonBlock] Applying default fallback data...");
-    batch(() {
-      information.value = UserInformation(
-        profiles: const UserProfile(
-          id: DataSeeder.guestPersonId,
-          tenantId: DataSeeder.guestTenantId,
-          firstName: 'Guest',
-          lastName: '',
-          username: 'Guest',
-          profileImageUrl:
-              'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
-        ),
-        details: const UserDetails(
-          bio: 'Securing the digital life.',
-          occupation: 'Core Security Agent',
-          location: 'Unknown Sector',
-          email: 'agent@ice-shield.net',
-        ),
-      );
+    untracked(() {
+      batch(() {
+        information.value = UserInformation(
+          profiles: const UserProfile(
+            id: DataSeeder.guestPersonId,
+            tenantId: DataSeeder.guestTenantId,
+            firstName: 'Guest',
+            lastName: '',
+            username: 'Guest',
+            profileImageUrl:
+                'https://ui-avatars.com/api/?name=Duy+Long&background=6366F1&color=fff',
+          ),
+          details: const UserDetails(
+            bio: 'Securing the digital life.',
+            occupation: 'Core Security Agent',
+            location: 'Unknown Sector',
+            email: 'agent@ice-shield.net',
+          ),
+        );
+      });
     });
   }
 
   // Consolidated image updates
   void setAvatarImage({required String remoteUrl, required String localPath}) {
     // 1. Update In-Memory Signal
-    batch(() {
-      information.value = UserInformation(
-        details: information.value.details,
-        profiles: information.value.profiles.copyWith(
-          profileImageUrl: remoteUrl,
-          avatarLocalPath: localPath,
-        ),
-      );
+    untracked(() {
+      batch(() {
+        information.value = UserInformation(
+          details: information.value.details,
+          profiles: information.value.profiles.copyWith(
+            profileImageUrl: remoteUrl,
+            avatarLocalPath: localPath,
+          ),
+        );
+      });
     });
 
     // 2. Persist to Local Database
@@ -551,14 +555,16 @@ class PersonBlock {
 
   void setCoverImage({required String remoteUrl, required String localPath}) {
     // 1. Update In-Memory Signal
-    batch(() {
-      information.value = UserInformation(
-        details: information.value.details,
-        profiles: information.value.profiles.copyWith(
-          coverImageUrl: remoteUrl,
-          coverLocalPath: localPath,
-        ),
-      );
+    untracked(() {
+      batch(() {
+        information.value = UserInformation(
+          details: information.value.details,
+          profiles: information.value.profiles.copyWith(
+            coverImageUrl: remoteUrl,
+            coverLocalPath: localPath,
+          ),
+        );
+      });
     });
 
     // 2. Persist to Local Database
@@ -585,25 +591,29 @@ class PersonBlock {
     String? educationLevel,
     String? email,
   }) {
-    information.value = UserInformation(
-      profiles: information.value.profiles.copyWith(
-        firstName: firstName,
-        lastName: lastName,
-      ),
-      details: information.value.details.copyWith(
-        university: university,
-        location: location,
-        bio: bio,
-        occupation: occupation,
-        websiteUrl: websiteUrl,
-        company: company,
-        country: country,
-        githubUrl: githubUrl,
-        linkedinUrl: linkedinUrl,
-        educationLevel: educationLevel,
-        email: email,
-      ),
-    );
+    untracked(() {
+      batch(() {
+        information.value = UserInformation(
+          profiles: information.value.profiles.copyWith(
+            firstName: firstName,
+            lastName: lastName,
+          ),
+          details: information.value.details.copyWith(
+            university: university,
+            location: location,
+            bio: bio,
+            occupation: occupation,
+            websiteUrl: websiteUrl,
+            company: company,
+            country: country,
+            githubUrl: githubUrl,
+            linkedinUrl: linkedinUrl,
+            educationLevel: educationLevel,
+            email: email,
+          ),
+        );
+      });
+    });
   }
 
   // Persist edits to Supabase
@@ -659,7 +669,7 @@ class PersonBlock {
   Future<void> getUserRole(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") {
-      account.value = const UserAccount(role: 'GUEST');
+      untracked(() => account.value = const UserAccount(role: 'GUEST'));
       return;
     }
 
@@ -667,11 +677,11 @@ class PersonBlock {
       // For now, assume a field exists or just default to USER
       // Role management might be in a separate table or app_metadata
       final role = user.appMetadata['role'] ?? 'USER';
-      account.value = UserAccount(role: role);
+      untracked(() => account.value = UserAccount(role: role));
       print("✅ [PersonBlock] User Role: $role");
     } catch (e) {
       print("❌ [PersonBlock] Failed to get user role: $e");
-      account.value = const UserAccount(role: 'USER');
+      untracked(() => account.value = const UserAccount(role: 'USER'));
     }
   }
 
@@ -679,7 +689,7 @@ class PersonBlock {
   Future<void> getUserSkill(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null || token == "mock_guest_jwt_token") {
-      skills.value = [];
+      untracked(() => skills.value = []);
       return;
     }
 
@@ -689,7 +699,7 @@ class PersonBlock {
         print(
           "⚠️ [PersonBlock] Skipping skills fetch: No personID resolved yet.",
         );
-        skills.value = [];
+        untracked(() => skills.value = []);
         return;
       }
 
@@ -702,11 +712,11 @@ class PersonBlock {
           .map((s) => SkillType.fromJson(s))
           .toList();
 
-      skills.value = skillList;
+      untracked(() => skills.value = skillList);
       print("✅ [PersonBlock] ${skillList.length} skills fetched.");
     } catch (e) {
       print("❌ [PersonBlock] Failed to get user skills: $e");
-      skills.value = [];
+      untracked(() => skills.value = []);
     }
   }
 
@@ -735,7 +745,7 @@ class PersonBlock {
 
       if (localPerson == null && localProfile == null) {
         debugPrint("⚠️ [PersonBlock] Person $personId not found locally.");
-        viewedInformation.value = null;
+        untracked(() => viewedInformation.value = null);
         return;
       }
 
@@ -772,13 +782,15 @@ class PersonBlock {
             localPerson?.coverLocalPath ?? localProfile?.coverLocalPath ?? '',
       );
 
-      viewedInformation.value = UserInformation(
-        profiles: profile,
-        details: details,
-      );
+      untracked(() {
+        viewedInformation.value = UserInformation(
+          profiles: profile,
+          details: details,
+        );
+      });
     } catch (e) {
       debugPrint("❌ [PersonBlock] Failed to fetch person $personId: $e");
-      viewedInformation.value = null;
+      untracked(() => viewedInformation.value = null);
     }
   }
 }

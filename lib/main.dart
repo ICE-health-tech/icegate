@@ -53,7 +53,10 @@ class MyApp extends StatelessWidget {
         Locale? appLocale;
         try {
           final localeBlock = context.read<LocaleBlock>();
-          appLocale = localeBlock.currentLocale.watch(context);
+          // We're already inside a Watch builder, so reading `.value` is reactive.
+          // Calling `.watch(context)` here would nest watchers and can throw
+          // `SignalEffectException`.
+          appLocale = localeBlock.currentLocale.value;
         } catch (_) {
           // LocaleBlock chưa sẵn sàng, dùng locale mặc định
           appLocale = const Locale('vi');

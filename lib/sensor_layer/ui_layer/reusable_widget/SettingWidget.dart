@@ -272,7 +272,7 @@ class SettingsWidget extends StatelessWidget {
                   final notificationService = context
                       .read<LocalNotificationService>();
                   final isEnabled = notificationService.notificationsEnabled
-                      .watch(context);
+                      .value;
 
                   return _buildPremiumSettingTile(
                     context: context,
@@ -297,9 +297,7 @@ class SettingsWidget extends StatelessWidget {
                 // Tile cho đổi ngôn ngữ — hiển thị ngôn ngữ hiện tại
                 Watch((context) {
                   final localeBlock = context.read<LocaleBlock>();
-                  final currentLocale = localeBlock.currentLocale.watch(
-                    context,
-                  );
+                  final currentLocale = localeBlock.currentLocale.value;
                   final currentName = localeBlock.getLocaleName(currentLocale);
 
                   return _buildPremiumSettingTile(

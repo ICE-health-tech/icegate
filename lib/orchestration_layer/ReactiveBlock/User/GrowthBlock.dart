@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/ProjectPoint.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class GrowthBlock {
@@ -123,30 +121,16 @@ class GrowthBlock {
     });
   }
 
-  Future<void> completeGoal(String id, {ScoreBlock? scoreBlock}) async {
+  Future<void> completeGoal(String id) async {
     await _dao.updateGoalStatusByUuid(id, 'done');
-    await _awardPoints(scoreBlock);
   }
 
   Future<void> completeGoalByGoalId(
-    String goalID, {
-    ScoreBlock? scoreBlock,
-  }) async {
+    String goalID,
+  ) async {
     await _dao.updateGoalStatusByUuid(goalID, 'done');
-    await _awardPoints(scoreBlock);
   }
 
-  Future<void> _awardPoints(ScoreBlock? scoreBlock) async {
-    // Award points for task completion
-    if (scoreBlock != null) {
-      final completedCount = goals.value
-          .where((g) => g.status == 'done')
-          .length;
-      final totalCount = goals.value.length;
-      final bonus = ProjectPoint.calculateTaskBonus(completedCount, totalCount);
-      await scoreBlock.persistentCareerIncrement(bonus);
-    }
-  }
 
   Future<void> createNewTask(
     String title,

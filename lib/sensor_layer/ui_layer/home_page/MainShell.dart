@@ -3,8 +3,9 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
+// import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/ActivityTrackerService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodConsumePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/FoodDashboardPage.dart';
@@ -14,9 +15,9 @@ import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.da
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/projects_page/projects_page.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/CanvasDynamicIsland.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/WeightPage.dart';
@@ -119,7 +120,7 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     final currentRoute = GoRouterState.of(context).uri.path;
-    
+
     // Update the tracker with the current path after the build is complete
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ActivityTrackerService().updatePath(currentRoute);
@@ -180,15 +181,17 @@ class _MainShellState extends State<MainShell> {
               child: SafeArea(
                 child: SizedBox(
                   height: 50,
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: currentRoute.startsWith('/finance') ? 0.0 : 20.0,
-                  ),
-                  child: Align(
-                    alignment: currentRoute.startsWith('/finance') 
-                        ? Alignment.center 
-                        : Alignment.centerLeft,
-                    child: CanvasDynamicIsland(
+                  child: Padding(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: currentRoute.startsWith('/finance')
+                          ? 0.0
+                          : 20.0,
+                    ),
+                    child: Align(
+                      alignment: currentRoute.startsWith('/finance')
+                          ? Alignment.center
+                          : Alignment.centerLeft,
+                      child: CanvasDynamicIsland(
                         personBlock: context.watch<PersonBlock>(),
                       ),
                     ),

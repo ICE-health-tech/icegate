@@ -10,7 +10,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 class MindBlock {
   final MindLogsDAO dao;
 
-  Timer? _updateTimer;
+  // Timer? _updateTimer;
   // Daily mood signal
   final dailyMoodValue = signal<int>(3);
   final latestMoodLog = signal<MindLogData?>(null);
@@ -21,10 +21,13 @@ class MindBlock {
     dao.watchLatestLog(personId).delay(Duration(milliseconds: 300)).listen((
       log,
     ) {
-      // Timer(Duration.zero, () {
-      batch(() {
-        latestMoodLog.value = log;
-        // });
+      // This callback can fire while another signal computation/batch is in
+      // progress (especially during app boot). Deferring the write avoids
+      // `SignalEffectException` from nested reactive work.
+      untracked(() {
+        scheduleMicrotask(() {
+          latestMoodLog.value = log;
+        });
       });
     });
   }

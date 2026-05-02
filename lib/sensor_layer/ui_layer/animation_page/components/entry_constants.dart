@@ -68,6 +68,29 @@ class EntryColors {
     ],
     stops: [0.0, 0.5, 1.0],
   );
+
+  // --- Winter entry (moonlit frost, not flat black) ---
+  static const Color winterMoonCore = Color(0xFFB8D9F0); // soft moon halo
+  static const Color winterSkyBand = Color(0xFF355B78); // muted glacier mid
+  static const Color winterDeepHorizon = Color(0xFF0E1E2E); // navy night
+  static const Color winterEdge = Color(0xFF050A12); // cold edge (not pure black)
+
+  /// Radial “frozen night”: bright cool center → deep blue-black rim.
+  static const Gradient winterNightGradient = RadialGradient(
+    center: Alignment(0, -0.12),
+    radius: 1.38,
+    colors: [
+      winterMoonCore,
+      Color(0xFF4A7CA5),
+      winterSkyBand,
+      winterDeepHorizon,
+      winterEdge,
+    ],
+    stops: [0.0, 0.22, 0.48, 0.78, 1.0],
+  );
+
+  static const Color frostBloomMist = Color(0xFFDCEEF9);
+  static const Color iceSparkle = Color(0xFFEEF6FF);
 }
 
 class EntryStyles {

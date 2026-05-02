@@ -110,7 +110,7 @@ class _DragCanvasState extends State<DragCanvas> {
                         const SizedBox(height: 12),
                         Watch((context) {
                           final configBlock = context.read<ConfigBlock>();
-                          final currency = configBlock.currency.watch(context);
+                          final currency = configBlock.currency.value;
                           return _buildSettingTile(
                             context: context,
                             title: "Currency Unit",

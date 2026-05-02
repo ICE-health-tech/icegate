@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +12,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.da
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/components/NutritionRingChart.dart';
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
+// import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 
 class FoodDashboardPage extends StatefulWidget {
   const FoodDashboardPage({super.key});
@@ -64,7 +65,10 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
         onPressed: () => context.push('/health/food'),
         label: Text(
           'LOG MEAL',
-          style: TextStyle(fontWeight: FontWeight.w900, color: colorScheme.onPrimary),
+          style: TextStyle(
+            fontWeight: FontWeight.w900,
+            color: colorScheme.onPrimary,
+          ),
         ),
         icon: Icon(Icons.add_rounded, color: colorScheme.onPrimary),
         backgroundColor: colorScheme.primary,
@@ -79,13 +83,15 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
 
           final data = snapshot.data ?? [];
           final groupedMeals = _groupMealsByDay(data);
-          final sortedDays = groupedMeals.keys.toList()..sort((a, b) => b.compareTo(a));
+          final sortedDays = groupedMeals.keys.toList()
+            ..sort((a, b) => b.compareTo(a));
 
           // Calculate today's totals
           double p = 0, c = 0, f = 0, kcal = 0;
           final todayKey = DateFormat('yyyy-MM-dd').format(DateTime.now());
           for (var entry in data) {
-            if (DateFormat('yyyy-MM-dd').format(entry.meal.eatenAt) == todayKey) {
+            if (DateFormat('yyyy-MM-dd').format(entry.meal.eatenAt) ==
+                todayKey) {
               p += entry.meal.protein;
               c += entry.meal.carbs;
               f += entry.meal.fat;
@@ -106,12 +112,19 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                   stretch: true,
                   backgroundColor: colorScheme.primary,
                   leading: IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, color: Colors.white, size: 20),
+                    icon: const Icon(
+                      Icons.arrow_back_ios_new,
+                      color: Colors.white,
+                      size: 20,
+                    ),
                     onPressed: () => WidgetNavigatorAction.smartPop(context),
                   ),
                   actions: [
                     IconButton(
-                      icon: const Icon(Icons.view_in_ar_rounded, color: Colors.white),
+                      icon: const Icon(
+                        Icons.view_in_ar_rounded,
+                        color: Colors.white,
+                      ),
                       onPressed: () => context.push('/health/food/scan'),
                       tooltip: '3D Scan Scene',
                     ),
@@ -119,7 +132,10 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                   flexibleSpace: FlexibleSpaceBar(
                     title: Text(
                       l10n.nutrition_dashboard,
-                      style: textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w900, color: Colors.white),
+                      style: textTheme.titleMedium?.copyWith(
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
                     ),
                     centerTitle: true,
                     background: _buildHeader(kcal, p, c, f),
@@ -144,14 +160,11 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                   SliverPadding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) {
-                          final dateKey = sortedDays[index];
-                          final dayMeals = groupedMeals[dateKey]!;
-                          return _buildDayCard(dateKey, dayMeals);
-                        },
-                        childCount: sortedDays.length,
-                      ),
+                      delegate: SliverChildBuilderDelegate((context, index) {
+                        final dateKey = sortedDays[index];
+                        final dayMeals = groupedMeals[dateKey]!;
+                        return _buildDayCard(dateKey, dayMeals);
+                      }, childCount: sortedDays.length),
                     ),
                   ),
                 ] else
@@ -160,9 +173,20 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.restaurant_menu_rounded, size: 80, color: colorScheme.primary.withValues(alpha: 0.1)),
+                          Icon(
+                            Icons.restaurant_menu_rounded,
+                            size: 80,
+                            color: colorScheme.primary.withValues(alpha: 0.1),
+                          ),
                           const SizedBox(height: 16),
-                          Text(l10n.nutri_no_meals, style: TextStyle(color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5))),
+                          Text(
+                            l10n.nutri_no_meals,
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant.withValues(
+                                alpha: 0.5,
+                              ),
+                            ),
+                          ),
                         ],
                       ),
                     ),
@@ -184,7 +208,10 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: [colorScheme.primary, colorScheme.secondary.withValues(alpha: 0.8)],
+          colors: [
+            colorScheme.primary,
+            colorScheme.secondary.withValues(alpha: 0.8),
+          ],
         ),
       ),
       child: SafeArea(
@@ -217,8 +244,22 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
   Widget _buildMacroSummary(String label, double value, Color color) {
     return Column(
       children: [
-        Text('${value.toInt()}g', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 18)),
-        Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.bold, fontSize: 10)),
+        Text(
+          '${value.toInt()}g',
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.w900,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withValues(alpha: 0.7),
+            fontWeight: FontWeight.bold,
+            fontSize: 10,
+          ),
+        ),
       ],
     );
   }
@@ -230,7 +271,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     final Map<String, double> dailyCals = {};
 
     for (int i = 6; i >= 0; i--) {
-      final key = DateFormat('yyyy-MM-dd').format(now.subtract(Duration(days: i)));
+      final key = DateFormat(
+        'yyyy-MM-dd',
+      ).format(now.subtract(Duration(days: i)));
       dailyCals[key] = 0.0;
     }
     for (var entry in data) {
@@ -253,18 +296,45 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(l10n.nutri_trends_title.toUpperCase(), 
-                style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12, color: colorScheme.primary, letterSpacing: 1.2)),
-              Text(l10n.nutri_weekly_calories_chart, style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+              Text(
+                l10n.nutri_trends_title.toUpperCase(),
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 12,
+                  color: colorScheme.primary,
+                  letterSpacing: 1.2,
+                ),
+              ),
+              Text(
+                l10n.nutri_weekly_calories_chart,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: colorScheme.onSurfaceVariant,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
-          SimpleLineChart(data: dailyCals.values.toList(), color: colorScheme.primary, height: 100),
+          SimpleLineChart(
+            data: dailyCals.values.toList(),
+            color: colorScheme.primary,
+            height: 100,
+          ),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: dailyCals.keys.map((k) => Text(DateFormat('E').format(DateTime.parse(k))[0], 
-              style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: colorScheme.onSurfaceVariant))).toList(),
+            children: dailyCals.keys
+                .map(
+                  (k) => Text(
+                    DateFormat('E').format(DateTime.parse(k))[0],
+                    style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                )
+                .toList(),
           ),
         ],
       ),
@@ -278,10 +348,14 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     double totalProtein = 0;
     int dayCount = 0;
     final now = DateTime.now();
-    
+
     for (int i = 0; i < 7; i++) {
-      final key = DateFormat('yyyy-MM-dd').format(now.subtract(Duration(days: i)));
-      final dayMeals = data.where((m) => DateFormat('yyyy-MM-dd').format(m.meal.eatenAt) == key).toList();
+      final key = DateFormat(
+        'yyyy-MM-dd',
+      ).format(now.subtract(Duration(days: i)));
+      final dayMeals = data
+          .where((m) => DateFormat('yyyy-MM-dd').format(m.meal.eatenAt) == key)
+          .toList();
       if (dayMeals.isNotEmpty) {
         dayCount++;
         for (var m in dayMeals) {
@@ -325,10 +399,23 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.nutri_insights_title.toUpperCase(), 
-                  style: TextStyle(fontWeight: FontWeight.w900, fontSize: 10, color: adviceColor, letterSpacing: 1.1)),
+                Text(
+                  l10n.nutri_insights_title.toUpperCase(),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    color: adviceColor,
+                    letterSpacing: 1.1,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text(advice, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
+                Text(
+                  advice,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ],
             ),
           ),
@@ -342,14 +429,19 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
     final colorScheme = Theme.of(context).colorScheme;
     final date = DateTime.parse(dateKey);
     final isToday = DateFormat('yyyy-MM-dd').format(DateTime.now()) == dateKey;
-    final totalCals = dayMeals.fold<double>(0, (sum, m) => sum + m.meal.calories);
+    final totalCals = dayMeals.fold<double>(
+      0,
+      (sum, m) => sum + m.meal.calories,
+    );
 
     return Container(
       margin: const EdgeInsets.only(bottom: 24),
       decoration: BoxDecoration(
         color: colorScheme.surface,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.5)),
+        border: Border.all(
+          color: colorScheme.outlineVariant.withValues(alpha: 0.5),
+        ),
       ),
       child: Column(
         children: [
@@ -358,10 +450,22 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(isToday ? l10n.nutri_today : DateFormat('EEEE, MMM d').format(date), 
-                  style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 16)),
-                Text('${totalCals.toInt()} ${l10n.nutri_kcal}', 
-                  style: TextStyle(color: colorScheme.primary, fontWeight: FontWeight.w900)),
+                Text(
+                  isToday
+                      ? l10n.nutri_today
+                      : DateFormat('EEEE, MMM d').format(date),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 16,
+                  ),
+                ),
+                Text(
+                  '${totalCals.toInt()} ${l10n.nutri_kcal}',
+                  style: TextStyle(
+                    color: colorScheme.primary,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
               ],
             ),
           ),
@@ -396,7 +500,13 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(meal.mealName, style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 15)),
+                Text(
+                  meal.mealName,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w900,
+                    fontSize: 15,
+                  ),
+                ),
                 if (meal.isAnalyzing)
                   Row(
                     children: [
@@ -405,7 +515,9 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                         height: 10,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          valueColor: AlwaysStoppedAnimation<Color>(Colors.orange),
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            Colors.orange,
+                          ),
                         ),
                       ),
                       const SizedBox(width: 6),
@@ -421,15 +533,31 @@ class _FoodDashboardPageState extends State<FoodDashboardPage> {
                     ],
                   )
                 else
-                  Text(DateFormat('h:mm a').format(meal.eatenAt), 
-                    style: TextStyle(fontSize: 12, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6))),
+                  Text(
+                    DateFormat('h:mm a').format(meal.eatenAt),
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: colorScheme.onSurfaceVariant.withValues(
+                        alpha: 0.6,
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
           if (!meal.isAnalyzing) ...[
-            Text('${meal.calories.toInt()}', style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18)),
+            Text(
+              '${meal.calories.toInt()}',
+              style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 18),
+            ),
             const SizedBox(width: 2),
-            Text(l10n.nutri_cal, style: TextStyle(fontSize: 10, color: colorScheme.onSurfaceVariant)),
+            Text(
+              l10n.nutri_cal,
+              style: TextStyle(
+                fontSize: 10,
+                color: colorScheme.onSurfaceVariant,
+              ),
+            ),
           ],
         ],
       ),

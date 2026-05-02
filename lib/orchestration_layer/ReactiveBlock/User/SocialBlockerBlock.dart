@@ -21,6 +21,7 @@ class SocialBlockerBlock {
   final isAnyBlockActive = signal<bool>(false);
   final isSystemAuthGranted = signal<bool>(false);
   final appSelectionJson = signal<String?>(null);
+  final isSyncing = signal<bool>(false);
   final _currentTime = signal<DateTime>(DateTime.now());
 
   static const _appSelectionKey = 'ice_gate_social_app_selection';
@@ -54,7 +55,7 @@ class SocialBlockerBlock {
   }
 
   void _setupEvaluation() {
-    _currentTime.value = DateTime.now();
+    untracked(() => _currentTime.value = DateTime.now());
 
     // Evaluation Logic
     _disposeEvaluation = effect(() {
@@ -105,7 +106,7 @@ class SocialBlockerBlock {
       }
 
       // Update the active state signal and trigger native sync ONLY on state change
-      if (shouldBeActive != isAnyBlockActive.value) {
+      if (shouldBeActive != untracked(() => isAnyBlockActive.value)) {
         Timer(Duration.zero, () {
           untracked(() {
             isAnyBlockActive.value = shouldBeActive;
@@ -115,13 +116,13 @@ class SocialBlockerBlock {
       }
     });
 
-    _currentTime.value = DateTime.now();
+    untracked(() => _currentTime.value = DateTime.now());
 
     // Tick current time every 30 seconds to evaluate schedules precisely
     _timerSubscription = Stream.periodic(const Duration(seconds: 30)).listen((
       _,
     ) {
-      _currentTime.value = DateTime.now();
+      untracked(() => _currentTime.value = DateTime.now());
     });
   }
 
@@ -133,13 +134,17 @@ class SocialBlockerBlock {
   // --- Actions ---
 
   Future<void> addRule(SocialBlockRule rule) async {
-    rules.value = [...rules.value, rule];
+    untracked(() {
+      rules.value = [...rules.value, rule];
+    });
     await _persist();
     _toggleSystemShield(isAnyBlockActive.value);
   }
 
   Future<void> removeRule(String id) async {
-    rules.value = rules.value.where((r) => r.id != id).toList();
+    untracked(() {
+      rules.value = rules.value.where((r) => r.id != id).toList();
+    });
     await _persist();
     _toggleSystemShield(isAnyBlockActive.value);
   }
@@ -147,9 +152,11 @@ class SocialBlockerBlock {
   Future<void> updateRule(SocialBlockRule rule) async {
     final index = rules.value.indexWhere((r) => r.id == rule.id);
     if (index != -1) {
-      final newList = [...rules.value];
-      newList[index] = rule;
-      rules.value = newList;
+      untracked(() {
+        final newList = [...rules.value];
+        newList[index] = rule;
+        rules.value = newList;
+      });
       await _persist();
       _toggleSystemShield(isAnyBlockActive.value);
     }
@@ -158,9 +165,11 @@ class SocialBlockerBlock {
   Future<void> toggleRule(String id, bool enabled) async {
     final index = rules.value.indexWhere((r) => r.id == id);
     if (index != -1) {
-      final newList = [...rules.value];
-      newList[index] = newList[index].copyWith(isEnabled: enabled);
-      rules.value = newList;
+      untracked(() {
+        final newList = [...rules.value];
+        newList[index] = newList[index].copyWith(isEnabled: enabled);
+        rules.value = newList;
+      });
       await _persist();
       _toggleSystemShield(isAnyBlockActive.value);
     }
@@ -272,6 +281,22 @@ class SocialBlockerBlock {
 
   // --- Cloud Sync ---
 
+  Future<void> appSync(String token) async {
+    final user = Supabase.instance.client.auth.currentUser;
+    if (user == null || token == "mock_guest_jwt_token") return;
+
+    untracked(() => isSyncing.value = true);
+    try {
+      print("🌐 [SocialBlockerBlock] Syncing rules from cloud...");
+      await _pullSelectionFromCloud();
+      print("✅ [SocialBlockerBlock] Cloud sync completed.");
+    } catch (e) {
+      print("⚠️ [SocialBlockerBlock] Cloud sync failed: $e");
+    } finally {
+      untracked(() => isSyncing.value = false);
+    }
+  }
+
   Future<void> _pullSelectionFromCloud() async {
     if (_personId == null ||
         _personId!.isEmpty ||
@@ -346,16 +371,20 @@ class SocialBlockerBlock {
   }
 
   void toggleBlacklist(bool enabled) {
-    isAppBlacklistEnabled.value = enabled;
+    untracked(() {
+      isAppBlacklistEnabled.value = enabled;
+    });
     _persist();
     _toggleSystemShield(isAnyBlockActive.value);
   }
 
   void disableAllRules() {
-    final newList = rules.value
-        .map((r) => r.copyWith(isEnabled: false))
-        .toList();
-    rules.value = newList;
+    untracked(() {
+      final newList = rules.value
+          .map((r) => r.copyWith(isEnabled: false))
+          .toList();
+      rules.value = newList;
+    });
     _persist();
     _toggleSystemShield(isAnyBlockActive.value);
   }

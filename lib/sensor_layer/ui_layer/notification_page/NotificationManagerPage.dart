@@ -489,27 +489,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     final targetV = quest.targetValue ?? 0.0;
     await dao.updateQuestProgress(quest.id, targetV > 0 ? targetV : 1.0);
 
-    // Award EXP to Social Score
-    try {
-      final personBlock = context.read<PersonBlock>();
-      final pID = personBlock.currentPersonID.value;
-      final reward = quest.rewardExp ?? 0;
-      if (pID != null && reward > 0) {
-        await context.read<ScoreDAO>().incrementSocialScore(
-          pID,
-          reward.toDouble(),
-        );
-      }
-    } catch (e) {
-      debugPrint('Error awarding social EXP: $e');
-    }
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             AppLocalizations.of(context)!.notification_quest_completed_snack(
               quest.title ?? AppLocalizations.of(context)!.project_note_untitled,
-              quest.rewardExp ?? 0,
+              0, // Passing 0 for exp as we're removing it from the message
             ),
           ),
           backgroundColor: Colors.blueAccent.withValues(alpha: 0.8),

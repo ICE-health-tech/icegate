@@ -3,11 +3,8 @@ import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
-import 'package:provider/provider.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/ProjectPoint.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 class ProjectBlock {
@@ -94,7 +91,6 @@ class ProjectBlock {
     BuildContext context,
     ProjectProtocol project,
   ) async {
-    final scoreBlock = context.read<ScoreBlock>();
     await _dao.updateProject(
       ProjectData(
         id: project.id,
@@ -110,13 +106,6 @@ class ProjectBlock {
         status: 1, // 1 for completed
       ),
     );
-
-    // Calculate dynamic bonus based on project effort
-    final daysActive = DateTime.now().difference(project.createdAt).inDays;
-    final bonus = ProjectPoint.calculateProjectBonus(0, 0, daysActive);
-
-    // Award points
-    await scoreBlock.persistentCareerIncrement(bonus);
   }
 
   Future<void> updateProjectRemoteSettings(

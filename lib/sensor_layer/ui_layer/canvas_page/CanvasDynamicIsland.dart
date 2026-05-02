@@ -13,7 +13,6 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Quests/QuestBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/SSHConfigForm.dart';
 import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
@@ -133,7 +132,6 @@ class CanvasDynamicIsland extends StatelessWidget {
     final double scalingFactor = isSmallDevice ? 0.85 : 1.0;
 
     final focusBlock = context.read<FocusBlock>();
-    final questBlock = context.read<QuestBlock>();
     final docBlock = context.read<DocumentationBlock>();
     final notificationService = context.read<LocalNotificationService>();
     final healthBlock = context.read<HealthBlock>();
@@ -383,12 +381,10 @@ class CanvasDynamicIsland extends StatelessWidget {
                         ),
                       ),
                       SizedBox(width: 4 * scalingFactor),
-                      // Notifications (badge shows active quest count; cap display to avoid overlap)
+                      // Notifications (badge shows active notifications; cap display to avoid overlap)
                       Watch((context) {
-                        final numberOfQuests = questBlock.numberOfQuests.value;
-                        final numberOfEnabledNotifications =
+                        final totalNotifications =
                             notificationService.numberOfEnabledNotifications.value;
-                        final totalNotifications = numberOfQuests + numberOfEnabledNotifications;
 
                         return GestureDetector(
                           onTap: () {

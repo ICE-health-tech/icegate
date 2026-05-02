@@ -4,7 +4,7 @@ import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:drift_sqlite_async/drift_sqlite_async.dart';
 import 'package:powersync/powersync.dart' show PowerSyncDatabase;
-import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
+// import 'package:ice_gate/orchestration_layer/Servic es/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ThemeLayer/CurrentThemeData.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/PersonProtocol.dart';
@@ -115,7 +115,6 @@ class InternalWidgetsTable extends Table {
 
 // InternalWidgetsDAO moved to daos/internal_widgets_dao.dart
 
-
 @DataClassName('HourlyActivityLogData')
 class HourlyActivityLogTable extends Table {
   @override
@@ -157,7 +156,6 @@ class HourlyActivityLogTable extends Table {
 }
 
 // HourlyActivityLogDAO moved to daos/hourly_activity_log_dao.dart
-
 
 @DataClassName('ExternalWidgetData') // The generated data class name
 class ExternalWidgetsTable extends Table {
@@ -764,9 +762,8 @@ class SubscriptionsTable extends Table {
       text().nullable().named('category')(); // e.g. 'software', 'entertainment'
   BoolColumn get isActive =>
       boolean().withDefault(const Constant(true)).named('is_active')();
-  TextColumn get billingCycle => text()
-      .withDefault(const Constant('monthly'))
-      .named('billing_cycle')();
+  TextColumn get billingCycle =>
+      text().withDefault(const Constant('monthly')).named('billing_cycle')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1023,8 +1020,10 @@ class HealthMetricsTable extends Table {
       .withDefault(const Constant(0.0))
       .named('quest_points')
       .nullable()();
-  RealColumn get oxygenSaturation =>
-      real().withDefault(const Constant(0.0)).named('oxygen_saturation').nullable()();
+  RealColumn get oxygenSaturation => real()
+      .withDefault(const Constant(0.0))
+      .named('oxygen_saturation')
+      .nullable()();
   TextColumn get source => text().nullable().named('source')();
   TextColumn get category => text().nullable().named('category')();
 
@@ -1193,11 +1192,17 @@ class AppUsageHistoryTable extends Table {
   String get tableName => 'app_usage_history';
   TextColumn get id => text()(); // UUID PK
   TextColumn get personID => text().named('person_id')();
-  DateTimeColumn get date => dateTime().map(const DateTimeUTCConverter()).named('date')();
+  DateTimeColumn get date =>
+      dateTime().map(const DateTimeUTCConverter()).named('date')();
   TextColumn get sector => text().named('sector')(); // Health, Finance, etc.
-  TextColumn get pagePath => text().nullable().named('page_path')(); // Specific URL/Path
-  RealColumn get durationMinutes => real().withDefault(const Constant(0.0)).named('duration_minutes')();
-  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime).map(const DateTimeUTCConverter()).named('updated_at')();
+  TextColumn get pagePath =>
+      text().nullable().named('page_path')(); // Specific URL/Path
+  RealColumn get durationMinutes =>
+      real().withDefault(const Constant(0.0)).named('duration_minutes')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1208,6 +1213,37 @@ class AppUsageHistoryTable extends Table {
   ];
 }
 
+@DataClassName('AppTimeSpendingData')
+class AppTimeSpendingTable extends Table {
+  @override
+  String get tableName => 'app_time_spending';
+
+  TextColumn get id => text()(); // UUID PK
+  TextColumn get personID => text().named('person_id')();
+
+  DateTimeColumn get startTime =>
+      dateTime().map(const DateTimeUTCConverter()).named('start_time')();
+  DateTimeColumn get endTime => dateTime()
+      .map(const DateTimeUTCConverter())
+      .nullable()
+      .named('end_time')();
+
+  TextColumn get sector => text().named('sector')(); // Health, Finance, etc.
+  TextColumn get pagePath => text().nullable().named('page_path')();
+
+  RealColumn get durationMinutes =>
+      real().withDefault(const Constant(0.0)).named('duration_minutes')();
+
+  TextColumn get tenantID => text().nullable().named('tenant_id')();
+
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
 
 @DataClassName('MealData')
 class MealsTable extends Table {
@@ -1368,9 +1404,8 @@ class HeartRateLogsTable extends Table {
   TextColumn get personID => text().nullable().named('person_id')();
 
   IntColumn get bpm => integer().named('bpm')();
-  DateTimeColumn get timestamp => dateTime()
-      .map(const DateTimeUTCConverter())
-      .named('timestamp')();
+  DateTimeColumn get timestamp =>
+      dateTime().map(const DateTimeUTCConverter()).named('timestamp')();
 
   TextColumn get source => text().nullable().named('source')();
 
@@ -1398,9 +1433,8 @@ class OxygenSaturationLogsTable extends Table {
 
   RealColumn get saturation => real().named('saturation')(); // e.g. 98.5
   TextColumn get source => text().nullable().named('source')();
-  DateTimeColumn get timestamp => dateTime()
-      .map(const DateTimeUTCConverter())
-      .named('timestamp')();
+  DateTimeColumn get timestamp =>
+      dateTime().map(const DateTimeUTCConverter()).named('timestamp')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -1452,8 +1486,8 @@ class SleepLogsTable extends Table {
 
   @override
   List<Set<Column>> get uniqueKeys => [
-        {personID, startTime}
-      ];
+    {personID, startTime},
+  ];
 }
 
 @DataClassName('ExerciseLogData')
@@ -1704,6 +1738,7 @@ class FeedbacksTable extends Table {
       text().withDefault(const Constant('pending'))(); // pending, synced
   DateTimeColumn get createdAt =>
       dateTime().withDefault(currentDateAndTime).named('created_at')();
+  TextColumn get tenantID => text().nullable().named('tenant_id')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -2059,80 +2094,6 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
     });
   }
 
-  Future<void> updateMindScore(
-    String personID, {
-    required int strategyNoteCount,
-    required double questXP,
-    String? tenantId,
-  }) async {
-    if (personID.isEmpty) return;
-
-    final notePoints = (strategyNoteCount * STRATEGY_NOTE_POINTS).toDouble();
-    final finalScore = notePoints + questXP;
-
-    await transaction(() async {
-      final existing = await getScoreByPersonID(personID);
-      if (existing != null) {
-        await (update(
-          scoresTable,
-        )..where((t) => t.id.equals(existing.id))).write(
-          ScoresTableCompanion(
-            socialGlobalScore: Value(finalScore),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      } else {
-        final deterministicId = IDGen.generateDeterministicUuid(
-          personID,
-          "score",
-        );
-        await into(scoresTable).insert(
-          ScoresTableCompanion.insert(
-            id: deterministicId,
-            personID: Value(personID),
-            tenantID: Value(tenantId),
-            socialGlobalScore: Value(finalScore),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      }
-    });
-  }
-
-  Future<void> updateFinancialScore(
-    String personID,
-    double score, {
-    String? tenantId,
-  }) async {
-    await transaction(() async {
-      final existing = await getScoreByPersonID(personID);
-      if (existing != null) {
-        await (update(
-          scoresTable,
-        )..where((t) => t.personID.equals(personID))).write(
-          ScoresTableCompanion(
-            financialGlobalScore: Value(score),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      } else {
-        final deterministicId = IDGen.generateDeterministicUuid(
-          personID,
-          "score",
-        );
-        await into(scoresTable).insert(
-          ScoresTableCompanion.insert(
-            id: deterministicId,
-            personID: Value(personID),
-            tenantID: Value(tenantId),
-            financialGlobalScore: Value(score),
-            updatedAt: Value(DateTime.now()),
-          ),
-        );
-      }
-    });
-  }
-
   Future<void> incrementHealthScore(
     String personID,
     double points, {
@@ -2207,10 +2168,8 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
 // 4.1 ExternalWidgetsDAO
 // ExternalWidgetsDAO moved to daos/external_widgets_dao.dart
 
-
 // 4.2 ThemesTableDAO
 // ThemesTableDAO moved to daos/theme_dao.dart
-
 
 // 4.3 ProjectNoteDAO
 @DriftAccessor(tables: [ProjectNotesTable])
@@ -2665,6 +2624,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       'meals',
       'custom_notifications',
       'quotes',
+      'app_time_spending',
       // 'ai_prompts',
     ];
 
@@ -4379,7 +4339,9 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
       if (updatedHeartRate.value != existing.heartRate) hasChanges = true;
       if (updatedQuestPoints.value != existing.questPoints) hasChanges = true;
       if (updatedOxygen.value != existing.oxygenSaturation) hasChanges = true;
-      if (updatedSource.value != (existing as dynamic).source) hasChanges = true;
+      if (updatedSource.value != (existing as dynamic).source) {
+        hasChanges = true;
+      }
 
       // If nothing changed and we already have a record with the correct ID, skip
       if (!hasChanges && !force && existingRecord != null) {
@@ -4624,6 +4586,7 @@ class HealthMetricsDAO extends DatabaseAccessor<AppDatabase>
     SocialMetricsTable,
     WeightLogsTable,
     AppUsageHistoryTable,
+    AppTimeSpendingTable,
   ],
 )
 class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
@@ -4634,6 +4597,50 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   }
 
   // --- App Usage Tracking ---
+
+  Future<void> logAppSpending({
+    required String personId,
+    required DateTime startTime,
+    required DateTime endTime,
+    required String sector,
+    String? pagePath,
+  }) async {
+    final duration = endTime.difference(startTime).inSeconds / 60.0;
+    if (duration <= 0.01) return; // Ignore very small increments
+
+    await into(appTimeSpendingTable).insert(
+      AppTimeSpendingTableCompanion.insert(
+        id: IDGen.generateUuid(),
+        personID: personId,
+        startTime: startTime,
+        sector: sector,
+        endTime: Value(endTime),
+        pagePath: Value(pagePath),
+        durationMinutes: Value(duration),
+      ),
+    );
+  }
+
+  Future<double> getPeriodSpendingMinutes(
+    String personId, {
+    required DateTime start,
+    required DateTime end,
+  }) async {
+    final query = select(appTimeSpendingTable)
+      ..where(
+        (t) =>
+            t.personID.equals(personId) &
+            t.startTime.isBiggerOrEqualValue(start) &
+            t.startTime.isSmallerThanValue(end),
+      );
+
+    final rows = await query.get();
+    double total = 0.0;
+    for (final row in rows) {
+      total += row.durationMinutes;
+    }
+    return total;
+  }
 
   Future<void> incrementAppUsage(
     String personId,
@@ -4649,16 +4656,16 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     );
 
     await transaction(() async {
-      final existing = await (select(appUsageHistoryTable)
-            ..where((t) => t.id.equals(targetId)))
-          .getSingleOrNull();
+      final existing = await (select(
+        appUsageHistoryTable,
+      )..where((t) => t.id.equals(targetId))).getSingleOrNull();
 
       if (existing != null) {
-        await (update(appUsageHistoryTable)
-              ..where((t) => t.id.equals(targetId)))
-            .write(
+        await (update(
+          appUsageHistoryTable,
+        )..where((t) => t.id.equals(targetId))).write(
           AppUsageHistoryTableCompanion(
-            durationMinutes: Value((existing.durationMinutes ?? 0.0) + minutes),
+            durationMinutes: Value(existing.durationMinutes + minutes),
             updatedAt: Value(now),
           ),
         );
@@ -4679,16 +4686,24 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   }
 
   Stream<List<AppUsageHistoryData>> watchLastNDaysUsage(
-      String personId, int days) {
+    String personId,
+    int days,
+  ) {
     final now = DateTime.now();
-    final cutoff =
-        DateTime(now.year, now.month, now.day).subtract(Duration(days: days));
+    final cutoff = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(Duration(days: days));
 
     return (select(appUsageHistoryTable)
-          ..where((t) =>
-              t.personID.equals(personId) & t.date.isBiggerOrEqualValue(cutoff))
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.date.isBiggerOrEqualValue(cutoff),
+          )
           ..orderBy([
-            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc)
+            (t) => OrderingTerm(expression: t.date, mode: OrderingMode.desc),
           ]))
         .watch();
   }
@@ -5252,6 +5267,16 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     });
   }
 
+  Future<double> getTotalHealthQuestPoints(String personId) async {
+    final row = await customSelect(
+      'SELECT SUM(quest_points) as total FROM health_metrics WHERE person_id = ? AND category != \'screentime\'',
+      variables: [Variable.withString(personId)],
+      readsFrom: {healthMetricsTable},
+    ).getSingle();
+    final val = row.data['total'];
+    return (val as num?)?.toDouble() ?? 0.0;
+  }
+
   Stream<double> watchTotalSocialQuestPoints(String personId) {
     return customSelect(
       'SELECT SUM(quest_points) as total FROM social_metrics WHERE person_id = ? AND category != \'screentime\'',
@@ -5263,6 +5288,16 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
     });
   }
 
+  Future<double> getTotalSocialQuestPoints(String personId) async {
+    final row = await customSelect(
+      'SELECT SUM(quest_points) as total FROM social_metrics WHERE person_id = ? AND category != \'screentime\'',
+      variables: [Variable.withString(personId)],
+      readsFrom: {socialMetricsTable},
+    ).getSingle();
+    final val = row.data['total'];
+    return (val as num?)?.toDouble() ?? 0.0;
+  }
+
   Stream<double> watchTotalProjectQuestPoints(String personId) {
     return customSelect(
       'SELECT SUM(quest_points) as total FROM project_metrics WHERE person_id = ? AND category != \'screentime\'',
@@ -5272,6 +5307,16 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
       final val = row.data['total'];
       return (val as num?)?.toDouble() ?? 0.0;
     });
+  }
+
+  Future<double> getTotalProjectQuestPoints(String personId) async {
+    final row = await customSelect(
+      'SELECT SUM(quest_points) as total FROM project_metrics WHERE person_id = ? AND category != \'screentime\'',
+      variables: [Variable.withString(personId)],
+      readsFrom: {projectMetricsTable},
+    ).getSingle();
+    final val = row.data['total'];
+    return (val as num?)?.toDouble() ?? 0.0;
   }
 
   Stream<double> watchTotalFinancialQuestPoints(String personId) {
@@ -5394,31 +5439,6 @@ class MetricsDAO extends DatabaseAccessor<AppDatabase> with _$MetricsDAOMixin {
   }
 
   // --- Historical Metric Points (Points derived from steps/etc on previous days) ---
-
-  Stream<double> watchHistoricalHealthMetricPoints(String personId) {
-    final today = DateTime.now();
-    final todayStart = DateTime(today.year, today.month, today.day);
-
-    return customSelect(
-      'SELECT SUM(max_s) as s, SUM(max_e) as e, SUM(max_sl) as sl FROM (SELECT MAX(steps) as max_s, MAX(exercise_minutes) as max_e, MAX(sleep_hours) as max_sl FROM health_metrics WHERE person_id = ? AND date < ? GROUP BY date)',
-      variables: [
-        Variable.withString(personId),
-        Variable.withDateTime(todayStart),
-      ],
-      readsFrom: {healthMetricsTable},
-    ).watchSingle().map((row) {
-      final s = (row.data['s'] as num?)?.toDouble() ?? 0.0;
-      final e = (row.data['e'] as num?)?.toDouble() ?? 0.0;
-      final sl = (row.data['sl'] as num?)?.toDouble() ?? 0.0;
-
-      // Use same constants as GameConst.dart
-      double points = 0;
-      if (STEPS_PER_POINT > 0) points += (s / STEPS_PER_POINT);
-      if (EXERCISE_PER_POINT > 0) points += (e / EXERCISE_PER_POINT);
-      points += (sl * SLEEP_POINTS_PER_HOUR);
-      return points;
-    });
-  }
 
   /// Removes the old migration "Genesis" records to cleanup the DB.
   Future<void> cleanupGenesisRecords(String personId) async {
@@ -6121,6 +6141,8 @@ class ExerciseWithFocusSession {
     ExerciseLogsTable,
     WeightLogsTable,
     FocusSessionsTable,
+    MindLogsTable,
+    AppTimeSpendingTable,
     HeartRateLogsTable,
     OxygenSaturationLogsTable,
   ],
@@ -6235,7 +6257,8 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Future<List<String>> getSleepSources() async {
-    final query = selectOnly(sleepLogsTable, distinct: true)..addColumns([sleepLogsTable.source]);
+    final query = selectOnly(sleepLogsTable, distinct: true)
+      ..addColumns([sleepLogsTable.source]);
     final rows = await query.get();
     return rows.map((r) => r.read(sleepLogsTable.source) ?? 'Manual').toList();
   }
@@ -6465,15 +6488,14 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
   // Heart Rate Logs
   Future<void> insertHeartRateLog(HeartRateLogsTableCompanion entry) async {
     try {
-      final existing = await (select(heartRateLogsTable)
-            ..where((t) => t.id.equals(entry.id.value)))
-          .getSingleOrNull();
+      final existing = await (select(
+        heartRateLogsTable,
+      )..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
 
       if (existing == null) {
-        await into(heartRateLogsTable).insert(
-          entry,
-          mode: InsertMode.insertOrReplace,
-        );
+        await into(
+          heartRateLogsTable,
+        ).insert(entry, mode: InsertMode.insertOrReplace);
       }
 
       // Sync to cloud
@@ -6517,15 +6539,14 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
     OxygenSaturationLogsTableCompanion entry,
   ) async {
     try {
-      final existing = await (select(oxygenSaturationLogsTable)
-            ..where((t) => t.id.equals(entry.id.value)))
-          .getSingleOrNull();
+      final existing = await (select(
+        oxygenSaturationLogsTable,
+      )..where((t) => t.id.equals(entry.id.value))).getSingleOrNull();
 
       if (existing == null) {
-        await into(oxygenSaturationLogsTable).insert(
-          entry,
-          mode: InsertMode.insertOrReplace,
-        );
+        await into(
+          oxygenSaturationLogsTable,
+        ).insert(entry, mode: InsertMode.insertOrReplace);
       }
 
       // Sync to cloud
@@ -6554,7 +6575,7 @@ class HealthLogsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> upsertFromSupabaseOxygen(Map<String, dynamic> record) async {
     final ts = record['timestamp'];
-    final timestamp = ts is int 
+    final timestamp = ts is int
         ? DateTime.fromMillisecondsSinceEpoch(ts)
         : DateTime.parse(ts.toString());
 
@@ -6588,9 +6609,7 @@ class AiPromptsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-
 // AiPromptsDAO moved to daos/ai_prompts_dao.dart
-
 
 @DataClassName('ConfigData')
 class ConfigsTable extends Table {
@@ -6614,7 +6633,6 @@ class ConfigsTable extends Table {
     {personID, configKey},
   ];
 }
-
 
 // ConfigsDAO moved to daos/configs_dao.dart
 
@@ -6675,6 +6693,7 @@ class ConfigsTable extends Table {
     HeartRateLogsTable,
     OxygenSaturationLogsTable,
     AppUsageHistoryTable,
+    AppTimeSpendingTable,
   ],
   daos: [
     ThemeDAO,
@@ -6882,7 +6901,8 @@ class AppDatabase extends _$AppDatabase {
   @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
   @override
-  PortfolioSnapshotsDAO get portfolioSnapshotsDAO => PortfolioSnapshotsDAO(this);
+  PortfolioSnapshotsDAO get portfolioSnapshotsDAO =>
+      PortfolioSnapshotsDAO(this);
 
   @override
   DriftDatabaseOptions get options => const DriftDatabaseOptions(
@@ -6902,7 +6922,7 @@ class AppDatabase extends _$AppDatabase {
   // v68 → adds is_analyzing to meals table for background AI tracking
   // v69 → adds source column to sleep_logs, water_logs, exercise_logs
   // v70 → ensures source column exists in all health log tables (water, sleep, exercise, weight)
-  int get schemaVersion => 70;
+  int get schemaVersion => 71;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -6970,7 +6990,7 @@ class AppDatabase extends _$AppDatabase {
             'sleep_logs',
             'water_logs',
             'exercise_logs',
-            'weight_logs'
+            'weight_logs',
           ];
           for (final table in healthTables) {
             try {
@@ -7012,13 +7032,22 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 60) {
           try {
-            await m.addColumn(healthMetricsTable, healthMetricsTable.oxygenSaturation);
+            await m.addColumn(
+              healthMetricsTable,
+              healthMetricsTable.oxygenSaturation,
+            );
           } catch (_) {}
           try {
-            await m.addColumn(healthMetricsTable, healthMetricsTable.exerciseMinutes);
+            await m.addColumn(
+              healthMetricsTable,
+              healthMetricsTable.exerciseMinutes,
+            );
           } catch (_) {}
           try {
-            await m.addColumn(healthMetricsTable, healthMetricsTable.focusMinutes);
+            await m.addColumn(
+              healthMetricsTable,
+              healthMetricsTable.focusMinutes,
+            );
           } catch (_) {}
         }
         if (from < 59) {
@@ -7424,6 +7453,9 @@ class AppDatabase extends _$AppDatabase {
         }
         if (from < 57) {
           await m.createTable(mindLogsTable);
+        }
+        if (from < 71) {
+          await m.createTable(appTimeSpendingTable);
         }
       },
       beforeOpen: (details) async {

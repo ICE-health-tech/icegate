@@ -277,14 +277,6 @@ class _HomePageState extends State<HomePage> {
               leading: const SizedBox.shrink(),
               actions: [const SizedBox(width: 8)],
             ),
-            // floatingActionButton: Watch((context) {
-            //   final level = _levelUpToShow.value;
-            //   if (level == null) return const SizedBox.shrink();
-            //   return LevelUpCelebration(
-            //     level: level,
-            //     onFinished: () => _levelUpToShow.value = null,
-            //   );
-            // }),
             floatingActionButtonLocation:
                 FloatingActionButtonLocation.centerDocked,
             // Use Builder instead of Watch here — this scope doesn't read
@@ -383,7 +375,7 @@ class _HomePageState extends State<HomePage> {
                                   .map(
                                     (m) => {
                                       'label': m['label'] as String,
-                                      'value': m['value'] as String,
+                                      'value': m['value'],
                                     },
                                   )
                                   .toList();
@@ -464,7 +456,7 @@ class _HomePageState extends State<HomePage> {
                                   .map(
                                     (m) => {
                                       'label': m['label'] as String,
-                                      'value': m['value'] as String,
+                                      'value': m['value'],
                                     },
                                   )
                                   .toList();
@@ -485,32 +477,34 @@ class _HomePageState extends State<HomePage> {
                               final socialScore =
                                   scoreBlock.score.socialGlobalScore;
                               final focus = healthBlock.todayFocusMinutes.value;
-                              final socialXP =
-                                  scoreBlock.todaySocialPoints.value;
-
                               dynamic moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
                                 moodDisplay = Row(
-                                  mainAxisSize: MainAxisSize.min,
                                   children: [
                                     _buildMoodIcon(context, moodLog.moodScore),
                                     const SizedBox(width: 4),
-                                    AutoSizeText(
-                                      moodLog.moodScore == 1
-                                          ? l10n.mood_awful
-                                          : moodLog.moodScore == 2
-                                          ? l10n.mood_bad
-                                          : moodLog.moodScore == 3
-                                          ? l10n.mood_meh
-                                          : moodLog.moodScore == 4
-                                          ? l10n.mood_good
-                                          : l10n.mood_rad,
-                                      style: TextStyle(
-                                        color: colorScheme.onSurface.withValues(
-                                          alpha: 0.9,
+                                    Expanded(
+                                      child: AutoSizeText(
+                                        moodLog.moodScore == 1
+                                            ? l10n.mood_awful
+                                            : moodLog.moodScore == 2
+                                            ? l10n.mood_bad
+                                            : moodLog.moodScore == 3
+                                            ? l10n.mood_meh
+                                            : moodLog.moodScore == 4
+                                            ? l10n.mood_good
+                                            : l10n.mood_rad,
+                                        style: TextStyle(
+                                          color: colorScheme.onSurface
+                                              .withValues(
+                                            alpha: 0.9,
+                                          ),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w800,
                                         ),
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w800,
+                                        maxLines: 1,
+                                        minFontSize: 8,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ),
                                   ],
@@ -548,11 +542,6 @@ class _HomePageState extends State<HomePage> {
                                   'visible': configBlock.showIndexFocus.value,
                                 },
                                 {
-                                  'label': l10n.home_index_xp,
-                                  'value': '+${socialXP.toInt()}',
-                                  'visible': configBlock.showIndexXP.value,
-                                },
-                                {
                                   'label': l10n.mind_latest_note,
                                   'value': moodLog?.note ?? l10n.mood_no_data,
                                   'visible':
@@ -565,7 +554,7 @@ class _HomePageState extends State<HomePage> {
                                   .map(
                                     (m) => {
                                       'label': m['label'] as String,
-                                      'value': m['value'] as String,
+                                      'value': m['value'],
                                     },
                                   )
                                   .toList();
@@ -597,50 +586,42 @@ class _HomePageState extends State<HomePage> {
                               final projectsRemaining = allProjects
                                   .where((p) => p.status == 0)
                                   .length;
-                              final projectXP =
-                                  scoreBlock.todayProjectPoints.value;
-
-                              final allMetrics = [
-                                {
-                                  'label': l10n.home_projects_done,
-                                  'value': '$projectsDone',
-                                  'visible': true,
-                                },
-                                {
-                                  'label': l10n.home_projects_active,
-                                  'value': '$projectsRemaining',
-                                  'visible': true,
-                                },
-                                {
-                                  'label': l10n.home_tasks_done,
-                                  'value': '$tasksDone',
-                                  'visible':
-                                      configBlock.showIndexProjects.value,
-                                },
-                                {
-                                  'label': l10n.home_tasks_active,
-                                  'value': '$tasksRemaining',
-                                  'visible':
-                                      configBlock.showIndexProjects.value,
-                                },
-                                {
-                                  'label': l10n.home_index_total,
-                                  'value': '${allProjects.length}',
-                                  'visible': true,
-                                },
-                                {
-                                  'label': l10n.home_index_xp,
-                                  'value': '+${projectXP.toInt()}',
-                                  'visible': configBlock.showIndexXP.value,
-                                },
-                              ];
+                                final allMetrics = [
+                                  {
+                                    'label': l10n.home_projects_done,
+                                    'value': '$projectsDone',
+                                    'visible': true,
+                                  },
+                                  {
+                                    'label': l10n.home_projects_active,
+                                    'value': '$projectsRemaining',
+                                    'visible': true,
+                                  },
+                                  {
+                                    'label': l10n.home_tasks_done,
+                                    'value': '$tasksDone',
+                                    'visible':
+                                        configBlock.showIndexProjects.value,
+                                  },
+                                  {
+                                    'label': l10n.home_tasks_active,
+                                    'value': '$tasksRemaining',
+                                    'visible':
+                                        configBlock.showIndexProjects.value,
+                                  },
+                                  {
+                                    'label': l10n.home_index_total,
+                                    'value': '${allProjects.length}',
+                                    'visible': true,
+                                  },
+                                ];
 
                               final visibleMetrics = allMetrics
                                   .where((m) => m['visible'] == true)
                                   .map(
                                     (m) => {
                                       'label': m['label'] as String,
-                                      'value': m['value'] as String,
+                                      'value': m['value'],
                                     },
                                   )
                                   .toList();
@@ -715,11 +696,9 @@ class _HomePageState extends State<HomePage> {
                           final envBlock = context.read<EnvironmentalBlock>();
                           final externalWidgets = externalWidgetBlock
                               .listExternalWidgets
-                              .watch(context);
-                          final showAqi = configBlock.showAqi.watch(context);
-                          final showWeather = configBlock.showWeather.watch(
-                            context,
-                          );
+                              .value;
+                          final showAqi = configBlock.showAqi.value;
+                          final showWeather = configBlock.showWeather.value;
 
                           // Build the temporary list of plugin widgets
                           final List<Widget> pluginItems = [];
@@ -941,65 +920,72 @@ class _HomePageState extends State<HomePage> {
                                 maxLines: 1,
                               ),
                               // const SizedBox(height: 4),
-                              // RollingScoreText(
-                              //   value: level,
-                              //   prefix: "LV ",
-                              //   style: TextStyle(
-                              //     color: colorScheme.onSurface,
-                              //     fontSize: isPhone ? 14 : 18,
-                              //     fontWeight: FontWeight.w900,
-                              //     letterSpacing: 0.5,
-                              //   ),
-                              // ),
                             ],
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: 24),
-                    // 2x2 Grid of metrics
-                    Wrap(
-                      spacing: isPhone ? 8 : 12,
-                      runSpacing: isPhone ? 4 : 4,
-                      children: metrics.map((m) {
-                        return SizedBox(
-                          width: isPhone ? 80 : 90,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (m['value'] is Widget)
-                                m['value'] as Widget
-                              else
-                                AutoSizeText(
-                                  m['value']?.toString() ?? '',
-                                  style: TextStyle(
-                                    color: colorScheme.onSurface.withValues(
-                                      alpha: 0.9,
+                    // 2-column metrics — width from layout so tiles never bleed together.
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        final spacing = isPhone ? 8.0 : 12.0;
+                        final maxW = constraints.maxWidth;
+                        final tileW = maxW.isFinite
+                            ? ((maxW - spacing) / 2).clamp(72.0, 160.0)
+                            : (isPhone ? 88.0 : 100.0);
+                        return Wrap(
+                          spacing: spacing,
+                          runSpacing: isPhone ? 6 : 8,
+                          children: metrics.map((m) {
+                            final valueChild =
+                                m['value'] is Widget
+                                    ? m['value'] as Widget
+                                    : AutoSizeText(
+                                      m['value']?.toString() ?? '',
+                                      style: TextStyle(
+                                        color: colorScheme.onSurface
+                                            .withValues(
+                                          alpha: 0.9,
+                                        ),
+                                        fontSize: isPhone ? 11 : 13,
+                                        fontWeight: FontWeight.w800,
+                                        height: 1.1,
+                                      ),
+                                      maxLines: 2,
+                                      minFontSize: 8,
+                                      overflow: TextOverflow.ellipsis,
+                                    );
+                            return SizedBox(
+                              width: tileW,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  SizedBox(
+                                    width: tileW,
+                                    child: valueChild,
+                                  ),
+                                  AutoSizeText(
+                                    m['label']?.toString() ?? '',
+                                    style: TextStyle(
+                                      color: colorScheme.onSurface
+                                          .withValues(
+                                        alpha: 0.5,
+                                      ),
+                                      fontSize: isPhone ? 9 : 10,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.1,
                                     ),
-                                    fontSize: isPhone ? 11 : 13,
-                                    fontWeight: FontWeight.w800,
-                                    height: 1.1,
+                                    maxLines: 2,
+                                    minFontSize: 7,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              AutoSizeText(
-                                m['label']?.toString() ?? '',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface.withValues(
-                                    alpha: 0.5,
-                                  ),
-                                  fontSize: isPhone ? 9 : 10,
-                                  fontWeight: FontWeight.w600,
-                                  height: 1.1,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                ],
                               ),
-                            ],
-                          ),
+                            );
+                          }).toList(),
                         );
-                      }).toList(),
+                      },
                     ),
                   ],
                 ),
@@ -1375,12 +1361,12 @@ class _HomePageState extends State<HomePage> {
     final envBlock = context.read<EnvironmentalBlock>();
 
     return Watch((context) {
-      final showAqi = configBlock.showAqi.watch(context);
-      final showWeather = configBlock.showWeather.watch(context);
+      final showAqi = configBlock.showAqi.value;
+      final showWeather = configBlock.showWeather.value;
 
       if (!showAqi && !showWeather) return const SizedBox.shrink();
 
-      final envData = envBlock.currentData.watch(context);
+      final envData = envBlock.currentData.value;
       final textTheme = Theme.of(context).textTheme;
       final colorScheme = Theme.of(context).colorScheme;
 

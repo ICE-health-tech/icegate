@@ -1178,7 +1178,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mood_rad => 'Tuyệt vời';
 
   @override
-  String get mood_no_data => 'Không có dữ liệu';
+  String get mood_no_data => 'N/A';
 
   @override
   String get mind_current_mood => 'Tâm trạng';
@@ -1199,7 +1199,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_stable => 'Ổn định';
 
   @override
-  String get mind_needs_care => 'Cần quan tâm';
+  String get mind_needs_care => 'Quan tâm';
 
   @override
   String get mind_quick_entry_hint => 'Bạn đang nghĩ gì thế?';
