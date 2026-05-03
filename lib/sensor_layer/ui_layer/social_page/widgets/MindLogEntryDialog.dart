@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
 import 'package:provider/provider.dart';
@@ -39,6 +41,76 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     });
   }
 
+  Future<void> _onAddCustomOption(
+    String categoryKey,
+    String personId,
+    String? tenantId,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final controller = TextEditingController();
+    String? result;
+    try {
+      result = await showDialog<String>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(l10n.mind_activity_custom_dialog_title),
+          content: TextField(
+            controller: controller,
+            maxLength: 80,
+            autofocus: true,
+            decoration: InputDecoration(
+              hintText: l10n.mind_activity_custom_hint,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: Text(l10n.cancel),
+            ),
+            TextButton(
+              onPressed: () {
+                final label = controller.text.trim();
+                if (label.isEmpty) return;
+                if (label.contains('|')) {
+                  ScaffoldMessenger.of(ctx).showSnackBar(
+                    SnackBar(content: Text(l10n.mind_activity_custom_invalid_char)),
+                  );
+                  return;
+                }
+                Navigator.pop(ctx, label);
+              },
+              child: Text(l10n.mind_activity_custom_add),
+            ),
+          ],
+        ),
+      );
+    } finally {
+      controller.dispose();
+    }
+
+    if (result == null || result.isEmpty || !mounted) return;
+
+    final id = IDGen.UUIDV7();
+    final db = context.read<AppDatabase>();
+    try {
+      await db.journalActivityOptionsDAO.insertOption(
+        id: id,
+        personId: personId,
+        tenantId: tenantId,
+        categoryKey: categoryKey,
+        label: result,
+      );
+      if (!mounted) return;
+      _onActivityToggled(MindActivityTokens.refToken(id));
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Failed to save activity: $e')),
+        );
+      }
+    }
+  }
+
   bool _isSaving = false;
 
   Future<void> _saveLog() async {
@@ -52,8 +124,6 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         ? profile.tenantId
         : (currentUser?.appMetadata['tenant_id'] ?? currentUser?.userMetadata?['tenant_id']);
 
-    print("DEBUG: Resolved personId: $personId, tenantId: $tenantId");
-
     if (personId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
@@ -66,8 +136,7 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
     setState(() => _isSaving = true);
 
     try {
-      print("entry: mood=$_selectedMood, activities=$_selectedActivities");
-      
+      final db = context.read<AppDatabase>();
       await context.read<MindBlock>().addMindLog(
         moodScore: _selectedMood,
         activities: _selectedActivities,
@@ -75,11 +144,21 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
         personId: personId,
         tenantId: tenantId,
       );
-      
+      if (!mounted) return;
+
       // Double insert into project_notes for Journal visibility
-      final activitiesStr = _selectedActivities.isNotEmpty 
-          ? _selectedActivities.join(", ") 
-          : AppLocalizations.of(context)!.mind_logged_mood;
+      final l10n = AppLocalizations.of(context)!;
+      final optionLabels = await db.journalActivityOptionsDAO.labelMapForPerson(
+        personId,
+      );
+      if (!mounted) return;
+      final activitiesStr = _selectedActivities.isNotEmpty
+          ? _selectedActivities
+                .map(
+                  (t) => MindActivityTokens.displayLabel(l10n, t, optionLabels),
+                )
+                .join(', ')
+          : l10n.mind_logged_mood;
       final emoji = _getMoodEmoji(_selectedMood);
       
       await context.read<ProjectNoteDAO>().insertNote(
@@ -131,6 +210,17 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final personBlock = context.read<PersonBlock>();
+    final profile = personBlock.information.value.profiles;
+    final currentUser = Supabase.instance.client.auth.currentUser;
+    final personId = profile.id ?? currentUser?.id;
+    final Object? rawTenant = (profile.tenantId != null &&
+            profile.tenantId!.isNotEmpty)
+        ? profile.tenantId
+        : (currentUser?.appMetadata['tenant_id'] ??
+            currentUser?.userMetadata?['tenant_id']);
+    final String? tenantId =
+        rawTenant is String ? rawTenant : rawTenant?.toString();
 
     return LayoutBuilder(
       builder: (context, constraints) {
@@ -184,10 +274,32 @@ class _MindLogEntryDialogState extends State<MindLogEntryDialog> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                ActivitySelector(
-                  selectedActivities: _selectedActivities,
-                  onActivityToggled: _onActivityToggled,
-                ),
+                if (personId != null && personId.isNotEmpty)
+                  StreamBuilder<List<JournalActivityOptionData>>(
+                    stream: context
+                        .read<AppDatabase>()
+                        .journalActivityOptionsDAO
+                        .watchForPerson(personId),
+                    builder: (context, snap) {
+                      return ActivitySelector(
+                        selectedActivities: _selectedActivities,
+                        onActivityToggled: _onActivityToggled,
+                        customOptions: snap.data ?? const [],
+                        onAddCustomOption: (cat) => _onAddCustomOption(
+                          cat,
+                          personId,
+                          tenantId,
+                        ),
+                      );
+                    },
+                  )
+                else
+                  ActivitySelector(
+                    selectedActivities: _selectedActivities,
+                    onActivityToggled: _onActivityToggled,
+                    customOptions: const [],
+                    onAddCustomOption: (_) {},
+                  ),
                 const SizedBox(height: 24),
                 TextField(
                   controller: _noteController,

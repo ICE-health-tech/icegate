@@ -182,6 +182,55 @@
   "health_metrics_net_calories": "Net Cal",
   "health_metrics_calories_consumed": "Consumed",
   "health_metrics_oxygen_saturation": "Oxygen",
+  "health_spo2_page_title": "Blood oxygen (SpO₂)",
+  "health_spo2_today": "Today",
+  "health_spo2_chart_section": "Today's chart",
+  "health_spo2_percent_unit": "% SpO₂",
+  "health_spo2_latest": "Latest: {time}",
+  "@health_spo2_latest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "health_spo2_target_line": "Target {n}%",
+  "@health_spo2_target_line": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "health_spo2_target_row": "Target: {n}%",
+  "@health_spo2_target_row": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "health_spo2_edit_target": "Change target",
+  "health_spo2_target_dialog_title": "SpO₂ target",
+  "health_spo2_save": "Save",
+  "health_spo2_day_avg": "Day average: {n}%",
+  "@health_spo2_day_avg": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "health_spo2_summary_min": "Lowest",
+  "health_spo2_summary_max": "Highest",
+  "health_spo2_educational_title": "About SpO₂",
+  "health_spo2_educational_body": "Normal blood oxygen saturation is often around 95–100%. These readings are for reference only and are not a substitute for professional medical advice.",
+  "health_spo2_motivation_peak": "Outstanding oxygenation—when SpO₂ stays high, focus feels sharper and breathing steadier.",
+  "health_spo2_motivation_high": "Strong SpO₂—great fuel for focus and a steadier mind.",
+  "health_spo2_motivation_on_target": "You're meeting your target—keep breathing easy.",
+  "health_spo2_motivation_near": "Close to your goal—a few slow breaths can bring you into range.",
+  "health_spo2_motivation_low": "Below your target today—rest, hydrate, and breathe gently.",
+  "health_spo2_motivation_empty": "Wear your device and check back—your next reading can guide your calm and clarity.",
   "health_metrics_air_quality": "Air Quality",
   "health_metrics_weather": "Weather",
   "health_metrics_air_quality": "Air Quality",
@@ -612,6 +661,11 @@
   "mind_activities_question": "What have you been up to?",
   "mind_note_hint": "Add a note (optional)",
   "mind_save_btn": "Save Entry",
+  "mind_activity_custom_chip": "Custom",
+  "mind_activity_custom_dialog_title": "New activity",
+  "mind_activity_custom_hint": "Name this activity",
+  "mind_activity_custom_add": "Add",
+  "mind_activity_custom_invalid_char": "This character is not allowed",
   "mind_save_success": "Mind log saved! Reflection updated.",
   "mind_feeling_format": "I'm feeling {mood} today.",
   "@mind_feeling_format": {

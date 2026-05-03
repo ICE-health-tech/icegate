@@ -12,6 +12,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -72,7 +73,11 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                             const SizedBox(height: 12),
                             MoodTrendsChart(logs: snapshot.data!),
                             const SizedBox(height: 24),
-                            _buildRecentLogsPreview(context, snapshot.data!),
+                            _buildRecentLogsPreview(
+                              context,
+                              snapshot.data!,
+                              personId,
+                            ),
                             const SizedBox(height: 24),
                             Text(
                               AppLocalizations.of(context)!.social_notes_title.toUpperCase(),
@@ -270,7 +275,11 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     );
   }
 
-  Widget _buildRecentLogsPreview(BuildContext context, List<MindLogData> logs) {
+  Widget _buildRecentLogsPreview(
+    BuildContext context,
+    List<MindLogData> logs,
+    String personId,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -278,72 +287,89 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     final sortedLogs = List<MindLogData>.from(logs)
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
-    return SizedBox(
-      height: 100,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        physics: const BouncingScrollPhysics(),
-        itemCount: sortedLogs.length.clamp(0, 10),
-        itemBuilder: (context, index) {
-          final log = sortedLogs[index];
-          final activities = jsonDecode(log.activities) as List;
+    return StreamBuilder<List<JournalActivityOptionData>>(
+      stream: context
+          .read<AppDatabase>()
+          .journalActivityOptionsDAO
+          .watchForPerson(personId),
+      builder: (context, optSnap) {
+        final optMap = <String, String>{
+          for (final o in optSnap.data ?? []) o.id: o.label,
+        };
+        final l10n = AppLocalizations.of(context)!;
 
-          final mood = mindMoodAccent(log.moodScore);
-          return Container(
-            width: 160,
-            margin: const EdgeInsets.only(right: 12),
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  mood.withValues(alpha: 0.18),
-                  colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
-                ],
-              ),
-              border: Border.all(
-                color: mood.withValues(alpha: 0.45),
-                width: 1,
-              ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
+        return SizedBox(
+          height: 100,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            physics: const BouncingScrollPhysics(),
+            itemCount: sortedLogs.length.clamp(0, 10),
+            itemBuilder: (context, index) {
+              final log = sortedLogs[index];
+
+              final mood = mindMoodAccent(log.moodScore);
+              return Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      mood.withValues(alpha: 0.18),
+                      colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
+                    ],
+                  ),
+                  border: Border.all(
+                    color: mood.withValues(alpha: 0.45),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    _buildMoodIcon(context, log.moodScore),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        DateFormat('MMM d, HH:mm').format(log.createdAt.toLocal()),
-                        style: textTheme.labelSmall?.copyWith(
-                          fontSize: 9,
-                          color: colorScheme.onSurface.withValues(alpha: 0.88),
-                          fontWeight: FontWeight.w600,
+                    Row(
+                      children: [
+                        _buildMoodIcon(context, log.moodScore),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            DateFormat('MMM d, HH:mm')
+                                .format(log.createdAt.toLocal()),
+                            style: textTheme.labelSmall?.copyWith(
+                              fontSize: 9,
+                              color: colorScheme.onSurface.withValues(alpha: 0.88),
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                          ),
                         ),
-                        maxLines: 1,
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      MindActivityTokens.formatActivitiesJson(
+                        l10n,
+                        log.activities,
+                        optMap,
                       ),
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontSize: 10,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  activities.join(", "),
-                  style: textTheme.bodySmall?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 10,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
-          );
-        },
-      ),
+              );
+            },
+          ),
+        );
+      },
     );
   }
 

@@ -182,6 +182,55 @@
   "health_metrics_net_calories": "Calo thực",
   "health_metrics_calories_consumed": "Calo nạp",
   "health_metrics_oxygen_saturation": "Oxy máu",
+  "health_spo2_page_title": "Oxy máu (SpO₂)",
+  "health_spo2_today": "Hôm nay",
+  "health_spo2_chart_section": "Biểu đồ trong ngày",
+  "health_spo2_percent_unit": "% SpO₂",
+  "health_spo2_latest": "Gần nhất: {time}",
+  "@health_spo2_latest": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "health_spo2_target_line": "Mục tiêu {n}%",
+  "@health_spo2_target_line": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "health_spo2_target_row": "Mục tiêu: {n}%",
+  "@health_spo2_target_row": {
+    "placeholders": {
+      "n": {
+        "type": "int"
+      }
+    }
+  },
+  "health_spo2_edit_target": "Đổi mục tiêu",
+  "health_spo2_target_dialog_title": "Mục tiêu SpO₂",
+  "health_spo2_save": "Lưu",
+  "health_spo2_day_avg": "Trung bình ngày: {n}%",
+  "@health_spo2_day_avg": {
+    "placeholders": {
+      "n": {
+        "type": "String"
+      }
+    }
+  },
+  "health_spo2_summary_min": "Thấp nhất",
+  "health_spo2_summary_max": "Cao nhất",
+  "health_spo2_educational_title": "Thông tin về SpO₂",
+  "health_spo2_educational_body": "Độ oxi máu từ 95%-100% giúp cơ thể tập trung hơn, cải thiện tâm trạng",
+  "health_spo2_motivation_peak": "Oxy hóa tuyệt vời—khi SpO₂ cao, tập trung sắc hơn và nhịp thở đều hơn.",
+  "health_spo2_motivation_high": "Chỉ số mạnh. Oxy ổn định giúp tư duy rõ ràng và tâm trí điềm tĩnh hơn.",
+  "health_spo2_motivation_on_target": "Bạn đạt mục tiêu—tiếp tục thở nhẹ nhàng.",
+  "health_spo2_motivation_near": "Gần mục tiêu rồi—vài nhịp thở chậm có thể đưa bạn vào vùng an toàn.",
+  "health_spo2_motivation_low": "Hôm nay thấp hơn mục tiêu—nghỉ ngơi, uống nước và thở chậm.",
+  "health_spo2_motivation_empty": "Đeo thiết bị và quay lại sau—lần đo tiếp theo gợi ý sự điềm tĩnh của bạn.",
   "health_air_quality": "AQI",
   "health_weather": "Thời tiết",
   "health_temperature_subtitle": "Nhiệt độ hiện tại",
@@ -608,6 +657,11 @@
   "mind_activities_question": "Bạn đã làm gì?",
   "mind_note_hint": "Thêm ghi chú (tùy chọn)",
   "mind_save_btn": "Lưu mục nhập",
+  "mind_activity_custom_chip": "Tùy chỉnh",
+  "mind_activity_custom_dialog_title": "Hoạt động mới",
+  "mind_activity_custom_hint": "Đặt tên hoạt động",
+  "mind_activity_custom_add": "Thêm",
+  "mind_activity_custom_invalid_char": "Không được dùng ký tự này",
   "mind_save_success": "Đã lưu nhật ký tinh thần! Cập nhật suy ngẫm.",
   "mind_feeling_format": "Hôm nay tôi cảm thấy {mood}.",
   "@mind_feeling_format": {

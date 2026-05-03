@@ -86,6 +86,7 @@ class SupabaseService {
     debugPrint("🔄 [SupabaseService] Starting full sync down for $personId...");
 
     final tablesToSync = [
+      'journal_activity_options',
       'mind_logs',
       'projects',
       'focus_sessions',
@@ -137,6 +138,11 @@ class SupabaseService {
     List<Map<String, dynamic>> records,
   ) async {
     switch (table) {
+      case 'journal_activity_options':
+        for (final r in records) {
+          await database.journalActivityOptionsDAO.upsertFromSupabase(r);
+        }
+        break;
       case 'mind_logs':
         for (final r in records) {
           await database.mindLogsDAO.upsertFromSupabase(r);

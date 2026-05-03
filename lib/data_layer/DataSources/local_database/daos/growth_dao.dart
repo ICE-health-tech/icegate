@@ -143,6 +143,89 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
+@DriftAccessor(tables: [JournalActivityOptionsTable])
+class JournalActivityOptionsDAO extends DatabaseAccessor<AppDatabase>
+    with _$JournalActivityOptionsDAOMixin {
+  JournalActivityOptionsDAO(super.db);
+
+  Stream<List<JournalActivityOptionData>> watchForPerson(String personId) {
+    return (select(journalActivityOptionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) =>
+                OrderingTerm(expression: t.label, mode: OrderingMode.asc),
+          ]))
+        .watch();
+  }
+
+  Future<JournalActivityOptionData?> getById(String id) {
+    return (select(journalActivityOptionsTable)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+  }
+
+  /// For resolving `act_user_ref:` tokens in UI.
+  Future<Map<String, String>> labelMapForPerson(String personId) async {
+    final rows = await (select(journalActivityOptionsTable)
+          ..where((t) => t.personID.equals(personId)))
+        .get();
+    return Map<String, String>.fromEntries(
+      rows.map((r) => MapEntry(r.id, r.label)),
+    );
+  }
+
+  /// Inserts locally and pushes to Supabase. [id] must be pre-generated (e.g. UUID v7).
+  Future<void> insertOption({
+    required String id,
+    required String personId,
+    required String? tenantId,
+    required String categoryKey,
+    required String label,
+  }) async {
+    final now = DateTime.now().toUtc();
+    final companion = JournalActivityOptionsTableCompanion.insert(
+      id: id,
+      tenantID: tenantId != null && tenantId.isNotEmpty
+          ? Value(tenantId)
+          : const Value.absent(),
+      personID: Value(personId),
+      categoryKey: categoryKey,
+      label: label,
+      createdAt: Value(now),
+      updatedAt: Value(now),
+    );
+    await into(journalActivityOptionsTable).insert(companion);
+
+    final Map<String, dynamic> payload = {};
+    for (final col in journalActivityOptionsTable.$columns) {
+      final value = companion.toColumns(true)[col.name];
+      if (value is Variable) {
+        payload[col.name] = value.value;
+      }
+    }
+    await db.pushToSupabase(
+      table: 'journal_activity_options',
+      payload: payload,
+    );
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final companion = JournalActivityOptionsTableCompanion(
+      id: Value(r['id'] as String),
+      tenantID: Value(r['tenant_id'] as String?),
+      personID: Value(r['person_id'] as String?),
+      categoryKey: Value(r['category_key'] as String),
+      label: Value(r['label'] as String),
+      createdAt: Value(DateTime.parse(r['created_at'] as String)),
+      updatedAt: Value(DateTime.parse(r['updated_at'] as String)),
+    );
+    await into(journalActivityOptionsTable).insert(
+      companion,
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+}
+
 @DriftAccessor(tables: [AchievementsTable])
 class AchievementsDAO extends DatabaseAccessor<AppDatabase>
     with _$AchievementsDAOMixin {

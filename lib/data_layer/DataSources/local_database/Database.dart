@@ -1729,6 +1729,26 @@ class MindLogsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// User-defined journal activity chips (synced); referenced from mind_logs via `act_user_ref:<id>`.
+@DataClassName('JournalActivityOptionData')
+class JournalActivityOptionsTable extends Table {
+  @override
+  String get tableName => 'journal_activity_options';
+
+  TextColumn get id => text()();
+  TextColumn get tenantID => text().nullable().named('tenant_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get categoryKey => text().named('category_key')();
+  TextColumn get label => text()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime).named('created_at')();
+  DateTimeColumn get updatedAt =>
+      dateTime().withDefault(currentDateAndTime).named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
 // MindLogsDAO moved to daos/growth_dao.dart
 
 @DataClassName('FeedbackLocalData')
@@ -6813,6 +6833,7 @@ class ConfigsTable extends Table {
     PortfolioSnapshotsTable,
     AchievementsTable,
     MindLogsTable,
+    JournalActivityOptionsTable,
     HeartRateLogsTable,
     OxygenSaturationLogsTable,
     AppUsageHistoryTable,
@@ -6850,6 +6871,7 @@ class ConfigsTable extends Table {
     HourlyActivityLogDAO,
     AchievementsDAO,
     MindLogsDAO,
+    JournalActivityOptionsDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -7100,6 +7122,9 @@ class AppDatabase extends _$AppDatabase {
   @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
   @override
+  JournalActivityOptionsDAO get journalActivityOptionsDAO =>
+      JournalActivityOptionsDAO(this);
+  @override
   PortfolioSnapshotsDAO get portfolioSnapshotsDAO =>
       PortfolioSnapshotsDAO(this);
 
@@ -7123,7 +7148,8 @@ class AppDatabase extends _$AppDatabase {
   // v70 → ensures source column exists in all health log tables (water, sleep, exercise, weight)
   // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
   // v74 → adds mood_score to exercise_logs (manual log / sync)
-  int get schemaVersion => 74;
+  // v75 → adds journal_activity_options (synced custom journal activities)
+  int get schemaVersion => 75;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7248,6 +7274,11 @@ class AppDatabase extends _$AppDatabase {
             await customStatement(
               'ALTER TABLE exercise_logs ADD COLUMN mood_score INTEGER;',
             );
+          } catch (_) {}
+        }
+        if (from < 75) {
+          try {
+            await m.createTable(journalActivityOptionsTable);
           } catch (_) {}
         }
         if (from < 60) {

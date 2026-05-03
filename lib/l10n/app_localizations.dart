@@ -1022,6 +1022,132 @@ abstract class AppLocalizations {
   /// **'Oxygen'**
   String get health_metrics_oxygen_saturation;
 
+  /// No description provided for @health_spo2_page_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Blood oxygen (SpO₂)'**
+  String get health_spo2_page_title;
+
+  /// No description provided for @health_spo2_today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get health_spo2_today;
+
+  /// No description provided for @health_spo2_chart_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s chart'**
+  String get health_spo2_chart_section;
+
+  /// No description provided for @health_spo2_percent_unit.
+  ///
+  /// In en, this message translates to:
+  /// **'% SpO₂'**
+  String get health_spo2_percent_unit;
+
+  /// No description provided for @health_spo2_latest.
+  ///
+  /// In en, this message translates to:
+  /// **'Latest: {time}'**
+  String health_spo2_latest(String time);
+
+  /// No description provided for @health_spo2_target_line.
+  ///
+  /// In en, this message translates to:
+  /// **'Target {n}%'**
+  String health_spo2_target_line(int n);
+
+  /// No description provided for @health_spo2_target_row.
+  ///
+  /// In en, this message translates to:
+  /// **'Target: {n}%'**
+  String health_spo2_target_row(int n);
+
+  /// No description provided for @health_spo2_edit_target.
+  ///
+  /// In en, this message translates to:
+  /// **'Change target'**
+  String get health_spo2_edit_target;
+
+  /// No description provided for @health_spo2_target_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'SpO₂ target'**
+  String get health_spo2_target_dialog_title;
+
+  /// No description provided for @health_spo2_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get health_spo2_save;
+
+  /// No description provided for @health_spo2_day_avg.
+  ///
+  /// In en, this message translates to:
+  /// **'Day average: {n}%'**
+  String health_spo2_day_avg(String n);
+
+  /// No description provided for @health_spo2_summary_min.
+  ///
+  /// In en, this message translates to:
+  /// **'Lowest'**
+  String get health_spo2_summary_min;
+
+  /// No description provided for @health_spo2_summary_max.
+  ///
+  /// In en, this message translates to:
+  /// **'Highest'**
+  String get health_spo2_summary_max;
+
+  /// No description provided for @health_spo2_educational_title.
+  ///
+  /// In en, this message translates to:
+  /// **'About SpO₂'**
+  String get health_spo2_educational_title;
+
+  /// No description provided for @health_spo2_educational_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Normal blood oxygen saturation is often around 95–100%. These readings are for reference only and are not a substitute for professional medical advice.'**
+  String get health_spo2_educational_body;
+
+  /// No description provided for @health_spo2_motivation_peak.
+  ///
+  /// In en, this message translates to:
+  /// **'Outstanding oxygenation—when SpO₂ stays high, focus feels sharper and breathing steadier.'**
+  String get health_spo2_motivation_peak;
+
+  /// No description provided for @health_spo2_motivation_high.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong SpO₂—great fuel for focus and a steadier mind.'**
+  String get health_spo2_motivation_high;
+
+  /// No description provided for @health_spo2_motivation_on_target.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'re meeting your target—keep breathing easy.'**
+  String get health_spo2_motivation_on_target;
+
+  /// No description provided for @health_spo2_motivation_near.
+  ///
+  /// In en, this message translates to:
+  /// **'Close to your goal—a few slow breaths can bring you into range.'**
+  String get health_spo2_motivation_near;
+
+  /// No description provided for @health_spo2_motivation_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Below your target today—rest, hydrate, and breathe gently.'**
+  String get health_spo2_motivation_low;
+
+  /// No description provided for @health_spo2_motivation_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Wear your device and check back—your next reading can guide your calm and clarity.'**
+  String get health_spo2_motivation_empty;
+
   /// No description provided for @health_metrics_air_quality.
   ///
   /// In en, this message translates to:
@@ -2605,6 +2731,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Save Entry'**
   String get mind_save_btn;
+
+  /// No description provided for @mind_activity_custom_chip.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom'**
+  String get mind_activity_custom_chip;
+
+  /// No description provided for @mind_activity_custom_dialog_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New activity'**
+  String get mind_activity_custom_dialog_title;
+
+  /// No description provided for @mind_activity_custom_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Name this activity'**
+  String get mind_activity_custom_hint;
+
+  /// No description provided for @mind_activity_custom_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add'**
+  String get mind_activity_custom_add;
+
+  /// No description provided for @mind_activity_custom_invalid_char.
+  ///
+  /// In en, this message translates to:
+  /// **'This character is not allowed'**
+  String get mind_activity_custom_invalid_char;
 
   /// No description provided for @mind_save_success.
   ///

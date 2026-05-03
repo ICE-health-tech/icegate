@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -9,6 +8,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 
@@ -107,79 +107,98 @@ class SocialAnalysisPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
-    return StreamBuilder<List<MindLogData>>(
-      stream: mindBlock.watchMindLogsRange(personId, 3), // Show last 3 days
-      builder: (context, snapshot) {
-        final logs = snapshot.data ?? [];
-        if (logs.isEmpty) return const SizedBox.shrink();
+    return StreamBuilder<List<JournalActivityOptionData>>(
+      stream: context
+          .read<AppDatabase>()
+          .journalActivityOptionsDAO
+          .watchForPerson(personId),
+      builder: (context, optSnap) {
+        final optMap = <String, String>{
+          for (final o in optSnap.data ?? []) o.id: o.label,
+        };
+        final l10n = AppLocalizations.of(context)!;
 
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.todays_reflections.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            const SizedBox(height: 16),
-            ...logs.take(5).map((log) {
-              final mood = mindMoodAccent(log.moodScore);
-              return Container(
-                margin: const EdgeInsets.only(bottom: 12),
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      mood.withValues(alpha: 0.14),
-                      colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
-                    ],
-                  ),
-                  border: Border.all(color: mood.withValues(alpha: 0.4)),
+        return StreamBuilder<List<MindLogData>>(
+          stream: mindBlock.watchMindLogsRange(personId, 3), // Show last 3 days
+          builder: (context, snapshot) {
+            final logs = snapshot.data ?? [];
+            if (logs.isEmpty) return const SizedBox.shrink();
+
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  AppLocalizations.of(context)!.todays_reflections.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
+                const SizedBox(height: 16),
+                ...logs.take(5).map((log) {
+                  final mood = mindMoodAccent(log.moodScore);
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          mood.withValues(alpha: 0.14),
+                          colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
+                        ],
+                      ),
+                      border: Border.all(color: mood.withValues(alpha: 0.4)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(_getMoodEmoji(log.moodScore), style: const TextStyle(fontSize: 18)),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                (jsonDecode(log.activities) as List).join(", "),
-                                style: textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                        Row(
+                          children: [
+                            Text(_getMoodEmoji(log.moodScore), style: const TextStyle(fontSize: 18)),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    MindActivityTokens.formatActivitiesJson(
+                                      l10n,
+                                      log.activities,
+                                      optMap,
+                                    ),
+                                    style: textTheme.titleSmall?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  Text(
+                                    DateFormat('MMMM d, yyyy • HH:mm')
+                                        .format(log.createdAt.toLocal()),
+                                    style: textTheme.labelSmall?.copyWith(
+                                      color: colorScheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              Text(
-                                DateFormat('MMMM d, yyyy • HH:mm')
-                                    .format(log.createdAt.toLocal()),
-                                style: textTheme.labelSmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant,
-                                ),
-                              ),
-                            ],
-                          ),
+                            ),
+                          ],
                         ),
+                        if (log.note != null && log.note!.isNotEmpty) ...[
+                          const SizedBox(height: 12),
+                          Text(
+                            log.note!,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurface.withValues(alpha: 0.8),
+                              fontStyle: FontStyle.italic,
+                            ),
+                          ),
+                        ],
                       ],
                     ),
-                    if (log.note != null && log.note!.isNotEmpty) ...[
-                      const SizedBox(height: 12),
-                      Text(
-                        log.note!,
-                        style: textTheme.bodyMedium?.copyWith(
-                          color: colorScheme.onSurface.withValues(alpha: 0.8),
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              );
-            }),
-          ],
+                  );
+                }),
+              ],
+            );
+          },
         );
       },
     );

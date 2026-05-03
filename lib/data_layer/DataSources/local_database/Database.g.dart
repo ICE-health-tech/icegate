@@ -32330,6 +32330,482 @@ class MindLogsTableCompanion extends UpdateCompanion<MindLogData> {
   }
 }
 
+class $JournalActivityOptionsTableTable extends JournalActivityOptionsTable
+    with
+        TableInfo<
+          $JournalActivityOptionsTableTable,
+          JournalActivityOptionData
+        > {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $JournalActivityOptionsTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tenantIDMeta = const VerificationMeta(
+    'tenantID',
+  );
+  @override
+  late final GeneratedColumn<String> tenantID = GeneratedColumn<String>(
+    'tenant_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _categoryKeyMeta = const VerificationMeta(
+    'categoryKey',
+  );
+  @override
+  late final GeneratedColumn<String> categoryKey = GeneratedColumn<String>(
+    'category_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _labelMeta = const VerificationMeta('label');
+  @override
+  late final GeneratedColumn<String> label = GeneratedColumn<String>(
+    'label',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    tenantID,
+    personID,
+    categoryKey,
+    label,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'journal_activity_options';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<JournalActivityOptionData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('tenant_id')) {
+      context.handle(
+        _tenantIDMeta,
+        tenantID.isAcceptableOrUnknown(data['tenant_id']!, _tenantIDMeta),
+      );
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    }
+    if (data.containsKey('category_key')) {
+      context.handle(
+        _categoryKeyMeta,
+        categoryKey.isAcceptableOrUnknown(
+          data['category_key']!,
+          _categoryKeyMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_categoryKeyMeta);
+    }
+    if (data.containsKey('label')) {
+      context.handle(
+        _labelMeta,
+        label.isAcceptableOrUnknown(data['label']!, _labelMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_labelMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  JournalActivityOptionData map(
+    Map<String, dynamic> data, {
+    String? tablePrefix,
+  }) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return JournalActivityOptionData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      tenantID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}tenant_id'],
+      ),
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      ),
+      categoryKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}category_key'],
+      )!,
+      label: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}label'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $JournalActivityOptionsTableTable createAlias(String alias) {
+    return $JournalActivityOptionsTableTable(attachedDatabase, alias);
+  }
+}
+
+class JournalActivityOptionData extends DataClass
+    implements Insertable<JournalActivityOptionData> {
+  final String id;
+  final String? tenantID;
+  final String? personID;
+  final String categoryKey;
+  final String label;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const JournalActivityOptionData({
+    required this.id,
+    this.tenantID,
+    this.personID,
+    required this.categoryKey,
+    required this.label,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    if (!nullToAbsent || tenantID != null) {
+      map['tenant_id'] = Variable<String>(tenantID);
+    }
+    if (!nullToAbsent || personID != null) {
+      map['person_id'] = Variable<String>(personID);
+    }
+    map['category_key'] = Variable<String>(categoryKey);
+    map['label'] = Variable<String>(label);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  JournalActivityOptionsTableCompanion toCompanion(bool nullToAbsent) {
+    return JournalActivityOptionsTableCompanion(
+      id: Value(id),
+      tenantID: tenantID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(tenantID),
+      personID: personID == null && nullToAbsent
+          ? const Value.absent()
+          : Value(personID),
+      categoryKey: Value(categoryKey),
+      label: Value(label),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory JournalActivityOptionData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return JournalActivityOptionData(
+      id: serializer.fromJson<String>(json['id']),
+      tenantID: serializer.fromJson<String?>(json['tenantID']),
+      personID: serializer.fromJson<String?>(json['personID']),
+      categoryKey: serializer.fromJson<String>(json['categoryKey']),
+      label: serializer.fromJson<String>(json['label']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'tenantID': serializer.toJson<String?>(tenantID),
+      'personID': serializer.toJson<String?>(personID),
+      'categoryKey': serializer.toJson<String>(categoryKey),
+      'label': serializer.toJson<String>(label),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  JournalActivityOptionData copyWith({
+    String? id,
+    Value<String?> tenantID = const Value.absent(),
+    Value<String?> personID = const Value.absent(),
+    String? categoryKey,
+    String? label,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => JournalActivityOptionData(
+    id: id ?? this.id,
+    tenantID: tenantID.present ? tenantID.value : this.tenantID,
+    personID: personID.present ? personID.value : this.personID,
+    categoryKey: categoryKey ?? this.categoryKey,
+    label: label ?? this.label,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  JournalActivityOptionData copyWithCompanion(
+    JournalActivityOptionsTableCompanion data,
+  ) {
+    return JournalActivityOptionData(
+      id: data.id.present ? data.id.value : this.id,
+      tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      categoryKey: data.categoryKey.present
+          ? data.categoryKey.value
+          : this.categoryKey,
+      label: data.label.present ? data.label.value : this.label,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalActivityOptionData(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('categoryKey: $categoryKey, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    tenantID,
+    personID,
+    categoryKey,
+    label,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is JournalActivityOptionData &&
+          other.id == this.id &&
+          other.tenantID == this.tenantID &&
+          other.personID == this.personID &&
+          other.categoryKey == this.categoryKey &&
+          other.label == this.label &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class JournalActivityOptionsTableCompanion
+    extends UpdateCompanion<JournalActivityOptionData> {
+  final Value<String> id;
+  final Value<String?> tenantID;
+  final Value<String?> personID;
+  final Value<String> categoryKey;
+  final Value<String> label;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const JournalActivityOptionsTableCompanion({
+    this.id = const Value.absent(),
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.categoryKey = const Value.absent(),
+    this.label = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  JournalActivityOptionsTableCompanion.insert({
+    required String id,
+    this.tenantID = const Value.absent(),
+    this.personID = const Value.absent(),
+    required String categoryKey,
+    required String label,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       categoryKey = Value(categoryKey),
+       label = Value(label);
+  static Insertable<JournalActivityOptionData> custom({
+    Expression<String>? id,
+    Expression<String>? tenantID,
+    Expression<String>? personID,
+    Expression<String>? categoryKey,
+    Expression<String>? label,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (tenantID != null) 'tenant_id': tenantID,
+      if (personID != null) 'person_id': personID,
+      if (categoryKey != null) 'category_key': categoryKey,
+      if (label != null) 'label': label,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  JournalActivityOptionsTableCompanion copyWith({
+    Value<String>? id,
+    Value<String?>? tenantID,
+    Value<String?>? personID,
+    Value<String>? categoryKey,
+    Value<String>? label,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return JournalActivityOptionsTableCompanion(
+      id: id ?? this.id,
+      tenantID: tenantID ?? this.tenantID,
+      personID: personID ?? this.personID,
+      categoryKey: categoryKey ?? this.categoryKey,
+      label: label ?? this.label,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (tenantID.present) {
+      map['tenant_id'] = Variable<String>(tenantID.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (categoryKey.present) {
+      map['category_key'] = Variable<String>(categoryKey.value);
+    }
+    if (label.present) {
+      map['label'] = Variable<String>(label.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('JournalActivityOptionsTableCompanion(')
+          ..write('id: $id, ')
+          ..write('tenantID: $tenantID, ')
+          ..write('personID: $personID, ')
+          ..write('categoryKey: $categoryKey, ')
+          ..write('label: $label, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $HeartRateLogsTableTable extends HeartRateLogsTable
     with TableInfo<$HeartRateLogsTableTable, HeartRateLogData> {
   @override
@@ -34401,6 +34877,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $AchievementsTableTable achievementsTable =
       $AchievementsTableTable(this);
   late final $MindLogsTableTable mindLogsTable = $MindLogsTableTable(this);
+  late final $JournalActivityOptionsTableTable journalActivityOptionsTable =
+      $JournalActivityOptionsTableTable(this);
   late final $HeartRateLogsTableTable heartRateLogsTable =
       $HeartRateLogsTableTable(this);
   late final $OxygenSaturationLogsTableTable oxygenSaturationLogsTable =
@@ -34459,6 +34937,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     this as AppDatabase,
   );
   late final MindLogsDAO mindLogsDAO = MindLogsDAO(this as AppDatabase);
+  late final JournalActivityOptionsDAO journalActivityOptionsDAO =
+      JournalActivityOptionsDAO(this as AppDatabase);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -34510,6 +34990,7 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     portfolioSnapshotsTable,
     achievementsTable,
     mindLogsTable,
+    journalActivityOptionsTable,
     heartRateLogsTable,
     oxygenSaturationLogsTable,
     appUsageHistoryTable,
@@ -49971,6 +50452,265 @@ typedef $$MindLogsTableTableProcessedTableManager =
       MindLogData,
       PrefetchHooks Function()
     >;
+typedef $$JournalActivityOptionsTableTableCreateCompanionBuilder =
+    JournalActivityOptionsTableCompanion Function({
+      required String id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      required String categoryKey,
+      required String label,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$JournalActivityOptionsTableTableUpdateCompanionBuilder =
+    JournalActivityOptionsTableCompanion Function({
+      Value<String> id,
+      Value<String?> tenantID,
+      Value<String?> personID,
+      Value<String> categoryKey,
+      Value<String> label,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$JournalActivityOptionsTableTableFilterComposer
+    extends Composer<_$AppDatabase, $JournalActivityOptionsTableTable> {
+  $$JournalActivityOptionsTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$JournalActivityOptionsTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $JournalActivityOptionsTableTable> {
+  $$JournalActivityOptionsTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get tenantID => $composableBuilder(
+    column: $table.tenantID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get label => $composableBuilder(
+    column: $table.label,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$JournalActivityOptionsTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $JournalActivityOptionsTableTable> {
+  $$JournalActivityOptionsTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get tenantID =>
+      $composableBuilder(column: $table.tenantID, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<String> get categoryKey => $composableBuilder(
+    column: $table.categoryKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get label =>
+      $composableBuilder(column: $table.label, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$JournalActivityOptionsTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $JournalActivityOptionsTableTable,
+          JournalActivityOptionData,
+          $$JournalActivityOptionsTableTableFilterComposer,
+          $$JournalActivityOptionsTableTableOrderingComposer,
+          $$JournalActivityOptionsTableTableAnnotationComposer,
+          $$JournalActivityOptionsTableTableCreateCompanionBuilder,
+          $$JournalActivityOptionsTableTableUpdateCompanionBuilder,
+          (
+            JournalActivityOptionData,
+            BaseReferences<
+              _$AppDatabase,
+              $JournalActivityOptionsTableTable,
+              JournalActivityOptionData
+            >,
+          ),
+          JournalActivityOptionData,
+          PrefetchHooks Function()
+        > {
+  $$JournalActivityOptionsTableTableTableManager(
+    _$AppDatabase db,
+    $JournalActivityOptionsTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$JournalActivityOptionsTableTableFilterComposer(
+                $db: db,
+                $table: table,
+              ),
+          createOrderingComposer: () =>
+              $$JournalActivityOptionsTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$JournalActivityOptionsTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                Value<String> categoryKey = const Value.absent(),
+                Value<String> label = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => JournalActivityOptionsTableCompanion(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                categoryKey: categoryKey,
+                label: label,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                Value<String?> tenantID = const Value.absent(),
+                Value<String?> personID = const Value.absent(),
+                required String categoryKey,
+                required String label,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => JournalActivityOptionsTableCompanion.insert(
+                id: id,
+                tenantID: tenantID,
+                personID: personID,
+                categoryKey: categoryKey,
+                label: label,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$JournalActivityOptionsTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $JournalActivityOptionsTableTable,
+      JournalActivityOptionData,
+      $$JournalActivityOptionsTableTableFilterComposer,
+      $$JournalActivityOptionsTableTableOrderingComposer,
+      $$JournalActivityOptionsTableTableAnnotationComposer,
+      $$JournalActivityOptionsTableTableCreateCompanionBuilder,
+      $$JournalActivityOptionsTableTableUpdateCompanionBuilder,
+      (
+        JournalActivityOptionData,
+        BaseReferences<
+          _$AppDatabase,
+          $JournalActivityOptionsTableTable,
+          JournalActivityOptionData
+        >,
+      ),
+      JournalActivityOptionData,
+      PrefetchHooks Function()
+    >;
 typedef $$HeartRateLogsTableTableCreateCompanionBuilder =
     HeartRateLogsTableCompanion Function({
       required String id,
@@ -51148,6 +51888,12 @@ class $AppDatabaseManager {
       $$AchievementsTableTableTableManager(_db, _db.achievementsTable);
   $$MindLogsTableTableTableManager get mindLogsTable =>
       $$MindLogsTableTableTableManager(_db, _db.mindLogsTable);
+  $$JournalActivityOptionsTableTableTableManager
+  get journalActivityOptionsTable =>
+      $$JournalActivityOptionsTableTableTableManager(
+        _db,
+        _db.journalActivityOptionsTable,
+      );
   $$HeartRateLogsTableTableTableManager get heartRateLogsTable =>
       $$HeartRateLogsTableTableTableManager(_db, _db.heartRateLogsTable);
   $$OxygenSaturationLogsTableTableTableManager get oxygenSaturationLogsTable =>
@@ -51204,4 +51950,8 @@ mixin _$AchievementsDAOMixin on DatabaseAccessor<AppDatabase> {
 }
 mixin _$MindLogsDAOMixin on DatabaseAccessor<AppDatabase> {
   $MindLogsTableTable get mindLogsTable => attachedDatabase.mindLogsTable;
+}
+mixin _$JournalActivityOptionsDAOMixin on DatabaseAccessor<AppDatabase> {
+  $JournalActivityOptionsTableTable get journalActivityOptionsTable =>
+      attachedDatabase.journalActivityOptionsTable;
 }

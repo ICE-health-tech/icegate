@@ -490,6 +490,84 @@ class AppLocalizationsEn extends AppLocalizations {
   String get health_metrics_oxygen_saturation => 'Oxygen';
 
   @override
+  String get health_spo2_page_title => 'Blood oxygen (SpO₂)';
+
+  @override
+  String get health_spo2_today => 'Today';
+
+  @override
+  String get health_spo2_chart_section => 'Today\'s chart';
+
+  @override
+  String get health_spo2_percent_unit => '% SpO₂';
+
+  @override
+  String health_spo2_latest(String time) {
+    return 'Latest: $time';
+  }
+
+  @override
+  String health_spo2_target_line(int n) {
+    return 'Target $n%';
+  }
+
+  @override
+  String health_spo2_target_row(int n) {
+    return 'Target: $n%';
+  }
+
+  @override
+  String get health_spo2_edit_target => 'Change target';
+
+  @override
+  String get health_spo2_target_dialog_title => 'SpO₂ target';
+
+  @override
+  String get health_spo2_save => 'Save';
+
+  @override
+  String health_spo2_day_avg(String n) {
+    return 'Day average: $n%';
+  }
+
+  @override
+  String get health_spo2_summary_min => 'Lowest';
+
+  @override
+  String get health_spo2_summary_max => 'Highest';
+
+  @override
+  String get health_spo2_educational_title => 'About SpO₂';
+
+  @override
+  String get health_spo2_educational_body =>
+      'Normal blood oxygen saturation is often around 95–100%. These readings are for reference only and are not a substitute for professional medical advice.';
+
+  @override
+  String get health_spo2_motivation_peak =>
+      'Outstanding oxygenation—when SpO₂ stays high, focus feels sharper and breathing steadier.';
+
+  @override
+  String get health_spo2_motivation_high =>
+      'Strong SpO₂—great fuel for focus and a steadier mind.';
+
+  @override
+  String get health_spo2_motivation_on_target =>
+      'You\'re meeting your target—keep breathing easy.';
+
+  @override
+  String get health_spo2_motivation_near =>
+      'Close to your goal—a few slow breaths can bring you into range.';
+
+  @override
+  String get health_spo2_motivation_low =>
+      'Below your target today—rest, hydrate, and breathe gently.';
+
+  @override
+  String get health_spo2_motivation_empty =>
+      'Wear your device and check back—your next reading can guide your calm and clarity.';
+
+  @override
   String get health_metrics_air_quality => 'Air Quality';
 
   @override
@@ -1346,6 +1424,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mind_save_btn => 'Save Entry';
+
+  @override
+  String get mind_activity_custom_chip => 'Custom';
+
+  @override
+  String get mind_activity_custom_dialog_title => 'New activity';
+
+  @override
+  String get mind_activity_custom_hint => 'Name this activity';
+
+  @override
+  String get mind_activity_custom_add => 'Add';
+
+  @override
+  String get mind_activity_custom_invalid_char =>
+      'This character is not allowed';
 
   @override
   String get mind_save_success => 'Mind log saved! Reflection updated.';

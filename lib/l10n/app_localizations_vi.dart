@@ -490,6 +490,84 @@ class AppLocalizationsVi extends AppLocalizations {
   String get health_metrics_oxygen_saturation => 'Oxy máu';
 
   @override
+  String get health_spo2_page_title => 'Oxy máu (SpO₂)';
+
+  @override
+  String get health_spo2_today => 'Hôm nay';
+
+  @override
+  String get health_spo2_chart_section => 'Biểu đồ trong ngày';
+
+  @override
+  String get health_spo2_percent_unit => '% SpO₂';
+
+  @override
+  String health_spo2_latest(String time) {
+    return 'Gần nhất: $time';
+  }
+
+  @override
+  String health_spo2_target_line(int n) {
+    return 'Mục tiêu $n%';
+  }
+
+  @override
+  String health_spo2_target_row(int n) {
+    return 'Mục tiêu: $n%';
+  }
+
+  @override
+  String get health_spo2_edit_target => 'Đổi mục tiêu';
+
+  @override
+  String get health_spo2_target_dialog_title => 'Mục tiêu SpO₂';
+
+  @override
+  String get health_spo2_save => 'Lưu';
+
+  @override
+  String health_spo2_day_avg(String n) {
+    return 'Trung bình ngày: $n%';
+  }
+
+  @override
+  String get health_spo2_summary_min => 'Thấp nhất';
+
+  @override
+  String get health_spo2_summary_max => 'Cao nhất';
+
+  @override
+  String get health_spo2_educational_title => 'Thông tin về SpO₂';
+
+  @override
+  String get health_spo2_educational_body =>
+      'Độ oxi máu từ 95%-100% giúp cơ thể tập trung hơn, cải thiện tâm trạng';
+
+  @override
+  String get health_spo2_motivation_peak =>
+      'Oxy hóa tuyệt vời—khi SpO₂ cao, tập trung sắc hơn và nhịp thở đều hơn.';
+
+  @override
+  String get health_spo2_motivation_high =>
+      'Chỉ số mạnh. Oxy ổn định giúp tư duy rõ ràng và tâm trí điềm tĩnh hơn.';
+
+  @override
+  String get health_spo2_motivation_on_target =>
+      'Bạn đạt mục tiêu—tiếp tục thở nhẹ nhàng.';
+
+  @override
+  String get health_spo2_motivation_near =>
+      'Gần mục tiêu rồi—vài nhịp thở chậm có thể đưa bạn vào vùng an toàn.';
+
+  @override
+  String get health_spo2_motivation_low =>
+      'Hôm nay thấp hơn mục tiêu—nghỉ ngơi, uống nước và thở chậm.';
+
+  @override
+  String get health_spo2_motivation_empty =>
+      'Đeo thiết bị và quay lại sau—lần đo tiếp theo gợi ý sự điềm tĩnh của bạn.';
+
+  @override
   String get health_metrics_air_quality => 'AQI';
 
   @override
@@ -1345,6 +1423,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get mind_save_btn => 'Lưu mục nhập';
+
+  @override
+  String get mind_activity_custom_chip => 'Tùy chỉnh';
+
+  @override
+  String get mind_activity_custom_dialog_title => 'Hoạt động mới';
+
+  @override
+  String get mind_activity_custom_hint => 'Đặt tên hoạt động';
+
+  @override
+  String get mind_activity_custom_add => 'Thêm';
+
+  @override
+  String get mind_activity_custom_invalid_char => 'Không được dùng ký tự này';
 
   @override
   String get mind_save_success =>

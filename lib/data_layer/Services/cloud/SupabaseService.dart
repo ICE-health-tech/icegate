@@ -147,6 +147,7 @@ class SupabaseService {
     debugPrint("🔄 [SupabaseService] Starting full sync down for $personId...");
 
     final tablesToSync = [
+      'journal_activity_options',
       'mind_logs',
       'projects',
       'focus_sessions',
@@ -225,6 +226,11 @@ class SupabaseService {
     switch (table) {
       // Iterate records and call individual upsert methods on each DAO.
       // This avoids needing separate batch wrappers.
+      case 'journal_activity_options':
+        for (final r in records) {
+          await database.journalActivityOptionsDAO.upsertFromSupabase(r);
+        }
+        break;
       case 'mind_logs':
         for (final r in records) {
           await database.mindLogsDAO.upsertFromSupabase(r);
