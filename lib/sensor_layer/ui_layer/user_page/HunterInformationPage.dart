@@ -10,14 +10,14 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 // --- DASHBOARD WIDGET ---
 
 // --- DASHBOARD WIDGET ---
-class UserInformationPage extends StatefulWidget {
-  const UserInformationPage({super.key});
+class HunterInformationPage extends StatefulWidget {
+  const HunterInformationPage({super.key});
 
   @override
-  State<UserInformationPage> createState() => _UserInformationPageState();
+  State<HunterInformationPage> createState() => _HunterInformationPageState();
 }
 
-class _UserInformationPageState extends State<UserInformationPage> {
+class _HunterInformationPageState extends State<HunterInformationPage> {
   // bool _isInteractingWithCard = false; // Unused
 
   void _setCardInteraction(bool isInteracting) {

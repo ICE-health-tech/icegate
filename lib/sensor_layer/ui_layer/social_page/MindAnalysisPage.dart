@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
@@ -9,9 +9,14 @@ import 'dart:convert';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
 
 class MindAnalysisPage extends StatelessWidget {
   const MindAnalysisPage({super.key});
+
+  static const _autoSwitchToSkillsKey = PageStorageKey<String>(
+    'mind_auto_switch_to_skills_once',
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -21,163 +26,339 @@ class MindAnalysisPage extends StatelessWidget {
     final noteDAO = context.watch<ProjectNoteDAO>();
     final personBlock = context.read<PersonBlock>();
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      body: Watch((context) {
-        final personId = personBlock.currentPersonID.value;
-        if (personId == null || personId.isEmpty) {
-          return const Center(child: CircularProgressIndicator());
-        }
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        extendBodyBehindAppBar: true,
+        body: Watch((context) {
+          final personId = personBlock.currentPersonID.value;
+          if (personId == null || personId.isEmpty) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-        return Stack(
-          children: [
-            // 1. Deep Base Background
-            Container(
-              color: isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5),
-            ),
+          return Stack(
+            children: [
+              // 1. Deep Base Background
+              Container(
+                color:
+                    isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5),
+              ),
 
-            // 2. Tactical Grid Background
-            Positioned.fill(
-              child: Opacity(
-                opacity: isDark ? 0.3 : 0.1,
-                child: CustomPaint(
-                  painter: TacticalGridPainter(
-                    color: colorScheme.primary,
-                    isDark: isDark,
+              // 2. Tactical Grid Background
+              Positioned.fill(
+                child: Opacity(
+                  opacity: isDark ? 0.3 : 0.1,
+                  child: CustomPaint(
+                    painter: TacticalGridPainter(
+                      color: colorScheme.primary,
+                      isDark: isDark,
+                    ),
                   ),
                 ),
               ),
-            ),
 
-            // 3. Ambient Glows
-            Positioned(
-              top: -100,
-              right: -100,
-              child: _buildAmbientGlow(colorScheme.primary, 300),
-            ),
-            Positioned(
-              bottom: -50,
-              left: -50,
-              child: _buildAmbientGlow(colorScheme.secondary, 250),
-            ),
+              // 3. Ambient Glows
+              Positioned(
+                top: -100,
+                right: -100,
+                child: _buildAmbientGlow(colorScheme.primary, 300),
+              ),
+              Positioned(
+                bottom: -50,
+                left: -50,
+                child: _buildAmbientGlow(colorScheme.secondary, 250),
+              ),
 
-            // 4. Main Content
-            SafeArea(
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverAppBar(
-                    floating: true,
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon: Icon(
-                        Icons.arrow_back_ios_rounded,
-                        color: colorScheme.onSurface,
-                        size: 22,
-                      ),
-                      onPressed: () => WidgetNavigatorAction.smartPop(context),
+              SafeArea(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 10, 18, 8),
+                      child: _buildTopPillBar(context),
                     ),
-                    expandedHeight: 120,
-                    flexibleSpace: FlexibleSpaceBar(
-                      titlePadding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 16,
-                      ),
-                      centerTitle: false,
-                      title: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    Expanded(
+                      child: TabBarView(
                         children: [
-                          Text(
-                            'COGNITIVE LAYER'.toUpperCase(),
-                            style: TextStyle(
-                              color: colorScheme.onSurface.withValues(alpha: 0.5),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 4,
-                            ),
+                          StreamBuilder<List<ProjectNoteData>>(
+                            stream: noteDAO.watchAllNotes(personId),
+                            builder: (context, snapshot) {
+                              if (!snapshot.hasData) {
+                                return const Center(
+                                  child: CircularProgressIndicator(),
+                                );
+                              }
+
+                              final notes = snapshot.data!;
+                              final strategyNotesCount = notes.length;
+
+                              return NotificationListener<ScrollEndNotification>(
+                                onNotification: (n) {
+                                  final controller =
+                                      DefaultTabController.of(context);
+                                  // Only auto-switch when user reaches the end of tab 0.
+                                  if (controller.index != 0) return false;
+                                  final m = n.metrics;
+                                  final atEnd = m.extentAfter < 12;
+                                  if (!atEnd) return false;
+
+                                  // Trigger only once per visit.
+                                  final storage = PageStorage.of(context);
+                                  final already =
+                                      storage.readState(context, identifier: _autoSwitchToSkillsKey) ==
+                                          true;
+                                  if (already) return false;
+                                  storage.writeState(
+                                    context,
+                                    true,
+                                    identifier: _autoSwitchToSkillsKey,
+                                  );
+
+                                  controller.animateTo(1);
+                                  return false;
+                                },
+                                child: ListView(
+                                physics: const BouncingScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 20,
+                                  vertical: 10,
+                                ),
+                                children: [
+                                  _buildGlassCard(
+                                    context,
+                                    title: 'INSIGHTS DASHBOARD',
+                                    icon: Icons.auto_graph_rounded,
+                                    child: _buildInsightsRows(
+                                      context,
+                                      strategyNotesCount: strategyNotesCount,
+                                      personId: personId,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 18),
+                                  _buildMindJournalCard(context),
+                                  const SizedBox(height: 18),
+                                  _buildMoodTelemetry(context, personId),
+                                  const SizedBox(height: 18),
+                                  _buildSkillsTelemetry(context, personId),
+                                  const SizedBox(height: 100),
+                                ],
+                                ),
+                              );
+                            },
                           ),
-                          Text(
-                            'STRATEGY JOURNAL',
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 28,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1,
-                            ),
+                          const MindSkillsView(
+                            showBackground: false,
+                            popOnSave: false,
                           ),
                         ],
                       ),
                     ),
-                  ),
-                  StreamBuilder<List<ProjectNoteData>>(
-                    stream: noteDAO.watchAllNotes(personId),
-                    builder: (context, snapshot) {
-                      if (!snapshot.hasData) {
-                        return const SliverFillRemaining(
-                          child: Center(child: CircularProgressIndicator()),
-                        );
-                      }
-
-                      final notes = snapshot.data!;
-                      final strategyNotesCount = notes.length;
-
-                      return SliverToBoxAdapter(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 20,
-                            vertical: 10,
-                          ),
-                          child: Column(
-                            children: [
-                              _buildGlassCard(
-                                context,
-                                title: 'SYSTEM TELEMETRY',
-                                icon: Icons.hub_rounded,
-                                child: GridView.count(
-                                  shrinkWrap: true,
-                                  physics: const NeverScrollableScrollPhysics(),
-                                  crossAxisCount: 2,
-                                  mainAxisSpacing: 16,
-                                  crossAxisSpacing: 16,
-                                  childAspectRatio: 1.6,
-                                  children: [
-                                    _buildTacticalMetric(
-                                      context,
-                                      'STABILITY INDEX',
-                                      'OPTIMAL',
-                                      Icons.psychology_rounded,
-                                      colorScheme.primary,
-                                    ),
-                                    _buildTacticalMetric(
-                                      context,
-                                      'STRATEGY DEPTH',
-                                      '$strategyNotesCount ENTRIES',
-                                      Icons.auto_awesome_mosaic_rounded,
-                                      const Color(0xFF00B2FF),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(height: 20),
-                              _buildMindJournalCard(context),
-                              const SizedBox(height: 20),
-                              _buildMoodTelemetry(context, personId),
-                              const SizedBox(height: 100),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                  ],
+                ),
               ),
+            ],
+          );
+        }),
+      ),
+    );
+  }
+
+  Widget _buildTopPillBar(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final bg = colorScheme.surface.withValues(alpha: 0.22);
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(26),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+        child: Container(
+          height: 56,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          decoration: BoxDecoration(
+            color: bg,
+            borderRadius: BorderRadius.circular(26),
+            border: Border.all(
+              color: colorScheme.onSurface.withValues(alpha: 0.10),
             ),
-          ],
+          ),
+          child: Row(
+            children: [
+              _CircleIconButton(
+                icon: Icons.arrow_back_rounded,
+                onPressed: () => WidgetNavigatorAction.smartPop(context),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Center(
+                  child: Container(
+                    padding: const EdgeInsets.all(4),
+                    decoration: BoxDecoration(
+                      color: colorScheme.onSurface.withValues(alpha: 0.06),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: colorScheme.onSurface.withValues(alpha: 0.08),
+                      ),
+                    ),
+                    child: TabBar(
+                      isScrollable: true,
+                      indicator: BoxDecoration(
+                        color: colorScheme.primary.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      dividerColor: Colors.transparent,
+                      labelColor: colorScheme.onSurface,
+                      unselectedLabelColor:
+                          colorScheme.onSurface.withValues(alpha: 0.55),
+                      labelStyle: const TextStyle(
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.0,
+                        fontSize: 12,
+                      ),
+                      tabs: const [
+                        Tab(
+                          iconMargin: EdgeInsets.zero,
+                          text: 'ACHIEVEMENTS',
+                          icon: Icon(Icons.emoji_events_rounded, size: 16),
+                        ),
+                        Tab(
+                          iconMargin: EdgeInsets.zero,
+                          text: 'SKILLS',
+                          icon: Icon(Icons.auto_awesome_rounded, size: 16),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              _CircleIconButton(
+                icon: Icons.bar_chart_rounded,
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInsightsRows(
+    BuildContext context, {
+    required int strategyNotesCount,
+    required String personId,
+  }) {
+    // Layout inspired by the screenshot: left label, long bar, right count.
+    // For now we map:
+    // - PROJECT = strategy notes count
+    // - KNOWLEDGE = skill sessions count (14d)
+    // - Others are placeholders (0) until you decide the mapping.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Monthly Reflection: $strategyNotesCount strategy entries recorded.',
+          style: TextStyle(
+            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
+            fontSize: 12,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        const SizedBox(height: 18),
+        _InsightRow(label: 'HEALTH', value: 0, max: 2),
+        const SizedBox(height: 12),
+        _InsightRow(label: 'FINANCE', value: 0, max: 2),
+        const SizedBox(height: 12),
+        _InsightRow(label: 'GOOD SOCIAL IMPACT', value: 0, max: 2),
+        const SizedBox(height: 12),
+        _InsightRow(label: 'RELATIONSHIP', value: 0, max: 2),
+        const SizedBox(height: 12),
+        _InsightRow(label: 'PROJECT', value: strategyNotesCount.clamp(0, 2), max: 2),
+        const SizedBox(height: 12),
+        _InsightRow(label: 'KNOWLEDGE', value: 0, max: 2),
+      ],
+    );
+  }
+
+  Widget _buildSkillsTelemetry(BuildContext context, String personId) {
+    final mindBlock = context.read<MindBlock>();
+
+    return StreamBuilder<List<MindLogData>>(
+      stream: mindBlock.watchMindLogsRange(personId, 14),
+      builder: (context, snapshot) {
+        final logs = snapshot.data ?? [];
+        if (logs.isEmpty) return const SizedBox.shrink();
+
+        final skillCounts = <String, int>{};
+        int sessions = 0;
+        int minutes = 0;
+
+        for (final log in logs) {
+          List<dynamic> acts;
+          try {
+            acts = jsonDecode(log.activities) as List<dynamic>;
+          } catch (_) {
+            continue;
+          }
+
+          final skills = acts
+              .whereType<String>()
+              .where((a) => a.startsWith('skill:'))
+              .map((a) => a.substring('skill:'.length))
+              .toList();
+          if (skills.isEmpty) continue;
+
+          sessions++;
+          for (final s in skills) {
+            skillCounts[s] = (skillCounts[s] ?? 0) + 1;
+          }
+
+          for (final a in acts.whereType<String>()) {
+            if (!a.startsWith('learn:')) continue;
+            final m = RegExp(r'learn:(\\d+)m').firstMatch(a);
+            if (m != null) {
+              minutes += int.tryParse(m.group(1) ?? '0') ?? 0;
+            }
+          }
+        }
+
+        if (sessions == 0) return const SizedBox.shrink();
+
+        final entries = skillCounts.entries.toList()
+          ..sort((a, b) => b.value.compareTo(a.value));
+        final top = entries.take(6).toList();
+        final maxCount = entries.isEmpty ? 1 : entries.first.value;
+
+        return _buildGlassCard(
+          context,
+          title: 'SKILL TELEMETRY (14D)',
+          icon: Icons.auto_awesome_rounded,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Sessions: $sessions  •  Minutes: $minutes',
+                style: TextStyle(
+                  color: Theme.of(context)
+                      .colorScheme
+                      .onSurface
+                      .withValues(alpha: 0.65),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 18),
+              for (final e in top) ...[
+                _InsightRow(
+                  label: e.key,
+                  value: e.value,
+                  max: maxCount,
+                ),
+                const SizedBox(height: 12),
+              ],
+            ],
+          ),
         );
-      }),
+      },
     );
   }
 
@@ -442,57 +623,6 @@ class MindAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildTacticalMetric(
-    BuildContext context,
-    String label,
-    String value,
-    IconData icon,
-    Color color,
-  ) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Row(
-            children: [
-              Icon(icon, color: color, size: 14),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label.toUpperCase(),
-                  style: TextStyle(
-                    color: color.withValues(alpha: 0.7),
-                    fontSize: 8,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1,
-                  ),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            value,
-            style: TextStyle(
-              color: Theme.of(context).colorScheme.onSurface,
-              fontSize: 18,
-              fontWeight: FontWeight.w900,
-              fontFamily: 'Monospace',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildMindJournalCard(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final personBlock = context.read<PersonBlock>();
@@ -612,5 +742,93 @@ class MindAnalysisPage extends StatelessWidget {
       }
     } catch (_) {}
     return content.trim();
+  }
+}
+
+class _CircleIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  const _CircleIconButton({required this.icon, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(18),
+        onTap: onPressed,
+        child: Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: colorScheme.onSurface.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Icon(icon, color: colorScheme.onSurface, size: 18),
+        ),
+      ),
+    );
+  }
+}
+
+class _InsightRow extends StatelessWidget {
+  final String label;
+  final int value;
+  final int max;
+
+  const _InsightRow({required this.label, required this.value, required this.max});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final v = max <= 0 ? 0.0 : (value / max).clamp(0.0, 1.0);
+    return Row(
+      children: [
+        SizedBox(
+          width: 130,
+          child: Text(
+            label.toUpperCase(),
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.75),
+              fontSize: 11,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1.4,
+            ),
+          ),
+        ),
+        Expanded(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: LinearProgressIndicator(
+              value: v,
+              minHeight: 8,
+              backgroundColor: colorScheme.onSurface.withValues(alpha: 0.10),
+              valueColor: AlwaysStoppedAnimation(
+                const Color(0xFF8FD3FF).withValues(alpha: 0.95),
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(width: 14),
+        SizedBox(
+          width: 18,
+          child: Text(
+            '$value',
+            textAlign: TextAlign.right,
+            style: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.7),
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              fontFamily: 'Monospace',
+            ),
+          ),
+        ),
+      ],
+    );
   }
 }

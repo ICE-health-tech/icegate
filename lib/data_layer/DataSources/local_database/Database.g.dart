@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'database.dart';
+part of 'Database.dart';
 
 // ignore_for_file: type=lint
 mixin _$PersonDAOMixin on DatabaseAccessor<AppDatabase> {
@@ -29,6 +29,7 @@ mixin _$PersonManagementDAOMixin on DatabaseAccessor<AppDatabase> {
   $PersonContactsTableTable get personContactsTable =>
       attachedDatabase.personContactsTable;
   $QuestsTableTable get questsTable => attachedDatabase.questsTable;
+  $ScoresTableTable get scoresTable => attachedDatabase.scoresTable;
 }
 mixin _$FinanceDAOMixin on DatabaseAccessor<AppDatabase> {
   $FinancialAccountsTableTable get financialAccountsTable =>

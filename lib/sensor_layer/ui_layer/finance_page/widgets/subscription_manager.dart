@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';

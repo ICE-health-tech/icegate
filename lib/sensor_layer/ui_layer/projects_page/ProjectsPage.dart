@@ -10,7 +10,7 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'task_item.dart';
@@ -135,6 +135,15 @@ class ProjectsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    Text(
+                      context.l10n.projects_page_tagline,
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.72),
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
                     Watch((context) {
                       final projectBlock = context.read<ProjectBlock>();
                       final growthBlock = context.read<GrowthBlock>();
@@ -188,7 +197,7 @@ class ProjectsPage extends StatelessWidget {
                               children: [
                                 _buildSummaryItem(
                                   context,
-                                  context.l10n.projects,
+                                  context.l10n.projects_summary_workspaces,
                                   '$projectsDone/${projectsActive + projectsDone}',
                                   Icons.folder_copy_rounded,
                                   Colors.blue,
@@ -208,7 +217,7 @@ class ProjectsPage extends StatelessWidget {
                     }),
                     const SizedBox(height: 32),
                     _buildSectionTitle(context, context.l10n.quick_actions),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 12),
                     Watch((context) {
                       final allApps = internalWidgetBlock
                           .listInternalWidgetProjectsPage
@@ -218,87 +227,132 @@ class ProjectsPage extends StatelessWidget {
                           .where((w) => uniqueNames.add(w.name))
                           .toList();
 
-                      return SingleChildScrollView(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        child: Row(
-                          children: [
-                            _ActionCard(
-                              width: 120,
-                              icon: Icons.note_add_rounded,
-                              label: context.l10n.new_label,
-                              color: Colors.orange,
-                              onTap: () async {
-                                final ext = await showDialog<String>(
-                                  context: context,
-                                  builder: (context) => SimpleDialog(
-                                    title: const Text('Choose Note Type'),
-                                    children: [
-                                      SimpleDialogOption(
-                                        onPressed: () =>
-                                            Navigator.pop(context, '.md'),
-                                        child: const Text('Markdown (.md)'),
-                                      ),
-                                      SimpleDialogOption(
-                                        onPressed: () =>
-                                            Navigator.pop(context, '.txt'),
-                                        child: const Text('Plain Text (.txt)'),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                                if (ext != null && context.mounted) {
-                                  context.push(
-                                    '/projects/editor',
-                                    extra: {'extension': ext},
-                                  );
-                                }
-                              },
+                      return ClipRRect(
+                        borderRadius: BorderRadius.circular(22),
+                        child: BackdropFilter(
+                          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 14,
+                              horizontal: 10,
                             ),
-                            const SizedBox(width: 10),
-                            _ActionCard(
-                              width: 150,
-                              icon: Icons.edit_note_rounded,
-                              label: context.l10n.project_notes_label,
-                              color: Colors.blue,
-                              onTap: () {
-                                context.push("/projects/notes");
-                              },
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.45),
+                                  colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.12),
+                                ],
+                              ),
+                              borderRadius: BorderRadius.circular(22),
+                              border: Border.all(
+                                color: colorScheme.outlineVariant
+                                    .withValues(alpha: 0.28),
+                              ),
                             ),
-                            const SizedBox(width: 12),
-                            // Plugin Slot (Limit 1 - Showing Latest)
-                            if (apps.isEmpty)
-                              _ActionCard(
-                                width: 130,
-                                icon: Icons.add_circle_outline_rounded,
-                                label: 'Plugin',
-                                color: Colors.grey,
-                                onTap: () {
-                                  _showAddPluginDialog(context);
-                                },
-                              )
-                            else
-                              ...apps.map((latestApp) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(right: 12),
-                                  child: _ActionCard(
-                                    width: 130,
-                                    icon: _getAppIcon(latestApp.name),
-                                    label: latestApp.name,
-                                    color: Colors.teal,
-                                    onTap: () {
-                                      context.push(latestApp.url);
-                                    },
-                                    onLongPress: () {
-                                      _showDeletePluginDialog(
-                                        context,
-                                        latestApp,
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              physics: const BouncingScrollPhysics(),
+                              child: Row(
+                                children: [
+                                  _ActionCard(
+                                    width: 112,
+                                    icon: Icons.note_add_rounded,
+                                    label: context.l10n.new_label,
+                                    color: Colors.orange,
+                                    onTap: () async {
+                                      final ext = await showDialog<String>(
+                                        context: context,
+                                        builder: (context) => SimpleDialog(
+                                          title: const Text('Choose Note Type'),
+                                          children: [
+                                            SimpleDialogOption(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, '.md'),
+                                              child: const Text(
+                                                'Markdown (.md)',
+                                              ),
+                                            ),
+                                            SimpleDialogOption(
+                                              onPressed: () =>
+                                                  Navigator.pop(context, '.txt'),
+                                              child: const Text(
+                                                'Plain Text (.txt)',
+                                              ),
+                                            ),
+                                            SimpleDialogOption(
+                                              onPressed: () => Navigator.pop(
+                                                context,
+                                                '.docx',
+                                              ),
+                                              child: const Text(
+                                                'Word (.docx)',
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       );
+                                      if (ext != null && context.mounted) {
+                                        context.push(
+                                          '/projects/editor',
+                                          extra: {'extension': ext},
+                                        );
+                                      }
                                     },
                                   ),
-                                );
-                              }),
-                          ],
+                                  const SizedBox(width: 12),
+                                  _ActionCard(
+                                    width: 112,
+                                    icon: Icons.edit_note_rounded,
+                                    label: context.l10n.project_notes_label,
+                                    color: Colors.blue,
+                                    onTap: () {
+                                      context.push("/projects/notes");
+                                    },
+                                  ),
+                                  const SizedBox(width: 12),
+                                  // Plugin Slot (Limit 1 - Showing Latest)
+                                  if (apps.isEmpty)
+                                    _ActionCard(
+                                      width: 112,
+                                      icon: Icons.extension_rounded,
+                                      label: context.l10n.plugins,
+                                      color: colorScheme.primary,
+                                      onTap: () {
+                                        _showAddPluginDialog(context);
+                                      },
+                                    )
+                                  else
+                                    ...apps.map((latestApp) {
+                                      return Padding(
+                                        padding: const EdgeInsets.only(
+                                          right: 12,
+                                        ),
+                                        child: _ActionCard(
+                                          width: 112,
+                                          icon: _getAppIcon(latestApp.name),
+                                          label: latestApp.name,
+                                          color: Colors.teal,
+                                          onTap: () {
+                                            context.push(latestApp.url);
+                                          },
+                                          onLongPress: () {
+                                            _showDeletePluginDialog(
+                                              context,
+                                              latestApp,
+                                            );
+                                          },
+                                        ),
+                                      );
+                                    }),
+                                  const SizedBox(width: 8),
+                                ],
+                              ),
+                            ),
+                          ),
                         ),
                       );
                     }),
@@ -763,34 +817,78 @@ class _ActionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final radius = BorderRadius.circular(18);
+    // Slightly smaller so more quick-actions fit on desktop & tablets.
+    final w = width ?? 112;
     return Material(
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
         onLongPress: onLongPress,
-        borderRadius: BorderRadius.circular(16),
-        child: Container(
-          width: width,
-          padding: const EdgeInsets.all(16),
+        borderRadius: radius,
+        splashColor: color.withValues(alpha: 0.2),
+        highlightColor: color.withValues(alpha: 0.06),
+        child: Ink(
+          width: w,
           decoration: BoxDecoration(
-            color: color.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: color.withValues(alpha: 0.2)),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 12),
-              Text(
-                label,
-                style: TextStyle(
-                  color: colorScheme.onSurface,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 12,
-                ),
+            borderRadius: radius,
+            color: colorScheme.surface.withValues(alpha: 0.55),
+            border: Border.all(
+              color: color.withValues(alpha: 0.38),
+              width: 1,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.14),
+                blurRadius: 14,
+                offset: const Offset(0, 5),
               ),
             ],
+          ),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: 92),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 10, 10),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(14),
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.28),
+                          color.withValues(alpha: 0.07),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: color.withValues(alpha: 0.22),
+                      ),
+                    ),
+                    child: Icon(icon, color: color, size: 22),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    label,
+                    style: TextStyle(
+                      color: colorScheme.onSurface,
+                      fontWeight: FontWeight.w600,
+                      fontSize: 12,
+                      height: 1.2,
+                      letterSpacing: -0.15,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
       ),

@@ -4,7 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/orchestration_layer/Health/HealthMetric.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 class HealthMetricCard extends StatefulWidget {

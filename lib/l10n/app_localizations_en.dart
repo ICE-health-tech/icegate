@@ -1613,6 +1613,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects => 'Projects';
 
   @override
+  String get projects_page_tagline =>
+      'Sessions, tasks, and notes in one place.';
+
+  @override
+  String get projects_summary_workspaces => 'Workspaces';
+
+  @override
   String get kcal_consume => 'Kcal Consumed';
 
   @override

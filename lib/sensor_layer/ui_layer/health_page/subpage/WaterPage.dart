@@ -7,7 +7,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart'
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     show
         HealthLogsDAO,
         WaterLogData;

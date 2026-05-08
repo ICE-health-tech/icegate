@@ -10,6 +10,8 @@ class PrismBackground extends StatelessWidget {
   final Animation<double> pulseController;
   final List<PrismShard> shards;
   final ValueNotifier<Offset> pointerOffset;
+  /// Foreground snow; lower = more contrast on the crystal.
+  final double snowOpacity;
 
   const PrismBackground({
     super.key,
@@ -19,6 +21,7 @@ class PrismBackground extends StatelessWidget {
     required this.pulseController,
     required this.shards,
     required this.pointerOffset,
+    this.snowOpacity = 0.4,
   });
 
   @override
@@ -45,8 +48,8 @@ class PrismBackground extends StatelessWidget {
             },
           ),
         ),
-        const Positioned.fill(
-          child: SnowfallOverlay(snowCount: 60, opacity: 0.4),
+        Positioned.fill(
+          child: SnowfallOverlay(snowCount: 60, opacity: snowOpacity),
         ),
         Positioned.fill(
           child: ValueListenableBuilder<Offset>(

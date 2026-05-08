@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
 

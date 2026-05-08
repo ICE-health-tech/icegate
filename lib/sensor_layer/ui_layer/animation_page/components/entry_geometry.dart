@@ -29,9 +29,11 @@ class EntryGeometry {
       final double distance = 600 + random.nextDouble() * 700;
       final Color c =
           winterShardHints
-              ? switch (random.nextInt(5)) {
+              ? switch (random.nextInt(7)) {
                   0 || 1 => EntryColors.frostedWhite,
                   2 => EntryColors.primaryIceLight,
+                  3 => EntryColors.iceCyan,
+                  4 => EntryColors.primaryIceBlue,
                   _ => EntryColors.arcticSilver,
                 }
               : (random.nextBool()

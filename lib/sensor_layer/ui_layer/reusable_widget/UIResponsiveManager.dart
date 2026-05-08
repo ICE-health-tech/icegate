@@ -1,3 +1,5 @@
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 
 enum DeviceType { phone, tablet, laptop, desktop }
@@ -42,8 +44,14 @@ class UIResponsiveManager {
   static const double maxWidgetSize = 160.0;
 
   static double getSizeOfWidget(BuildContext context) {
-    double size = MediaQuery.of(context).size.width * widgetSizePercentage;
-    return size.clamp(minWidgetSize, maxWidgetSize);
+    double size =
+        MediaQuery.sizeOf(context).width * widgetSizePercentage;
+    size = size.clamp(minWidgetSize, maxWidgetSize);
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
+      // Wide macOS windows hit maxWidgetSize; scale down for a denser plugin row.
+      size = (size * 0.72).clamp(60.0, 118.0);
+    }
+    return size;
   }
 
   static double getSizeOfDepartment(BuildContext context) {

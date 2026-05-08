@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 @DriftAccessor(tables: [AiPromptsTable])
 class AiPromptsDAO extends DatabaseAccessor<AppDatabase>

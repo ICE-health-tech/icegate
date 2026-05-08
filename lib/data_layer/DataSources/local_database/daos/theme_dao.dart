@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 @DriftAccessor(tables: [ThemesTable])
 class ThemeDAO extends DatabaseAccessor<AppDatabase> with _$ThemeDAOMixin {

@@ -15,7 +15,8 @@ typedef WidgetFactory = Widget Function({String? identifier});
 
 class WidgetNameMapping {
   static final Map<String, WidgetFactory> _widgetMap = {
-    "UserInformationPage": ({identifier}) => const UserInformationPage(),
+    "UserInformationPage": ({identifier}) => const HunterInformationPage(),
+    "HunterInformationPage": ({identifier}) => const HunterInformationPage(),
     "HealthPage": ({identifier}) => const HealthPage(),
     "FocusPage": ({identifier}) => const FocusPage(),
     "ProjectsPage": ({identifier}) => const ProjectsPage(),

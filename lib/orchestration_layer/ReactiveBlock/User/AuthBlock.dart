@@ -6,7 +6,7 @@ import 'package:ice_gate/orchestration_layer/Services/PasskeyAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/BiometricAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/SecureStorageService.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -73,26 +73,59 @@ class AuthBlock {
       false; // Reentrancy lock to prevent double-login race conditions
 
   Timer? _authInteractionTimer;
+  /// Wall-clock end for auth watchdog — [Timer] may not run while the app is
+  /// backgrounded (OAuth in Safari); [checkAuthInteractionDeadline] uses this on resume.
+  DateTime? _authInteractionDeadline;
 
-  /// Clears the 10s OAuth / login spinner watchdog (call when session is ready).
+  /// Clears the OAuth / login spinner watchdog (call when session is ready).
   void cancelAuthInteractionTimeout() {
     _authInteractionTimer?.cancel();
     _authInteractionTimer = null;
+    _authInteractionDeadline = null;
   }
 
-  /// Starts a 10s watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering],
-  /// resets to unauthenticated so the user can try again (covers stuck OAuth / hung API).
-  void armAuthInteractionTimeout() {
+  /// Call from [WidgetsBindingObserver.didChangeAppLifecycleState] when the app
+  /// resumes. Applies timeout if the user spent longer than the armed duration
+  /// in the browser while timers were throttled.
+  void checkAuthInteractionDeadline() {
+    if (_authInteractionDeadline == null) return;
+    if (DateTime.now().isBefore(_authInteractionDeadline!)) return;
+    _applyAuthInteractionTimeoutIfNeeded();
+  }
+
+  void _applyAuthInteractionTimeoutIfNeeded() {
+    if (status.value != AuthStatus.authenticating &&
+        status.value != AuthStatus.registering) {
+      cancelAuthInteractionTimeout();
+      return;
+    }
+    status.value = AuthStatus.unauthenticated;
+    error.value = 'err_auth_timeout';
+    debugPrint('⏱️ [AuthBlock] Auth interaction timed out (watchdog)');
     cancelAuthInteractionTimeout();
-    _authInteractionTimer = Timer(const Duration(seconds: 10), () {
-      if (status.value == AuthStatus.authenticating ||
-          status.value == AuthStatus.registering) {
-        status.value = AuthStatus.unauthenticated;
-        error.value = error.value ?? 'err_auth_timeout';
-        debugPrint('⏱️ [AuthBlock] Auth interaction timed out after 10s');
-      }
-      _authInteractionTimer = null;
-    });
+  }
+
+  /// [signInWithOAuth] returns after opening Safari / system browser; session
+  /// usually arrives later via deep link. Keep [AuthStatus.authenticating] so
+  /// the login spinner stays on until the session arrives or [armAuthInteractionTimeout]
+  /// fires (default 10s): then [error] is `err_auth_timeout` and status becomes
+  /// unauthenticated so buttons unlock.
+  void _idleLoginUiWhileOAuthContinuesInBrowser() {
+    if (Supabase.instance.client.auth.currentSession == null) {
+      armAuthInteractionTimeout(const Duration(seconds: 10));
+    }
+  }
+
+  /// Watchdog: if still [AuthStatus.authenticating] or [AuthStatus.registering]
+  /// after [duration], reset to unauthenticated so the user can try again
+  /// (covers stuck OAuth / hung API). Default 10s stops the login button spinner
+  /// when the network or Supabase does not return.
+  void armAuthInteractionTimeout([
+    Duration duration = const Duration(seconds: 10),
+  ]) {
+    cancelAuthInteractionTimeout();
+    _authInteractionDeadline = DateTime.now().add(duration);
+    _authInteractionTimer = Timer(duration, _applyAuthInteractionTimeoutIfNeeded);
   }
 
   /// Helper to persist session locally (e.g. after Google OAuth)
@@ -531,30 +564,25 @@ class AuthBlock {
     }
   }
 
-  /// Step 2: Attempt to fetch JWT from API automatically (if possible/needed)
-  /// Corresponds to onAuthen in XState
+  /// Step 2: No Supabase session — leave user unauthenticated so [GoRouter]
+  /// can open `/login`. Guest mode is optional via [loginAsGuest] on the login UI.
   Future<void> fetchAutoJWT() async {
-    status.value = AuthStatus.authenticating;
-    print("🔍 Step 2: Attempting to fetch JWT from API automatically...");
+    print(
+      "🔍 Step 2: No Supabase session — sign-in required (guest not auto-selected).",
+    );
 
     try {
-      // The machine logic says GET /backend/auth/login
-      // We'll implement this in CustomAuthService if it doesn't exist
-      // Since it's a mock/example in many cases, we'll try it
-      // final data = await _authService.fetchSessionJWT(); // hypothetical
-
-      // For now, let's assume it fails or returns unauthenticated to force manual login
-      // unless we want to simulate success
+      jwt.value = null;
+      username.value = null;
       status.value = AuthStatus.unauthenticated;
       print(
         "⚠️ Auto-auth returned unauthenticated. Waiting for user credentials.",
       );
-      // Fallback to Guest Mode automatically if offline/unauthenticated
-      await loginAsGuest();
     } catch (e) {
       print("❌ Auto-auth fetch failed: $e");
-      // Fallback to Guest Mode automatically if offline
-      await loginAsGuest();
+      jwt.value = null;
+      username.value = null;
+      status.value = AuthStatus.unauthenticated;
     }
   }
 
@@ -661,7 +689,7 @@ class AuthBlock {
   Future<void> signInWithApple() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout();
+    armAuthInteractionTimeout(const Duration(seconds: 10));
     print("🍎 [AuthBlock] Initiating Apple Sign-In via Supabase...");
 
     try {
@@ -690,6 +718,7 @@ class AuthBlock {
           redirectTo: redirectTo,
           authScreenLaunchMode: LaunchMode.externalApplication,
         );
+        _idleLoginUiWhileOAuthContinuesInBrowser();
       }
 
       final user = Supabase.instance.client.auth.currentUser;
@@ -738,7 +767,7 @@ class AuthBlock {
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
     error.value = null;
-    armAuthInteractionTimeout();
+    armAuthInteractionTimeout(const Duration(seconds: 10));
     print("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
 
     try {
@@ -748,6 +777,8 @@ class AuthBlock {
         redirectTo: redirectTo,
         authScreenLaunchMode: LaunchMode.externalApplication,
       );
+
+      _idleLoginUiWhileOAuthContinuesInBrowser();
 
       final user = Supabase.instance.client.auth.currentUser;
 

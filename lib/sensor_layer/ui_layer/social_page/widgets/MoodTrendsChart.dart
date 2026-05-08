@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
 import 'package:intl/intl.dart';
 

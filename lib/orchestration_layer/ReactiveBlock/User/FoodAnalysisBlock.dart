@@ -2,7 +2,7 @@ import 'dart:io';
 
 import 'package:drift/drift.dart';
 import 'package:flutter/foundation.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/Health/AIFoodCaloriesServices.dart';
 import 'package:ice_gate/orchestration_layer/Services/Health/FoodDataCentralService.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';

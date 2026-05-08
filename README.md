@@ -1,19 +1,17 @@
 # ice_gate
 
-A new Flutter project.
+Personal productivity app driven by **time management** (focus sessions, timers, routines) and **note management** (projects as notebooks, synced notes). Health, social, and finance modules extend that core.
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+Flutter SDK `^3.9.2`. Configure `.env` from `.env.example`, then:
 
-A few resources to get you started if this is your first Flutter project:
+```bash
+flutter pub get
+flutter run
+```
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+Flutter docs: [codelab](https://docs.flutter.dev/get-started/codelab), [cookbook](https://docs.flutter.dev/cookbook), [full docs](https://docs.flutter.dev/).
 
 
 

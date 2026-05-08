@@ -4,18 +4,20 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_markdown/flutter_markdown.dart';
+// Preview removed.
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
-import 'package:drift/drift.dart' show Value;
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
 import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
+import 'package:ice_gate/link_layer/note_export/note_export_preferences.dart';
+import 'package:ice_gate/link_layer/note_export/note_export_service.dart';
+import 'package:ice_gate/link_layer/note_export/note_export_settings_sheet.dart';
+import 'package:ice_gate/link_layer/note_export/docx_utils.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
@@ -49,7 +51,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   bool _hasUnsavedChanges = false;
   bool _isSaving = false;
   bool _focusMode = false;
-  bool _isPreview = false;
+  // Preview mode removed (always editor).
   Timer? _autoSaveTimer;
   DateTime? _lastSaved;
   File? _openedFile; // Track the currently opened local file
@@ -189,9 +191,13 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
-    _autoSaveTimer = Timer(const Duration(seconds: 5), () {
+    _autoSaveTimer = Timer(const Duration(seconds: 1), () {
       if (_hasUnsavedChanges && mounted) {
-        _saveNote(showSnackbar: false);
+        // Local-file-only: auto-save only when a file path is already chosen.
+        // Never trigger a "Save As" picker from autosave.
+        if (_openedFile != null) {
+          _saveToLocalFile();
+        }
       }
     });
   }
@@ -332,13 +338,21 @@ class _TextEditorPageState extends State<TextEditorPage>
   Future<void> _pickLocalFile() async {
     final result = await FilePicker.pickFiles(
       type: FileType.custom,
-      allowedExtensions: ['md', 'txt'],
+      allowedExtensions: ['md', 'txt', 'docx'],
     );
 
     if (result != null && result.files.single.path != null) {
       final file = File(result.files.single.path!);
-      final content = await file.readAsString();
-      final title = result.files.single.name.replaceFirst(RegExp(r'\.md$'), '');
+      final ext = p.extension(file.path).toLowerCase();
+      final title =
+          result.files.single.name.replaceFirst(RegExp(r'\.(md|txt|docx)$'), '');
+      String content;
+      if (ext == '.docx') {
+        final bytes = await file.readAsBytes();
+        content = DocxUtils.extractPlainText(bytes);
+      } else {
+        content = await file.readAsString();
+      }
 
       setState(() {
         _contentController.text = content;
@@ -352,7 +366,14 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   Future<void> _saveToLocalFile() async {
     if (_openedFile != null) {
-      await _openedFile!.writeAsString(_contentController.text);
+      final ext = p.extension(_openedFile!.path).toLowerCase();
+      if (ext == '.docx') {
+        final bytes =
+            DocxUtils.createDocxBytesFromPlainText(_contentController.text);
+        await _openedFile!.writeAsBytes(bytes, flush: true);
+      } else {
+        await _openedFile!.writeAsString(_contentController.text, flush: true);
+      }
       if (mounted) {
         setState(() {
           _hasUnsavedChanges = false;
@@ -361,19 +382,42 @@ class _TextEditorPageState extends State<TextEditorPage>
       }
     } else {
       // Prompt user to save as a new file if no file is currently opened
+      final ext = widget.initialExtension ?? '.md';
+      final fileName = '${_titleController.text}$ext';
+      final bytes =
+          ext.toLowerCase() == '.docx'
+              ? DocxUtils.createDocxBytesFromPlainText(_contentController.text)
+              : Uint8List.fromList(utf8.encode(_contentController.text));
       final path = await FilePicker.saveFile(
-        dialogTitle: 'Save as Markdown',
-        fileName: '${_titleController.text}.md',
+        dialogTitle: 'Save file',
+        fileName: fileName,
         type: FileType.custom,
-        allowedExtensions: ['md'],
+        allowedExtensions: ['md', 'txt', 'docx'],
+        bytes: bytes,
       );
 
       if (path != null) {
         final file = File(path);
-        await file.writeAsString(_contentController.text);
+        final ext = p.extension(file.path).toLowerCase();
+        if (ext == '.docx') {
+          final bytes =
+              DocxUtils.createDocxBytesFromPlainText(_contentController.text);
+          await file.writeAsBytes(bytes, flush: true);
+        } else {
+          await file.writeAsString(_contentController.text, flush: true);
+        }
         if (mounted) {
           setState(() {
             _openedFile = file;
+            _hasUnsavedChanges = false;
+            _lastSaved = DateTime.now();
+          });
+        }
+      } else {
+        // On iOS/Android, saveFile can succeed without returning a filesystem path
+        // when [bytes] is provided. In that case, consider the content saved.
+        if (mounted) {
+          setState(() {
             _hasUnsavedChanges = false;
             _lastSaved = DateTime.now();
           });
@@ -382,125 +426,103 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
   }
 
-  Future<void> _saveNote({bool showSnackbar = true}) async {
-    final title = _titleController.text;
-    final content = _contentController.text; // Store as plain markdown
+  Future<void> _runPostSaveExportsIfNeeded(String title, String content) async {
+    try {
+      final prefs = await NoteExportPreferences.load();
+      await NoteExportService.runPostSaveExports(
+        prefs: prefs,
+        title: title,
+        body: content,
+      );
+    } catch (e, st) {
+      debugPrint('Note export after save: $e\n$st');
+    }
+  }
 
+  Future<void> _exportToNotionFromEditor() async {
+    final title = _titleController.text;
+    final content = _contentController.text;
     if (title.isEmpty) {
-      if (showSnackbar) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please enter a title'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a title'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
       return;
     }
-
-    setState(() => _isSaving = true);
-
-    try {
-      print("📝 [Editor] Starting save process for title: '$title'");
-      final String? userAlias = Supabase.instance.client.auth.currentUser?.id;
-      final fileName = title.replaceAll(RegExp(r'[\\/:*?"<>|]'), '_');
-      
-      // 1. Automatic Save to user_markdown_documentation
-      final appDir = await getApplicationDocumentsDirectory();
-      print("📂 [Editor] App documents directory: ${appDir.path}");
-
-      late final Directory docDir;
-      if (widget.initialDirectory != null) {
-        docDir = widget.initialDirectory!;
-        print("📁 [Editor] Using initialDirectory: ${docDir.path}");
-      } else {
-        docDir = Directory(
-          '${appDir.path}/${userAlias ?? "unknown_user"}/user_markdown_documentation',
-        );
-        print("📁 [Editor] No initialDirectory, using default vault: ${docDir.path}");
-      }
-
-      if (!await docDir.exists()) {
-        print("🔨 [Editor] Creating directory: ${docDir.path}");
-        await docDir.create(recursive: true);
-      }
-
-      final extension = widget.note?.extension ?? widget.initialExtension ?? '.md';
-      final String savingPath = p.join(docDir.path, "$fileName$extension");
-      print("💾 [Editor] Saving file to: $savingPath");
-      final localFile = File(savingPath);
-      await localFile.writeAsString(content);
-      print("✅ [Editor] File written successfully");
-
-      // If we didn't have a file opened manually, track this auto-saved one
-      _openedFile ??= localFile;
-
-      // 2. Database Sync
-      if (widget.note != null) {
-        await context.read<ProjectNoteDAO>().updateNote(
-          widget.note!.copyWith(
-            title: title,
-            content: content,
-            mood: Value(_selectedMood),
+    final prefs = await NoteExportPreferences.load();
+    if (!prefs.hasNotionConfig) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text(
+            'Open Note export settings and add your Notion token and database ID.',
           ),
-        );
-      } else {
-        // Only insert to DB if it's a new database note
-        final personBlock = context.read<PersonBlock>();
-        await context.read<ProjectNoteDAO>().insertNote(
-          title: title,
-          content: content,
-          personID: personBlock.currentPersonID.value,
-          tenantID: personBlock.currentTenantID.value,
-          category: widget.initialCategory,
-          mood: _selectedMood,
-          extension: extension,
-        );
-      }
-
-      if (mounted) {
-        setState(() {
-          _hasUnsavedChanges = false;
-          _isSaving = false;
-          _lastSaved = DateTime.now();
-        });
-        if (showSnackbar) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Row(
-                children: [
-                  Icon(
-                    Icons.check_circle_rounded,
-                    color: Colors.white,
-                    size: 18,
-                  ),
-                  SizedBox(width: 8),
-                  Text('Saved'),
-                ],
-              ),
-              duration: const Duration(seconds: 1),
-              behavior: SnackBarBehavior.floating,
-              margin: EdgeInsets.only(
-                left: 16,
-                right: 16,
-                bottom: MediaQuery.of(context).padding.bottom + 16,
-              ),
-            ),
-          );
-        }
-      }
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    try {
+      await NoteExportService.exportNotionIfConfigured(
+        prefs,
+        title: title,
+        body: content,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Exported to Notion'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSaving = false);
-        if (showSnackbar) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: $e'),
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Notion export failed: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+  }
+
+  Future<void> _exportToGoogleDocFromEditor() async {
+    final title = _titleController.text;
+    final content = _contentController.text;
+    if (title.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please enter a title'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+    try {
+      await NoteExportService.exportToGoogleDoc(
+        title: title,
+        body: content,
+        interactive: true,
+      );
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Created Google Doc'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Google Doc export failed: $e'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
@@ -672,14 +694,14 @@ class _TextEditorPageState extends State<TextEditorPage>
                       controller: scrollController,
                       padding: const EdgeInsets.only(bottom: 16),
                       children: [
-                        _optionTile(
+                         _optionTile(
                           ctx,
-                          icon: Icons.save_rounded,
-                          label: 'Save Note',
-                          color: Colors.green,
+                          icon: Icons.file_download_rounded,
+                          label: 'Save to Local File',
+                          color: Colors.blueAccent,
                           onTap: () {
                             Navigator.pop(ctx);
-                            _saveNote();
+                            _saveToLocalFile();
                           },
                         ),
                         _optionTile(
@@ -692,16 +714,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                             _pickLocalFile();
                           },
                         ),
-                        _optionTile(
-                          ctx,
-                          icon: Icons.file_download_rounded,
-                          label: 'Save to Local File',
-                          color: Colors.blueAccent,
-                          onTap: () {
-                            Navigator.pop(ctx);
-                            _saveToLocalFile();
-                          },
-                        ),
+                     
                         _optionTile(
                           ctx,
                           icon: Icons.share_rounded,
@@ -766,6 +779,36 @@ class _TextEditorPageState extends State<TextEditorPage>
                             Navigator.pop(ctx);
                             final plainText = _contentController.text;
                             context.go('/widgets/ssh', extra: plainText);
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.book_outlined,
+                          label: 'Export to Notion',
+                          color: Colors.teal,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _exportToNotionFromEditor();
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.description_outlined,
+                          label: 'Export to Google Doc',
+                          color: Colors.deepPurple,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _exportToGoogleDocFromEditor();
+                          },
+                        ),
+                        _optionTile(
+                          ctx,
+                          icon: Icons.settings_suggest_outlined,
+                          label: 'Note export settings',
+                          color: colorScheme.primary,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            showNoteExportSettingsSheet(context);
                           },
                         ),
 
@@ -902,16 +945,16 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           );
           if (shouldSave == true) {
-            await _saveNote(showSnackbar: false);
+            await _saveToLocalFile();
           }
           if (context.mounted) Navigator.pop(context);
         },
         child: CallbackShortcuts(
           bindings: {
             const SingleActivator(LogicalKeyboardKey.keyS, control: true): () =>
-                _saveNote(),
+                _saveToLocalFile(),
             const SingleActivator(LogicalKeyboardKey.keyS, meta: true): () =>
-                _saveNote(),
+                _saveToLocalFile(),
             const SingleActivator(LogicalKeyboardKey.keyB, control: true): () =>
                 _insertMarkdown('**', suffix: '**'),
             const SingleActivator(LogicalKeyboardKey.keyB, meta: true): () =>
@@ -920,10 +963,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                 _insertMarkdown('*', suffix: '*'),
             const SingleActivator(LogicalKeyboardKey.keyI, meta: true): () =>
                 _insertMarkdown('*', suffix: '*'),
-            const SingleActivator(LogicalKeyboardKey.keyP, control: true): () =>
-                setState(() => _isPreview = !_isPreview),
-            const SingleActivator(LogicalKeyboardKey.keyP, meta: true): () =>
-                setState(() => _isPreview = !_isPreview),
+            // Preview shortcut removed.
             const SingleActivator(LogicalKeyboardKey.keyZ, control: true):
                 _undo,
             const SingleActivator(LogicalKeyboardKey.keyZ, meta: true): _undo,
@@ -1172,11 +1212,8 @@ class _TextEditorPageState extends State<TextEditorPage>
                                 ] else
                                   const SizedBox(height: 12),
 
-                                // Toggle Edit / Preview
                                 Expanded(
-                                  child: _isPreview
-                                      ? _buildMarkdownPreview(colorScheme)
-                                      : _buildMarkdownEditor(colorScheme),
+                                  child: _buildMarkdownEditor(colorScheme),
                                 ),
                               ],
                             ),
@@ -1187,60 +1224,10 @@ class _TextEditorPageState extends State<TextEditorPage>
                   ),
                 ),
                 // Floating Markdown Toolbar
-                if (!_focusMode && !_isPreview)
+                if (!_focusMode)
                   _buildMarkdownToolbar(colorScheme),
 
-                Positioned(
-                  bottom: 64,
-                  // left: 24,
-                  right: 24,
-                  child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    constraints: const BoxConstraints(minWidth: 100),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 14,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: _isPreview
-                          ? colorScheme.primary.withValues(alpha: 0.15)
-                          : colorScheme.surfaceContainerHighest.withOpacity(
-                              0.5,
-                            ),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: InkWell(
-                      onTap: () => setState(() => _isPreview = !_isPreview),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _isPreview
-                                ? Icons.edit_rounded
-                                : Icons.preview_rounded,
-                            size: 16,
-                            color: _isPreview
-                                ? colorScheme.primary
-                                : colorScheme.onSurface.withValues(alpha: 0.6),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _isPreview ? 'EDIT' : 'PREVIEW',
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 0.8,
-                              color: _isPreview
-                                  ? colorScheme.primary
-                                  : colorScheme.onSurface.withValues(alpha: 0.6),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
+                // Preview button removed.
               ],
             ),
           ),
@@ -1276,73 +1263,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
-  Widget _buildMarkdownPreview(ColorScheme colorScheme) {
-    return Markdown(
-      data: _contentController.text,
-      imageDirectory: _vaultPath,
-      padding: const EdgeInsets.only(bottom: 120),
-      selectable: true,
-      styleSheet: MarkdownStyleSheet(
-        h1: TextStyle(
-          fontSize: 28,
-          fontWeight: FontWeight.w900,
-          height: 1.3,
-          color: colorScheme.onSurface,
-        ),
-        h2: TextStyle(
-          fontSize: 22,
-          fontWeight: FontWeight.w800,
-          height: 1.3,
-          color: colorScheme.onSurface,
-        ),
-        h3: TextStyle(
-          fontSize: 18,
-          fontWeight: FontWeight.w700,
-          height: 1.4,
-          color: colorScheme.onSurface.withValues(alpha: 0.9),
-        ),
-        p: TextStyle(
-          fontSize: 16,
-          height: 1.7,
-          color: colorScheme.onSurface.withValues(alpha: 0.85),
-        ),
-        code: TextStyle(
-          fontSize: 14,
-          backgroundColor: colorScheme.primary.withValues(alpha: 0.08),
-          color: colorScheme.primary,
-          fontFamily: 'monospace',
-        ),
-        codeblockDecoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-          ),
-        ),
-        blockquoteDecoration: BoxDecoration(
-          border: Border(
-            left: BorderSide(
-              color: colorScheme.primary.withValues(alpha: 0.4),
-              width: 3,
-            ),
-          ),
-        ),
-        blockquotePadding: const EdgeInsets.only(left: 16, top: 4, bottom: 4),
-        listBullet: TextStyle(
-          color: colorScheme.primary,
-          fontWeight: FontWeight.bold,
-        ),
-        horizontalRuleDecoration: BoxDecoration(
-          border: Border(
-            top: BorderSide(
-              color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-              width: 1,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
+  // Preview renderer removed.
 
   Widget _buildMoodSelector(ColorScheme colorScheme) {
     final validValue =
@@ -1590,7 +1511,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                       ),
                       onPressed: () {
                         if (_hasUnsavedChanges) {
-                          _saveNote(showSnackbar: false).then((_) {
+                          _saveToLocalFile().then((_) {
                             if (context.mounted) Navigator.pop(context);
                           });
                         } else {
@@ -1601,42 +1522,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                   ),
                   const Spacer(),
 
-                  // Preview / Edit toggle chip
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: colorScheme.outline.withValues(alpha: 0.05),
-                      ),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        _headerToggleItem(
-                          icon: Icons.edit_note_rounded,
-                          label: 'EDIT',
-                          active: !_isPreview,
-                          onTap: () => setState(() => _isPreview = false),
-                          colorScheme: colorScheme,
-                        ),
-                        _headerToggleItem(
-                          icon: Icons.auto_awesome_mosaic_rounded,
-                          label: 'PREVIEW',
-                          active: _isPreview,
-                          onTap: () => setState(() => _isPreview = true),
-                          colorScheme: colorScheme,
-                        ),
-                      ],
-                    ),
-                  ),
+                  // Preview toggle removed.
 
                   const SizedBox(width: 12),
 
@@ -1671,60 +1557,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
-  Widget _headerToggleItem({
-    required IconData icon,
-    required String label,
-    required bool active,
-    required VoidCallback onTap,
-    required ColorScheme colorScheme,
-  }) {
-    return GestureDetector(
-      onTap: () {
-        HapticFeedback.selectionClick();
-        onTap();
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: active ? colorScheme.primary : Colors.transparent,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: active
-              ? [
-                  BoxShadow(
-                    color: colorScheme.primary.withValues(alpha: 0.3),
-                    blurRadius: 8,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Row(
-          children: [
-            Icon(
-              icon,
-              size: 16,
-              color: active
-                  ? colorScheme.onPrimary
-                  : colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-            const SizedBox(width: 6),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 0.5,
-                color: active
-                    ? colorScheme.onPrimary
-                    : colorScheme.onSurface.withValues(alpha: 0.5),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+  // Preview toggle UI removed.
 
   String _formatRelativeTime(DateTime time) {
     final diff = DateTime.now().difference(time);

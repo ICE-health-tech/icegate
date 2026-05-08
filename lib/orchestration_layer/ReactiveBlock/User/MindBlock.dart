@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter/foundation.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:signals_flutter/signals_flutter.dart';

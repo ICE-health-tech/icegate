@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 /// DAO for managing external widgets (plugins) in the local database.
 /// Handles CRUD operations and Supabase sync for the ExternalWidgetsTable.

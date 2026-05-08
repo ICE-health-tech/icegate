@@ -8,7 +8,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dar
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 
 class FinanceDashboardPage extends StatelessWidget {

@@ -61,6 +61,10 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                 builder: (context) => SimpleDialog(
                   title: const Text('Choose Note Type'),
                   children: [
+                   SimpleDialogOption(
+                      onPressed: () => Navigator.pop(context, '.docx'),
+                      child: const Text('Plain Text (.docx)'),
+                    ),
                     SimpleDialogOption(
                       onPressed: () => Navigator.pop(context, '.md'),
                       child: const Text('Markdown (.md)'),
@@ -126,7 +130,13 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                   child: _buildSearchBar(colorScheme),
                 ),
               ),
-              _buildGridOrList(context, colorScheme),
+              Watch((context) {
+                final block = context.read<DocumentationBlock>();
+                // Re-run directory listing when sync finishes (Drive/Notion call _loadFiles).
+                block.files.value;
+                block.directories.value;
+                return _buildGridOrList(context, colorScheme);
+              }),
               const SliverToBoxAdapter(child: SizedBox(height: 100)),
             ],
           ),
@@ -135,13 +145,17 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     );
   }
 
+  bool _compactPhone(BuildContext context) =>
+      MediaQuery.sizeOf(context).width < 480;
+
   Widget _buildSliverAppBar(
     BuildContext context,
     String title,
     ColorScheme colorScheme,
   ) {
+    final compact = _compactPhone(context);
     return SliverAppBar(
-      expandedHeight: 90,
+      expandedHeight: compact ? 76 : 90,
       floating: false,
       pinned: true,
       stretch: true,
@@ -159,7 +173,12 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
         onPressed: () => context.pop(),
       ),
       flexibleSpace: FlexibleSpaceBar(
-        titlePadding: const EdgeInsets.symmetric(horizontal: 56, vertical: 16),
+        titlePadding: EdgeInsets.fromLTRB(
+          compact ? 44 : 56,
+          12,
+          compact ? 12 : 56,
+          14,
+        ),
         centerTitle: false,
         background: Stack(
           fit: StackFit.expand,
@@ -184,11 +203,14 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
         ),
         title: AutoSizeText(
           title,
+          maxLines: compact ? 2 : 1,
+          minFontSize: 9,
+          maxFontSize: compact ? 12 : 14,
+          overflow: TextOverflow.ellipsis,
           style: TextStyle(
             color: colorScheme.onSurface,
             fontWeight: FontWeight.w800,
-            fontSize: 14,
-            letterSpacing: -0.5,
+            letterSpacing: compact ? -0.35 : -0.5,
           ),
         ),
       ),
@@ -279,7 +301,8 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
             childAspectRatio: 0.8,
           ),
           delegate: SliverChildBuilderDelegate(
-            (context, index) => _buildGridItem(filtered[index], colorScheme),
+            (context, index) =>
+                _buildGridItem(context, filtered[index], colorScheme),
             childCount: filtered.length,
           ),
         ),
@@ -288,13 +311,18 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
 
     return SliverList(
       delegate: SliverChildBuilderDelegate(
-        (context, index) => _buildListItem(filtered[index], colorScheme),
+        (context, index) =>
+            _buildListItem(context, filtered[index], colorScheme),
         childCount: filtered.length,
       ),
     );
   }
 
-  Widget _buildGridItem(FileSystemEntity entity, ColorScheme colorScheme) {
+  Widget _buildGridItem(
+    BuildContext context,
+    FileSystemEntity entity,
+    ColorScheme colorScheme,
+  ) {
     final isDir = entity is Directory;
     final name = p.basename(entity.path);
 
@@ -344,7 +372,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: _compactPhone(context) ? 10 : 12,
                     fontWeight: isDir ? FontWeight.bold : FontWeight.w500,
                     color: colorScheme.onSurface,
                   ),
@@ -357,7 +385,11 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
     );
   }
 
-  Widget _buildListItem(FileSystemEntity entity, ColorScheme colorScheme) {
+  Widget _buildListItem(
+    BuildContext context,
+    FileSystemEntity entity,
+    ColorScheme colorScheme,
+  ) {
     final isDir = entity is Directory;
     final name = p.basename(entity.path);
     final stats = entity.statSync();
@@ -393,7 +425,7 @@ class _FolderDetailsPageState extends State<FolderDetailsPage> {
           name,
           style: TextStyle(
             fontWeight: isDir ? FontWeight.bold : FontWeight.w600,
-            fontSize: 15,
+            fontSize: _compactPhone(context) ? 13 : 15,
           ),
         ),
         subtitle: Text(

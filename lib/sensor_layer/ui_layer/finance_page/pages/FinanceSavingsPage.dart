@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/savings_streak_card.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_card.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -47,81 +45,7 @@ class FinanceSavingsPage extends StatelessWidget {
               monthly: monthlySavings,
               savingsRatePercent: rate,
             ),
-            const SizedBox(height: 20),
-            Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () {
-                  HapticFeedback.mediumImpact();
-                  QuickSaveSheet.show(context, financeBlock);
-                },
-                borderRadius: BorderRadius.circular(20),
-                child: Ink(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 16,
-                    horizontal: 20,
-                  ),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.greenAccent.withValues(alpha: 0.25),
-                        EntryColors.iceCyan.withValues(alpha: 0.12),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.greenAccent.withValues(alpha: 0.35),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent.withValues(alpha: 0.15),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: const Icon(
-                          Icons.savings_rounded,
-                          color: Colors.greenAccent,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      const Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              "Add savings",
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 17,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            SizedBox(height: 4),
-                            Text(
-                              "Log money set aside toward goals or emergency",
-                              style: TextStyle(
-                                color: Colors.white54,
-                                fontSize: 12,
-                                height: 1.3,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        color: Colors.white.withValues(alpha: 0.4),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 24),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
               child: Row(
@@ -166,15 +90,15 @@ class FinanceSavingsPage extends StatelessWidget {
                         fontSize: 14,
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    Text(
-                      "Tap Add savings above to record your first transfer",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.22),
-                        fontSize: 12,
-                      ),
-                    ),
+                    // const SizedBox(height: 8),
+                    // Text(
+                    //   "Tap Add savings above to record your first transfer",
+                    //   textAlign: TextAlign.center,
+                    //   style: TextStyle(
+                    //     color: Colors.white.withValues(alpha: 0.22),
+                    //     fontSize: 12,
+                    //   ),
+                    // ),
                   ],
                 ),
               )

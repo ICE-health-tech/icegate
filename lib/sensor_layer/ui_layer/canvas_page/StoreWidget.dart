@@ -5,7 +5,7 @@ import 'package:provider/provider.dart';
 
 // --- IMPORTS ---
 // Update these paths to match your actual project structure
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 // import 'package:ice_gate/data_layer/Protocol/Widget/InternalWidgetDragProtocol.dart';
 // import 'package:ice_gate/data_layer/Protocol/Widget/WidgetManagerBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';

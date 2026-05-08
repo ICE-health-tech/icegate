@@ -58,6 +58,12 @@ class AvailablePlugins {
       category: PluginCategory.social,
     ),
     _InternalPlugin(
+      name: 'Music',
+      url: '/social/skills',
+      icon: Icons.music_note_rounded,
+      category: PluginCategory.social,
+    ),
+    _InternalPlugin(
       name: 'Profile',
       url: '/profile',
       icon: Icons.person_rounded,

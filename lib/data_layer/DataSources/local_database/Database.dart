@@ -29,7 +29,7 @@ import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.d
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
-part 'database.g.dart';
+part 'Database.g.dart';
 part 'daos/internal_widgets_dao.dart';
 part 'daos/hourly_activity_log_dao.dart';
 part 'daos/theme_dao.dart';
@@ -2479,6 +2479,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
     CVAddressesTable,
     PersonContactsTable,
     QuestsTable,
+    ScoresTable,
   ],
 )
 class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
@@ -2624,8 +2625,113 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       "🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...",
     );
 
+    double _maxNullable(double? a, double? b) {
+      if (a == null && b == null) return 0.0;
+      if (a == null) return b ?? 0.0;
+      if (b == null) return a;
+      return a > b ? a : b;
+    }
+
+    /// [scores] has a UNIQUE [person_id]. Reassigning guest rows can collide with
+    /// an existing row for the real user — merge guest metrics into the user row
+    /// and delete the guest row.
+    Future<void> migrateGuestScores() async {
+      final guest = await (select(
+        scoresTable,
+      )..where((t) => t.personID.equals(guestId))).getSingleOrNull();
+      if (guest == null) return;
+
+      final userRow = await (select(
+        scoresTable,
+      )..where((t) => t.personID.equals(newPersonId))).getSingleOrNull();
+
+      if (userRow == null) {
+        try {
+          await (update(
+            scoresTable,
+          )..where((t) => t.personID.equals(guestId))).write(
+            ScoresTableCompanion(
+              personID: Value(newPersonId),
+              tenantID: Value(tenantId),
+              updatedAt: Value(DateTime.now()),
+            ),
+          );
+        } catch (e) {
+          if (e.toString().contains('no such column') &&
+              e.toString().contains('tenant_id')) {
+            await (update(
+              scoresTable,
+            )..where((t) => t.personID.equals(guestId))).write(
+              ScoresTableCompanion(
+                personID: Value(newPersonId),
+                updatedAt: Value(DateTime.now()),
+              ),
+            );
+          } else {
+            rethrow;
+          }
+        }
+        return;
+      }
+
+      final merged = ScoreLocalData(
+        id: userRow.id,
+        tenantID: tenantId,
+        scoreID: userRow.scoreID ?? guest.scoreID,
+        personID: userRow.personID,
+        healthGlobalScore: _maxNullable(
+          userRow.healthGlobalScore,
+          guest.healthGlobalScore,
+        ),
+        socialGlobalScore: _maxNullable(
+          userRow.socialGlobalScore,
+          guest.socialGlobalScore,
+        ),
+        financialGlobalScore: _maxNullable(
+          userRow.financialGlobalScore,
+          guest.financialGlobalScore,
+        ),
+        careerGlobalScore: _maxNullable(
+          userRow.careerGlobalScore,
+          guest.careerGlobalScore,
+        ),
+        penaltyScore: _maxNullable(userRow.penaltyScore, guest.penaltyScore),
+        createdAt: userRow.createdAt,
+        updatedAt: DateTime.now(),
+      );
+      await update(scoresTable).replace(merged);
+      await (delete(
+        scoresTable,
+      )..where((t) => t.personID.equals(guestId))).go();
+    }
+
+    Future<void> migrateGuestTable(String table) async {
+      try {
+        await customUpdate(
+          'UPDATE $table SET person_id = ?, tenant_id = ? WHERE person_id = ?',
+          variables: [
+            Variable.withString(newPersonId),
+            Variable.withString(tenantId),
+            Variable.withString(guestId),
+          ],
+        );
+      } catch (e) {
+        final msg = e.toString();
+        if (msg.contains('no such column') && msg.contains('tenant_id')) {
+          await customUpdate(
+            'UPDATE $table SET person_id = ? WHERE person_id = ?',
+            variables: [
+              Variable.withString(newPersonId),
+              Variable.withString(guestId),
+            ],
+          );
+        } else {
+          rethrow;
+        }
+      }
+    }
+
     final tables = [
-      'scores',
       'achievements',
       'mind_logs',
       'habits',
@@ -2658,17 +2764,14 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     ];
 
     await transaction(() async {
+      try {
+        await migrateGuestScores();
+      } catch (e) {
+        print("⚠️ [Migration] Could not migrate table scores: $e");
+      }
       for (final table in tables) {
         try {
-          // Use raw SQL for speed and to avoid Companion naming discrepancies
-          await customUpdate(
-            'UPDATE $table SET person_id = ?, tenant_id = ? WHERE person_id = ?',
-            variables: [
-              Variable(newPersonId),
-              Variable(tenantId),
-              Variable(guestId),
-            ],
-          );
+          await migrateGuestTable(table);
         } catch (e) {
           print("⚠️ [Migration] Could not migrate table $table: $e");
         }

@@ -3,7 +3,8 @@ import 'package:drift/drift.dart' hide Column;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:flutter/services.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
     as DatabaseAgent;
@@ -612,6 +613,20 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       debugPrint("DataLayer: App paused at $_lastPausedTime");
     } else if (state == AppLifecycleState.resumed) {
       debugPrint("DataLayer: App resumed");
+      // Workaround for occasional desktop key-state desync on resume:
+      // clear pressed keys so duplicate KeyDown doesn't trip assertions.
+      try {
+        // These are marked testing-only in Flutter, so we call via `dynamic`
+        // to avoid analyzer access restrictions in app code.
+        (HardwareKeyboard.instance as dynamic).clearState();
+      } catch (_) {
+        try {
+          (RawKeyboard.instance as dynamic).clearKeysPressed();
+        } catch (_) {}
+      }
+      if (_isInitialized) {
+        authBlock.checkAuthInteractionDeadline();
+      }
       if (_lastPausedTime != null) {
         final diff = DateTime.now().difference(_lastPausedTime!);
         debugPrint("DataLayer: App was paused for ${diff.inSeconds} seconds");

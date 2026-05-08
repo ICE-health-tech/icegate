@@ -5,7 +5,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementTimeline.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';

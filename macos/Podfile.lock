@@ -68,6 +68,8 @@ PODS:
   - GTMSessionFetcher/Core (3.5.0)
   - GTMSessionFetcher/Full (3.5.0):
     - GTMSessionFetcher/Core
+  - ice_music (0.0.1):
+    - FlutterMacOS
   - local_auth_darwin (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -146,6 +148,7 @@ DEPENDENCIES:
   - FlutterMacOS (from `Flutter/ephemeral`)
   - geolocator_apple (from `Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin`)
   - google_sign_in_ios (from `Flutter/ephemeral/.symlinks/plugins/google_sign_in_ios/darwin`)
+  - ice_music (from `Flutter/ephemeral/.symlinks/plugins/ice_music/macos`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
   - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
   - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
@@ -205,6 +208,8 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/geolocator_apple/darwin
   google_sign_in_ios:
     :path: Flutter/ephemeral/.symlinks/plugins/google_sign_in_ios/darwin
+  ice_music:
+    :path: Flutter/ephemeral/.symlinks/plugins/ice_music/macos
   local_auth_darwin:
     :path: Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin
   media_kit_libs_macos_video:
@@ -258,6 +263,7 @@ SPEC CHECKSUMS:
   GoogleUtilities: 00c88b9a86066ef77f0da2fab05f65d7768ed8e1
   GTMAppAuth: f69bd07d68cd3b766125f7e072c45d7340dea0de
   GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  ice_music: fb707b2b87c335d94ed492cf07a950dd91e13814
   local_auth_darwin: 63c73d6d28cc3e239be2b6aa460ea6e317cd5100
   media_kit_libs_macos_video: b3e2bbec2eef97c285f2b1baa7963c67c753fb82
   media_kit_video: c75b07f14d59706c775778e4dd47dd027de8d1e5

@@ -10,9 +10,9 @@ import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/orchestration_layer/Health/HealthMetric.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
@@ -526,6 +526,7 @@ class _HealthPageState extends State<HealthPage>
                             ));
                           }
 
+                          final crossAxisCount = compact ? 2 : 3;
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(
                               _healthPageGutter,
@@ -533,43 +534,68 @@ class _HealthPageState extends State<HealthPage>
                               _healthPageGutter,
                               _healthGridSpacing,
                             ),
-                            sliver: SliverGrid(
-                              gridDelegate:
-                                  SliverGridDelegateWithFixedCrossAxisCount(
-                                    crossAxisCount: compact ? 2 : 3,
-                                    crossAxisSpacing: _healthGridSpacing,
-                                    mainAxisSpacing: _healthGridSpacing,
-                                    childAspectRatio: compact ? 0.88 : 1.1,
-                                  ),
-                              delegate: SliverChildBuilderDelegate((
-                                context,
-                                index,
-                              ) {
-                                final animation =
-                                    Tween<double>(begin: 0.0, end: 1.0).animate(
-                                      CurvedAnimation(
-                                        parent: _gridAnimationController,
-                                        curve: Interval(
-                                          (1 / displayMetrics.length) * index,
-                                          1.0,
-                                          curve: Curves.easeOutCubic,
+                            sliver: SliverToBoxAdapter(
+                              child: LayoutBuilder(
+                                builder: (context, constraints) {
+                                  final spacing = _healthGridSpacing;
+                                  final maxW = constraints.maxWidth;
+                                  final cellW =
+                                      (maxW -
+                                              spacing *
+                                                  (crossAxisCount - 1)) /
+                                          crossAxisCount;
+                                  final aspect = compact ? 0.88 : 1.1;
+                                  final cellH = cellW / aspect;
+
+                                  final rows = <Widget>[];
+                                  for (var start = 0;
+                                      start < displayMetrics.length;
+                                      start += crossAxisCount) {
+                                    final rowTiles = <Widget>[];
+                                    for (var col = 0;
+                                        col < crossAxisCount;
+                                        col++) {
+                                      if (col > 0) {
+                                        rowTiles.add(SizedBox(width: spacing));
+                                      }
+                                      final index = start + col;
+                                      rowTiles.add(
+                                        Expanded(
+                                          child: SizedBox(
+                                            height: cellH,
+                                            child: index <
+                                                    displayMetrics.length
+                                                ? _animatedMetricGridTile(
+                                                    index,
+                                                    displayMetrics.length,
+                                                    displayMetrics[index],
+                                                  )
+                                                : const SizedBox.shrink(),
+                                          ),
                                         ),
+                                      );
+                                    }
+                                    rows.add(
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: rowTiles,
                                       ),
                                     );
+                                    if (start + crossAxisCount <
+                                        displayMetrics.length) {
+                                      rows.add(SizedBox(height: spacing));
+                                    }
+                                  }
 
-                                return FadeTransition(
-                                  opacity: animation,
-                                  child: Transform.translate(
-                                    offset: Offset(
-                                      0,
-                                      20 * (1.0 - animation.value),
-                                    ),
-                                    child: HealthMetricCard(
-                                      metrics: displayMetrics[index],
-                                    ),
-                                  ),
-                                );
-                              }, childCount: displayMetrics.length),
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: rows,
+                                  );
+                                },
+                              ),
                             ),
                           );
                         }),
@@ -581,6 +607,32 @@ class _HealthPageState extends State<HealthPage>
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _animatedMetricGridTile(
+    int index,
+    int total,
+    HealthMetric metric,
+  ) {
+    final safeTotal = total <= 0 ? 1 : total;
+    final animation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _gridAnimationController,
+        curve: Interval(
+          (1 / safeTotal) * index,
+          1.0,
+          curve: Curves.easeOutCubic,
+        ),
+      ),
+    );
+
+    return FadeTransition(
+      opacity: animation,
+      child: Transform.translate(
+        offset: Offset(0, 20 * (1.0 - animation.value)),
+        child: HealthMetricCard(metrics: metric),
       ),
     );
   }

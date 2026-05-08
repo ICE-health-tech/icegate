@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 @DriftAccessor(tables: [ConfigsTable])
 class ConfigsDAO extends DatabaseAccessor<AppDatabase> with _$ConfigsDAOMixin {

@@ -3,7 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/link_layer/finnace_services/stock_service.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/services/market_service.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
@@ -12,7 +12,7 @@ import 'package:go_router/go_router.dart';
 class FinanceStocksPage extends StatelessWidget {
   final FinanceBlock financeBlock;
 
-  FinanceStocksPage({super.key, required this.financeBlock});
+  const FinanceStocksPage({super.key, required this.financeBlock});
 
   @override
   Widget build(BuildContext context) {

@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 

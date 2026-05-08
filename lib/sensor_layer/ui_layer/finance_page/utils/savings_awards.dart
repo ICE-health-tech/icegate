@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart' show Value;
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/utils/savings_streak.dart';

@@ -1,6 +1,6 @@
 /// Normalizes values for PostgREST upserts. Timestamptz columns expect ISO-8601;
 /// Drift [Map]/JSON sometimes carries epoch **milliseconds** as [int] or digit [String].
-library supabase_payload_codec;
+library;
 
 bool _isTimestamptzColumnKey(String key) {
   const explicit = <String>{

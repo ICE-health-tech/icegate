@@ -322,14 +322,19 @@ class ObjectDatabaseBlock {
   }
 
   /// Logs all files in a folder to a text file within that folder for debugging.
-  Future<void> logFolderContents(String subFolder) async {
+  /// Matches [saveAnyLocalImage]: with [personId], uses `{documents}/{personId}/{subFolder}`.
+  Future<void> logFolderContents(String subFolder, {String? personId}) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
-      final folder = Directory(p.join(appDir.path, subFolder));
+      final folder = personId != null && personId.isNotEmpty
+          ? Directory(p.join(appDir.path, personId, subFolder))
+          : Directory(p.join(appDir.path, subFolder));
 
       if (!await folder.exists()) {
-        debugPrint('❌ [ObjectDB] Folder does not exist: $subFolder');
-        return;
+        await folder.create(recursive: true);
+        debugPrint(
+          '📂 [ObjectDB] Created folder for manifest: ${folder.path}',
+        );
       }
 
       final List<FileSystemEntity> files = await folder.list().toList();

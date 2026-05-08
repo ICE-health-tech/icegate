@@ -729,6 +729,8 @@
   "finance": "Finance",
   "auth_error_session_not_found": "Error: User session not found. Please log in again.",
   "projects": "Projects",
+  "projects_page_tagline": "Sessions, tasks, and notes in one place.",
+  "projects_summary_workspaces": "Workspaces",
   "kcal_consume": "Kcal Consumed",
   "hr": "Heart Rate",
   "spent": "Spent",

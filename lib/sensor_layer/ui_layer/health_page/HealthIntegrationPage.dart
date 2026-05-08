@@ -1,9 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HuaweiCloudService.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 
 class HealthIntegrationPage extends StatefulWidget {
   const HealthIntegrationPage({super.key});
@@ -86,7 +90,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                 _buildSearchAndFilter(colorScheme),
                 _buildCategoryHeader("NATIVE ECOSYSTEM", colorScheme),
                 _buildNativeSection(colorScheme),
-                _buildCategoryHeader("ACTIVE DATA STREAMS", colorScheme),
+                _buildCategoryHeader("TRENDS · 7 DAYS", colorScheme),
                 _buildDataStreamsSection(colorScheme),
                 _buildCategoryHeader("DEVICE SOURCE HUB", colorScheme),
                 _buildDeviceSourceSection(colorScheme),
@@ -323,34 +327,87 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
   }
 
   Widget _buildDataStreamsSection(ColorScheme colorScheme) {
+    final personId = context.watch<AuthBlock>().user.value?['id'] as String?;
+    final dao = context.watch<HealthMetricsDAO>();
+
+    if (personId == null) {
+      return const SliverToBoxAdapter(child: SizedBox.shrink());
+    }
+
     return SliverPadding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
-      sliver: SliverGrid(
-        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3,
-          mainAxisSpacing: 12,
-          crossAxisSpacing: 12,
-          childAspectRatio: 1.1,
+      sliver: SliverToBoxAdapter(
+        child: StreamBuilder<List<HealthMetricsLocal>>(
+          stream: dao.watchAllMetrics(personId),
+          builder: (context, snapshot) {
+            final series = _metricsLast7(snapshot.data ?? []);
+            final steps = series.map((m) => m.steps?.toDouble()).toList();
+            final hr = series.map((m) => m.heartRate?.toDouble()).toList();
+            final sleep = series.map((m) => m.sleepHours).toList();
+
+            return SizedBox(
+              height: 118,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: _buildStreamMiniCard(
+                      'Steps',
+                      'LIVE',
+                      Colors.greenAccent,
+                      steps,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildStreamMiniCard(
+                      'Heart',
+                      'LIVE',
+                      Colors.redAccent,
+                      hr,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _buildStreamMiniCard(
+                      'Sleep',
+                      'LIVE',
+                      Colors.purpleAccent,
+                      sleep,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
         ),
-        delegate: SliverChildListDelegate([
-          _buildStreamMiniCard("Steps", "STREAMING", Colors.greenAccent),
-          _buildStreamMiniCard("Heart", "LIVE", Colors.redAccent),
-          _buildStreamMiniCard("Sleep", "SYNCED", Colors.purpleAccent),
-          _buildStreamMiniCard("SpO2", "ACTIVE", Colors.blueAccent),
-          _buildStreamMiniCard("Weight", "DAILY", Colors.orangeAccent),
-          _buildStreamMiniCard("Energy", "TRACKING", Colors.yellowAccent),
-        ]),
       ),
     );
   }
 
-  Widget _buildStreamMiniCard(String label, String status, Color color) {
+  /// Last 7 calendar rows by [date], oldest → newest (sparkline left→right).
+  List<HealthMetricsLocal> _metricsLast7(List<HealthMetricsLocal> all) {
+    if (all.isEmpty) return [];
+    final sorted = [...all]..sort((a, b) => a.date.compareTo(b.date));
+    if (sorted.length <= 7) return sorted;
+    return sorted.sublist(sorted.length - 7);
+  }
+
+  Widget _buildStreamMiniCard(
+    String label,
+    String status,
+    Color color,
+    List<double?> series,
+  ) {
+    final chartData =
+        series.isEmpty || series.every((e) => e == null) ? <double?>[0] : series;
+
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.fromLTRB(8, 8, 8, 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.1)),
+        color: color.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withValues(alpha: 0.12)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,25 +419,34 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
                 height: 4,
                 decoration: BoxDecoration(shape: BoxShape.circle, color: color),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: 4),
               Text(
                 status,
                 style: TextStyle(
                   color: color,
-                  fontSize: 8,
-                  fontWeight: FontWeight.w900,
-                  letterSpacing: 0.5,
+                  fontSize: 7,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 0.4,
                 ),
               ),
             ],
           ),
-          const Spacer(),
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: SimpleLineChart(
+                data: chartData,
+                color: color,
+                height: 44,
+              ),
+            ),
+          ),
           Text(
             label,
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
             ),
           ),
         ],

@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -656,8 +656,37 @@ class PersonBlock {
         country: details.country,
       );
 
+      // Manual push: PowerSync uploadData drains the outbox without uploading, so
+      // remote `persons` would stay stale and _fetchRemoteAndUpdate would revert the UI.
+      // RLS: UPDATE requires a matching row the user can SELECT; otherwise PostgREST returns [].
+      final client = Supabase.instance.client;
+      final firstNameRemote = profile.firstName.trim().isEmpty
+          ? 'User'
+          : profile.firstName.trim();
+      final lastNameRemote = profile.lastName.trim();
+      final remoteRows = await client
+          .from('persons')
+          .update({
+            'first_name': firstNameRemote,
+            'last_name': lastNameRemote,
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
+          })
+          .eq('id', user.id)
+          .select('id, first_name, last_name');
+
+      if (remoteRows.isEmpty) {
+        debugPrint(
+          "⚠️ [PersonBlock] Supabase persons update returned 0 rows for ${user.id}. "
+          "Check RLS (SELECT + UPDATE for own row) or that persons.id matches auth user id.",
+        );
+        throw Exception(
+          'Could not save name to the server (no permission or missing persons row).',
+        );
+      }
+      debugPrint("✅ [PersonBlock] Supabase persons name updated: $remoteRows");
+
       print(
-        "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally for ${user.id}. PowerSync will sync shortly.",
+        "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally + remote name for ${user.id}.",
       );
     } catch (e) {
       print("❌ [PersonBlock] Failed to update profile in database: $e");

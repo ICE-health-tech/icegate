@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'entry_constants.dart';
+import 'ice_petal_burst.dart';
 
 class PremiumLogo extends StatelessWidget {
   final Animation<double> pulseController;
@@ -91,6 +92,7 @@ class PremiumLogo extends StatelessWidget {
                               ],
                             ),
                           ),
+                          IcePetalBurst(progress: chargeVal, size: 240),
                           Image.asset(
                             'assets/images/iceflowerlogo.png',
                             width: 200,

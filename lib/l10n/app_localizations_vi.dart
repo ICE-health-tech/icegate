@@ -9,13 +9,13 @@ class AppLocalizationsVi extends AppLocalizations {
   AppLocalizationsVi([String locale = 'vi']) : super(locale);
 
   @override
-  String get quick_actions => 'Hành động nhanh';
+  String get quick_actions => 'Ghi chú & thời gian';
 
   @override
   String get new_label => 'Tạo mới';
 
   @override
-  String get my_projects_label => 'Dự án của tôi';
+  String get my_projects_label => 'Không gian làm việc';
 
   @override
   String get completed_projects_label => 'Dự án đã xong';
@@ -1613,6 +1613,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects => 'Dự án';
 
   @override
+  String get projects_page_tagline =>
+      'Tập trung theo phiên, nhiệm vụ và ghi chú cùng một nơi.';
+
+  @override
+  String get projects_summary_workspaces => 'Không gian';
+
+  @override
   String get kcal_consume => 'Kcal tiêu thụ';
 
   @override
@@ -1658,7 +1665,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get home_index_mood => 'Tâm trạng';
 
   @override
-  String get home_index_projects => 'Tăng trưởng';
+  String get home_index_projects => 'Dự án';
 
   @override
   String get home_index_weight => 'Cân nặng';

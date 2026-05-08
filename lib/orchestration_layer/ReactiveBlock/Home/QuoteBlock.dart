@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:signals/signals.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class QuoteBlock {
   final currentQuote = signal<String>(

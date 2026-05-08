@@ -3,9 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
 
 Color _particleWinterColor(math.Random r) {
+  // Bias toward lighter ice tones so shards read clearly on the dark radial.
   final roll = r.nextDouble();
-  if (roll > 0.66) return EntryLandscapePalette.icyWhiteBlue;
-  if (roll > 0.33) return EntryLandscapePalette.dustySkyBlue;
+  if (roll > 0.5) return EntryLandscapePalette.icyWhiteBlue;
+  if (roll > 0.22) return EntryLandscapePalette.dustySkyBlue;
   return EntryLandscapePalette.steelBlue;
 }
 
@@ -48,10 +49,10 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
         _CrystalParticle(
           x: _random.nextDouble(),
           y: _random.nextDouble(),
-          size: 2.0 + _random.nextDouble() * 4.0,
+          size: 2.8 + _random.nextDouble() * 5.2,
           speed: 0.0003 + _random.nextDouble() * 0.0008,
           drift: (_random.nextDouble() - 0.5) * 0.0005,
-          opacity: 0.05 + _random.nextDouble() * 0.3,
+          opacity: 0.14 + _random.nextDouble() * 0.32,
           rotation: _random.nextDouble() * math.pi * 2,
           spinSpeed: (_random.nextDouble() - 0.5) * 0.015,
           color: _particleWinterColor(_random),
@@ -79,7 +80,59 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
           ),
         ),
 
-        // 2. Animated Crystalline Particles
+        // 2. Aurora light blobs (adds depth/motion behind particles)
+        Positioned.fill(
+          child: AnimatedBuilder(
+            animation: _controller,
+            builder: (context, child) {
+              final t = _controller.value;
+              // Slow drift so it feels alive but not distracting.
+              final a1 = Alignment(
+                -0.75 + math.sin(t * math.pi * 2) * 0.25,
+                -0.65 + math.cos(t * math.pi * 2) * 0.18,
+              );
+              final a2 = Alignment(
+                0.85 + math.cos(t * math.pi * 2) * 0.22,
+                0.55 + math.sin(t * math.pi * 2) * 0.2,
+              );
+
+              return Stack(
+                children: [
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: a1,
+                        radius: 1.15,
+                        colors: [
+                          EntryColors.iceCyan.withValues(alpha: 0.14),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  ),
+                  DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: RadialGradient(
+                        center: a2,
+                        radius: 1.25,
+                        colors: [
+                          EntryLandscapePalette.mutedSlateBlue.withValues(
+                            alpha: 0.16,
+                          ),
+                          Colors.transparent,
+                        ],
+                        stops: const [0.0, 1.0],
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+        ),
+
+        // 3. Animated Crystalline Particles
         Positioned.fill(
           child: AnimatedBuilder(
             animation: _controller,
@@ -95,18 +148,19 @@ class _IceDiamondBackgroundState extends State<IceDiamondBackground>
           ),
         ),
 
-        // 3. Ice Vapor / Vignette Overlay
+        // 4. Ice Vapor / Vignette — lighter center preserves radial punch; darker rim adds depth.
         Positioned.fill(
           child: Container(
             decoration: BoxDecoration(
               gradient: RadialGradient(
                 center: Alignment.center,
-                radius: 1.4,
+                radius: 1.35,
                 colors: [
-                  EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.07),
-                  EntryLandscapePalette.midnightNavy.withValues(alpha: 0.42),
+                  EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.03),
+                  Colors.transparent,
+                  EntryLandscapePalette.midnightNavy.withValues(alpha: 0.55),
                 ],
-                stops: const [0.3, 1.0],
+                stops: const [0.15, 0.55, 1.0],
               ),
             ),
           ),
@@ -134,8 +188,8 @@ class _IceDiamondPainter extends CustomPainter {
     // 0. Tactical Ice Grid
     if (showGrid) {
       final gridPaint = Paint()
-        ..color = EntryLandscapePalette.steelBlue.withValues(alpha: 0.045)
-        ..strokeWidth = 0.5;
+        ..color = EntryLandscapePalette.steelBlue.withValues(alpha: 0.11)
+        ..strokeWidth = 0.65;
 
       const double step = 80.0;
       for (double i = 0; i < size.width; i += step) {
@@ -154,7 +208,7 @@ class _IceDiamondPainter extends CustomPainter {
       
       // Icy Glimmer effect: rhythmic brightness pulse
       final double pulse = (math.sin(progress * 2 * math.pi * 5 + crystal.x * 10) + 1.0) / 2.0;
-      final double dynamicOpacity = crystal.opacity + (pulse * 0.15);
+      final double dynamicOpacity = (crystal.opacity + pulse * 0.24).clamp(0.08, 0.95);
 
       final crystalPaint = Paint()
         ..color = crystal.color.withValues(alpha: dynamicOpacity)
@@ -182,8 +236,8 @@ class _IceDiamondPainter extends CustomPainter {
       
       // Specular Highlight line (The "Diamond Glint") - simpler drawing
       final highlightPaint = Paint()
-        ..color = Colors.white.withValues(alpha: dynamicOpacity * 0.5)
-        ..strokeWidth = 0.5;
+        ..color = Colors.white.withValues(alpha: dynamicOpacity * 0.72)
+        ..strokeWidth = 0.65;
       
       canvas.drawLine(
         Offset(-w / 2, 0), 

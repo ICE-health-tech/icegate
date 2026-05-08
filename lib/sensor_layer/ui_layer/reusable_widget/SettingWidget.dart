@@ -9,7 +9,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/ThemeManager.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/LocaleBlock.dart';

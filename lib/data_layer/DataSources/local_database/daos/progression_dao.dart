@@ -1,4 +1,4 @@
-part of '../database.dart';
+part of '../Database.dart';
 
 @DriftAccessor(tables: [QuestsTable])
 class QuestDAO extends DatabaseAccessor<AppDatabase> with _$QuestDAOMixin {

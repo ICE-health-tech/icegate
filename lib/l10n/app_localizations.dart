@@ -3098,6 +3098,18 @@ abstract class AppLocalizations {
   /// **'Projects'**
   String get projects;
 
+  /// No description provided for @projects_page_tagline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sessions, tasks, and notes in one place.'**
+  String get projects_page_tagline;
+
+  /// No description provided for @projects_summary_workspaces.
+  ///
+  /// In en, this message translates to:
+  /// **'Workspaces'**
+  String get projects_summary_workspaces;
+
   /// No description provided for @kcal_consume.
   ///
   /// In en, this message translates to:

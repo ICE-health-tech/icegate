@@ -2171,7 +2171,7 @@ class PrismPainter extends CustomPainter {
       final double alpha = currentOpacity * focalFactor;
 
       final paint = Paint()
-        ..color = shard.color.withValues(alpha: alpha * 0.48)
+        ..color = shard.color.withValues(alpha: alpha * 0.72)
         ..style = PaintingStyle.fill;
 
       canvas.save();
@@ -2190,19 +2190,19 @@ class PrismPainter extends CustomPainter {
       canvas.drawPath(path, paint);
 
       // Bright cut-glass rim (refs: high-luminance shard outlines).
-      final double rim = (alpha * focalFactor * 0.62).clamp(0.0, 1.0);
+      final double rim = (alpha * focalFactor * 0.78).clamp(0.0, 1.0);
       canvas.drawPath(
         path,
         Paint()
-          ..color = EntryColors.arcticSilver.withValues(alpha: rim * 0.72)
+          ..color = EntryColors.frostedWhite.withValues(alpha: rim * 0.95)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = math.max(0.4, shard.size * 0.09),
+          ..strokeWidth = math.max(0.55, shard.size * 0.12),
       );
 
       if (adjustedT > 0.85) {
         final glowPaint = Paint()
-            ..color = shard.color.withValues(alpha: alpha * 0.22)
-            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+            ..color = shard.color.withValues(alpha: alpha * 0.38)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
         canvas.drawPath(path, glowPaint);
       }
 
@@ -2213,6 +2213,7 @@ class PrismPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant PrismPainter oldDelegate) =>
       oldDelegate.progress != progress ||
+      oldDelegate.pulse != pulse ||
       oldDelegate.pointerOffset != pointerOffset;
 
   /// Flat-top hexagon, circumradius [r].

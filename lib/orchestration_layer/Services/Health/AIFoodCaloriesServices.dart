@@ -68,6 +68,7 @@ class AIFoodCaloriesService {
       final requestBody = {
         "s3_url": s3UrlForAgent,
         "volume_cm3": volume ?? 250.0,
+        "food_name": foodName,
       };
 
       print("AIFoodCaloriesService: Invoking Food Agent at $_agentUrl");

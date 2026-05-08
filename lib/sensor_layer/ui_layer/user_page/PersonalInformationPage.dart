@@ -105,11 +105,15 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         final objectBlock = context.read<ObjectDatabaseBlock>();
-        objectBlock.updateUrlOfUser(context.read<PersonBlock>());
-        // Log folders for debugging on device
-        objectBlock.logFolderContents('profile_images');
-        objectBlock.logFolderContents('meals');
-        objectBlock.logFolderContents('quests');
+        final personBlock = context.read<PersonBlock>();
+        objectBlock.updateUrlOfUser(personBlock);
+        // Same paths as saveAnyLocalImage: {personId}/{subFolder}
+        final pid = personBlock.currentPersonID.value;
+        if (pid != null && pid.isNotEmpty) {
+          objectBlock.logFolderContents('profile_images', personId: pid);
+          objectBlock.logFolderContents('meals', personId: pid);
+          objectBlock.logFolderContents('quests', personId: pid);
+        }
       }
     });
 
@@ -776,7 +780,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
 
                             return _buildInfoGroup(
                               title: AppLocalizations.of(context)!.security_accuracy,
-                              icon: Icons.security_rounded,
+                              icon: Icons.shield,
                               children: [
                                 _buildSecurityItem(
                                   context: context,
@@ -784,17 +788,52 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                                   subtitle: _authBlock.isPasskeyEnrolled.value
                                       ? AppLocalizations.of(context)!.fast_track_active
                                       : AppLocalizations.of(context)!.upgrade_biometric,
-                                  icon: Icons.fingerprint_rounded,
-                                  trailing: Icon(
-                                    _authBlock.isPasskeyEnrolled.value
-                                        ? Icons.verified_user_rounded
-                                        : Icons.chevron_right_rounded,
-                                    color: _authBlock.isPasskeyEnrolled.value
-                                        ? Colors.green
-                                        : colorScheme.primary.withValues(
-                                            alpha: 0.5,
+                                  icon: Icons.key_rounded,
+                                  trailing: _authBlock.isPasskeyEnrolled.value
+                                      ? Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 10,
+                                            vertical: 6,
                                           ),
-                                  ),
+                                          decoration: BoxDecoration(
+                                            borderRadius:
+                                                BorderRadius.circular(999),
+                                            color: Colors.green
+                                                .withValues(alpha: 0.12),
+                                            border: Border.all(
+                                              color: Colors.green
+                                                  .withValues(alpha: 0.35),
+                                              width: 1,
+                                            ),
+                                          ),
+                                          child: Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.check_circle_rounded,
+                                                size: 16,
+                                                color: Colors.green
+                                                    .withValues(alpha: 0.95),
+                                              ),
+                                              const SizedBox(width: 6),
+                                              Text(
+                                                'ACTIVE',
+                                                style: TextStyle(
+                                                  color: Colors.green
+                                                      .withValues(alpha: 0.95),
+                                                  fontSize: 10,
+                                                  fontWeight: FontWeight.w900,
+                                                  letterSpacing: 1.4,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        )
+                                      : Icon(
+                                          Icons.chevron_right_rounded,
+                                          color: colorScheme.primary
+                                              .withValues(alpha: 0.5),
+                                        ),
                                   onTap: () => _showPasskeySetupDialog(),
                                 ),
                                 // _buildSecurityItem(

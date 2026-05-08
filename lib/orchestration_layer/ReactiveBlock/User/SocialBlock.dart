@@ -1,5 +1,5 @@
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class SocialBlock {
   final activeTab = signal(0);

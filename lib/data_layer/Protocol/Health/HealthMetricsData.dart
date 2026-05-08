@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/Constraint/HealthConstraint.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/DomainData/Plugin/GPSTracker/PersonProfile.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/health_page/models/HealthMetric.dart';
+import 'package:ice_gate/orchestration_layer/Health/HealthMetric.dart';
 // import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:provider/provider.dart' show ReadContext;
 import 'package:ice_gate/l10n/app_localizations.dart';

@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:math' show min;
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
 

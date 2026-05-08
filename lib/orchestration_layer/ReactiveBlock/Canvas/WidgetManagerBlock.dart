@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'dart:async';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
 class WidgetManagerBlock {
   final WidgetDAO? _widgetDao;

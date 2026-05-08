@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/notification_page/NotificationManagerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/notification_page/NotificationInboxPage.dart';
@@ -57,6 +57,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindAnalysisPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
@@ -442,6 +443,10 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'dashboard',
               builder: (context, state) => const MindAnalysisPage(),
+            ),
+            GoRoute(
+              path: 'skills',
+              builder: (context, state) => const MindSkillsPage(),
             ),
             GoRoute(
               path: 'journal',

@@ -132,6 +132,19 @@ class EntryColors {
     stops: [0.0, 0.22, 0.48, 0.72, 1.0],
   );
 
+  /// Prism / intro: small bright core, saturated mid, **true black** rim — high contrast "beacon" look.
+  static const Gradient winterEntryVivid = RadialGradient(
+    center: Alignment(0, -0.1),
+    radius: 1.12,
+    colors: [
+      Color(0xFFF2FAFF), // near-white core
+      Color(0xFF4EB8F0), // vivid ice blue
+      Color(0xFF0C2440), // deep steel
+      Color(0xFF000000), // void edge
+    ],
+    stops: [0.0, 0.11, 0.42, 1.0],
+  );
+
   static const Color frostBloomMist = Color(0xFFDCEEF9);
   static const Color iceSparkle = Color(0xFFEEF6FF);
 }
