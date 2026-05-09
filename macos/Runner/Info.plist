@@ -45,10 +45,7 @@
 	</array>
 	<key>LSMinimumSystemVersion</key>
 	<string>$(MACOSX_DEPLOYMENT_TARGET)</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_ssh._tcp</string>

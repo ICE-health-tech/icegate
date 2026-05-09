@@ -49,20 +49,14 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
-	<key>NSAppleMusicUsageDescription</key>
-	<string>We need music library access to let you select background sounds for the focus timer</string>
-	<key>NSBluetoothAlwaysUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
-	<key>NSBluetoothPeripheralUsageDescription</key>
-	<string>We need Bluetooth to connect to external GPS devices and health trackers.</string>
+	
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_ssh._tcp</string>
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
-	<key>NSContactsUsageDescription</key>
-	<string>We need access to your contacts to let you import friends into your social circle.</string>
+	
 	<key>NSFaceIDUsageDescription</key>
 	<string>We use Face ID to allow you to securely log into your account.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -88,7 +82,6 @@
 	<key>UIBackgroundModes</key>
 	<array>
 		<string>audio</string>
-		<string>bluetooth-peripheral</string>
 	</array>
 	<key>UIFileSharingEnabled</key>
 	<true/>

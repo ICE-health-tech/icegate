@@ -82,7 +82,9 @@ fi
 # --- Step 3: Build iOS release ---
 log_step "Building Flutter iOS release..."
 cd "$PROJECT_DIR"
-flutter build ipa --release --export-options-plist="$EXPORT_OPTIONS"
+# NOTE: `MindSkillsPage` supports user-picked Material icon codepoints at runtime.
+# This uses non-constant IconData and is incompatible with icon tree-shaking.
+flutter build ipa --release --no-tree-shake-icons --export-options-plist="$EXPORT_OPTIONS"
 
 echo ""
 echo "=================================================="
