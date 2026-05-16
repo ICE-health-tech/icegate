@@ -11,6 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 
 class AnalysisDashboardPage extends StatefulWidget {
   final String? personId;
@@ -44,10 +45,18 @@ class AnalysisDashboardPage extends StatefulWidget {
 class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
   ScoreBlock? _viewedScoreBlock;
   bool _isOther = false;
+  late DateTime _usageFocusedMonth;
+  late DateTime _usageSelectedDay;
+
+  DateTime _dateOnly(DateTime value) =>
+      DateTime(value.year, value.month, value.day);
 
   @override
   void initState() {
     super.initState();
+    final today = DateTime.now();
+    _usageFocusedMonth = DateTime(today.year, today.month);
+    _usageSelectedDay = _dateOnly(today);
     _checkAndInitOther();
   }
 
@@ -188,11 +197,10 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             _buildBalanceSection(context, activeScoreBlock),
             const SizedBox(height: 32),
 
-            // --- USAGE HISTORY ---
+            // --- APP SESSION CALENDAR + USAGE HISTORY ---
             Watch((signalsContext) {
               final history =
                   activeScoreBlock.usageHistory.watch(signalsContext);
-              if (history.isEmpty) return const SizedBox.shrink();
               return _buildUsageHistory(context, history);
             }),
           ],
@@ -545,8 +553,12 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
       grouped.putIfAbsent(date, () => []).add(item);
     }
 
-    final sortedDates = grouped.keys.toList()
-      ..sort((a, b) => b.compareTo(a));
+    final selectedDate = _dateOnly(_usageSelectedDay);
+    final items = grouped[selectedDate] ?? const <AppUsageHistoryData>[];
+    final isToday = selectedDate == _dateOnly(DateTime.now());
+    final dateLabel = isToday
+        ? l10n.date_today
+        : "${selectedDate.day}/${selectedDate.month}/${selectedDate.year}";
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,95 +573,110 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
           ),
         ),
         const SizedBox(height: 16),
-        ...sortedDates.map((date) {
-          final items = grouped[date]!;
-          final isToday = DateTime.now().year == date.year &&
-              DateTime.now().month == date.month &&
-              DateTime.now().day == date.day;
-
-          final dateLabel = isToday
-              ? l10n.date_today
-              : "${date.day}/${date.month}/${date.year}";
-
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 24.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Text(
-                      dateLabel,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                    const Spacer(),
-                    Text(
-                      _formatScreenTime(items.fold(
-                          0.0, (sum, item) => sum + item.durationMinutes)),
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ],
+        AppSessionCalendar(
+          markedDays: history
+              .map(
+                (item) => DateTime(
+                  item.date.year,
+                  item.date.month,
+                  item.date.day,
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  decoration: BoxDecoration(
-                    color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: items.map((item) {
-                      return ListTile(
-                        dense: true,
-                        leading: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: _getColorForSector(item.sector)
-                                .withOpacity(0.1),
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            _getSectorIcon(item.sector),
-                            size: 16,
-                            color: _getColorForSector(item.sector),
-                          ),
-                        ),
-                        title: Text(
-                          (item.pagePath == null || item.pagePath == '/')
-                              ? l10n.home_welcome.toUpperCase()
-                              : item.pagePath!.split('/').last.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Text(
-                          item.pagePath ?? item.sector,
-                          style: const TextStyle(fontSize: 10),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                        trailing: Text(
-                          _formatScreenTime(item.durationMinutes),
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ),
-              ],
+              )
+              .toSet(),
+          focusedMonth: _usageFocusedMonth,
+          selectedDay: _usageSelectedDay,
+          onMonthChanged: (month) {
+            setState(() => _usageFocusedMonth = DateTime(month.year, month.month));
+          },
+          onDaySelected: (day) {
+            setState(() {
+              _usageSelectedDay = _dateOnly(day);
+              _usageFocusedMonth = DateTime(day.year, day.month);
+            });
+          },
+        ),
+        const SizedBox(height: 20),
+        Row(
+          children: [
+            Text(
+              dateLabel,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
             ),
-          );
-        }),
+            const Spacer(),
+            Text(
+              _formatScreenTime(
+                items.fold(0.0, (sum, item) => sum + item.durationMinutes),
+              ),
+              style: TextStyle(
+                color: colorScheme.primary,
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (items.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: Text(
+              l10n.mood_no_data,
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+            ),
+          )
+        else
+          Container(
+            decoration: BoxDecoration(
+              color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              children: items.map((item) {
+                return ListTile(
+                  dense: true,
+                  leading: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: _getColorForSector(item.sector).withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      _getSectorIcon(item.sector),
+                      size: 16,
+                      color: _getColorForSector(item.sector),
+                    ),
+                  ),
+                  title: Text(
+                    (item.pagePath == null || item.pagePath == '/')
+                        ? l10n.home_welcome.toUpperCase()
+                        : item.pagePath!.split('/').last.toUpperCase(),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  subtitle: Text(
+                    item.pagePath ?? item.sector,
+                    style: const TextStyle(fontSize: 10),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  trailing: Text(
+                    _formatScreenTime(item.durationMinutes),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
       ],
     );
   }

@@ -9,6 +9,7 @@ import 'PluginList/AvailablePlugins.dart';
 import 'package:ice_gate/data_layer/Protocol/Plugin/BasePluginProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/PluginProtocol.dart'
     show PluginCategory;
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
 // --- DATA MODEL ---
 class FormData {
@@ -186,11 +187,17 @@ class _WidgetFormDataState extends State<AddPluginForm> {
         final personId =
             context.read<PersonBlock>().information.value.profiles.id ?? "";
 
+        final widgetId = IDGen.UUIDV7();
+        final baseAlias =
+            _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_');
+        final uniqueAlias = '${baseAlias}_${widgetId.substring(0, 8)}';
+
         await internalWidgetsDAO.insertInternalWidget(
+          widgetID: widgetId,
           personID: personId,
           name: _selectedPlugin!.name,
           url: _selectedPlugin!.url,
-          alias: _selectedPlugin!.name.toLowerCase().replaceAll(' ', '_'),
+          alias: uniqueAlias,
           imageUrl:
               _selectedPlugin!.imageUrl ??
               "assets/internalwidget/default_plugin.png",

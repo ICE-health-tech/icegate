@@ -368,7 +368,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '3.2.1',
+                  subtitle: '3.2.4',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

@@ -76,12 +76,6 @@ class AvailablePlugins {
       category: PluginCategory.productivity,
     ),
     _InternalPlugin(
-      name: 'Location Tracker',
-      url: '/gps',
-      icon: Icons.location_on_rounded,
-      category: PluginCategory.other,
-    ),
-    _InternalPlugin(
       name: 'Block Reminder',
       url: '/health/block-reminder',
       icon: Icons.timer_rounded,

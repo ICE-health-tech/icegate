@@ -17,6 +17,7 @@ class NotificationInboxPage extends StatelessWidget {
     final personBlock = context.watch<PersonBlock>();
     final personId = personBlock.currentPersonID.watch(context) ?? "";
     final questDao = context.watch<QuestDAO>();
+    final growthDao = context.watch<GrowthDAO>();
     final notificationDao = context.watch<CustomNotificationDAO>();
     final focusSessionDao = context.watch<FocusSessionsDAO>();
 
@@ -50,69 +51,93 @@ class NotificationInboxPage extends StatelessWidget {
               children: [
                 _buildHeader(context),
                 Expanded(
-                  child: StreamBuilder<List<QuestData>>(
-                    stream: questDao.watchAllQuests(personId),
-                    builder: (context, questSnapshot) {
-                      return StreamBuilder<List<CustomNotificationData>>(
-                        stream: notificationDao.watchAllNotifications(personId),
-                        builder: (context, notificationSnapshot) {
-                          return StreamBuilder<List<FocusSessionData>>(
-                            stream: focusSessionDao.watchAllSessions(),
-                            builder: (context, focusSnapshot) {
-                              final allQuests = questSnapshot.data ?? [];
-                              final allNotifications =
-                                  notificationSnapshot.data ?? [];
-                              final allFocusSessions = focusSnapshot.data ?? [];
+                  child: StreamBuilder<List<GoalData>>(
+                    stream: growthDao.watchGoals(personId),
+                    builder: (context, goalSnapshot) {
+                      return StreamBuilder<List<QuestData>>(
+                        stream: questDao.watchAllQuests(personId),
+                        builder: (context, questSnapshot) {
+                          return StreamBuilder<List<CustomNotificationData>>(
+                            stream:
+                                notificationDao.watchAllNotifications(personId),
+                            builder: (context, notificationSnapshot) {
+                              return StreamBuilder<List<FocusSessionData>>(
+                                stream: focusSessionDao.watchAllSessions(),
+                                builder: (context, focusSnapshot) {
+                                  final allGoals = goalSnapshot.data ?? [];
+                                  final completedGoals = allGoals
+                                      .where((g) => g.status == 'done')
+                                      .toList();
 
-                              final completedQuests = allQuests
-                                  .where((q) => q.isCompleted == true)
-                                  .toList();
+                                  final allQuests = questSnapshot.data ?? [];
+                                  final allNotifications =
+                                      notificationSnapshot.data ?? [];
+                                  final allFocusSessions =
+                                      focusSnapshot.data ?? [];
 
-                              final completedFocusSessions = allFocusSessions
-                                  .where((s) => s.status == 'completed')
-                                  .toList();
+                                  final completedQuests = allQuests
+                                      .where((q) => q.isCompleted == true)
+                                      .toList();
 
-                              // Combine into a single list of items
-                              final List<dynamic> timelineItems = [
-                                ...completedQuests,
-                                ...allNotifications,
-                                ...completedFocusSessions,
-                              ];
+                                  final completedFocusSessions =
+                                      allFocusSessions
+                                          .where(
+                                            (s) => s.status == 'completed',
+                                          )
+                                          .toList();
 
-                              // Sort by date (newest first)
-                              timelineItems.sort((a, b) {
-                                final dateA = _getDateTime(a);
-                                final dateB = _getDateTime(b);
-                                return dateB.compareTo(dateA);
-                              });
+                                  // Combine into a single list of items
+                                  final List<dynamic> timelineItems = [
+                                    ...completedQuests,
+                                    ...completedGoals,
+                                    ...allNotifications,
+                                    ...completedFocusSessions,
+                                  ];
 
-                              if (timelineItems.isEmpty) {
-                                return _buildEmptyState(context);
-                              }
+                                  // Sort by date (newest first)
+                                  timelineItems.sort((a, b) {
+                                    final dateA = _getDateTime(a);
+                                    final dateB = _getDateTime(b);
+                                    return dateB.compareTo(dateA);
+                                  });
 
-                              return ListView.builder(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 24,
-                                  vertical: 16,
-                                ),
-                                physics: const BouncingScrollPhysics(),
-                                itemCount: timelineItems.length,
-                                itemBuilder: (context, index) {
-                                  final item = timelineItems[index];
-                                  if (item is QuestData) {
-                                    return _buildQuestTile(context, item);
-                                  } else if (item is CustomNotificationData) {
-                                    return _buildNotificationTile(
-                                      context,
-                                      item,
-                                    );
-                                  } else if (item is FocusSessionData) {
-                                    return _buildFocusSessionTile(
-                                      context,
-                                      item,
-                                    );
+                                  if (timelineItems.isEmpty) {
+                                    return _buildEmptyState(context);
                                   }
-                                  return const SizedBox.shrink();
+
+                                  return ListView.builder(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 24,
+                                      vertical: 16,
+                                    ),
+                                    physics: const BouncingScrollPhysics(),
+                                    itemCount: timelineItems.length,
+                                    itemBuilder: (context, index) {
+                                      final item = timelineItems[index];
+                                      if (item is QuestData) {
+                                        return _buildQuestTile(context, item);
+                                      }
+                                      if (item is GoalData) {
+                                        return _buildCompletedGoalTile(
+                                          context,
+                                          item,
+                                        );
+                                      }
+                                      if (item is CustomNotificationData) {
+                                        return _buildNotificationTile(
+                                          context,
+                                          item,
+                                        );
+                                      }
+                                      if (item is FocusSessionData) {
+                                        return _buildFocusSessionTile(
+                                          context,
+                                          item,
+                                        );
+                                      }
+                                      return const SizedBox.shrink();
+                                    },
+                                  );
                                 },
                               );
                             },
@@ -132,6 +157,9 @@ class NotificationInboxPage extends StatelessWidget {
 
   DateTime _getDateTime(dynamic item) {
     if (item is QuestData) return item.createdAt;
+    if (item is GoalData) {
+      return item.completionDate ?? item.updatedAt;
+    }
     if (item is CustomNotificationData) {
       return item.scheduledTime;
     }
@@ -173,6 +201,127 @@ class NotificationInboxPage extends StatelessWidget {
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCompletedGoalTile(BuildContext context, GoalData goal) {
+    final when = goal.completionDate ?? goal.updatedAt;
+    final timeStr = DateFormat('HH:mm').format(when);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: Colors.greenAccent.withValues(alpha: 0.5),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.greenAccent.withValues(alpha: 0.12),
+            blurRadius: 14,
+            spreadRadius: 0,
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(19),
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Colors.green.withValues(alpha: 0.14),
+                    Colors.teal.withValues(alpha: 0.06),
+                    Colors.transparent,
+                  ],
+                  stops: const [0.0, 0.45, 1.0],
+                ),
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.greenAccent.withValues(alpha: 0.18),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.greenAccent.withValues(alpha: 0.25),
+                        blurRadius: 10,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    Icons.task_alt_rounded,
+                    color: Colors.greenAccent.shade100,
+                    size: 24,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            AppLocalizations.of(context)!.notification_task_success,
+                            style: TextStyle(
+                              color: Colors.greenAccent.shade100,
+                              fontWeight: FontWeight.w900,
+                              fontSize: 10,
+                              letterSpacing: 1.0,
+                            ),
+                          ),
+                          Text(
+                            timeStr,
+                            style: const TextStyle(
+                              color: Colors.white38,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        goal.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if (goal.description != null &&
+                          goal.description!.isNotEmpty) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          goal.description!,
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.65),
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),

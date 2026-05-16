@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/Protocol/User/RegistrationProtocol.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/IceDiamondBackground.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/login_components/LoginButtons.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/login_components/LoginFields.dart';

@@ -24,12 +24,12 @@ class GrowthBlock {
   void updateSkills(List<SkillProtocol> data) => skills.value = data;
 
   void init(GrowthDAO dao, String personId) {
+    _dao = dao;
+    _personId = personId;
     if (personId.isEmpty) {
       debugPrint("GrowthBlock: Skipping init, personId is empty.");
       return;
     }
-    _dao = dao;
-    _personId = personId;
 
     _goalsSubscription?.cancel();
     _goalsSubscription = dao
@@ -123,6 +123,10 @@ class GrowthBlock {
 
   Future<void> completeGoal(String id) async {
     await _dao.updateGoalStatusByUuid(id, 'done');
+  }
+
+  Future<void> deleteGoal(String id) async {
+    await _dao.deleteGoalByUuid(id);
   }
 
   Future<void> completeGoalByGoalId(

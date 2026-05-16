@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalService.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';

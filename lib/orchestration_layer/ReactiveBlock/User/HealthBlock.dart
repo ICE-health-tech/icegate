@@ -25,10 +25,10 @@ import 'package:rxdart/rxdart.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 
-part 'HealthBlock_State.dart';
-part 'HealthBlock_Init.dart';
-part 'HealthBlock_Sync.dart';
-part 'HealthBlock_Actions.dart';
+part 'HealthBlockState.dart';
+part 'HealthBlockInit.dart';
+part 'HealthBlockSync.dart';
+part 'HealthBlockActions.dart';
 
 class HealthBlock with HealthBlockState {
   String personId;

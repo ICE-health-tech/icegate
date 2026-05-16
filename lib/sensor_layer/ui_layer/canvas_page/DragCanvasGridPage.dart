@@ -2,7 +2,6 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:flutter/services.dart';
@@ -30,18 +29,6 @@ void buildAddCell(BuildContext context) {
 class DragCanvasGrid extends StatefulWidget {
   const DragCanvasGrid({super.key});
 
-  // Global signal for tab state
-  static final activeCanvasTab = signal<String>('none');
-
-  static void toggleStore() {
-    print("Toggle store");
-    if (activeCanvasTab.value == 'store') {
-      activeCanvasTab.value = 'none';
-    } else {
-      activeCanvasTab.value = 'store';
-    }
-  }
-
   static Widget icon(BuildContext context, {double? size}) {
     return MainButton(
       type: "grid",
@@ -58,8 +45,8 @@ class DragCanvasGrid extends StatefulWidget {
         ),
       ),
       mainFunction: () {
-        toggleStore();
         HapticFeedback.heavyImpact();
+        context.go('/canvas');
       },
       onLongPress: () {
         context.go("/");

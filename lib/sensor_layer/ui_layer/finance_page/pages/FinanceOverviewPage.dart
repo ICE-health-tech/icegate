@@ -1,13 +1,13 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
-import '../finance_form/add_account_dialog.dart';
+import '../finance_form/AddAccountDialog.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/savings_streak_card.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -16,13 +16,22 @@ class FinanceOverviewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      physics: const BouncingScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const SizedBox(height: 16),
+    final w = MediaQuery.sizeOf(context).width;
+    final isDesktop = w >= 900;
+
+    return Align(
+      alignment: Alignment.topCenter,
+      child: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxWidth: isDesktop ? 920 : double.infinity,
+        ),
+        child: SingleChildScrollView(
+          physics: const BouncingScrollPhysics(),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 28 : 16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(height: isDesktop ? 12 : 16),
           Watch((context) {
             return Align(
               alignment: Alignment.centerRight,
@@ -63,32 +72,41 @@ class FinanceOverviewPage extends StatelessWidget {
             );
           }),
           const SizedBox(height: 120), // Bottom space
-        ],
+            ],
+          ),
+        ),
       ),
     );
   }
 
   Widget _buildPremiumIceCard(BuildContext context, FinanceBlock block) {
+    final dense = MediaQuery.sizeOf(context).width >= 900;
     final burnRate = block.monthlyBurnRate.value;
     final totalSpent = block.monthlySpending.value;
     final progress = block.budgetUsagePercent.value / 100;
+
+    final pad = dense ? 20.0 : 28.0;
+    final radius = dense ? 24.0 : 32.0;
+    final mainAmtSize = dense ? 30.0 : 42.0;
+    final gapAfterTitle = dense ? 18.0 : 28.0;
+    final gapBeforeBar = dense ? 14.0 : 20.0;
 
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: EntryColors.glassBorder.withValues(alpha: 0.1)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 40,
-            offset: const Offset(0, 20),
+            blurRadius: dense ? 28 : 40,
+            offset: Offset(0, dense ? 12 : 20),
           ),
         ],
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(32),
+        borderRadius: BorderRadius.circular(radius),
         child: BackdropFilter(
           filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
           child: Stack(
@@ -97,13 +115,13 @@ class FinanceOverviewPage extends StatelessWidget {
                 right: -40,
                 top: -40,
                 child: Container(
-                  width: 150,
-                  height: 150,
+                  width: dense ? 120 : 150,
+                  height: dense ? 120 : 150,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     gradient: RadialGradient(
                       colors: [
-                        EntryColors.primaryIceBlue.withValues(alpha: 0.12),
+                        EntryColors.financeSilverAccent.withValues(alpha: 0.12),
                         Colors.transparent,
                       ],
                     ),
@@ -111,7 +129,7 @@ class FinanceOverviewPage extends StatelessWidget {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.all(28),
+                padding: EdgeInsets.all(pad),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -131,28 +149,31 @@ class FinanceOverviewPage extends StatelessWidget {
                         Flexible(
                           child: Text(
                             block.formatCurrency(burnRate),
-                            style: const TextStyle(
+                            style: TextStyle(
                               color: Colors.white,
-                              fontSize: 42,
+                              fontSize: mainAmtSize,
                               fontWeight: FontWeight.w900,
                               letterSpacing: -1,
                             ),
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 10, left: 4),
+                        Padding(
+                          padding: EdgeInsets.only(
+                            bottom: dense ? 6 : 10,
+                            left: 4,
+                          ),
                           child: Text(
                             "/ mo",
                             style: TextStyle(
                               color: Colors.white38,
-                              fontSize: 14,
+                              fontSize: dense ? 12 : 14,
                             ),
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 28),
+                    SizedBox(height: gapAfterTitle),
                     Row(
                       children: [
                         Expanded(
@@ -163,6 +184,7 @@ class FinanceOverviewPage extends StatelessWidget {
                               compact: true,
                             ),
                             icon: Icons.payments_rounded,
+                            dense: dense,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -174,21 +196,22 @@ class FinanceOverviewPage extends StatelessWidget {
                             color: progress > 0.8
                                 ? Colors.redAccent
                                 : Colors.tealAccent,
+                            dense: dense,
                           ),
                         ),
                       ],
                     ),
-                    const SizedBox(height: 20),
+                    SizedBox(height: gapBeforeBar),
                     ClipRRect(
                       borderRadius: BorderRadius.circular(10),
                       child: LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
-                        minHeight: 6,
+                        minHeight: dense ? 5 : 6,
                         backgroundColor: Colors.white.withValues(alpha: 0.05),
                         valueColor: AlwaysStoppedAnimation<Color>(
                           progress > 0.9
                               ? Colors.redAccent
-                              : EntryColors.primaryIceBlue,
+                              : EntryColors.financeSilverAccent,
                         ),
                       ),
                     ),
@@ -206,7 +229,8 @@ class FinanceOverviewPage extends StatelessWidget {
     required String label,
     required String value,
     required IconData icon,
-    Color color = EntryColors.primaryIceBlue,
+    Color color = EntryColors.financeSilverAccent,
+    bool dense = false,
   }) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,7 +254,7 @@ class FinanceOverviewPage extends StatelessWidget {
           value,
           style: TextStyle(
             color: color,
-            fontSize: 16,
+            fontSize: dense ? 14 : 16,
             fontWeight: FontWeight.w900,
           ),
         ),
@@ -239,6 +263,7 @@ class FinanceOverviewPage extends StatelessWidget {
   }
 
   Widget _buildSummaryCardRow(BuildContext context, FinanceBlock block) {
+    final dense = MediaQuery.sizeOf(context).width >= 900;
     return Row(
       children: [
         Expanded(
@@ -251,6 +276,7 @@ class FinanceOverviewPage extends StatelessWidget {
             ),
             color: const Color(0xFF4CAF50),
             icon: Icons.savings_rounded,
+            dense: dense,
           ),
         ),
         const SizedBox(width: 12),
@@ -264,6 +290,7 @@ class FinanceOverviewPage extends StatelessWidget {
             ),
             color: const Color(0xFFF44336),
             icon: Icons.shopping_cart_rounded,
+            dense: dense,
           ),
         ),
       ],
@@ -276,19 +303,22 @@ class FinanceOverviewPage extends StatelessWidget {
     required String value,
     required Color color,
     required IconData icon,
+    bool dense = false,
   }) {
+    final pad = dense ? 12.0 : 16.0;
+    final radius = dense ? 20.0 : 24.0;
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
         color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(height: 12),
+          Icon(icon, color: color, size: dense ? 15 : 16),
+          SizedBox(height: dense ? 8 : 12),
           Text(
             label,
             style: TextStyle(
@@ -301,9 +331,9 @@ class FinanceOverviewPage extends StatelessWidget {
           const SizedBox(height: 2),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
-              fontSize: 18,
+              fontSize: dense ? 16 : 18,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -329,6 +359,11 @@ class FinanceOverviewPage extends StatelessWidget {
     List<TransactionData> txns,
     double currentTotal,
   ) {
+    final dense = MediaQuery.sizeOf(context).width >= 900;
+    final pad = dense ? 18.0 : 24.0;
+    final radius = dense ? 26.0 : 32.0;
+    final headlineSize = dense ? 26.0 : 32.0;
+    final chartH = dense ? 110.0 : 140.0;
     // Reverse engineer balance history (simplified logic)
     List<double> history = [currentTotal];
     double running = currentTotal;
@@ -347,11 +382,11 @@ class FinanceOverviewPage extends StatelessWidget {
     final chartData = history.reversed.toList();
 
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(pad),
       decoration: BoxDecoration(
-        color: EntryColors.primaryIceBlue.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: EntryColors.primaryIceBlue.withValues(alpha: 0.1)),
+        color: EntryColors.financeSilverAccent.withValues(alpha: 0.05),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: EntryColors.financeSilverAccent.withValues(alpha: 0.1)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -362,30 +397,30 @@ class FinanceOverviewPage extends StatelessWidget {
               fontWeight: FontWeight.w900,
               fontSize: 10,
               letterSpacing: 1.5,
-              color: EntryColors.primaryIceBlue.withValues(alpha: 0.7),
+              color: EntryColors.financeSilverAccent.withValues(alpha: 0.7),
             ),
           ),
           const SizedBox(height: 8),
           Text(
             financeBlock.formatCurrency(currentTotal),
-            style: const TextStyle(
+            style: TextStyle(
               color: Colors.white,
               fontWeight: FontWeight.w900,
-              fontSize: 32,
+              fontSize: headlineSize,
               letterSpacing: -1,
             ),
           ),
-          const SizedBox(height: 24),
+          SizedBox(height: dense ? 18 : 24),
           if (chartData.length > 1)
             SimpleLineChart(
               data: chartData,
-              color: EntryColors.primaryIceBlue,
-              height: 140,
+              color: EntryColors.financeSilverAccent,
+              height: chartH,
             )
           else
-            const SizedBox(
-              height: 140,
-              child: Center(
+            SizedBox(
+              height: chartH,
+              child: const Center(
                 child: Text(
                   'Need more data for trend',
                   style: TextStyle(color: Colors.white38),
@@ -419,20 +454,20 @@ class FinanceOverviewPage extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                 decoration: BoxDecoration(
-                  color: EntryColors.financeYellow.withValues(alpha: 0.1),
+                  color: EntryColors.financeSilverAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(12),
                   border: Border.all(
-                    color: EntryColors.financeYellow.withValues(alpha: 0.2),
+                    color: EntryColors.financeSilverAccent.withValues(alpha: 0.2),
                   ),
                 ),
                 child: const Row(
                   children: [
-                    Icon(Icons.add_rounded, color: EntryColors.financeYellow, size: 14),
+                    Icon(Icons.add_rounded, color: EntryColors.financeSilverAccent, size: 14),
                     SizedBox(width: 4),
                     Text(
                       "ADD",
                       style: TextStyle(
-                        color: EntryColors.financeYellow,
+                        color: EntryColors.financeSilverAccent,
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                       ),
@@ -540,7 +575,7 @@ class FinanceOverviewPage extends StatelessWidget {
         break;
       default:
         icon = Icons.account_balance_rounded;
-        color = EntryColors.primaryIceBlue;
+        color = EntryColors.financeSilverAccent;
     }
     return Icon(icon, color: color.withValues(alpha: 0.5), size: 14);
   }
@@ -620,7 +655,7 @@ class FinanceOverviewPage extends StatelessWidget {
               child: SimplePieChart(
                 data: categories,
                 colors: const [
-                  EntryColors.primaryIceBlue,
+                  EntryColors.financeSilverAccent,
                   Color(0xFF839BF3),
                   Color(0xFFA5B4FC),
                   Color(0xFFF0FDFA),

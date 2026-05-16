@@ -134,8 +134,14 @@ class _HealthMetricCardState extends State<HealthMetricCard>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final compact = MediaQuery.of(context).size.width < 600;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final compact = screenW < 600;
+    final desktopDense = screenW >= 900;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    final outerR = desktopDense ? 20.0 : 32.0;
+    final pad = desktopDense ? 14.0 : 20.0;
+    final iconBoxSize = desktopDense ? 40.0 : 46.0;
 
     return GestureDetector(
       onTapDown: _onTapDown,
@@ -144,7 +150,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(32),
+          borderRadius: BorderRadius.circular(outerR),
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
             child: Container(
@@ -152,7 +158,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                 color: isDark 
                     ? Colors.white.withValues(alpha: 0.06) 
                     : Colors.white.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(outerR),
                 border: Border.all(
                   color: widget.metrics.isFuture
                       ? (isDark ? Colors.white24 : Colors.grey.withAlpha(50))
@@ -164,13 +170,13 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                 boxShadow: [
                   BoxShadow(
                     color: widget.metrics.color.withValues(alpha: 0.05),
-                    blurRadius: 20,
-                    offset: const Offset(0, 8),
+                    blurRadius: desktopDense ? 12 : 20,
+                    offset: Offset(0, desktopDense ? 4 : 8),
                   ),
                   BoxShadow(
                     color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: 40,
-                    offset: const Offset(0, 15),
+                    blurRadius: desktopDense ? 24 : 40,
+                    offset: Offset(0, desktopDense ? 8 : 15),
                   ),
                 ],
               ),
@@ -191,7 +197,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                   ),
                   
                   Padding(
-                    padding: const EdgeInsets.all(20.0),
+                    padding: EdgeInsets.all(pad),
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -201,12 +207,14 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                           children: [
                             // 1. Fixed height Icon Container
                             Container(
-                              width: 46,
-                              height: 46,
-                              padding: const EdgeInsets.all(10),
+                              width: iconBoxSize,
+                              height: iconBoxSize,
+                              padding: EdgeInsets.all(desktopDense ? 8 : 10),
                               decoration: BoxDecoration(
                                 color: widget.metrics.color.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(16),
+                                borderRadius: BorderRadius.circular(
+                                  desktopDense ? 13 : 16,
+                                ),
                               ),
                               child: Center(
                                 child: Stack(
@@ -217,7 +225,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                       color: widget.metrics.isFuture 
                                           ? colorScheme.onSurface.withValues(alpha: 0.2)
                                           : widget.metrics.color,
-                                      size: compact ? 22 : 26,
+                                      size: compact ? 22 : (desktopDense ? 24 : 26),
                                     ),
                                     if (widget.metrics.isFuture)
                                       Positioned(
@@ -261,11 +269,14 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                             else if (widget.metrics.trend != null)
                               _buildTrendChip(widget.metrics.trend!, widget.metrics.trendPositive ?? true)
                             else
-                              const SizedBox(height: 24),
+                              SizedBox(height: desktopDense ? 20 : 24),
                           ],
                         ),
                         
-                        const Spacer(),
+                        if (desktopDense)
+                          const SizedBox(height: 4)
+                        else
+                          const Spacer(),
                         
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -333,7 +344,9 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                             
                             // 4. Value & Unit row
                             SizedBox(
-                              height: compact ? 32 : 36,
+                              height: compact
+                                  ? 32
+                                  : (desktopDense ? 28 : 36),
                               child: Row(
                                 crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
@@ -362,7 +375,9 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                                   ? colorScheme.onSurface.withValues(alpha: 0.15)
                                                   : colorScheme.onSurface,
                                               fontWeight: FontWeight.w900,
-                                              fontSize: compact ? 26 : 30,
+                                              fontSize: compact
+                                                  ? 26
+                                                  : (desktopDense ? 24 : 30),
                                               height: 1.0,
                                               letterSpacing: -1,
                                             ),
@@ -387,7 +402,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                             ),
                             
                             // 5. Progress bar or spacer
-                            const SizedBox(height: 12),
+                            SizedBox(height: desktopDense ? 8 : 12),
                             if (widget.metrics.progress != null)
                               _buildProgressBar(widget.metrics.progress!, widget.metrics.color)
                             else

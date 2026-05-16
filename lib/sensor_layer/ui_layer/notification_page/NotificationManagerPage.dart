@@ -13,6 +13,7 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/NotificationMaskChip.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -998,9 +999,6 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       'MMM dd, HH:mm',
     ).format(notification.scheduledTime);
 
-    final category = notification.category ?? 'General';
-    final priority = notification.priority ?? 'Normal';
-
     final categoryIcons = {
       'General': Icons.notifications_none_rounded,
       'Health': Icons.favorite_rounded,
@@ -1024,7 +1022,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    categoryIcons[category] ?? Icons.notifications_none_rounded,
+                    categoryIcons[notification.category] ??
+                        Icons.notifications_none_rounded,
                     color: Colors.blueAccent,
                     size: 20,
                   ),
@@ -1072,58 +1071,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               children: [
                 Row(
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.05),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.1),
-                        ),
-                      ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.access_time_rounded,
-                            size: 14,
-                            color: Colors.blueAccent,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            formattedTime,
-                            style: const TextStyle(
-                              color: Colors.blueAccent,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    NotificationMaskChip.schedule(label: formattedTime),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 6,
+                    NotificationMaskChip.tag(
+                      label: _localizedPriorityShort(
+                        context,
+                        notification.priority,
                       ),
-                      decoration: BoxDecoration(
-                        color: _getPriorityColor(priority).withValues(alpha: 0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: _getPriorityColor(priority).withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Text(
-                        priority,
-                        style: TextStyle(
-                          color: _getPriorityColor(priority),
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
-                        ),
-                      ),
+                      tagAccent: _getPriorityColor(notification.priority),
                     ),
                   ],
                 ),
@@ -1650,6 +1605,17 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       default:
         return Colors.grey;
     }
+  }
+
+  String _localizedPriorityShort(BuildContext context, String priority) {
+    final l10n = AppLocalizations.of(context)!;
+    return {
+          'Low': l10n.notification_priority_low,
+          'Normal': l10n.notification_priority_normal,
+          'High': l10n.notification_priority_high,
+          'Urgent': l10n.notification_priority_urgent,
+        }[priority] ??
+        priority;
   }
 
   Widget _buildDayPicker(

@@ -5,15 +5,16 @@ import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
-import 'package:ice_gate/utils/l10n_extensions.dart';
+import 'package:ice_gate/utils/L10nExtensions.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'task_item.dart';
+import 'TaskItem.dart';
 import 'CreateProjectDialog.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
@@ -126,7 +127,9 @@ class ProjectsPage extends StatelessWidget {
             // ),
           ],
         ),
-        body: CustomScrollView(
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final scrollBody = CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverToBoxAdapter(
@@ -139,14 +142,26 @@ class ProjectsPage extends StatelessWidget {
                       context.l10n.projects_page_tagline,
                       style: TextStyle(
                         color: colorScheme.onSurface.withValues(alpha: 0.72),
-                        fontSize: 14,
-                        height: 1.4,
+                        fontSize: 13,
+                        height: 1.25,
                       ),
                     ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 10),
                     Watch((context) {
                       final projectBlock = context.read<ProjectBlock>();
                       final growthBlock = context.read<GrowthBlock>();
+                      final pluginsCount = internalWidgetBlock
+                          .listInternalWidgetProjectsPage
+                          .value
+                          .length;
+                      final notePersonId =
+                          context
+                              .read<PersonBlock>()
+                              .information
+                              .value
+                              .profiles
+                              .id ??
+                          '';
 
                       final allProjects = projectBlock.projects.value;
                       final projectsDone = allProjects
@@ -155,6 +170,7 @@ class ProjectsPage extends StatelessWidget {
                       final projectsActive = allProjects
                           .where((p) => p.status == 0)
                           .length;
+                      final totalProjects = projectsActive + projectsDone;
 
                       final projectGoals = growthBlock.goals.value
                           .where((g) => g.category == 'project')
@@ -165,13 +181,22 @@ class ProjectsPage extends StatelessWidget {
                       final tasksActive = projectGoals
                           .where((g) => g.status != 'done')
                           .length;
+                      final totalTasks = tasksDone + tasksActive;
+
+                      final workspaceDetail =
+                          '${context.l10n.home_projects_active} $projectsActive · ${context.l10n.home_projects_done} $projectsDone';
+                      final taskDetail =
+                          '${context.l10n.home_tasks_active} $tasksActive · ${context.l10n.home_tasks_done} $tasksDone';
 
                       return ClipRRect(
-                        borderRadius: BorderRadius.circular(24),
+                        borderRadius: BorderRadius.circular(16),
                         child: BackdropFilter(
-                          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
                           child: Container(
-                            padding: const EdgeInsets.all(20),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
@@ -185,219 +210,388 @@ class ProjectsPage extends StatelessWidget {
                                   ),
                                 ],
                               ),
-                              borderRadius: BorderRadius.circular(24),
+                              borderRadius: BorderRadius.circular(16),
                               border: Border.all(
                                 color: colorScheme.primaryContainer.withValues(
                                   alpha: 0.2,
                                 ),
                               ),
                             ),
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceAround,
-                              children: [
-                                _buildSummaryItem(
+                            child: LayoutBuilder(
+                              builder: (context, box) {
+                                final twoRows = box.maxWidth < 400;
+                                Widget workspaces() => _buildSummaryItem(
                                   context,
                                   context.l10n.projects_summary_workspaces,
-                                  '$projectsDone/${projectsActive + projectsDone}',
+                                  totalProjects > 0
+                                      ? '$projectsDone/$totalProjects'
+                                      : '0',
                                   Icons.folder_copy_rounded,
                                   Colors.blue,
-                                ),
-                                _buildSummaryItem(
+                                  detail: workspaceDetail,
+                                );
+                                Widget tasks() => _buildSummaryItem(
                                   context,
                                   context.l10n.tasks,
-                                  '$tasksDone/${tasksDone + tasksActive}',
+                                  totalTasks > 0
+                                      ? '$tasksDone/$totalTasks'
+                                      : '0',
                                   Icons.task_alt_rounded,
                                   Colors.orange,
-                                ),
-                              ],
+                                  detail: taskDetail,
+                                );
+                                Widget notes() =>
+                                    StreamBuilder<List<ProjectNoteData>>(
+                                      stream: database.projectNoteDAO
+                                          .watchAllNotes(notePersonId),
+                                      builder: (context, snapshot) {
+                                        final n = snapshot.data?.length ?? 0;
+                                        return _buildSummaryItem(
+                                          context,
+                                          context.l10n.project_notes_label,
+                                          '$n',
+                                          Icons.edit_note_rounded,
+                                          Colors.lightBlueAccent,
+                                          detail:
+                                              context.l10n.recent_notes_label,
+                                        );
+                                      },
+                                    );
+                                Widget plugins() => _buildSummaryItem(
+                                  context,
+                                  context.l10n.projects_summary_plugins,
+                                  '$pluginsCount',
+                                  Icons.extension_rounded,
+                                  Colors.teal,
+                                );
+
+                                if (twoRows) {
+                                  return Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(child: workspaces()),
+                                          Expanded(child: tasks()),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      Row(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Expanded(child: notes()),
+                                          Expanded(child: plugins()),
+                                        ],
+                                      ),
+                                    ],
+                                  );
+                                }
+
+                                return Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Expanded(child: workspaces()),
+                                    Expanded(child: tasks()),
+                                    Expanded(child: notes()),
+                                    Expanded(child: plugins()),
+                                  ],
+                                );
+                              },
                             ),
                           ),
                         ),
                       );
                     }),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 18),
                     _buildSectionTitle(context, context.l10n.quick_actions),
                     const SizedBox(height: 12),
                     Watch((context) {
                       final allApps = internalWidgetBlock
                           .listInternalWidgetProjectsPage
                           .value;
-                      final uniqueNames = <String>{};
-                      final apps = allApps
-                          .where((w) => uniqueNames.add(w.name))
-                          .toList();
+                      final apps = List<InternalWidgetProtocol>.from(allApps)
+                        ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
 
                       return ClipRRect(
                         borderRadius: BorderRadius.circular(22),
                         child: BackdropFilter(
                           filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 14,
-                              horizontal: 10,
-                            ),
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  colorScheme.surfaceContainerHighest
-                                      .withValues(alpha: 0.45),
-                                  colorScheme.surfaceContainerHighest
-                                      .withValues(alpha: 0.12),
-                                ],
-                              ),
-                              borderRadius: BorderRadius.circular(22),
-                              border: Border.all(
-                                color: colorScheme.outlineVariant
-                                    .withValues(alpha: 0.28),
-                              ),
-                            ),
-                            child: SingleChildScrollView(
-                              scrollDirection: Axis.horizontal,
-                              physics: const BouncingScrollPhysics(),
-                              child: Row(
-                                children: [
-                                  _ActionCard(
-                                    width: 112,
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              final w = constraints.maxWidth;
+                              final isDesktopQuick = w >= 880;
+                              final narrowPhone = w < 540;
+
+                              late final int crossAxisCount;
+                              late final double tileSpacing;
+                              late final double childAspectRatio;
+
+                              if (isDesktopQuick) {
+                                tileSpacing = 8;
+                                if (w >= 1280) {
+                                  crossAxisCount = 6;
+                                  childAspectRatio = 1.56;
+                                } else if (w >= 1040) {
+                                  crossAxisCount = 5;
+                                  childAspectRatio = 1.52;
+                                } else {
+                                  crossAxisCount = 4;
+                                  childAspectRatio = 1.46;
+                                }
+                              } else {
+                                crossAxisCount = w >= 720
+                                    ? 4
+                                    : w >= 520
+                                        ? 3
+                                        : narrowPhone
+                                            ? 3
+                                            : 2;
+                                tileSpacing = narrowPhone ? 8.0 : 12.0;
+                                childAspectRatio =
+                                    narrowPhone ? 1.08 : 0.92;
+                              }
+
+                              Future<void> openNewNote() async {
+                                  final ext = await showDialog<String>(
+                                    context: context,
+                                    builder: (context) => SimpleDialog(
+                                      title: const Text('Choose Note Type'),
+                                      children: [
+                                        SimpleDialogOption(
+                                          onPressed: () =>
+                                              Navigator.pop(context, '.md'),
+                                          child: const Text('Markdown (.md)'),
+                                        ),
+                                        SimpleDialogOption(
+                                          onPressed: () =>
+                                              Navigator.pop(context, '.txt'),
+                                          child: const Text('Plain Text (.txt)'),
+                                        ),
+                                        SimpleDialogOption(
+                                          onPressed: () =>
+                                              Navigator.pop(context, '.docx'),
+                                          child: const Text('Word (.docx)'),
+                                        ),
+                                      ],
+                                    ),
+                                  );
+                                  if (ext != null && context.mounted) {
+                                    context.push(
+                                      '/projects/editor',
+                                      extra: {'extension': ext},
+                                    );
+                                  }
+                                }
+
+                                final coreTiles = <Widget>[
+                                  _ProjectsGridTile(
                                     icon: Icons.note_add_rounded,
                                     label: context.l10n.new_label,
-                                    color: Colors.orange,
-                                    onTap: () async {
-                                      final ext = await showDialog<String>(
-                                        context: context,
-                                        builder: (context) => SimpleDialog(
-                                          title: const Text('Choose Note Type'),
-                                          children: [
-                                            SimpleDialogOption(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, '.md'),
-                                              child: const Text(
-                                                'Markdown (.md)',
-                                              ),
-                                            ),
-                                            SimpleDialogOption(
-                                              onPressed: () =>
-                                                  Navigator.pop(context, '.txt'),
-                                              child: const Text(
-                                                'Plain Text (.txt)',
-                                              ),
-                                            ),
-                                            SimpleDialogOption(
-                                              onPressed: () => Navigator.pop(
-                                                context,
-                                                '.docx',
-                                              ),
-                                              child: const Text(
-                                                'Word (.docx)',
-                                              ),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                      if (ext != null && context.mounted) {
-                                        context.push(
-                                          '/projects/editor',
-                                          extra: {'extension': ext},
-                                        );
-                                      }
-                                    },
+                                    accent: Colors.orange,
+                                    onTap: openNewNote,
                                   ),
-                                  const SizedBox(width: 12),
-                                  _ActionCard(
-                                    width: 112,
+                                  _ProjectsGridTile(
                                     icon: Icons.edit_note_rounded,
                                     label: context.l10n.project_notes_label,
-                                    color: Colors.blue,
-                                    onTap: () {
-                                      context.push("/projects/notes");
-                                    },
+                                    accent: Colors.blue,
+                                    onTap: () => context.push('/projects/notes'),
                                   ),
-                                  const SizedBox(width: 12),
-                                  // Plugin Slot (Limit 1 - Showing Latest)
-                                  if (apps.isEmpty)
-                                    _ActionCard(
-                                      width: 112,
-                                      icon: Icons.extension_rounded,
-                                      label: context.l10n.plugins,
-                                      color: colorScheme.primary,
-                                      onTap: () {
-                                        _showAddPluginDialog(context);
-                                      },
-                                    )
-                                  else
-                                    ...apps.map((latestApp) {
-                                      return Padding(
-                                        padding: const EdgeInsets.only(
-                                          right: 12,
+                                  _ProjectsGridTile(
+                                    icon: Icons.groups_rounded,
+                                    label:
+                                        context.l10n.projects_tile_social_blocker,
+                                    accent: Colors.teal,
+                                    onTap: () =>
+                                        context.push('/social/blocker'),
+                                  ),
+                                  _ProjectsGridTile(
+                                    icon: Icons.notifications_active_rounded,
+                                    label: context.l10n.projects_tile_reminders,
+                                    accent: Colors.deepPurple,
+                                    onTap: () =>
+                                        context.push('/health/block-reminder'),
+                                  ),
+                                  _ProjectsGridTile(
+                                    icon: Icons.calendar_month_rounded,
+                                    label: context.l10n.projects_tile_calendar,
+                                    accent: Colors.amber.shade700,
+                                    onTap: () =>
+                                        context.push('/projects/calendar'),
+                                  ),
+                                  _ProjectsGridTile(
+                                    icon: Icons.bolt_rounded,
+                                    label: context.l10n.projects_tile_focus,
+                                    accent: Colors.indigo,
+                                    onTap: () => context.push('/health/focus'),
+                                  ),
+                                ];
+
+                                final extraTiles = <Widget>[
+                                  _ProjectsGridTile(
+                                    icon: Icons.timer_rounded,
+                                    label: context.l10n.projects_tile_pomodoro,
+                                    accent: Colors.red.shade400,
+                                    onTap: () =>
+                                        context.push('/focus-history'),
+                                  ),
+                                  ...apps.map(
+                                    (app) => _ProjectsGridTile(
+                                      icon: _getAppIcon(app.name),
+                                      label: app.name,
+                                      accent: Colors.cyan,
+                                      onTap: () => context.push(app.url),
+                                      onLongPress: () =>
+                                          _showDeletePluginDialog(context, app),
+                                    ),
+                                  ),
+                                  _ProjectsGridTile(
+                                    icon: Icons.add_rounded,
+                                    label: context.l10n.add,
+                                    accent: colorScheme.primary,
+                                    isAddSlot: true,
+                                    onTap: () => _showAddPluginDialog(context),
+                                  ),
+                                ];
+
+                                final allTiles = <Widget>[
+                                  ...coreTiles,
+                                  ...extraTiles,
+                                ];
+
+                                final gridDelegate =
+                                    SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: crossAxisCount,
+                                  mainAxisSpacing: tileSpacing,
+                                  crossAxisSpacing: tileSpacing,
+                                  childAspectRatio: childAspectRatio,
+                                );
+
+                                final Widget body;
+                                if (narrowPhone) {
+                                  body = Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      GridView.builder(
+                                        shrinkWrap: true,
+                                        physics:
+                                            const NeverScrollableScrollPhysics(),
+                                        gridDelegate:
+                                            SliverGridDelegateWithFixedCrossAxisCount(
+                                          crossAxisCount: 3,
+                                          mainAxisSpacing: tileSpacing,
+                                          crossAxisSpacing: tileSpacing,
+                                          childAspectRatio: childAspectRatio,
                                         ),
-                                        child: _ActionCard(
-                                          width: 112,
-                                          icon: _getAppIcon(latestApp.name),
-                                          label: latestApp.name,
-                                          color: Colors.teal,
-                                          onTap: () {
-                                            context.push(latestApp.url);
-                                          },
-                                          onLongPress: () {
-                                            _showDeletePluginDialog(
-                                              context,
-                                              latestApp,
-                                            );
-                                          },
+                                        itemCount: coreTiles.length,
+                                        itemBuilder: (context, index) =>
+                                            coreTiles[index],
+                                      ),
+                                      if (extraTiles.isNotEmpty) ...[
+                                        Padding(
+                                          padding: const EdgeInsets.only(
+                                            top: 12,
+                                            bottom: 4,
+                                          ),
+                                          child: Text(
+                                            context.l10n.projects_quick_more,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              fontWeight: FontWeight.w700,
+                                              color: colorScheme.onSurface
+                                                  .withValues(alpha: 0.62),
+                                              letterSpacing: -0.1,
+                                            ),
+                                          ),
                                         ),
-                                      );
-                                    }),
-                                  const SizedBox(width: 8),
-                                ],
-                              ),
+                                        GridView.builder(
+                                          shrinkWrap: true,
+                                          physics:
+                                              const NeverScrollableScrollPhysics(),
+                                          gridDelegate:
+                                              SliverGridDelegateWithFixedCrossAxisCount(
+                                            crossAxisCount: 3,
+                                            mainAxisSpacing: tileSpacing,
+                                            crossAxisSpacing: tileSpacing,
+                                            childAspectRatio: childAspectRatio,
+                                          ),
+                                          itemCount: extraTiles.length,
+                                          itemBuilder: (context, index) =>
+                                              extraTiles[index],
+                                        ),
+                                      ],
+                                    ],
+                                  );
+                                } else {
+                                  body = GridView.builder(
+                                    shrinkWrap: true,
+                                    physics:
+                                        const NeverScrollableScrollPhysics(),
+                                    gridDelegate: gridDelegate,
+                                    itemCount: allTiles.length,
+                                    itemBuilder: (context, index) =>
+                                        allTiles[index],
+                                  );
+                                }
+
+                                return Container(
+                                  padding: EdgeInsets.all(
+                                    isDesktopQuick ? 10 : 14,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        colorScheme.surfaceContainerHighest
+                                            .withValues(alpha: 0.45),
+                                        colorScheme.surfaceContainerHighest
+                                            .withValues(alpha: 0.12),
+                                      ],
+                                    ),
+                                    borderRadius: BorderRadius.circular(
+                                      isDesktopQuick ? 18 : 22,
+                                    ),
+                                    border: Border.all(
+                                      color: colorScheme.outlineVariant
+                                          .withValues(alpha: 0.28),
+                                    ),
+                                  ),
+                                  child: body,
+                                );
+                              },
                             ),
                           ),
-                        ),
+                        );
+                    }),
+                    const SizedBox(height: 28),
+                    _buildSectionTitle(context, context.l10n.my_projects_label),
+                    const SizedBox(height: 12),
+                    Watch((context) {
+                      final projectBlock = context.read<ProjectBlock>();
+                      final activeProjects = projectBlock.projects.value
+                          .where((p) => p.status == 0)
+                          .toList();
+
+                      return _ProjectsWorkspaceCard(
+                        activeProjects: activeProjects,
+                        onCreateProject: () {
+                          showDialog<void>(
+                            context: context,
+                            builder: (context) =>
+                                const CreateProjectDialog(),
+                          );
+                        },
                       );
                     }),
-                    const SizedBox(height: 32),
-                    _buildSectionTitle(context, context.l10n.my_projects_label),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
                   ],
                 ),
               ),
             ),
-            // --- MY PROJECTS SECTION ---
-            Watch((context) {
-              final projectBlock = context.read<ProjectBlock>();
-              final projectList = projectBlock.projects.value
-                  .where((p) => p.status == 0)
-                  .toList();
-
-              if (projectList.isEmpty) {
-                return const SliverToBoxAdapter(
-                  child: Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20),
-                    child: _EmptyState(
-                      icon: Icons.folder_off_rounded,
-                      message: 'No projects yet. Create one to get started!',
-                    ),
-                  ),
-                );
-              }
-
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.4,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final project = projectList[index];
-                    return _ProjectCard(project: project);
-                  }, childCount: projectList.length),
-                ),
-              );
-            }),
             // --- COMPLETED PROJECTS SECTION ---
             SliverToBoxAdapter(
               child: Watch((context) {
@@ -427,23 +621,32 @@ class ProjectsPage extends StatelessWidget {
                 return const SliverToBoxAdapter(child: SizedBox.shrink());
               }
 
-              return SliverPadding(
-                padding: const EdgeInsets.symmetric(horizontal: 20),
-                sliver: SliverGrid(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: 1.4,
-                  ),
-                  delegate: SliverChildBuilderDelegate((context, index) {
-                    final project = completedList[index];
-                    return Opacity(
-                      opacity: 0.6,
-                      child: _ProjectCard(project: project),
-                    );
-                  }, childCount: completedList.length),
-                ),
+              return SliverLayoutBuilder(
+                builder: (context, constraints) {
+                  final spec =
+                      _ProjectGridSpec.forWidth(constraints.crossAxisExtent);
+                  return SliverPadding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    sliver: SliverGrid(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: spec.crossAxisCount,
+                        mainAxisSpacing: 10,
+                        crossAxisSpacing: 10,
+                        childAspectRatio: spec.childAspectRatio,
+                      ),
+                      delegate: SliverChildBuilderDelegate(
+                        (context, index) {
+                          final project = completedList[index];
+                          return Opacity(
+                            opacity: 0.6,
+                            child: _ProjectCard(project: project),
+                          );
+                        },
+                        childCount: completedList.length,
+                      ),
+                    ),
+                  );
+                },
               );
             }),
             // --- ALL TASKS SECTION ---
@@ -534,6 +737,11 @@ class ProjectsPage extends StatelessWidget {
                           );
                         }
                       },
+                      onDeleteRequested: () => confirmDeleteTask(
+                        context,
+                        growthBlock,
+                        task,
+                      ),
                     );
                   }, childCount: tasks.length),
                 ),
@@ -599,6 +807,15 @@ class ProjectsPage extends StatelessWidget {
               },
             ),
           ],
+        );
+
+            return WorkspaceSidebarLayout.useWorkspace(constraints.maxWidth)
+                ? WorkspaceSidebarLayout(
+                    onPluginTap: () => _showAddPluginDialog(context),
+                    child: scrollBody,
+                  )
+                : scrollBody;
+          },
         ),
       ),
     );
@@ -625,35 +842,63 @@ class ProjectsPage extends StatelessWidget {
     String label,
     String value,
     IconData icon,
-    Color color,
-  ) {
+    Color color, {
+    String? detail,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Column(
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(5),
           decoration: BoxDecoration(
             color: color.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(icon, color: color, size: 24),
+          child: Icon(icon, color: color, size: 16),
         ),
-        const SizedBox(height: 8),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 18,
-            fontWeight: FontWeight.w900,
-            color: colorScheme.onSurface,
-            letterSpacing: -0.5,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w600,
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w800,
+                  color: colorScheme.onSurface,
+                  letterSpacing: -0.35,
+                  height: 1.1,
+                ),
+              ),
+              Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 9,
+                  fontWeight: FontWeight.w600,
+                  height: 1.15,
+                  color: colorScheme.onSurface.withValues(alpha: 0.52),
+                ),
+              ),
+              if (detail != null)
+                Text(
+                  detail,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 8,
+                    height: 1.15,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurface.withValues(alpha: 0.38),
+                  ),
+                ),
+            ],
           ),
         ),
       ],
@@ -699,9 +944,12 @@ class ProjectsPage extends StatelessWidget {
           ),
           TextButton(
             onPressed: () async {
-              await context.read<InternalWidgetsDAO>().deleteInternalWidget(
-                app.name,
-              );
+              final dao = context.read<InternalWidgetsDAO>();
+              if (app.rowId != null) {
+                await dao.deleteInternalWidgetById(app.rowId!);
+              } else {
+                await dao.deleteInternalWidget(app.name);
+              }
               if (context.mounted) Navigator.pop(ctx);
             },
             child: const Text('Remove', style: TextStyle(color: Colors.red)),
@@ -763,6 +1011,255 @@ class ProjectsPage extends StatelessWidget {
   }
 }
 
+/// More columns + wider aspect on large screens so project cards stay compact.
+class _ProjectGridSpec {
+  const _ProjectGridSpec({
+    required this.crossAxisCount,
+    required this.childAspectRatio,
+  });
+
+  final int crossAxisCount;
+  final double childAspectRatio;
+
+  static _ProjectGridSpec forWidth(double width) {
+    if (width >= 1240) {
+      return const _ProjectGridSpec(crossAxisCount: 4, childAspectRatio: 2.25);
+    }
+    if (width >= 900) {
+      return const _ProjectGridSpec(crossAxisCount: 3, childAspectRatio: 2.05);
+    }
+    if (width >= 520) {
+      return const _ProjectGridSpec(crossAxisCount: 2, childAspectRatio: 1.82);
+    }
+    return const _ProjectGridSpec(crossAxisCount: 1, childAspectRatio: 2.55);
+  }
+}
+
+class _ProjectsWorkspaceCard extends StatelessWidget {
+  const _ProjectsWorkspaceCard({
+    required this.activeProjects,
+    required this.onCreateProject,
+  });
+
+  final List<ProjectProtocol> activeProjects;
+  final VoidCallback onCreateProject;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final l10n = context.l10n;
+    final wide = MediaQuery.sizeOf(context).width >= 900;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(wide ? 18 : 22),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.35),
+        ),
+        color: cs.surface.withValues(alpha: 0.35),
+      ),
+      padding: EdgeInsets.all(
+        activeProjects.isEmpty
+            ? (wide ? 22 : 28)
+            : (wide ? 12 : 18),
+      ),
+      child: activeProjects.isEmpty
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: EdgeInsets.all(wide ? 18 : 22),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: cs.primary.withValues(alpha: 0.08),
+                  ),
+                  child: Icon(
+                    Icons.layers_rounded,
+                    size: wide ? 36 : 44,
+                    color: cs.primary.withValues(alpha: 0.75),
+                  ),
+                ),
+                SizedBox(height: wide ? 14 : 18),
+                Text(
+                  l10n.projects_workspace_empty,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: wide ? 14 : 15,
+                    height: 1.45,
+                    fontWeight: FontWeight.w600,
+                    color: cs.onSurface.withValues(alpha: 0.72),
+                  ),
+                ),
+                SizedBox(height: wide ? 16 : 22),
+                FilledButton.tonal(
+                  onPressed: onCreateProject,
+                  style: FilledButton.styleFrom(
+                    padding: EdgeInsets.symmetric(
+                      horizontal: wide ? 22 : 28,
+                      vertical: wide ? 12 : 14,
+                    ),
+                  ),
+                  child: Text(l10n.projects_workspace_start),
+                ),
+              ],
+            )
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final spec = _ProjectGridSpec.forWidth(constraints.maxWidth);
+                return GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: spec.crossAxisCount,
+                    mainAxisSpacing: 10,
+                    crossAxisSpacing: 10,
+                    childAspectRatio: spec.childAspectRatio,
+                  ),
+                  itemCount: activeProjects.length,
+                  itemBuilder: (context, i) =>
+                      _ProjectCard(project: activeProjects[i]),
+                );
+              },
+            ),
+    );
+  }
+}
+
+class _ProjectsGridTile extends StatelessWidget {
+  const _ProjectsGridTile({
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.onTap,
+    this.onLongPress,
+    this.isAddSlot = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+  final VoidCallback? onLongPress;
+  final bool isAddSlot;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final screenW = MediaQuery.sizeOf(context).width;
+    final compact = screenW < 540;
+    final desktopDense = screenW >= 880;
+
+    final double iconBox;
+    final double iconSize;
+    final EdgeInsets pad;
+    final BorderRadius radius;
+    final double labelFontSize;
+    final double shadowBlur;
+
+    if (desktopDense) {
+      iconBox = 34;
+      iconSize = 19;
+      pad = const EdgeInsets.fromLTRB(9, 9, 7, 8);
+      radius = BorderRadius.circular(14);
+      labelFontSize = 11;
+      shadowBlur = 8;
+    } else if (compact) {
+      iconBox = 32;
+      iconSize = 18;
+      pad = const EdgeInsets.fromLTRB(8, 10, 6, 8);
+      radius = BorderRadius.circular(14);
+      labelFontSize = 10.5;
+      shadowBlur = 12;
+    } else {
+      iconBox = 40;
+      iconSize = 22;
+      pad = const EdgeInsets.fromLTRB(10, 12, 8, 10);
+      radius = BorderRadius.circular(18);
+      labelFontSize = 12;
+      shadowBlur = 12;
+    }
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: radius,
+        splashColor: accent.withValues(alpha: 0.2),
+        highlightColor: accent.withValues(alpha: 0.06),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            color: cs.surface.withValues(alpha: isAddSlot ? 0.25 : 0.55),
+            border: Border.all(
+              color: isAddSlot
+                  ? cs.outline.withValues(alpha: 0.45)
+                  : accent.withValues(alpha: 0.38),
+              width: isAddSlot ? 1.5 : 1,
+            ),
+            boxShadow: [
+              if (!isAddSlot)
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.12),
+                  blurRadius: shadowBlur,
+                  offset: Offset(0, desktopDense ? 2 : 4),
+                ),
+            ],
+          ),
+          child: Padding(
+            padding: pad,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: iconBox,
+                  height: iconBox,
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(
+                      compact ? 11 : (desktopDense ? 12 : 14),
+                    ),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        accent.withValues(alpha: 0.28),
+                        accent.withValues(alpha: 0.07),
+                      ],
+                    ),
+                    border: Border.all(
+                      color: accent.withValues(alpha: 0.22),
+                    ),
+                  ),
+                  child: Icon(icon, color: accent, size: iconSize),
+                ),
+                if (desktopDense)
+                  const SizedBox(height: 6)
+                else if (compact)
+                  const SizedBox(height: 5)
+                else
+                  const Spacer(),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w600,
+                    fontSize: labelFontSize,
+                    height: 1.2,
+                    letterSpacing: -0.15,
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   final IconData icon;
   final String message;
@@ -792,105 +1289,6 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _ActionCard extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final Color color;
-  final VoidCallback onTap;
-  final VoidCallback? onLongPress;
-  final double? width;
-
-  const _ActionCard({
-    required this.icon,
-    required this.label,
-    required this.color,
-    required this.onTap,
-    this.onLongPress,
-    this.width,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final radius = BorderRadius.circular(18);
-    // Slightly smaller so more quick-actions fit on desktop & tablets.
-    final w = width ?? 112;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        onLongPress: onLongPress,
-        borderRadius: radius,
-        splashColor: color.withValues(alpha: 0.2),
-        highlightColor: color.withValues(alpha: 0.06),
-        child: Ink(
-          width: w,
-          decoration: BoxDecoration(
-            borderRadius: radius,
-            color: colorScheme.surface.withValues(alpha: 0.55),
-            border: Border.all(
-              color: color.withValues(alpha: 0.38),
-              width: 1,
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: color.withValues(alpha: 0.14),
-                blurRadius: 14,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 92),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(12, 12, 10, 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisAlignment: MainAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(14),
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          color.withValues(alpha: 0.28),
-                          color.withValues(alpha: 0.07),
-                        ],
-                      ),
-                      border: Border.all(
-                        color: color.withValues(alpha: 0.22),
-                      ),
-                    ),
-                    child: Icon(icon, color: color, size: 22),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    label,
-                    style: TextStyle(
-                      color: colorScheme.onSurface,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 12,
-                      height: 1.2,
-                      letterSpacing: -0.15,
-                    ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
       ),
     );
   }
@@ -1012,13 +1410,19 @@ class _ProjectCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final w = MediaQuery.sizeOf(context).width;
+    final dense = w >= 720;
     final projectColor = project.color != null
         ? Color(int.parse(project.color!))
         : colorScheme.primary;
+    final pad = dense ? 12.0 : 15.0;
+    final iconInset = dense ? 8.0 : 10.0;
+    final iconSize = dense ? 20.0 : 23.0;
+    final radius = dense ? 18.0 : 22.0;
 
     return InkWell(
       onTap: () {
-        context.push('/projects/${project.projectID}');
+        context.push('/projects/${project.id}');
       },
       onLongPress: () async {
         final confirm = await showDialog<bool>(
@@ -1054,57 +1458,59 @@ class _ProjectCard extends StatelessWidget {
           }
         }
       },
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(radius + 2),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: EdgeInsets.all(pad),
         decoration: BoxDecoration(
           color: projectColor.withValues(alpha: 0.08),
-          borderRadius: BorderRadius.circular(24),
+          borderRadius: BorderRadius.circular(radius),
           border: Border.all(color: projectColor.withValues(alpha: 0.2)),
         ),
+        alignment: Alignment.topLeft,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: EdgeInsets.all(iconInset),
                   decoration: BoxDecoration(
                     color: projectColor.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(dense ? 10 : 12),
                   ),
                   child: Icon(
                     Icons.folder_rounded,
                     color: projectColor,
-                    size: 24,
+                    size: iconSize,
                   ),
                 ),
                 Icon(
                   Icons.arrow_forward_rounded,
                   color: colorScheme.onSurface.withValues(alpha: 0.3),
-                  size: 16,
+                  size: dense ? 14 : 16,
                 ),
               ],
             ),
-            const Spacer(),
+            SizedBox(height: dense ? 8 : 10),
             Text(
               project.name,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
                 fontWeight: FontWeight.w900,
-                fontSize: 15,
+                fontSize: dense ? 13.5 : 14.5,
                 color: colorScheme.onSurface,
                 letterSpacing: -0.3,
               ),
             ),
-            const SizedBox(height: 4),
+            SizedBox(height: dense ? 2 : 3),
             Text(
-              'Created ${DateFormat.MMMd().format(project.createdAt)}',
+              'Created ${DateFormat.MMMd().format(project.createdAt.toLocal())}',
               style: TextStyle(
                 color: colorScheme.onSurface.withValues(alpha: 0.4),
-                fontSize: 11,
+                fontSize: dense ? 10 : 10.5,
                 fontWeight: FontWeight.w600,
               ),
             ),

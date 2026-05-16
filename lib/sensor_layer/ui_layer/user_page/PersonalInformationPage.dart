@@ -15,7 +15,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/identity_page/widgets/PasskeySetupCard.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 

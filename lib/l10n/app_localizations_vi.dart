@@ -27,6 +27,35 @@ class AppLocalizationsVi extends AppLocalizations {
   String get recent_notes_label => 'Ghi chú gần đây';
 
   @override
+  String get projects_tile_reminders => 'Lời nhắc';
+
+  @override
+  String get projects_tile_calendar => 'Lịch';
+
+  @override
+  String get projects_calendar_projects_created => 'Dự án được tạo';
+
+  @override
+  String get projects_calendar_day_empty =>
+      'Không có nhiệm vụ hay dự án mới trong ngày này.';
+
+  @override
+  String get projects_tile_focus => 'Tập trung';
+
+  @override
+  String get projects_tile_pomodoro => 'Pomodoro';
+
+  @override
+  String get projects_tile_social_blocker => 'Social Blocker';
+
+  @override
+  String get projects_workspace_empty =>
+      'Chưa có không gian làm việc nào được thiết lập.';
+
+  @override
+  String get projects_workspace_start => 'Bắt đầu ngay';
+
+  @override
   String get project_drive_sync => 'Đồng bộ Mây';
 
   @override
@@ -1620,6 +1649,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_summary_workspaces => 'Không gian';
 
   @override
+  String get projects_summary_plugins => 'Tiện ích';
+
+  @override
+  String get projects_quick_more => 'Lối tắt thêm';
+
+  @override
   String get kcal_consume => 'Kcal tiêu thụ';
 
   @override
@@ -1838,6 +1873,96 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get canvas_goal_desc => 'Điều chỉnh mục tiêu';
+
+  @override
+  String get canvas_finance_reports_title => 'Báo cáo tài chính';
+
+  @override
+  String get canvas_finance_reports_desc =>
+      'Tóm tắt trong ngày, nhắc nhở cục bộ và lối tắt';
+
+  @override
+  String get canvas_finance_n8n_title => 'Báo cáo qua email';
+
+  @override
+  String get canvas_finance_n8n_desc =>
+      'Tóm tắt tài chính và sức khỏe gửi qua n8n';
+
+  @override
+  String get canvas_finance_n8n_send_success => 'Đã gửi báo cáo tới n8n.';
+
+  @override
+  String get canvas_finance_n8n_send_failed =>
+      'Không gửi được báo cáo. Thử lại sau.';
+
+  @override
+  String get canvas_finance_n8n_not_configured =>
+      'Chưa cấu hình webhook n8n trong môi trường ứng dụng.';
+
+  @override
+  String get canvas_finance_n8n_no_email =>
+      'Thêm email vào hồ sơ trước khi gửi báo cáo.';
+
+  @override
+  String get canvas_finance_n8n_confirm_title => 'Gửi báo cáo qua email?';
+
+  @override
+  String canvas_finance_n8n_confirm_message(String email) {
+    return 'Tóm tắt tài chính và sức khỏe hôm nay sẽ được gửi tới n8n để chuyển tới $email.';
+  }
+
+  @override
+  String get canvas_mail_summary_recipient => 'Người nhận';
+
+  @override
+  String get canvas_mail_summary_finance => 'Tài chính hôm nay';
+
+  @override
+  String get canvas_mail_summary_health => 'Sức khỏe hôm nay';
+
+  @override
+  String get canvas_mail_summary_send => 'Gửi báo cáo email';
+
+  @override
+  String get canvas_mail_summary_auto_title => 'Email tự động hàng ngày';
+
+  @override
+  String get canvas_mail_summary_auto_subtitle =>
+      'Sau giờ này, gửi một lần mỗi ngày khi ứng dụng đang mở';
+
+  @override
+  String get reports_hub_title => 'Báo cáo qua mail';
+
+  @override
+  String get reports_hub_subtitle =>
+      'Báo cáo tài chính trên máy, gửi email qua n8n';
+
+  @override
+  String get reports_mail_section_title => 'Gửi qua n8n';
+
+  @override
+  String get reports_mail_section_subtitle =>
+      'Tóm tắt tài chính và sức khỏe gửi bằng email';
+
+  @override
+  String get reports_finance_section => 'Báo cáo tài chính trên máy';
+
+  @override
+  String get reports_recipient_hint => 'nguoi-nhan@example.com';
+
+  @override
+  String get reports_recipient_save => 'Lưu người nhận';
+
+  @override
+  String get reports_recipient_saved => 'Đã lưu người nhận báo cáo.';
+
+  @override
+  String reports_recipient_profile_fallback(String email) {
+    return 'Mặc định từ hồ sơ: $email';
+  }
+
+  @override
+  String get canvas_finance_n8n_confirm_send => 'Gửi';
 
   @override
   String get gps_permissions_required => 'Yêu cầu quyền GPS để theo dõi.';
@@ -2161,6 +2286,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get project_task_title_hint => 'Tiêu đề nhiệm vụ';
+
+  @override
+  String get task_delete_tooltip => 'Xóa nhiệm vụ';
+
+  @override
+  String get task_delete_confirm_title => 'Xóa nhiệm vụ';
+
+  @override
+  String task_delete_confirm_msg(String name) {
+    return 'Bạn có chắc chắn muốn xóa \"$name\"? Không thể hoàn tác.';
+  }
+
+  @override
+  String get task_deleted_msg => 'Đã xóa nhiệm vụ';
 
   @override
   String get project_add_investment_title => 'Thêm khoản đầu tư';
@@ -2529,6 +2668,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_focus_complete => 'TẬP TRUNG HOÀN TẤT';
 
   @override
+  String get notification_task_success => 'NHIỆM VỤ XONG';
+
+  @override
   String get notification_reminder => 'NHẮC NHỞ';
 
   @override
@@ -2617,6 +2759,42 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_see_all => 'XEM TẤT CẢ';
+
+  @override
+  String get finance_daily_report_title => 'Báo cáo trong ngày';
+
+  @override
+  String get finance_daily_report_reminder => 'Nhắc hàng ngày';
+
+  @override
+  String get finance_daily_report_reminder_subtitle =>
+      'Thông báo cục bộ mở báo cáo này';
+
+  @override
+  String get finance_daily_report_open => 'Mở báo cáo trong ngày';
+
+  @override
+  String get finance_daily_report_income => 'Thu nhập';
+
+  @override
+  String get finance_daily_report_expense => 'Chi tiêu';
+
+  @override
+  String get finance_daily_report_net => 'Chênh lệch';
+
+  @override
+  String get finance_daily_report_spending_by_category =>
+      'Chi tiêu theo hạng mục';
+
+  @override
+  String get finance_daily_report_today_transactions => 'Hoạt động hôm nay';
+
+  @override
+  String get finance_daily_report_empty_day => 'Chưa có giao dịch trong ngày.';
+
+  @override
+  String get finance_daily_report_notifications_off =>
+      'Bật thông báo hệ thống trong Cài đặt để dùng nhắc nhở.';
 
   @override
   String get finance_cat_food => 'Ăn uống';

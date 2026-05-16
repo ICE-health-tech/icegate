@@ -2,35 +2,19 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
 
 import 'DotGridPainter.dart';
-import 'InternalDragIconWidget.dart';
-import 'StoreWidget.dart';
-import 'DragCanvasGridPage.dart'; // For activeCanvasTab
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
-class DragCanvas extends StatefulWidget {
+class DragCanvas extends StatelessWidget {
   final Color baseColor;
   final bool isDark;
 
   const DragCanvas({super.key, required this.baseColor, required this.isDark});
-
-  @override
-  State<DragCanvas> createState() => _DragCanvasState();
-}
-
-class _DragCanvasState extends State<DragCanvas> {
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<WidgetManagerBlock>().loadFromDatabase();
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -42,7 +26,7 @@ class _DragCanvasState extends State<DragCanvas> {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 6),
             decoration: BoxDecoration(
-              color: widget.baseColor.withValues(alpha: 0.15),
+              color: baseColor.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(35),
               border: Border.all(
                 color: Theme.of(context).dividerColor.withValues(alpha: 0.1),
@@ -59,7 +43,7 @@ class _DragCanvasState extends State<DragCanvas> {
                   Positioned.fill(
                     child: CustomPaint(
                       painter: DotGridPainter(
-                        color: widget.isDark ? Colors.white : Colors.black,
+                        color: isDark ? Colors.white : Colors.black,
                         opacity: 0.1,
                         spacing: 25,
                       ),
@@ -99,13 +83,6 @@ class _DragCanvasState extends State<DragCanvas> {
                         ),
 
                         const SizedBox(height: 32),
-                        _buildSectionTitle(context, "INTERACTIVE CANVAS"),
-                        const SizedBox(height: 12),
-                        
-                        // --- 15 CELL GRID ---
-                        _buildWidgetGrid(context),
-
-                        const SizedBox(height: 32),
                         _buildSectionTitle(context, "FINANCE SETTINGS"),
                         const SizedBox(height: 12),
                         Watch((context) {
@@ -139,6 +116,15 @@ class _DragCanvasState extends State<DragCanvas> {
                             onTap: () => configBlock.toggleCurrency(),
                           );
                         }),
+                        const SizedBox(height: 16),
+                        _buildEntryCard(
+                          context: context,
+                          title: l10n.reports_hub_title,
+                          subtitle: l10n.reports_hub_subtitle,
+                          icon: Icons.mark_email_unread_rounded,
+                          color: EntryColors.financeSilverAccent,
+                          onTap: () => context.push('/finance/reports/daily'),
+                        ),
                       ],
                     );
                   }),
@@ -147,64 +133,7 @@ class _DragCanvasState extends State<DragCanvas> {
             ),
           ),
         ),
-
-        const SizedBox(height: 16),
-
-        Watch((context) {
-          final activeTab = DragCanvasGrid.activeCanvasTab.value;
-          return AnimatedSwitcher(
-            duration: const Duration(milliseconds: 300),
-            transitionBuilder: (child, animation) {
-              return SlideTransition(
-                position: animation.drive(
-                  Tween(
-                    begin: const Offset(0, 1),
-                    end: Offset.zero,
-                  ).chain(CurveTween(curve: Curves.easeOutCubic)),
-                ),
-                child: child,
-              );
-            },
-            child: activeTab == 'store'
-                ? const StoreWidget()
-                : const SizedBox.shrink(),
-          );
-        }),
       ],
-    );
-  }
-
-  Widget _buildWidgetGrid(BuildContext context) {
-    final store = context.read<WidgetManagerBlock>();
-    
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        // Calculate card size based on 3 columns
-        final double spacing = 12.0;
-        final double width = (constraints.maxWidth - (spacing * 2)) / 3;
-        final double height = width; // Square cards
-
-        return GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            crossAxisSpacing: spacing,
-            mainAxisSpacing: spacing,
-            childAspectRatio: 1.0,
-          ),
-          itemCount: 15,
-          itemBuilder: (context, index) {
-            return InternalDragIconWidget(
-              index: index,
-              store: store,
-              widthCard: width,
-              heightCard: height,
-              name: "Slot $index", // Name is handled inside InternalDragIconWidget watching the store
-            );
-          },
-        );
-      },
     );
   }
 

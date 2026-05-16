@@ -3,7 +3,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
-import 'package:ice_gate/link_layer/storage_services/minio_service.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'dart:io';
 
 /// Result of calling the food AI agent (HTTP + parsing).

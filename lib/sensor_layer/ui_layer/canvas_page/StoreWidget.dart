@@ -24,7 +24,7 @@ import '../UIConstants.dart';
 
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
-import '../finance_page/services/finance_service.dart';
+import '../finance_page/services/FinanceService.dart';
 
 class StoreWidget extends StatelessWidget {
   const StoreWidget({super.key});

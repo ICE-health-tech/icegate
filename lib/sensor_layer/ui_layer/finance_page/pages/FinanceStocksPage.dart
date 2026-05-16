@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/link_layer/finnace_services/stock_service.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/services/market_service.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
+import 'package:ice_gate/link_layer/finnace_services/StockService.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/services/MarketService.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/QuickSaveSheet.dart';
 import 'package:go_router/go_router.dart';
 
 class FinanceStocksPage extends StatelessWidget {
@@ -93,7 +93,7 @@ class FinanceStocksPage extends StatelessWidget {
                   Text(
                     "${tickers.length} ASSETS",
                     style: const TextStyle(
-                      color: EntryColors.iceCyan,
+                      color: EntryColors.financeSilverAccent,
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -162,12 +162,12 @@ class FinanceStocksPage extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            EntryColors.iceCyan.withValues(alpha: 0.1),
+            EntryColors.financeSilverAccent.withValues(alpha: 0.1),
             Colors.white.withValues(alpha: 0.02),
           ],
         ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: EntryColors.iceCyan.withValues(alpha: 0.2)),
+        border: Border.all(color: EntryColors.financeSilverAccent.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,7 +175,7 @@ class FinanceStocksPage extends StatelessWidget {
           const Text(
             "TOTAL EQUITY",
             style: TextStyle(
-              color: EntryColors.iceCyan,
+              color: EntryColors.financeSilverAccent,
               fontSize: 9,
               fontWeight: FontWeight.w900,
               letterSpacing: 2,
@@ -264,11 +264,11 @@ class FinanceStocksPage extends StatelessWidget {
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  color: EntryColors.iceCyan.withValues(alpha: 0.1),
+                  color: EntryColors.financeSilverAccent.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                  child: Icon(Icons.show_chart_rounded, color: EntryColors.iceCyan, size: 24),
+                  child: Icon(Icons.show_chart_rounded, color: EntryColors.financeSilverAccent, size: 24),
                 ),
               ),
               const SizedBox(width: 16),

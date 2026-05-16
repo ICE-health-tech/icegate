@@ -9,7 +9,7 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 class FinanceDashboardPage extends StatelessWidget {
   const FinanceDashboardPage({super.key});
@@ -24,19 +24,32 @@ class FinanceDashboardPage extends StatelessWidget {
       onSwipe: () => WidgetNavigatorAction.smartPop(context),
       direction: SwipeablePageDirection.leftToRight,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0D0D12), // Deep Obsidian
+        backgroundColor: Colors.transparent,
         body: Stack(
           children: [
+            Positioned.fill(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: EntryColors.silverMetallicGradient,
+                ),
+              ),
+            ),
             // --- PREMIUM BACKGROUND SYSTEM ---
             Positioned(
               top: -100,
               right: -50,
-              child: _buildGlowSphere(EntryColors.financeYellow.withValues(alpha: 0.08), 350),
+              child: _buildGlowSphere(
+                EntryColors.financeSilverAccent.withValues(alpha: 0.12),
+                350,
+              ),
             ),
             Positioned(
               bottom: 100,
               left: -80,
-              child: _buildGlowSphere(const Color(0xFF6366F1).withValues(alpha: 0.05), 400),
+              child: _buildGlowSphere(
+                EntryColors.neonSilver.withValues(alpha: 0.06),
+                400,
+              ),
             ),
 
             SafeArea(
@@ -150,7 +163,7 @@ class FinanceDashboardPage extends StatelessWidget {
                 child: Text(
                   block.useVnd.value ? '₫' : '\$',
                   style: const TextStyle(
-                    color: EntryColors.financeYellow,
+                    color: EntryColors.financeSilverAccent,
                     fontWeight: FontWeight.w900,
                     fontSize: 16,
                   ),
@@ -260,7 +273,7 @@ class FinanceDashboardPage extends StatelessWidget {
                   height: 120,
                   child: SimpleLineChart(
                     data: block.historicalNetWorth.value,
-                    color: EntryColors.financeYellow,
+                    color: EntryColors.financeSilverAccent,
                     height: 120,
                   ),
                 ),
@@ -345,11 +358,11 @@ class FinanceDashboardPage extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
         child: Container(
-          color: const Color(0xFF0D0D12).withValues(alpha: 0.8),
+          color: EntryColors.deepGlacier.withValues(alpha: 0.82),
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Row(
             children: [
-              Icon(icon, color: EntryColors.financeYellow, size: 16),
+              Icon(icon, color: EntryColors.financeSilverAccent, size: 16),
               const SizedBox(width: 8),
               Text(
                 title,

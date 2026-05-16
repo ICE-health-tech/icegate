@@ -23,23 +23,23 @@ import 'dart:convert';
 // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:ice_gate/data_layer/Services/cloud/supabase_payload_codec.dart';
+import 'package:ice_gate/data_layer/Services/cloud/SupabasePayloadCodec.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
 part 'Database.g.dart';
-part 'daos/internal_widgets_dao.dart';
-part 'daos/hourly_activity_log_dao.dart';
-part 'daos/theme_dao.dart';
-part 'daos/external_widgets_dao.dart';
-part 'daos/growth_dao.dart';
-part 'daos/progression_dao.dart';
-part 'daos/ssh_sessions_dao.dart';
-part 'daos/ai_prompts_dao.dart';
-part 'daos/configs_dao.dart';
-part 'daos/portfolio_snapshots_dao.dart';
+part 'daos/InternalWidgetsDao.dart';
+part 'daos/HourlyActivityLogDao.dart';
+part 'daos/ThemeDao.dart';
+part 'daos/ExternalWidgetsDao.dart';
+part 'daos/GrowthDao.dart';
+part 'daos/ProgressionDao.dart';
+part 'daos/SshSessionsDao.dart';
+part 'daos/AiPromptsDao.dart';
+part 'daos/ConfigsDao.dart';
+part 'daos/PortfolioSnapshotsDao.dart';
 
 // NOTE: I'm using 'app_database.g.dart' as the standard naming convention.
 
@@ -114,7 +114,7 @@ class InternalWidgetsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// InternalWidgetsDAO moved to daos/internal_widgets_dao.dart
+// InternalWidgetsDAO moved to daos/InternalWidgetsDao.dart
 
 @DataClassName('HourlyActivityLogData')
 class HourlyActivityLogTable extends Table {
@@ -156,7 +156,7 @@ class HourlyActivityLogTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// HourlyActivityLogDAO moved to daos/hourly_activity_log_dao.dart
+// HourlyActivityLogDAO moved to daos/HourlyActivityLogDao.dart
 
 @DataClassName('ExternalWidgetData') // The generated data class name
 class ExternalWidgetsTable extends Table {
@@ -1749,7 +1749,7 @@ class JournalActivityOptionsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// MindLogsDAO moved to daos/growth_dao.dart
+// MindLogsDAO moved to daos/GrowthDao.dart
 
 @DataClassName('FeedbackLocalData')
 class FeedbacksTable extends Table {
@@ -1774,7 +1774,7 @@ class FeedbacksTable extends Table {
 }
 
 // Legacy SharedPreferences-based theme persistence (not a Drift accessor).
-// Renamed to avoid collision with the Drift-based ThemeDAO in theme_dao.dart.
+// Renamed to avoid collision with the Drift-based ThemeDAO in ThemeDao.dart.
 class LegacyThemeDAO {
   final AppDatabase db;
   LegacyThemeDAO(this.db);
@@ -2195,10 +2195,10 @@ class ScoreDAO extends DatabaseAccessor<AppDatabase> with _$ScoreDAOMixin {
 }
 
 // 4.1 ExternalWidgetsDAO
-// ExternalWidgetsDAO moved to daos/external_widgets_dao.dart
+// ExternalWidgetsDAO moved to daos/ExternalWidgetsDao.dart
 
 // 4.2 ThemesTableDAO
-// ThemesTableDAO moved to daos/theme_dao.dart
+// ThemesTableDAO moved to daos/ThemeDao.dart
 
 // 4.3 ProjectNoteDAO
 @DriftAccessor(tables: [ProjectNotesTable])
@@ -2625,7 +2625,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       "🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...",
     );
 
-    double _maxNullable(double? a, double? b) {
+    double maxNullable(double? a, double? b) {
       if (a == null && b == null) return 0.0;
       if (a == null) return b ?? 0.0;
       if (b == null) return a;
@@ -2679,23 +2679,23 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
         tenantID: tenantId,
         scoreID: userRow.scoreID ?? guest.scoreID,
         personID: userRow.personID,
-        healthGlobalScore: _maxNullable(
+        healthGlobalScore: maxNullable(
           userRow.healthGlobalScore,
           guest.healthGlobalScore,
         ),
-        socialGlobalScore: _maxNullable(
+        socialGlobalScore: maxNullable(
           userRow.socialGlobalScore,
           guest.socialGlobalScore,
         ),
-        financialGlobalScore: _maxNullable(
+        financialGlobalScore: maxNullable(
           userRow.financialGlobalScore,
           guest.financialGlobalScore,
         ),
-        careerGlobalScore: _maxNullable(
+        careerGlobalScore: maxNullable(
           userRow.careerGlobalScore,
           guest.careerGlobalScore,
         ),
-        penaltyScore: _maxNullable(userRow.penaltyScore, guest.penaltyScore),
+        penaltyScore: maxNullable(userRow.penaltyScore, guest.penaltyScore),
         createdAt: userRow.createdAt,
         updatedAt: DateTime.now(),
       );
@@ -3990,7 +3990,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
 }
 
 // 4.6 GrowthDAO
-// GrowthDAO moved to daos/growth_dao.dart
+// GrowthDAO moved to daos/GrowthDao.dart
 
 // 4.7 AiAnalysisDAO
 @DriftAccessor(tables: [AiAnalysisTable])
@@ -6271,7 +6271,7 @@ class FeedbackDAO extends DatabaseAccessor<AppDatabase>
   }
 }
 
-// QuestDAO moved to daos/progression_dao.dart
+// QuestDAO moved to daos/ProgressionDao.dart
 
 /// Lightweight result class returned by [HealthLogsDAO.getDailyExerciseWithSession].
 /// Combines an exercise_logs row with the exact duration_seconds from the
@@ -6855,7 +6855,7 @@ class AiPromptsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
-// AiPromptsDAO moved to daos/ai_prompts_dao.dart
+// AiPromptsDAO moved to daos/AiPromptsDao.dart
 
 @DataClassName('ConfigData')
 class ConfigsTable extends Table {
@@ -6880,11 +6880,11 @@ class ConfigsTable extends Table {
   ];
 }
 
-// ConfigsDAO moved to daos/configs_dao.dart
+// ConfigsDAO moved to daos/ConfigsDao.dart
 
-// SSHSessionsDAO moved to daos/ssh_sessions_dao.dart
+// SSHSessionsDAO moved to daos/SshSessionsDao.dart
 
-// AchievementsDAO moved to daos/growth_dao.dart
+// AchievementsDAO moved to daos/GrowthDao.dart
 
 // --- 6. Main Database Class ---
 
@@ -7465,7 +7465,7 @@ class AppDatabase extends _$AppDatabase {
         if (from < 47) {
           // Schema version 47 adds ai_model to the 'projects' table.
           // Since 'projects' is a PowerSync-managed table, its local representation is a view.
-          // PowerSync manages its own schema updates via powersync_schema.dart.
+          // PowerSync manages its own schema updates via PowersyncSchema.dart.
           // We must NOT use m.addColumn here for PowerSync tables.
         }
         if (from < 46) {
@@ -7760,7 +7760,7 @@ class AppDatabase extends _$AppDatabase {
         }
 
         if (from < 52) {
-          // focus_session_id is now managed via PowerSync schema in powersync_schema.dart.
+          // focus_session_id is now managed via PowerSync schema in PowersyncSchema.dart.
           // Manual ALTER TABLE on views is illegal in SQLite.
         }
         if (from < 53) {

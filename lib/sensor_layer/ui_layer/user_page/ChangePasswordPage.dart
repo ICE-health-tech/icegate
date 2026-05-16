@@ -7,7 +7,7 @@ import 'dart:convert';
 import 'package:crypto/crypto.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});

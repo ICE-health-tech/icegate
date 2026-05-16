@@ -10,16 +10,16 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:live_activities/live_activities.dart';
 
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/quick_save_sheet.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_builder_dialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/QuickSaveSheet.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/subscription_manager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -89,8 +89,8 @@ class FinancePage extends StatefulWidget {
         type: "finance",
         destination: "/finance",
         size: size,
-        backgroundColor: EntryColors.financeYellow.withValues(alpha: 0.9),
-        iconColor: const Color(0xFF0D0D12),
+        backgroundColor: EntryColors.financeSilverAccent.withValues(alpha: 0.92),
+        iconColor: EntryColors.deepGlacier,
         icon: Icons.add,
         mainFunction: () {
           if (tab == 2) {
@@ -250,7 +250,7 @@ class _FinancePageState extends State<FinancePage>
       case 2:
         return "BILLING";
       case 3:
-        return "SAVINGS";
+        return "SAVING";
       default:
         return "FINANCE";
     }
@@ -270,7 +270,7 @@ class _FinancePageState extends State<FinancePage>
     final financeBlock = context.read<FinanceBlock>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D12), // Deep Obsidian
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
         toolbarHeight: 80, // Space for Dynamic Island, same as SocialPage
         backgroundColor: Colors.transparent,
@@ -280,6 +280,13 @@ class _FinancePageState extends State<FinancePage>
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
+          Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: EntryColors.silverMetallicGradient,
+              ),
+            ),
+          ),
           // Tactical Scanline
           _buildScanline(),
 
@@ -319,10 +326,10 @@ class _FinancePageState extends State<FinancePage>
                               vertical: 8,
                             ),
                             decoration: BoxDecoration(
-                              color: EntryColors.financeYellow.withValues(alpha: 0.1),
+                              color: EntryColors.financeSilverAccent.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                               border: Border.all(
-                                color: EntryColors.financeYellow.withValues(alpha: 0.3),
+                                color: EntryColors.financeSilverAccent.withValues(alpha: 0.3),
                                 width: 1,
                               ),
                             ),
@@ -332,7 +339,7 @@ class _FinancePageState extends State<FinancePage>
                                 _buildCurrencyIndicator(
                                   "USD",
                                   !useVnd,
-                                  EntryColors.financeYellow,
+                                  EntryColors.financeSilverAccent,
                                 ),
                                 Padding(
                                   padding: const EdgeInsets.symmetric(
@@ -341,13 +348,13 @@ class _FinancePageState extends State<FinancePage>
                                   child: Icon(
                                     Icons.sync_alt_rounded,
                                     size: 14,
-                                    color: EntryColors.financeYellow.withValues(alpha: 0.5),
+                                    color: EntryColors.financeSilverAccent.withValues(alpha: 0.5),
                                   ),
                                 ),
                                 _buildCurrencyIndicator(
                                   "VND",
                                   useVnd,
-                                  EntryColors.financeYellow,
+                                  EntryColors.financeSilverAccent,
                                 ),
                               ],
                             ),
@@ -418,7 +425,7 @@ class _FinancePageState extends State<FinancePage>
                     },
                     icon: const Icon(
                       Icons.add_box_rounded,
-                      color: EntryColors.financeYellow,
+                      color: EntryColors.financeSilverAccent,
                       size: 22,
                     ),
                   ),
@@ -433,13 +440,13 @@ class _FinancePageState extends State<FinancePage>
                               height: 14,
                               child: CircularProgressIndicator(
                                 strokeWidth: 1.5,
-                                color: EntryColors.financeYellow.withValues(alpha: 0.5),
+                                color: EntryColors.financeSilverAccent.withValues(alpha: 0.5),
                               ),
                             )
                           : const Icon(
                               Icons.sync_rounded,
                               size: 18,
-                              color: EntryColors.financeYellow,
+                              color: EntryColors.financeSilverAccent,
                             ),
                     );
                   }),
@@ -453,13 +460,13 @@ class _FinancePageState extends State<FinancePage>
             isScrollable: true,
             tabAlignment: TabAlignment.start,
             indicatorSize: TabBarIndicatorSize.label,
-            labelColor: EntryColors.financeYellow,
+            labelColor: EntryColors.financeSilverAccent,
             unselectedLabelColor: Colors.white24,
             dividerColor: Colors.transparent,
             indicator: UnderlineTabIndicator(
               borderSide: BorderSide(
                 width: 3,
-                color: EntryColors.financeYellow,
+                color: EntryColors.financeSilverAccent,
               ),
               borderRadius: BorderRadius.circular(3),
             ),
@@ -472,7 +479,7 @@ class _FinancePageState extends State<FinancePage>
               Tab(text: "OVERVIEW"),
               Tab(text: "HISTORY"),
               Tab(text: "BILLING"),
-              Tab(text: "SAVINGS"),
+              Tab(text: "SAVING"),
             ],
           ),
         ],
@@ -545,7 +552,7 @@ class _ScanlinePainter extends CustomPainter {
             end: Alignment.bottomCenter,
             colors: [
               Colors.transparent,
-              EntryColors.financeYellow.withValues(alpha: 0.03),
+              EntryColors.financeSilverAccent.withValues(alpha: 0.03),
               Colors.transparent,
             ],
             stops: const [0.0, 0.5, 1.0],

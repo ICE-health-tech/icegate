@@ -1,6 +1,6 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 /// A sophisticated HUD (Heads-Up Display) ornament with multiple rings and tech lines.
 /// This component provides the futuristic "UPLINK" aesthetic.

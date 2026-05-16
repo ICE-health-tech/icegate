@@ -134,6 +134,60 @@ abstract class AppLocalizations {
   /// **'Recent Notes'**
   String get recent_notes_label;
 
+  /// No description provided for @projects_tile_reminders.
+  ///
+  /// In en, this message translates to:
+  /// **'Reminders'**
+  String get projects_tile_reminders;
+
+  /// No description provided for @projects_tile_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get projects_tile_calendar;
+
+  /// No description provided for @projects_calendar_projects_created.
+  ///
+  /// In en, this message translates to:
+  /// **'Projects created'**
+  String get projects_calendar_projects_created;
+
+  /// No description provided for @projects_calendar_day_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No tasks or project starts on this day.'**
+  String get projects_calendar_day_empty;
+
+  /// No description provided for @projects_tile_focus.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus'**
+  String get projects_tile_focus;
+
+  /// No description provided for @projects_tile_pomodoro.
+  ///
+  /// In en, this message translates to:
+  /// **'Pomodoro'**
+  String get projects_tile_pomodoro;
+
+  /// No description provided for @projects_tile_social_blocker.
+  ///
+  /// In en, this message translates to:
+  /// **'Social Blocker'**
+  String get projects_tile_social_blocker;
+
+  /// No description provided for @projects_workspace_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No workspace has been set up yet.'**
+  String get projects_workspace_empty;
+
+  /// No description provided for @projects_workspace_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Get started'**
+  String get projects_workspace_start;
+
   /// No description provided for @project_drive_sync.
   ///
   /// In en, this message translates to:
@@ -3110,6 +3164,18 @@ abstract class AppLocalizations {
   /// **'Workspaces'**
   String get projects_summary_workspaces;
 
+  /// No description provided for @projects_summary_plugins.
+  ///
+  /// In en, this message translates to:
+  /// **'Plugins'**
+  String get projects_summary_plugins;
+
+  /// No description provided for @projects_quick_more.
+  ///
+  /// In en, this message translates to:
+  /// **'More shortcuts'**
+  String get projects_quick_more;
+
   /// No description provided for @kcal_consume.
   ///
   /// In en, this message translates to:
@@ -3487,6 +3553,162 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Adjust tactical goal parameters'**
   String get canvas_goal_desc;
+
+  /// No description provided for @canvas_finance_reports_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance reports'**
+  String get canvas_finance_reports_title;
+
+  /// No description provided for @canvas_finance_reports_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily summary, local reminders, and shortcuts'**
+  String get canvas_finance_reports_desc;
+
+  /// No description provided for @canvas_finance_n8n_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Email report'**
+  String get canvas_finance_n8n_title;
+
+  /// No description provided for @canvas_finance_n8n_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance and health snapshot delivered through n8n'**
+  String get canvas_finance_n8n_desc;
+
+  /// No description provided for @canvas_finance_n8n_send_success.
+  ///
+  /// In en, this message translates to:
+  /// **'Report sent to n8n.'**
+  String get canvas_finance_n8n_send_success;
+
+  /// No description provided for @canvas_finance_n8n_send_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not send report. Try again later.'**
+  String get canvas_finance_n8n_send_failed;
+
+  /// No description provided for @canvas_finance_n8n_not_configured.
+  ///
+  /// In en, this message translates to:
+  /// **'n8n webhook is not configured in the app environment.'**
+  String get canvas_finance_n8n_not_configured;
+
+  /// No description provided for @canvas_finance_n8n_no_email.
+  ///
+  /// In en, this message translates to:
+  /// **'Add an email to your profile before sending a report.'**
+  String get canvas_finance_n8n_no_email;
+
+  /// No description provided for @canvas_finance_n8n_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email report?'**
+  String get canvas_finance_n8n_confirm_title;
+
+  /// No description provided for @canvas_finance_n8n_confirm_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s finance and health summary will be sent to n8n for delivery to {email}.'**
+  String canvas_finance_n8n_confirm_message(String email);
+
+  /// No description provided for @canvas_mail_summary_recipient.
+  ///
+  /// In en, this message translates to:
+  /// **'Recipient'**
+  String get canvas_mail_summary_recipient;
+
+  /// No description provided for @canvas_mail_summary_finance.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance today'**
+  String get canvas_mail_summary_finance;
+
+  /// No description provided for @canvas_mail_summary_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health today'**
+  String get canvas_mail_summary_health;
+
+  /// No description provided for @canvas_mail_summary_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send email report'**
+  String get canvas_mail_summary_send;
+
+  /// No description provided for @canvas_mail_summary_auto_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic daily email'**
+  String get canvas_mail_summary_auto_title;
+
+  /// No description provided for @canvas_mail_summary_auto_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'After this time, send once per day while the app is open'**
+  String get canvas_mail_summary_auto_subtitle;
+
+  /// No description provided for @reports_hub_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Report via mail'**
+  String get reports_hub_title;
+
+  /// No description provided for @reports_hub_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily finance on device, email delivery through n8n'**
+  String get reports_hub_subtitle;
+
+  /// No description provided for @reports_mail_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Email via n8n'**
+  String get reports_mail_section_title;
+
+  /// No description provided for @reports_mail_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Finance and health snapshot delivered by email'**
+  String get reports_mail_section_subtitle;
+
+  /// No description provided for @reports_finance_section.
+  ///
+  /// In en, this message translates to:
+  /// **'On-device finance report'**
+  String get reports_finance_section;
+
+  /// No description provided for @reports_recipient_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'recipient@example.com'**
+  String get reports_recipient_hint;
+
+  /// No description provided for @reports_recipient_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save recipient'**
+  String get reports_recipient_save;
+
+  /// No description provided for @reports_recipient_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Report recipient saved.'**
+  String get reports_recipient_saved;
+
+  /// No description provided for @reports_recipient_profile_fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Profile email default: {email}'**
+  String reports_recipient_profile_fallback(String email);
+
+  /// No description provided for @canvas_finance_n8n_confirm_send.
+  ///
+  /// In en, this message translates to:
+  /// **'Send'**
+  String get canvas_finance_n8n_confirm_send;
 
   /// No description provided for @gps_permissions_required.
   ///
@@ -4111,6 +4333,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Task title'**
   String get project_task_title_hint;
+
+  /// No description provided for @task_delete_tooltip.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get task_delete_tooltip;
+
+  /// No description provided for @task_delete_confirm_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete task'**
+  String get task_delete_confirm_title;
+
+  /// No description provided for @task_delete_confirm_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Are you sure you want to delete \"{name}\"? This cannot be undone.'**
+  String task_delete_confirm_msg(String name);
+
+  /// No description provided for @task_deleted_msg.
+  ///
+  /// In en, this message translates to:
+  /// **'Task deleted'**
+  String get task_deleted_msg;
 
   /// No description provided for @project_add_investment_title.
   ///
@@ -4796,6 +5042,12 @@ abstract class AppLocalizations {
   /// **'FOCUS COMPLETE'**
   String get notification_focus_complete;
 
+  /// No description provided for @notification_task_success.
+  ///
+  /// In en, this message translates to:
+  /// **'TASK SUCCESS'**
+  String get notification_task_success;
+
   /// No description provided for @notification_reminder.
   ///
   /// In en, this message translates to:
@@ -4957,6 +5209,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'SEE ALL'**
   String get finance_see_all;
+
+  /// No description provided for @finance_daily_report_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily report'**
+  String get finance_daily_report_title;
+
+  /// No description provided for @finance_daily_report_reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily reminder'**
+  String get finance_daily_report_reminder;
+
+  /// No description provided for @finance_daily_report_reminder_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Local notification that opens this report'**
+  String get finance_daily_report_reminder_subtitle;
+
+  /// No description provided for @finance_daily_report_open.
+  ///
+  /// In en, this message translates to:
+  /// **'Open daily report'**
+  String get finance_daily_report_open;
+
+  /// No description provided for @finance_daily_report_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Income'**
+  String get finance_daily_report_income;
+
+  /// No description provided for @finance_daily_report_expense.
+  ///
+  /// In en, this message translates to:
+  /// **'Expenses'**
+  String get finance_daily_report_expense;
+
+  /// No description provided for @finance_daily_report_net.
+  ///
+  /// In en, this message translates to:
+  /// **'Net'**
+  String get finance_daily_report_net;
+
+  /// No description provided for @finance_daily_report_spending_by_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Spending by category'**
+  String get finance_daily_report_spending_by_category;
+
+  /// No description provided for @finance_daily_report_today_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s activity'**
+  String get finance_daily_report_today_transactions;
+
+  /// No description provided for @finance_daily_report_empty_day.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions for this day yet.'**
+  String get finance_daily_report_empty_day;
+
+  /// No description provided for @finance_daily_report_notifications_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Enable system notifications in Settings to use daily reminders.'**
+  String get finance_daily_report_notifications_off;
 
   /// No description provided for @finance_cat_food.
   ///

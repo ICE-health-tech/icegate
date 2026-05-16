@@ -5,9 +5,9 @@ import 'package:signals/signals.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreData.dart';
 import 'package:rxdart/rxdart.dart';
 
-part 'ScoreBlock_State.dart';
-part 'ScoreBlock_Init.dart';
-part 'ScoreBlock_Actions.dart';
+part 'ScoreBlockState.dart';
+part 'ScoreBlockInit.dart';
+part 'ScoreBlockActions.dart';
 
 class ScoreBlock with ScoreBlockState {
   final _updateScoreSubject = PublishSubject<ScoreData>();

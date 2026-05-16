@@ -4,7 +4,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodSelector.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/ActivitySelector.dart';
 import 'package:provider/provider.dart';

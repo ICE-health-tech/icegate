@@ -9,7 +9,6 @@ import 'package:ice_gate/sensor_layer/ui_layer/user_page/AnalysisDashboardPage.d
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TextEditorPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SettingWidget.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectNotesPage.dart';
-// import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/IOTTracker/GPSTrackingPage.dart';
 
 typedef WidgetFactory = Widget Function({String? identifier});
 
@@ -26,7 +25,6 @@ class WidgetNameMapping {
     "NotesPage": ({identifier}) => const TextEditorPage(),
     "SettingsPage": ({identifier}) => const SettingsWidget(),
     "ProjectNotes": ({identifier}) => const ProjectNotesPage(),
-    // "GPSPage": ({identifier}) => const GPSTrackingPage(),
   };
 
   Widget getWidgetByName(String name) {

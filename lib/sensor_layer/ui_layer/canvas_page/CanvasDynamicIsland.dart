@@ -10,10 +10,8 @@ import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 
-import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/SSHConfigForm.dart';
 import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
@@ -88,7 +86,7 @@ class CanvasDynamicIsland extends StatelessWidget {
         case 0: return "OVERVIEW";
         case 1: return "HISTORY";
         case 2: return "BILLING";
-        case 3: return "STOCKS";
+        case 3: return "SAVING";
         default: return "FINANCE";
       }
     }
@@ -124,7 +122,6 @@ class CanvasDynamicIsland extends StatelessWidget {
         currentRoute != '/projects/documents') {
       return const SizedBox.shrink();
     }
-    final isCanvas = currentRoute == '/canvas';
     final screenWidth = MediaQuery.of(context).size.width;
 
     // Responsive Scaling
@@ -142,9 +139,6 @@ class CanvasDynamicIsland extends StatelessWidget {
 
     return Watch((context) {
       final currentRoute = GoRouterState.of(context).uri.path;
-      final activeTab = DragCanvasGrid.activeCanvasTab.value;
-      final isAnyTabOpen = isCanvas && activeTab != 'none';
-      
       final isFocusRunning = focusBlock.isRunning.value;
       final isSyncing = docBlock.isSyncing.value;
       final syncStatus = docBlock.syncStatus.value;
@@ -162,9 +156,7 @@ class CanvasDynamicIsland extends StatelessWidget {
 
       // Calculate width based on screen size
       // isFoodAnalyzing needs extra width for the status text
-      final double targetWidth = isAnyTabOpen
-          ? 320
-          : (currentRoute.startsWith('/widgets/ssh')
+      final double targetWidth = currentRoute.startsWith('/widgets/ssh')
                 ? 340
                 : (currentRoute.startsWith('/finance') || currentRoute.startsWith('/social')
                     ? screenWidth * 0.92
@@ -172,7 +164,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                           ? 300
                           : ((isSyncing || syncStatus != null)
                                 ? 320
-                                : (isFocusRunning ? 280 : (useTmux ? 260 : 240))))));
+                                : (isFocusRunning ? 280 : (useTmux ? 260 : 240)))));
                           
       final double width = (targetWidth * scalingFactor).clamp(
         0.0,
@@ -213,7 +205,7 @@ class CanvasDynamicIsland extends StatelessWidget {
           ],
         ),
         padding: EdgeInsets.symmetric(
-          horizontal: (isAnyTabOpen ? 12 : 8) * scalingFactor,
+          horizontal: 8 * scalingFactor,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -248,9 +240,8 @@ class CanvasDynamicIsland extends StatelessWidget {
             ),
 
             // Center Content (Title or Focus Timer)
-            if (!isAnyTabOpen)
-              Expanded(
-                child: Center(
+            Expanded(
+              child: Center(
                   child: currentRoute.startsWith('/widgets/ssh')
                       ? (sshService.isConfigMode.value
                             ? _buildSSHConfig(
@@ -314,13 +305,10 @@ class CanvasDynamicIsland extends StatelessWidget {
                             colorScheme,
                           ),
                 ),
-              )
-            else
-              const Spacer(),
+              ),
 
             // Actions (extra leading gap so quest/notification badge never paints over title)
-            if (!isAnyTabOpen)
-              Padding(
+            Padding(
                 padding: EdgeInsets.only(left: 10 * scalingFactor),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -460,70 +448,6 @@ class CanvasDynamicIsland extends StatelessWidget {
                     ],
                   ],
                 ),
-              )
-            else
-              Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SizedBox(width: 8 * scalingFactor),
-
-                  // Step Goal Customizer
-                  GestureDetector(
-                    onTap: () {
-                      HapticFeedback.selectionClick();
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const GoalConfigurationWidget(),
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: EdgeInsets.all(6 * scalingFactor),
-                      decoration: BoxDecoration(
-                        color: colorScheme.onSurface.withValues(alpha: 0.05),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(
-                        Icons.settings_suggest_rounded,
-                        color: colorScheme.onSurfaceVariant,
-                        size: 26 * scalingFactor,
-                      ),
-                    ),
-                  ),
-
-                  if (isCanvas) ...[
-                    SizedBox(width: 8 * scalingFactor),
-
-                    // vertical divider
-                    Container(
-                      width: 1,
-                      height: 16 * scalingFactor,
-                      color: colorScheme.outlineVariant,
-                    ),
-
-                    SizedBox(width: 8 * scalingFactor),
-
-                    // Store Toggle
-                    GestureDetector(
-                      onTap: () {
-                        HapticFeedback.mediumImpact();
-                        DragCanvasGrid.toggleStore();
-                      },
-                      child: AnimatedRotation(
-                        turns: activeTab == 'store' ? 0.125 : 0,
-                        duration: const Duration(milliseconds: 300),
-                        child: Icon(
-                          Icons.add_circle_rounded,
-                          color: activeTab == 'store'
-                              ? colorScheme.error
-                              : colorScheme.primary,
-                          size: 28 * scalingFactor,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
               ),
           ],
         ),
@@ -1077,8 +1001,8 @@ class CanvasDynamicIsland extends StatelessWidget {
             _buildAdaptiveTabIcon(
               context,
               index: 3,
-              icon: Icons.show_chart_rounded,
-              label: "STOCKS",
+              icon: Icons.savings_rounded,
+              label: "SAVING",
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,

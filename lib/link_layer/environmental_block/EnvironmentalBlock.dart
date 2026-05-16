@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:signals/signals.dart';
 import 'EnvironmentalService.dart';
-import 'LocationService.dart';
 
 class EnvironmentalBlock {
   // Signals for reactive state
@@ -29,14 +28,9 @@ class EnvironmentalBlock {
     debugPrint('EnvironmentalBlock: refresh() started');
 
     try {
-      var position = await LocationService.getCurrentLocation();
-      
-      double lat = position?.latitude ?? 21.0285; // Fallback to Hanoi
-      double lon = position?.longitude ?? 105.8542;
-      
-      if (position == null) {
-        debugPrint('EnvironmentalBlock: Location null, using fallback (Hanoi)');
-      }
+      // Default coordinates (Hanoi) — device GPS not used.
+      const double lat = 21.0285;
+      const double lon = 105.8542;
 
       final data = await EnvironmentalService.fetchEnvironmentalData(lat, lon);
       

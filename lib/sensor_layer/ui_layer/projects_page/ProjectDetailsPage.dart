@@ -13,10 +13,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/utils/l10n_extensions.dart';
+import 'package:ice_gate/utils/L10nExtensions.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
     
-import 'task_item.dart';
+import 'TaskItem.dart';
 import 'ProjectNoteItem.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SnowfallOverlay.dart';
@@ -447,6 +447,11 @@ class ProjectDetailsPage extends StatelessWidget {
                               task: protocol,
                               onComplete: () =>
                                   growthBlock.completeGoal(protocol.id),
+                              onDeleteRequested: () => confirmDeleteTask(
+                                context,
+                                growthBlock,
+                                protocol,
+                              ),
                             );
                           }).toList(),
                         );

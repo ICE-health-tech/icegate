@@ -6,7 +6,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/database_agent.dart'
+import 'package:ice_gate/orchestration_layer/Services/DailyMailSummaryAutoSend.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
 import 'package:ice_gate/orchestration_layer/Services/PasskeyAuthService.dart';
@@ -34,7 +35,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBloc
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 
-import 'package:ice_gate/link_layer/cloud_database/powersync_connector.dart';
+import 'package:ice_gate/link_layer/cloud_database/PowersyncConnector.dart';
 import 'package:ice_gate/orchestration_layer/Services/FocusAudioHandler.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:audio_service/audio_service.dart';
@@ -42,7 +43,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Canvas/WidgetManagerBlock.dart';
-import 'package:ice_gate/link_layer/ui_route/internal_route.dart';
+import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -303,6 +304,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
       debugPrint("🚀 [Boot] Step 3: Initialize Notifications...");
       notificationService = LocalNotificationService();
+      notificationService.onDailyMailSummaryTriggered = _trySendDailyMailSummaryIfDue;
       await notificationService.init(database);
 
       debugPrint("🚀 [Boot] Step 4: Initialize Audio...");
@@ -427,6 +429,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 _syncHealthData();
 
                 projectBlock.init(database.projectsDAO, personId);
+                growthBlock.init(database.growthDAO, personId);
                 financeBlock.init(
                   database.financeDAO,
                   database.portfolioSnapshotsDAO,
@@ -515,6 +518,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         });
         // Start the periodic health sync NOW that all blocks are initialized.
         _startHealthSync();
+        Future.microtask(_trySendDailyMailSummaryIfDue);
       }
       debugPrint("🚀 [Boot] ✅ initializationData sequence COMPLETED.");
 
@@ -634,7 +638,23 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           authBlock.showWelcomeBack.value = true;
         }
         _syncHealthData();
+        Future.microtask(_trySendDailyMailSummaryIfDue);
       }
+    }
+  }
+
+  Future<void> _trySendDailyMailSummaryIfDue() async {
+    if (!_isInitialized || kIsWeb) return;
+    try {
+      await DailyMailSummaryAutoSend.trySendIfDue(
+        finance: financeBlock,
+        health: healthBlock,
+        config: configBlock,
+        person: personBlock,
+        localeCode: localeBlock.currentLocale.value.languageCode,
+      );
+    } catch (e) {
+      debugPrint('DataLayer: daily mail summary auto-send failed: $e');
     }
   }
 

@@ -5,6 +5,15 @@
   "completed_projects_label": "Completed Projects",
   "active_tasks_label": "Active Tasks",
   "recent_notes_label": "Recent Notes",
+  "projects_tile_reminders": "Reminders",
+  "projects_tile_calendar": "Calendar",
+  "projects_calendar_projects_created": "Projects created",
+  "projects_calendar_day_empty": "No tasks or project starts on this day.",
+  "projects_tile_focus": "Focus",
+  "projects_tile_pomodoro": "Pomodoro",
+  "projects_tile_social_blocker": "Social Blocker",
+  "projects_workspace_empty": "No workspace has been set up yet.",
+  "projects_workspace_start": "Get started",
   "project_drive_sync": "Cloud Sync",
   "project_drive_sync_tooltip": "Sync with Google Drive",
   "project_sync_success": "Sync completed successfully!",
@@ -731,6 +740,8 @@
   "projects": "Projects",
   "projects_page_tagline": "Sessions, tasks, and notes in one place.",
   "projects_summary_workspaces": "Workspaces",
+  "projects_summary_plugins": "Plugins",
+  "projects_quick_more": "More shortcuts",
   "kcal_consume": "Kcal Consumed",
   "hr": "Heart Rate",
   "spent": "Spent",
@@ -890,6 +901,46 @@
   "canvas_notification_desc": "Control and oversee all system notifications",
   "canvas_goal_center": "Goal Evolution",
   "canvas_goal_desc": "Adjust tactical goal parameters",
+  "canvas_finance_reports_title": "Finance reports",
+  "canvas_finance_reports_desc": "Daily summary, local reminders, and shortcuts",
+  "canvas_finance_n8n_title": "Email report",
+  "canvas_finance_n8n_desc": "Finance and health snapshot delivered through n8n",
+  "canvas_finance_n8n_send_success": "Report sent to n8n.",
+  "canvas_finance_n8n_send_failed": "Could not send report. Try again later.",
+  "canvas_finance_n8n_not_configured": "n8n webhook is not configured in the app environment.",
+  "canvas_finance_n8n_no_email": "Add an email to your profile before sending a report.",
+  "canvas_finance_n8n_confirm_title": "Send email report?",
+  "canvas_finance_n8n_confirm_message": "Today's finance and health summary will be sent to n8n for delivery to {email}.",
+  "canvas_mail_summary_recipient": "Recipient",
+  "canvas_mail_summary_finance": "Finance today",
+  "canvas_mail_summary_health": "Health today",
+  "canvas_mail_summary_send": "Send email report",
+  "canvas_mail_summary_auto_title": "Automatic daily email",
+  "canvas_mail_summary_auto_subtitle": "After this time, send once per day while the app is open",
+  "reports_hub_title": "Report via mail",
+  "reports_hub_subtitle": "Daily finance on device, email delivery through n8n",
+  "reports_mail_section_title": "Email via n8n",
+  "reports_mail_section_subtitle": "Finance and health snapshot delivered by email",
+  "reports_finance_section": "On-device finance report",
+  "reports_recipient_hint": "recipient@example.com",
+  "reports_recipient_save": "Save recipient",
+  "reports_recipient_saved": "Report recipient saved.",
+  "reports_recipient_profile_fallback": "Profile email default: {email}",
+  "@reports_recipient_profile_fallback": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@canvas_finance_n8n_confirm_message": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "canvas_finance_n8n_confirm_send": "Send",
   "gps_permissions_required": "GPS permissions required for tracking.",
   "gps_title": "GPS TRACKING",
   "gps_disconnect_tooltip": "Disconnect device",
@@ -1022,6 +1073,17 @@
   "project_no_finance": "No financial records linked to this project.",
   "project_add_task_title": "New Task",
   "project_task_title_hint": "Task title",
+  "task_delete_tooltip": "Delete task",
+  "task_delete_confirm_title": "Delete task",
+  "task_delete_confirm_msg": "Are you sure you want to delete \"{name}\"? This cannot be undone.",
+  "@task_delete_confirm_msg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "task_deleted_msg": "Task deleted",
   "project_add_investment_title": "Add Investment",
   "project_add_investment_desc": "Record an expense or investment for this project.",
   "amount": "Amount",
@@ -1191,6 +1253,7 @@
   "notification_mission_history": "Mission History",
   "notification_mission_success": "MISSION SUCCESS",
   "notification_focus_complete": "FOCUS COMPLETE",
+  "notification_task_success": "TASK SUCCESS",
   "notification_reminder": "REMINDER",
   "notification_no_logs": "LOGS ARE EMPTY",
   "notification_empty_desc": "All system events will be stored here.",
@@ -1246,6 +1309,17 @@
     }
   },
   "finance_see_all": "SEE ALL",
+  "finance_daily_report_title": "Daily report",
+  "finance_daily_report_reminder": "Daily reminder",
+  "finance_daily_report_reminder_subtitle": "Local notification that opens this report",
+  "finance_daily_report_open": "Open daily report",
+  "finance_daily_report_income": "Income",
+  "finance_daily_report_expense": "Expenses",
+  "finance_daily_report_net": "Net",
+  "finance_daily_report_spending_by_category": "Spending by category",
+  "finance_daily_report_today_transactions": "Today's activity",
+  "finance_daily_report_empty_day": "No transactions for this day yet.",
+  "finance_daily_report_notifications_off": "Enable system notifications in Settings to use daily reminders.",
   "finance_cat_food": "Food",
   "finance_cat_coffee": "Coffee",
   "finance_cat_transport": "Transport",

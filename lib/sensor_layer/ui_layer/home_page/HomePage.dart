@@ -1,5 +1,7 @@
 import 'dart:async' show unawaited;
 
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
@@ -32,12 +34,13 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/AvailablePlugins.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
 
 /// Avoids re-running heavy bootstrap when returning to Home (same session / same user).
 String? _homePageBootstrapUserId;
@@ -297,10 +300,7 @@ class _HomePageState extends State<HomePage> {
             // SignalEffectException crashes.
             body: Builder(builder: (context) {
               final l10n = AppLocalizations.of(context)!;
-              return SwipeablePage(
-                direction: SwipeablePageDirection.leftToRight,
-                onSwipe: () => context.pop(),
-                child: SingleChildScrollView(
+              final scrollBody = SingleChildScrollView(
                   key: const PageStorageKey<String>('home_feed_scroll'),
                   physics: const BouncingScrollPhysics(),
                   padding: const EdgeInsets.symmetric(
@@ -657,7 +657,9 @@ class _HomePageState extends State<HomePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 32),
+                      // const SizedBox(height: 20),
+                      // const DailyFinanceReportReminderCard(),
+                      const SizedBox(height: 12),
 
                       // --- SECTION: QUICK ACCESS GRID ---
                       Row(
@@ -799,7 +801,19 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(height: 40),
                     ],
                   ),
-                ),
+                );
+
+              final bodyChild = WorkspaceSidebarLayout.useHomeWorkspace(context)
+                  ? WorkspaceSidebarLayout(
+                      onPluginTap: () => _showAddPluginDialog(context),
+                      child: scrollBody,
+                    )
+                  : scrollBody;
+
+              return SwipeablePage(
+                direction: SwipeablePageDirection.leftToRight,
+                onSwipe: () => context.pop(),
+                child: bodyChild,
               );
             }),
           ),
@@ -851,10 +865,18 @@ class _HomePageState extends State<HomePage> {
     required double scoreData,
   }) {
     final isPhone = MediaQuery.of(context).size.width < 600;
+    final isLaptop = defaultTargetPlatform == TargetPlatform.macOS;
+    // Icon badge: size set directly on the Container (not padding-driven).
+    final double iconContainerSize = isPhone
+        ? 50.0
+        : (isLaptop ? 40.0 : 52.0);
+    final double headerIconSize = isPhone
+        ? 26.0
+        : (isLaptop ? 22.0 : 25.0);
     final colorScheme = Theme.of(context).colorScheme;
 
     return Container(
-      width: isPhone ? 210 : 280,
+      width: isPhone ? 210.0 : (isLaptop ? 240.0 : 280.0),
       margin: const EdgeInsets.only(right: 12),
       child: Card(
         elevation: 0,
@@ -907,7 +929,9 @@ class _HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Container(
-                          padding: EdgeInsets.all(isPhone ? 12 : 16),
+                          width: iconContainerSize,
+                          height: iconContainerSize,
+                          alignment: Alignment.center,
                           decoration: BoxDecoration(
                             color: color.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
@@ -915,7 +939,7 @@ class _HomePageState extends State<HomePage> {
                           child: Icon(
                             icon,
                             color: color,
-                            size: isPhone ? 26 : 30,
+                            size: headerIconSize,
                           ),
                         ),
                         Container(

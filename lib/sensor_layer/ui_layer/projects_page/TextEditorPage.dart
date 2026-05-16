@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 // Preview removed.
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:intl/intl.dart';
 import 'package:file_picker/file_picker.dart';
@@ -14,10 +15,12 @@ import 'dart:io';
 import 'package:share_plus/share_plus.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:path/path.dart' as p;
-import 'package:ice_gate/link_layer/note_export/note_export_preferences.dart';
-import 'package:ice_gate/link_layer/note_export/note_export_service.dart';
-import 'package:ice_gate/link_layer/note_export/note_export_settings_sheet.dart';
-import 'package:ice_gate/link_layer/note_export/docx_utils.dart';
+import 'package:ice_gate/link_layer/note_export/NoteExportPreferences.dart';
+import 'package:ice_gate/link_layer/note_export/NoteExportService.dart';
+import 'package:ice_gate/link_layer/note_export/NoteExportSettingsSheet.dart';
+import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
@@ -51,6 +54,7 @@ class _TextEditorPageState extends State<TextEditorPage>
   bool _hasUnsavedChanges = false;
   bool _isSaving = false;
   bool _focusMode = false;
+  ProjectNoteData? _activeNote;
   // Preview mode removed (always editor).
   Timer? _autoSaveTimer;
   DateTime? _lastSaved;
@@ -134,6 +138,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
 
     _contentController = TextEditingController(text: initialContent);
+    _activeNote = widget.note;
     _editorFocusNode = FocusNode();
     _titleFocusNode = FocusNode();
 
@@ -192,12 +197,12 @@ class _TextEditorPageState extends State<TextEditorPage>
   void _scheduleAutoSave() {
     _autoSaveTimer?.cancel();
     _autoSaveTimer = Timer(const Duration(seconds: 1), () {
-      if (_hasUnsavedChanges && mounted) {
-        // Local-file-only: auto-save only when a file path is already chosen.
+      if (!_hasUnsavedChanges || !mounted) return;
+      if (_openedFile != null) {
         // Never trigger a "Save As" picker from autosave.
-        if (_openedFile != null) {
-          _saveToLocalFile();
-        }
+        _saveToLocalFile();
+      } else {
+        _saveNote(showConfirmation: false);
       }
     });
   }
@@ -275,6 +280,13 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
   }
 
+  void _dismissKeyboard() {
+    _editorFocusNode.unfocus();
+    _titleFocusNode.unfocus();
+    FocusManager.instance.primaryFocus?.unfocus();
+    SystemChannels.textInput.invokeMethod<void>('TextInput.hide');
+  }
+
   void _toggleFocusMode() {
     setState(() => _focusMode = !_focusMode);
     if (_focusMode) {
@@ -283,6 +295,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     } else {
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
       _headerAnimController.reverse();
+      _dismissKeyboard();
     }
   }
 
@@ -362,6 +375,125 @@ class _TextEditorPageState extends State<TextEditorPage>
         _lastSaved = file.lastModifiedSync();
       });
     }
+  }
+
+  Future<bool> _saveNote({bool showConfirmation = true}) async {
+    if (_isSaving) return false;
+    setState(() => _isSaving = true);
+    try {
+      final dao = context.read<ProjectNoteDAO>();
+      final personId =
+          context.read<PersonBlock>().currentPersonID.value ??
+          Supabase.instance.client.auth.currentUser?.id;
+      if (personId == null || personId.isEmpty) {
+        if (!mounted) return false;
+        if (showConfirmation) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Sign in to save notes'),
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+        return false;
+      }
+
+      final title = _titleController.text.trim().isEmpty
+          ? 'Untitled'
+          : _titleController.text.trim();
+      final content = _contentController.text;
+      final category =
+          _activeNote?.category ?? widget.initialCategory ?? 'projects';
+      final extension =
+          _activeNote?.extension ?? widget.initialExtension ?? '.md';
+
+      if (_activeNote != null) {
+        final updated = _activeNote!.copyWith(
+          title: title,
+          content: content,
+          mood: Value(_selectedMood),
+          updatedAt: DateTime.now(),
+        );
+        await dao.updateNote(updated);
+        if (!mounted) return false;
+        setState(() {
+          _activeNote = updated;
+          _hasUnsavedChanges = false;
+          _lastSaved = DateTime.now();
+        });
+      } else {
+        final id = await dao.insertNote(
+          title: title,
+          content: content,
+          personID: personId,
+          category: category,
+          mood: _selectedMood,
+          extension: extension,
+        );
+        final saved = await dao.getNoteById(id);
+        if (!mounted) return false;
+        setState(() {
+          _activeNote = saved;
+          _hasUnsavedChanges = false;
+          _lastSaved = DateTime.now();
+        });
+      }
+
+      if (showConfirmation && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Note saved'),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+      return true;
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Failed to save note: $e'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+      return false;
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
+  Future<void> _confirmDeleteNote() async {
+    final note = _activeNote;
+    if (note == null) return;
+
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.project_delete_note_title),
+        content: Text(l10n.project_delete_note_msg),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              l10n.delete,
+              style: const TextStyle(color: Colors.red),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+
+    await context.read<ProjectNoteDAO>().deleteNote(note.id);
+    if (!mounted) return;
+    Navigator.pop(context);
   }
 
   Future<void> _saveToLocalFile() async {
@@ -694,7 +826,17 @@ class _TextEditorPageState extends State<TextEditorPage>
                       controller: scrollController,
                       padding: const EdgeInsets.only(bottom: 16),
                       children: [
-                         _optionTile(
+                        _optionTile(
+                          ctx,
+                          icon: Icons.save_rounded,
+                          label: 'Save Note',
+                          color: colorScheme.primary,
+                          onTap: () {
+                            Navigator.pop(ctx);
+                            _saveNote();
+                          },
+                        ),
+                        _optionTile(
                           ctx,
                           icon: Icons.file_download_rounded,
                           label: 'Save to Local File',
@@ -812,8 +954,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                           },
                         ),
 
-                        // ── Destructive actions ──────────────────────────────
-                        if (widget.note != null) ...[
+                        if (_activeNote != null) ...[
                           Divider(
                             height: 8,
                             thickness: 0.5,
@@ -826,38 +967,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                             icon: Icons.delete_outline_rounded,
                             label: 'Delete Note',
                             color: Colors.red,
-                            onTap: () async {
+                            onTap: () {
                               Navigator.pop(ctx);
-                              final confirm = await showDialog<bool>(
-                                context: context,
-                                builder: (dCtx) => AlertDialog(
-                                  title: const Text('Delete Note?'),
-                                  content: const Text(
-                                    'This action cannot be undone.',
-                                  ),
-                                  actions: [
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dCtx, false),
-                                      child: const Text('Cancel'),
-                                    ),
-                                    TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(dCtx, true),
-                                      child: const Text(
-                                        'Delete',
-                                        style: TextStyle(color: Colors.red),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              );
-                              if (confirm == true && context.mounted) {
-                                await context.read<ProjectNoteDAO>().deleteNote(
-                                  widget.note!.id,
-                                );
-                                if (context.mounted) Navigator.pop(context);
-                              }
+                              _confirmDeleteNote();
                             },
                           ),
                         ],
@@ -945,7 +1057,7 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           );
           if (shouldSave == true) {
-            await _saveToLocalFile();
+            await _saveNote(showConfirmation: false);
           }
           if (context.mounted) Navigator.pop(context);
         },
@@ -981,6 +1093,7 @@ class _TextEditorPageState extends State<TextEditorPage>
           child: Scaffold(
             backgroundColor: colorScheme.surface,
             extendBodyBehindAppBar: true,
+            resizeToAvoidBottomInset: true,
             body: Stack(
               children: [
                 // Background gradient
@@ -1024,6 +1137,8 @@ class _TextEditorPageState extends State<TextEditorPage>
                       // Editor / Preview
                       Expanded(
                         child: GestureDetector(
+                          behavior: HitTestBehavior.translucent,
+                          onTap: _dismissKeyboard,
                           onDoubleTap: _toggleFocusMode,
                           child: Padding(
                             padding: const EdgeInsets.symmetric(
@@ -1226,6 +1341,12 @@ class _TextEditorPageState extends State<TextEditorPage>
                 // Floating Markdown Toolbar
                 if (!_focusMode)
                   _buildMarkdownToolbar(colorScheme),
+                if (_focusMode)
+                  Positioned(
+                    right: 20,
+                    bottom: 24,
+                    child: _buildKeyboardDismissButton(colorScheme),
+                  ),
 
                 // Preview button removed.
               ],
@@ -1343,6 +1464,12 @@ class _TextEditorPageState extends State<TextEditorPage>
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     _toolbarBtn(
+                      Icons.keyboard_hide_rounded,
+                      'Hide keyboard',
+                      _dismissKeyboard,
+                    ),
+                    _toolbarDivider(colorScheme),
+                    _toolbarBtn(
                       Icons.undo_rounded,
                       'Undo',
                       _undo,
@@ -1422,6 +1549,19 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildKeyboardDismissButton(ColorScheme colorScheme) {
+    return Material(
+      color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.9),
+      elevation: 4,
+      shape: const CircleBorder(),
+      child: IconButton(
+        tooltip: 'Hide keyboard',
+        icon: const Icon(Icons.keyboard_hide_rounded),
+        onPressed: _dismissKeyboard,
       ),
     );
   }
@@ -1510,8 +1650,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                         color: colorScheme.onSurface,
                       ),
                       onPressed: () {
+                        _dismissKeyboard();
                         if (_hasUnsavedChanges) {
-                          _saveToLocalFile().then((_) {
+                          _saveNote(showConfirmation: false).then((_) {
                             if (context.mounted) Navigator.pop(context);
                           });
                         } else {

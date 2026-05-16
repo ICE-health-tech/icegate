@@ -12,8 +12,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialNotesDashboard extends StatefulWidget {
@@ -47,13 +47,22 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   _buildQuickEntryBar(context, colorScheme, textTheme),
                   const Divider(height: 1, thickness: 0.2),
                   Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: StreamBuilder<List<MindLogData>>(
-                      stream: context.read<MindBlock>().watchMindLogsRange(
-                        personId,
-                        7,
-                      ),
-                      builder: (context, snapshot) {
+                    padding: EdgeInsets.symmetric(
+                      horizontal: MediaQuery.sizeOf(context).width >= 900
+                          ? 32
+                          : 16,
+                      vertical: 16.0,
+                    ),
+                    child: Align(
+                      alignment: Alignment.center,
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxWidth: 920),
+                        child: StreamBuilder<List<MindLogData>>(
+                          stream: context.read<MindBlock>().watchMindLogsRange(
+                            personId,
+                            7,
+                          ),
+                          builder: (context, snapshot) {
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
                           return const SizedBox.shrink();
                         }
@@ -94,9 +103,11 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                       },
                     ),
                   ),
-                ],
+                ),
               ),
-            ),
+            ],
+          ),
+        ),
             StreamBuilder<List<ProjectNoteData>>(
               stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
                 personId,
@@ -127,25 +138,48 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                 final sortedNotes = List<ProjectNoteData>.from(notes)
                   ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt));
 
-                return SliverPadding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 12,
-                  ),
-                  sliver: SliverGrid(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
-                          childAspectRatio: 0.75,
+                return SliverLayoutBuilder(
+                  builder: (context, constraints) {
+                    final cw = constraints.crossAxisExtent;
+                    var crossCount = 2;
+                    var aspect = 0.75;
+                    var gap = 16.0;
+                    var hPad = 16.0;
+                    if (cw >= 1200) {
+                      crossCount = 5;
+                      aspect = 1.02;
+                      gap = 12;
+                      hPad = 32;
+                    } else if (cw >= 900) {
+                      crossCount = 4;
+                      aspect = 0.98;
+                      gap = 12;
+                      hPad = 28;
+                    } else if (cw >= 640) {
+                      crossCount = 3;
+                      aspect = 0.88;
+                      gap = 14;
+                      hPad = 20;
+                    }
+
+                    return SliverPadding(
+                      padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 12),
+                      sliver: SliverGrid(
+                        gridDelegate:
+                            SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: crossCount,
+                          crossAxisSpacing: gap,
+                          mainAxisSpacing: gap,
+                          childAspectRatio: aspect,
                         ),
-                    delegate: SliverChildBuilderDelegate(
-                      (context, index) =>
-                          _SocialNoteCard(note: sortedNotes[index]),
-                      childCount: sortedNotes.length,
-                    ),
-                  ),
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) =>
+                              _SocialNoteCard(note: sortedNotes[index]),
+                          childCount: sortedNotes.length,
+                        ),
+                      ),
+                    );
+                  },
                 );
               },
             ),
@@ -160,20 +194,28 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     ColorScheme colorScheme,
     TextTheme textTheme,
   ) {
-    final personBlock = context.read<PersonBlock>();
-    final person = personBlock.information.value.profiles;
+    final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      child: Row(
+      padding: EdgeInsets.symmetric(
+        horizontal: isDesktop ? 32 : 16,
+        vertical: isDesktop ? 12 : 16,
+      ),
+      child: Align(
+        alignment: Alignment.center,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(
+            maxWidth: isDesktop ? 720 : double.infinity,
+          ),
+          child: Row(
         children: [
           Expanded(
             child: GestureDetector(
               onTap: () => _createNewNote(context),
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 20,
-                  vertical: 12,
+                padding: EdgeInsets.symmetric(
+                  horizontal: isDesktop ? 16 : 20,
+                  vertical: isDesktop ? 10 : 12,
                 ),
                 decoration: BoxDecoration(
                   color: colorScheme.surfaceContainerHigh.withValues(
@@ -188,7 +230,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   children: [
                     Icon(
                       Icons.sentiment_satisfied_alt_rounded,
-                      size: 20,
+                      size: isDesktop ? 18 : 20,
                       color: colorScheme.primary.withValues(alpha: 0.7),
                     ),
                     const SizedBox(width: 12),
@@ -199,6 +241,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                           alpha: 0.8,
                         ),
                         fontWeight: FontWeight.w500,
+                        fontSize: isDesktop ? 14 : null,
                       ),
                     ),
                   ],
@@ -209,7 +252,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           const SizedBox(width: 12),
           IconButton.filledTonal(
             onPressed: () => _pickAndCreateImageNote(context),
-            icon: const Icon(Icons.add_photo_alternate_rounded, size: 22),
+            icon: Icon(
+              Icons.add_photo_alternate_rounded,
+              size: isDesktop ? 20 : 22,
+            ),
             style: IconButton.styleFrom(
               backgroundColor: colorScheme.secondaryContainer.withValues(
                 alpha: 0.4,
@@ -219,7 +265,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
           ),
         ],
       ),
-    );
+    ),
+  ),
+);
   }
 
   Widget _buildEmptyState(

@@ -49,7 +49,7 @@ class UIResponsiveManager {
     size = size.clamp(minWidgetSize, maxWidgetSize);
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.macOS) {
       // Wide macOS windows hit maxWidgetSize; scale down for a denser plugin row.
-      size = (size * 0.72).clamp(60.0, 118.0);
+      size = (size * 0.62).clamp(52.0, 102.0);
     }
     return size;
   }

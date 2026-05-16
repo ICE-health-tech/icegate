@@ -8,9 +8,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_activity_tokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/mind_mood_palette.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 

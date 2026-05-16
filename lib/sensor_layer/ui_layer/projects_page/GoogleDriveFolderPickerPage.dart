@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleDriveService.dart';
-import 'package:ice_gate/utils/l10n_extensions.dart';
+import 'package:ice_gate/utils/L10nExtensions.dart';
 import 'package:shimmer/shimmer.dart';
 
 class GoogleDriveFolderPickerPage extends StatefulWidget {

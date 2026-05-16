@@ -2,11 +2,22 @@
   "quick_actions": "Ghi chú & thời gian",
   "projects_page_tagline": "Tập trung theo phiên, nhiệm vụ và ghi chú cùng một nơi.",
   "projects_summary_workspaces": "Không gian",
+  "projects_summary_plugins": "Tiện ích",
+  "projects_quick_more": "Lối tắt thêm",
   "new_label": "Tạo mới",
   "my_projects_label": "Không gian làm việc",
   "completed_projects_label": "Dự án đã xong",
   "active_tasks_label": "Nhiệm vụ đang chạy",
   "recent_notes_label": "Ghi chú gần đây",
+  "projects_tile_reminders": "Lời nhắc",
+  "projects_tile_calendar": "Lịch",
+  "projects_calendar_projects_created": "Dự án được tạo",
+  "projects_calendar_day_empty": "Không có nhiệm vụ hay dự án mới trong ngày này.",
+  "projects_tile_focus": "Tập trung",
+  "projects_tile_pomodoro": "Pomodoro",
+  "projects_tile_social_blocker": "Social Blocker",
+  "projects_workspace_empty": "Chưa có không gian làm việc nào được thiết lập.",
+  "projects_workspace_start": "Bắt đầu ngay",
   "project_drive_sync": "Đồng bộ Mây",
   "project_drive_sync_tooltip": "Đồng bộ với Google Drive",
   "project_sync_success": "Đồng bộ thành công!",
@@ -866,6 +877,46 @@
   "canvas_notification_desc": "Điều khiển và kiểm soát mọi thông báo hệ thống",
   "canvas_goal_center": "Mục tiêu",
   "canvas_goal_desc": "Điều chỉnh mục tiêu",
+  "canvas_finance_reports_title": "Báo cáo tài chính",
+  "canvas_finance_reports_desc": "Tóm tắt trong ngày, nhắc nhở cục bộ và lối tắt",
+  "canvas_finance_n8n_title": "Báo cáo qua email",
+  "canvas_finance_n8n_desc": "Tóm tắt tài chính và sức khỏe gửi qua n8n",
+  "canvas_finance_n8n_send_success": "Đã gửi báo cáo tới n8n.",
+  "canvas_finance_n8n_send_failed": "Không gửi được báo cáo. Thử lại sau.",
+  "canvas_finance_n8n_not_configured": "Chưa cấu hình webhook n8n trong môi trường ứng dụng.",
+  "canvas_finance_n8n_no_email": "Thêm email vào hồ sơ trước khi gửi báo cáo.",
+  "canvas_finance_n8n_confirm_title": "Gửi báo cáo qua email?",
+  "canvas_finance_n8n_confirm_message": "Tóm tắt tài chính và sức khỏe hôm nay sẽ được gửi tới n8n để chuyển tới {email}.",
+  "canvas_mail_summary_recipient": "Người nhận",
+  "canvas_mail_summary_finance": "Tài chính hôm nay",
+  "canvas_mail_summary_health": "Sức khỏe hôm nay",
+  "canvas_mail_summary_send": "Gửi báo cáo email",
+  "canvas_mail_summary_auto_title": "Email tự động hàng ngày",
+  "canvas_mail_summary_auto_subtitle": "Sau giờ này, gửi một lần mỗi ngày khi ứng dụng đang mở",
+  "reports_hub_title": "Báo cáo qua mail",
+  "reports_hub_subtitle": "Báo cáo tài chính trên máy, gửi email qua n8n",
+  "reports_mail_section_title": "Gửi qua n8n",
+  "reports_mail_section_subtitle": "Tóm tắt tài chính và sức khỏe gửi bằng email",
+  "reports_finance_section": "Báo cáo tài chính trên máy",
+  "reports_recipient_hint": "nguoi-nhan@example.com",
+  "reports_recipient_save": "Lưu người nhận",
+  "reports_recipient_saved": "Đã lưu người nhận báo cáo.",
+  "reports_recipient_profile_fallback": "Mặc định từ hồ sơ: {email}",
+  "@reports_recipient_profile_fallback": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "@canvas_finance_n8n_confirm_message": {
+    "placeholders": {
+      "email": {
+        "type": "String"
+      }
+    }
+  },
+  "canvas_finance_n8n_confirm_send": "Gửi",
   "gps_permissions_required": "Yêu cầu quyền GPS để theo dõi.",
   "gps_title": "THEO DÕI GPS",
   "gps_disconnect_tooltip": "Ngắt kết nối thiết bị",
@@ -998,6 +1049,17 @@
   "project_no_finance": "Chưa có bản ghi tài chính nào cho dự án này.",
   "project_add_task_title": "Nhiệm vụ mới",
   "project_task_title_hint": "Tiêu đề nhiệm vụ",
+  "task_delete_tooltip": "Xóa nhiệm vụ",
+  "task_delete_confirm_title": "Xóa nhiệm vụ",
+  "task_delete_confirm_msg": "Bạn có chắc chắn muốn xóa \"{name}\"? Không thể hoàn tác.",
+  "@task_delete_confirm_msg": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "task_deleted_msg": "Đã xóa nhiệm vụ",
   "project_add_investment_title": "Thêm khoản đầu tư",
   "project_add_investment_desc": "Ghi nhận chi phí hoặc khoản đầu tư cho dự án này.",
   "amount": "Số tiền",
@@ -1167,6 +1229,7 @@
   "notification_mission_history": "Lịch sử nhiệm vụ",
   "notification_mission_success": "NHIỆM VỤ THÀNH CÔNG",
   "notification_focus_complete": "TẬP TRUNG HOÀN TẤT",
+  "notification_task_success": "NHIỆM VỤ XONG",
   "notification_reminder": "NHẮC NHỞ",
   "notification_no_logs": "LỊCH SỬ TRỐNG",
   "notification_empty_desc": "Tất cả các sự kiện hệ thống sẽ được lưu trữ tại đây.",
@@ -1222,6 +1285,17 @@
     }
   },
   "finance_see_all": "XEM TẤT CẢ",
+  "finance_daily_report_title": "Báo cáo trong ngày",
+  "finance_daily_report_reminder": "Nhắc hàng ngày",
+  "finance_daily_report_reminder_subtitle": "Thông báo cục bộ mở báo cáo này",
+  "finance_daily_report_open": "Mở báo cáo trong ngày",
+  "finance_daily_report_income": "Thu nhập",
+  "finance_daily_report_expense": "Chi tiêu",
+  "finance_daily_report_net": "Chênh lệch",
+  "finance_daily_report_spending_by_category": "Chi tiêu theo hạng mục",
+  "finance_daily_report_today_transactions": "Hoạt động hôm nay",
+  "finance_daily_report_empty_day": "Chưa có giao dịch trong ngày.",
+  "finance_daily_report_notifications_off": "Bật thông báo hệ thống trong Cài đặt để dùng nhắc nhở.",
   "finance_cat_food": "Ăn uống",
   "finance_cat_coffee": "Cà phê",
   "finance_cat_transport": "Di chuyển",

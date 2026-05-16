@@ -27,6 +27,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get recent_notes_label => 'Recent Notes';
 
   @override
+  String get projects_tile_reminders => 'Reminders';
+
+  @override
+  String get projects_tile_calendar => 'Calendar';
+
+  @override
+  String get projects_calendar_projects_created => 'Projects created';
+
+  @override
+  String get projects_calendar_day_empty =>
+      'No tasks or project starts on this day.';
+
+  @override
+  String get projects_tile_focus => 'Focus';
+
+  @override
+  String get projects_tile_pomodoro => 'Pomodoro';
+
+  @override
+  String get projects_tile_social_blocker => 'Social Blocker';
+
+  @override
+  String get projects_workspace_empty => 'No workspace has been set up yet.';
+
+  @override
+  String get projects_workspace_start => 'Get started';
+
+  @override
   String get project_drive_sync => 'Cloud Sync';
 
   @override
@@ -1620,6 +1648,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_summary_workspaces => 'Workspaces';
 
   @override
+  String get projects_summary_plugins => 'Plugins';
+
+  @override
+  String get projects_quick_more => 'More shortcuts';
+
+  @override
   String get kcal_consume => 'Kcal Consumed';
 
   @override
@@ -1838,6 +1872,96 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get canvas_goal_desc => 'Adjust tactical goal parameters';
+
+  @override
+  String get canvas_finance_reports_title => 'Finance reports';
+
+  @override
+  String get canvas_finance_reports_desc =>
+      'Daily summary, local reminders, and shortcuts';
+
+  @override
+  String get canvas_finance_n8n_title => 'Email report';
+
+  @override
+  String get canvas_finance_n8n_desc =>
+      'Finance and health snapshot delivered through n8n';
+
+  @override
+  String get canvas_finance_n8n_send_success => 'Report sent to n8n.';
+
+  @override
+  String get canvas_finance_n8n_send_failed =>
+      'Could not send report. Try again later.';
+
+  @override
+  String get canvas_finance_n8n_not_configured =>
+      'n8n webhook is not configured in the app environment.';
+
+  @override
+  String get canvas_finance_n8n_no_email =>
+      'Add an email to your profile before sending a report.';
+
+  @override
+  String get canvas_finance_n8n_confirm_title => 'Send email report?';
+
+  @override
+  String canvas_finance_n8n_confirm_message(String email) {
+    return 'Today\'s finance and health summary will be sent to n8n for delivery to $email.';
+  }
+
+  @override
+  String get canvas_mail_summary_recipient => 'Recipient';
+
+  @override
+  String get canvas_mail_summary_finance => 'Finance today';
+
+  @override
+  String get canvas_mail_summary_health => 'Health today';
+
+  @override
+  String get canvas_mail_summary_send => 'Send email report';
+
+  @override
+  String get canvas_mail_summary_auto_title => 'Automatic daily email';
+
+  @override
+  String get canvas_mail_summary_auto_subtitle =>
+      'After this time, send once per day while the app is open';
+
+  @override
+  String get reports_hub_title => 'Report via mail';
+
+  @override
+  String get reports_hub_subtitle =>
+      'Daily finance on device, email delivery through n8n';
+
+  @override
+  String get reports_mail_section_title => 'Email via n8n';
+
+  @override
+  String get reports_mail_section_subtitle =>
+      'Finance and health snapshot delivered by email';
+
+  @override
+  String get reports_finance_section => 'On-device finance report';
+
+  @override
+  String get reports_recipient_hint => 'recipient@example.com';
+
+  @override
+  String get reports_recipient_save => 'Save recipient';
+
+  @override
+  String get reports_recipient_saved => 'Report recipient saved.';
+
+  @override
+  String reports_recipient_profile_fallback(String email) {
+    return 'Profile email default: $email';
+  }
+
+  @override
+  String get canvas_finance_n8n_confirm_send => 'Send';
 
   @override
   String get gps_permissions_required =>
@@ -2162,6 +2286,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_task_title_hint => 'Task title';
+
+  @override
+  String get task_delete_tooltip => 'Delete task';
+
+  @override
+  String get task_delete_confirm_title => 'Delete task';
+
+  @override
+  String task_delete_confirm_msg(String name) {
+    return 'Are you sure you want to delete \"$name\"? This cannot be undone.';
+  }
+
+  @override
+  String get task_deleted_msg => 'Task deleted';
 
   @override
   String get project_add_investment_title => 'Add Investment';
@@ -2532,6 +2670,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_focus_complete => 'FOCUS COMPLETE';
 
   @override
+  String get notification_task_success => 'TASK SUCCESS';
+
+  @override
   String get notification_reminder => 'REMINDER';
 
   @override
@@ -2620,6 +2761,43 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_see_all => 'SEE ALL';
+
+  @override
+  String get finance_daily_report_title => 'Daily report';
+
+  @override
+  String get finance_daily_report_reminder => 'Daily reminder';
+
+  @override
+  String get finance_daily_report_reminder_subtitle =>
+      'Local notification that opens this report';
+
+  @override
+  String get finance_daily_report_open => 'Open daily report';
+
+  @override
+  String get finance_daily_report_income => 'Income';
+
+  @override
+  String get finance_daily_report_expense => 'Expenses';
+
+  @override
+  String get finance_daily_report_net => 'Net';
+
+  @override
+  String get finance_daily_report_spending_by_category =>
+      'Spending by category';
+
+  @override
+  String get finance_daily_report_today_transactions => 'Today\'s activity';
+
+  @override
+  String get finance_daily_report_empty_day =>
+      'No transactions for this day yet.';
+
+  @override
+  String get finance_daily_report_notifications_off =>
+      'Enable system notifications in Settings to use daily reminders.';
 
   @override
   String get finance_cat_food => 'Food';

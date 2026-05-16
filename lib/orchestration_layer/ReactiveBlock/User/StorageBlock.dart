@@ -1,5 +1,5 @@
 import 'dart:io';
-import 'package:ice_gate/link_layer/storage_services/minio_service.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:signals/signals.dart';
 
 class StorageBlock {

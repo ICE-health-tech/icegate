@@ -84,7 +84,6 @@ class _HealthPageState extends State<HealthPage>
   late AppDatabase database;
   Map<String, HealthMetric> _healthMetrics = {};
   bool _isLoading = false;
-  late bool compact;
   late AnimationController _gridAnimationController;
 
   /// Cached in [didChangeDependencies] so [dispose] can call
@@ -262,7 +261,6 @@ class _HealthPageState extends State<HealthPage>
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
-    compact = MediaQuery.of(context).size.width < 600;
     final topSafe = MediaQuery.paddingOf(context).top;
     // Clear floating shell header + status bar (fixed 80 was short on some notches).
     final headerClearance = topSafe + 72;
@@ -526,7 +524,6 @@ class _HealthPageState extends State<HealthPage>
                             ));
                           }
 
-                          final crossAxisCount = compact ? 2 : 3;
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(
                               _healthPageGutter,
@@ -539,12 +536,31 @@ class _HealthPageState extends State<HealthPage>
                                 builder: (context, constraints) {
                                   final spacing = _healthGridSpacing;
                                   final maxW = constraints.maxWidth;
+
+                                  late final int crossAxisCount;
+                                  late final double aspect;
+                                  if (maxW >= 1200) {
+                                    crossAxisCount = 5;
+                                    aspect = 1.32;
+                                  } else if (maxW >= 960) {
+                                    crossAxisCount = 4;
+                                    aspect = 1.22;
+                                  } else if (maxW >= 720) {
+                                    crossAxisCount = 3;
+                                    aspect = 1.08;
+                                  } else if (maxW >= 480) {
+                                    crossAxisCount = 2;
+                                    aspect = 0.92;
+                                  } else {
+                                    crossAxisCount = 2;
+                                    aspect = 0.88;
+                                  }
+
                                   final cellW =
                                       (maxW -
                                               spacing *
                                                   (crossAxisCount - 1)) /
                                           crossAxisCount;
-                                  final aspect = compact ? 0.88 : 1.1;
                                   final cellH = cellW / aspect;
 
                                   final rows = <Widget>[];

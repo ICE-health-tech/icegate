@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/entry_constants.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/savings_streak_card.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/transaction_card.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionCard.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
 /// Fourth Finance tab: savings-focused actions and history (replaces stocks).
@@ -63,7 +63,7 @@ class FinanceSavingsPage extends StatelessWidget {
                   Text(
                     "${savingsTxns.length} ENTRIES",
                     style: TextStyle(
-                      color: EntryColors.financeYellow.withValues(alpha: 0.9),
+                      color: EntryColors.financeSilverAccent.withValues(alpha: 0.9),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -175,7 +175,7 @@ class FinanceSavingsPage extends StatelessWidget {
                 child: _miniStat(
                   "Of income",
                   "${savingsRatePercent.clamp(0, 999).toStringAsFixed(1)}%",
-                  EntryColors.financeYellow,
+                  EntryColors.financeSilverAccent,
                 ),
               ),
             ],

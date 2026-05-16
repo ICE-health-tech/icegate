@@ -56,12 +56,6 @@
 	<string>$(PRODUCT_COPYRIGHT)</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
-	<key>NSLocationUsageDescription</key>
-	<string>ICE Gate uses your location for local weather and air quality, and for distance and movement features.</string>
-	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-	<string>We need your location to track your running distance and movement quests in the real world.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>We need your location to track your running distance and movement quests in the real world.</string>
 	<key>NSMainNibFile</key>
 	<string>MainMenu</string>
 	<key>NSPhotoLibraryUsageDescription</key>

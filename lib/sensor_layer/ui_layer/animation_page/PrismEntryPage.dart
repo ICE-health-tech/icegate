@@ -7,10 +7,10 @@ import 'package:provider/provider.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 
-import 'components/entry_constants.dart';
-import 'components/entry_geometry.dart';
-import 'components/prism_background.dart';
-import 'components/prism_painters.dart';
+import 'components/EntryConstants.dart';
+import 'components/EntryGeometry.dart';
+import 'components/PrismBackground.dart';
+import 'components/PrismPainters.dart';
 
 class PrismEntryPage extends StatefulWidget {
   const PrismEntryPage({super.key});

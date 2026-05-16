@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:async';
-import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/Protocol/Social/SocialBlockProtocol.dart';
@@ -25,6 +24,9 @@ class SocialBlockerBlock {
   final _currentTime = signal<DateTime>(DateTime.now());
 
   static const _appSelectionKey = 'ice_gate_social_app_selection';
+
+  static bool get _nativeScreenTimeEnabled =>
+      !kIsWeb && defaultTargetPlatform != TargetPlatform.iOS;
 
   FocusBlock? _focusBlock;
   String? _personId;
@@ -323,11 +325,13 @@ class SocialBlockerBlock {
           "SocialBlockerBlock: Pulled ${appTokens.length} apps and ${categoryTokens.length} categories from cloud",
         );
 
-        // Update native side
-        await _channel.invokeMethod('setSelection', {
-          'appTokens': appTokens,
-          'categoryTokens': categoryTokens,
-        });
+        // iOS App Store builds do not ship Screen Time APIs.
+        if (_nativeScreenTimeEnabled) {
+          await _channel.invokeMethod('setSelection', {
+            'appTokens': appTokens,
+            'categoryTokens': categoryTokens,
+          });
+        }
 
         // Trigger UI update if needed (though appSelectionJson is mostly for macOS legacy)
         // For iOS, the tokens are the source of truth now.
