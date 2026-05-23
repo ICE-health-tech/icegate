@@ -1,17 +1,75 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
 
+int _clampBillingDay(int billingDay, int year, int month) {
+  final lastDay = DateTime(year, month + 1, 0).day;
+  return billingDay.clamp(1, lastDay);
+}
+
+/// Next charge date on or after today (monthly roll-forward; yearly once per year).
+DateTime subscriptionNextBillingDate(SubscriptionData sub, [DateTime? reference]) {
+  final now = reference ?? DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+
+  if (sub.billingCycle == 'yearly') {
+    final anchorMonth = sub.createdAt.toLocal().month;
+    final day = _clampBillingDay(sub.billingDay, now.year, anchorMonth);
+    var due = DateTime(now.year, anchorMonth, day);
+    if (!due.isAfter(today)) {
+      due = DateTime(now.year + 1, anchorMonth, day);
+    }
+    return due;
+  }
+
+  final day = _clampBillingDay(sub.billingDay, now.year, now.month);
+  var due = DateTime(now.year, now.month, day);
+  if (due.isBefore(today)) {
+    final nextMonth = now.month == 12 ? 1 : now.month + 1;
+    final nextYear = now.month == 12 ? now.year + 1 : now.year;
+    due = DateTime(
+      nextYear,
+      nextMonth,
+      _clampBillingDay(sub.billingDay, nextYear, nextMonth),
+    );
+  }
+  return due;
+}
+
+List<({SubscriptionData sub, DateTime due})> subscriptionsDueInMonth(
+  List<SubscriptionData> subs,
+  int year,
+  int month, {
+  Set<String> planSkips = const {},
+}) {
+  final items = <({SubscriptionData sub, DateTime due})>[];
+  for (final sub in subs.where((s) => s.isActive)) {
+    final skipToken = ConfigBlock.subscriptionPlanSkipToken(sub.id, year, month);
+    if (planSkips.contains(skipToken)) continue;
+    final due = subscriptionNextBillingDate(sub);
+    if (due.year == year && due.month == month) {
+      items.add((sub: sub, due: due));
+    }
+  }
+  items.sort((a, b) => a.due.compareTo(b.due));
+  return items;
+}
+
 /// Opens the subscription editor (create or edit). Used from the Billing tab MainButton.
 void showSubscriptionEditor(
   BuildContext context,
   FinanceBlock financeBlock, {
   SubscriptionData? subscription,
+  int? planYear,
+  int? planMonth,
 }) {
   final isEdit = subscription != null;
   final nameController = TextEditingController(text: subscription?.name ?? "");
@@ -117,17 +175,19 @@ void showSubscriptionEditor(
                 (val) => setState(() => selectedCategory = val),
               ),
               const SizedBox(height: 32),
-              _subscriptionSheetActionButtons(
-                context,
-                financeBlock,
-                isEdit,
-                subscription,
-                nameController,
-                amountController,
-                billingDay,
-                selectedCategory,
-                selectedCycle,
-              ),
+                _subscriptionSheetActionButtons(
+                  context,
+                  financeBlock,
+                  isEdit,
+                  subscription,
+                  nameController,
+                  amountController,
+                  billingDay,
+                  selectedCategory,
+                  selectedCycle,
+                  planYear: planYear,
+                  planMonth: planMonth,
+                ),
             ],
           ),
         );
@@ -304,8 +364,12 @@ Widget _subscriptionSheetActionButtons(
   TextEditingController a,
   int d,
   String c,
-  String cy,
-) {
+  String cy, {
+  int? planYear,
+  int? planMonth,
+}) {
+  final inPlanContext = planYear != null && planMonth != null;
+  final l10n = AppLocalizations.of(context)!;
   return Column(
     children: [
       SizedBox(
@@ -361,17 +425,21 @@ Widget _subscriptionSheetActionButtons(
                 context: context,
                 builder: (ctx) => AlertDialog(
                   backgroundColor: const Color(0xFF16161E),
-                  title: const Text(
-                    "DELETE SUBSCRIPTION",
-                    style: TextStyle(
+                  title: Text(
+                    inPlanContext
+                        ? l10n.finance_subscriptions_next_month_remove_title
+                        : "DELETE SUBSCRIPTION",
+                    style: const TextStyle(
                       color: Colors.white,
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                     ),
                   ),
-                  content: const Text(
-                    "Are you sure you want to remove this recurring bill?",
-                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                  content: Text(
+                    inPlanContext
+                        ? l10n.finance_subscriptions_next_month_remove_message
+                        : "Are you sure you want to remove this recurring bill?",
+                    style: const TextStyle(color: Colors.white70, fontSize: 12),
                   ),
                   actions: [
                     TextButton(
@@ -383,25 +451,35 @@ Widget _subscriptionSheetActionButtons(
                     ),
                     TextButton(
                       onPressed: () => Navigator.pop(ctx, true),
-                      child: const Text(
-                        "DELETE",
-                        style: TextStyle(color: Colors.redAccent),
+                      child: Text(
+                        inPlanContext ? l10n.finance_subscriptions_next_month_remove_confirm : "DELETE",
+                        style: const TextStyle(color: Colors.redAccent),
                       ),
                     ),
                   ],
                 ),
               );
               if (confirm == true) {
-                await financeBlock.deleteSubscription(sub!.id);
+                if (inPlanContext) {
+                  await financeBlock.skipSubscriptionInPlanMonth(
+                    sub!.id,
+                    planYear,
+                    planMonth,
+                  );
+                } else {
+                  await financeBlock.deleteSubscription(sub!.id);
+                }
                 if (context.mounted) Navigator.pop(context);
               }
             },
             style: TextButton.styleFrom(
               padding: const EdgeInsets.symmetric(vertical: 16),
             ),
-            child: const Text(
-              "DELETE RECURRING BILL",
-              style: TextStyle(
+            child: Text(
+              inPlanContext
+                  ? l10n.finance_subscriptions_next_month_remove_action
+                  : "DELETE RECURRING BILL",
+              style: const TextStyle(
                 color: Colors.redAccent,
                 fontWeight: FontWeight.w900,
                 fontSize: 10,
@@ -427,33 +505,67 @@ class SubscriptionManager extends StatelessWidget {
     return Watch((context) {
       final subs = financeBlock.subscriptions.value;
       final useVnd = financeBlock.useVnd.value;
+      final monthlyTotal = financeBlock.monthlyBurnRate.value;
 
       return Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 10),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
-                  "ACTIVE SUBSCRIPTIONS",
-                  style: TextStyle(
-                    color: EntryColors.financeSilverAccent,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.finance_subscriptions_active_header,
+                        style: const TextStyle(
+                          color: EntryColors.financeSilverAccent,
+                          fontSize: 10,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        l10n.finance_cat_subscriptions,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.finance_cat_subscriptions,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
+                if (subs.isNotEmpty) ...[
+                  const SizedBox(width: 16),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        l10n.finance_subscriptions_monthly_total,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.45),
+                          fontSize: 9,
+                          fontWeight: FontWeight.w900,
+                          letterSpacing: 1.2,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        financeBlock.formatCurrency(monthlyTotal),
+                        style: const TextStyle(
+                          color: EntryColors.financeSilverAccent,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                    ],
                   ),
-                ),
+                ],
               ],
             ),
           ),
@@ -465,6 +577,11 @@ class SubscriptionManager extends StatelessWidget {
               subs: subs,
               cardBuilder: (ctx, sub) => _buildSubscriptionCard(ctx, sub),
             ),
+          const SizedBox(height: 8),
+          _NextMonthPlanSection(
+            financeBlock: financeBlock,
+            subs: subs,
+          ),
         ],
       );
     });
@@ -502,7 +619,7 @@ class SubscriptionManager extends StatelessWidget {
   }
 
   Widget _buildSubscriptionCard(BuildContext context, SubscriptionData sub) {
-    final daysLeft = _calculateDaysLeft(sub.billingDay);
+    final daysLeft = _calculateDaysLeft(sub);
     final isYearly = sub.billingCycle == 'yearly';
 
     return Container(
@@ -571,7 +688,7 @@ class SubscriptionManager extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  _buildCountdownBadge(daysLeft),
+                  _buildCountdownBadge(context, daysLeft),
                 ],
               ),
             ),
@@ -595,7 +712,8 @@ class SubscriptionManager extends StatelessWidget {
     );
   }
 
-  Widget _buildCountdownBadge(int days) {
+  Widget _buildCountdownBadge(BuildContext context, int days) {
+    final l10n = AppLocalizations.of(context)!;
     final bool isSoon = days <= 3;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
@@ -605,7 +723,9 @@ class SubscriptionManager extends StatelessWidget {
         border: Border.all(color: isSoon ? Colors.red.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05)),
       ),
       child: Text(
-        days == 0 ? "DUE TODAY" : "$days DAYS LEFT",
+        days == 0
+            ? l10n.finance_subscription_due_today
+            : l10n.finance_subscription_days_left(days),
         style: TextStyle(
           color: isSoon ? Colors.redAccent : Colors.white54,
           fontSize: 8,
@@ -616,17 +736,10 @@ class SubscriptionManager extends StatelessWidget {
     );
   }
 
-  int _calculateDaysLeft(int billingDay) {
-    final now = DateTime.now();
-    final currentMonth = now.month;
-    final currentYear = now.year;
-    
-    DateTime billingDate = DateTime(currentYear, currentMonth, billingDay);
-    if (billingDate.isBefore(DateTime(now.year, now.month, now.day))) {
-      billingDate = DateTime(currentYear, currentMonth + 1, billingDay);
-    }
-    
-    return billingDate.difference(DateTime(now.year, now.month, now.day)).inDays;
+  int _calculateDaysLeft(SubscriptionData sub) {
+    final today = DateTime.now();
+    final due = subscriptionNextBillingDate(sub);
+    return due.difference(DateTime(today.year, today.month, today.day)).inDays;
   }
 
   IconData _getCategoryIcon(String category) {
@@ -639,6 +752,253 @@ class SubscriptionManager extends StatelessWidget {
       case 'rent': return Icons.home_rounded;
       default: return Icons.layers_rounded;
     }
+  }
+}
+
+/// Upcoming charges in the next calendar month (planning view).
+class _NextMonthPlanSection extends StatelessWidget {
+  const _NextMonthPlanSection({
+    required this.financeBlock,
+    required this.subs,
+  });
+
+  final FinanceBlock financeBlock;
+  final List<SubscriptionData> subs;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final now = DateTime.now();
+    final planYear = now.month == 12 ? now.year + 1 : now.year;
+    final planMonth = now.month == 12 ? 1 : now.month + 1;
+    final planSkips = financeBlock.subscriptionPlanSkips.value;
+    final items = subscriptionsDueInMonth(
+      subs,
+      planYear,
+      planMonth,
+      planSkips: planSkips,
+    );
+    final monthLabel = DateFormat.yMMMM().format(DateTime(planYear, planMonth));
+    final planTotal = items.fold<double>(0, (sum, e) => sum + e.sub.amount);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.finance_subscriptions_next_month_header,
+                      style: const TextStyle(
+                        color: EntryColors.financeSilverAccent,
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      monthLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (items.isNotEmpty)
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      l10n.finance_subscriptions_next_month_total,
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.45),
+                        fontSize: 9,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      financeBlock.formatCurrency(planTotal),
+                      style: const TextStyle(
+                        color: Colors.white70,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (items.isEmpty)
+            Text(
+              l10n.finance_subscriptions_next_month_empty,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.35),
+                fontSize: 12,
+                height: 1.35,
+              ),
+            )
+          else
+            ...items.map(
+              (entry) => _NextMonthPlanRow(
+                financeBlock: financeBlock,
+                sub: entry.sub,
+                due: entry.due,
+                planYear: planYear,
+                planMonth: planMonth,
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _NextMonthPlanRow extends StatelessWidget {
+  const _NextMonthPlanRow({
+    required this.financeBlock,
+    required this.sub,
+    required this.due,
+    required this.planYear,
+    required this.planMonth,
+  });
+
+  final FinanceBlock financeBlock;
+  final SubscriptionData sub;
+  final DateTime due;
+  final int planYear;
+  final int planMonth;
+
+  Future<void> _confirmRemoveFromPlan(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF16161E),
+        title: Text(
+          l10n.finance_subscriptions_next_month_remove_title,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 14,
+            fontWeight: FontWeight.w900,
+          ),
+        ),
+        content: Text(
+          l10n.finance_subscriptions_next_month_remove_message,
+          style: const TextStyle(color: Colors.white70, fontSize: 12),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text(
+              "CANCEL",
+              style: TextStyle(color: Colors.white24),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: Text(
+              l10n.finance_subscriptions_next_month_remove_confirm,
+              style: const TextStyle(color: Colors.redAccent),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirm == true) {
+      await financeBlock.skipSubscriptionInPlanMonth(sub.id, planYear, planMonth);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).toString();
+    final dueLabel = DateFormat.MMMd(locale).format(due);
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Material(
+        color: Colors.white.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(16),
+          onTap: () => showSubscriptionEditor(
+            context,
+            financeBlock,
+            subscription: sub,
+            planYear: planYear,
+            planMonth: planMonth,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        sub.name,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dueLabel,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.45),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  financeBlock.formatCurrency(sub.amount),
+                  style: const TextStyle(
+                    color: EntryColors.financeSilverAccent,
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                IconButton(
+                  tooltip: l10n.finance_subscriptions_next_month_remove_tooltip,
+                  onPressed: () => _confirmRemoveFromPlan(context),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    size: 18,
+                    color: Colors.white.withValues(alpha: 0.35),
+                  ),
+                  visualDensity: VisualDensity.compact,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

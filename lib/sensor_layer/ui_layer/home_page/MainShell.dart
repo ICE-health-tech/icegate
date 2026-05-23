@@ -182,15 +182,9 @@ class _MainShellState extends State<MainShell> {
                 child: SizedBox(
                   height: 50,
                   child: Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: currentRoute.startsWith('/finance')
-                          ? 0.0
-                          : 20.0,
-                    ),
+                    padding: const EdgeInsets.symmetric(horizontal: 20.0),
                     child: Align(
-                      alignment: currentRoute.startsWith('/finance')
-                          ? Alignment.center
-                          : Alignment.centerLeft,
+                      alignment: Alignment.centerLeft,
                       child: CanvasDynamicIsland(
                         personBlock: context.watch<PersonBlock>(),
                       ),

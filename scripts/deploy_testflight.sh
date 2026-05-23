@@ -71,6 +71,15 @@ if [ "$BUMP_BUILD" = true ]; then
   echo "  Version: $CURRENT_VERSION → $NEW_VERSION"
 fi
 
+# --- Preflight: App Store distribution signing ---
+log_step "Checking code signing..."
+if ! security find-identity -v -p codesigning 2>/dev/null | grep -qE "Apple Distribution|iOS Distribution"; then
+  log_warn "No App Store distribution certificate in Keychain."
+  echo "  IPA export will likely fail until you add one:"
+  echo "  Xcode → Settings → Accounts → Manage Certificates → + → Apple Distribution"
+  echo ""
+fi
+
 # --- Step 2: Clean (optional) ---
 if [ "$SKIP_CLEAN" = false ]; then
   log_step "Cleaning previous build..."
@@ -84,24 +93,25 @@ log_step "Building Flutter iOS release..."
 cd "$PROJECT_DIR"
 # NOTE: `MindSkillsPage` supports user-picked Material icon codepoints at runtime.
 # This uses non-constant IconData and is incompatible with icon tree-shaking.
-flutter build ipa --release --no-tree-shake-icons --export-options-plist="$EXPORT_OPTIONS"
+if ! flutter build ipa --release --no-tree-shake-icons --export-options-plist="$EXPORT_OPTIONS"; then
+  log_error "IPA build failed. See errors above."
+  exit 1
+fi
+
+IPA_FILE=$(find "$IPA_OUTPUT" -name "*.ipa" -type f 2>/dev/null | head -1)
+if [ -z "$IPA_FILE" ]; then
+  log_error "IPA export failed (no .ipa in $IPA_OUTPUT). Check ExportOptions.plist (use app-store-connect on Xcode 16+)."
+  exit 1
+fi
 
 echo ""
 echo "=================================================="
 echo "  IPA built successfully!"
-echo "  Output: $IPA_OUTPUT"
+echo "  Output: $IPA_FILE"
 echo "=================================================="
 
 # --- Step 4: Upload to TestFlight ---
 log_step "Uploading to TestFlight..."
-
-# Find the .ipa file in the output directory
-IPA_FILE=$(find "$IPA_OUTPUT" -name "*.ipa" -type f | head -1)
-
-if [ -z "$IPA_FILE" ]; then
-  log_error "No .ipa file found in $IPA_OUTPUT"
-  exit 1
-fi
 
 echo "  Uploading: $IPA_FILE"
 

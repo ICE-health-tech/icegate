@@ -458,6 +458,16 @@ const Schema schema = Schema([
     Column.text('created_at'),
     Column.text('updated_at'),
   ]),
+  Table.localOnly('recurring_incomes', [
+    Column.text('person_id'),
+    Column.text('category'),
+    Column.real('amount'),
+    Column.text('description'),
+    Column.text('interval'),
+    Column.text('next_due_at'),
+    Column.integer('is_active'),
+    Column.text('created_at'),
+  ]),
   Table.localOnly('person_contacts', [
     Column.text('person_id'),
     Column.text('first_name'),

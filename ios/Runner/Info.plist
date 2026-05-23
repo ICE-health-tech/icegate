@@ -53,10 +53,12 @@
 	<array>
 		<string>_ssh._tcp</string>
 	</array>
+	<key>NSCalendarsUsageDescription</key>
+	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
-	<key>NSContactsUsageDescription</key>
-	<string>ICE Gate can optionally access your contacts only if you use the “Import friends” feature. We do not collect or upload your contacts without your action.</string>
 	<key>NSFaceIDUsageDescription</key>
 	<string>We use Face ID to allow you to securely log into your account.</string>
 	<key>NSHealthShareUsageDescription</key>
@@ -65,6 +67,8 @@
 	<string>We would like to write health data to help you track your progress.</string>
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>UPLINK requires access to the local network to connect to SSH servers and AI gateways.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>ICE Gate uses your location to show local weather and air quality on your dashboard, and to display your position on the map when you use location tracking.</string>
 	<key>NSMotionUsageDescription</key>
 	<string>We need to track your steps for the Ice Gate.</string>
 	<key>NSPhotoLibraryUsageDescription</key>

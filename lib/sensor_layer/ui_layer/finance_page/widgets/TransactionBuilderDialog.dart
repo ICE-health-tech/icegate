@@ -4,6 +4,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceEntryInsightPanel.dart';
 
 class TransactionBuilderDialog extends StatefulWidget {
   final TransactionData? initialData;
@@ -43,6 +44,8 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
   final descController = TextEditingController();
   late String selectedType;
   late String selectedCategory;
+  bool recurringIncome = false;
+  String recurringInterval = 'monthly';
 
   final categories = {
     'expense': [
@@ -95,6 +98,12 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
     amountController.dispose();
     descController.dispose();
     super.dispose();
+  }
+
+  double? _parseTransactionDraftAmount(FinanceBlock block, String text) {
+    final raw = double.tryParse(text.replaceAll(',', '.').trim());
+    if (raw == null || raw <= 0) return null;
+    return block.convertToBase(raw);
   }
 
   String _getCategoryName(AppLocalizations l10n, String category) {
@@ -190,6 +199,9 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                     setState(() {
                       selectedType = val.first;
                       selectedCategory = 'general';
+                      if (selectedType != 'income') {
+                        recurringIncome = false;
+                      }
                     });
                   },
                 ),
@@ -211,6 +223,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
               final useVnd = widget.financeBlock.useVnd.value;
               return TextField(
                 controller: amountController,
+                onChanged: (_) => setState(() {}),
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 style: const TextStyle(fontSize: 14),
@@ -254,6 +267,69 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 border: const OutlineInputBorder(),
               ),
             ),
+            if (!isEdit && selectedType == 'income') ...[
+              const SizedBox(height: 8),
+              SwitchListTile(
+                contentPadding: EdgeInsets.zero,
+                title: Text(
+                  l10n.finance_recurring_income,
+                  style: const TextStyle(fontSize: 14),
+                ),
+                value: recurringIncome,
+                onChanged: (v) => setState(() => recurringIncome = v),
+              ),
+              if (recurringIncome)
+                DropdownButtonFormField<String>(
+                  initialValue: recurringInterval,
+                  decoration: InputDecoration(
+                    labelText: l10n.finance_recurring_interval,
+                    labelStyle: const TextStyle(fontSize: 12),
+                    border: const OutlineInputBorder(),
+                  ),
+                  items: [
+                    DropdownMenuItem(
+                      value: 'weekly',
+                      child: Text(
+                        l10n.finance_interval_weekly,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'monthly',
+                      child: Text(
+                        l10n.finance_interval_monthly,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                    DropdownMenuItem(
+                      value: 'yearly',
+                      child: Text(
+                        l10n.finance_interval_yearly,
+                        style: const TextStyle(fontSize: 14),
+                      ),
+                    ),
+                  ],
+                  onChanged: (val) => setState(
+                    () => recurringInterval = val ?? 'monthly',
+                  ),
+                ),
+            ],
+            if (!isEdit) ...[
+              const SizedBox(height: 16),
+              FinanceEntryInsightPanel(
+                insight: buildTransactionInsight(
+                  l10n: l10n,
+                  block: widget.financeBlock,
+                  draftAmountBase: _parseTransactionDraftAmount(
+                    widget.financeBlock,
+                    amountController.text,
+                  ),
+                  type: selectedType,
+                  recurringIncome: recurringIncome,
+                  recurringInterval: recurringInterval,
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -290,13 +366,22 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 moodScore: widget.initialData!.moodScore,
               );
             } else {
+              final description =
+                  descController.text.isEmpty ? null : descController.text;
               await widget.financeBlock.addTransaction(
                 category: selectedCategory,
                 type: selectedType,
                 amount: amount,
-                description:
-                    descController.text.isEmpty ? null : descController.text,
+                description: description,
               );
+              if (selectedType == 'income' && recurringIncome) {
+                await widget.financeBlock.addRecurringIncome(
+                  category: selectedCategory,
+                  amount: amount,
+                  description: description,
+                  interval: recurringInterval,
+                );
+              }
             }
             if (context.mounted) Navigator.pop(context);
           },

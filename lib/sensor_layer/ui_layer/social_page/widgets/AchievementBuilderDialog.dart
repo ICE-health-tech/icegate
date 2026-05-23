@@ -9,15 +9,29 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 class AchievementBuilderDialog extends StatefulWidget {
   final BuildContext parentContext;
   final AchievementData? initialData;
+  final String? initialDomain;
 
-  const AchievementBuilderDialog({super.key, required this.parentContext, this.initialData});
+  const AchievementBuilderDialog({
+    super.key,
+    required this.parentContext,
+    this.initialData,
+    this.initialDomain,
+  });
 
-  static Future<void> show(BuildContext context, {AchievementData? initialData}) {
+  static Future<void> show(
+    BuildContext context, {
+    AchievementData? initialData,
+    String? initialDomain,
+  }) {
     return showDialog<void>(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withValues(alpha: 0.65),
-      builder: (ctx) => AchievementBuilderDialog(parentContext: context, initialData: initialData),
+      builder: (ctx) => AchievementBuilderDialog(
+        parentContext: context,
+        initialData: initialData,
+        initialDomain: initialDomain,
+      ),
     );
   }
 
@@ -64,6 +78,9 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
       _meaningScore = a.meaningScore ?? 5;
       _impactScore = a.impactScore;
       _impactWhoController.text = a.impactDescWho;
+    } else if (widget.initialDomain != null &&
+        _domains.contains(widget.initialDomain)) {
+      _selectedDomain = widget.initialDomain!;
     }
   }
 

@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
@@ -17,6 +19,8 @@ import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/TalkSSHPage.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:provider/provider.dart';
+import 'package:ice_gate/utils/app_log.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
   final int? socialIndex;
@@ -40,73 +44,114 @@ class CanvasDynamicIsland extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return "ICE GATE";
 
-    if (path == '/social/blocker') return "APP BLOCKER";
-    if (path == '/intro') return "INITIALIZING...";
-    if (path == '/notifications') return "NOTIFICATIONS";
-    if (path == '/notification-inbox') return "INBOX";
-    if (path == '/documentation') return "DOCUMENTATION";
-    
-    if (path.startsWith('/canvas')) return "CANVAS";
-    if (path.startsWith('/profile')) return "ANALYSIS";
+    if (path == '/social/blocker') return l10n.island_app_blocker;
+    if (path == '/intro') return l10n.island_initializing;
+    if (path == '/notifications') return l10n.island_notifications;
+    if (path == '/notification-inbox') return l10n.island_inbox;
+    if (path == '/documentation') return l10n.island_documentation;
+
+    if (path.startsWith('/canvas')) return l10n.island_canvas;
+    if (path.startsWith('/profile')) return l10n.analysis.toUpperCase();
     
     if (path == '/') {
       return "${personBlock.information.value.profiles.firstName} ${personBlock.information.value.profiles.lastName}";
     }
 
     if (path.startsWith('/social')) {
-      if (path.contains('blocker')) return "APP BLOCKER";
-      if (path.contains('journal')) return "JOURNAL";
+      if (path.contains('blocker')) return l10n.island_app_blocker;
+      if (path.contains('journal')) return l10n.journal.toUpperCase();
+      final focus = socialBlock.activeFocusTrend.value;
+      if (focus != null) return focus.name.toUpperCase();
       final index = socialIndex ?? socialBlock.activeTab.value;
       switch (index) {
-        case 0: return "JOURNAL";
-        case 1: return "ACHIEVEMENTS";
-        case 2: return "ANALYSIS";
-        default: return "MIND";
+        case 0:
+          return l10n.journal.toUpperCase();
+        case 1:
+          return l10n.mind_focus_title.toUpperCase();
+        case 2:
+          return l10n.achievements;
+        case 3:
+          return l10n.analysis.toUpperCase();
+        default:
+          return l10n.island_mind;
       }
+    }
+
+    if (path == '/health') {
+      final burned = context.read<HealthBlock>().todayCaloriesBurned.value;
+      return '$burned ${l10n.health_kcal}';
     }
 
     if (path.startsWith('/health')) {
-      if (path.contains('integrations')) return "DATA";
-      if (path.contains('food')) return "NUTRITION";
-      if (path.contains('exercise')) return "ACTIVITY";
-      if (path.contains('water')) return "HYDRATION";
-      if (path.contains('focus')) return "FOCUS";
-      if (path.contains('steps')) return "STEPS";
-      if (path.contains('heart_rate') || path.contains('vitals')) return "VITALS";
-      if (path.contains('sleep')) return "SLEEP";
-      if (path.contains('calories')) return "CALORIES";
-      if (path.contains('oxygen_saturation')) return "SPO2";
-      if (path.contains('weight')) return "BIOMETRICS";
-      return "HEALTH";
+      if (path.contains('integrations')) return l10n.island_health_data;
+      if (path.contains('food')) return l10n.island_nutrition;
+      if (path.contains('exercise')) return l10n.island_activity;
+      if (path.contains('water')) return l10n.island_hydration;
+      if (path.contains('focus')) return l10n.island_focus;
+      if (path.contains('steps')) return l10n.island_steps;
+      if (path.contains('heart_rate') || path.contains('vitals')) {
+        return l10n.island_vitals;
+      }
+      if (path.contains('sleep')) return l10n.island_sleep;
+      if (path.contains('calories')) return l10n.island_calories;
+      if (path.contains('oxygen_saturation')) return l10n.island_spo2;
+      if (path.contains('weight')) return l10n.island_biometrics;
+      return l10n.health.toUpperCase();
     }
 
     if (path.startsWith('/finance')) {
+      if (path.contains('/reports/daily')) return l10n.reports_hub_title;
       final index = financeBlock.activeTab.value;
       switch (index) {
-        case 0: return "OVERVIEW";
-        case 1: return "HISTORY";
-        case 2: return "BILLING";
-        case 3: return "SAVING";
-        default: return "FINANCE";
+        case 0:
+          return l10n.finance_tab_overview;
+        case 1:
+          return l10n.finance_tab_daily;
+        case 2:
+          return l10n.finance_tab_billing;
+        case 3:
+          return l10n.finance_tab_saving;
+        case 4:
+          return l10n.finance_tab_achievements;
+        default:
+          return l10n.finance.toUpperCase();
       }
     }
 
-    if (path.startsWith('/projects/documents') || path.startsWith('/projects/notes')) {
-      return "DOCUMENTS";
+    if (path.startsWith('/projects/documents') ||
+        path.startsWith('/projects/notes')) {
+      return l10n.island_documents;
     }
 
-    if (path.startsWith('/projects/editor')) return "EDITOR";
-    if (path.startsWith('/projects')) return "PROJECTS";
-    
-    if (path.startsWith('/personal-info')) return "IDENTITY";
-    if (path == '/change-password') return "SECURITY";
-    if (path == '/change-username') return "ID UPDATE";
-    if (path == '/manual') return "PROTOCOLS";
-    if (path == '/sync-engine') return "SYNC CORE";
-    if (path.startsWith('/settings')) return "SETTINGS";
-    if (path.startsWith('/widgets/ssh')) return "REMOTE SSH";
-    
-    return "ICE GATE";
+    if (path.startsWith('/projects/editor')) return l10n.island_editor;
+    if (path.startsWith('/projects')) return l10n.projects.toUpperCase();
+
+    if (path.startsWith('/personal-info')) return l10n.island_identity;
+    if (path == '/change-password') return l10n.security_title.toUpperCase();
+    if (path == '/change-username') return l10n.island_id_update;
+    if (path == '/manual') return l10n.island_protocols;
+    if (path == '/sync-engine') return l10n.island_sync_core;
+    if (path.startsWith('/settings')) return l10n.island_settings;
+    if (path.startsWith('/widgets/ssh')) return l10n.island_remote_ssh;
+
+    return l10n.island_app_name;
+  }
+
+  /// Sub-route title for the gap between back and finance tabs (null on `/finance`).
+  String? _financeSubRouteTitle(BuildContext context, String path) {
+    if (path == '/finance') return null;
+    final l10n = AppLocalizations.of(context);
+    if (l10n == null) return null;
+    if (path.contains('/reports/daily')) return l10n.reports_hub_title;
+    return null;
+  }
+
+  Color? _pillarAccentForRoute(String path, {Color? socialAccent}) {
+    if (path.startsWith('/finance')) return EntryColors.financeSilverAccent;
+    if (path.startsWith('/social')) return socialAccent ?? EntryColors.socialPurple;
+    if (path.startsWith('/health')) return EntryColors.healthGreen;
+    if (path.startsWith('/projects')) return EntryColors.projectBlue;
+    return null;
   }
 
   @override
@@ -146,6 +191,7 @@ class CanvasDynamicIsland extends StatelessWidget {
       final useTmux = sshService.useTmuxSignal.value;
       final isFoodAnalyzing = foodAnalysisBlock.isAnalyzing.value;
       final foodAnalysisStatus = foodAnalysisBlock.analysisStatus.value;
+      final socialMindFocus = socialBlock.activeFocusTrend.value;
 
       // Time formatting helper
       String formatTime(int seconds) {
@@ -175,140 +221,213 @@ class CanvasDynamicIsland extends StatelessWidget {
           ? Colors.blueAccent
           : Colors.greenAccent;
       final String location = GoRouterState.of(context).uri.toString();
-      return AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        curve: Curves.easeOutQuart,
-        width: width,
-        height: 48 * scalingFactor,
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainerHighest,
-          borderRadius: BorderRadius.circular(27 * scalingFactor),
-          border: Border.all(
-            color: isFocusRunning
-                ? focusColor.withValues(alpha: 0.5)
+      final pillarAccent = _pillarAccentForRoute(
+        currentRoute,
+        socialAccent: socialMindFocus?.color,
+      );
+      final financeSubTitle = currentRoute.startsWith('/finance')
+          ? _financeSubRouteTitle(context, currentRoute)
+          : null;
+      final borderColor = isFocusRunning
+          ? focusColor.withValues(alpha: 0.5)
+          : (currentRoute.startsWith('/social') && socialMindFocus != null
+                ? socialMindFocus.color.withValues(alpha: 0.55)
                 : (useTmux
                       ? Colors.greenAccent.withValues(alpha: 0.5)
-                      : colorScheme.outlineVariant.withValues(alpha: 0.5)),
-            width: (isFocusRunning || useTmux) ? 1.5 : 1.2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  (isFocusRunning
-                          ? focusColor
-                          : (useTmux ? Colors.greenAccent : colorScheme.shadow))
-                      .withValues(alpha: 0.3),
-              blurRadius: (isFocusRunning || useTmux) ? 20 : 16,
-              offset: Offset(0, 6 * scalingFactor),
-              spreadRadius: 2,
-            ),
-          ],
-        ),
-        padding: EdgeInsets.symmetric(
-          horizontal: 8 * scalingFactor,
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            // Back Button
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.mediumImpact();
-                print("Current location: $location");
-                if (location.startsWith('/projects/editor')) {
-                  context.go("/projects");
-                }
+                      : Colors.white.withValues(alpha: 0.08)));
+      final islandRadius = 27 * scalingFactor;
 
-                if (Navigator.canPop(context)) {
-                  Navigator.pop(context);
-                } else {
-                  context.go('/');
-                }
-              },
-              child: Container(
-                padding: EdgeInsets.all(4 * scalingFactor),
-                decoration: BoxDecoration(
-                  color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.arrow_back_rounded,
-                  color: colorScheme.onSurface,
-                  size: 20 * scalingFactor,
-                ),
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(islandRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            curve: Curves.easeOutQuart,
+            width: width,
+            height: 48 * scalingFactor,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: pillarAccent != null
+                    ? [
+                        pillarAccent.withValues(alpha: 0.12),
+                        Colors.white.withValues(alpha: 0.055),
+                        Colors.white.withValues(alpha: 0.03),
+                      ]
+                    : [
+                        Colors.white.withValues(alpha: 0.055),
+                        Colors.white.withValues(alpha: 0.03),
+                      ],
+                stops: pillarAccent != null
+                    ? const [0.0, 0.35, 1.0]
+                    : const [0.0, 1.0],
               ),
+              borderRadius: BorderRadius.circular(islandRadius),
+              border: Border.all(color: borderColor, width: 1.2),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF000F1E).withValues(alpha: 0.37),
+                  blurRadius: (isFocusRunning || useTmux) ? 20 : 16,
+                  offset: Offset(0, 6 * scalingFactor),
+                  spreadRadius: 2,
+                ),
+                if (pillarAccent != null)
+                  BoxShadow(
+                    color: pillarAccent.withValues(alpha: 0.12),
+                    blurRadius: 20,
+                    spreadRadius: -4,
+                  ),
+              ],
             ),
+            padding: EdgeInsets.symmetric(horizontal: 8 * scalingFactor),
+            child: Stack(
+              children: [
+                Positioned(
+                  top: 0,
+                  left: 12 * scalingFactor,
+                  right: 12 * scalingFactor,
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.18),
+                          Colors.white.withValues(alpha: 0.04),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(1),
+                    ),
+                  ),
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        HapticFeedback.mediumImpact();
+                        appLog("Current location: $location");
+                        if (location.startsWith('/projects/editor')) {
+                          context.go("/projects");
+                        }
 
-            // Center Content (Title or Focus Timer)
-            Expanded(
-              child: Center(
-                  child: currentRoute.startsWith('/widgets/ssh')
-                      ? (sshService.isConfigMode.value
-                            ? _buildSSHConfig(
-                                context,
-                                colorScheme,
-                                scalingFactor,
-                              )
-                            : _buildSSHMetrics(
-                                context,
-                                colorScheme,
-                                scalingFactor,
-                              ))
-                      : currentRoute.startsWith('/finance')
-                      ? _buildFinanceTabs(
-                          context,
-                          financeBlock,
-                          scalingFactor,
-                          colorScheme,
-                        )
-                      : currentRoute.startsWith('/social')
-                      ? _buildSocialTabs(
-                          context,
-                          socialBlock,
-                          scalingFactor,
-                          colorScheme,
-                        )
-                      : isFoodAnalyzing
-                      ? _buildFoodAnalysisStatus(
-                          context,
-                          foodAnalysisStatus,
-                          scalingFactor,
-                          colorScheme,
-                        )
-                      : isFocusRunning
-                      ? _buildFocusTimer(
-                          context,
-                          focusBlock,
-                          focusColor,
-                          sessionType,
-                          scalingFactor,
-                          colorScheme,
-                        )
-                      : useTmux
-                      ? _buildTmuxStatus(context, scalingFactor, colorScheme)
-                      : (isSyncing || syncStatus != null)
-                      ? _buildSyncStatus(
-                          context,
-                          syncStatus,
-                          isSyncing,
-                          scalingFactor,
-                          colorScheme,
-                        )
-                      : _buildDefaultTitle(
-                            context,
-                            currentRoute,
-                            socialBlock,
-                            financeBlock,
-                            socialIndex,
-                            documentIndex,
-                            scalingFactor,
-                            colorScheme,
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          context.go('/');
+                        }
+                      },
+                      child: Container(
+                        padding: EdgeInsets.all(6 * scalingFactor),
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.04),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withValues(alpha: 0.08),
                           ),
-                ),
-              ),
+                        ),
+                        child: Icon(
+                          Icons.arrow_back_rounded,
+                          color: const Color(0xF2FFFFFF),
+                          size: 18 * scalingFactor,
+                        ),
+                      ),
+                    ),
 
-            // Actions (extra leading gap so quest/notification badge never paints over title)
-            Padding(
+                    Expanded(
+                      child: currentRoute.startsWith('/widgets/ssh')
+                          ? Align(
+                              alignment: Alignment.centerLeft,
+                              child: sshService.isConfigMode.value
+                                  ? _buildSSHConfig(
+                                      context,
+                                      colorScheme,
+                                      scalingFactor,
+                                    )
+                                  : _buildSSHMetrics(
+                                      context,
+                                      colorScheme,
+                                      scalingFactor,
+                                    ),
+                            )
+                          : currentRoute.startsWith('/finance')
+                          ? Row(
+                              children: [
+                                if (financeSubTitle != null) ...[
+                                  _buildRouteTitleChip(
+                                    financeSubTitle,
+                                    pillarAccent ?? colorScheme.primary,
+                                    scalingFactor,
+                                  ),
+                                  SizedBox(width: 8 * scalingFactor),
+                                ],
+                                Expanded(
+                                  child: Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: _buildFinanceTabs(
+                                      context,
+                                      financeBlock,
+                                      scalingFactor,
+                                      colorScheme,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Align(
+                              alignment: Alignment.centerLeft,
+                              child: currentRoute.startsWith('/social')
+                                  ? _buildSocialTabs(
+                                      context,
+                                      socialBlock,
+                                      scalingFactor,
+                                      colorScheme,
+                                    )
+                                  : isFoodAnalyzing
+                                  ? _buildFoodAnalysisStatus(
+                                      context,
+                                      foodAnalysisStatus,
+                                      scalingFactor,
+                                      colorScheme,
+                                    )
+                                  : isFocusRunning
+                                  ? _buildFocusTimer(
+                                      context,
+                                      focusBlock,
+                                      focusColor,
+                                      sessionType,
+                                      scalingFactor,
+                                      colorScheme,
+                                    )
+                                  : useTmux
+                                  ? _buildTmuxStatus(
+                                      context,
+                                      scalingFactor,
+                                      colorScheme,
+                                    )
+                                  : (isSyncing || syncStatus != null)
+                                  ? _buildSyncStatus(
+                                      context,
+                                      syncStatus,
+                                      isSyncing,
+                                      scalingFactor,
+                                      colorScheme,
+                                    )
+                                  : _buildDefaultTitle(
+                                      context,
+                                      currentRoute,
+                                      socialBlock,
+                                      financeBlock,
+                                      socialIndex,
+                                      documentIndex,
+                                      scalingFactor,
+                                      colorScheme,
+                                    ),
+                            ),
+                    ),
+
+                    Padding(
                 padding: EdgeInsets.only(left: 10 * scalingFactor),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -449,10 +568,58 @@ class CanvasDynamicIsland extends StatelessWidget {
                   ],
                 ),
               ),
+              ],
+            ),
           ],
         ),
-      );
+      ),
+    ),
+  );
     });
+  }
+
+  Widget _buildRouteTitleChip(
+    String title,
+    Color accent,
+    double scalingFactor,
+  ) {
+    return Flexible(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: EdgeInsets.symmetric(
+              horizontal: 10 * scalingFactor,
+              vertical: 4 * scalingFactor,
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  accent.withValues(alpha: 0.12),
+                  Colors.white.withValues(alpha: 0.04),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: const Color(0xF2FFFFFF),
+                fontSize: 10 * scalingFactor,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.2,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildFocusTimer(
@@ -587,7 +754,7 @@ class CanvasDynamicIsland extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            "TMUX ACTIVE",
+            AppLocalizations.of(context)!.island_tmux_active,
             style: TextStyle(
               color: Colors.greenAccent,
               fontSize: 10 * scalingFactor,
@@ -624,7 +791,7 @@ class CanvasDynamicIsland extends StatelessWidget {
         if (currentRoute.startsWith('/social')) {
           HapticFeedback.mediumImpact();
           final currentIdx = socialBlock.activeTab.value;
-          socialBlock.activeTab.value = (currentIdx + 1) % 3;
+          socialBlock.activeTab.value = (currentIdx + 1) % 4;
         } else if (currentRoute == '/') {
           HapticFeedback.mediumImpact();
           context.go("/personal-info");
@@ -842,8 +1009,9 @@ class CanvasDynamicIsland extends StatelessWidget {
               Flexible(
                 child: Text(
                   isConnected
-                      ? (sshService.currentHost ?? "CONNECTED")
-                      : "NOT ACTIVE",
+                      ? (sshService.currentHost ??
+                          AppLocalizations.of(context)!.island_connected)
+                      : AppLocalizations.of(context)!.island_not_active,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: isConnected
@@ -881,7 +1049,7 @@ class CanvasDynamicIsland extends StatelessWidget {
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Text(
-                      "CONNECT",
+                      AppLocalizations.of(context)!.island_connect,
                       style: TextStyle(
                         color: colorScheme.onPrimary,
                         fontSize: 8 * scalingFactor,
@@ -958,7 +1126,9 @@ class CanvasDynamicIsland extends StatelessWidget {
     double scalingFactor,
     ColorScheme colorScheme,
   ) {
+    const financeAccent = EntryColors.financeSilverAccent;
     return Watch((context) {
+      final l10n = AppLocalizations.of(context)!;
       final activeIndex = financeBlock.activeTab.value;
       return FittedBox(
         fit: BoxFit.scaleDown,
@@ -969,44 +1139,60 @@ class CanvasDynamicIsland extends StatelessWidget {
               context,
               index: 0,
               icon: Icons.dashboard_rounded,
-              label: "OVERVIEW",
+              label: l10n.finance_tab_overview,
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: financeAccent,
             ),
             SizedBox(width: 16 * scalingFactor),
             _buildAdaptiveTabIcon(
               context,
               index: 1,
-              icon: Icons.history_rounded,
-              label: "HISTORY",
+              icon: Icons.today_rounded,
+              label: l10n.finance_tab_daily,
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: financeAccent,
             ),
-            SizedBox(width: 16 * scalingFactor),
+            SizedBox(width: 12 * scalingFactor),
             _buildAdaptiveTabIcon(
               context,
               index: 2,
               icon: Icons.receipt_long_rounded,
-              label: "BILLING",
+              label: l10n.finance_tab_billing,
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: financeAccent,
             ),
-            SizedBox(width: 16 * scalingFactor),
+            SizedBox(width: 12 * scalingFactor),
             _buildAdaptiveTabIcon(
               context,
               index: 3,
               icon: Icons.savings_rounded,
-              label: "SAVING",
+              label: l10n.finance_tab_saving,
               activeIndex: activeIndex,
               onTap: (idx) => financeBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: financeAccent,
+            ),
+            SizedBox(width: 12 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 4,
+              icon: Icons.emoji_events_rounded,
+              label: l10n.finance_tab_achievements,
+              activeIndex: activeIndex,
+              onTap: (idx) => financeBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+              accentColor: financeAccent,
             ),
           ],
         ),
@@ -1021,7 +1207,10 @@ class CanvasDynamicIsland extends StatelessWidget {
     ColorScheme colorScheme,
   ) {
     return Watch((context) {
+      final l10n = AppLocalizations.of(context)!;
       final activeIndex = socialBlock.activeTab.value;
+      final focus = socialBlock.activeFocusTrend.value;
+      final accent = focus?.color ?? colorScheme.primary;
       return FittedBox(
         fit: BoxFit.scaleDown,
         child: Row(
@@ -1031,33 +1220,48 @@ class CanvasDynamicIsland extends StatelessWidget {
               context,
               index: 0,
               icon: Icons.sentiment_satisfied_rounded,
-              label: "JOURNAL",
+              label: l10n.journal.toUpperCase(),
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: accent,
             ),
             SizedBox(width: 32 * scalingFactor),
             _buildAdaptiveTabIcon(
               context,
               index: 1,
-              icon: Icons.sentiment_satisfied_rounded,
-              label: "ACHIEVEMENTS",
+              icon: Icons.center_focus_strong_rounded,
+              label: l10n.mind_focus_title.toUpperCase(),
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: accent,
             ),
             SizedBox(width: 32 * scalingFactor),
             _buildAdaptiveTabIcon(
               context,
               index: 2,
-              icon: Icons.bar_chart_rounded,
-              label: "ANALYSIS",
+              icon: Icons.emoji_events_outlined,
+              label: l10n.achievements,
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,
               scalingFactor: scalingFactor,
               colorScheme: colorScheme,
+              accentColor: accent,
+            ),
+            SizedBox(width: 32 * scalingFactor),
+            _buildAdaptiveTabIcon(
+              context,
+              index: 3,
+              icon: Icons.bar_chart_rounded,
+              label: l10n.analysis.toUpperCase(),
+              activeIndex: activeIndex,
+              onTap: (idx) => socialBlock.activeTab.value = idx,
+              scalingFactor: scalingFactor,
+              colorScheme: colorScheme,
+              accentColor: accent,
             ),
           ],
         ),
@@ -1074,8 +1278,10 @@ class CanvasDynamicIsland extends StatelessWidget {
     required Function(int) onTap,
     required double scalingFactor,
     required ColorScheme colorScheme,
+    Color? accentColor,
   }) {
     final bool isActive = index == activeIndex;
+    final primary = accentColor ?? colorScheme.primary;
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1089,9 +1295,14 @@ class CanvasDynamicIsland extends StatelessWidget {
         ),
         decoration: BoxDecoration(
           color: isActive
-              ? colorScheme.primary.withValues(alpha: 0.15)
-              : Colors.transparent,
+              ? primary.withValues(alpha: 0.15)
+              : Colors.white.withValues(alpha: 0.04),
           borderRadius: BorderRadius.circular(20 * scalingFactor),
+          border: Border.all(
+            color: isActive
+                ? primary.withValues(alpha: 0.35)
+                : Colors.white.withValues(alpha: 0.06),
+          ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -1100,7 +1311,7 @@ class CanvasDynamicIsland extends StatelessWidget {
               icon,
               size: 18 * scalingFactor,
               color: isActive
-                  ? colorScheme.primary
+                  ? primary
                   : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
             ),
             if (isActive) ...[
@@ -1108,7 +1319,7 @@ class CanvasDynamicIsland extends StatelessWidget {
               Text(
                 label,
                 style: TextStyle(
-                  color: colorScheme.primary,
+                  color: primary,
                   fontSize: 10 * scalingFactor,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,

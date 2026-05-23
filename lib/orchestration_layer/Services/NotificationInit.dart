@@ -5,12 +5,13 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/orchestration_layer/Services/DailyFinanceReportPrefs.dart';
-import 'package:ice_gate/orchestration_layer/Services/DailyMailSummaryPrefs.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryPrefs.dart';
 import 'package:signals/signals.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
 import 'package:flutter_timezone/flutter_timezone.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class LocalNotificationService {
   // 1. Create the plugin instance
@@ -319,13 +320,13 @@ class LocalNotificationService {
           try {
             await scheduleCustomNotification(notification);
           } catch (e) {
-            print(
+            appLog(
               "Warning: Failed to schedule notification ${notification.id}: $e",
             );
           }
         }
       } catch (e) {
-        print("Warning: Failed to sync notifications: $e");
+        appLog("Warning: Failed to sync notifications: $e");
       }
     }
 
@@ -353,7 +354,7 @@ class LocalNotificationService {
 
     // Guard: If it's a one-time notification and it's in the past, skip it.
     if (matchComponents == null && scheduledDate.isBefore(now)) {
-      print('Skipping past one-time notification: ${data.title}');
+      appLog('Skipping past one-time notification: ${data.title}');
       return;
     }
 

@@ -4,13 +4,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/Services/DailySummaryPayloadBuilder.dart';
-import 'package:ice_gate/orchestration_layer/Services/N8nSummaryDispatch.dart';
-import 'package:ice_gate/orchestration_layer/Services/ReportRecipientPrefs.dart';
-import 'package:ice_gate/orchestration_layer/Services/ReportRecipientResolver.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryEmailFormatter.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryPayloadBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/FinanceDailySummaryBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/N8nSummaryDispatch.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/ReportRecipientPrefs.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/ReportRecipientResolver.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DailyMailSummaryAutoSection.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
@@ -45,14 +50,20 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
 
   Future<void> _loadRecipient() async {
     final personBlock = context.read<PersonBlock>();
-    final profileEmail = ReportRecipientResolver.profileEmail(personBlock);
-    final saved = await ReportRecipientPrefs.getRecipient();
+    final defaultEmail = ReportRecipientResolver.profileEmail(personBlock);
+    final saved = (await ReportRecipientPrefs.getRecipient())?.trim();
+    if (saved != null &&
+        saved.isNotEmpty &&
+        !ReportRecipientResolver.isValidEmail(saved)) {
+      await ReportRecipientPrefs.setRecipient(null);
+    }
+    final savedValid = saved != null &&
+        saved.isNotEmpty &&
+        ReportRecipientResolver.isValidEmail(saved);
     if (!mounted) return;
     setState(() {
-      _profileEmail = profileEmail;
-      _recipientController.text = (saved?.trim().isNotEmpty == true)
-          ? saved!.trim()
-          : (profileEmail ?? '');
+      _profileEmail = defaultEmail;
+      _recipientController.text = savedValid ? saved : (defaultEmail ?? '');
       _loadingRecipient = false;
     });
   }
@@ -107,6 +118,9 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
       final personBlock = context.read<PersonBlock>();
       final financeBlock = context.read<FinanceBlock>();
       final healthBlock = context.read<HealthBlock>();
+      final mindBlock = context.read<MindBlock>();
+      final growthBlock = context.read<GrowthBlock>();
+      final projectBlock = context.read<ProjectBlock>();
       final configBlock = context.read<ConfigBlock>();
       final personId = personBlock.currentPersonID.value ?? '';
       final locale = Localizations.localeOf(context).languageCode;
@@ -123,10 +137,14 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
       final payload = DailySummaryPayloadBuilder.build(
         finance: financeBlock,
         health: healthBlock,
+        mind: mindBlock,
+        growth: growthBlock,
+        project: projectBlock,
         personId: personId,
         currency: configBlock.currency.value,
         locale: locale,
         recipientEmail: email,
+        recipientName: ReportRecipientResolver.displayName(personBlock),
         categoryLabels: categoryLabels,
       );
 
@@ -157,40 +175,99 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
     final l10n = AppLocalizations.of(context)!;
     final financeBlock = context.read<FinanceBlock>();
     final healthBlock = context.read<HealthBlock>();
+    final mindBlock = context.read<MindBlock>();
+    final growthBlock = context.read<GrowthBlock>();
+    final projectBlock = context.read<ProjectBlock>();
+
+    const financeAccent = EntryColors.financeSilverAccent;
+    const iceTextSecondary = Color(0x80ADD8E6);
 
     return ClipRRect(
-      borderRadius: BorderRadius.circular(24),
+      borderRadius: BorderRadius.circular(20),
       child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-        child: Container(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: DecoratedBox(
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: EntryColors.financeSilverAccent.withValues(alpha: 0.22),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                financeAccent.withValues(alpha: 0.12),
+                Colors.white.withValues(alpha: 0.055),
+                Colors.white.withValues(alpha: 0.03),
+              ],
+              stops: const [0.0, 0.32, 1.0],
             ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: Colors.white.withValues(alpha: 0.08),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFF000F1E).withValues(alpha: 0.37),
+                blurRadius: 32,
+                offset: const Offset(0, 8),
+              ),
+              BoxShadow(
+                color: financeAccent.withValues(alpha: 0.12),
+                blurRadius: 48,
+                spreadRadius: -8,
+              ),
+            ],
           ),
-          padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+          child: Stack(
             children: [
-              Text(
-                l10n.reports_mail_section_title,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
+              Padding(
+            padding: const EdgeInsets.fromLTRB(18, 18, 18, 16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.04),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.08),
+                        ),
+                      ),
+                      child: Icon(
+                        Icons.mark_email_unread_rounded,
+                        size: 22,
+                        color: financeAccent.withValues(alpha: 0.95),
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            l10n.reports_mail_section_title,
+                            style: const TextStyle(
+                              color: Color(0xF2FFFFFF),
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            l10n.reports_mail_section_subtitle,
+                            style: const TextStyle(
+                              color: iceTextSecondary,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                l10n.reports_mail_section_subtitle,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  fontSize: 12,
-                ),
-              ),
-              const SizedBox(height: 16),
+                const SizedBox(height: 16),
               Text(
                 l10n.canvas_mail_summary_recipient.toUpperCase(),
                 style: TextStyle(
@@ -272,14 +349,60 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
               ],
               const SizedBox(height: 18),
               Watch((context) {
-                final income = financeBlock.monthlyIncome.value;
-                final spending = financeBlock.monthlySpending.value;
+                final now = DateTime.now();
+                double dayIncome = 0;
+                double dayExpense = 0;
+                for (final t in financeBlock.transactions.value) {
+                  if (!FinanceDailySummaryBuilder.sameCalendarDay(
+                    t.transactionDate,
+                    now,
+                  )) {
+                    continue;
+                  }
+                  switch (t.type) {
+                    case 'income':
+                      dayIncome += t.amount;
+                      break;
+                    case 'expense':
+                    case 'investment':
+                      dayExpense += t.amount;
+                      break;
+                  }
+                }
+                final dayNet = dayIncome - dayExpense;
                 final netWorth = financeBlock.totalBalance.value;
-                final dailyNet = financeBlock.dailyDelta.value;
+                final savings = financeBlock.totalSavings.value;
                 final steps = healthBlock.todaySteps.value;
+                final stepGoal = healthBlock.dailyStepGoal.value;
                 final sleep = healthBlock.todaySleep.value;
                 final water = healthBlock.todayWater.value;
-                final kcal = healthBlock.todayCaloriesBurned.value;
+                final heartRate = healthBlock.todayHeartRate.value;
+                final exercise = healthBlock.todayExerciseMinutes.value;
+                final focus = healthBlock.todayFocusMinutes.value;
+                final kcalBurned = healthBlock.todayCaloriesBurned.value;
+
+                final moodLog = mindBlock.latestMoodLog.value;
+                final moodToday = moodLog != null &&
+                    FinanceDailySummaryBuilder.sameCalendarDay(
+                      moodLog.logDate,
+                      now,
+                    );
+                final moodLabel = moodToday
+                    ? DailySummaryEmailFormatter.moodLabel(
+                        moodLog.moodScore,
+                        Localizations.localeOf(context).languageCode,
+                      )
+                    : l10n.mood_no_data;
+
+                final projectGoals = growthBlock.goals.value
+                    .where((g) => g.category == 'project')
+                    .toList();
+                final tasksActive = projectGoals
+                    .where((g) => g.status != 'done')
+                    .length;
+                final projectsActive = projectBlock.projects.value
+                    .where((p) => p.status == 0)
+                    .length;
 
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -300,8 +423,18 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                       children: [
                         _PreviewChip(
                           label: l10n.finance_daily_report_net,
-                          value: financeBlock.formatCurrency(dailyNet),
+                          value: financeBlock.formatCurrency(dayNet),
                           color: EntryColors.financeSilverAccent,
+                        ),
+                        _PreviewChip(
+                          label: l10n.finance_daily_report_income,
+                          value: financeBlock.formatCurrency(dayIncome),
+                          color: Colors.greenAccent,
+                        ),
+                        _PreviewChip(
+                          label: l10n.finance_daily_report_expense,
+                          value: financeBlock.formatCurrency(dayExpense),
+                          color: Colors.orangeAccent,
                         ),
                         _PreviewChip(
                           label: l10n.finance_total_net_worth,
@@ -309,14 +442,9 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                           color: EntryColors.primaryIceBlue,
                         ),
                         _PreviewChip(
-                          label: l10n.finance_daily_report_income,
-                          value: financeBlock.formatCurrency(income),
-                          color: Colors.greenAccent,
-                        ),
-                        _PreviewChip(
-                          label: l10n.finance_daily_report_expense,
-                          value: financeBlock.formatCurrency(spending),
-                          color: Colors.orangeAccent,
+                          label: l10n.finance_total_savings,
+                          value: financeBlock.formatCurrency(savings),
+                          color: Colors.tealAccent,
                         ),
                       ],
                     ),
@@ -337,7 +465,7 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                       children: [
                         _PreviewChip(
                           label: l10n.health_steps,
-                          value: '$steps',
+                          value: stepGoal > 0 ? '$steps / $stepGoal' : '$steps',
                           color: EntryColors.healthGreen,
                         ),
                         _PreviewChip(
@@ -351,9 +479,73 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                           color: EntryColors.iceCyan,
                         ),
                         _PreviewChip(
+                          label: l10n.health_heart_rate,
+                          value: heartRate > 0 ? '$heartRate ${l10n.health_bpm}' : '—',
+                          color: Colors.redAccent,
+                        ),
+                        _PreviewChip(
+                          label: l10n.health_exercise,
+                          value: '$exercise ${l10n.health_minutes}',
+                          color: Colors.amberAccent,
+                        ),
+                        _PreviewChip(
+                          label: l10n.health_focus,
+                          value: '$focus ${l10n.health_minutes}',
+                          color: EntryColors.primaryIceBlue,
+                        ),
+                        _PreviewChip(
                           label: l10n.health_calories,
-                          value: '$kcal',
+                          value: '$kcalBurned',
                           color: Colors.deepOrangeAccent,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.mind_current_mood.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _PreviewChip(
+                          label: l10n.mind_current_mood,
+                          value: moodLabel,
+                          color: Colors.purpleAccent,
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      l10n.projects.toUpperCase(),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: [
+                        _PreviewChip(
+                          label: l10n.home_projects_active,
+                          value: '$projectsActive',
+                          color: Colors.orangeAccent,
+                        ),
+                        _PreviewChip(
+                          label: l10n.home_tasks_active,
+                          value: '$tasksActive',
+                          color: EntryColors.projectBlue,
                         ),
                       ],
                     ),
@@ -388,6 +580,29 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                   label: Text(
                     l10n.canvas_mail_summary_send,
                     style: const TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                ),
+              ),
+              ],
+            ),
+          ),
+              Positioned(
+                top: 0,
+                left: 12,
+                right: 12,
+                child: IgnorePointer(
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(1),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.transparent,
+                          Colors.white.withValues(alpha: 0.22),
+                          Colors.transparent,
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

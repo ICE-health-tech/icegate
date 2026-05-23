@@ -287,12 +287,8 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF000000),
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: EntryColors.winterEntryVivid,
-        ),
-        child: Listener(
+      backgroundColor: EntryColors.winterEdge,
+      body: Listener(
           onPointerMove: (event) {
             final size = MediaQuery.of(context).size;
             _pointerOffset.value = Offset(
@@ -355,7 +351,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                           pulseController: _pulseController,
                           shards: _assemblyShards,
                           pointerOffset: _pointerOffset,
-                          snowOpacity: 0.18,
+                          snowOpacity: 0.14,
                         ),
                       ),
 
@@ -478,7 +474,6 @@ class _PrismEntryPageState extends State<PrismEntryPage>
             ),
           ),
         ),
-      ),
     );
   }
 

@@ -624,12 +624,13 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     // ignore: unused_local_variable
     final blocker = context.watch<SocialBlockerBlock>();
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "SYSTEM PREFERENCES",
+          l10n.notification_system_preferences,
           style: TextStyle(
             color: colorScheme.onSurface.withValues(alpha: 0.5),
             fontSize: 11,
@@ -640,15 +641,15 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         const SizedBox(height: 16),
         _buildPreferenceTile(
           context,
-          title: "Pomodoros Reminder",
-          subtitle: "Receive notification after you finish a pomodoro or end a break.",
+          title: l10n.notification_pomodoro_reminder_title,
+          subtitle: l10n.notification_pomodoro_reminder_subtitle,
           icon: Icons.notifications_active_rounded,
           color: Colors.greenAccent,
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "on",
+                l10n.notification_status_on,
                 style: TextStyle(
                   color: colorScheme.onSurface.withValues(alpha: 0.5),
                   fontSize: 13,
@@ -665,8 +666,8 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         const SizedBox(height: 12),
         _buildPreferenceTile(
           context,
-          title: "Live Activities",
-          subtitle: "Track focus timer and information on your Lock Screen.",
+          title: l10n.notification_live_activities_title,
+          subtitle: l10n.notification_live_activities_subtitle,
           icon: Icons.timer_rounded,
           color: Colors.blueAccent,
           trailing: Switch.adaptive(

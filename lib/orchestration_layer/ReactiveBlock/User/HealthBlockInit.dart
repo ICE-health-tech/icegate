@@ -367,6 +367,18 @@ extension HealthBlockInit on HealthBlock {
         .catchError((e) {
           debugPrint("HealthBlock: ⚠️ Silent sync sleep data failed: $e");
         });
+
+    syncTodayWeight(() => HealthService.fetchLatestWeight())
+        .then((_) {
+          debugPrint("HealthBlock: 🔄 Silent sync of weight completed.");
+        })
+        .catchError((e) {
+          debugPrint("HealthBlock: ⚠️ Silent sync weight failed: $e");
+        });
+
+    syncWeightHistory(HealthService.fetchWeightForDay).catchError((e) {
+      debugPrint("HealthBlock: ⚠️ Weight history sync failed: $e");
+    });
   }
 
   void startRealtimeSync({Duration interval = const Duration(seconds: 30)}) {

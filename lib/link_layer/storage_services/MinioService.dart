@@ -4,6 +4,7 @@ import 'package:minio/io.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:typed_data';
 import 'package:path/path.dart' as p;
+import 'package:ice_gate/utils/app_log.dart';
 
 class MinioService {
   static final MinioService _instance = MinioService._internal();
@@ -44,7 +45,7 @@ class MinioService {
     } catch (e) {
       // For S3 Access Points or restricted IAM roles, bucketExists/makeBucket might fail.
       // We log the error but allow the service to continue as the bucket likely exists.
-      print('MinioService: Bucket initialization skipped/failed (expected for some S3 setups): $e');
+      appLog('MinioService: Bucket initialization skipped/failed (expected for some S3 setups): $e');
     }
   }
 
@@ -71,7 +72,7 @@ class MinioService {
     final fullName = subFolder != null ? '$subFolder/$fileName' : fileName;
     
     await minio.putObject(bucketName, fullName, stream, onProgress: (progress) {
-      print('Upload progress: $progress');
+      appLog('Upload progress: $progress');
     });
  
     if (endpoint.contains('amazonaws.com')) {

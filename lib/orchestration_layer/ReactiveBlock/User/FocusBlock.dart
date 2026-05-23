@@ -12,6 +12,7 @@ import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 enum FocusStatus { idle, running, paused, completed }
 
@@ -138,12 +139,12 @@ class FocusBlock {
        _musicBlock = musicBlock,
        _audioHandler = audioHandler,
        _notificationService = notificationService {
-    print("FocusBlock Checking: MusicBlock injected: ${_musicBlock != null}");
+    appLog("FocusBlock Checking: MusicBlock injected: ${_musicBlock != null}");
   }
 
   // --- Initialization ---
   Future<void> init() async {
-    print(
+    appLog(
       "FocusBlock Checking: init called. AudioHandler is ${_audioHandler != null ? 'PRESENT' : 'NULL'}",
     );
     try {
@@ -167,7 +168,7 @@ class FocusBlock {
       }
 
       if (_currentPersonId.isEmpty) {
-        print("FocusBlock: personId is empty, skipping daily stats fetch.");
+        appLog("FocusBlock: personId is empty, skipping daily stats fetch.");
       } else {
         await fetchDailyStats();
       }
@@ -175,14 +176,14 @@ class FocusBlock {
       // Register this block with the audio handler for two-way sync
       _audioHandler?.focusBlock = this;
     } catch (e) {
-      print("FocusBlock init error: $e");
+      appLog("FocusBlock init error: $e");
     }
   }
 
   // --- Timer Actions ---
 
   void startTimer({bool fromSystem = false}) async {
-    print(
+    appLog(
       "FocusBlock(${identityHashCode(this)}): startTimer called. isRunning: ${isRunning.value}, fromSystem: $fromSystem, _isStarting: $_isStarting",
     );
     if (isRunning.value || _isStarting) return;
@@ -287,7 +288,7 @@ class FocusBlock {
                 _musicBlock?.play();
               }
             } catch (audioError) {
-              print(
+              appLog(
                 "FocusBlock: Audio setup failed ($audioError), proceeding with silent timer.",
               );
             }
@@ -296,7 +297,7 @@ class FocusBlock {
           try {
             await _createLiveActivity();
           } catch (e) {
-            print("FocusBlock: Live Activity skipped: $e");
+            appLog("FocusBlock: Live Activity skipped: $e");
           }
         });
       });
@@ -307,7 +308,7 @@ class FocusBlock {
 
   Future<void> _createLiveActivity() async {
     if (!_isLiveActivityInitialized) {
-      print("FocusBlock: Live Activity skipped (Not initialized yet)");
+      appLog("FocusBlock: Live Activity skipped (Not initialized yet)");
       return;
     }
     try {
@@ -328,11 +329,11 @@ class FocusBlock {
       // Check if it's the known "missing widget extension" error
       if (e.toString().contains("ActivityInput error 0") ||
           e.toString().contains("LIVE_ACTIVITY_ERROR")) {
-        print(
+        appLog(
           "FocusBlock: Live Activity not available (Widget Extension missing). Skipping.",
         );
       } else {
-        print("FocusBlock: Error creating Live Activity: $e");
+        appLog("FocusBlock: Error creating Live Activity: $e");
       }
     }
   }
@@ -352,13 +353,13 @@ class FocusBlock {
               : (1.0 - (remainingTime.value / _getDurationForType(currentSessionType.value))),
         });
       } catch (e) {
-        print("FocusBlock: Live Activity update failed (quietly skipped): $e");
+        appLog("FocusBlock: Live Activity update failed (quietly skipped): $e");
       }
     }
   }
 
   void pauseTimer({bool fromSystem = false}) {
-    print(
+    appLog(
       "FocusBlock(${identityHashCode(this)}): pauseTimer called. isRunning: ${isRunning.value}, fromSystem: $fromSystem",
     );
     if (!isRunning.value) return;
@@ -422,7 +423,7 @@ class FocusBlock {
 
   /// Persists session (including exercise_logs when [isExerciseMode]) then clears timer state.
   Future<void> stopTimer() async {
-    print("FocusBlock: stopTimer called. Saving session...");
+    appLog("FocusBlock: stopTimer called. Saving session...");
     await _saveSession(status: 'interrupted');
     resetTimer();
   }
@@ -561,7 +562,7 @@ class FocusBlock {
   }
 
   void startMuskFocus() {
-    print(
+    appLog(
       "🚀 [FocusBlock] Alignment Musk Focus for: ${muskFocusDuration.value}m",
     );
     currentSessionType.value = 'Focus';
@@ -607,7 +608,7 @@ class FocusBlock {
   }
 
   void startExercise(String type, int minutes) {
-    print("🚀 [FocusBlock] Starting Exercise: $type for $minutes min");
+    appLog("🚀 [FocusBlock] Starting Exercise: $type for $minutes min");
     currentSessionType.value = 'Focus';
     isExerciseMode.value = true;
     isStopwatchMode.value = false;
@@ -618,7 +619,7 @@ class FocusBlock {
   }
 
   void startStopwatchExercise(String type) {
-    print("🚀 [FocusBlock] Starting Stopwatch Exercise: $type");
+    appLog("🚀 [FocusBlock] Starting Stopwatch Exercise: $type");
     currentSessionType.value = 'Focus';
     isExerciseMode.value = true;
     isStopwatchMode.value = true;
@@ -647,7 +648,7 @@ class FocusBlock {
     if (duration < 10 &&
         status == 'interrupted' &&
         !isExerciseMode.value) {
-      print("FocusBlock: Session too short to save (< 10s).");
+      appLog("FocusBlock: Session too short to save (< 10s).");
       return null;
     }
 
@@ -718,7 +719,7 @@ class FocusBlock {
       );
       await _healthLogsDao.insertExerciseLog(exerciseLog);
       pendingExerciseLogForMood.value = exerciseLogId;
-      print("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
+      appLog("✅ [FocusBlock] Exercise log recorded: ${exerciseType.value}");
 
       // --- Sync to Apple Health / Google Fit ---
       try {
@@ -742,11 +743,11 @@ class FocusBlock {
           totalEnergyBurned: estimatedKcal,
         ).then((success) {
           if (success) {
-            print("🚀 [FocusBlock] Workout synced to Platform Health.");
+            appLog("🚀 [FocusBlock] Workout synced to Platform Health.");
           }
         });
       } catch (e) {
-        print("⚠️ [FocusBlock] Failed to sync workout to platform: $e");
+        appLog("⚠️ [FocusBlock] Failed to sync workout to platform: $e");
       }
 
     }

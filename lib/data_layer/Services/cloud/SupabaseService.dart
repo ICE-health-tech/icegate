@@ -150,6 +150,7 @@ class SupabaseService {
       'journal_activity_options',
       'mind_logs',
       'projects',
+      'goals',
       'focus_sessions',
       'health_metrics',
       'meals',
@@ -239,6 +240,11 @@ class SupabaseService {
       case 'projects':
         for (final r in records) {
           await database.projectsDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'goals':
+        for (final r in records) {
+          await database.growthDAO.upsertFromSupabaseGoal(r);
         }
         break;
       case 'focus_sessions':

@@ -9,9 +9,115 @@
   "projects_tile_calendar": "Calendar",
   "projects_calendar_projects_created": "Projects created",
   "projects_calendar_day_empty": "No tasks or project starts on this day.",
+  "projects_calendar_day_empty_not_connected": "No calendar connected. Use “Connect calendar” above, then sync.",
+  "projects_calendar_day_empty_other_days": "No events on this day. {count} events elsewhere this month — try dates highlighted on the grid.",
+  "@projects_calendar_day_empty_other_days": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "projects_calendar_google_events": "Google Calendar",
+  "projects_calendar_reminders": "Reminders",
+  "projects_calendar_connect_google": "Connect Google Calendar",
+  "projects_calendar_disconnect_google": "Disconnect Google Calendar",
+  "projects_calendar_google_connected": "Google Calendar connected",
+  "projects_calendar_sign_in_failed": "Could not connect Google Calendar",
+  "projects_calendar_sign_in_cancelled": "Google sign-in was cancelled",
+  "projects_calendar_scope_denied": "Calendar permission was not granted. Allow access in your Google account settings.",
+  "projects_calendar_api_not_enabled": "Google Calendar API is disabled for the macOS app (GCP project {projectId}). In Google Cloud Console, enable \"Google Calendar API\" for that project, wait a few minutes, then retry.",
+  "@projects_calendar_api_not_enabled": {
+    "placeholders": {
+      "projectId": { "type": "String" }
+    }
+  },
+  "projects_calendar_insufficient_scopes": "Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.",
+  "projects_calendar_connect_hint": "Sign in with Google to sync all your Google calendars to the Calendar screen.",
+  "projects_calendar_add_reminder": "Add reminder",
+  "projects_calendar_reminder_title": "Reminder title",
+  "projects_calendar_sync_google": "Sync events",
+  "projects_calendar_all_day": "All day",
+  "projects_calendar_integrations": "Calendar connections",
+  "projects_calendar_connect_device": "Connect device calendar",
+  "projects_calendar_connect_apple": "Connect Apple Calendar",
+  "projects_calendar_disconnect_device": "Disconnect device calendar",
+  "projects_calendar_disconnect_apple": "Disconnect Apple Calendar",
+  "projects_calendar_device_connected": "Device calendar connected",
+  "projects_calendar_apple_connected": "Apple Calendar connected",
+  "projects_calendar_device_events": "Device calendar",
+  "projects_calendar_apple_events": "Apple Calendar",
+  "projects_calendar_device_hint": "Allow calendar access to show events from calendars on this device.",
+  "projects_calendar_sync_device": "Sync device events",
+  "projects_calendar_device_denied": "Calendar access was denied. Enable it in Settings.",
+  "integration_hub_title": "Integration Hub",
+  "integration_hub_subtitle": "Calendars, health platforms, and device sensors — one connection center.",
+  "integration_hub_google_fit": "Google Fit",
+  "integration_hub_google_fit_hint": "Uses the same Google sign-in as Calendar and Drive.",
+  "integration_hub_sensors_section": "Devices & sensors",
+  "integration_hub_open_sensor_hub": "Open Sensor Hub",
+  "integration_hub_sensor_hub_hint": "Wearables, IoT pipelines, SSH streams, and Huawei setup.",
+  "integration_hub_huawei_sensor_hint": "Set up Huawei credentials in Sensor Hub first.",
+  "projects_calendar_all_calendars_events": "All calendars",
+  "projects_calendar_synced_count": "Loaded {count} events this month",
+  "@projects_calendar_synced_count": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "projects_calendar_sync_empty_month": "Connected — no events this month. Try another month or check Google Calendar.",
+  "integration_hub_calendars_section": "Calendars",
+  "integration_hub_health_section": "Health",
+  "integration_hub_connect": "Connect",
+  "integration_hub_status_connected": "Connected",
+  "integration_hub_apple_health": "Apple Health",
+  "integration_hub_apple_health_hint": "Steps, sleep, heart rate, and more from HealthKit.",
+  "integration_hub_huawei_health": "Huawei Health",
+  "integration_hub_huawei_health_hint": "Sync from Huawei cloud credentials.",
+  "integration_hub_phase2_notice": "Calendar and Google sign-in work here. Huawei credentials: use Sensor Hub below.",
+  "integration_hub_sign_in_required": "Sign in to your icegate account first, then connect integrations.",
+  "integration_hub_health_coming_soon": "This health source is not available yet.",
+  "integration_hub_open": "Open Integration Hub",
   "projects_tile_focus": "Focus",
   "projects_tile_pomodoro": "Pomodoro",
   "projects_tile_social_blocker": "Social Blocker",
+  "projects_plugin_open": "Open",
+  "projects_plugin_location_tracker": "Location Tracker",
+  "projects_plugin_live_map": "Live Map",
+  "projects_remove_plugin_title": "Remove shortcut?",
+  "projects_remove_plugin_body": "Remove \"{name}\" from quick actions?",
+  "@projects_remove_plugin_body": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_remove_plugin_confirm": "Remove",
+  "integrations_title": "Integrations",
+  "integrations_subtitle": "Manage your document sources",
+  "integrations_active_services": "Active Services",
+  "integrations_total_notes": "Total Notes",
+  "integrations_search_hint": "Search sources...",
+  "integrations_enabled_connections": "ENABLED CONNECTIONS",
+  "integrations_filters": "Filters",
+  "integrations_internal_notes": "Internal Notes",
+  "integrations_primary_vault": "Primary Vault (Local)",
+  "integrations_explore": "Explore",
+  "integrations_google_drive": "Google Drive",
+  "integrations_synced_cloud": "Synced with Cloud",
+  "integrations_cloud_storage": "Cloud Storage",
+  "integrations_sync_now": "Sync Now",
+  "integrations_connect": "Connect",
+  "integrations_notion_sync": "Notion Sync",
+  "integrations_database_pipeline": "Database Pipeline",
+  "integrations_fetch": "Fetch",
+  "integrations_setup": "Setup",
+  "integrations_slack_docs": "Slack Docs",
+  "integrations_shared_channels": "Shared Channels",
+  "integrations_notify_me": "Notify Me",
+  "integrations_notion_config_title": "Notion Configuration",
+  "integrations_notion_secret_label": "Internal Integration Secret",
+  "integrations_save_fetch": "Save & Fetch",
+  "integrations_marketplace_soon": "Source Marketplace coming soon!",
   "projects_workspace_empty": "No workspace has been set up yet.",
   "projects_workspace_start": "Get started",
   "project_drive_sync": "Cloud Sync",
@@ -64,6 +170,15 @@
   "health_sync_success": "Health data synced!",
   "health_sync_failed": "Sync failed. Please try again.",
   "health_update_weight": "Update Weight",
+  "health_smart_scale_title": "Smart scale",
+  "health_smart_scale_desc": "Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)",
+  "health_smart_scale_sync": "Sync smart scale",
+  "health_smart_scale_syncing": "Syncing…",
+  "health_smart_scale_sync_ok": "Weight synced from smart scale",
+  "health_smart_scale_sync_empty": "No weight found. Weigh in on your scale first, then sync.",
+  "health_smart_scale_sync_denied": "Health access denied. Enable in Settings.",
+  "health_smart_scale_desktop": "Smart scale sync is available on iPhone and Android only.",
+  "health_smart_scale_import": "Import from smart scale",
   "health_log_water": "Log Water",
   "health_daily_goal_reached": "You've reached your daily goal!",
   "health_almost_there": "Almost there! Just a little more.",
@@ -324,6 +439,8 @@
       }
     }
   },
+  "health_at_a_glance": "Your health at a glance.",
+  "health_analyzing_meal": "Analyzing meal…",
   "health_subtitle_health_first": "Health First",
   "health_kcal_label": "kcal",
   "health_subtitle_todays_intake": "Today's intake",
@@ -628,6 +745,23 @@
   "social_delete_bond": "Delete Bond",
   "social_no_achievements": "No achievements yet",
   "social_no_achievements_msg": "No achievements logged yet.",
+  "achievement_story_section": "Photo stories",
+  "achievement_story_empty_hint": "Tap + to save a photo win — shown here like stories.",
+  "achievement_story_add": "Add",
+  "achievement_feats_section": "Logged feats",
+  "achievement_insights_title": "Insights Dashboard",
+  "achievement_insights_summary": "Monthly Reflection: {count} feats recorded. Average Meaningfulness: {meaning}, Average Impact: {impact}",
+  "@achievement_insights_summary": {
+    "placeholders": {
+      "count": { "type": "int" },
+      "meaning": { "type": "String" },
+      "impact": { "type": "String" }
+    }
+  },
+  "achievement_story_title_dialog": "Name this win",
+  "achievement_story_title_hint": "What did you achieve?",
+  "achievement_story_added": "Story saved to your achievements.",
+  "achievement_story_save_failed": "Could not save photo.",
   "social_delete_feat_title": "Delete feat",
   "social_delete_feat_body": "Remove this achievement? This cannot be undone.",
   "social_feat": "Feat",
@@ -658,7 +792,47 @@
   "mind_status": "Status",
   "mind_stable": "Stable",
   "mind_needs_care": "Needs Care",
+  "mind_focus_current": "Focus",
+  "mind_focus_none": "Not set",
   "mind_quick_entry_hint": "What's on your mind?",
+  "mind_focus_title": "Focus areas",
+  "mind_focus_subtitle": "Define weekly trends so you know where to put your energy.",
+  "mind_focus_empty": "No focus areas yet. Start from a template or create your own.",
+  "mind_focus_add": "New focus area",
+  "mind_focus_edit": "Edit focus area",
+  "mind_focus_weekly_goal": "Logs per week (goal)",
+  "mind_focus_this_week": "This week",
+  "mind_focus_select_hint": "Tap to focus on this area. Recent matching journal entries:",
+  "mind_focus_template_gym": "Gym week",
+  "mind_focus_template_learn": "Learn week",
+  "mind_focus_template_invest": "Invest week",
+  "mind_focus_name_hint": "Name (e.g. Gym week)",
+  "mind_focus_activities_label": "Linked activities",
+  "mind_focus_name_required": "Enter a name for this focus area",
+  "mind_focus_activities_required": "Pick at least one activity",
+  "mind_focus_icon_label": "Icon",
+  "mind_focus_color_label": "Color",
+  "mind_focus_no_logs_yet": "No journal entries match this area yet.",
+  "mind_focus_log_now": "Log for this area",
+  "mind_focus_todos": "To-do",
+  "mind_focus_open_projects": "Projects",
+  "mind_focus_no_todos": "No active project tasks. Add tasks in Projects.",
+  "mind_focus_more_todos": "+{count} more in Projects",
+  "@mind_focus_more_todos": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_focus_avg_mood": "Avg mood this week: {score}",
+  "@mind_focus_avg_mood": {
+    "placeholders": {
+      "score": {
+        "type": "String"
+      }
+    }
+  },
   "mood_trends_title": "Mood Trends",
   "social_notes_title": "Social Notes",
   "social_empty_state_title": "Your story begins here",
@@ -1069,6 +1243,15 @@
   "project_notes_label": "Notes",
   "project_no_notes": "No notes yet. Tap + to create one.",
   "project_no_notes_list": "No notes found",
+  "project_choose_document_type": "Choose document type",
+  "project_doc_blank_note": "Blank note",
+  "project_doc_blank_note_desc": "Start with a clean slate",
+  "project_doc_tech": "Technical doc",
+  "project_doc_tech_desc": "Architecture and implementation template",
+  "project_doc_api": "API specification",
+  "project_doc_api_desc": "Endpoints and schema template",
+  "project_doc_tech_title": "Technical Documentation",
+  "project_doc_api_title": "API Specification",
   "project_finance_label": "Finance",
   "project_no_finance": "No financial records linked to this project.",
   "project_add_task_title": "New Task",
@@ -1243,6 +1426,13 @@
   "notification_add_new": "ADD NEW",
   "notification_no_reminders": "No reminders set.",
   "notification_disabled_desc": "System notifications are currently disabled.",
+  "notification_system_preferences": "SYSTEM PREFERENCES",
+  "notification_pomodoro_reminder_title": "Pomodoros Reminder",
+  "notification_pomodoro_reminder_subtitle": "Receive notification after you finish a pomodoro or end a break.",
+  "notification_live_activities_title": "Live Activities",
+  "notification_live_activities_subtitle": "Track focus timer and information on your Lock Screen.",
+  "notification_status_on": "on",
+  "notification_status_off": "off",
   "notification_wisdom_board": "Wisdom Board",
   "notification_add_quote": "ADD QUOTE",
   "notification_quote_empty": "The board of wisdom is empty.",
@@ -1278,6 +1468,80 @@
   "finance_label_amount": "Amount",
   "finance_label_category": "Category",
   "finance_label_description_optional": "Description (optional)",
+  "finance_recurring_income": "Recurring income",
+  "finance_recurring_interval": "Repeat every",
+  "finance_fixed_income_title": "Fixed income",
+  "finance_fixed_income_subtitle": "Salary, rent received, and other steady income",
+  "finance_fixed_income_monthly_total": "Monthly total",
+  "finance_fixed_income_empty": "No fixed income yet",
+  "finance_fixed_income_add": "Add fixed income",
+  "finance_fixed_income_new": "New fixed income",
+  "finance_fixed_income_edit": "Edit fixed income",
+  "finance_fixed_income_name": "Income name",
+  "finance_fixed_income_next": "Next payout",
+  "finance_fixed_income_delete_confirm": "Remove this fixed income schedule?",
+  "finance_insight_title": "Analysis",
+  "finance_insight_suggestions": "Suggestions",
+  "finance_insight_enter_amount": "Enter an amount to preview how this affects your month.",
+  "finance_insight_fixed_after": "After saving: about {amount}/month in fixed income.",
+  "@finance_insight_fixed_after": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "finance_insight_covers_spending": "Covers about {percent}% of spending logged this month ({spent}).",
+  "@finance_insight_covers_spending": {
+    "placeholders": {
+      "percent": { "type": "String" },
+      "spent": { "type": "String" }
+    }
+  },
+  "finance_insight_shortfall": "Still about {amount} short vs monthly spending.",
+  "@finance_insight_shortfall": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "finance_insight_surplus": "Roughly {amount}/month left after typical spending.",
+  "@finance_insight_surplus": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "finance_insight_duplicate_fixed": "You already have fixed income in “{name}” — avoid double counting.",
+  "@finance_insight_duplicate_fixed": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "finance_insight_expense_share": "This would be about {percent}% of spending this month.",
+  "@finance_insight_expense_share": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "finance_insight_expense_large": "Large one-off expense — double-check the category.",
+  "finance_insight_income_share": "Adds about {percent}% to income logged this month.",
+  "@finance_insight_income_share": {
+    "placeholders": {
+      "percent": { "type": "String" }
+    }
+  },
+  "finance_insight_recurring_equiv": "As recurring: about {amount}/month on top of fixed income.",
+  "@finance_insight_recurring_equiv": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "finance_insight_savings_total": "Savings balance would reach about {amount}.",
+  "@finance_insight_savings_total": {
+    "placeholders": {
+      "amount": { "type": "String" }
+    }
+  },
+  "finance_interval_weekly": "Week",
+  "finance_interval_monthly": "Month",
+  "finance_interval_yearly": "Year",
   "finance_btn_add": "Add",
   "finance_total_net_worth": "TOTAL NET WORTH",
   "finance_monthly_breakdown": "{month} Breakdown",
@@ -1328,6 +1592,25 @@
   "finance_cat_bills": "Bills",
   "finance_cat_rent": "Rent",
   "finance_cat_subscriptions": "Subscriptions",
+  "finance_subscriptions_active_header": "ACTIVE SUBSCRIPTIONS",
+  "finance_subscriptions_monthly_total": "MONTHLY TOTAL",
+  "finance_subscriptions_next_month_header": "PLAN NEXT MONTH",
+  "finance_subscriptions_next_month_total": "PLANNED TOTAL",
+  "finance_subscriptions_next_month_empty": "No subscription charges scheduled for next month.",
+  "finance_subscriptions_next_month_remove_tooltip": "Remove from this month's plan",
+  "finance_subscriptions_next_month_remove_title": "REMOVE FROM PLAN",
+  "finance_subscriptions_next_month_remove_message": "This only removes the charge from next month's plan. Your subscription stays active and will show again when that billing month arrives.",
+  "finance_subscriptions_next_month_remove_confirm": "REMOVE",
+  "finance_subscriptions_next_month_remove_action": "REMOVE FROM PLAN",
+  "finance_subscription_due_today": "DUE TODAY",
+  "finance_subscription_days_left": "{days} DAYS LEFT",
+  "@finance_subscription_days_left": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
   "finance_cat_entertainment": "Entertainment",
   "finance_cat_health": "Health",
   "finance_cat_education": "Education",
@@ -1425,6 +1708,9 @@
   "ssh_type_command": "Type a command...",
   "ssh_disconnect": "Disconnect",
   "ssh_search_hint": "Search...",
+  "ssh_connect_host_first": "Connect to a host first to manage live sessions.",
+  "ssh_go_to_terminal": "GO TO TERMINAL",
+  "ssh_no_tmux_sessions": "No active tmux sessions found.",
   "journal": "Journal",
   "social_notes": "Mind Notes",
   "btn_send_feedback": "Send Feedback",
@@ -1468,5 +1754,54 @@
   "custom_url": "Custom URL",
   "settings_title": "Settings",
   "mind_latest_note": "Latest Note",
-  "common_done": "Done"
+  "common_done": "Done",
+  "island_app_name": "ICE GATE",
+  "island_app_blocker": "APP BLOCKER",
+  "island_initializing": "INITIALIZING…",
+  "island_notifications": "NOTIFICATIONS",
+  "island_inbox": "INBOX",
+  "island_documentation": "DOCUMENTATION",
+  "island_canvas": "CANVAS",
+  "island_mind": "MIND",
+  "island_health_data": "DATA",
+  "island_nutrition": "NUTRITION",
+  "island_activity": "ACTIVITY",
+  "island_hydration": "HYDRATION",
+  "island_focus": "FOCUS",
+  "island_steps": "STEPS",
+  "island_vitals": "VITALS",
+  "island_sleep": "SLEEP",
+  "island_calories": "CALORIES",
+  "island_spo2": "SpO₂",
+  "island_biometrics": "BIOMETRICS",
+  "finance_tab_overview": "OVERVIEW",
+  "finance_tab_history": "HISTORY",
+  "finance_tab_daily": "DAILY",
+  "finance_tab_daily_subtitle": "Daily fun spending and income — pick a day on the calendar.",
+  "finance_tab_achievements": "ACHIEVEMENTS",
+  "finance_achievements_subtitle": "Major financial wins by month and year.",
+  "finance_period_month": "Month",
+  "finance_period_year": "Year",
+  "finance_daily_in": "Money in",
+  "finance_daily_out": "Money out",
+  "finance_daily_empty": "Nothing logged this day",
+  "finance_achievements_empty": "No major achievements in this period yet",
+  "finance_achievements_add": "Record achievement",
+  "finance_milestone_month_income": "Monthly income recorded",
+  "finance_milestone_month_savings": "Monthly savings added",
+  "finance_milestone_year_total": "Year total income",
+  "finance_tab_billing": "BILLING",
+  "finance_tab_saving": "SAVINGS",
+  "island_documents": "DOCUMENTS",
+  "island_editor": "EDITOR",
+  "island_identity": "IDENTITY",
+  "island_id_update": "ID UPDATE",
+  "island_protocols": "PROTOCOLS",
+  "island_sync_core": "SYNC CORE",
+  "island_settings": "SETTINGS",
+  "island_remote_ssh": "REMOTE SSH",
+  "island_connected": "CONNECTED",
+  "island_not_active": "NOT ACTIVE",
+  "island_connect": "CONNECT",
+  "island_tmux_active": "TMUX ACTIVE"
 }

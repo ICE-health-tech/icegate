@@ -2,7 +2,7 @@ TrueDepth and face-related data — response for App Store Review
 ================================================================
 (App: ICE Gate)
 
-Version: 3.2.4
+Version: 3.2.5
 
 
 1. Does the app use the TrueDepth API?

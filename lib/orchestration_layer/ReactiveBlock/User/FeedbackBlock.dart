@@ -6,6 +6,7 @@ import 'package:signals/signals.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:uuid/uuid.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class FeedbackBlock {
   late FeedbackDAO _dao;
@@ -95,7 +96,7 @@ class FeedbackBlock {
       selectedImage.value = null;
       return true;
     } catch (e) {
-      print("Error saving feedback: $e");
+      appLog("Error saving feedback: $e");
       return false;
     } finally {
       isLoading.value = false;

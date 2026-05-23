@@ -69,8 +69,6 @@ PODS:
     - FlutterMacOS
   - media_kit_libs_macos_video (1.0.4):
     - FlutterMacOS
-  - media_kit_video (0.0.1):
-    - FlutterMacOS
   - package_info_plus (0.0.1):
     - FlutterMacOS
   - powersync-sqlite-core (0.4.11)
@@ -118,10 +116,6 @@ PODS:
     - sqlite3/session
   - url_launcher_macos (0.0.1):
     - FlutterMacOS
-  - volume_controller (0.0.1):
-    - FlutterMacOS
-  - wakelock_plus (0.0.1):
-    - FlutterMacOS
   - webview_flutter_wkwebview (0.0.1):
     - Flutter
     - FlutterMacOS
@@ -143,7 +137,6 @@ DEPENDENCIES:
   - ice_music (from `Flutter/ephemeral/.symlinks/plugins/ice_music/macos`)
   - local_auth_darwin (from `Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin`)
   - media_kit_libs_macos_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos`)
-  - media_kit_video (from `Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos`)
   - package_info_plus (from `Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos`)
   - powersync_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/powersync_flutter_libs/darwin`)
   - quill_native_bridge_macos (from `Flutter/ephemeral/.symlinks/plugins/quill_native_bridge_macos/macos`)
@@ -153,8 +146,6 @@ DEPENDENCIES:
   - sqflite_darwin (from `Flutter/ephemeral/.symlinks/plugins/sqflite_darwin/darwin`)
   - sqlite3_flutter_libs (from `Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin`)
   - url_launcher_macos (from `Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos`)
-  - volume_controller (from `Flutter/ephemeral/.symlinks/plugins/volume_controller/macos`)
-  - wakelock_plus (from `Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos`)
   - webview_flutter_wkwebview (from `Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin`)
 
 SPEC REPOS:
@@ -202,8 +193,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/local_auth_darwin/darwin
   media_kit_libs_macos_video:
     :path: Flutter/ephemeral/.symlinks/plugins/media_kit_libs_macos_video/macos
-  media_kit_video:
-    :path: Flutter/ephemeral/.symlinks/plugins/media_kit_video/macos
   package_info_plus:
     :path: Flutter/ephemeral/.symlinks/plugins/package_info_plus/macos
   powersync_flutter_libs:
@@ -222,10 +211,6 @@ EXTERNAL SOURCES:
     :path: Flutter/ephemeral/.symlinks/plugins/sqlite3_flutter_libs/darwin
   url_launcher_macos:
     :path: Flutter/ephemeral/.symlinks/plugins/url_launcher_macos/macos
-  volume_controller:
-    :path: Flutter/ephemeral/.symlinks/plugins/volume_controller/macos
-  wakelock_plus:
-    :path: Flutter/ephemeral/.symlinks/plugins/wakelock_plus/macos
   webview_flutter_wkwebview:
     :path: Flutter/ephemeral/.symlinks/plugins/webview_flutter_wkwebview/darwin
 
@@ -252,7 +237,6 @@ SPEC CHECKSUMS:
   ice_music: fb707b2b87c335d94ed492cf07a950dd91e13814
   local_auth_darwin: 63c73d6d28cc3e239be2b6aa460ea6e317cd5100
   media_kit_libs_macos_video: b3e2bbec2eef97c285f2b1baa7963c67c753fb82
-  media_kit_video: c75b07f14d59706c775778e4dd47dd027de8d1e5
   package_info_plus: 12f1c5c2cfe8727ca46cbd0b26677728972d9a5b
   powersync-sqlite-core: aae0128de5f062c8e5a6bc450090ebba0b398222
   powersync_flutter_libs: 7a855feed8c993deddb92bbb1a9d6680d245e337
@@ -265,8 +249,6 @@ SPEC CHECKSUMS:
   sqlite3: a51c07cf16e023d6c48abd5e5791a61a47354921
   sqlite3_flutter_libs: f9114e4bbe1f2e03dd543373c53d23245982ca13
   url_launcher_macos: 175a54c831f4375a6cf895875f716ee5af3888ce
-  volume_controller: 90a5978956cf18ebb7739bf5382fc1b0cfef66d0
-  wakelock_plus: 9d63063ffb7af1c215209769067c57103bde719d
   webview_flutter_wkwebview: 29eb20d43355b48fe7d07113835b9128f84e3af4
 
 PODFILE CHECKSUM: cdfaba6ce63f2ab473d149b94cfa9493c2b3e450

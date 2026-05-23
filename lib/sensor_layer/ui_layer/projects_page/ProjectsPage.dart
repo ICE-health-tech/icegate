@@ -21,6 +21,15 @@ import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+/// Quick-action routes already represented by built-in tiles (avoid duplicates).
+const _builtInQuickActionPaths = {
+  '/social/blocker',
+  '/health/block-reminder',
+  '/projects/calendar',
+  '/health/focus',
+  '/focus-history',
+};
+
 class ProjectsPage extends StatelessWidget {
   const ProjectsPage({super.key});
 
@@ -91,26 +100,14 @@ class ProjectsPage extends StatelessWidget {
       child: Scaffold(
         backgroundColor: colorScheme.surface,
         appBar: AppBar(
-          toolbarHeight: 70,
+          toolbarHeight: 72,
           backgroundColor: Colors.transparent,
           elevation: 0,
           leadingWidth: 0,
           leading: const SizedBox.shrink(),
-          flexibleSpace: ClipRect(
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: colorScheme.surface.withValues(alpha: 0.7),
-                  border: Border(
-                    bottom: BorderSide(
-                      color: colorScheme.outlineVariant.withValues(alpha: 0.2),
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
+          titleSpacing: 0,
+          title: _buildPageBrandHeader(context, colorScheme),
+          flexibleSpace: _buildProjectsAppBarBackground(context, colorScheme),
           actions: [
             // IconButton(
             //   icon: Container(
@@ -138,15 +135,6 @@ class ProjectsPage extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      context.l10n.projects_page_tagline,
-                      style: TextStyle(
-                        color: colorScheme.onSurface.withValues(alpha: 0.72),
-                        fontSize: 13,
-                        height: 1.25,
-                      ),
-                    ),
-                    const SizedBox(height: 10),
                     Watch((context) {
                       final projectBlock = context.read<ProjectBlock>();
                       final growthBlock = context.read<GrowthBlock>();
@@ -313,6 +301,9 @@ class ProjectsPage extends StatelessWidget {
                           .listInternalWidgetProjectsPage
                           .value;
                       final apps = List<InternalWidgetProtocol>.from(allApps)
+                        ..removeWhere(
+                          (a) => _builtInQuickActionPaths.contains(a.url),
+                        )
                         ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
 
                       return ClipRRect(
@@ -351,7 +342,7 @@ class ProjectsPage extends StatelessWidget {
                                             : 2;
                                 tileSpacing = narrowPhone ? 8.0 : 12.0;
                                 childAspectRatio =
-                                    narrowPhone ? 1.08 : 0.92;
+                                    narrowPhone ? 1.12 : 1.05;
                               }
 
                               Future<void> openNewNote() async {
@@ -440,8 +431,13 @@ class ProjectsPage extends StatelessWidget {
                                   ...apps.map(
                                     (app) => _ProjectsGridTile(
                                       icon: _getAppIcon(app.name),
-                                      label: app.name,
+                                      label: _pluginDisplayLabel(
+                                        context,
+                                        app.name,
+                                      ),
                                       accent: Colors.cyan,
+                                      actionHint:
+                                          context.l10n.projects_plugin_open,
                                       onTap: () => context.push(app.url),
                                       onLongPress: () =>
                                           _showDeletePluginDialog(context, app),
@@ -821,6 +817,80 @@ class ProjectsPage extends StatelessWidget {
     );
   }
 
+  Widget _buildProjectsAppBarBackground(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    return ClipRect(
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    colorScheme.primaryContainer.withValues(alpha: 0.22),
+                    colorScheme.surface.withValues(alpha: 0.72),
+                  ],
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: colorScheme.outlineVariant.withValues(alpha: 0.2),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPageBrandHeader(BuildContext context, ColorScheme colorScheme) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 0),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  context.l10n.projects.toUpperCase(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.4,
+                    color: colorScheme.onSurface,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  context.l10n.projects_page_tagline,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 12,
+                    height: 1.2,
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildFinanceSection(BuildContext context) {
     return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
@@ -909,6 +979,30 @@ class ProjectsPage extends StatelessWidget {
     return const SliverToBoxAdapter(child: SizedBox.shrink());
   }
 
+  String _pluginDisplayLabel(BuildContext context, String? name) {
+    if (name == null || name.trim().isEmpty) return '';
+    final l10n = context.l10n;
+    final key = name.trim().toLowerCase();
+    switch (key) {
+      case 'location tracker':
+      case 'location':
+        return l10n.projects_plugin_location_tracker;
+      case 'live web map':
+      case 'live map':
+        return l10n.projects_plugin_live_map;
+      case 'social blocker':
+        return l10n.projects_tile_social_blocker;
+      case 'block reminder':
+        return l10n.projects_tile_reminders;
+      case 'focus':
+        return l10n.projects_tile_focus;
+      case 'pomodoro':
+        return l10n.projects_tile_pomodoro;
+      default:
+        return name;
+    }
+  }
+
   IconData _getAppIcon(String? name) {
     if (name == null) return Icons.apps_rounded;
     final n = name.toLowerCase();
@@ -930,17 +1024,17 @@ class ProjectsPage extends StatelessWidget {
     BuildContext context,
     InternalWidgetProtocol app,
   ) {
+    final l10n = context.l10n;
+    final displayName = _pluginDisplayLabel(context, app.name);
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Plugin?'),
-        content: Text(
-          'Do you want to remove "${app.name}" from quick actions?',
-        ),
+        title: Text(l10n.projects_remove_plugin_title),
+        content: Text(l10n.projects_remove_plugin_body(displayName)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () async {
@@ -952,7 +1046,10 @@ class ProjectsPage extends StatelessWidget {
               }
               if (context.mounted) Navigator.pop(ctx);
             },
-            child: const Text('Remove', style: TextStyle(color: Colors.red)),
+            child: Text(
+              l10n.projects_remove_plugin_confirm,
+              style: const TextStyle(color: Colors.red),
+            ),
           ),
         ],
       ),
@@ -1134,6 +1231,7 @@ class _ProjectsGridTile extends StatelessWidget {
     required this.onTap,
     this.onLongPress,
     this.isAddSlot = false,
+    this.actionHint,
   });
 
   final IconData icon;
@@ -1142,6 +1240,7 @@ class _ProjectsGridTile extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final bool isAddSlot;
+  final String? actionHint;
 
   @override
   Widget build(BuildContext context) {
@@ -1180,6 +1279,16 @@ class _ProjectsGridTile extends StatelessWidget {
       shadowBlur = 12;
     }
 
+    final faceTop = isAddSlot
+        ? cs.surfaceContainerHighest.withValues(alpha: 0.55)
+        : Color.lerp(cs.surface, accent, 0.12)!.withValues(alpha: 0.92);
+    final faceMid = isAddSlot
+        ? cs.surface.withValues(alpha: 0.38)
+        : cs.surface.withValues(alpha: 0.78);
+    final faceBottom = isAddSlot
+        ? cs.surfaceContainerLow.withValues(alpha: 0.5)
+        : Color.lerp(cs.surface, accent, 0.22)!.withValues(alpha: 0.35);
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -1191,68 +1300,223 @@ class _ProjectsGridTile extends StatelessWidget {
         child: Ink(
           decoration: BoxDecoration(
             borderRadius: radius,
-            color: cs.surface.withValues(alpha: isAddSlot ? 0.25 : 0.55),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [faceTop, faceMid, faceBottom],
+              stops: const [0.0, 0.52, 1.0],
+            ),
+            // Must be uniform when combined with borderRadius (Flutter assertion).
+            // Edge depth is handled by the highlight/shadow overlays below.
             border: Border.all(
-              color: isAddSlot
-                  ? cs.outline.withValues(alpha: 0.45)
-                  : accent.withValues(alpha: 0.38),
-              width: isAddSlot ? 1.5 : 1,
+              color: cs.outlineVariant.withValues(alpha: isAddSlot ? 0.22 : 0.28),
+              width: 1.2,
             ),
             boxShadow: [
-              if (!isAddSlot)
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.12),
-                  blurRadius: shadowBlur,
-                  offset: Offset(0, desktopDense ? 2 : 4),
-                ),
+              BoxShadow(
+                color: (isAddSlot ? cs.shadow : accent)
+                    .withValues(alpha: isAddSlot ? 0.2 : 0.22),
+                blurRadius: shadowBlur,
+                offset: Offset(0, desktopDense ? 3 : 5),
+              ),
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.32),
+                blurRadius: desktopDense ? 6 : 10,
+                offset: Offset(desktopDense ? 1 : 2, desktopDense ? 4 : 7),
+              ),
+              BoxShadow(
+                color: Colors.white.withValues(alpha: 0.07),
+                blurRadius: 2,
+                offset: const Offset(-1, -1),
+              ),
             ],
           ),
-          child: Padding(
-            padding: pad,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: iconBox,
-                  height: iconBox,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(
-                      compact ? 11 : (desktopDense ? 12 : 14),
+          child: Stack(
+            clipBehavior: Clip.hardEdge,
+            children: [
+              // Top rim highlight (3D edge catch light).
+              Positioned(
+                left: 10,
+                right: 10,
+                top: 1,
+                height: 1.2,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(1),
+                      gradient: LinearGradient(
+                        colors: [
+                          Colors.white.withValues(alpha: 0.0),
+                          Colors.white.withValues(
+                            alpha: isAddSlot ? 0.22 : 0.45,
+                          ),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
                     ),
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        accent.withValues(alpha: 0.28),
-                        accent.withValues(alpha: 0.07),
+                  ),
+                ),
+              ),
+              // Left edge highlight.
+              Positioned(
+                left: 1,
+                top: 10,
+                bottom: 14,
+                width: 1,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.white.withValues(
+                            alpha: isAddSlot ? 0.12 : 0.2,
+                          ),
+                          Colors.white.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Bottom inner shadow (depth inside the tile).
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: desktopDense ? 14 : 18,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(
+                            alpha: isAddSlot ? 0.18 : 0.26,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              // Right/bottom edge shade.
+              Positioned(
+                right: 0,
+                top: 0,
+                bottom: 0,
+                width: 2,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.centerLeft,
+                        end: Alignment.centerRight,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(
+                            alpha: isAddSlot ? 0.12 : 0.18,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              if (!isAddSlot)
+                Positioned(
+                  right: desktopDense ? -10 : -14,
+                  bottom: desktopDense ? -12 : -18,
+                  child: Icon(
+                    icon,
+                    size: iconBox * (desktopDense ? 2.4 : 2.8),
+                    color: accent.withValues(alpha: 0.07),
+                  ),
+                ),
+              Padding(
+                padding: pad,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Container(
+                          width: iconBox,
+                          height: iconBox,
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(
+                              compact ? 11 : (desktopDense ? 12 : 14),
+                            ),
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: isAddSlot
+                                  ? [
+                                      cs.surface.withValues(alpha: 0.5),
+                                      cs.surface.withValues(alpha: 0.25),
+                                    ]
+                                  : [
+                                      accent.withValues(alpha: 0.32),
+                                      accent.withValues(alpha: 0.08),
+                                    ],
+                            ),
+                            border: Border.all(
+                              color: isAddSlot
+                                  ? cs.outline.withValues(alpha: 0.4)
+                                  : accent.withValues(alpha: 0.28),
+                            ),
+                          ),
+                          child: Icon(
+                            icon,
+                            color: isAddSlot
+                                ? cs.onSurface.withValues(alpha: 0.7)
+                                : accent,
+                            size: iconSize,
+                          ),
+                        ),
+                        const Spacer(),
+                        if (!isAddSlot)
+                          Icon(
+                            Icons.north_east_rounded,
+                            size: desktopDense ? 13 : 14,
+                            color: accent.withValues(alpha: 0.55),
+                          ),
                       ],
                     ),
-                    border: Border.all(
-                      color: accent.withValues(alpha: 0.22),
+                    const Spacer(),
+                    Text(
+                      label,
+                      style: TextStyle(
+                        color: cs.onSurface,
+                        fontWeight: FontWeight.w700,
+                        fontSize: labelFontSize,
+                        height: 1.15,
+                        letterSpacing: -0.2,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                  child: Icon(icon, color: accent, size: iconSize),
+                    if (actionHint != null && actionHint!.isNotEmpty) ...[
+                      SizedBox(height: compact ? 2 : 3),
+                      Text(
+                        actionHint!,
+                        style: TextStyle(
+                          color: accent.withValues(alpha: 0.85),
+                          fontSize: compact ? 9 : 10,
+                          fontWeight: FontWeight.w600,
+                          letterSpacing: 0.1,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ],
                 ),
-                if (desktopDense)
-                  const SizedBox(height: 6)
-                else if (compact)
-                  const SizedBox(height: 5)
-                else
-                  const Spacer(),
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.w600,
-                    fontSize: labelFontSize,
-                    height: 1.2,
-                    letterSpacing: -0.15,
-                  ),
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
       ),

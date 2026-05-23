@@ -26,6 +26,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabasePayloadCodec.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 // 2. Part Directives (Crucial for generated code)
 // NOTE: You must run `flutter pub run build_runner build` to generate this file.
@@ -39,6 +40,7 @@ part 'daos/ProgressionDao.dart';
 part 'daos/SshSessionsDao.dart';
 part 'daos/AiPromptsDao.dart';
 part 'daos/ConfigsDao.dart';
+part 'daos/IntegrationAccountDao.dart';
 part 'daos/PortfolioSnapshotsDao.dart';
 
 // NOTE: I'm using 'app_database.g.dart' as the standard naming convention.
@@ -768,6 +770,31 @@ class SubscriptionsTable extends Table {
       boolean().withDefault(const Constant(true)).named('is_active')();
   TextColumn get billingCycle =>
       text().withDefault(const Constant('monthly')).named('billing_cycle')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Local-only scheduled income (e.g. salary); posts transactions when due.
+@DataClassName('RecurringIncomeData')
+class RecurringIncomesTable extends Table {
+  @override
+  String get tableName => 'recurring_incomes';
+  TextColumn get id => text()();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get category => text().named('category')();
+  RealColumn get amount => real().named('amount')();
+  TextColumn get description => text().nullable().named('description')();
+  /// `weekly`, `monthly`, or `yearly`
+  TextColumn get interval =>
+      text().withDefault(const Constant('monthly')).named('interval')();
+  DateTimeColumn get nextDueAt => dateTime().named('next_due_at')();
+  BoolColumn get isActive =>
+      boolean().withDefault(const Constant(true)).named('is_active')();
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
       .map(const DateTimeUTCConverter())
@@ -1684,6 +1711,9 @@ class AchievementsTable extends Table {
   TextColumn get moodPost => text().nullable().named('mood_post')();
   TextColumn get impactDescWho => text().named('impact_desc_who')();
   TextColumn get impactDescHow => text().named('impact_desc_how')();
+  /// Offline story image (relative path under app documents).
+  TextColumn get localImagePath =>
+      text().nullable().named('local_image_path')();
 
   DateTimeColumn get createdAt => dateTime()
       .withDefault(currentDateAndTime)
@@ -2621,7 +2651,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     const guestId = DataSeeder.guestPersonId;
     if (newPersonId == guestId) return; // No self-migration
 
-    print(
+    appLog(
       "🛰️ [Migration] Promoting guest data to user $newPersonId with tenant $tenantId...",
     );
 
@@ -2767,16 +2797,16 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
       try {
         await migrateGuestScores();
       } catch (e) {
-        print("⚠️ [Migration] Could not migrate table scores: $e");
+        appLog("⚠️ [Migration] Could not migrate table scores: $e");
       }
       for (final table in tables) {
         try {
           await migrateGuestTable(table);
         } catch (e) {
-          print("⚠️ [Migration] Could not migrate table $table: $e");
+          appLog("⚠️ [Migration] Could not migrate table $table: $e");
         }
       }
-      print("✅ [Migration] Comprehensive Guest data migration complete.");
+      appLog("✅ [Migration] Comprehensive Guest data migration complete.");
     });
   }
 
@@ -3574,6 +3604,7 @@ class PersonManagementDAO extends DatabaseAccessor<AppDatabase>
     AssetsTable,
     TransactionsTable,
     SubscriptionsTable,
+    RecurringIncomesTable,
   ],
 )
 class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
@@ -3648,6 +3679,52 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
           ..where((t) => t.personID.equals(personId))
           ..orderBy([(t) => OrderingTerm(expression: t.createdAt)]))
         .watch();
+  }
+
+  Stream<List<RecurringIncomeData>> watchRecurringIncomes(String personId) {
+    return (select(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId) & t.isActive.equals(true))
+          ..orderBy([(t) => OrderingTerm(expression: t.nextDueAt)]))
+        .watch();
+  }
+
+  Future<void> insertRecurringIncome(
+    RecurringIncomesTableCompanion income,
+  ) async {
+    await into(recurringIncomesTable).insert(income);
+  }
+
+  Future<void> deleteRecurringIncome(String id) async {
+    await (delete(recurringIncomesTable)..where((t) => t.id.equals(id))).go();
+  }
+
+  Future<List<RecurringIncomeData>> getDueRecurringIncomes(
+    String personId,
+    DateTime asOf,
+  ) {
+    return (select(recurringIncomesTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.isActive.equals(true) &
+                t.nextDueAt.isSmallerOrEqualValue(asOf),
+          ))
+        .get();
+  }
+
+  Future<void> updateRecurringIncomeNextDue({
+    required String id,
+    required DateTime nextDueAt,
+  }) async {
+    await (update(recurringIncomesTable)..where((t) => t.id.equals(id))).write(
+      RecurringIncomesTableCompanion(nextDueAt: Value(nextDueAt)),
+    );
+  }
+
+  Future<void> deleteRecurringIncomesForPerson(String personId) async {
+    await (delete(recurringIncomesTable)
+          ..where((t) => t.personID.equals(personId)))
+        .go();
   }
 
   // Accounts
@@ -5676,7 +5753,7 @@ class HealthMealDAO extends DatabaseAccessor<AppDatabase>
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = startOfDay.add(const Duration(days: 1));
 
-    print("The date that fetch: $date");
+    appLog("The date that fetch: $date");
 
     final rows =
         await (select(mealsTable)..where(
@@ -6857,6 +6934,43 @@ class AiPromptsTable extends Table {
 
 // AiPromptsDAO moved to daos/AiPromptsDao.dart
 
+@DataClassName('IntegrationAccountData')
+class IntegrationAccountsTable extends Table {
+  @override
+  String get tableName => 'integration_accounts';
+
+  TextColumn get id => text()();
+  TextColumn get personId => text().named('person_id')();
+  TextColumn get domain => text()();
+  TextColumn get provider => text()();
+  TextColumn get status => text()();
+  TextColumn get displayName => text().named('display_name')();
+  TextColumn get externalAccountId =>
+      text().nullable().named('external_account_id')();
+  TextColumn get configJson => text().nullable().named('config_json')();
+  DateTimeColumn get lastSyncAt => dateTime()
+      .nullable()
+      .named('last_sync_at')
+      .map(const DateTimeUTCConverter())();
+  TextColumn get lastError => text().nullable().named('last_error')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+        {personId, domain, provider},
+      ];
+}
+
 @DataClassName('ConfigData')
 class ConfigsTable extends Table {
   @override
@@ -6921,6 +7035,7 @@ class ConfigsTable extends Table {
     ProjectsTable,
     TransactionsTable,
     SubscriptionsTable,
+    RecurringIncomesTable,
     FocusSessionsTable,
     CustomNotificationsTable,
     QuotesTable,
@@ -6941,6 +7056,7 @@ class ConfigsTable extends Table {
     OxygenSaturationLogsTable,
     AppUsageHistoryTable,
     AppTimeSpendingTable,
+    IntegrationAccountsTable,
   ],
   daos: [
     ThemeDAO,
@@ -6966,6 +7082,7 @@ class ConfigsTable extends Table {
     HealthLogsDAO,
     AiPromptsDAO,
     ConfigsDAO,
+    IntegrationAccountDAO,
     QuestDAO,
     SSHHostsDAO,
     SSHSessionsDAO,
@@ -6982,9 +7099,7 @@ class AppDatabase extends _$AppDatabase {
   SupabaseService? supabaseSync;
 
   AppDatabase([QueryExecutor? executor, this.powerSync])
-    : super(executor ?? _openConnection()) {
-    print("OBVIOUS LOG: DATABASE VERSION IS 49");
-  }
+    : super(executor ?? _openConnection());
 
   /// Direct push to Supabase as requested for this branch (bypassing PowerSync upload queue)
   Future<void> pushToSupabase({
@@ -7223,6 +7338,9 @@ class AppDatabase extends _$AppDatabase {
   @override
   ConfigsDAO get configsDAO => ConfigsDAO(this);
   @override
+  IntegrationAccountDAO get integrationAccountDAO =>
+      IntegrationAccountDAO(this);
+  @override
   MindLogsDAO get mindLogsDAO => MindLogsDAO(this);
   @override
   JournalActivityOptionsDAO get journalActivityOptionsDAO =>
@@ -7252,7 +7370,10 @@ class AppDatabase extends _$AppDatabase {
   // v72 → adds needs_ai_retry to meals for offline / failed AI analysis retry
   // v74 → adds mood_score to exercise_logs (manual log / sync)
   // v75 → adds journal_activity_options (synced custom journal activities)
-  int get schemaVersion => 75;
+  // v76 → adds recurring_incomes (local scheduled income)
+  // v77 → achievements.local_image_path (offline story photos)
+  // v78 → integration_accounts (calendar + health hub)
+  int get schemaVersion => 78;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7382,6 +7503,24 @@ class AppDatabase extends _$AppDatabase {
         if (from < 75) {
           try {
             await m.createTable(journalActivityOptionsTable);
+          } catch (_) {}
+        }
+        if (from < 76) {
+          try {
+            await m.createTable(recurringIncomesTable);
+          } catch (_) {}
+        }
+        if (from < 77) {
+          try {
+            await m.addColumn(
+              achievementsTable,
+              achievementsTable.localImagePath,
+            );
+          } catch (_) {}
+        }
+        if (from < 78) {
+          try {
+            await m.createTable(integrationAccountsTable);
           } catch (_) {}
         }
         if (from < 60) {
@@ -7521,7 +7660,7 @@ class AppDatabase extends _$AppDatabase {
               "ALTER TABLE focus_sessions ADD COLUMN taskID TEXT REFERENCES goals(goalID) ON DELETE CASCADE;",
             );
           } catch (e) {
-            print('Error adding taskID: $e');
+            appLog('Error adding taskID: $e');
           }
         }
         if (from < 5) {
@@ -7559,7 +7698,7 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_health_metrics_unique ON health_metrics (personID, date)',
             );
           } catch (e) {
-            print('Error in version 10: $e');
+            appLog('Error in version 10: $e');
           }
         }
         if (from < 20) {
@@ -7571,7 +7710,7 @@ class AppDatabase extends _$AppDatabase {
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_scores_person_unique ON scores (personID)',
             );
           } catch (e) {
-            print('Error in version 20: $e');
+            appLog('Error in version 20: $e');
           }
         }
         if (from < 11) {
@@ -7813,7 +7952,7 @@ class AppDatabase extends _$AppDatabase {
         }
       },
       beforeOpen: (details) async {
-        print(
+        appLog(
           "Drift: beforeOpen triggered. Version: ${details.versionBefore} -> ${details.versionNow}",
         );
         await repairFocusSessionsSchemaForDrift();

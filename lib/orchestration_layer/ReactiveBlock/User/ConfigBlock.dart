@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 
@@ -25,6 +27,11 @@ class ConfigBlock {
   final showIndexFinanceUsage = signal<bool>(true);
   final showIndexFocus = signal<bool>(true);
   final showIndexMoodNote = signal<bool>(true);
+
+  /// `subId|yyyy-MM` tokens — hide a charge from the future plan for that month only.
+  final subscriptionPlanSkips = signal<Set<String>>({});
+
+  static const _subscriptionPlanSkipsKey = 'subscription_plan_skips';
 
   void init(ConfigsDAO dao, String personId) async {
     _dao = dao;
@@ -65,6 +72,78 @@ class ConfigBlock {
     showIndexFinanceUsage.value = await _getBoolConfig('show_index_finance_usage', true);
     showIndexFocus.value = await _getBoolConfig('show_index_focus', true);
     showIndexMoodNote.value = await _getBoolConfig('show_index_mood_note', true);
+
+    await _loadSubscriptionPlanSkips();
+  }
+
+  static String subscriptionPlanSkipToken(
+    String subId,
+    int year,
+    int month,
+  ) {
+    return '$subId|${year.toString().padLeft(4, '0')}-${month.toString().padLeft(2, '0')}';
+  }
+
+  Future<void> _loadSubscriptionPlanSkips() async {
+    final config = await _dao.getConfig(_personId, _subscriptionPlanSkipsKey);
+    if (config == null) return;
+    try {
+      final decoded = jsonDecode(config.configValue);
+      if (decoded is! List) return;
+      final pruned = _pruneSubscriptionPlanSkips(
+        decoded.map((e) => e.toString()).toList(),
+      );
+      subscriptionPlanSkips.value = pruned;
+      if (pruned.length != decoded.length) {
+        await _persistSubscriptionPlanSkips(pruned);
+      }
+    } catch (_) {
+      subscriptionPlanSkips.value = {};
+    }
+  }
+
+  Set<String> _pruneSubscriptionPlanSkips(List<String> tokens) {
+    final now = DateTime.now();
+    final currentYm =
+        '${now.year.toString().padLeft(4, '0')}-${now.month.toString().padLeft(2, '0')}';
+    return tokens.where((token) {
+      final parts = token.split('|');
+      if (parts.length != 2) return false;
+      return parts[1].compareTo(currentYm) >= 0;
+    }).toSet();
+  }
+
+  Future<void> _persistSubscriptionPlanSkips(Set<String> tokens) async {
+    if (_personId.isEmpty) return;
+    await _dao.setConfig(
+      _personId,
+      _subscriptionPlanSkipsKey,
+      jsonEncode(tokens.toList()..sort()),
+    );
+  }
+
+  bool isSubscriptionSkippedForPlanMonth(
+    String subId,
+    int year,
+    int month,
+  ) {
+    return subscriptionPlanSkips.value.contains(
+      subscriptionPlanSkipToken(subId, year, month),
+    );
+  }
+
+  Future<void> skipSubscriptionForPlanMonth(
+    String subId,
+    int year,
+    int month,
+  ) async {
+    if (_personId.isEmpty) return;
+    final next = {
+      ...subscriptionPlanSkips.value,
+      subscriptionPlanSkipToken(subId, year, month),
+    };
+    subscriptionPlanSkips.value = next;
+    await _persistSubscriptionPlanSkips(next);
   }
 
   Future<bool> _getBoolConfig(String key, bool defaultValue) async {

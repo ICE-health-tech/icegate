@@ -8,6 +8,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.d
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class SocialBlockerBlock {
   static const _channel = MethodChannel('duylong.art/screentime');
@@ -46,8 +47,8 @@ class SocialBlockerBlock {
     _focusBlock = focusBlock;
     _personId = personId;
     await _load();
-    print('SocialBlockerBlock: Initializing for person $personId');
-    print('SocialBlockerBlock: Initializing for person $_focusBlock');
+    appLog('SocialBlockerBlock: Initializing for person $personId');
+    appLog('SocialBlockerBlock: Initializing for person $_focusBlock');
     await checkAuthStatus();
 
     // Pull from cloud on start
@@ -289,11 +290,11 @@ class SocialBlockerBlock {
 
     untracked(() => isSyncing.value = true);
     try {
-      print("🌐 [SocialBlockerBlock] Syncing rules from cloud...");
+      appLog("🌐 [SocialBlockerBlock] Syncing rules from cloud...");
       await _pullSelectionFromCloud();
-      print("✅ [SocialBlockerBlock] Cloud sync completed.");
+      appLog("✅ [SocialBlockerBlock] Cloud sync completed.");
     } catch (e) {
-      print("⚠️ [SocialBlockerBlock] Cloud sync failed: $e");
+      appLog("⚠️ [SocialBlockerBlock] Cloud sync failed: $e");
     } finally {
       untracked(() => isSyncing.value = false);
     }

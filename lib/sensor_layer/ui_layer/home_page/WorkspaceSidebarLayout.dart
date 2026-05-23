@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 /// Wireframe layout: narrow “Analysis” rail → icon plugin rail → main content.
@@ -87,7 +88,7 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                 child: RotatedBox(
                   quarterTurns: 3,
                   child: Text(
-                    'ANALYSIS',
+                    AppLocalizations.of(context)!.analysis.toUpperCase(),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w900,

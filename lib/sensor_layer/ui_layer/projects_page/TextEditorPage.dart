@@ -21,6 +21,7 @@ import 'package:ice_gate/link_layer/note_export/NoteExportSettingsSheet.dart';
 import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
@@ -121,7 +122,7 @@ class _TextEditorPageState extends State<TextEditorPage>
         initialContent = widget.initialFile!.readAsStringSync();
         _lastSaved = widget.initialFile!.lastModifiedSync();
       } catch (e) {
-        print("Error reading initial file: $e");
+        appLog("Error reading initial file: $e");
       }
     } else if (widget.note != null) {
       _lastSaved = widget.note?.updatedAt;

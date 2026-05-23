@@ -8,23 +8,28 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'dart:convert';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
 
 class MindAnalysisPage extends StatelessWidget {
   const MindAnalysisPage({super.key});
 
-  static const _autoSwitchToSkillsKey = PageStorageKey<String>(
-    'mind_auto_switch_to_skills_once',
-  );
+  static DateTime _monthStart() {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, 1);
+  }
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    final noteDAO = context.watch<ProjectNoteDAO>();
     final personBlock = context.read<PersonBlock>();
+    final achievementsDAO = context.read<AchievementsDAO>();
+    final mindBlock = context.read<MindBlock>();
 
     return DefaultTabController(
       length: 2,
@@ -80,75 +85,87 @@ class MindAnalysisPage extends StatelessWidget {
                     Expanded(
                       child: TabBarView(
                         children: [
-                          StreamBuilder<List<ProjectNoteData>>(
-                            stream: noteDAO.watchAllNotes(personId),
-                            builder: (context, snapshot) {
-                              if (!snapshot.hasData) {
+                          StreamBuilder<List<AchievementData>>(
+                            stream: achievementsDAO.watchAchievementsByPerson(
+                              personId,
+                            ),
+                            builder: (context, achSnap) {
+                              if (!achSnap.hasData) {
                                 return const Center(
                                   child: CircularProgressIndicator(),
                                 );
                               }
 
-                              final notes = snapshot.data!;
-                              final strategyNotesCount = notes.length;
-
-                              return NotificationListener<ScrollEndNotification>(
-                                onNotification: (n) {
-                                  final controller =
-                                      DefaultTabController.of(context);
-                                  // Only auto-switch when user reaches the end of tab 0.
-                                  if (controller.index != 0) return false;
-                                  final m = n.metrics;
-                                  final atEnd = m.extentAfter < 12;
-                                  if (!atEnd) return false;
-
-                                  // Trigger only once per visit.
-                                  final storage = PageStorage.of(context);
-                                  final already =
-                                      storage.readState(context, identifier: _autoSwitchToSkillsKey) ==
-                                          true;
-                                  if (already) return false;
-                                  storage.writeState(
-                                    context,
-                                    true,
-                                    identifier: _autoSwitchToSkillsKey,
-                                  );
-
-                                  controller.animateTo(1);
-                                  return false;
-                                },
-                                child: ListView(
-                                physics: const BouncingScrollPhysics(),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 20,
-                                  vertical: 10,
+                              return StreamBuilder<List<MindLogData>>(
+                                stream: mindBlock.watchMindLogsRange(
+                                  personId,
+                                  30,
                                 ),
-                                children: [
-                                  _buildGlassCard(
-                                    context,
-                                    title: 'INSIGHTS DASHBOARD',
-                                    icon: Icons.auto_graph_rounded,
-                                    child: _buildInsightsRows(
-                                      context,
-                                      strategyNotesCount: strategyNotesCount,
-                                      personId: personId,
+                                builder: (context, logSnap) {
+                                  final achievements = achSnap.data!;
+                                  final logs = logSnap.data ?? [];
+
+                                  return ListView(
+                                    physics: const BouncingScrollPhysics(),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 20,
+                                      vertical: 10,
                                     ),
-                                  ),
-                                  const SizedBox(height: 18),
-                                  _buildMindJournalCard(context),
-                                  const SizedBox(height: 18),
-                                  _buildMoodTelemetry(context, personId),
-                                  const SizedBox(height: 18),
-                                  _buildSkillsTelemetry(context, personId),
-                                  const SizedBox(height: 100),
-                                ],
-                                ),
+                                    children: [
+                                      _buildGlassCard(
+                                        context,
+                                        title: 'INSIGHTS DASHBOARD',
+                                        icon: Icons.auto_graph_rounded,
+                                        trailing: IconButton(
+                                          tooltip: 'Log achievement',
+                                          icon: const Icon(
+                                            Icons.add_circle_outline_rounded,
+                                            size: 22,
+                                          ),
+                                          onPressed: () =>
+                                              AchievementBuilderDialog.show(
+                                            context,
+                                          ),
+                                        ),
+                                        child: _buildInsightsRows(
+                                          context,
+                                          achievements: achievements,
+                                          mindLogs: logs,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 18),
+                                      _buildMindJournalCard(
+                                        context,
+                                        personId: personId,
+                                      ),
+                                      const SizedBox(height: 18),
+                                      _buildMoodTelemetry(context, personId),
+                                      const SizedBox(height: 18),
+                                      _buildSkillsTelemetry(
+                                        context,
+                                        personId,
+                                      ),
+                                      const SizedBox(height: 100),
+                                    ],
+                                  );
+                                },
                               );
                             },
                           ),
-                          const MindSkillsView(
+                          MindSkillsView(
                             showBackground: false,
                             popOnSave: false,
+                            onSessionLogged: () {
+                              DefaultTabController.of(context).animateTo(0);
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'Session logged — check Achievements tab.',
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -233,7 +250,10 @@ class MindAnalysisPage extends StatelessWidget {
               const SizedBox(width: 10),
               _CircleIconButton(
                 icon: Icons.bar_chart_rounded,
-                onPressed: () {},
+                onPressed: () {
+                  context.read<SocialBlock>().activeTab.value = 3;
+                  context.go('/social');
+                },
               ),
             ],
           ),
@@ -244,37 +264,62 @@ class MindAnalysisPage extends StatelessWidget {
 
   Widget _buildInsightsRows(
     BuildContext context, {
-    required int strategyNotesCount,
-    required String personId,
+    required List<AchievementData> achievements,
+    required List<MindLogData> mindLogs,
   }) {
-    // Layout inspired by the screenshot: left label, long bar, right count.
-    // For now we map:
-    // - PROJECT = strategy notes count
-    // - KNOWLEDGE = skill sessions count (14d)
-    // - Others are placeholders (0) until you decide the mapping.
+    final monthStart = _monthStart();
+    final monthlyAchievements = achievements
+        .where((a) => !a.createdAt.isBefore(monthStart))
+        .toList();
+    final domainCounts = countAchievementsByDomain(monthlyAchievements);
+
+    final monthLogs = mindLogs
+        .where((l) => !l.logDate.isBefore(monthStart))
+        .toList();
+    final skillSessions = countSkillSessionsInRange(monthLogs);
+    domainCounts['knowledge'] =
+        domainCounts['knowledge']! + skillSessions;
+
+    final totalFeats = monthlyAchievements.length + skillSessions;
+    final maxCount = domainCounts.values.fold<int>(
+      1,
+      (prev, v) => v > prev ? v : prev,
+    );
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Monthly Reflection: $strategyNotesCount strategy entries recorded.',
+          'Monthly Reflection: $totalFeats feats recorded this month.',
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.65),
             fontSize: 12,
             fontWeight: FontWeight.w700,
           ),
         ),
+        if (totalFeats == 0) ...[
+          const SizedBox(height: 14),
+          Text(
+            'Log an achievement or complete a skill session to populate this chart.',
+            style: TextStyle(
+              color: Theme.of(context)
+                  .colorScheme
+                  .onSurface
+                  .withValues(alpha: 0.5),
+              fontSize: 12,
+              height: 1.35,
+            ),
+          ),
+        ],
         const SizedBox(height: 18),
-        _InsightRow(label: 'HEALTH', value: 0, max: 2),
-        const SizedBox(height: 12),
-        _InsightRow(label: 'FINANCE', value: 0, max: 2),
-        const SizedBox(height: 12),
-        _InsightRow(label: 'GOOD SOCIAL IMPACT', value: 0, max: 2),
-        const SizedBox(height: 12),
-        _InsightRow(label: 'RELATIONSHIP', value: 0, max: 2),
-        const SizedBox(height: 12),
-        _InsightRow(label: 'PROJECT', value: strategyNotesCount.clamp(0, 2), max: 2),
-        const SizedBox(height: 12),
-        _InsightRow(label: 'KNOWLEDGE', value: 0, max: 2),
+        for (var i = 0; i < kAchievementDomains.length; i++) ...[
+          if (i > 0) const SizedBox(height: 12),
+          _InsightRow(
+            label: kAchievementDomainLabels[kAchievementDomains[i]]!,
+            value: domainCounts[kAchievementDomains[i]]!,
+            max: maxCount,
+          ),
+        ],
       ],
     );
   }
@@ -314,14 +359,31 @@ class MindAnalysisPage extends StatelessWidget {
 
           for (final a in acts.whereType<String>()) {
             if (!a.startsWith('learn:')) continue;
-            final m = RegExp(r'learn:(\\d+)m').firstMatch(a);
+            final m = RegExp(r'learn:(\d+)m').firstMatch(a);
             if (m != null) {
               minutes += int.tryParse(m.group(1) ?? '0') ?? 0;
             }
           }
         }
 
-        if (sessions == 0) return const SizedBox.shrink();
+        if (sessions == 0) {
+          return _buildGlassCard(
+            context,
+            title: 'SKILL TELEMETRY (14D)',
+            icon: Icons.auto_awesome_rounded,
+            child: Text(
+              'No skill sessions yet. Open the Skills tab, pick a skill, and tap Log session.',
+              style: TextStyle(
+                color: Theme.of(context)
+                    .colorScheme
+                    .onSurface
+                    .withValues(alpha: 0.55),
+                fontSize: 12,
+                height: 1.35,
+              ),
+            ),
+          );
+        }
 
         final entries = skillCounts.entries.toList()
           ..sort((a, b) => b.value.compareTo(a.value));
@@ -570,6 +632,7 @@ class MindAnalysisPage extends StatelessWidget {
     required String title,
     required IconData icon,
     required Widget child,
+    Widget? trailing,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -603,15 +666,18 @@ class MindAnalysisPage extends StatelessWidget {
                     size: 14,
                   ),
                   const SizedBox(width: 8),
-                  Text(
-                    title.toUpperCase(),
-                    style: TextStyle(
-                      color: colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2,
+                  Expanded(
+                    child: Text(
+                      title.toUpperCase(),
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        fontSize: 10,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2,
+                      ),
                     ),
                   ),
+                  if (trailing != null) trailing,
                 ],
               ),
               const SizedBox(height: 24),
@@ -623,10 +689,8 @@ class MindAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildMindJournalCard(BuildContext context) {
+  Widget _buildMindJournalCard(BuildContext context, {required String personId}) {
     final colorScheme = Theme.of(context).colorScheme;
-    final personBlock = context.read<PersonBlock>();
-    final personId = personBlock.information.value.profiles.id ?? "";
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
@@ -681,14 +745,17 @@ class MindAnalysisPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 16),
                     StreamBuilder<List<ProjectNoteData>>(
-                      stream: context.read<ProjectNoteDAO>().watchRecentNotes(
-                        personId,
-                        1,
-                      ),
+                      stream: context
+                          .read<ProjectNoteDAO>()
+                          .watchNotesByCategory(personId, 'social'),
                       builder: (context, snapshot) {
-                        final note =
-                            snapshot.hasData && snapshot.data!.isNotEmpty
-                            ? snapshot.data!.first
+                        final notes = snapshot.data ?? [];
+                        final note = notes.isNotEmpty
+                            ? (List<ProjectNoteData>.from(notes)..sort(
+                                (a, b) =>
+                                    b.updatedAt.compareTo(a.updatedAt),
+                              ))
+                                .first
                             : null;
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

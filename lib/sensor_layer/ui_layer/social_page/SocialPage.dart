@@ -1,11 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindFocusTrendsTab.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryRail.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementTimeline.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
@@ -16,6 +20,7 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 
@@ -23,7 +28,9 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:live_activities/live_activities.dart';
 import 'package:flutter/foundation.dart';
 
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindFocusTheme.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialAnalysisPage.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class SocialPage extends StatefulWidget {
   const SocialPage({super.key});
@@ -34,18 +41,35 @@ class SocialPage extends StatefulWidget {
       final index = socialBlock.activeTab.value;
       IconData iconData;
       VoidCallback action;
-      print("social index: $index");
-      // 3 tabs: 0=Journal, 1=Achievements, 2=Analysis
+      appLog("social index: $index");
+      // 4 tabs: 0=Journal, 1=Focus, 2=Achievements, 3=Analysis
       switch (index) {
         case 0: // Journal
           iconData = Icons.sentiment_satisfied_rounded;
           action = () => MindLogEntryDialog.show(context);
           break;
-        case 1: // Achievements
-          iconData = Icons.sentiment_satisfied_rounded;
+        case 1: // Focus trends
+          iconData = Icons.center_focus_strong_rounded;
+          action = () async {
+            final personId =
+                context.read<PersonBlock>().currentPersonID.value ?? '';
+            if (personId.isEmpty) return;
+            await MindFocusTrendEditor.show(
+              context,
+              onSave: (trend) async {
+                final list = await MindFocusTrendPrefs.load(personId);
+                list.add(trend);
+                await MindFocusTrendPrefs.save(personId, list);
+                context.read<SocialBlock>().notifyFocusTrendsChanged();
+              },
+            );
+          };
+          break;
+        case 2: // Achievements
+          iconData = Icons.emoji_events_outlined;
           action = () => AchievementBuilderDialog.show(context);
           break;
-        case 2: // Analysis
+        case 3: // Analysis
           iconData = Icons.bar_chart_rounded;
           action = () {
             // Placeholder for analysis action or navigation
@@ -122,10 +146,9 @@ class _SocialPageState extends State<SocialPage>
     super.initState();
     _socialBlock = context.read<SocialBlock>();
     _tabController = TabController(
-      length: 3, // Journal, Achievements, Analysis
+      length: 4, // Journal, Focus, Achievements, Analysis
       vsync: this,
-      // Clamp to valid range in case signal was saved from old 4-tab layout
-      initialIndex: _socialBlock.activeTab.peek().clamp(0, 2),
+      initialIndex: _socialBlock.activeTab.peek().clamp(0, 3),
     );
 
     // Sync signal -> tab
@@ -147,7 +170,7 @@ class _SocialPageState extends State<SocialPage>
     _disposeEffect = effect(() {
       final rawIndex = _socialBlock.activeTab.value;
       // Clamp to valid range to prevent out-of-bounds animation
-      final index = rawIndex.clamp(0, 2);
+      final index = rawIndex.clamp(0, 3);
 
       // Update Live Activity / Dynamic Island
       if (mounted) {
@@ -164,6 +187,15 @@ class _SocialPageState extends State<SocialPage>
     if (!kIsWeb && defaultTargetPlatform == TargetPlatform.iOS) {
       _setupLiveActivity();
     }
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _restoreActiveFocus());
+  }
+
+  Future<void> _restoreActiveFocus() async {
+    if (!mounted) return;
+    final personId = context.read<PersonBlock>().currentPersonID.value;
+    if (personId == null || personId.isEmpty) return;
+    await _socialBlock.restoreActiveFocus(personId);
   }
 
   Future<void> _setupLiveActivity() async {
@@ -203,7 +235,7 @@ class _SocialPageState extends State<SocialPage>
           'cover': "social_cover",
           'progress': 0.0,
         });
-        print(
+        appLog(
           "✅ [SOCIAL] Dynamic Island Updated to: ${_getTabName(context, index)}",
         );
       } catch (e) {
@@ -215,12 +247,16 @@ class _SocialPageState extends State<SocialPage>
   // Returns the tab name for the Dynamic Island display
   String _getTabName(BuildContext context, int index) {
     final l10n = AppLocalizations.of(context)!;
+    final focus = _socialBlock.activeFocusTrend.peek();
+    if (focus != null) return focus.name;
     switch (index) {
       case 0:
         return l10n.journal;
       case 1:
-        return l10n.achievements;
+        return l10n.mind_focus_title.toUpperCase();
       case 2:
+        return l10n.achievements;
+      case 3:
         return AppLocalizations.of(context)!.analysis.toUpperCase();
       default:
         return l10n.social;
@@ -239,47 +275,54 @@ class _SocialPageState extends State<SocialPage>
 
   @override
   Widget build(BuildContext context) {
-    return SwipeablePage(
-      onSwipe: () => Navigator.maybePop(context),
-      direction: SwipeablePageDirection.leftToRight,
-      child: RadialPremiumBackground(
-        child: Scaffold(
-          backgroundColor: Colors.transparent,
-          appBar: AppBar(
-            toolbarHeight: 80, // We use a custom header (CanvasDynamicIsland)
-            backgroundColor: Colors.transparent,
-            elevation: 0,
-            automaticallyImplyLeading: false,
-          ),
-          body: Column(
-            children: [
-              // const SizedBox(height: 16),
-              // TabBar is now removed, navigation is handled by Dynamic Island
-              Expanded(
-                child: Watch((context) {
-                  // Accessing activeTab.value ensures this widget rebuilds when the signal changes
-                  final _ = _socialBlock.activeTab.value;
+    return Watch((context) {
+      final focus = _socialBlock.activeFocusTrend.value;
+      final baseTheme = Theme.of(context);
+      final pageTheme = mindFocusThemed(baseTheme, focus);
 
-                  return Stack(
-                    children: [
-                      // Main content – swipe disabled so navigation is button-only
-                      TabBarView(
-                        controller: _tabController,
-                        children: [
-                          const SocialNotesDashboard(),
-                          _buildAchievementsDashboard(context),
-                          const SocialAnalysisPage(),
-                        ],
-                      ),
-                    ],
-                  );
-                }),
+      return Theme(
+        data: pageTheme,
+        child: SwipeablePage(
+          onSwipe: () => Navigator.maybePop(context),
+          direction: SwipeablePageDirection.leftToRight,
+          child: RadialPremiumBackground(
+            glowColor: focus?.color,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              appBar: AppBar(
+                toolbarHeight: 80,
+                backgroundColor: Colors.transparent,
+                elevation: 0,
+                automaticallyImplyLeading: false,
               ),
-            ],
+              body: Column(
+                children: [
+                  Expanded(
+                    child: Watch((context) {
+                      final _ = _socialBlock.activeTab.value;
+
+                      return Stack(
+                        children: [
+                          TabBarView(
+                            controller: _tabController,
+                            children: [
+                              const SocialNotesDashboard(),
+                              const MindFocusTrendsTab(),
+                              _buildAchievementsDashboard(context),
+                              const SocialAnalysisPage(),
+                            ],
+                          ),
+                        ],
+                      );
+                    }),
+                  ),
+                ],
+              ),
+            ),
           ),
         ),
-      ),
-    );
+      );
+    });
   }
 
   Widget _buildEmptyState(BuildContext context, String title, IconData icon) {
@@ -332,23 +375,79 @@ class _SocialPageState extends State<SocialPage>
           }
 
           final achievements = snapshot.data!;
+          final feats = achievementLoggedFeats(achievements);
+          final l10n = AppLocalizations.of(context)!;
 
-          if (achievements.isEmpty) {
-            return _buildEmptyState(
-              context,
-              AppLocalizations.of(context)!.social_no_achievements_msg,
-              Icons.emoji_events_outlined,
-            );
-          }
-
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: DomainAnalysisChart(achievements: achievements),
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: AchievementStoryRail.recordColumnFlex,
+                child: CustomScrollView(
+                  physics: const BouncingScrollPhysics(),
+                  slivers: [
+                    const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                    if (feats.isEmpty && achievements.isEmpty)
+                      SliverFillRemaining(
+                        hasScrollBody: false,
+                        child: _buildEmptyState(
+                          context,
+                          l10n.social_no_achievements_msg,
+                          Icons.emoji_events_outlined,
+                        ),
+                      )
+                    else ...[
+                      if (feats.isNotEmpty) ...[
+                        SliverToBoxAdapter(
+                          child: DomainAnalysisChart(achievements: feats),
+                        ),
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(20, 10, 12, 2),
+                            child: Text(
+                              l10n.achievement_feats_section.toUpperCase(),
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .labelMedium
+                                  ?.copyWith(
+                                letterSpacing: 1.1,
+                                fontWeight: FontWeight.w800,
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                        SliverToBoxAdapter(
+                          child: AchievementTimeline(achievements: feats),
+                        ),
+                      ] else
+                        SliverToBoxAdapter(
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(24, 24, 12, 8),
+                            child: Text(
+                              l10n.social_no_achievements_msg,
+                              textAlign: TextAlign.center,
+                              style: Theme.of(context)
+                                  .textTheme
+                                  .bodyMedium
+                                  ?.copyWith(
+                                color: Theme.of(context)
+                                    .colorScheme
+                                    .onSurfaceVariant,
+                              ),
+                            ),
+                          ),
+                        ),
+                      const SliverToBoxAdapter(child: SizedBox(height: 96)),
+                    ],
+                  ],
+                ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 16)),
-              SliverToBoxAdapter(
-                child: AchievementTimeline(achievements: achievements),
+              Expanded(
+                flex: AchievementStoryRail.imageColumnFlex,
+                child: AchievementStoryRail(achievements: achievements),
               ),
             ],
           );

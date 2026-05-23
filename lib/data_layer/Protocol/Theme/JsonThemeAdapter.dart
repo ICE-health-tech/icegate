@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show SystemUiOverlayStyle, rootBundle;
+import 'package:ice_gate/utils/app_log.dart';
 
 // Helper function to convert a hex string (e.g., "0xFF3F3B66") to a Color object.
 Color _parseColor(String hex) {
@@ -28,7 +29,7 @@ Color _parseColor(String hex) {
     return Color(int.parse(cleanHex));
   } catch (e) {
     // Helpful debug during error:
-    print('Failed to parse color string: "$cleanHex"');
+    appLog('Failed to parse color string: "$cleanHex"');
     rethrow;
   }
 }

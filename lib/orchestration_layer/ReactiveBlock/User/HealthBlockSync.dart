@@ -47,7 +47,12 @@ extension HealthBlockSync on HealthBlock {
         final weight = await fetcher(day);
 
         if (weight > 0) {
-          updateWeight(weight, date: day, force: true);
+          updateWeight(
+            weight,
+            date: day,
+            force: true,
+            source: HealthSourceService.sourceAppleHealth,
+          );
         }
       }
       debugPrint("✅ [HealthBlock] Weight History Sync Completed");
@@ -88,6 +93,37 @@ extension HealthBlockSync on HealthBlock {
     } finally {
       untracked(() => isExerciseLoading.value = false);
     }
+  }
+
+  Future<void> syncTodayWeight(Future<double> Function() fetcher) async {
+    if (_isDesktop) {
+      debugPrint("HealthBlock: ⏭️ Skipping today's weight sync on desktop.");
+      return;
+    }
+    untracked(() => isWeightLoading.value = true);
+    try {
+      final weight = await fetcher();
+      if (weight > 0) {
+        await updateWeight(
+          weight,
+          force: true,
+          source: HealthSourceService.sourceAppleHealth,
+        );
+        debugPrint("HealthBlock: ✅ [SYNC] Today's weight synced: $weight kg");
+      }
+    } finally {
+      untracked(() => isWeightLoading.value = false);
+    }
+  }
+
+  /// Pulls weight from Apple Health / Health Connect (smart scales sync there).
+  Future<double> syncFromSmartScale() async {
+    if (_isDesktop) return 0.0;
+    final authorized = await HealthService.requestPermissions();
+    if (!authorized) return 0.0;
+    await syncTodayWeight(HealthService.fetchLatestWeight);
+    await syncWeightHistory(HealthService.fetchWeightForDay);
+    return todayWeight.value;
   }
 
   Future<void> syncTodaySteps(Future<int> Function() fetcher) async {
@@ -198,6 +234,7 @@ extension HealthBlockSync on HealthBlock {
 
       await Future.wait([
         syncTodaySteps(HealthService.fetchStepCount),
+        syncTodayWeight(HealthService.fetchLatestWeight),
         syncTodayHeartRate(HealthService.fetchLatestHeartRate),
         syncTodayOxygenSaturation(HealthService.fetchLatestOxygenSaturation),
         syncTodaySleep(HealthService.fetchSleepData),

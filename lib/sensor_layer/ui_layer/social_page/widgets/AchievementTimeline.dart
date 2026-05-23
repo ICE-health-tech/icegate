@@ -4,7 +4,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'AchievementBuilderDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 
 class AchievementTimeline extends StatefulWidget {
   final List<AchievementData> achievements;
@@ -58,7 +58,7 @@ class _AchievementTimelineState extends State<AchievementTimeline> {
     return Column(
       children: [
         SizedBox(
-          height: 480, // Estimated height for 2 cards + spacing
+          height: 268,
           child: Stack(
             children: [
               PageView.builder(
@@ -69,7 +69,7 @@ class _AchievementTimelineState extends State<AchievementTimeline> {
                 itemBuilder: (context, pageIndex) {
                   final pageItems = chunks[pageIndex];
                   return Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
                     child: Column(
                       children: pageItems.map((a) => _buildAchievementCard(context, a)).toList(),
                     ),
@@ -141,120 +141,133 @@ class _AchievementTimelineState extends State<AchievementTimeline> {
   Widget _buildAchievementCard(BuildContext context, AchievementData a) {
     final dateStr = DateFormat('MMM d, yyyy').format(a.createdAt);
 
+    final cs = Theme.of(context).colorScheme;
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
+      margin: const EdgeInsets.only(bottom: 8),
       child: InkWell(
         onTap: () => AchievementBuilderDialog.show(context, initialData: a),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(12),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(10, 8, 8, 8),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
+            color: cs.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: cs.outlineVariant.withValues(alpha: 0.7)),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.primaryContainer,
-                      borderRadius: BorderRadius.circular(8),
+                      color: cs.primaryContainer,
+                      borderRadius: BorderRadius.circular(6),
                     ),
                     child: Text(
                       a.domain.toUpperCase(),
                       style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Theme.of(context).colorScheme.onPrimaryContainer),
+                        fontSize: 9,
+                        fontWeight: FontWeight.bold,
+                        color: cs.onPrimaryContainer,
+                      ),
                     ),
                   ),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(dateStr,
-                          style: TextStyle(
-                              fontSize: 12,
-                              color: Theme.of(context).colorScheme.onSurfaceVariant)),
-                      IconButton(
-                        icon: Icon(
-                          Icons.delete_outline_rounded,
-                          size: 22,
-                          color: Theme.of(context).colorScheme.error.withValues(alpha: 0.85),
-                        ),
-                        tooltip: AppLocalizations.of(context)!.social_delete_feat_title,
-                        padding: EdgeInsets.zero,
-                        constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-                        visualDensity: VisualDensity.compact,
-                        onPressed: () => _confirmDeleteAchievement(context, a),
-                      ),
-                    ],
+                  const Spacer(),
+                  Text(
+                    dateStr,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: cs.onSurfaceVariant,
+                    ),
+                  ),
+                  IconButton(
+                    icon: Icon(
+                      Icons.delete_outline_rounded,
+                      size: 18,
+                      color: cs.error.withValues(alpha: 0.85),
+                    ),
+                    tooltip: AppLocalizations.of(context)!.social_delete_feat_title,
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                    visualDensity: VisualDensity.compact,
+                    onPressed: () => _confirmDeleteAchievement(context, a),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
-              Text(a.title,
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+              Text(
+                a.title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+              ),
               if (a.description != null && a.description!.isNotEmpty) ...[
-                const SizedBox(height: 4),
+                const SizedBox(height: 2),
                 Text(
                   a.description!,
-                  style: TextStyle(
-                      fontSize: 14, color: Theme.of(context).colorScheme.onSurfaceVariant),
+                  style: TextStyle(fontSize: 11, color: cs.onSurfaceVariant),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ],
-              const SizedBox(height: 12),
-              const Divider(height: 1),
-              const SizedBox(height: 12),
-              Row(
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
                 children: [
-                  Icon(Icons.psychology,
-                      size: 16, color: Theme.of(context).colorScheme.secondary),
-                  const SizedBox(width: 4),
-                  Text("Meaning: ${a.meaningScore}/10",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                  const Spacer(),
-                  Icon(Icons.public,
-                      size: 16, color: Theme.of(context).colorScheme.primary),
-                  const SizedBox(width: 4),
-                  Text("Impact: ${a.impactScore}/10",
-                      style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                  _metricChip(
+                    context,
+                    icon: Icons.psychology_outlined,
+                    label: 'M ${a.meaningScore}/10',
+                    color: cs.secondary,
+                  ),
+                  _metricChip(
+                    context,
+                    icon: Icons.public_outlined,
+                    label: 'I ${a.impactScore}/10',
+                    color: cs.primary,
+                  ),
+                  if (a.impactDescWho.isNotEmpty)
+                    _metricChip(
+                      context,
+                      icon: Icons.favorite_outline_rounded,
+                      label: a.impactDescWho,
+                      color: cs.tertiary,
+                    ),
                 ],
               ),
-              if (a.impactDescWho.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context)
-                        .colorScheme
-                        .surfaceContainerHighest
-                        .withValues(alpha: 0.5),
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          "Helped: ${a.impactDescWho}",
-                          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ]
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _metricChip(
+    BuildContext context, {
+    required IconData icon,
+    required String label,
+    required Color color,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 3),
+          Text(
+            label,
+            style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
     );
   }

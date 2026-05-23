@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 /// Agent responsible for checking the health and integrity of the live database.
 class DatabaseVerificationAgent {
@@ -55,12 +56,8 @@ class DatabaseVerificationAgent {
   Future<void> checkDatabaseTables() async {
     try {
       await database.customSelect('SELECT 1').get();
-      final allTables = database.allTables;
-      for (var table in allTables) {
-        print(table.actualTableName);
-      }
     } catch (e) {
-      print(e);
+      appLog(e);
     }
   }
 
@@ -69,10 +66,10 @@ class DatabaseVerificationAgent {
       // await database.customSelect('SELECT 1').get();
       PersonDAO dao = PersonDAO(database as AppDatabase);
       dao.getPersonByID('');
-      // print("✅ Can get person 0");
+      // appLog("✅ Can get person 0");
     } catch (e) {
-      // print("❌ Can't get person 0");
-      print(e);
+      // appLog("❌ Can't get person 0");
+      appLog(e);
     }
   }
 
@@ -121,15 +118,8 @@ class VerificationReport {
 
 Future<void> monitoring(AppDatabase db) async {
   final agent = DatabaseVerificationAgent(db);
-  print("==========Database agent===========");
-  // Call this safely, perhaps in a background isolate if the DB is huge
   final report = await agent.runFullDiagnostics();
-
-  print(report.toString());
   if (!report.isHealthy) {
-    // Log to Sentry/Crashlytics or prompt user to "Reset Data"
-    print(report.toString());
-    print("==========Database agent===========");
-    print(report.toString());
+    appLog(report.toString());
   }
 }

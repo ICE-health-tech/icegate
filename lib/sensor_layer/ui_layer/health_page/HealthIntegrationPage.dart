@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HuaweiCloudService.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
@@ -86,6 +88,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
             child: CustomScrollView(
               physics: const BouncingScrollPhysics(),
               slivers: [
+                const SliverToBoxAdapter(child: SizedBox(height: 56)),
                 _buildHeader(context, colorScheme),
                 _buildSearchAndFilter(colorScheme),
                 _buildCategoryHeader("NATIVE ECOSYSTEM", colorScheme),
@@ -149,22 +152,6 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
           children: [
             Row(
               children: [
-                GestureDetector(
-                  onTap: () => context.pop(),
-                  child: Container(
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.05),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
                 const Spacer(),
                 Container(
                   padding: const EdgeInsets.symmetric(
@@ -292,7 +279,7 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
         delegate: SliverChildListDelegate([
           _buildIntegrationCard(
             name: "Apple Health",
-            description: "Sync steps, sleep and heart rate",
+            description: "Sync steps, sleep, heart rate and weight",
             icon: Icons.favorite_rounded,
             color: Colors.redAccent,
             status: "Connected",
@@ -792,6 +779,36 @@ class _HealthIntegrationPageState extends State<HealthIntegrationPage> {
           childAspectRatio: 0.85,
         ),
         delegate: SliverChildListDelegate([
+          _buildSensorGridCard(
+            name: AppLocalizations.of(context)!.health_smart_scale_title,
+            brand: "Health / Health Connect",
+            icon: Icons.monitor_weight_rounded,
+            color: Colors.purpleAccent,
+            onTap: () async {
+              final healthBlock = context.read<HealthBlock>();
+              final l10n = AppLocalizations.of(context)!;
+              final authorized = await HealthService.requestPermissions();
+              if (!mounted) return;
+              if (!authorized) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text(l10n.health_smart_scale_sync_denied)),
+                );
+                return;
+              }
+              final weight = await healthBlock.syncFromSmartScale();
+              if (!mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    weight > 0
+                        ? l10n.health_smart_scale_sync_ok
+                        : l10n.health_smart_scale_sync_empty,
+                  ),
+                ),
+              );
+              if (weight > 0) context.push('/health/weight');
+            },
+          ),
           _buildSensorGridCard(
             name: "Smart Watch",
             brand: "Apple/Garmin",

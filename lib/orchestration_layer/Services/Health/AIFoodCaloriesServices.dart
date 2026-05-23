@@ -5,6 +5,7 @@ import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'dart:io';
+import 'package:ice_gate/utils/app_log.dart';
 
 /// Result of calling the food AI agent (HTTP + parsing).
 class AIFoodCaloriesOutcome {
@@ -39,12 +40,12 @@ class AIFoodCaloriesService {
         final s3 = MinioService();
         final subFolder = personId != null ? '$personId/food' : 'guest/food';
         imageUrl = await s3.uploadFile(File(image.path), subFolder: subFolder);
-        print("AIFoodCaloriesService: Image uploaded to S3: $imageUrl");
+        appLog("AIFoodCaloriesService: Image uploaded to S3: $imageUrl");
       } else if (existingPublicImageUrl != null &&
           (existingPublicImageUrl.startsWith('http://') ||
               existingPublicImageUrl.startsWith('https://'))) {
         imageUrl = existingPublicImageUrl;
-        print("AIFoodCaloriesService: Using existing public image URL for agent");
+        appLog("AIFoodCaloriesService: Using existing public image URL for agent");
       }
 
       final String s3UrlForAgent =
@@ -54,7 +55,7 @@ class AIFoodCaloriesService {
           : '';
 
       if (s3UrlForAgent.isEmpty) {
-        print(
+        appLog(
           "AIFoodCaloriesService: No public HTTPS image URL (missing file upload or invalid path). Skipping agent.",
         );
         return AIFoodCaloriesOutcome(
@@ -63,7 +64,7 @@ class AIFoodCaloriesService {
         );
       }
 
-      print("AIFoodCaloriesService: Analyzing food '$foodName'");
+      appLog("AIFoodCaloriesService: Analyzing food '$foodName'");
 
       final requestBody = {
         "s3_url": s3UrlForAgent,
@@ -71,7 +72,7 @@ class AIFoodCaloriesService {
         "food_name": foodName,
       };
 
-      print("AIFoodCaloriesService: Invoking Food Agent at $_agentUrl");
+      appLog("AIFoodCaloriesService: Invoking Food Agent at $_agentUrl");
 
       final response = await http.post(
         Uri.parse("$_agentUrl/analyze_food_url"),
@@ -79,7 +80,7 @@ class AIFoodCaloriesService {
         body: jsonEncode(requestBody),
       );
 
-      print("Agent Response Status: ${response.statusCode}");
+      appLog("Agent Response Status: ${response.statusCode}");
 
       if (response.statusCode == 200) {
         final Map<String, dynamic> responseData = jsonDecode(response.body);
@@ -140,7 +141,7 @@ class AIFoodCaloriesService {
             requestOk: true,
           );
         } else if (output is String) {
-          print("Agent returned text output: $output");
+          appLog("Agent returned text output: $output");
         }
 
         return AIFoodCaloriesOutcome(
@@ -154,14 +155,14 @@ class AIFoodCaloriesService {
           requestOk: true,
         );
       } else {
-        print("Agent Error: ${response.body}");
+        appLog("Agent Error: ${response.body}");
         return AIFoodCaloriesOutcome(
           calories: CaloriesProtocol.empty(),
           requestOk: false,
         );
       }
     } catch (e) {
-      print("Error in AIFoodCaloriesService: $e");
+      appLog("Error in AIFoodCaloriesService: $e");
       return AIFoodCaloriesOutcome(
         calories: CaloriesProtocol.empty(),
         requestOk: false,

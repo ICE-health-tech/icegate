@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/Protocol/Theme/JsonThemeAdapter.dart';
 import 'package:signals/signals.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 // --- ThemeAdapter (Utility remains static, but its usage moves into the store) ---
 
@@ -76,7 +77,7 @@ class ThemeStore {
       // Set the signal state after loading the theme asynchronously
       currentTheme.value = await ThemeAdapter.parse(assetPath);
     } catch (e) {
-      print("Error loading Neumorphic theme: $e");
+      appLog("Error loading Neumorphic theme: $e");
       // Handle error (e.g., set to a default theme)
     }
   }

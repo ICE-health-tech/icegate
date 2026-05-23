@@ -2,8 +2,6 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
-import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:go_router/go_router.dart';
 
@@ -83,40 +81,6 @@ class DragCanvas extends StatelessWidget {
                         ),
 
                         const SizedBox(height: 32),
-                        _buildSectionTitle(context, "FINANCE SETTINGS"),
-                        const SizedBox(height: 12),
-                        Watch((context) {
-                          final configBlock = context.read<ConfigBlock>();
-                          final currency = configBlock.currency.value;
-                          return _buildSettingTile(
-                            context: context,
-                            title: "Currency Unit",
-                            subtitle: "Current: $currency",
-                            icon: Icons.monetization_on_rounded,
-                            color: Colors.green,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  currency,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Switch.adaptive(
-                                  value: currency == 'VND',
-                                  onChanged: (_) =>
-                                      configBlock.toggleCurrency(),
-                                  activeColor: Colors.greenAccent,
-                                ),
-                              ],
-                            ),
-                            onTap: () => configBlock.toggleCurrency(),
-                          );
-                        }),
-                        const SizedBox(height: 16),
                         _buildEntryCard(
                           context: context,
                           title: l10n.reports_hub_title,
@@ -217,92 +181,4 @@ class DragCanvas extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionTitle(BuildContext context, String title) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: Text(
-        title,
-        style: TextStyle(
-          color: Colors.blueGrey.shade300,
-          fontSize: 13,
-          fontWeight: FontWeight.w900,
-          letterSpacing: 1.2,
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSettingTile({
-    required BuildContext context,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color color,
-    Widget? trailing,
-    required VoidCallback onTap,
-  }) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(
-          context,
-        ).colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05), width: 1),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            HapticFeedback.selectionClick();
-            onTap();
-          },
-          borderRadius: BorderRadius.circular(24),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(icon, color: color, size: 24),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        subtitle,
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                trailing ??
-                    Icon(
-                      Icons.chevron_right_rounded,
-                      color: Colors.white.withValues(alpha: 0.2),
-                    ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
 }

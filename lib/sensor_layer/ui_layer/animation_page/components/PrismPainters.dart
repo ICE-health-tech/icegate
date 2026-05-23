@@ -830,43 +830,39 @@ class TacticalGridPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final auroraPaint = Paint();
     final center = Offset(
       size.width / 2 + pointerOffset.dx * 30,
       size.height / 2 + pointerOffset.dy * 30,
     );
-
-    for (int i = 0; i < 3; i++) {
-      final double angle = (auroraProgress * 2 * math.pi) + (i * math.pi * 0.6);
-      final double x =
-          center.dx + math.cos(angle) * 120 + pointerOffset.dx * 100;
-      final double y =
-          center.dy + math.sin(angle * 1.5) * 60 + pointerOffset.dy * 100;
-
-      final gradient = RadialGradient(
-        colors: [
-          EntryColors.winterMoonCore.withValues(alpha: 0.07),
-          EntryColors.primaryIceLight.withValues(alpha: 0.032),
-          Colors.transparent,
-        ],
-      ).createShader(Rect.fromCircle(center: Offset(x, y), radius: 320));
-
-      canvas.drawRect(
-        Rect.fromLTWH(0, 0, size.width, size.height),
-        auroraPaint..shader = gradient,
-      );
-    }
-
-    final paint = Paint()
-      ..color = EntryColors.frostedWhite.withValues(alpha: 0.028)
-      ..strokeWidth = 0.48;
+    final short = size.shortestSide;
 
     /// Clear radius around focal center so grid lines don’t stack into a harsh “+”.
-    const double gridHoleRadius = 172.0;
+    final gridHoleRadius = (short * 0.22).clamp(150.0, 200.0);
+
+    // Soft well glow inside the grid hole.
+    canvas.drawCircle(
+      center,
+      gridHoleRadius * 1.05,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            EntryColors.iceCyan.withValues(alpha: 0.06),
+            EntryColors.primaryIceBlue.withValues(alpha: 0.03),
+            Colors.transparent,
+          ],
+          stops: const [0.0, 0.45, 1.0],
+        ).createShader(
+          Rect.fromCircle(center: center, radius: gridHoleRadius * 1.05),
+        ),
+    );
+
+    final paint = Paint()
+      ..color = EntryColors.frostedWhite.withValues(alpha: 0.034)
+      ..strokeWidth = 0.5;
     final cx = center.dx;
     final cy = center.dy;
 
-    const double step = 76.0;
+    final step = (short / 11).clamp(68.0, 88.0);
     for (double i = -100; i < size.width + 100; i += step) {
       final double x = i + pointerOffset.dx * 40;
       final dx = x - cx;
@@ -911,27 +907,38 @@ class TacticalGridPainter extends CustomPainter {
     }
 
     // Concentric HUD rings (ref: faint cyan tactical circles behind cracks).
-    final double maxRingR =
-        math.min(size.width, size.height) * 0.485;
-    const int ringSteps = 8;
+    final double maxRingR = short * 0.5;
+    const int ringSteps = 9;
     final ringPaint = Paint()..style = PaintingStyle.stroke;
     for (int r = 0; r < ringSteps; r++) {
       final double t = r / (ringSteps - 1);
       final double radius =
-          gridHoleRadius + 22 + (maxRingR - gridHoleRadius - 22) * t;
+          gridHoleRadius + 18 + (maxRingR - gridHoleRadius - 18) * t;
       final pulse =
-          0.52 +
-              0.48 * math.sin(scanProgress * math.pi * 2 + r * 0.7);
+          0.48 + 0.52 * math.sin(scanProgress * math.pi * 2 + r * 0.65);
+      final ringAlpha = (0.032 + 0.05 * (1.0 - t)) * pulse;
       ringPaint
-        ..strokeWidth = 0.42 + 0.22 * (1.0 - t)
-        ..color = EntryColors.iceCyan.withValues(
-          alpha: (0.028 + 0.036 * (1.0 - t)) * pulse,
-        );
+        ..strokeWidth = 0.5 + 0.28 * (1.0 - t)
+        ..color = EntryColors.iceCyan.withValues(alpha: ringAlpha);
       canvas.drawCircle(center, radius, ringPaint);
-      ringPaint.color = EntryColors.winterMoonCore.withValues(
-        alpha: (0.018 + 0.015 * (1.0 - t)) * pulse,
-      );
-      canvas.drawCircle(center, radius + 0.75, ringPaint);
+      ringPaint
+        ..strokeWidth = 0.35
+        ..color = EntryColors.winterMoonCore.withValues(alpha: ringAlpha * 0.55);
+      canvas.drawCircle(center, radius + 0.85, ringPaint);
+    }
+
+    // Cardinal tick marks (subtle targeting reticle).
+    final tickLen = gridHoleRadius * 0.14;
+    final tickPaint = Paint()
+      ..color = EntryColors.iceCyan.withValues(alpha: 0.12)
+      ..strokeWidth = 1.1
+      ..strokeCap = StrokeCap.round;
+    for (int i = 0; i < 4; i++) {
+      final ang = i * math.pi / 2 + auroraProgress * 0.08;
+      final dir = Offset(math.cos(ang), math.sin(ang));
+      final inner = center + dir * (gridHoleRadius + 8);
+      final outer = inner + dir * tickLen;
+      canvas.drawLine(inner, outer, tickPaint);
     }
 
     final scanlineY = size.height * scanProgress;
@@ -956,10 +963,10 @@ class TacticalGridPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [
           Colors.transparent,
-          EntryColors.winterDeepHorizon.withValues(alpha: 0.88),
-          EntryColors.winterEdge.withValues(alpha: 0.98),
+          EntryColors.winterDeepHorizon.withValues(alpha: 0.45),
+          EntryColors.winterEdge.withValues(alpha: 0.72),
         ],
-        stops: const [0.28, 0.72, 1.0],
+        stops: const [0.42, 0.78, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),
@@ -970,7 +977,8 @@ class TacticalGridPainter extends CustomPainter {
   @override
   bool shouldRepaint(covariant TacticalGridPainter oldDelegate) =>
       oldDelegate.scanProgress != scanProgress ||
-      oldDelegate.auroraProgress != auroraProgress;
+      oldDelegate.auroraProgress != auroraProgress ||
+      oldDelegate.pointerOffset != pointerOffset;
 }
 
 class FlowerPainter extends CustomPainter {
@@ -2337,39 +2345,106 @@ class IceGateChargePulsePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (progress <= 0 || progress >= 1.0) return;
+    if (progress <= 0) return;
+
+    final t = progress.clamp(0.0, 1.0);
+    if (t >= 1.0) return;
+
+    // Snappy build-up with a touch of shimmer on the leading edge.
+    final charge = Curves.easeOutCubic.transform(t);
+    final shimmer = 0.9 + 0.1 * math.sin(t * math.pi * 5);
 
     final center = Offset(
       size.width / 2 + pointerOffset.dx * 18,
       size.height / 2 + pointerOffset.dy * 18,
     );
-    final pulse = Curves.easeOut.transform(progress);
-    final shortSide = size.shortestSide;
-    final outerR = shortSide * (0.18 + 0.28 * pulse);
+    final short = size.shortestSide;
 
-    const rayCount = 14;
-    final rayLen = shortSide * (0.32 + 0.14 * pulse);
-    final rayAlpha = 0.38 * pulse;
+    _paintExpandingRipple(canvas, center, short, charge);
+    _paintCrystalRays(canvas, center, short, charge, shimmer);
+    _paintChargeHalo(canvas, center, short, charge, shimmer);
+    _paintChargeCore(canvas, center, short, charge, t);
+  }
+
+  void _paintExpandingRipple(
+    Canvas canvas,
+    Offset center,
+    double short,
+    double charge,
+  ) {
+    final fade = (1.0 - charge).clamp(0.0, 1.0);
+    if (fade < 0.04) return;
+
+    final radius = short * (0.14 + 0.46 * charge);
+    canvas.drawCircle(
+      center,
+      radius,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.9 + 2.6 * fade
+        ..color = EntryColors.iceCyan.withValues(alpha: 0.42 * fade)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8),
+    );
+    canvas.drawCircle(
+      center,
+      radius * 0.72,
+      Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 0.6 + 1.4 * fade
+        ..color = EntryColors.winterMoonCore.withValues(alpha: 0.22 * fade)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+  }
+
+  void _paintCrystalRays(
+    Canvas canvas,
+    Offset center,
+    double short,
+    double charge,
+    double shimmer,
+  ) {
+    const rayCount = 16;
+    final spin = charge * 0.32;
+    final baseLen = short * (0.26 + 0.2 * charge);
+
     for (int i = 0; i < rayCount; i++) {
-      final ang = (i / rayCount) * math.pi * 2 - pulse * 0.2;
-      final p2 = center + Offset(math.cos(ang), math.sin(ang)) * rayLen;
-      final rect = Rect.fromPoints(center, p2);
+      final ang = (i / rayCount) * math.pi * 2 - spin;
+      final isMajor = i % 4 == 0;
+      final len = baseLen * (isMajor ? 1.2 : 0.68);
+      final alpha =
+          (0.34 * charge * shimmer * (isMajor ? 1.0 : 0.52)).clamp(0.0, 1.0);
+      if (alpha < 0.02) continue;
+
+      final end = center + Offset(math.cos(ang), math.sin(ang)) * len;
+      final rect = Rect.fromPoints(center, end);
       canvas.drawLine(
         center,
-        p2,
+        end,
         Paint()
           ..shader = LinearGradient(
             colors: [
-              Colors.white.withValues(alpha: rayAlpha * 1.05),
-              EntryColors.iceCyan.withValues(alpha: rayAlpha * 0.88),
+              Colors.white.withValues(alpha: alpha * 1.15),
+              EntryColors.iceCyan.withValues(alpha: alpha * 0.92),
+              EntryColors.primaryIceLight.withValues(alpha: alpha * 0.35),
               EntryColors.primaryIceBlue.withValues(alpha: 0.0),
             ],
-            stops: const [0.0, 0.22, 1.0],
+            stops: const [0.0, 0.18, 0.45, 1.0],
           ).createShader(rect)
-          ..strokeWidth = 1.4 + pulse * 0.9
-          ..strokeCap = StrokeCap.butt,
+          ..strokeWidth = (isMajor ? 1.65 : 1.05) + charge * (isMajor ? 1.1 : 0.5)
+          ..strokeCap = StrokeCap.round,
       );
     }
+  }
+
+  void _paintChargeHalo(
+    Canvas canvas,
+    Offset center,
+    double short,
+    double charge,
+    double shimmer,
+  ) {
+    final outerR = short * (0.14 + 0.34 * charge);
+    final midR = outerR * 0.55;
 
     canvas.drawCircle(
       center,
@@ -2377,36 +2452,57 @@ class IceGateChargePulsePainter extends CustomPainter {
       Paint()
         ..shader = RadialGradient(
           colors: [
-            Colors.white.withValues(alpha: 0.88 * (1.0 - pulse * 0.05)),
-            EntryColors.iceCyan.withValues(alpha: 0.72 * pulse),
-            EntryColors.frostBloomMist.withValues(alpha: 0.78 * pulse),
-            EntryColors.primaryIceBlue.withValues(alpha: 0.68 * pulse),
+            Colors.white.withValues(alpha: (0.92 * charge * shimmer).clamp(0.0, 1.0)),
+            EntryColors.iceCyan.withValues(alpha: (0.78 * charge).clamp(0.0, 1.0)),
+            EntryColors.frostBloomMist.withValues(alpha: (0.62 * charge).clamp(0.0, 1.0)),
+            EntryColors.primaryIceBlue.withValues(alpha: (0.38 * charge).clamp(0.0, 1.0)),
             EntryColors.winterSkyBand.withValues(alpha: 0.0),
           ],
-          stops: const [0.0, 0.14, 0.28, 0.52, 1.0],
+          stops: const [0.0, 0.12, 0.28, 0.5, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: outerR))
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 12 + 24 * pulse),
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 10 + 28 * charge),
     );
 
-    final coreR = shortSide * (0.022 + 0.014 * pulse);
+    canvas.drawCircle(
+      center,
+      midR,
+      Paint()
+        ..shader = RadialGradient(
+          colors: [
+            EntryColors.winterMoonCore.withValues(alpha: (0.35 * charge).clamp(0.0, 1.0)),
+            EntryColors.primaryIceLight.withValues(alpha: 0.0),
+          ],
+        ).createShader(Rect.fromCircle(center: center, radius: midR))
+        ..maskFilter = MaskFilter.blur(BlurStyle.normal, 6 + 10 * charge),
+    );
+  }
+
+  void _paintChargeCore(
+    Canvas canvas,
+    Offset center,
+    double short,
+    double charge,
+    double t,
+  ) {
+    final coreR = short * (0.018 + 0.016 * charge);
     canvas.drawCircle(
       center,
       coreR,
-      Paint()..color = Colors.white.withValues(alpha: 0.98 * pulse),
+      Paint()..color = Colors.white.withValues(alpha: (0.98 * charge).clamp(0.0, 1.0)),
     );
 
-    final innerR = shortSide * (0.042 + 0.036 * math.sin(progress * math.pi));
+    final innerR = short * (0.038 + 0.04 * math.sin(t * math.pi));
     canvas.drawCircle(
       center,
       innerR,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            EntryColors.iceCyan.withValues(alpha: 0.55 * pulse),
-            EntryColors.primaryIceLight.withValues(alpha: 0.42 * pulse),
+            EntryColors.iceCyan.withValues(alpha: (0.62 * charge).clamp(0.0, 1.0)),
+            EntryColors.primaryIceLight.withValues(alpha: (0.38 * charge).clamp(0.0, 1.0)),
             EntryColors.primaryIceBlue.withValues(alpha: 0.0),
           ],
-          stops: const [0.0, 0.38, 1.0],
+          stops: const [0.0, 0.42, 1.0],
         ).createShader(Rect.fromCircle(center: center, radius: innerR)),
     );
   }

@@ -145,6 +145,20 @@ class N8nSummaryDispatch {
     return index < total - 1 ? Duration(seconds: quick) : Duration(seconds: max);
   }
 
+  /// n8n Webhook templates often use `{{ $json.body.email_body_plain }}`.
+  /// POST sends `{ "body": { ...payload } }` plus top-level copies of key fields.
+  static Map<String, dynamic> envelopeForN8n(Map<String, dynamic> payload) {
+    final body = Map<String, dynamic>.from(payload);
+    return {
+      'body': body,
+      if (body['email_subject'] != null) 'email_subject': body['email_subject'],
+      if (body['email_body_plain'] != null)
+        'email_body_plain': body['email_body_plain'],
+      if (body['email_body_html'] != null)
+        'email_body_html': body['email_body_html'],
+    };
+  }
+
   static Future<void> _sendToUrl(
     String url,
     Map<String, dynamic> payload,
@@ -152,9 +166,10 @@ class N8nSummaryDispatch {
   ) async {
     final method = _webhookMethod;
     if (kDebugMode) {
-      debugPrint(
-        'N8nSummaryDispatch: $method $url (body keys: ${payload.keys.join(", ")})',
-      );
+      final preview = method == 'GET'
+          ? 'query keys: ${_queryFromPayload(payload).keys.join(", ")}'
+          : 'POST envelope keys: ${envelopeForN8n(payload).keys.join(", ")}';
+      debugPrint('N8nSummaryDispatch: $method $url ($preview)');
     }
 
     final uri = Uri.parse(url);
@@ -196,7 +211,11 @@ class N8nSummaryDispatch {
     Duration timeout,
   ) {
     return http
-        .post(uri, headers: headers, body: jsonEncode(payload))
+        .post(
+          uri,
+          headers: headers,
+          body: jsonEncode(envelopeForN8n(payload)),
+        )
         .timeout(timeout);
   }
 
@@ -217,7 +236,94 @@ class N8nSummaryDispatch {
     final totals = payload['totals'] as Map<String, dynamic>;
     final delivery = payload['delivery'] as Map<String, dynamic>;
 
-    return {
+    String? str(dynamic v) => v == null ? null : '$v';
+
+    final flatKeys = [
+      'sent_at',
+      'recipient_name',
+      'email_subject',
+      'email_body_plain',
+      'email_body_html',
+      'period_label',
+      'net_today',
+      'income_today',
+      'expense_today',
+      'net_worth',
+      'month_income',
+      'month_spending',
+      'month_net',
+      'daily_delta',
+      'total_savings',
+      'remaining_budget',
+      'budget_usage',
+      'savings_rate',
+      'drawdown',
+      'transactions_today',
+      'subscriptions_count',
+      'today_transactions_text',
+      'steps_display',
+      'steps_progress',
+      'sleep_display',
+      'sleep_progress',
+      'water_display',
+      'water_progress',
+      'heart_rate_display',
+      'oxygen_display',
+      'calories_burned_display',
+      'calories_consumed_display',
+      'exercise_display',
+      'focus_display',
+      'weight_display',
+      'mood_display',
+      'mood_activities_display',
+      'mood_note_display',
+      'projects_summary',
+      'tasks_summary',
+      'projects_active_list',
+      'tasks_active_list',
+      'finance_daily_income',
+      'finance_daily_expense',
+      'finance_daily_net',
+      'finance_net_worth',
+      'finance_ath_balance',
+      'finance_drawdown_percent',
+      'finance_monthly_income',
+      'finance_monthly_spending',
+      'finance_monthly_net',
+      'finance_daily_delta',
+      'finance_total_savings',
+      'finance_savings_rate_percent',
+      'finance_top_category',
+      'finance_top_category_amount',
+      'health_steps',
+      'health_step_goal',
+      'health_steps_progress_percent',
+      'health_sleep_hours',
+      'health_sleep_goal',
+      'health_heart_rate',
+      'health_oxygen_saturation',
+      'health_water_ml',
+      'health_water_goal',
+      'health_calories_burned',
+      'health_calories_consumed',
+      'health_exercise_minutes',
+      'health_focus_minutes',
+      'health_weight_kg',
+      'health_exercise_goal',
+      'health_focus_goal',
+      'health_calorie_goal',
+      'health_exercise_progress_percent',
+      'health_focus_progress_percent',
+      'mood_score',
+      'mood_has_log_today',
+      'projects_total',
+      'projects_active',
+      'projects_done',
+      'tasks_active',
+      'tasks_done',
+    ];
+
+    final out = <String, String>{
       'schema_version': '${payload['schema_version']}',
       'report_type': payload['report_type'] as String,
       'person_id': payload['person_id'] as String,
@@ -236,10 +342,20 @@ class N8nSummaryDispatch {
       if (payload['finance'] != null)
         'finance': jsonEncode(payload['finance']),
       if (payload['health'] != null) 'health': jsonEncode(payload['health']),
-      if (payload['health_steps'] != null)
-        'health_steps': '${payload['health_steps']}',
-      if (payload['finance_net_worth'] != null)
-        'finance_net_worth': '${payload['finance_net_worth']}',
+      if (payload['mood'] != null) 'mood': jsonEncode(payload['mood']),
+      if (payload['projects'] != null)
+        'projects': jsonEncode(payload['projects']),
     };
+
+    for (final key in flatKeys) {
+      final v = str(payload[key]);
+      if (v != null) out[key] = v;
+    }
+
+    // GET webhooks: fields are on $json.query.* (not $json.body.*).
+    // Also expose a JSON blob for workflows that parse body in a Code node.
+    out['body'] = jsonEncode(payload);
+
+    return out;
   }
 }

@@ -130,7 +130,9 @@ extension HealthBlockActions on HealthBlock {
     double weight, {
     DateTime? date,
     bool force = false,
+    String? source,
   }) async {
+    final dataSource = source ?? HealthSourceService.sourceManual;
     final targetDate = date ?? DateTime.now();
     final now = DateTime.now();
     final isToday =
@@ -149,7 +151,7 @@ extension HealthBlockActions on HealthBlock {
           weight,
           date: targetDate,
           force: force,
-          source: HealthSourceService.sourceManual,
+          source: dataSource,
         );
       }
     } else {
@@ -157,7 +159,7 @@ extension HealthBlockActions on HealthBlock {
         weight,
         date: targetDate,
         force: force,
-        source: HealthSourceService.sourceManual,
+        source: dataSource,
       );
     }
   }

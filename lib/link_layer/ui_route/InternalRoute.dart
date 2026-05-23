@@ -62,12 +62,14 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/IntegrationHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsCalendarPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/FolderDetailsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/SyncEnginePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/stock_page/StockPage.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 final GlobalKey<NavigatorState> _shellNavigatorKey =
@@ -126,7 +128,7 @@ final GoRouter router = GoRouter(
       showIntroNotifier.value = false;
       return '/intro';
     }
-    print("Current Location: ${state.matchedLocation}");
+    appLog("Current Location: ${state.matchedLocation}");
 
     if (status == null ||
         status == AuthStatus.checkingSession ||
@@ -277,6 +279,19 @@ final GoRouter router = GoRouter(
           ],
         ),
         GoRoute(
+          path: '/integrations',
+          builder: (context, state) {
+            final focus = state.uri.queryParameters['focus'];
+            return IntegrationHubPage(initialFocus: focus);
+          },
+          routes: [
+            GoRoute(
+              path: 'sensors',
+              builder: (context, state) => const HealthIntegrationPage(),
+            ),
+          ],
+        ),
+        GoRoute(
           path: '/settings',
           builder: (context, state) => const SettingsWidget(),
           routes: [
@@ -313,7 +328,7 @@ final GoRouter router = GoRouter(
           routes: [
             GoRoute(
               path: 'integrations',
-              builder: (context, state) => const HealthIntegrationPage(),
+              redirect: (context, state) => '/integrations?focus=health',
             ),
             GoRoute(
               path: 'dashboard',

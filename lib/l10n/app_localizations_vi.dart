@@ -40,13 +40,290 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không có nhiệm vụ hay dự án mới trong ngày này.';
 
   @override
+  String get projects_calendar_day_empty_not_connected =>
+      'Chưa kết nối lịch. Dùng “Kết nối lịch” phía trên, rồi đồng bộ.';
+
+  @override
+  String projects_calendar_day_empty_other_days(int count) {
+    return 'Không có sự kiện trong ngày này. Có $count sự kiện ở ngày khác trong tháng — thử các ô được tô trên lịch.';
+  }
+
+  @override
+  String get projects_calendar_google_events => 'Google Calendar';
+
+  @override
+  String get projects_calendar_reminders => 'Nhắc nhở';
+
+  @override
+  String get projects_calendar_connect_google => 'Kết nối Google Calendar';
+
+  @override
+  String get projects_calendar_disconnect_google => 'Ngắt Google Calendar';
+
+  @override
+  String get projects_calendar_google_connected => 'Đã kết nối Google Calendar';
+
+  @override
+  String get projects_calendar_sign_in_failed =>
+      'Không thể kết nối Google Calendar';
+
+  @override
+  String get projects_calendar_sign_in_cancelled => 'Đã hủy đăng nhập Google';
+
+  @override
+  String get projects_calendar_scope_denied =>
+      'Chưa cấp quyền Lịch. Hãy cho phép trong tài khoản Google của bạn.';
+
+  @override
+  String projects_calendar_api_not_enabled(String projectId) {
+    return 'Google Calendar API chưa bật cho app macOS (dự án GCP $projectId). Vào Google Cloud Console → bật \"Google Calendar API\" cho dự án đó, đợi vài phút rồi thử lại.';
+  }
+
+  @override
+  String get projects_calendar_insufficient_scopes =>
+      'Chưa cấp quyền Lịch. Ngắt kết nối Google, kết nối lại và chấp nhận đủ quyền.';
+
+  @override
+  String get projects_calendar_connect_hint =>
+      'Đăng nhập Google để đồng bộ mọi lịch Google lên màn hình Lịch.';
+
+  @override
+  String get projects_calendar_add_reminder => 'Thêm nhắc nhở';
+
+  @override
+  String get projects_calendar_reminder_title => 'Tiêu đề nhắc nhở';
+
+  @override
+  String get projects_calendar_sync_google => 'Đồng bộ sự kiện';
+
+  @override
+  String get projects_calendar_all_day => 'Cả ngày';
+
+  @override
+  String get projects_calendar_integrations => 'Kết nối lịch';
+
+  @override
+  String get projects_calendar_connect_device => 'Kết nối lịch trên máy';
+
+  @override
+  String get projects_calendar_connect_apple => 'Kết nối Apple Calendar';
+
+  @override
+  String get projects_calendar_disconnect_device => 'Ngắt lịch trên máy';
+
+  @override
+  String get projects_calendar_disconnect_apple => 'Ngắt Apple Calendar';
+
+  @override
+  String get projects_calendar_device_connected => 'Đã kết nối lịch trên máy';
+
+  @override
+  String get projects_calendar_apple_connected => 'Đã kết nối Apple Calendar';
+
+  @override
+  String get projects_calendar_device_events => 'Lịch trên máy';
+
+  @override
+  String get projects_calendar_apple_events => 'Apple Calendar';
+
+  @override
+  String get projects_calendar_device_hint =>
+      'Cho phép truy cập Lịch để xem sự kiện từ các lịch trên thiết bị.';
+
+  @override
+  String get projects_calendar_sync_device => 'Đồng bộ sự kiện máy';
+
+  @override
+  String get projects_calendar_device_denied =>
+      'Chưa cấp quyền Lịch. Bật trong Cài đặt.';
+
+  @override
+  String get integration_hub_title => 'Trung tâm kết nối';
+
+  @override
+  String get integration_hub_subtitle =>
+      'Lịch, sức khỏe và thiết bị — một trung tâm kết nối.';
+
+  @override
+  String get integration_hub_google_fit => 'Google Fit';
+
+  @override
+  String get integration_hub_google_fit_hint =>
+      'Dùng chung đăng nhập Google với Lịch và Drive.';
+
+  @override
+  String get integration_hub_sensors_section => 'Thiết bị & cảm biến';
+
+  @override
+  String get integration_hub_open_sensor_hub => 'Mở Sensor Hub';
+
+  @override
+  String get integration_hub_sensor_hub_hint =>
+      'Đồng hồ, IoT, SSH và cấu hình Huawei.';
+
+  @override
+  String get integration_hub_huawei_sensor_hint =>
+      'Cấu hình Huawei trong Sensor Hub trước.';
+
+  @override
+  String get projects_calendar_all_calendars_events => 'Mọi lịch';
+
+  @override
+  String projects_calendar_synced_count(int count) {
+    return 'Đã tải $count sự kiện trong tháng này';
+  }
+
+  @override
+  String get projects_calendar_sync_empty_month =>
+      'Đã kết nối — không có sự kiện trong tháng này. Thử tháng khác hoặc kiểm tra Google Calendar.';
+
+  @override
+  String get integration_hub_calendars_section => 'Lịch';
+
+  @override
+  String get integration_hub_health_section => 'Sức khỏe';
+
+  @override
+  String get integration_hub_connect => 'Kết nối';
+
+  @override
+  String get integration_hub_status_connected => 'Đã kết nối';
+
+  @override
+  String get integration_hub_apple_health => 'Apple Health';
+
+  @override
+  String get integration_hub_apple_health_hint =>
+      'Bước chân, giấc ngủ, nhịp tim từ HealthKit.';
+
+  @override
+  String get integration_hub_huawei_health => 'Huawei Health';
+
+  @override
+  String get integration_hub_huawei_health_hint =>
+      'Đồng bộ từ tài khoản Huawei cloud.';
+
+  @override
+  String get integration_hub_phase2_notice =>
+      'Lịch và đăng nhập Google hoạt động tại đây. Cấu hình Huawei: dùng Sensor Hub bên dưới.';
+
+  @override
+  String get integration_hub_sign_in_required =>
+      'Hãy đăng nhập icegate trước, rồi kết nối tích hợp.';
+
+  @override
+  String get integration_hub_health_coming_soon =>
+      'Nguồn sức khỏe này chưa khả dụng.';
+
+  @override
+  String get integration_hub_open => 'Mở trung tâm kết nối';
+
+  @override
   String get projects_tile_focus => 'Tập trung';
 
   @override
-  String get projects_tile_pomodoro => 'Pomodoro';
+  String get projects_tile_pomodoro => 'Cà chua';
 
   @override
-  String get projects_tile_social_blocker => 'Social Blocker';
+  String get projects_tile_social_blocker => 'Chặn mạng xã hội';
+
+  @override
+  String get projects_plugin_open => 'Mở';
+
+  @override
+  String get projects_plugin_location_tracker => 'Theo dõi vị trí';
+
+  @override
+  String get projects_plugin_live_map => 'Bản đồ trực tiếp';
+
+  @override
+  String get projects_remove_plugin_title => 'Gỡ lối tắt?';
+
+  @override
+  String projects_remove_plugin_body(String name) {
+    return 'Gỡ \"$name\" khỏi lối tắt nhanh?';
+  }
+
+  @override
+  String get projects_remove_plugin_confirm => 'Gỡ';
+
+  @override
+  String get integrations_title => 'Tích hợp';
+
+  @override
+  String get integrations_subtitle => 'Quản lý nguồn tài liệu của bạn';
+
+  @override
+  String get integrations_active_services => 'Dịch vụ đang bật';
+
+  @override
+  String get integrations_total_notes => 'Tổng ghi chú';
+
+  @override
+  String get integrations_search_hint => 'Tìm nguồn...';
+
+  @override
+  String get integrations_enabled_connections => 'KẾT NỐI ĐANG BẬT';
+
+  @override
+  String get integrations_filters => 'Bộ lọc';
+
+  @override
+  String get integrations_internal_notes => 'Ghi chú nội bộ';
+
+  @override
+  String get integrations_primary_vault => 'Kho chính (cục bộ)';
+
+  @override
+  String get integrations_explore => 'Khám phá';
+
+  @override
+  String get integrations_google_drive => 'Google Drive';
+
+  @override
+  String get integrations_synced_cloud => 'Đã đồng bộ đám mây';
+
+  @override
+  String get integrations_cloud_storage => 'Lưu trữ đám mây';
+
+  @override
+  String get integrations_sync_now => 'Đồng bộ ngay';
+
+  @override
+  String get integrations_connect => 'Kết nối';
+
+  @override
+  String get integrations_notion_sync => 'Đồng bộ Notion';
+
+  @override
+  String get integrations_database_pipeline => 'Luồng cơ sở dữ liệu';
+
+  @override
+  String get integrations_fetch => 'Tải về';
+
+  @override
+  String get integrations_setup => 'Thiết lập';
+
+  @override
+  String get integrations_slack_docs => 'Tài liệu Slack';
+
+  @override
+  String get integrations_shared_channels => 'Kênh dùng chung';
+
+  @override
+  String get integrations_notify_me => 'Báo khi có';
+
+  @override
+  String get integrations_notion_config_title => 'Cấu hình Notion';
+
+  @override
+  String get integrations_notion_secret_label => 'Mã tích hợp nội bộ';
+
+  @override
+  String get integrations_save_fetch => 'Lưu & tải về';
+
+  @override
+  String get integrations_marketplace_soon => 'Chợ nguồn sắp ra mắt!';
 
   @override
   String get projects_workspace_empty =>
@@ -163,6 +440,38 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get health_update_weight => 'Cập nhật cân nặng';
+
+  @override
+  String get health_smart_scale_title => 'Cân thông minh';
+
+  @override
+  String get health_smart_scale_desc =>
+      'Đồng bộ từ Apple Health hoặc Health Connect (Withings, Eufy, Xiaomi, v.v.)';
+
+  @override
+  String get health_smart_scale_sync => 'Đồng bộ cân thông minh';
+
+  @override
+  String get health_smart_scale_syncing => 'Đang đồng bộ…';
+
+  @override
+  String get health_smart_scale_sync_ok =>
+      'Đã đồng bộ cân nặng từ cân thông minh';
+
+  @override
+  String get health_smart_scale_sync_empty =>
+      'Chưa có dữ liệu. Cân trước, rồi nhấn đồng bộ.';
+
+  @override
+  String get health_smart_scale_sync_denied =>
+      'Chưa cấp quyền Health. Bật trong Cài đặt.';
+
+  @override
+  String get health_smart_scale_desktop =>
+      'Đồng bộ cân thông minh chỉ có trên iPhone và Android.';
+
+  @override
+  String get health_smart_scale_import => 'Nhập từ cân thông minh';
 
   @override
   String get health_log_water => 'Ghi nhận nước';
@@ -710,6 +1019,12 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get health_at_a_glance => 'Tổng quan sức khỏe của bạn.';
+
+  @override
+  String get health_analyzing_meal => 'Đang phân tích bữa ăn…';
+
+  @override
   String get health_subtitle_health_first => 'Sức khỏe là trên hết';
 
   @override
@@ -1104,7 +1419,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get last_name_label => 'Họ';
 
   @override
-  String get email_label => 'Email';
+  String get email_label => 'Địa chỉ email';
 
   @override
   String get phone_number_label => 'Số điện thoại';
@@ -1345,6 +1660,43 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có thành tích nào được ghi nhận.';
 
   @override
+  String get achievement_story_section => 'Thành tích ảnh';
+
+  @override
+  String get achievement_story_empty_hint =>
+      'Chạm + để lưu ảnh thành tích — hiển thị dạng story ở đây.';
+
+  @override
+  String get achievement_story_add => 'Thêm';
+
+  @override
+  String get achievement_feats_section => 'Thành tích đã ghi';
+
+  @override
+  String get achievement_insights_title => 'Bảng phân tích';
+
+  @override
+  String achievement_insights_summary(
+    int count,
+    String meaning,
+    String impact,
+  ) {
+    return 'Tổng kết tháng: $count thành tích. Ý nghĩa TB: $meaning, Tác động TB: $impact';
+  }
+
+  @override
+  String get achievement_story_title_dialog => 'Đặt tên thành tích';
+
+  @override
+  String get achievement_story_title_hint => 'Bạn đã làm gì?';
+
+  @override
+  String get achievement_story_added => 'Đã lưu story vào thành tích.';
+
+  @override
+  String get achievement_story_save_failed => 'Không lưu được ảnh.';
+
+  @override
   String get social_delete_feat_title => 'Xóa thành tích';
 
   @override
@@ -1417,7 +1769,93 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_needs_care => 'Quan tâm';
 
   @override
+  String get mind_focus_current => 'Tập trung';
+
+  @override
+  String get mind_focus_none => 'Chưa chọn';
+
+  @override
   String get mind_quick_entry_hint => 'Bạn đang nghĩ gì thế?';
+
+  @override
+  String get mind_focus_title => 'KHU VỰC TẬP TRUNG';
+
+  @override
+  String get mind_focus_subtitle =>
+      'Định nghĩa xu hướng theo tuần để biết nên tập trung vào đâu.';
+
+  @override
+  String get mind_focus_empty =>
+      'Chưa có khu vực tập trung. Chọn mẫu hoặc tạo mới.';
+
+  @override
+  String get mind_focus_add => 'Khu vực mới';
+
+  @override
+  String get mind_focus_edit => 'Sửa khu vực';
+
+  @override
+  String get mind_focus_weekly_goal => 'Số nhật ký / tuần (mục tiêu)';
+
+  @override
+  String get mind_focus_this_week => 'Tuần này';
+
+  @override
+  String get mind_focus_select_hint =>
+      'Chạm để tập trung. Nhật ký gần đây khớp khu vực này:';
+
+  @override
+  String get mind_focus_template_gym => 'Tuần gym';
+
+  @override
+  String get mind_focus_template_learn => 'Tuần học';
+
+  @override
+  String get mind_focus_template_invest => 'Tuần đầu tư';
+
+  @override
+  String get mind_focus_name_hint => 'Tên (vd. Tuần gym)';
+
+  @override
+  String get mind_focus_activities_label => 'Hoạt động liên kết';
+
+  @override
+  String get mind_focus_name_required => 'Nhập tên khu vực tập trung';
+
+  @override
+  String get mind_focus_activities_required => 'Chọn ít nhất một hoạt động';
+
+  @override
+  String get mind_focus_icon_label => 'Biểu tượng';
+
+  @override
+  String get mind_focus_color_label => 'Màu';
+
+  @override
+  String get mind_focus_no_logs_yet => 'Chưa có nhật ký khớp khu vực này.';
+
+  @override
+  String get mind_focus_log_now => 'Ghi nhật ký';
+
+  @override
+  String get mind_focus_todos => 'Việc cần làm';
+
+  @override
+  String get mind_focus_open_projects => 'Dự án';
+
+  @override
+  String get mind_focus_no_todos =>
+      'Chưa có việc trong dự án. Thêm ở trang Dự án.';
+
+  @override
+  String mind_focus_more_todos(int count) {
+    return '+$count việc khác trong Dự án';
+  }
+
+  @override
+  String mind_focus_avg_mood(String score) {
+    return 'Tâm trạng TB tuần này: $score';
+  }
 
   @override
   String get mood_trends_title => 'XU HƯỚNG TÂM TRẠNG';
@@ -2275,6 +2713,33 @@ class AppLocalizationsVi extends AppLocalizations {
   String get project_no_notes_list => 'Không tìm thấy ghi chú nào';
 
   @override
+  String get project_choose_document_type => 'Chọn loại tài liệu';
+
+  @override
+  String get project_doc_blank_note => 'Ghi chú trống';
+
+  @override
+  String get project_doc_blank_note_desc => 'Bắt đầu từ trang trắng';
+
+  @override
+  String get project_doc_tech => 'Tài liệu kỹ thuật';
+
+  @override
+  String get project_doc_tech_desc => 'Mẫu kiến trúc và triển khai';
+
+  @override
+  String get project_doc_api => 'Đặc tả API';
+
+  @override
+  String get project_doc_api_desc => 'Mẫu endpoint và schema';
+
+  @override
+  String get project_doc_tech_title => 'Tài liệu kỹ thuật';
+
+  @override
+  String get project_doc_api_title => 'Đặc tả API';
+
+  @override
   String get project_finance_label => 'Tài chính';
 
   @override
@@ -2638,6 +3103,29 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_disabled_desc => 'Thông báo hệ thống đang bị tắt.';
 
   @override
+  String get notification_system_preferences => 'TÙY CHỌN HỆ THỐNG';
+
+  @override
+  String get notification_pomodoro_reminder_title => 'Nhắc Pomodoro';
+
+  @override
+  String get notification_pomodoro_reminder_subtitle =>
+      'Nhận thông báo khi hoàn thành một phiên Pomodoro hoặc kết thúc giờ nghỉ.';
+
+  @override
+  String get notification_live_activities_title => 'Hoạt động trực tiếp';
+
+  @override
+  String get notification_live_activities_subtitle =>
+      'Theo dõi bộ đếm tập trung trên Màn hình khóa.';
+
+  @override
+  String get notification_status_on => 'bật';
+
+  @override
+  String get notification_status_off => 'tắt';
+
+  @override
   String get notification_wisdom_board => 'Bảng trí tuệ';
 
   @override
@@ -2723,6 +3211,112 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_label_description_optional => 'Mô tả (tùy chọn)';
+
+  @override
+  String get finance_recurring_income => 'Thu nhập định kỳ';
+
+  @override
+  String get finance_recurring_interval => 'Lặp lại mỗi';
+
+  @override
+  String get finance_fixed_income_title => 'Thu nhập cố định';
+
+  @override
+  String get finance_fixed_income_subtitle =>
+      'Lương, tiền thuê và các khoản thu ổn định khác';
+
+  @override
+  String get finance_fixed_income_monthly_total => 'Tổng / tháng';
+
+  @override
+  String get finance_fixed_income_empty => 'Chưa có thu nhập cố định';
+
+  @override
+  String get finance_fixed_income_add => 'Thêm thu nhập cố định';
+
+  @override
+  String get finance_fixed_income_new => 'Thu nhập cố định mới';
+
+  @override
+  String get finance_fixed_income_edit => 'Sửa thu nhập cố định';
+
+  @override
+  String get finance_fixed_income_name => 'Tên khoản thu';
+
+  @override
+  String get finance_fixed_income_next => 'Lần nhận tiếp theo';
+
+  @override
+  String get finance_fixed_income_delete_confirm =>
+      'Xóa lịch thu nhập cố định này?';
+
+  @override
+  String get finance_insight_title => 'Phân tích';
+
+  @override
+  String get finance_insight_suggestions => 'Gợi ý';
+
+  @override
+  String get finance_insight_enter_amount =>
+      'Nhập số tiền để xem ảnh hưởng tới tháng này.';
+
+  @override
+  String finance_insight_fixed_after(String amount) {
+    return 'Sau khi lưu: khoảng $amount/tháng thu nhập cố định.';
+  }
+
+  @override
+  String finance_insight_covers_spending(String percent, String spent) {
+    return 'Bao phủ khoảng $percent% chi tiêu đã ghi trong tháng ($spent).';
+  }
+
+  @override
+  String finance_insight_shortfall(String amount) {
+    return 'Vẫn thiếu khoảng $amount so với chi tiêu tháng.';
+  }
+
+  @override
+  String finance_insight_surplus(String amount) {
+    return 'Còn khoảng $amount/tháng sau chi tiêu thường.';
+  }
+
+  @override
+  String finance_insight_duplicate_fixed(String name) {
+    return 'Bạn đã có thu nhập cố định “$name” — tránh ghi trùng.';
+  }
+
+  @override
+  String finance_insight_expense_share(String percent) {
+    return 'Khoản này chiếm khoảng $percent% chi tiêu tháng này.';
+  }
+
+  @override
+  String get finance_insight_expense_large =>
+      'Chi tiêu lớn một lần — kiểm tra lại danh mục.';
+
+  @override
+  String finance_insight_income_share(String percent) {
+    return 'Tăng khoảng $percent% thu nhập đã ghi trong tháng.';
+  }
+
+  @override
+  String finance_insight_recurring_equiv(String amount) {
+    return 'Nếu lặp lại: thêm khoảng $amount/tháng ngoài thu cố định.';
+  }
+
+  @override
+  String finance_insight_savings_total(String amount) {
+    return 'Số dư tiết kiệm sẽ khoảng $amount.';
+  }
+
+  @override
+  String get finance_interval_weekly => 'Tuần';
+
+  @override
+  String get finance_interval_monthly => 'Tháng';
+
+  @override
+  String get finance_interval_yearly => 'Năm';
 
   @override
   String get finance_btn_add => 'Thêm';
@@ -2819,6 +3413,49 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_cat_subscriptions => 'Đăng ký dịch vụ';
+
+  @override
+  String get finance_subscriptions_active_header => 'ĐĂNG KÝ ĐANG HOẠT ĐỘNG';
+
+  @override
+  String get finance_subscriptions_monthly_total => 'TỔNG HÀNG THÁNG';
+
+  @override
+  String get finance_subscriptions_next_month_header => 'KẾ HOẠCH THÁNG SAU';
+
+  @override
+  String get finance_subscriptions_next_month_total => 'TỔNG DỰ KIẾN';
+
+  @override
+  String get finance_subscriptions_next_month_empty =>
+      'Không có khoản đăng ký nào trong tháng sau.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_tooltip =>
+      'Bỏ khỏi kế hoạch tháng này';
+
+  @override
+  String get finance_subscriptions_next_month_remove_title =>
+      'BỎ KHỎI KẾ HOẠCH';
+
+  @override
+  String get finance_subscriptions_next_month_remove_message =>
+      'Chỉ bỏ khoản này khỏi kế hoạch tháng sau. Đăng ký vẫn hoạt động và sẽ hiện lại khi đến tháng thanh toán đó.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_confirm => 'BỎ';
+
+  @override
+  String get finance_subscriptions_next_month_remove_action =>
+      'BỎ KHỎI KẾ HOẠCH';
+
+  @override
+  String get finance_subscription_due_today => 'HẾT HẠN HÔM NAY';
+
+  @override
+  String finance_subscription_days_left(int days) {
+    return 'CÒN $days NGÀY';
+  }
 
   @override
   String get finance_cat_entertainment => 'Giải trí';
@@ -3081,6 +3718,16 @@ class AppLocalizationsVi extends AppLocalizations {
   String get ssh_search_hint => 'Tìm kiếm...';
 
   @override
+  String get ssh_connect_host_first =>
+      'Hãy kết nối máy chủ trước khi quản lý phiên tmux.';
+
+  @override
+  String get ssh_go_to_terminal => 'MỞ TERMINAL';
+
+  @override
+  String get ssh_no_tmux_sessions => 'Không có phiên tmux đang chạy.';
+
+  @override
   String get journal => 'Nhật ký';
 
   @override
@@ -3093,7 +3740,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get feedback_subtitle => 'Báo lỗi hoặc đề xuất tính năng mới';
 
   @override
-  String get sync_engine_title => 'Sync Engine';
+  String get sync_engine_title => 'Động cơ đồng bộ';
 
   @override
   String get system_health => 'SỨC KHỎE HỆ THỐNG';
@@ -3153,7 +3800,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get app_shortcut => 'Lối tắt ứng dụng';
 
   @override
-  String get web_widget => 'Web Widget';
+  String get web_widget => 'Tiện ích web';
 
   @override
   String get please_select_app_page => 'Vui lòng chọn một trang ứng dụng';
@@ -3179,7 +3826,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get url_hint => 'URL (ví dụ: facebook.com)';
 
   @override
-  String get plugins => 'Plugins';
+  String get plugins => 'Tiện ích';
 
   @override
   String get custom_url => 'URL tùy chỉnh';
@@ -3192,4 +3839,153 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get common_done => 'Xong';
+
+  @override
+  String get island_app_name => 'ICE GATE';
+
+  @override
+  String get island_app_blocker => 'CHẶN ỨNG DỤNG';
+
+  @override
+  String get island_initializing => 'ĐANG KHỞI TẠO…';
+
+  @override
+  String get island_notifications => 'THÔNG BÁO';
+
+  @override
+  String get island_inbox => 'HỘP THƯ';
+
+  @override
+  String get island_documentation => 'TÀI LIỆU';
+
+  @override
+  String get island_canvas => 'BẢNG GHÉP';
+
+  @override
+  String get island_mind => 'TÂM TRÍ';
+
+  @override
+  String get island_health_data => 'DỮ LIỆU';
+
+  @override
+  String get island_nutrition => 'DINH DƯỠNG';
+
+  @override
+  String get island_activity => 'VẬN ĐỘNG';
+
+  @override
+  String get island_hydration => 'NƯỚC UỐNG';
+
+  @override
+  String get island_focus => 'TẬP TRUNG';
+
+  @override
+  String get island_steps => 'BƯỚC CHÂN';
+
+  @override
+  String get island_vitals => 'CHỈ SỐ SỐNG';
+
+  @override
+  String get island_sleep => 'GIẤC NGỦ';
+
+  @override
+  String get island_calories => 'CALO';
+
+  @override
+  String get island_spo2 => 'SpO₂';
+
+  @override
+  String get island_biometrics => 'SINH TRẮC';
+
+  @override
+  String get finance_tab_overview => 'TỔNG QUAN';
+
+  @override
+  String get finance_tab_history => 'LỊCH SỬ';
+
+  @override
+  String get finance_tab_daily => 'TRONG NGÀY';
+
+  @override
+  String get finance_tab_daily_subtitle =>
+      'Chi tiêu vui và thu nhập trong ngày — chọn ngày trên lịch.';
+
+  @override
+  String get finance_tab_achievements => 'THÀNH TỰU';
+
+  @override
+  String get finance_achievements_subtitle =>
+      'Thành tựu tài chính lớn theo tháng và năm.';
+
+  @override
+  String get finance_period_month => 'Tháng';
+
+  @override
+  String get finance_period_year => 'Năm';
+
+  @override
+  String get finance_daily_in => 'Tiền vào';
+
+  @override
+  String get finance_daily_out => 'Tiền ra';
+
+  @override
+  String get finance_daily_empty => 'Chưa có giao dịch trong ngày này';
+
+  @override
+  String get finance_achievements_empty => 'Chưa có thành tựu lớn trong kỳ này';
+
+  @override
+  String get finance_achievements_add => 'Ghi thành tựu';
+
+  @override
+  String get finance_milestone_month_income => 'Thu nhập tháng';
+
+  @override
+  String get finance_milestone_month_savings => 'Tiết kiệm tháng';
+
+  @override
+  String get finance_milestone_year_total => 'Tổng thu năm';
+
+  @override
+  String get finance_tab_billing => 'HÓA ĐƠN';
+
+  @override
+  String get finance_tab_saving => 'TIẾT KIỆM';
+
+  @override
+  String get island_documents => 'TÀI LIỆU';
+
+  @override
+  String get island_editor => 'SOẠN THẢO';
+
+  @override
+  String get island_identity => 'DANH TÍNH';
+
+  @override
+  String get island_id_update => 'CẬP NHẬT ID';
+
+  @override
+  String get island_protocols => 'QUY TRÌNH';
+
+  @override
+  String get island_sync_core => 'ĐỒNG BỘ';
+
+  @override
+  String get island_settings => 'CÀI ĐẶT';
+
+  @override
+  String get island_remote_ssh => 'SSH TỪ XA';
+
+  @override
+  String get island_connected => 'ĐÃ KẾT NỐI';
+
+  @override
+  String get island_not_active => 'CHƯA HOẠT ĐỘNG';
+
+  @override
+  String get island_connect => 'KẾT NỐI';
+
+  @override
+  String get island_tmux_active => 'TMUX ĐANG CHẠY';
 }

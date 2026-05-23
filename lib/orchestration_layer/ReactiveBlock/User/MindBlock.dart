@@ -6,6 +6,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:rxdart/rxdart.dart';
 import 'package:signals_flutter/signals_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class MindBlock {
   final MindLogsDAO dao;
@@ -38,7 +39,7 @@ class MindBlock {
 
   /// Watch ALL logs for a person (for debugging / total history)
   Stream<List<MindLogData>> watchAllMindLogs(String personId) {
-    print("🔭 [MindBlock] Watching ALL logs for $personId");
+    appLog("🔭 [MindBlock] Watching ALL logs for $personId");
     return dao.watchAllLogs(personId).map((logs) {
       debugPrint("📊 [MindBlock] Total logs in local DB: ${logs.length}");
       return logs;

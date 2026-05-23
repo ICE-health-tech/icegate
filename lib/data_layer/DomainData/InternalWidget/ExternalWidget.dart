@@ -23,9 +23,9 @@
 //   void connect() {
 //     // Đây là nơi triển khai logic kết nối cơ bản.
 //     // Ví dụ: kiểm tra thông tin host và port.
-//     print('✅ BaseWidget: Attempting to connect to $host${port != null ? ':$port' : ''}...');
+//     appLog('✅ BaseWidget: Attempting to connect to $host${port != null ? ':$port' : ''}...');
 //     if (ipAddress != null) {
-//       print('   (Using IP: $ipAddress)');
+//       appLog('   (Using IP: $ipAddress)');
 //     }
 //     // ... Thêm logic kết nối thực tế ở đây ...
 //   }
@@ -34,12 +34,12 @@
 //   @override
 //   Future<bool> fetchData() async {
 //     // Đây là nơi triển khai logic lấy dữ liệu cơ bản.
-//     print('⬇️ BaseWidget: Fetching data from URL: $url...');
+//     appLog('⬇️ BaseWidget: Fetching data from URL: $url...');
     
 //     // Giả lập quá trình lấy dữ liệu
 //     await Future.delayed(const Duration(milliseconds: 500));
     
-//     print('   Data fetch completed.');
+//     appLog('   Data fetch completed.');
 //     return true; // Trả về true nếu thành công
 //   }
 

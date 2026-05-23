@@ -41,11 +41,13 @@ class MindSkillsPage extends StatelessWidget {
 class MindSkillsView extends StatefulWidget {
   final bool showBackground;
   final bool popOnSave;
+  final VoidCallback? onSessionLogged;
 
   const MindSkillsView({
     super.key,
     required this.showBackground,
     required this.popOnSave,
+    this.onSessionLogged,
   });
 
   @override
@@ -87,6 +89,27 @@ class _MindSkillsViewState extends State<MindSkillsView>
     'Syntax',
     'Growth',
     'Spirit',
+  ];
+
+  /// Const palette for custom skill icons (release builds cannot use IconData(cp)).
+  static const _skillIconPalette = <IconData>[
+    Icons.auto_awesome_rounded,
+    Icons.psychology_alt_rounded,
+    Icons.bolt_rounded,
+    Icons.ac_unit_rounded,
+    Icons.water_drop_rounded,
+    Icons.local_fire_department_rounded,
+    Icons.air_rounded,
+    Icons.eco_rounded,
+    Icons.favorite_rounded,
+    Icons.record_voice_over_rounded,
+    Icons.center_focus_strong_rounded,
+    Icons.functions_rounded,
+    Icons.brush_rounded,
+    Icons.code_rounded,
+    Icons.trending_up_rounded,
+    Icons.autorenew_rounded,
+    Icons.auto_awesome_mosaic_rounded,
   ];
   final List<String> _customSkills = [];
   String? _loadedForPersonId;
@@ -427,23 +450,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
     );
 
     if (action == 'icon') {
-      final icons = <IconData>[
-        Icons.auto_awesome_rounded,
-        Icons.psychology_alt_rounded,
-        Icons.bolt_rounded,
-        Icons.ac_unit_rounded,
-        Icons.water_drop_rounded,
-        Icons.local_fire_department_rounded,
-        Icons.air_rounded,
-        Icons.eco_rounded,
-        Icons.favorite_rounded,
-        Icons.record_voice_over_rounded,
-        Icons.center_focus_strong_rounded,
-        Icons.functions_rounded,
-        Icons.brush_rounded,
-        Icons.code_rounded,
-        Icons.trending_up_rounded,
-      ];
+      const icons = _skillIconPalette;
 
       if (!context.mounted) return;
       final picked = await showModalBottomSheet<IconData>(
@@ -631,7 +638,9 @@ class _MindSkillsViewState extends State<MindSkillsView>
   IconData _iconForSkill(String label) {
     final cp = _iconOverrideCodePoint[label.toLowerCase()];
     if (cp != null) {
-      return IconData(cp, fontFamily: 'MaterialIcons');
+      for (final icon in _skillIconPalette) {
+        if (icon.codePoint == cp) return icon;
+      }
     }
     return _defaultIconForSkill(label);
   }
@@ -903,6 +912,8 @@ class _MindSkillsViewState extends State<MindSkillsView>
                                     behavior: SnackBarBehavior.floating,
                                   ),
                                 );
+                                _noteController.clear();
+                                widget.onSessionLogged?.call();
                                 if (widget.popOnSave && context.canPop()) {
                                   context.pop();
                                 }
@@ -958,6 +969,15 @@ class _MindSkillsViewState extends State<MindSkillsView>
           .clamp(0.08, 1.0)
           .toDouble();
 
+      final focusTitle = _selected.isEmpty
+          ? 'PICK SKILL'
+          : (_selected.length == 1
+              ? _selected.first.toUpperCase()
+              : '${_selected.length} SKILLS');
+      final focusSubtitle = _selected.isEmpty
+          ? 'TAP A TILE BELOW'
+          : 'SESSION READY';
+
       final content = SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
@@ -965,19 +985,22 @@ class _MindSkillsViewState extends State<MindSkillsView>
             children: [
               Center(
                 child: Text(
-                  'ASCEND',
+                  focusTitle,
+                  textAlign: TextAlign.center,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: colorScheme.onSurface.withValues(alpha: 0.8),
                     fontSize: 13,
                     fontWeight: FontWeight.w900,
-                    letterSpacing: 4,
+                    letterSpacing: 2,
                   ),
                 ),
               ),
               const SizedBox(height: 10),
               Center(
                 child: Text(
-                  'SKILL'.toUpperCase(),
+                  focusSubtitle,
                   style: TextStyle(
                     color: colorScheme.primary.withValues(alpha: 0.8),
                     fontSize: 10,
@@ -1122,7 +1145,36 @@ class _MindSkillsViewState extends State<MindSkillsView>
                 ),
               ),
 
-              const SizedBox(height: 12),
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton.icon(
+                  onPressed: _selected.isEmpty
+                      ? null
+                      : () => _openSessionSheet(
+                            context: context,
+                            mindBlock: mindBlock,
+                            personId: personId,
+                            tenantId: tenantId,
+                            baseMood: baseMood,
+                          ),
+                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
+                  label: const Text(
+                    'LOG SESSION',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.2,
+                    ),
+                  ),
+                  style: FilledButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 10),
               SizedBox(
                 height: 98,
                 child: ListView.separated(

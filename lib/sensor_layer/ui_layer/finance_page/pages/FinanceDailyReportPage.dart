@@ -87,11 +87,11 @@ class FinanceDailyReportPage extends StatelessWidget {
                     SliverAppBar(
                       backgroundColor: Colors.transparent,
                       elevation: 0,
-                      leading: IconButton(
-                        icon: const Icon(Icons.chevron_left_rounded,
-                            color: Colors.white),
-                        onPressed: () => context.pop(),
-                      ),
+                      // leading: IconButton(
+                      //   icon: const Icon(Icons.chevron_left_rounded,
+                      //       color: Colors.white),
+                      //   onPressed: () => context.pop(),
+                      // ),
                       title: Text(
                         l10n.reports_hub_title,
                         style: theme.textTheme.titleMedium?.copyWith(

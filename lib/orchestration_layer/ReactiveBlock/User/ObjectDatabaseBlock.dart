@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class UserObjectResource {
   final String avatarImage;
@@ -54,7 +55,7 @@ class ObjectDatabaseBlock {
       }
 
       final savedFile = await File(pickedFile.path).copy(localPath);
-      print('📂 [ObjectDB] Saved universal image to: ${savedFile.path}');
+      appLog('📂 [ObjectDB] Saved universal image to: ${savedFile.path}');
 
       // Evict from Flutter image cache to ensure UI updates
       imageCache.evict(FileImage(File(localPath)));
@@ -65,7 +66,7 @@ class ObjectDatabaseBlock {
       }
       return p.join(subFolder, p.basename(savedFile.path));
     } catch (e) {
-      print('❌ [ObjectDB] saveAnyLocalImage failed: $e');
+      appLog('❌ [ObjectDB] saveAnyLocalImage failed: $e');
       rethrow;
     }
   }
@@ -205,7 +206,7 @@ class ObjectDatabaseBlock {
           _refreshUrls(userId);
         }
       } catch (e) {
-        print('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
+        appLog('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
         // We continue because we have the local copy stored
       }
 
@@ -252,7 +253,7 @@ class ObjectDatabaseBlock {
           _refreshUrls(userId);
         }
       } catch (e) {
-        print('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
+        appLog('⚠️ [ObjectDB] Server upload failed, but kept local copy: $e');
       }
 
       return localPath;
@@ -285,7 +286,7 @@ class ObjectDatabaseBlock {
     final String? userId = Supabase.instance.client.auth.currentUser?.id;
     final String username = profile.username;
 
-    print("userId: $userId, username: $username");
+    appLog("userId: $userId, username: $username");
 
     if (userId == null && username.isEmpty) {
       userObjectResource.value = UserObjectResource(

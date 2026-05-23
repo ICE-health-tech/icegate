@@ -16,7 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 # In Windows, build-name is used as the major, minor, and patch parts
 # of the product and file versions while build-number is used as the build suffix.
-version: 3.2.4+1
+version: 4.0.0+1
 
 environment:  
   sdk: ^3.9.2
@@ -41,7 +41,6 @@ dependencies:
     path: packages/ice_music
 
   media_kit: "^1.1.10+1"
-  media_kit_video: "^1.1.11+1"
   media_kit_libs_video: "^1.0.7"
 
   http: ^1.2.1
@@ -65,12 +64,12 @@ dependencies:
   json_annotation: ^4.9.0
   supabase_flutter: ^2.10.3
   freezed_annotation: ^2.4.4
-  camerakit_flutter: ^1.0.7
   image_picker: ^1.0.7
   file_selector: ^1.0.3
   intl: ^0.20.2
   permission_handler: ^11.0.0
   webview_flutter: ^4.13.0
+  webview_flutter_android: ^4.10.13
   webview_flutter_wkwebview: ^3.23.4
   flutter_quill: ^11.5.0
   signals: ^6.3.0
@@ -91,7 +90,6 @@ dependencies:
     git:
       url: https://github.com/Hexer10/youtube_explode_dart.git
   live_activities: ^2.4.3
-  flutter_contacts: ^1.1.9+2
   uuid: ^4.5.3
   crypto: ^3.0.7
   share_plus: ^12.0.1
@@ -116,6 +114,7 @@ dependencies:
   minio: ^3.5.8
   archive: ^4.0.9
   xml: ^6.6.1
+  device_calendar: ^3.9.0
 
 
 dependency_overrides:

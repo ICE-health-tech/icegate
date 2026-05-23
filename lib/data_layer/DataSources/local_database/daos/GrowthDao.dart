@@ -337,20 +337,140 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
 class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
   GrowthDAO(super.db);
 
-  Future<String> createGoal(GoalsTableCompanion goal) async {
-    // 1. Generate your unique ID
-    final String goalId = IDGen.UUIDV7();
+  /// Supabase `goals.project_id` FK references `projects.id` (PK), not `projects.project_id`.
+  Future<String?> _resolveCloudProjectId(String? projectRef) async {
+    if (projectRef == null || projectRef.isEmpty) return null;
 
-    // 2. Create a new version of the goal including the generated ID
+    final byPk = await db
+        .customSelect(
+          'SELECT id FROM projects WHERE id = ? LIMIT 1',
+          variables: [Variable.withString(projectRef)],
+          readsFrom: {db.projectsTable},
+        )
+        .getSingleOrNull();
+    if (byPk != null) return byPk.read<String>('id');
+
+    final byLegacy = await db
+        .customSelect(
+          'SELECT id FROM projects WHERE project_id = ? LIMIT 1',
+          variables: [Variable.withString(projectRef)],
+          readsFrom: {db.projectsTable},
+        )
+        .getSingleOrNull();
+    return byLegacy?.read<String>('id');
+  }
+
+  Future<String> createGoal(GoalsTableCompanion goal) async {
+    final String goalId = IDGen.UUIDV7();
+    String? normalizedProjectId;
+    if (goal.projectID.present && goal.projectID.value != null) {
+      normalizedProjectId =
+          await _resolveCloudProjectId(goal.projectID.value);
+    }
+
     final goalToInsert = goal.copyWith(
-      id: Value(goalId), // Assuming your PK is named 'id' in the table
-      // If your column is named goalID in the table, use that instead
+      id: Value(goalId),
+      goalID: goal.goalID.present ? goal.goalID : Value(goalId),
+      projectID: normalizedProjectId != null
+          ? Value(normalizedProjectId)
+          : goal.projectID,
     );
 
-    // 3. Insert the new object
     await into(goalsTable).insert(goalToInsert);
+    await _pushGoalById(goalId);
 
     return goalId;
+  }
+
+  Future<void> upsertFromSupabaseGoal(Map<String, dynamic> r) async {
+    await into(goalsTable).insert(
+      GoalsTableCompanion(
+        id: Value(r['id'] as String),
+        tenantID: Value(r['tenant_id'] as String?),
+        goalID: Value(r['goal_id'] as String?),
+        personID: Value(r['person_id'] as String?),
+        title: Value(r['title'] as String? ?? 'Untitled Task'),
+        description: Value(r['description'] as String?),
+        category: Value(r['category'] as String? ?? 'personal'),
+        priority: Value((r['priority'] as num?)?.toInt() ?? 3),
+        status: Value(r['status'] as String? ?? 'active'),
+        targetDate: r['target_date'] != null
+            ? Value(DateTime.parse(r['target_date'].toString()))
+            : const Value.absent(),
+        completionDate: r['completion_date'] != null
+            ? Value(DateTime.parse(r['completion_date'].toString()))
+            : const Value.absent(),
+        progressPercentage:
+            Value((r['progress_percentage'] as num?)?.toInt() ?? 0),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+        updatedAt: Value(
+          r['updated_at'] != null
+              ? DateTime.parse(r['updated_at'].toString())
+              : DateTime.now(),
+        ),
+        projectID: Value(r['project_id'] as String?),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> syncGoalsFromCloud(String personId) async {
+    await db.syncTableDown('goals', personId);
+  }
+
+  /// Pushes every local goal for [personId] (repairs tasks created before cloud push existed).
+  Future<void> pushAllGoalsToCloud(String personId) async {
+    final rows = await customSelect(
+      'SELECT id FROM goals WHERE person_id = ?',
+      variables: [Variable.withString(personId)],
+      readsFrom: {goalsTable},
+    ).get();
+    for (final row in rows) {
+      final id = row.read<String>('id');
+      await _pushGoalById(id);
+    }
+  }
+
+  Future<void> _pushGoalById(String id) async {
+    final row = await (select(goalsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+
+    final cloudProjectId = await _resolveCloudProjectId(row.projectID);
+    if (cloudProjectId != row.projectID && cloudProjectId != null) {
+      await (update(goalsTable)..where((t) => t.id.equals(id))).write(
+        GoalsTableCompanion(projectID: Value(cloudProjectId)),
+      );
+    }
+
+    final latest = await (select(goalsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (latest == null) return;
+
+    await db.pushToSupabase(
+      table: 'goals',
+      payload: {
+        'id': latest.id,
+        'tenant_id': latest.tenantID,
+        'goal_id': latest.goalID ?? latest.id,
+        'person_id': latest.personID,
+        'title': latest.title,
+        'description': latest.description,
+        'category': latest.category,
+        'priority': latest.priority,
+        'status': latest.status,
+        'target_date': latest.targetDate?.toUtc().toIso8601String(),
+        'completion_date': latest.completionDate?.toUtc().toIso8601String(),
+        'progress_percentage': latest.progressPercentage,
+        'created_at': latest.createdAt.toUtc().toIso8601String(),
+        'updated_at': latest.updatedAt.toUtc().toIso8601String(),
+        'project_id': cloudProjectId,
+      },
+    );
   }
 
   Stream<List<GoalData>> watchGoals(String personId) {
@@ -438,21 +558,27 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
 
   Future<void> deleteGoalByUuid(String id) async {
     await (delete(goalsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'goals',
+      payload: {'id': id},
+      isDelete: true,
+    );
   }
 
   Future<void> updateGoalStatusByUuid(String id, String status) async {
     await (update(goalsTable)..where((t) => t.id.equals(id))).write(
       GoalsTableCompanion(
         status: Value(status),
-        updatedAt: Value(DateTime.now()),
+        updatedAt: Value(DateTime.now().toUtc()),
         completionDate: status == 'done'
-            ? Value(DateTime.now())
+            ? Value(DateTime.now().toUtc())
             : const Value.absent(),
         progressPercentage: status == 'done'
             ? const Value(100)
             : const Value.absent(),
       ),
     );
+    await _pushGoalById(id);
   }
 
   Future<void> updateGoalStatusByIntId(String goalID, String status) async {

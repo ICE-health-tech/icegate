@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/Protocol/Canvas/InternalWidgetDragProtocol.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class WidgetManagerBlock {
   final WidgetDAO? _widgetDao;
@@ -18,7 +19,7 @@ class WidgetManagerBlock {
     required ReadonlySignal<String?> personIdSignal,
   }) : _widgetDao = widgetDao,
        _personIdSignal = personIdSignal {
-    // print("widgets: ${widgets.value}");
+    // appLog("widgets: ${widgets.value}");
     if (widgets.value.isEmpty) {
       _initializeGrid();
     }
@@ -75,7 +76,7 @@ class WidgetManagerBlock {
             );
             nextGrid[index] = InternalWidgetDragProtocol.fromJson(json);
           } catch (e) {
-            print("Error decoding: $e");
+            appLog("Error decoding: $e");
           }
         }
       }
@@ -88,7 +89,7 @@ class WidgetManagerBlock {
         });
       });
     } catch (e) {
-      print("Error loading widgets from database: $e");
+      appLog("Error loading widgets from database: $e");
     }
   }
 
@@ -110,7 +111,7 @@ class WidgetManagerBlock {
     try {
       await _widgetDao.saveAllWidgets(personId, widgets.value);
     } catch (e) {
-      print("Error persisting widgets: $e");
+      appLog("Error persisting widgets: $e");
     } finally {
       _isSaving = false;
       if (_needsSaveAgain) {
@@ -165,8 +166,8 @@ class WidgetManagerBlock {
 
   void addWidget(int index, InternalWidgetDragProtocol outSideWidget) {
     widgets[index] = outSideWidget;
-    print("widgets: ${widgets.value}");
-    print("Added widget: ${outSideWidget.alias}");
+    appLog("widgets: ${widgets.value}");
+    appLog("Added widget: ${outSideWidget.alias}");
     _persistToDatabase();
   }
 

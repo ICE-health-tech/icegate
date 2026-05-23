@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:signals/signals.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class StorageBlock {
   final MinioService _minioService = MinioService();
@@ -24,7 +25,7 @@ class StorageBlock {
       lastUploadUrl.value = url;
       return url;
     } catch (e) {
-      print('StorageBlock Upload Error: $e');
+      appLog('StorageBlock Upload Error: $e');
       return null;
     } finally {
       isUploading.value = false;
@@ -39,7 +40,7 @@ class StorageBlock {
       lastUploadUrl.value = url;
       return url;
     } catch (e) {
-      print('StorageBlock Upload Error: $e');
+      appLog('StorageBlock Upload Error: $e');
       return null;
     } finally {
       isUploading.value = false;

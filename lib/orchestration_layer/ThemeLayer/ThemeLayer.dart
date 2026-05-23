@@ -3,6 +3,7 @@ import 'package:flutter/material.dart'; // Import standard Material
 import 'package:provider/provider.dart';
 
 import 'package:ice_gate/data_layer/Protocol/Theme/ThemeAdapter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 /// This widget asynchronously loads the initial Material theme data
 /// and makes the necessary providers (ThemeStore, etc.) available to the child widget.
@@ -18,7 +19,7 @@ class ThemeLayer extends StatefulWidget {
       // Try to load the saved theme configuration
       return await ThemeAdapter.parse("assets/CurrentTheme.json");
     } catch (e) {
-      print(
+      appLog(
         "Warning: Could not load CurrentTheme.json ($e). Falling back to SakuraZen.",
       );
       // Fallback to a default theme if the specific file is missing/corrupt
@@ -48,7 +49,7 @@ class _ThemeLayerState extends State<ThemeLayer> {
     // Initialize the Future by calling the method on the parent widget
     initialThemeData = widget._loadTheme();
     themeStore = ThemeStore();
-    print(initialThemeData);
+    appLog(initialThemeData);
   }
 
   @override

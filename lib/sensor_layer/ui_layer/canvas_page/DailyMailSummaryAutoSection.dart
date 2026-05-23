@@ -1,9 +1,18 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/orchestration_layer/Services/DailyMailSummaryPrefs.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryAutoSend.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryPrefs.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/NotificationMaskChip.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -44,7 +53,63 @@ class _DailyMailSummaryAutoSectionState extends State<DailyMailSummaryAutoSectio
     await DailyMailSummaryPrefs.setEnabled(_enabled);
     await DailyMailSummaryPrefs.setTime(_time.hour, _time.minute);
     if (!mounted) return;
-    await context.read<LocalNotificationService>().scheduleDailyMailSummaryFromPrefs();
+    try {
+      await context
+          .read<LocalNotificationService>()
+          .scheduleDailyMailSummaryFromPrefs();
+    } catch (e) {
+      debugPrint('DailyMailSummaryAutoSection: schedule failed — $e');
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppLocalizations.of(context)!.finance_daily_report_notifications_off,
+          ),
+        ),
+      );
+    }
+  }
+
+  Future<void> _trySendNowIfDue() async {
+    if (!_enabled || !mounted) return;
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    final finance = context.read<FinanceBlock>();
+    final categoryLabels = <String, String>{};
+    for (final t in finance.transactions.value) {
+      categoryLabels.putIfAbsent(
+        t.category,
+        () => FinancePage.getCategoryName(l10n, t.category),
+      );
+    }
+
+    final result = await DailyMailSummaryAutoSend.trySendIfDue(
+      finance: finance,
+      health: context.read<HealthBlock>(),
+      mind: context.read<MindBlock>(),
+      growth: context.read<GrowthBlock>(),
+      project: context.read<ProjectBlock>(),
+      config: context.read<ConfigBlock>(),
+      person: context.read<PersonBlock>(),
+      localeCode: locale,
+    );
+
+    if (!mounted) return;
+    final String? message = switch (result) {
+      DailyMailSummarySendResult.success => l10n.canvas_finance_n8n_send_success,
+      DailyMailSummarySendResult.skippedNoRecipient =>
+        l10n.canvas_finance_n8n_no_email,
+      DailyMailSummarySendResult.failedNotConfigured =>
+        l10n.canvas_finance_n8n_not_configured,
+      DailyMailSummarySendResult.failedSend =>
+        l10n.canvas_finance_n8n_send_failed,
+      _ => null,
+    };
+    if (message != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(message)),
+      );
+    }
   }
 
   Future<void> _pickTime() async {
@@ -66,6 +131,7 @@ class _DailyMailSummaryAutoSectionState extends State<DailyMailSummaryAutoSectio
     if (picked != null) {
       setState(() => _time = picked);
       await _persistAndSchedule();
+      await _trySendNowIfDue();
     }
   }
 
@@ -84,6 +150,9 @@ class _DailyMailSummaryAutoSectionState extends State<DailyMailSummaryAutoSectio
     }
     setState(() => _enabled = value);
     await _persistAndSchedule();
+    if (value) {
+      await _trySendNowIfDue();
+    }
   }
 
   @override

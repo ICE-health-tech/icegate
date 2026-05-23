@@ -6,6 +6,8 @@ class RadialPremiumBackground extends StatelessWidget {
   final bool showGlow;
   final Alignment center;
   final double radius;
+  /// When set, overrides [Theme.colorScheme.primary] for the radial glow.
+  final Color? glowColor;
 
   const RadialPremiumBackground({
     super.key,
@@ -13,11 +15,12 @@ class RadialPremiumBackground extends StatelessWidget {
     this.showGlow = true,
     this.center = Alignment.center,
     this.radius = 1.5,
+    this.glowColor,
   });
 
   @override
   Widget build(BuildContext context) {
-    final primaryColor = Theme.of(context).colorScheme.primary;
+    final primaryColor = glowColor ?? Theme.of(context).colorScheme.primary;
 
     return Stack(
       children: [

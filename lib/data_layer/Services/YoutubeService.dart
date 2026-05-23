@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class YoutubeService {
   final YoutubeExplode _yt = YoutubeExplode();
@@ -47,9 +48,9 @@ class YoutubeService {
     } catch (e) {
       if (e.toString().contains('RateLimitExceededException') ||
           e.toString().contains('rate limiting')) {
-        print('YoutubeService: YouTube Rate Limit exceeded.');
+        appLog('YoutubeService: YouTube Rate Limit exceeded.');
       } else {
-        print('YoutubeService Error: $e');
+        appLog('YoutubeService Error: $e');
       }
       return null;
     }

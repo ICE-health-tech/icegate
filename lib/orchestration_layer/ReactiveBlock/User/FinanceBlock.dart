@@ -17,12 +17,14 @@ class FinanceBlock {
   final assets = listSignal<AssetProtocol>([]);
   final transactions = listSignal<TransactionData>([]);
   final subscriptions = listSignal<SubscriptionData>([]);
+  final recurringIncomes = listSignal<RecurringIncomeData>([]);
   final isSyncing = signal(false);
 
   StreamSubscription? _accountsSubscription;
   StreamSubscription? _assetsSubscription;
   StreamSubscription? _transactionsSubscription;
   StreamSubscription? _subscriptionsSubscription;
+  StreamSubscription? _recurringIncomesSubscription;
 
   late FinanceDAO _dao;
   late PortfolioSnapshotsDAO _snapshotDao;
@@ -72,6 +74,21 @@ class FinanceBlock {
               t.transactionDate.year == now.year,
         )
         .fold(0.0, (sum, t) => sum + t.amount);
+  });
+
+  /// Sum of active fixed/recurring incomes normalized to a monthly amount.
+  late final monthlyFixedIncome = computed(() {
+    return recurringIncomes.value.fold(0.0, (sum, item) {
+      switch (item.interval) {
+        case 'weekly':
+          return sum + (item.amount * 52 / 12);
+        case 'yearly':
+          return sum + (item.amount / 12);
+        case 'monthly':
+        default:
+          return sum + item.amount;
+      }
+    });
   });
 
   /// Monthly income for the current month
@@ -305,6 +322,10 @@ class FinanceBlock {
     () => _configBlock.value?.currency.value == 'VND',
   );
 
+  late final subscriptionPlanSkips = computed(
+    () => _configBlock.value?.subscriptionPlanSkips.value ?? const <String>{},
+  );
+
   final _configBlock = signal<ConfigBlock?>(null);
   void Function()? _snapshotDisposer;
 
@@ -431,8 +452,102 @@ class FinanceBlock {
         });
       });
     });
+    _recurringIncomesSubscription?.cancel();
+    _recurringIncomesSubscription =
+        dao.watchRecurringIncomes(personId).listen((data) {
+      Timer(Duration.zero, () {
+        untracked(() {
+          recurringIncomes.value = data;
+        });
+      });
+    });
     unawaited(_reloadSubscriptionsFromDb());
+    unawaited(_reloadRecurringIncomesFromDb());
+    unawaited(processDueRecurringIncomes());
   }
+
+  static DateTime advanceRecurringDue(DateTime from, String interval) {
+    switch (interval) {
+      case 'weekly':
+        return from.add(const Duration(days: 7));
+      case 'yearly':
+        return DateTime(from.year + 1, from.month, from.day);
+      case 'monthly':
+      default:
+        return DateTime(from.year, from.month + 1, from.day);
+    }
+  }
+
+  /// Posts income transactions for any recurring schedules that are due.
+  Future<void> processDueRecurringIncomes() async {
+    if (_personId.isEmpty) return;
+    final now = DateTime.now();
+    final due = await _dao.getDueRecurringIncomes(_personId, now);
+    for (final schedule in due) {
+      var next = schedule.nextDueAt;
+      while (!next.isAfter(now)) {
+        await addTransaction(
+          category: schedule.category,
+          type: 'income',
+          amount: schedule.amount,
+          description: schedule.description,
+          date: next,
+        );
+        next = advanceRecurringDue(next, schedule.interval);
+      }
+      await _dao.updateRecurringIncomeNextDue(
+        id: schedule.id,
+        nextDueAt: next,
+      );
+    }
+  }
+
+  Future<void> addRecurringIncome({
+    required String category,
+    required double amount,
+    String? description,
+    String interval = 'monthly',
+  }) async {
+    if (_personId.isEmpty) return;
+    final anchor = DateTime.now();
+    await _dao.insertRecurringIncome(
+      RecurringIncomesTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: _personId,
+        category: category,
+        amount: amount,
+        description: Value(description),
+        interval: Value(interval),
+        nextDueAt: advanceRecurringDue(anchor, interval),
+        createdAt: Value(anchor),
+      ),
+    );
+    await _reloadRecurringIncomesFromDb();
+    await processDueRecurringIncomes();
+  }
+
+  Future<void> deleteRecurringIncome(String id) async {
+    if (_personId.isEmpty) return;
+    await _dao.deleteRecurringIncome(id);
+    await _reloadRecurringIncomesFromDb();
+  }
+
+  Future<void> _reloadRecurringIncomesFromDb() async {
+    if (_personId.isEmpty) return;
+    final rows = await (_dao.select(_dao.recurringIncomesTable)
+          ..where(
+            (t) => t.personID.equals(_personId) & t.isActive.equals(true),
+          )
+          ..orderBy([(t) => OrderingTerm(expression: t.nextDueAt)]))
+        .get();
+    Timer(Duration.zero, () {
+      untracked(() {
+        recurringIncomes.value = rows;
+      });
+    });
+  }
+
+  Future<void> refreshRecurringIncomes() => _reloadRecurringIncomesFromDb();
 
   /// One-shot load + call after local writes so the list updates even if table [watch] lags (e.g. sync/replication).
   Future<void> _reloadSubscriptionsFromDb() async {
@@ -644,6 +759,28 @@ class FinanceBlock {
     await _reloadSubscriptionsFromDb();
   }
 
+  /// Hides one billing from the future-month plan; does not delete the subscription.
+  Future<void> skipSubscriptionInPlanMonth(
+    String subId,
+    int year,
+    int month,
+  ) async {
+    await _configBlock.value?.skipSubscriptionForPlanMonth(subId, year, month);
+  }
+
+  bool isSubscriptionSkippedInPlanMonth(
+    String subId,
+    int year,
+    int month,
+  ) {
+    return _configBlock.value?.isSubscriptionSkippedForPlanMonth(
+          subId,
+          year,
+          month,
+        ) ??
+        false;
+  }
+
   Future<void> deleteTransaction(String id) async {
     await _dao.deleteTransaction(id);
   }
@@ -730,6 +867,7 @@ class FinanceBlock {
     _assetsSubscription?.cancel();
     _transactionsSubscription?.cancel();
     _subscriptionsSubscription?.cancel();
+    _recurringIncomesSubscription?.cancel();
     _snapshotDisposer?.call();
   }
 }

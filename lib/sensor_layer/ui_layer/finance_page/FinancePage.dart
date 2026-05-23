@@ -16,10 +16,13 @@ import 'package:live_activities/live_activities.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/QuickSaveSheet.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceTransactionsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscriptionsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceAchievementsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 
 class FinancePage extends StatefulWidget {
   const FinancePage({super.key});
@@ -93,10 +96,16 @@ class FinancePage extends StatefulWidget {
         iconColor: EntryColors.deepGlacier,
         icon: Icons.add,
         mainFunction: () {
-          if (tab == 2) {
+          if (tab == 0) {
+            showFixedIncomeEditor(context, financeBlock);
+          } else if (tab == 1) {
+            TransactionBuilderDialog.show(context, financeBlock: financeBlock);
+          } else if (tab == 2) {
             showSubscriptionEditor(context, financeBlock);
           } else if (tab == 3) {
             QuickSaveSheet.show(context, financeBlock);
+          } else if (tab == 4) {
+            AchievementBuilderDialog.show(context, initialDomain: 'finance');
           } else {
             TransactionBuilderDialog.show(context, financeBlock: financeBlock);
           }
@@ -166,9 +175,9 @@ class _FinancePageState extends State<FinancePage>
     )..repeat();
 
     _tabController = TabController(
-      length: 4,
+      length: 5,
       vsync: this,
-      initialIndex: _financeBlock.activeTab.peek().clamp(0, 3),
+      initialIndex: _financeBlock.activeTab.peek().clamp(0, 4),
     );
 
     _tabController.addListener(() {
@@ -178,6 +187,9 @@ class _FinancePageState extends State<FinancePage>
         untracked(() {
           _financeBlock.activeTab.value = newIndex;
         });
+      }
+      if (newIndex == 0) {
+        unawaited(_financeBlock.refreshRecurringIncomes());
       }
       if (newIndex == 2) {
         unawaited(_financeBlock.refreshSubscriptions());
@@ -190,7 +202,7 @@ class _FinancePageState extends State<FinancePage>
     });
 
     _disposeEffect = effect(() {
-      final index = _financeBlock.activeTab.value.clamp(0, 3);
+      final index = _financeBlock.activeTab.value.clamp(0, 4);
       if (mounted) _updateLiveActivity(context, index);
       if (_tabController.index != index) {
         if (mounted) _tabController.animateTo(index);
@@ -242,17 +254,20 @@ class _FinancePageState extends State<FinancePage>
   }
 
   String _getTabName(BuildContext context, int index) {
+    final l10n = AppLocalizations.of(context)!;
     switch (index) {
       case 0:
-        return "OVERVIEW";
+        return l10n.finance_tab_overview;
       case 1:
-        return "HISTORY";
+        return l10n.finance_tab_daily;
       case 2:
-        return "BILLING";
+        return l10n.finance_tab_billing;
       case 3:
-        return "SAVING";
+        return l10n.finance_tab_saving;
+      case 4:
+        return l10n.finance_tab_achievements;
       default:
-        return "FINANCE";
+        return l10n.finance.toUpperCase();
     }
   }
 
@@ -301,9 +316,10 @@ class _FinancePageState extends State<FinancePage>
                     controller: _tabController,
                     children: [
                       FinanceOverviewPage(financeBlock: financeBlock),
-                      FinanceTransactionsPage(financeBlock: financeBlock),
+                      FinanceDailyPage(financeBlock: financeBlock),
                       FinanceSubscriptionsPage(financeBlock: financeBlock),
                       FinanceSavingsPage(financeBlock: financeBlock),
+                      FinanceAchievementsPage(financeBlock: financeBlock),
                     ],
                   ),
                 ),
@@ -476,10 +492,11 @@ class _FinancePageState extends State<FinancePage>
               letterSpacing: 1.2,
             ),
             tabs: [
-              Tab(text: "OVERVIEW"),
-              Tab(text: "HISTORY"),
-              Tab(text: "BILLING"),
-              Tab(text: "SAVING"),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_overview),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_daily),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_billing),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_saving),
+              Tab(text: AppLocalizations.of(context)!.finance_tab_achievements),
             ],
           ),
         ],

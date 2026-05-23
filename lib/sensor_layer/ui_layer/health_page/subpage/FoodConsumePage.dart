@@ -259,26 +259,29 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
       child: Column(
         children: [
           Container(
-            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  colorScheme.primaryContainer.withValues(alpha: 0.4),
-                  colorScheme.primaryContainer.withValues(alpha: 0.1),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
               border: Border(
                 bottom: BorderSide(
                   color: colorScheme.primary.withValues(alpha: 0.2),
                 ),
               ),
             ),
-            child: Row(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    colorScheme.primaryContainer.withValues(alpha: 0.4),
+                    colorScheme.primaryContainer.withValues(alpha: 0.1),
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
+              ),
+              child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
@@ -316,6 +319,7 @@ class _FoodConsumePageState extends State<FoodConsumePage> {
               ],
             ),
           ),
+        ),
           ...([...dayMeals]..sort(
                 (a, b) => b.meal.eatenAt.compareTo(a.meal.eatenAt),
               ))

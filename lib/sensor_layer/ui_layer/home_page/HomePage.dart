@@ -1,4 +1,5 @@
 import 'dart:async' show unawaited;
+import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -15,7 +16,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/orchestration_layer/Health/HealthMetric.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
@@ -31,6 +32,8 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
@@ -38,9 +41,11 @@ import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryCo
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/AvailablePlugins.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 /// Avoids re-running heavy bootstrap when returning to Home (same session / same user).
 String? _homePageBootstrapUserId;
@@ -57,7 +62,7 @@ class HomePage extends StatefulWidget {
       mainFunction: () => context.go("/"),
       icon: Icons.ac_unit,
       doubleClickFunction: () {
-        print("double click");
+        appLog("double click");
         context.pop();
       },
       onSwipeUp: () {
@@ -114,7 +119,7 @@ class HomePage extends StatefulWidget {
       //   );
       // }),
       doubleClickFunction: () {
-        print("double click");
+        appLog("double click");
         context.pop();
       },
       onSwipeRight: () => WidgetNavigatorAction.smartPop(context),
@@ -133,9 +138,9 @@ class _HomePageState extends State<HomePage> {
   late AuthBlock authBlock;
   late PersonBlock personBlock;
   late HealthMetricsDAO healthMetricsDAO;
-  late Map<String, HealthMetric> healthMetricsData = {};
-  late Map<String, HealthMetric> financeMetricsData = {};
-  late Map<String, HealthMetric> socialMetricsData = {};
+  late Map<String, HealthMetricProtocol> healthMetricsData = {};
+  late Map<String, HealthMetricProtocol> financeMetricsData = {};
+  late Map<String, HealthMetricProtocol> socialMetricsData = {};
   late ScoreBlock scoreBlock;
   late FinanceBlock financeBlock;
   late ExternalWidgetBlock externalWidgetBlock;
@@ -178,6 +183,13 @@ class _HomePageState extends State<HomePage> {
       _fetchInitialData();
     }
 
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final personId = personBlock.currentPersonID.value;
+      if (personId != null && personId.isNotEmpty) {
+        context.read<SocialBlock>().restoreActiveFocus(personId);
+      }
+    });
+
     // Level Up effect
     // Future.microtask(() {
     //   _initLevelTracking();
@@ -191,7 +203,7 @@ class _HomePageState extends State<HomePage> {
     }
 
     Future.microtask(() {
-      print("DUYLONG>>");
+      appLog("DUYLONG>>");
       unawaited(financeBlock.refreshFromLocalDatabase());
       final String personIdToUse =
           Supabase.instance.client.auth.currentUser?.id ?? "";
@@ -205,10 +217,10 @@ class _HomePageState extends State<HomePage> {
         personIdToUse,
       );
 
-      // print("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
+      // appLog("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
       // );
       final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
-      HealthMetricsData.getMetricsByDay(personId, DateTime.now(), context).then(
+      HealthMetricsData.shared.getMetricsByDay(personId, DateTime.now(), context).then(
         (newData) {
           if (mounted) {
             setState(() {
@@ -397,10 +409,11 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.health,
                                 Icons.favorite_rounded,
-                                Colors.green,
+                                const Color(0xFFa7f3d0), // --ice-health
                                 metrics: visibleMetrics,
                                 route: '/health',
                                 scoreData: scoreBlock.score.healthGlobalScore,
+                                useL1IceGlass: true,
                               );
                             }),
                             Watch((context) {
@@ -493,7 +506,12 @@ class _HomePageState extends State<HomePage> {
                               final moodLog = mindBlock.latestMoodLog.value;
                               final socialScore =
                                   scoreBlock.score.socialGlobalScore;
-                              final focus = healthBlock.todayFocusMinutes.value;
+                              final focusMinutes =
+                                  healthBlock.todayFocusMinutes.value;
+                              final activeMindFocus = context
+                                  .read<SocialBlock>()
+                                  .activeFocusTrend
+                                  .value;
                               dynamic moodDisplay = l10n.mood_no_data;
                               if (moodLog != null) {
                                 moodDisplay = Row(
@@ -547,15 +565,40 @@ class _HomePageState extends State<HomePage> {
                                   'visible': true,
                                 },
                                 {
-                                  'label': l10n.mind_status,
-                                  'value': socialScore >= 70
-                                      ? l10n.mind_stable
-                                      : l10n.mind_needs_care,
+                                  'label': l10n.mind_focus_current,
+                                  'value': activeMindFocus != null
+                                      ? Row(
+                                          children: [
+                                            Icon(
+                                              MindFocusTrend.resolveIcon(
+                                                activeMindFocus.iconCodePoint,
+                                              ),
+                                              size: 14,
+                                              color: activeMindFocus.color,
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Expanded(
+                                              child: AutoSizeText(
+                                                activeMindFocus.name,
+                                                style: TextStyle(
+                                                  color: colorScheme.onSurface
+                                                      .withValues(alpha: 0.9),
+                                                  fontSize: 11,
+                                                  fontWeight: FontWeight.w800,
+                                                ),
+                                                maxLines: 2,
+                                                minFontSize: 8,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ],
+                                        )
+                                      : l10n.mind_focus_none,
                                   'visible': true,
                                 },
                                 {
                                   'label': l10n.home_index_focus,
-                                  'value': '${focus}m',
+                                  'value': '${focusMinutes}m',
                                   'visible': configBlock.showIndexFocus.value,
                                 },
                                 {
@@ -855,6 +898,41 @@ class _HomePageState extends State<HomePage> {
     return 'Just now';
   }
 
+  /// L1 glass + --ice-health wash (duylongart_glass_ui.md). Health pillar only.
+  static const Color _iceHealth = Color(0xFFa7f3d0);
+
+  BoxDecoration _healthL1IceDecoration() {
+    const glassBg = Color.fromRGBO(255, 255, 255, 0.03);
+    return BoxDecoration(
+      gradient: LinearGradient(
+        begin: Alignment.topCenter,
+        end: Alignment.bottomCenter,
+        colors: [
+          _iceHealth.withValues(alpha: 0.2),
+          glassBg,
+          glassBg,
+        ],
+        stops: const [0.0, 0.35, 1.0],
+      ),
+      borderRadius: BorderRadius.circular(20),
+      border: Border.all(
+        color: Colors.white.withValues(alpha: 0.08),
+        width: 1,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: const Color(0xFF000f1e).withValues(alpha: 0.37),
+          blurRadius: 32,
+          offset: const Offset(0, 8),
+        ),
+        BoxShadow(
+          color: _iceHealth.withValues(alpha: 0.12),
+          blurRadius: 48,
+        ),
+      ],
+    );
+  }
+
   Widget _buildQuickAccessCard(
     BuildContext context,
     String title,
@@ -863,6 +941,7 @@ class _HomePageState extends State<HomePage> {
     required List<Map<String, dynamic>> metrics,
     required String route,
     required double scoreData,
+    bool useL1IceGlass = false,
   }) {
     final isPhone = MediaQuery.of(context).size.width < 600;
     final isLaptop = defaultTargetPlatform == TargetPlatform.macOS;
@@ -874,52 +953,68 @@ class _HomePageState extends State<HomePage> {
         ? 26.0
         : (isLaptop ? 22.0 : 25.0);
     final colorScheme = Theme.of(context).colorScheme;
+    final iceEtchedPrimary = Colors.white.withValues(alpha: 0.95);
+    final iceEtchedSecondary =
+        const Color.fromRGBO(173, 216, 230, 0.5);
+    final titleColor =
+        useL1IceGlass ? iceEtchedPrimary : colorScheme.onSurface;
+    final labelColor = useL1IceGlass
+        ? iceEtchedSecondary
+        : colorScheme.onSurface.withValues(alpha: 0.5);
+    final valueColor = useL1IceGlass
+        ? iceEtchedPrimary
+        : colorScheme.onSurface.withValues(alpha: 0.9);
 
-    return Container(
-      width: isPhone ? 210.0 : (isLaptop ? 240.0 : 280.0),
-      margin: const EdgeInsets.only(right: 12),
-      child: Card(
-        elevation: 0,
-        color: colorScheme.onPrimary,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: color.withValues(alpha: 0.12)),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
+    final cardBody = InkWell(
           onTap: () => context.push(route),
           child: Stack(
             children: [
-              // Glassmorphism Background
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        color.withValues(alpha: 0.18),
-                        color.withValues(alpha: 0.08),
-                        color.withValues(alpha: 0.02),
-                      ],
-                      stops: const [0.0, 0.5, 1.0],
+              if (useL1IceGlass)
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    height: 1,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.1),
+                      borderRadius: const BorderRadius.vertical(
+                        top: Radius.circular(20),
+                      ),
                     ),
                   ),
                 ),
-              ),
-              // Subtle Glow
-              Positioned(
-                top: -25,
-                right: -20,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
+              if (!useL1IceGlass) ...[
+                // Glassmorphism Background (non–ice pillars)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          color.withValues(alpha: 0.18),
+                          color.withValues(alpha: 0.08),
+                          color.withValues(alpha: 0.02),
+                        ],
+                        stops: const [0.0, 0.5, 1.0],
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                Positioned(
+                  top: -25,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.1),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+              ],
               Padding(
                 padding: EdgeInsets.all(isPhone ? 12.0 : 20.0),
                 child: Column(
@@ -955,7 +1050,7 @@ class _HomePageState extends State<HomePage> {
                                 style: TextStyle(
                                   fontWeight: FontWeight.w900,
                                   fontSize: isPhone ? 18 : 22,
-                                  color: colorScheme.onSurface,
+                                  color: titleColor,
                                   letterSpacing: -0.5,
                                 ),
                                 maxLines: 1,
@@ -985,10 +1080,7 @@ class _HomePageState extends State<HomePage> {
                                     : AutoSizeText(
                                       m['value']?.toString() ?? '',
                                       style: TextStyle(
-                                        color: colorScheme.onSurface
-                                            .withValues(
-                                          alpha: 0.9,
-                                        ),
+                                        color: valueColor,
                                         fontSize: isPhone ? 11 : 13,
                                         fontWeight: FontWeight.w800,
                                         height: 1.1,
@@ -1009,10 +1101,7 @@ class _HomePageState extends State<HomePage> {
                                   AutoSizeText(
                                     m['label']?.toString() ?? '',
                                     style: TextStyle(
-                                      color: colorScheme.onSurface
-                                          .withValues(
-                                        alpha: 0.5,
-                                      ),
+                                      color: labelColor,
                                       fontSize: isPhone ? 9 : 10,
                                       fontWeight: FontWeight.w600,
                                       height: 1.1,
@@ -1033,7 +1122,40 @@ class _HomePageState extends State<HomePage> {
               ),
             ],
           ),
+        );
+
+    final width = isPhone ? 210.0 : (isLaptop ? 240.0 : 280.0);
+    const margin = EdgeInsets.only(right: 12);
+
+    if (useL1IceGlass) {
+      return Container(
+        width: width,
+        margin: margin,
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(20),
+          child: BackdropFilter(
+            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+            child: DecoratedBox(
+              decoration: _healthL1IceDecoration(),
+              child: cardBody,
+            ),
+          ),
         ),
+      );
+    }
+
+    return Container(
+      width: width,
+      margin: margin,
+      child: Card(
+        elevation: 0,
+        color: colorScheme.onPrimary,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(28),
+          side: BorderSide(color: color.withValues(alpha: 0.12)),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: cardBody,
       ),
     );
   }
@@ -1196,8 +1318,11 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildExternalWidget(BuildContext context, ExternalWidgetData data) {
     final colorScheme = Theme.of(context).colorScheme;
-    final String fullUrl =
-        "${data.protocol ?? 'https'}://${data.host ?? ''}${data.url ?? ''}";
+    final String fullUrl = GoogleCalendarPlugin.resolveLaunchUrl(
+      protocol: data.protocol ?? 'https',
+      host: data.host ?? '',
+      path: data.url ?? '',
+    );
 
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
     final item = Container(
@@ -1276,7 +1401,11 @@ class _HomePageState extends State<HomePage> {
                   _showRenameExternalDialog(context, data);
                 }
               : () {
-                  WidgetNavigatorAction.navigateExternalUrl(context, fullUrl);
+                  WidgetNavigatorAction.navigateExternalUrl(
+                    context,
+                    fullUrl,
+                    title: data.name ?? 'Web',
+                  );
                 },
           borderRadius: BorderRadius.circular(28),
           child: item,

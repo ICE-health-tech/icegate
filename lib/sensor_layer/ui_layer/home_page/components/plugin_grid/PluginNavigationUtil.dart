@@ -27,7 +27,15 @@ class PluginNavigationUtil {
   }
 
   /// Navigates to an external URL using the WidgetNavigatorAction utility.
-  static void navigateExternal(BuildContext context, String fullUrl) {
-    WidgetNavigatorAction.navigateExternalUrl(context, fullUrl);
+  static void navigateExternal(
+    BuildContext context,
+    String fullUrl, {
+    String? title,
+  }) {
+    WidgetNavigatorAction.navigateExternalUrl(
+      context,
+      fullUrl,
+      title: title,
+    );
   }
 }

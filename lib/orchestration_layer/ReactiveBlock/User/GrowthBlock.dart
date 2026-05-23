@@ -5,8 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
-import 'package:ice_gate/orchestration_layer/IDGen.dart';
-
 class GrowthBlock {
   final goals = signal<List<GoalProtocol>>([]);
   final habits = signal<List<HabitProtocol>>([]);
@@ -143,10 +141,9 @@ class GrowthBlock {
   }) async {
     if (_personId.isEmpty) return;
     await _dao.createGoal(
-      GoalsTableCompanion.insert(
-        id: IDGen.UUIDV7(),
+      GoalsTableCompanion(
         personID: Value(_personId),
-        title: title,
+        title: Value(title),
         projectID: Value(projectID),
         description: Value(description),
         status: const Value('active'),
@@ -155,6 +152,13 @@ class GrowthBlock {
         updatedAt: Value(DateTime.now().toUtc()),
       ),
     );
+  }
+
+  /// Push local tasks up, then pull from Supabase (watch stream updates UI).
+  Future<void> sync() async {
+    if (_personId.isEmpty) return;
+    await _dao.pushAllGoalsToCloud(_personId);
+    await _dao.syncGoalsFromCloud(_personId);
   }
 
   void dispose() {

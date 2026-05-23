@@ -40,6 +40,188 @@ class AppLocalizationsEn extends AppLocalizations {
       'No tasks or project starts on this day.';
 
   @override
+  String get projects_calendar_day_empty_not_connected =>
+      'No calendar connected. Use “Connect calendar” above, then sync.';
+
+  @override
+  String projects_calendar_day_empty_other_days(int count) {
+    return 'No events on this day. $count events elsewhere this month — try dates highlighted on the grid.';
+  }
+
+  @override
+  String get projects_calendar_google_events => 'Google Calendar';
+
+  @override
+  String get projects_calendar_reminders => 'Reminders';
+
+  @override
+  String get projects_calendar_connect_google => 'Connect Google Calendar';
+
+  @override
+  String get projects_calendar_disconnect_google =>
+      'Disconnect Google Calendar';
+
+  @override
+  String get projects_calendar_google_connected => 'Google Calendar connected';
+
+  @override
+  String get projects_calendar_sign_in_failed =>
+      'Could not connect Google Calendar';
+
+  @override
+  String get projects_calendar_sign_in_cancelled =>
+      'Google sign-in was cancelled';
+
+  @override
+  String get projects_calendar_scope_denied =>
+      'Calendar permission was not granted. Allow access in your Google account settings.';
+
+  @override
+  String projects_calendar_api_not_enabled(String projectId) {
+    return 'Google Calendar API is disabled for the macOS app (GCP project $projectId). In Google Cloud Console, enable \"Google Calendar API\" for that project, wait a few minutes, then retry.';
+  }
+
+  @override
+  String get projects_calendar_insufficient_scopes =>
+      'Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.';
+
+  @override
+  String get projects_calendar_connect_hint =>
+      'Sign in with Google to sync all your Google calendars to the Calendar screen.';
+
+  @override
+  String get projects_calendar_add_reminder => 'Add reminder';
+
+  @override
+  String get projects_calendar_reminder_title => 'Reminder title';
+
+  @override
+  String get projects_calendar_sync_google => 'Sync events';
+
+  @override
+  String get projects_calendar_all_day => 'All day';
+
+  @override
+  String get projects_calendar_integrations => 'Calendar connections';
+
+  @override
+  String get projects_calendar_connect_device => 'Connect device calendar';
+
+  @override
+  String get projects_calendar_connect_apple => 'Connect Apple Calendar';
+
+  @override
+  String get projects_calendar_disconnect_device =>
+      'Disconnect device calendar';
+
+  @override
+  String get projects_calendar_disconnect_apple => 'Disconnect Apple Calendar';
+
+  @override
+  String get projects_calendar_device_connected => 'Device calendar connected';
+
+  @override
+  String get projects_calendar_apple_connected => 'Apple Calendar connected';
+
+  @override
+  String get projects_calendar_device_events => 'Device calendar';
+
+  @override
+  String get projects_calendar_apple_events => 'Apple Calendar';
+
+  @override
+  String get projects_calendar_device_hint =>
+      'Allow calendar access to show events from calendars on this device.';
+
+  @override
+  String get projects_calendar_sync_device => 'Sync device events';
+
+  @override
+  String get projects_calendar_device_denied =>
+      'Calendar access was denied. Enable it in Settings.';
+
+  @override
+  String get integration_hub_title => 'Integration Hub';
+
+  @override
+  String get integration_hub_subtitle =>
+      'Calendars, health platforms, and device sensors — one connection center.';
+
+  @override
+  String get integration_hub_google_fit => 'Google Fit';
+
+  @override
+  String get integration_hub_google_fit_hint =>
+      'Uses the same Google sign-in as Calendar and Drive.';
+
+  @override
+  String get integration_hub_sensors_section => 'Devices & sensors';
+
+  @override
+  String get integration_hub_open_sensor_hub => 'Open Sensor Hub';
+
+  @override
+  String get integration_hub_sensor_hub_hint =>
+      'Wearables, IoT pipelines, SSH streams, and Huawei setup.';
+
+  @override
+  String get integration_hub_huawei_sensor_hint =>
+      'Set up Huawei credentials in Sensor Hub first.';
+
+  @override
+  String get projects_calendar_all_calendars_events => 'All calendars';
+
+  @override
+  String projects_calendar_synced_count(int count) {
+    return 'Loaded $count events this month';
+  }
+
+  @override
+  String get projects_calendar_sync_empty_month =>
+      'Connected — no events this month. Try another month or check Google Calendar.';
+
+  @override
+  String get integration_hub_calendars_section => 'Calendars';
+
+  @override
+  String get integration_hub_health_section => 'Health';
+
+  @override
+  String get integration_hub_connect => 'Connect';
+
+  @override
+  String get integration_hub_status_connected => 'Connected';
+
+  @override
+  String get integration_hub_apple_health => 'Apple Health';
+
+  @override
+  String get integration_hub_apple_health_hint =>
+      'Steps, sleep, heart rate, and more from HealthKit.';
+
+  @override
+  String get integration_hub_huawei_health => 'Huawei Health';
+
+  @override
+  String get integration_hub_huawei_health_hint =>
+      'Sync from Huawei cloud credentials.';
+
+  @override
+  String get integration_hub_phase2_notice =>
+      'Calendar and Google sign-in work here. Huawei credentials: use Sensor Hub below.';
+
+  @override
+  String get integration_hub_sign_in_required =>
+      'Sign in to your icegate account first, then connect integrations.';
+
+  @override
+  String get integration_hub_health_coming_soon =>
+      'This health source is not available yet.';
+
+  @override
+  String get integration_hub_open => 'Open Integration Hub';
+
+  @override
   String get projects_tile_focus => 'Focus';
 
   @override
@@ -47,6 +229,104 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get projects_tile_social_blocker => 'Social Blocker';
+
+  @override
+  String get projects_plugin_open => 'Open';
+
+  @override
+  String get projects_plugin_location_tracker => 'Location Tracker';
+
+  @override
+  String get projects_plugin_live_map => 'Live Map';
+
+  @override
+  String get projects_remove_plugin_title => 'Remove shortcut?';
+
+  @override
+  String projects_remove_plugin_body(String name) {
+    return 'Remove \"$name\" from quick actions?';
+  }
+
+  @override
+  String get projects_remove_plugin_confirm => 'Remove';
+
+  @override
+  String get integrations_title => 'Integrations';
+
+  @override
+  String get integrations_subtitle => 'Manage your document sources';
+
+  @override
+  String get integrations_active_services => 'Active Services';
+
+  @override
+  String get integrations_total_notes => 'Total Notes';
+
+  @override
+  String get integrations_search_hint => 'Search sources...';
+
+  @override
+  String get integrations_enabled_connections => 'ENABLED CONNECTIONS';
+
+  @override
+  String get integrations_filters => 'Filters';
+
+  @override
+  String get integrations_internal_notes => 'Internal Notes';
+
+  @override
+  String get integrations_primary_vault => 'Primary Vault (Local)';
+
+  @override
+  String get integrations_explore => 'Explore';
+
+  @override
+  String get integrations_google_drive => 'Google Drive';
+
+  @override
+  String get integrations_synced_cloud => 'Synced with Cloud';
+
+  @override
+  String get integrations_cloud_storage => 'Cloud Storage';
+
+  @override
+  String get integrations_sync_now => 'Sync Now';
+
+  @override
+  String get integrations_connect => 'Connect';
+
+  @override
+  String get integrations_notion_sync => 'Notion Sync';
+
+  @override
+  String get integrations_database_pipeline => 'Database Pipeline';
+
+  @override
+  String get integrations_fetch => 'Fetch';
+
+  @override
+  String get integrations_setup => 'Setup';
+
+  @override
+  String get integrations_slack_docs => 'Slack Docs';
+
+  @override
+  String get integrations_shared_channels => 'Shared Channels';
+
+  @override
+  String get integrations_notify_me => 'Notify Me';
+
+  @override
+  String get integrations_notion_config_title => 'Notion Configuration';
+
+  @override
+  String get integrations_notion_secret_label => 'Internal Integration Secret';
+
+  @override
+  String get integrations_save_fetch => 'Save & Fetch';
+
+  @override
+  String get integrations_marketplace_soon => 'Source Marketplace coming soon!';
 
   @override
   String get projects_workspace_empty => 'No workspace has been set up yet.';
@@ -162,6 +442,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get health_update_weight => 'Update Weight';
+
+  @override
+  String get health_smart_scale_title => 'Smart scale';
+
+  @override
+  String get health_smart_scale_desc =>
+      'Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)';
+
+  @override
+  String get health_smart_scale_sync => 'Sync smart scale';
+
+  @override
+  String get health_smart_scale_syncing => 'Syncing…';
+
+  @override
+  String get health_smart_scale_sync_ok => 'Weight synced from smart scale';
+
+  @override
+  String get health_smart_scale_sync_empty =>
+      'No weight found. Weigh in on your scale first, then sync.';
+
+  @override
+  String get health_smart_scale_sync_denied =>
+      'Health access denied. Enable in Settings.';
+
+  @override
+  String get health_smart_scale_desktop =>
+      'Smart scale sync is available on iPhone and Android only.';
+
+  @override
+  String get health_smart_scale_import => 'Import from smart scale';
 
   @override
   String get health_log_water => 'Log Water';
@@ -707,6 +1018,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String health_subtitle_goal_steps(int goal) {
     return 'Goal: $goal steps';
   }
+
+  @override
+  String get health_at_a_glance => 'Your health at a glance.';
+
+  @override
+  String get health_analyzing_meal => 'Analyzing meal…';
 
   @override
   String get health_subtitle_health_first => 'Health First';
@@ -1344,6 +1661,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get social_no_achievements_msg => 'No achievements logged yet.';
 
   @override
+  String get achievement_story_section => 'Photo stories';
+
+  @override
+  String get achievement_story_empty_hint =>
+      'Tap + to save a photo win — shown here like stories.';
+
+  @override
+  String get achievement_story_add => 'Add';
+
+  @override
+  String get achievement_feats_section => 'Logged feats';
+
+  @override
+  String get achievement_insights_title => 'Insights Dashboard';
+
+  @override
+  String achievement_insights_summary(
+    int count,
+    String meaning,
+    String impact,
+  ) {
+    return 'Monthly Reflection: $count feats recorded. Average Meaningfulness: $meaning, Average Impact: $impact';
+  }
+
+  @override
+  String get achievement_story_title_dialog => 'Name this win';
+
+  @override
+  String get achievement_story_title_hint => 'What did you achieve?';
+
+  @override
+  String get achievement_story_added => 'Story saved to your achievements.';
+
+  @override
+  String get achievement_story_save_failed => 'Could not save photo.';
+
+  @override
   String get social_delete_feat_title => 'Delete feat';
 
   @override
@@ -1417,7 +1771,94 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_needs_care => 'Needs Care';
 
   @override
+  String get mind_focus_current => 'Focus';
+
+  @override
+  String get mind_focus_none => 'Not set';
+
+  @override
   String get mind_quick_entry_hint => 'What\'s on your mind?';
+
+  @override
+  String get mind_focus_title => 'Focus areas';
+
+  @override
+  String get mind_focus_subtitle =>
+      'Define weekly trends so you know where to put your energy.';
+
+  @override
+  String get mind_focus_empty =>
+      'No focus areas yet. Start from a template or create your own.';
+
+  @override
+  String get mind_focus_add => 'New focus area';
+
+  @override
+  String get mind_focus_edit => 'Edit focus area';
+
+  @override
+  String get mind_focus_weekly_goal => 'Logs per week (goal)';
+
+  @override
+  String get mind_focus_this_week => 'This week';
+
+  @override
+  String get mind_focus_select_hint =>
+      'Tap to focus on this area. Recent matching journal entries:';
+
+  @override
+  String get mind_focus_template_gym => 'Gym week';
+
+  @override
+  String get mind_focus_template_learn => 'Learn week';
+
+  @override
+  String get mind_focus_template_invest => 'Invest week';
+
+  @override
+  String get mind_focus_name_hint => 'Name (e.g. Gym week)';
+
+  @override
+  String get mind_focus_activities_label => 'Linked activities';
+
+  @override
+  String get mind_focus_name_required => 'Enter a name for this focus area';
+
+  @override
+  String get mind_focus_activities_required => 'Pick at least one activity';
+
+  @override
+  String get mind_focus_icon_label => 'Icon';
+
+  @override
+  String get mind_focus_color_label => 'Color';
+
+  @override
+  String get mind_focus_no_logs_yet =>
+      'No journal entries match this area yet.';
+
+  @override
+  String get mind_focus_log_now => 'Log for this area';
+
+  @override
+  String get mind_focus_todos => 'To-do';
+
+  @override
+  String get mind_focus_open_projects => 'Projects';
+
+  @override
+  String get mind_focus_no_todos =>
+      'No active project tasks. Add tasks in Projects.';
+
+  @override
+  String mind_focus_more_todos(int count) {
+    return '+$count more in Projects';
+  }
+
+  @override
+  String mind_focus_avg_mood(String score) {
+    return 'Avg mood this week: $score';
+  }
 
   @override
   String get mood_trends_title => 'Mood Trends';
@@ -2275,6 +2716,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get project_no_notes_list => 'No notes found';
 
   @override
+  String get project_choose_document_type => 'Choose document type';
+
+  @override
+  String get project_doc_blank_note => 'Blank note';
+
+  @override
+  String get project_doc_blank_note_desc => 'Start with a clean slate';
+
+  @override
+  String get project_doc_tech => 'Technical doc';
+
+  @override
+  String get project_doc_tech_desc =>
+      'Architecture and implementation template';
+
+  @override
+  String get project_doc_api => 'API specification';
+
+  @override
+  String get project_doc_api_desc => 'Endpoints and schema template';
+
+  @override
+  String get project_doc_tech_title => 'Technical Documentation';
+
+  @override
+  String get project_doc_api_title => 'API Specification';
+
+  @override
   String get project_finance_label => 'Finance';
 
   @override
@@ -2640,6 +3109,29 @@ class AppLocalizationsEn extends AppLocalizations {
       'System notifications are currently disabled.';
 
   @override
+  String get notification_system_preferences => 'SYSTEM PREFERENCES';
+
+  @override
+  String get notification_pomodoro_reminder_title => 'Pomodoros Reminder';
+
+  @override
+  String get notification_pomodoro_reminder_subtitle =>
+      'Receive notification after you finish a pomodoro or end a break.';
+
+  @override
+  String get notification_live_activities_title => 'Live Activities';
+
+  @override
+  String get notification_live_activities_subtitle =>
+      'Track focus timer and information on your Lock Screen.';
+
+  @override
+  String get notification_status_on => 'on';
+
+  @override
+  String get notification_status_off => 'off';
+
+  @override
   String get notification_wisdom_board => 'Wisdom Board';
 
   @override
@@ -2725,6 +3217,112 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_label_description_optional => 'Description (optional)';
+
+  @override
+  String get finance_recurring_income => 'Recurring income';
+
+  @override
+  String get finance_recurring_interval => 'Repeat every';
+
+  @override
+  String get finance_fixed_income_title => 'Fixed income';
+
+  @override
+  String get finance_fixed_income_subtitle =>
+      'Salary, rent received, and other steady income';
+
+  @override
+  String get finance_fixed_income_monthly_total => 'Monthly total';
+
+  @override
+  String get finance_fixed_income_empty => 'No fixed income yet';
+
+  @override
+  String get finance_fixed_income_add => 'Add fixed income';
+
+  @override
+  String get finance_fixed_income_new => 'New fixed income';
+
+  @override
+  String get finance_fixed_income_edit => 'Edit fixed income';
+
+  @override
+  String get finance_fixed_income_name => 'Income name';
+
+  @override
+  String get finance_fixed_income_next => 'Next payout';
+
+  @override
+  String get finance_fixed_income_delete_confirm =>
+      'Remove this fixed income schedule?';
+
+  @override
+  String get finance_insight_title => 'Analysis';
+
+  @override
+  String get finance_insight_suggestions => 'Suggestions';
+
+  @override
+  String get finance_insight_enter_amount =>
+      'Enter an amount to preview how this affects your month.';
+
+  @override
+  String finance_insight_fixed_after(String amount) {
+    return 'After saving: about $amount/month in fixed income.';
+  }
+
+  @override
+  String finance_insight_covers_spending(String percent, String spent) {
+    return 'Covers about $percent% of spending logged this month ($spent).';
+  }
+
+  @override
+  String finance_insight_shortfall(String amount) {
+    return 'Still about $amount short vs monthly spending.';
+  }
+
+  @override
+  String finance_insight_surplus(String amount) {
+    return 'Roughly $amount/month left after typical spending.';
+  }
+
+  @override
+  String finance_insight_duplicate_fixed(String name) {
+    return 'You already have fixed income in “$name” — avoid double counting.';
+  }
+
+  @override
+  String finance_insight_expense_share(String percent) {
+    return 'This would be about $percent% of spending this month.';
+  }
+
+  @override
+  String get finance_insight_expense_large =>
+      'Large one-off expense — double-check the category.';
+
+  @override
+  String finance_insight_income_share(String percent) {
+    return 'Adds about $percent% to income logged this month.';
+  }
+
+  @override
+  String finance_insight_recurring_equiv(String amount) {
+    return 'As recurring: about $amount/month on top of fixed income.';
+  }
+
+  @override
+  String finance_insight_savings_total(String amount) {
+    return 'Savings balance would reach about $amount.';
+  }
+
+  @override
+  String get finance_interval_weekly => 'Week';
+
+  @override
+  String get finance_interval_monthly => 'Month';
+
+  @override
+  String get finance_interval_yearly => 'Year';
 
   @override
   String get finance_btn_add => 'Add';
@@ -2822,6 +3420,49 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_cat_subscriptions => 'Subscriptions';
+
+  @override
+  String get finance_subscriptions_active_header => 'ACTIVE SUBSCRIPTIONS';
+
+  @override
+  String get finance_subscriptions_monthly_total => 'MONTHLY TOTAL';
+
+  @override
+  String get finance_subscriptions_next_month_header => 'PLAN NEXT MONTH';
+
+  @override
+  String get finance_subscriptions_next_month_total => 'PLANNED TOTAL';
+
+  @override
+  String get finance_subscriptions_next_month_empty =>
+      'No subscription charges scheduled for next month.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_tooltip =>
+      'Remove from this month\'s plan';
+
+  @override
+  String get finance_subscriptions_next_month_remove_title =>
+      'REMOVE FROM PLAN';
+
+  @override
+  String get finance_subscriptions_next_month_remove_message =>
+      'This only removes the charge from next month\'s plan. Your subscription stays active and will show again when that billing month arrives.';
+
+  @override
+  String get finance_subscriptions_next_month_remove_confirm => 'REMOVE';
+
+  @override
+  String get finance_subscriptions_next_month_remove_action =>
+      'REMOVE FROM PLAN';
+
+  @override
+  String get finance_subscription_due_today => 'DUE TODAY';
+
+  @override
+  String finance_subscription_days_left(int days) {
+    return '$days DAYS LEFT';
+  }
 
   @override
   String get finance_cat_entertainment => 'Entertainment';
@@ -3086,6 +3727,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ssh_search_hint => 'Search...';
 
   @override
+  String get ssh_connect_host_first =>
+      'Connect to a host first to manage live sessions.';
+
+  @override
+  String get ssh_go_to_terminal => 'GO TO TERMINAL';
+
+  @override
+  String get ssh_no_tmux_sessions => 'No active tmux sessions found.';
+
+  @override
   String get journal => 'Journal';
 
   @override
@@ -3197,4 +3848,154 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get common_done => 'Done';
+
+  @override
+  String get island_app_name => 'ICE GATE';
+
+  @override
+  String get island_app_blocker => 'APP BLOCKER';
+
+  @override
+  String get island_initializing => 'INITIALIZING…';
+
+  @override
+  String get island_notifications => 'NOTIFICATIONS';
+
+  @override
+  String get island_inbox => 'INBOX';
+
+  @override
+  String get island_documentation => 'DOCUMENTATION';
+
+  @override
+  String get island_canvas => 'CANVAS';
+
+  @override
+  String get island_mind => 'MIND';
+
+  @override
+  String get island_health_data => 'DATA';
+
+  @override
+  String get island_nutrition => 'NUTRITION';
+
+  @override
+  String get island_activity => 'ACTIVITY';
+
+  @override
+  String get island_hydration => 'HYDRATION';
+
+  @override
+  String get island_focus => 'FOCUS';
+
+  @override
+  String get island_steps => 'STEPS';
+
+  @override
+  String get island_vitals => 'VITALS';
+
+  @override
+  String get island_sleep => 'SLEEP';
+
+  @override
+  String get island_calories => 'CALORIES';
+
+  @override
+  String get island_spo2 => 'SpO₂';
+
+  @override
+  String get island_biometrics => 'BIOMETRICS';
+
+  @override
+  String get finance_tab_overview => 'OVERVIEW';
+
+  @override
+  String get finance_tab_history => 'HISTORY';
+
+  @override
+  String get finance_tab_daily => 'DAILY';
+
+  @override
+  String get finance_tab_daily_subtitle =>
+      'Daily fun spending and income — pick a day on the calendar.';
+
+  @override
+  String get finance_tab_achievements => 'ACHIEVEMENTS';
+
+  @override
+  String get finance_achievements_subtitle =>
+      'Major financial wins by month and year.';
+
+  @override
+  String get finance_period_month => 'Month';
+
+  @override
+  String get finance_period_year => 'Year';
+
+  @override
+  String get finance_daily_in => 'Money in';
+
+  @override
+  String get finance_daily_out => 'Money out';
+
+  @override
+  String get finance_daily_empty => 'Nothing logged this day';
+
+  @override
+  String get finance_achievements_empty =>
+      'No major achievements in this period yet';
+
+  @override
+  String get finance_achievements_add => 'Record achievement';
+
+  @override
+  String get finance_milestone_month_income => 'Monthly income recorded';
+
+  @override
+  String get finance_milestone_month_savings => 'Monthly savings added';
+
+  @override
+  String get finance_milestone_year_total => 'Year total income';
+
+  @override
+  String get finance_tab_billing => 'BILLING';
+
+  @override
+  String get finance_tab_saving => 'SAVINGS';
+
+  @override
+  String get island_documents => 'DOCUMENTS';
+
+  @override
+  String get island_editor => 'EDITOR';
+
+  @override
+  String get island_identity => 'IDENTITY';
+
+  @override
+  String get island_id_update => 'ID UPDATE';
+
+  @override
+  String get island_protocols => 'PROTOCOLS';
+
+  @override
+  String get island_sync_core => 'SYNC CORE';
+
+  @override
+  String get island_settings => 'SETTINGS';
+
+  @override
+  String get island_remote_ssh => 'REMOTE SSH';
+
+  @override
+  String get island_connected => 'CONNECTED';
+
+  @override
+  String get island_not_active => 'NOT ACTIVE';
+
+  @override
+  String get island_connect => 'CONNECT';
+
+  @override
+  String get island_tmux_active => 'TMUX ACTIVE';
 }

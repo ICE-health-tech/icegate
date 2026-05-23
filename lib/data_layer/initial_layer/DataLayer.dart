@@ -6,7 +6,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
-import 'package:ice_gate/orchestration_layer/Services/DailyMailSummaryAutoSend.dart';
+import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleDriveService.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/IntegrationHubBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/IntegrationSyncCoordinator.dart';
+import 'package:ice_gate/orchestration_layer/Services/google_auth_utils.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryAutoSend.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/DatabaseAgent.dart'
     as DatabaseAgent;
 import 'package:ice_gate/orchestration_layer/Services/CustomAuthService.dart';
@@ -56,6 +62,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/RemoteController
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 class DataLayer extends StatefulWidget {
   final Widget childWidget;
@@ -71,6 +78,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   AppDatabase get database => _databaseInstance!;
 
   late LocalNotificationService notificationService;
+  late GoogleCalendarService googleCalendarService;
+  late GoogleDriveService googleDriveService;
+  late DeviceCalendarService deviceCalendarService;
+  IntegrationHubBlock? integrationHubBlock;
+  bool _pendingGoogleEcosystemConnect = false;
   late FocusAudioHandler audioHandler;
 
   late PersonBlock personBlock;
@@ -106,6 +118,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   String? _lastInitializedPersonId; // Guard for redundant re-inits
 
   Timer? _healthSyncTimer;
+  Timer? _dailyMailSummaryTimer;
 
   late HealthMetricsDAO healthMetricsDAO;
   bool _isInitialized = false;
@@ -148,6 +161,15 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     _syncHealthData(days: 30);
     _healthSyncTimer = Timer.periodic(const Duration(minutes: 5), (_) {
       _syncHealthData(days: 3);
+    });
+  }
+
+  /// Poll so auto-send still runs if the app stays open past the scheduled time.
+  void _startDailyMailSummaryPolling() {
+    if (kIsWeb) return;
+    _dailyMailSummaryTimer?.cancel();
+    _dailyMailSummaryTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      unawaited(_trySendDailyMailSummaryIfDue());
     });
   }
 
@@ -306,6 +328,10 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       notificationService = LocalNotificationService();
       notificationService.onDailyMailSummaryTriggered = _trySendDailyMailSummaryIfDue;
       await notificationService.init(database);
+      googleCalendarService = GoogleCalendarService();
+      googleDriveService = GoogleDriveService();
+      deviceCalendarService = DeviceCalendarService();
+      unawaited(deviceCalendarService.restoreAccess());
 
       debugPrint("🚀 [Boot] Step 4: Initialize Audio...");
       try {
@@ -348,6 +374,16 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       personBlock = PersonBlock(
         authService: authService,
         personDao: database.personManagementDAO,
+      );
+      integrationHubBlock = IntegrationHubBlock(
+        personId: personBlock.information.value.profiles.id ?? '',
+        dao: database.integrationAccountDAO,
+        coordinator: IntegrationSyncCoordinator(
+          accountDao: database.integrationAccountDAO,
+          calendarService: googleCalendarService,
+          driveService: googleDriveService,
+          deviceCalendarService: deviceCalendarService,
+        ),
       );
       authBlock = AuthBlock(
         authService: authService,
@@ -420,7 +456,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
               _lastInitializedPersonId = personId;
 
               untracked(() {
-                print(
+                appLog(
                   "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
                 );
                 healthBlock.personId = personId;
@@ -459,8 +495,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 socialBlockerBlock.initWithSync(focusBlock, personId);
 
                 // NEW: Trigger Cloud Sync
-                database.supabaseSync?.syncFullDown(personId).then((_) {
+                database.supabaseSync?.syncFullDown(personId).then((_) async {
                   debugPrint("📡 [CloudSync] Initial full sync completed.");
+                  await growthBlock.sync();
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
                   financeBlock.refreshFromLocalDatabase();
@@ -483,6 +520,22 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   database.externalWidgetsDAO,
                   personId,
                 );
+
+                integrationHubBlock?.updatePersonId(personId);
+                if (_pendingGoogleEcosystemConnect) {
+                  _pendingGoogleEcosystemConnect = false;
+                  unawaited(
+                    integrationHubBlock
+                        ?.connectGoogleEcosystem(interactive: true)
+                        .then((_) => _syncDocumentationDriveState()),
+                  );
+                } else {
+                  unawaited(
+                    integrationHubBlock?.restoreGoogleEcosystem().then(
+                      (_) => _syncDocumentationDriveState(),
+                    ),
+                  );
+                }
               });
             }
           } catch (e) {
@@ -518,6 +571,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         });
         // Start the periodic health sync NOW that all blocks are initialized.
         _startHealthSync();
+        _startDailyMailSummaryPolling();
         Future.microtask(_trySendDailyMailSummaryIfDue);
       }
       debugPrint("🚀 [Boot] ✅ initializationData sequence COMPLETED.");
@@ -527,7 +581,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         final Session? session = data.session;
         final ps = database.powerSync;
 
-        print(
+        appLog(
           "🔑 [DataLayer] Supabase Auth Change: Event=$event, HasSession=${session != null}",
         );
 
@@ -539,6 +593,11 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         }
 
         if (session != null) {
+          if (event == AuthChangeEvent.signedIn &&
+              sessionUsedGoogleProvider(session)) {
+            _pendingGoogleEcosystemConnect = true;
+          }
+
           Future.microtask(() {
             batch(() {
               authBlock.jwt.value = session.accessToken;
@@ -643,12 +702,25 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _syncDocumentationDriveState() async {
+    try {
+      await documentationBlock.driveService.signIn(interactive: false);
+      documentationBlock.isGoogleDriveConnected.value =
+          documentationBlock.driveService.driveApi != null;
+    } catch (e) {
+      debugPrint('DataLayer: Documentation Drive sync failed: $e');
+    }
+  }
+
   Future<void> _trySendDailyMailSummaryIfDue() async {
     if (!_isInitialized || kIsWeb) return;
     try {
       await DailyMailSummaryAutoSend.trySendIfDue(
         finance: financeBlock,
         health: healthBlock,
+        mind: mindBlock,
+        growth: growthBlock,
+        project: projectBlock,
         config: configBlock,
         person: personBlock,
         localeCode: localeBlock.currentLocale.value.languageCode,
@@ -662,6 +734,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _healthSyncTimer?.cancel();
+    _dailyMailSummaryTimer?.cancel();
     for (final cleanup in _effectCleanups) {
       cleanup();
     }
@@ -728,6 +801,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     return MultiProvider(
       providers: [
         Provider<LocalNotificationService>.value(value: notificationService),
+        Provider<GoogleCalendarService>.value(value: googleCalendarService),
+        Provider<DeviceCalendarService>.value(value: deviceCalendarService),
         Provider<FocusAudioHandler>.value(value: audioHandler),
         Provider<AppDatabase>.value(value: database),
         Provider<ExternalWidgetsDAO>.value(value: database.externalWidgetsDAO),
@@ -802,6 +877,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<FoodAnalysisBlock>.value(value: foodAnalysisBlock),
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
         Provider<StorageBlock>.value(value: storageBlock),
+        if (integrationHubBlock != null)
+          Provider<IntegrationHubBlock>.value(value: integrationHubBlock!),
 
       ],
       child: widget.childWidget,

@@ -412,15 +412,47 @@ class ProjectDetailsPage extends StatelessWidget {
                           _showAddTaskDialog(
                             context,
                             growthBlock,
-                            project.projectID,
+                            project.id,
                           );
+                        },
+                        onSync: () async {
+                          try {
+                            await growthBlock.sync();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.project_sync_success,
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.project_sync_failed(
+                                      e.toString(),
+                                    ),
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
                         },
                       ),
                       const SizedBox(height: 16),
                       Watch((context) {
                         final allGoals = growthBlock.goals.value;
                         final tasks = allGoals
-                            .where((g) => g.projectID == project.projectID)
+                            .where(
+                              (g) =>
+                                  g.projectID == project.id ||
+                                  g.projectID == project.projectID,
+                            )
                             .toList();
                         if (tasks.isEmpty) {
                           return _buildEmptyState(
@@ -457,6 +489,16 @@ class ProjectDetailsPage extends StatelessWidget {
                         );
                       }),
 
+                      const SizedBox(height: 32),
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context)!.project_notes_label,
+                        () => _createNewNote(
+                          context,
+                          database.projectNoteDAO,
+                          project.projectID,
+                        ),
+                      ),
                       const SizedBox(height: 16),
                       StreamBuilder<List<ProjectNoteData>>(
                         stream: database.projectNoteDAO.watchNotesByProject(
@@ -464,32 +506,22 @@ class ProjectDetailsPage extends StatelessWidget {
                         ),
                         builder: (context, snapshot) {
                           final notes = snapshot.data ?? [];
-                          if (notes.isEmpty) return const SizedBox.shrink();
+                          if (notes.isEmpty) {
+                            return _buildEmptyState(
+                              context,
+                              AppLocalizations.of(context)!.project_no_notes,
+                            );
+                          }
 
                           return Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _buildSectionHeader(
-                                context,
-                                AppLocalizations.of(
-                                  context,
-                                )!.project_notes_label,
-                                () => _createNewNote(
-                                  context,
-                                  database.projectNoteDAO,
-                                  project.projectID,
-                                ),
-                              ),
-                              const SizedBox(height: 16),
-                              ...notes
-                                  .take(3)
-                                  .map(
-                                    (note) => ProjectNoteItem(
-                                      note: note,
-                                      project: project,
-                                    ),
+                            children: notes
+                                .map(
+                                  (note) => ProjectNoteItem(
+                                    note: note,
+                                    project: project,
                                   ),
-                            ],
+                                )
+                                .toList(),
                           );
                         },
                       ),
@@ -612,8 +644,9 @@ class ProjectDetailsPage extends StatelessWidget {
   Widget _buildSectionHeader(
     BuildContext context,
     String title,
-    VoidCallback onAdd,
-  ) {
+    VoidCallback onAdd, {
+    VoidCallback? onSync,
+  }) {
     final colorScheme = Theme.of(context).colorScheme;
 
     return Row(
@@ -641,7 +674,16 @@ class ProjectDetailsPage extends StatelessWidget {
             ),
           ),
         ),
-        const SizedBox(width: 16),
+        if (onSync != null) ...[
+          const SizedBox(width: 8),
+          IconButton(
+            visualDensity: VisualDensity.compact,
+            tooltip: context.l10n.integrations_sync_now,
+            icon: const Icon(Icons.sync_rounded, size: 20),
+            onPressed: onSync,
+          ),
+        ],
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: onAdd,
           child: Container(
@@ -824,7 +866,7 @@ class ProjectDetailsPage extends StatelessWidget {
     final type = await showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
-      builder: (ctx) => _DocumentTypePicker(),
+      builder: (ctx) => const _DocumentTypePicker(),
     );
 
     if (type == null) return;
@@ -832,13 +874,15 @@ class ProjectDetailsPage extends StatelessWidget {
     String content = '';
     String title = AppLocalizations.of(context)!.project_new_note_title;
 
+    final l10n = AppLocalizations.of(context)!;
     if (type == 'tech_doc') {
-      title = 'Technical Documentation';
+      title = l10n.project_doc_tech_title;
       content =
-          '# Technical Documentation\n\n## Overview\n\n## Architecture\n\n## Implementation Details\n';
+          '# ${l10n.project_doc_tech_title}\n\n## Overview\n\n## Architecture\n\n## Implementation Details\n';
     } else if (type == 'api_spec') {
-      title = 'API Specification';
-      content = '# API Specification\n\n## Endpoints\n\n### GET /v1/...\n';
+      title = l10n.project_doc_api_title;
+      content =
+          '# ${l10n.project_doc_api_title}\n\n## Endpoints\n\n### GET /v1/...\n';
     }
 
     // 2. Resolve the directory for the editor
@@ -864,9 +908,12 @@ class ProjectDetailsPage extends StatelessWidget {
 }
 
 class _DocumentTypePicker extends StatelessWidget {
+  const _DocumentTypePicker();
+
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -886,7 +933,7 @@ class _DocumentTypePicker extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           Text(
-            'Choose Document Type',
+            l10n.project_choose_document_type,
             style: TextStyle(
               fontSize: 20,
               fontWeight: FontWeight.w900,
@@ -897,8 +944,8 @@ class _DocumentTypePicker extends StatelessWidget {
           _buildTypeOption(
             context,
             'note',
-            'Blank Note',
-            'Start with a clean slate',
+            l10n.project_doc_blank_note,
+            l10n.project_doc_blank_note_desc,
             Icons.edit_note_rounded,
             Colors.blue,
           ),
@@ -906,8 +953,8 @@ class _DocumentTypePicker extends StatelessWidget {
           _buildTypeOption(
             context,
             'tech_doc',
-            'Technical Doc',
-            'Architecture & implementation template',
+            l10n.project_doc_tech,
+            l10n.project_doc_tech_desc,
             Icons.account_tree_rounded,
             Colors.purple,
           ),
@@ -915,8 +962,8 @@ class _DocumentTypePicker extends StatelessWidget {
           _buildTypeOption(
             context,
             'api_spec',
-            'API Specification',
-            'Endpoints and schema template',
+            l10n.project_doc_api,
+            l10n.project_doc_api_desc,
             Icons.api_rounded,
             Colors.orange,
           ),

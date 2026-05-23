@@ -7,6 +7,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/DataSeeder.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:ice_gate/utils/app_log.dart';
 
 // --- Interfaces for State ---
 class UserDetails {
@@ -350,7 +351,7 @@ class PersonBlock {
   /// background remote fetch to keep UI non-blocking
   Future<void> _fetchRemoteAndUpdate(User user) async {
     try {
-      print("🌐 [PersonBlock] Fetching remote data in background...");
+      appLog("🌐 [PersonBlock] Fetching remote data in background...");
       final remotePerson = await Supabase.instance.client
           .from('persons')
           .select()
@@ -392,9 +393,9 @@ class PersonBlock {
         unawaited(personDao.updateCoverImageUrl(user.id, coverUrl));
       }
 
-      print("✅ [PersonBlock] Remote sync completed.");
+      appLog("✅ [PersonBlock] Remote sync completed.");
     } catch (e) {
-      print("⚠️ [PersonBlock] Remote background sync failed: $e");
+      appLog("⚠️ [PersonBlock] Remote background sync failed: $e");
     }
   }
 
@@ -506,7 +507,7 @@ class PersonBlock {
   }
 
   void _applyGuestFallback() {
-    print("👤 [PersonBlock] Applying default fallback data...");
+    appLog("👤 [PersonBlock] Applying default fallback data...");
     untracked(() {
       batch(() {
         information.value = UserInformation(
@@ -620,7 +621,7 @@ class PersonBlock {
   Future<void> updateProfileDatabase(String token) async {
     final user = Supabase.instance.client.auth.currentUser;
     if (user == null) {
-      print("❌ [PersonBlock] No user logged in to update profile.");
+      appLog("❌ [PersonBlock] No user logged in to update profile.");
       throw Exception("No user logged in");
     }
 
@@ -628,12 +629,12 @@ class PersonBlock {
       final details = information.value.details;
       final profile = information.value.profiles;
 
-      print(
+      appLog(
         "💾 [PersonBlock] Updating profile across tables for ${user.id}...",
       );
 
       // We'll update via Drift first, and PowerSync will handle the remote sync.
-      print(
+      appLog(
         "   - Updating local database via Drift (PowerSync will sync to Supabase)...",
       );
       await personDao.upsertPersonProfileData(
@@ -685,11 +686,11 @@ class PersonBlock {
       }
       debugPrint("✅ [PersonBlock] Supabase persons name updated: $remoteRows");
 
-      print(
+      appLog(
         "✅ [PersonBlock] Multi-table Profile Update COMPLETED locally + remote name for ${user.id}.",
       );
     } catch (e) {
-      print("❌ [PersonBlock] Failed to update profile in database: $e");
+      appLog("❌ [PersonBlock] Failed to update profile in database: $e");
       rethrow;
     }
   }
@@ -707,9 +708,9 @@ class PersonBlock {
       // Role management might be in a separate table or app_metadata
       final role = user.appMetadata['role'] ?? 'USER';
       untracked(() => account.value = UserAccount(role: role));
-      print("✅ [PersonBlock] User Role: $role");
+      appLog("✅ [PersonBlock] User Role: $role");
     } catch (e) {
-      print("❌ [PersonBlock] Failed to get user role: $e");
+      appLog("❌ [PersonBlock] Failed to get user role: $e");
       untracked(() => account.value = const UserAccount(role: 'USER'));
     }
   }
@@ -725,7 +726,7 @@ class PersonBlock {
     try {
       final personId = information.value.profiles.id;
       if (personId == null) {
-        print(
+        appLog(
           "⚠️ [PersonBlock] Skipping skills fetch: No personID resolved yet.",
         );
         untracked(() => skills.value = []);
@@ -742,9 +743,9 @@ class PersonBlock {
           .toList();
 
       untracked(() => skills.value = skillList);
-      print("✅ [PersonBlock] ${skillList.length} skills fetched.");
+      appLog("✅ [PersonBlock] ${skillList.length} skills fetched.");
     } catch (e) {
-      print("❌ [PersonBlock] Failed to get user skills: $e");
+      appLog("❌ [PersonBlock] Failed to get user skills: $e");
       untracked(() => skills.value = []);
     }
   }
@@ -753,14 +754,14 @@ class PersonBlock {
   Future<void> fetchInitialData(String token) async {
     if (token.isEmpty) return;
 
-    print("🚀 [PersonBlock] Starting Initial Data Fetch (Sequential Flow)...");
+    appLog("🚀 [PersonBlock] Starting Initial Data Fetch (Sequential Flow)...");
 
     // 1. First resolve person identity
     await fetchFromDatabase(token);
 
     // 2. Then fetch dependent data
     await Future.wait([getUserRole(token), getUserSkill(token)]);
-    print("✅ [PersonBlock] Initial Data Fetch Completed");
+    appLog("✅ [PersonBlock] Initial Data Fetch Completed");
   }
 
   /// Fetch a specific person's profile for viewing

@@ -10,6 +10,9 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 
@@ -43,6 +46,8 @@ class AnalysisDashboardPage extends StatefulWidget {
 }
 
 class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
+  static const _maxUsageHistoryItems = 4;
+
   ScoreBlock? _viewedScoreBlock;
   bool _isOther = false;
   late DateTime _usageFocusedMonth;
@@ -299,49 +304,105 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
 
 
   Widget _buildSectorGrid(BuildContext context, ScoreBlock scoreBlock) {
-    final score = scoreBlock.score;
-    return GridView.count(
-      crossAxisCount: 2,
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      mainAxisSpacing: 16,
-      crossAxisSpacing: 16,
-      childAspectRatio: 0.85, // Adjusted for breakdown text
-      children: [
-        _buildSectorCard(
-          context,
-          title: AppLocalizations.of(context)!.scoring_health.toUpperCase(),
-          value: score.healthGlobalScore.toInt().toString(),
-          icon: Icons.favorite_rounded,
-          color: Colors.green,
-          onTap: () => context.push('/health/dashboard'),
-        ),
-        _buildSectorCard(
-          context,
-          title: AppLocalizations.of(context)!.scoring_finance.toUpperCase(),
-          value: score.financialGlobalScore.toInt().toString(),
-          icon: Icons.account_balance_wallet_rounded,
-          color: Colors.blue,
-          onTap: () => context.push('/finance/dashboard'),
-        ),
-        _buildSectorCard(
-          context,
-          title: AppLocalizations.of(context)!.scoring_social.toUpperCase(),
-          value: score.socialGlobalScore.toInt().toString(),
-          icon: Icons.psychology_rounded,
-          color: Colors.purple,
-          onTap: () => context.push('/social/dashboard'),
-        ),
-        _buildSectorCard(
-          context,
-          title: AppLocalizations.of(context)!.scoring_career.toUpperCase(),
-          value: score.careerGlobalScore.toInt().toString(),
-          icon: Icons.rocket_launch_rounded,
-          color: Colors.orange,
-          onTap: () => context.push('/projects/dashboard'),
-        ),
-      ],
-    );
+    return Watch((watchContext) {
+      final score = scoreBlock.score;
+      final l10n = AppLocalizations.of(watchContext)!;
+      final health = watchContext.watch<HealthBlock>();
+      final finance = watchContext.watch<FinanceBlock>();
+      final projectCount = watchContext.watch<ProjectBlock>().projects.value.length;
+      final socialMinutes = _usageMinutesToday(scoreBlock, 'social');
+      final careerMinutes = _usageMinutesToday(scoreBlock, 'projects');
+
+      return GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        mainAxisSpacing: 16,
+        crossAxisSpacing: 16,
+        childAspectRatio: 0.72,
+        children: [
+          _buildSectorCard(
+            watchContext,
+            title: l10n.scoring_health.toUpperCase(),
+            value: score.healthGlobalScore.toInt().toString(),
+            icon: Icons.favorite_rounded,
+            color: Colors.green,
+            stats: [
+              (l10n.breakdown_steps, '${health.todaySteps.value}'),
+              (
+                l10n.breakdown_sleep,
+                '${health.todaySleep.value.toStringAsFixed(1)}h',
+              ),
+              (l10n.breakdown_water, '${health.todayWater.value} ml'),
+            ],
+            onTap: () => watchContext.push('/health/dashboard'),
+          ),
+          _buildSectorCard(
+            watchContext,
+            title: l10n.scoring_finance.toUpperCase(),
+            value: score.financialGlobalScore.toInt().toString(),
+            icon: Icons.account_balance_wallet_rounded,
+            color: Colors.blue,
+            stats: [
+              (
+                l10n.finance_total_net_worth,
+                finance.formatCurrency(finance.totalBalance.value, compact: true),
+              ),
+              (
+                l10n.finance_daily_report_net,
+                finance.formatCurrency(finance.dailyDelta.value, compact: true),
+              ),
+              (
+                l10n.finance_daily_report_expense,
+                finance.formatCurrency(
+                  finance.monthlySpending.value,
+                  compact: true,
+                ),
+              ),
+            ],
+            onTap: () => watchContext.push('/finance/dashboard'),
+          ),
+          _buildSectorCard(
+            watchContext,
+            title: l10n.scoring_social.toUpperCase(),
+            value: score.socialGlobalScore.toInt().toString(),
+            icon: Icons.psychology_rounded,
+            color: Colors.purple,
+            stats: [
+              (l10n.breakdown_screentime, _formatScreenTime(socialMinutes)),
+              (
+                l10n.breakdown_focus,
+                '${health.todayFocusMinutes.value} ${l10n.unit_min}',
+              ),
+            ],
+            onTap: () => watchContext.push('/social/dashboard'),
+          ),
+          _buildSectorCard(
+            watchContext,
+            title: l10n.scoring_career.toUpperCase(),
+            value: score.careerGlobalScore.toInt().toString(),
+            icon: Icons.rocket_launch_rounded,
+            color: Colors.orange,
+            stats: [
+              (l10n.breakdown_projects, '$projectCount'),
+              (l10n.breakdown_screentime, _formatScreenTime(careerMinutes)),
+            ],
+            onTap: () => watchContext.push('/projects/dashboard'),
+          ),
+        ],
+      );
+    });
+  }
+
+  double _usageMinutesToday(ScoreBlock scoreBlock, String sector) {
+    final today = _dateOnly(DateTime.now());
+    final key = sector.toLowerCase();
+    return scoreBlock.usageHistory.value
+        .where((item) {
+          final day = _dateOnly(item.date);
+          return day == today && item.sector.toLowerCase() == key;
+        })
+        .fold(0.0, (sum, item) => sum + item.durationMinutes);
   }
 
   Widget _buildSectorCard(
@@ -350,10 +411,10 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
     required String value,
     required IconData icon,
     required Color color,
+    required List<(String label, String stat)> stats,
     required VoidCallback onTap,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-
 
     return GestureDetector(
       onTap: onTap,
@@ -366,7 +427,6 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisSize: MainAxisSize.min,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -399,9 +459,61 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
                 color: colorScheme.onSurfaceVariant.withOpacity(0.6),
               ),
             ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: stats
+                    .map(
+                      (row) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: _buildBreakdownRow(
+                          context,
+                          label: row.$1,
+                          value: row.$2,
+                          color: color,
+                        ),
+                      ),
+                    )
+                    .toList(),
+              ),
+            ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBreakdownRow(
+    BuildContext context, {
+    required String label,
+    required String value,
+    required Color color,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: 10,
+              color: colorScheme.onSurfaceVariant.withOpacity(0.75),
+            ),
+          ),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: color.withOpacity(0.95),
+          ),
+        ),
+      ],
     );
   }
 
@@ -554,7 +666,10 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
     }
 
     final selectedDate = _dateOnly(_usageSelectedDay);
-    final items = grouped[selectedDate] ?? const <AppUsageHistoryData>[];
+    final dayItems = grouped[selectedDate] ?? const <AppUsageHistoryData>[];
+    final items = [...dayItems]
+      ..sort((a, b) => b.durationMinutes.compareTo(a.durationMinutes));
+    final displayItems = items.take(_maxUsageHistoryItems).toList();
     final isToday = selectedDate == _dateOnly(DateTime.now());
     final dateLabel = isToday
         ? l10n.date_today
@@ -608,7 +723,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
             const Spacer(),
             Text(
               _formatScreenTime(
-                items.fold(0.0, (sum, item) => sum + item.durationMinutes),
+                dayItems.fold(0.0, (sum, item) => sum + item.durationMinutes),
               ),
               style: TextStyle(
                 color: colorScheme.primary,
@@ -619,7 +734,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
           ],
         ),
         const SizedBox(height: 12),
-        if (items.isEmpty)
+        if (dayItems.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 20),
             child: Text(
@@ -636,7 +751,7 @@ class _AnalysisDashboardPageState extends State<AnalysisDashboardPage> {
               borderRadius: BorderRadius.circular(16),
             ),
             child: Column(
-              children: items.map((item) {
+              children: displayItems.map((item) {
                 return ListTile(
                   dense: true,
                   leading: Container(

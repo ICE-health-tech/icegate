@@ -12,7 +12,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
-import 'package:ice_gate/orchestration_layer/Health/HealthMetric.dart';
+import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
@@ -82,7 +82,7 @@ const double _healthGridSpacing = 16;
 class _HealthPageState extends State<HealthPage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
   late AppDatabase database;
-  Map<String, HealthMetric> _healthMetrics = {};
+  Map<String, HealthMetricProtocol> _healthMetrics = {};
   bool _isLoading = false;
   late AnimationController _gridAnimationController;
 
@@ -99,6 +99,7 @@ class _HealthPageState extends State<HealthPage>
     _gridAnimationController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
+      value: 1.0,
     );
 
     // Load after the first frame so AppLocalizations is fully resolved.
@@ -136,6 +137,15 @@ class _HealthPageState extends State<HealthPage>
     }
   }
 
+  void _runGridAnimationIfNeeded() {
+    if (!mounted || _healthMetrics.isEmpty) return;
+    if (_gridAnimationController.isAnimating ||
+        _gridAnimationController.status == AnimationStatus.completed) {
+      return;
+    }
+    _gridAnimationController.forward(from: 0);
+  }
+
   Future<void> _loadHealthData() async {
     if (!mounted) return;
 
@@ -154,21 +164,18 @@ class _HealthPageState extends State<HealthPage>
 
       // 1. Fetch aggregated metrics from LOCAL DB first (Fast)
       // This ensures we show SOMETHING immediately if it exists
-      final localData = await HealthMetricsData.getMetricsByDay(
+      final localData = await HealthMetricsData.shared.getMetricsByDay(
         personId,
         today,
         context,
       );
 
       if (mounted) {
-        final isInitialLoad = _healthMetrics.isEmpty;
         setState(() {
           _healthMetrics = localData;
           if (localData.isNotEmpty) _isLoading = false;
         });
-        if (isInitialLoad && localData.isNotEmpty) {
-          _gridAnimationController.forward(from: 0.0);
-        }
+        _runGridAnimationIfNeeded();
       }
 
       // 2. Trigger fresh sync from Apple Health / Google Fit in background
@@ -182,7 +189,7 @@ class _HealthPageState extends State<HealthPage>
       if (!mounted) return;
 
       // 3. Final refresh of local data after sync completes
-      final syncedData = await HealthMetricsData.getMetricsByDay(
+      final syncedData = await HealthMetricsData.shared.getMetricsByDay(
         personId,
         today,
         context,
@@ -193,6 +200,7 @@ class _HealthPageState extends State<HealthPage>
           _healthMetrics = syncedData;
           _isLoading = false;
         });
+        _runGridAnimationIfNeeded();
         // Start periodic "real-time" polling while on this page
         healthBlock.startRealtimeSync(interval: const Duration(seconds: 30));
       }
@@ -341,7 +349,8 @@ class _HealthPageState extends State<HealthPage>
                             children: [
                               Text(
                                 DateFormat(
-                                  'EEEE, MMMM d',
+                                  'EEEE, d MMMM',
+                                  Localizations.localeOf(context).toString(),
                                 ).format(DateTime.now()),
                                 style: textTheme.labelLarge?.copyWith(
                                   color: colorScheme.primary,
@@ -349,18 +358,16 @@ class _HealthPageState extends State<HealthPage>
                                   letterSpacing: 1.2,
                                 ),
                               ),
-                              // const SizedBox(height: 4),
                               _buildHeaderButton(
                                 context,
                                 icon: Icons.hub_rounded,
                                 onPressed: () =>
-                                    context.push('/health/integrations'),
+                                    context.push('/integrations'),
                               ),
                             ],
                           ),
-
                           Text(
-                            "Your health at a glance.",
+                            l10n.health_at_a_glance,
                             style: textTheme.bodyMedium?.copyWith(
                               color: colorScheme.onSurface.withValues(
                                 alpha: 0.5,
@@ -402,7 +409,7 @@ class _HealthPageState extends State<HealthPage>
                           final currentCaloriesBurned =
                               healthBlock.todayCaloriesBurned.value;
 
-                          final List<HealthMetric>
+                          final List<HealthMetricProtocol>
                           displayMetrics = _healthMetrics.values.map((m) {
                             if (m.id == 'steps') {
                               return m.copyWith(
@@ -495,7 +502,7 @@ class _HealthPageState extends State<HealthPage>
 
                           // Add Environmental Metrics
                           if (envData != null) {
-                            displayMetrics.add(HealthMetric(
+                            displayMetrics.add(HealthMetricProtocol(
                               id: 'weather',
                               name: l10n.health_weather,
                               value: '${envData.temperature.toStringAsFixed(1)}°C',
@@ -509,7 +516,7 @@ class _HealthPageState extends State<HealthPage>
                               detailPage: '/health/temperature',
                             ));
 
-                            displayMetrics.add(HealthMetric(
+                            displayMetrics.add(HealthMetricProtocol(
                               id: 'air_quality',
                               name: l10n.health_air_quality,
                               value: envData.aqi.toString(),
@@ -553,7 +560,7 @@ class _HealthPageState extends State<HealthPage>
                                     aspect = 0.92;
                                   } else {
                                     crossAxisCount = 2;
-                                    aspect = 0.88;
+                                    aspect = 0.78;
                                   }
 
                                   final cellW =
@@ -630,7 +637,7 @@ class _HealthPageState extends State<HealthPage>
   Widget _animatedMetricGridTile(
     int index,
     int total,
-    HealthMetric metric,
+    HealthMetricProtocol metric,
   ) {
     final safeTotal = total <= 0 ? 1 : total;
     final animation = Tween<double>(begin: 0.0, end: 1.0).animate(

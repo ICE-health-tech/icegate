@@ -9,6 +9,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/AddPluginForm.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/ConfirmDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart';
 
 class PluginGrid extends StatefulWidget {
   final String personId;
@@ -65,7 +66,15 @@ class _PluginGridState extends State<PluginGrid> {
             label: widgetData.name ?? 'External',
             imageUrl: widgetData.imageUrl,
             isEditMode: widget.isEditMode,
-            onTap: () => PluginNavigationUtil.navigateExternal(context, widgetData.url ?? ''),
+            onTap: () => PluginNavigationUtil.navigateExternal(
+              context,
+              GoogleCalendarPlugin.resolveLaunchUrl(
+                protocol: widgetData.protocol ?? 'https',
+                host: widgetData.host ?? '',
+                path: widgetData.url ?? '',
+              ),
+              title: widgetData.name,
+            ),
             onLongPress: () => _showRenameDialog(context, widgetData),
             onDelete: () => _showDeleteDialog(
               context,

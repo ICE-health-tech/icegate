@@ -7,7 +7,9 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
 import '../finance_form/AddAccountDialog.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -47,6 +49,11 @@ class FinanceOverviewPage extends StatelessWidget {
 
           Watch((context) {
             return _buildSummaryCardRow(context, financeBlock);
+          }),
+          const SizedBox(height: 32),
+
+          Watch((context) {
+            return FixedIncomeManager(financeBlock: financeBlock);
           }),
           const SizedBox(height: 32),
 
@@ -264,6 +271,7 @@ class FinanceOverviewPage extends StatelessWidget {
 
   Widget _buildSummaryCardRow(BuildContext context, FinanceBlock block) {
     final dense = MediaQuery.sizeOf(context).width >= 900;
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
@@ -279,7 +287,21 @@ class FinanceOverviewPage extends StatelessWidget {
             dense: dense,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 8),
+        Expanded(
+          child: _buildSimpleStatsCard(
+            context,
+            label: l10n.finance_fixed_income_title.toUpperCase(),
+            value: block.formatCurrency(
+              block.monthlyFixedIncome.value,
+              compact: true,
+            ),
+            color: const Color(0xFF66BB6A),
+            icon: Icons.trending_up_rounded,
+            dense: dense,
+          ),
+        ),
+        const SizedBox(width: 8),
         Expanded(
           child: _buildSimpleStatsCard(
             context,
