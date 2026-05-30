@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:go_router/go_router.dart';
@@ -13,12 +14,13 @@ class AQIPluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final envData = envBlock.currentData.watch(context);
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
+    final aqi = envData?.aqi ?? 0;
 
     return _BasePluginCard(
+      pluginId: 'aqi',
       onTap: () {
         showModalBottomSheet(
           context: context,
@@ -41,16 +43,16 @@ class AQIPluginCard extends StatelessWidget {
               style: TextStyle(
                 fontWeight: FontWeight.w900,
                 fontSize: 22,
-                color: _getAQIColor(envData?.aqi ?? 0),
+                color: HealthMetricColors.aqiColor(aqi),
               ),
             ),
             const SizedBox(height: 2),
             AutoSizeText(
               l10n.health_metrics_air_quality.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 9,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                color: HealthMetricColors.textSecondary,
                 letterSpacing: 0.5,
               ),
               textAlign: TextAlign.center,
@@ -61,15 +63,6 @@ class AQIPluginCard extends StatelessWidget {
       ),
     );
   }
-
-  Color _getAQIColor(int aqi) {
-    if (aqi <= 50) return Colors.green;
-    if (aqi <= 100) return Colors.yellow[700]!;
-    if (aqi <= 150) return Colors.orange;
-    if (aqi <= 200) return Colors.red;
-    if (aqi <= 300) return Colors.purple;
-    return Colors.brown;
-  }
 }
 
 class WeatherPluginCard extends StatelessWidget {
@@ -78,12 +71,12 @@ class WeatherPluginCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final envData = envBlock.currentData.watch(context);
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
 
     return _BasePluginCard(
+      pluginId: 'weather',
       onTap: () => context.push('/health/temperature'),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -101,18 +94,18 @@ class WeatherPluginCard extends StatelessWidget {
               children: [
                 Text(
                   envData?.temperature.toStringAsFixed(0) ?? '--',
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 22,
-                    color: colorScheme.primary,
+                    color: HealthMetricColors.tempAccent,
                   ),
                 ),
-                Text(
+                const Text(
                   '°',
                   style: TextStyle(
                     fontWeight: FontWeight.w900,
                     fontSize: 14,
-                    color: colorScheme.primary.withValues(alpha: 0.6),
+                    color: HealthMetricColors.textSecondary,
                   ),
                 ),
               ],
@@ -120,10 +113,10 @@ class WeatherPluginCard extends StatelessWidget {
             const SizedBox(height: 2),
             AutoSizeText(
               l10n.health_metrics_weather.toUpperCase(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontWeight: FontWeight.w700,
                 fontSize: 9,
-                color: colorScheme.onSurface.withValues(alpha: 0.5),
+                color: HealthMetricColors.textSecondary,
                 letterSpacing: 0.5,
               ),
               textAlign: TextAlign.center,
@@ -137,15 +130,21 @@ class WeatherPluginCard extends StatelessWidget {
 }
 
 class _BasePluginCard extends StatelessWidget {
+  final String pluginId;
   final Widget child;
   final VoidCallback onTap;
 
-  const _BasePluginCard({required this.child, required this.onTap});
+  const _BasePluginCard({
+    required this.pluginId,
+    required this.child,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
+    final tint = HealthMetricColors.pluginCardTint(pluginId);
+    final accent = HealthMetricColors.pluginAccent(pluginId);
 
     return InkWell(
       onTap: onTap,
@@ -154,42 +153,21 @@ class _BasePluginCard extends StatelessWidget {
         width: sizeOfWidget,
         height: sizeOfWidget,
         decoration: BoxDecoration(
-          color: colorScheme.surface,
+          color: tint,
           borderRadius: BorderRadius.circular(24),
+          border: Border.all(
+            color: HealthMetricColors.cardBorder,
+            width: 1,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withValues(alpha: 0.05),
-              blurRadius: 10,
+              color: accent.withValues(alpha: 0.08),
+              blurRadius: 12,
               offset: const Offset(0, 4),
             ),
           ],
-          border: Border.all(
-            color: colorScheme.primary.withValues(alpha: 0.1),
-            width: 1.5,
-          ),
         ),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        colorScheme.primary.withValues(alpha: 0.05),
-                        colorScheme.primary.withValues(alpha: 0.01),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-              Center(child: child),
-            ],
-          ),
-        ),
+        child: Center(child: child),
       ),
     );
   }

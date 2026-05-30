@@ -1,10 +1,10 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HealthSourceService.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:auto_size_text/auto_size_text.dart';
 
 class HealthMetricCard extends StatefulWidget {
@@ -136,8 +136,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
     final colorScheme = Theme.of(context).colorScheme;
     final desktopDense = MediaQuery.sizeOf(context).width >= 900;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final metricId = widget.metrics.id;
+    final cardTint = HealthMetricColors.cardTintForId(metricId);
+    final accent = HealthMetricColors.accentForId(metricId);
 
-    final outerR = desktopDense ? 20.0 : 32.0;
+    final outerR = desktopDense ? 20.0 : 20.0;
     final pad = desktopDense ? 12.0 : 16.0;
     final title = _localizedMetricName(context, widget.metrics.name);
     final displayValue = widget.metrics.value.trim().isEmpty
@@ -150,36 +153,35 @@ class _HealthMetricCardState extends State<HealthMetricCard>
       onTapCancel: _onTapCancel,
       child: ScaleTransition(
         scale: _scaleAnimation,
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(outerR),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-            child: Container(
+        child: Container(
               decoration: BoxDecoration(
-                color: isDark 
-                    ? Colors.white.withValues(alpha: 0.06) 
-                    : Colors.white.withValues(alpha: 0.5),
+                color: isDark
+                    ? cardTint
+                    : colorScheme.surfaceContainerHighest,
                 borderRadius: BorderRadius.circular(outerR),
                 border: Border.all(
                   color: widget.metrics.isFuture
                       ? (isDark ? Colors.white24 : Colors.grey.withAlpha(50))
-                      : (isDark 
-                          ? Colors.white.withValues(alpha: 0.1) 
+                      : (isDark
+                          ? HealthMetricColors.cardBorder
                           : colorScheme.primary.withValues(alpha: 0.08)),
-                  width: 1.5,
+                  width: 1,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: widget.metrics.color.withValues(alpha: 0.05),
-                    blurRadius: desktopDense ? 12 : 20,
-                    offset: Offset(0, desktopDense ? 4 : 8),
-                  ),
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.03),
-                    blurRadius: desktopDense ? 24 : 40,
-                    offset: Offset(0, desktopDense ? 8 : 15),
-                  ),
-                ],
+                boxShadow: isDark
+                    ? [
+                        BoxShadow(
+                          color: accent.withValues(alpha: 0.08),
+                          blurRadius: 16,
+                          offset: const Offset(0, 4),
+                        ),
+                      ]
+                    : [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.06),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
               ),
               child: Stack(
                 children: [
@@ -192,7 +194,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                       height: 80,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: widget.metrics.color.withValues(alpha: 0.06),
+                        color: accent.withValues(alpha: 0.08),
                       ),
                     ),
                   ),
@@ -206,7 +208,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                         width: 64,
                         height: 64,
                         fit: BoxFit.contain,
-                        color: widget.metrics.color,
+                        color: accent,
                         colorBlendMode: BlendMode.srcIn,
                       ),
                     ),
@@ -232,9 +234,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                   height: iconBoxSize,
                                   padding: EdgeInsets.all(tight ? 7 : 9),
                                   decoration: BoxDecoration(
-                                    color: widget.metrics.color.withValues(
-                                      alpha: 0.14,
-                                    ),
+                                    color: accent.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(
                                       tight ? 11 : 14,
                                     ),
@@ -246,9 +246,8 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                         Icon(
                                           widget.metrics.icon,
                                           color: widget.metrics.isFuture
-                                              ? colorScheme.onSurface
-                                                  .withValues(alpha: 0.35)
-                                              : widget.metrics.color,
+                                              ? HealthMetricColors.textSecondary
+                                              : accent,
                                           size: tight ? 20 : 24,
                                         ),
                                         if (widget.metrics.isFuture)
@@ -284,8 +283,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                         maxLines: 2,
                                         overflow: TextOverflow.ellipsis,
                                         style: TextStyle(
-                                          color: colorScheme.onSurface
-                                              .withValues(alpha: 0.88),
+                                          color: isDark
+                                              ? HealthMetricColors
+                                                  .textSecondary
+                                              : colorScheme.onSurface
+                                                  .withValues(alpha: 0.88),
                                           fontWeight: FontWeight.w900,
                                           letterSpacing: 0.6,
                                           fontSize: tight ? 10 : 11,
@@ -301,8 +303,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            color: colorScheme.onSurface
-                                                .withValues(alpha: 0.45),
+                                            color: isDark
+                                                ? HealthMetricColors
+                                                    .textSecondary
+                                                : colorScheme.onSurface
+                                                    .withValues(alpha: 0.45),
                                             fontSize: tight ? 8 : 9,
                                             fontWeight: FontWeight.w600,
                                           ),
@@ -403,8 +408,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                               strokeWidth: 2.5,
                                               valueColor:
                                                   AlwaysStoppedAnimation<Color>(
-                                                widget.metrics.color
-                                                    .withValues(alpha: 0.7),
+                                                accent.withValues(alpha: 0.7),
                                               ),
                                             ),
                                           ),
@@ -413,9 +417,12 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                           displayValue,
                                           style: TextStyle(
                                             color: widget.metrics.isFuture
-                                                ? colorScheme.onSurface
-                                                    .withValues(alpha: 0.25)
-                                                : colorScheme.onSurface,
+                                                ? HealthMetricColors
+                                                    .textSecondary
+                                                : (isDark
+                                                    ? HealthMetricColors
+                                                        .textPrimary
+                                                    : colorScheme.onSurface),
                                             fontWeight: FontWeight.w900,
                                             fontSize: tight
                                                 ? 22
@@ -431,9 +438,11 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                 Text(
                                   widget.metrics.unit,
                                   style: TextStyle(
-                                    color: colorScheme.onSurface.withValues(
-                                      alpha: 0.45,
-                                    ),
+                                    color: isDark
+                                        ? HealthMetricColors.textSecondary
+                                        : colorScheme.onSurface.withValues(
+                                            alpha: 0.45,
+                                          ),
                                     fontWeight: FontWeight.w800,
                                     fontSize: 9,
                                   ),
@@ -444,7 +453,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                               const SizedBox(height: 8),
                               _buildProgressBar(
                                 widget.metrics.progress!,
-                                widget.metrics.color,
+                                HealthMetricColors.progressColorForId(metricId),
                               ),
                             ],
                           ],
@@ -454,15 +463,14 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                   ),
                 ],
               ),
-            ),
-          ),
         ),
       ),
     );
   }
 
   Widget _buildTrendChip(String trend, bool positive) {
-    final color = positive ? Colors.green : Colors.red;
+    final color =
+        positive ? HealthMetricColors.progressGreen : const Color(0xFFFF453A);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(

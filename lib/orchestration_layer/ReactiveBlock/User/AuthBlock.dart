@@ -10,6 +10,8 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 import 'dart:io';
 import 'package:ice_gate/utils/app_log.dart';
@@ -772,14 +774,11 @@ class AuthBlock {
     appLog("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
 
     try {
-      const redirectTo = 'io.supabase.icegate://login-callback';
-      await Supabase.instance.client.auth.signInWithOAuth(
-        OAuthProvider.google,
-        redirectTo: redirectTo,
-        authScreenLaunchMode: LaunchMode.externalApplication,
-      );
-
-      _idleLoginUiWhileOAuthContinuesInBrowser();
+      if (Platform.isIOS || Platform.isMacOS) {
+        await _signInWithGoogleNative();
+      } else {
+        await _signInWithGoogleOAuth();
+      }
 
       final user = Supabase.instance.client.auth.currentUser;
 
@@ -821,6 +820,42 @@ class AuthBlock {
       status.value = AuthStatus.unauthenticated;
       cancelAuthInteractionTimeout();
     }
+  }
+
+  /// Native Google account picker → Supabase session (avoids invalid `/auth/v1/...` URL on iOS).
+  Future<void> _signInWithGoogleNative() async {
+    final account = await GoogleSignInHub.authSignIn.signIn();
+    if (account == null) {
+      throw Exception('err_passkey_canceled');
+    }
+    final googleAuth = await account.authentication;
+    final idToken = googleAuth.idToken;
+    if (idToken == null || idToken.isEmpty) {
+      throw Exception(
+        'Google ID token missing. Check GIDClientID / serverClientId.',
+      );
+    }
+    await Supabase.instance.client.auth.signInWithIdToken(
+      provider: OAuthProvider.google,
+      idToken: idToken,
+      accessToken: googleAuth.accessToken,
+    );
+  }
+
+  Future<void> _signInWithGoogleOAuth() async {
+    final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+    if (supabaseUrl.isEmpty || !supabaseUrl.startsWith('http')) {
+      throw Exception(
+        'SUPABASE_URL is missing or invalid. Add it to .env and rebuild.',
+      );
+    }
+    const redirectTo = 'io.supabase.icegate://login-callback';
+    await Supabase.instance.client.auth.signInWithOAuth(
+      OAuthProvider.google,
+      redirectTo: redirectTo,
+      authScreenLaunchMode: LaunchMode.inAppBrowserView,
+    );
+    _idleLoginUiWhileOAuthContinuesInBrowser();
   }
 
   /// Deep link for confirmation / OAuth / recovery — allowlist in Supabase Dashboard → Auth → URL config.

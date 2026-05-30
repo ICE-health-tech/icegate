@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_passkey/flutter_passkey.dart';
 import 'package:logging/logging.dart';
 
@@ -7,6 +8,16 @@ class PasskeyAuthService {
   final Logger _logger = Logger('PasskeyAuthService');
 
   PasskeyAuthService();
+
+  /// Wait until Flutter has presented a window (ASAuthorization needs a VC).
+  Future<void> _waitForPresentableWindow() async {
+    await Future<void>.delayed(Duration.zero);
+    final binding = SchedulerBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.idle) {
+      await binding.endOfFrame;
+    }
+    await Future<void>.delayed(const Duration(milliseconds: 400));
+  }
 
   Future<bool> isSupported() async {
     return await _flutterPasskey.isSupported();
@@ -29,8 +40,7 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
 
-      // Increase delay to 1250ms to ensure the UI/Window/Scene is fully ready and Key status is gained
-      await Future.delayed(const Duration(milliseconds: 1250));
+      await _waitForPresentableWindow();
 
       // 1. Construct the creation options.
       final String finalOptionsJson;
@@ -113,9 +123,8 @@ class PasskeyAuthService {
         throw Exception('Passkeys are not supported on this device.');
       }
  
-      // Increase delay to 1250ms to ensure the UI/Window/Scene is fully ready and Key status is gained
-      await Future.delayed(const Duration(milliseconds: 1250));
- 
+      await _waitForPresentableWindow();
+
       // Standard WebAuthn PublicKeyCredentialRequestOptions
       final String finalOptionsJson;
       

@@ -291,9 +291,20 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       await localeBlock.init();
 
       debugPrint("🚀 [Boot] Step 1: Initialize Supabase...");
+      final supabaseUrl = dotenv.env['SUPABASE_URL']?.trim() ?? '';
+      final supabaseAnon = dotenv.env['SUPABASE_ANON_KEY']?.trim() ?? '';
+      if (supabaseUrl.isEmpty || !supabaseUrl.startsWith('http')) {
+        throw StateError(
+          'SUPABASE_URL missing in .env (got "$supabaseUrl"). '
+          'OAuth would open invalid URLs like /auth/v1/authorize.',
+        );
+      }
+      if (supabaseAnon.isEmpty) {
+        throw StateError('SUPABASE_ANON_KEY missing in .env');
+      }
       await Supabase.initialize(
-        url: dotenv.env['SUPABASE_URL'] ?? "",
-        anonKey: dotenv.env['SUPABASE_ANON_KEY'] ?? "",
+        url: supabaseUrl,
+        anonKey: supabaseAnon,
         authOptions: const FlutterAuthClientOptions(
           authFlowType: AuthFlowType.pkce,
         ),

@@ -1,3 +1,4 @@
+import 'dart:ui' show ImageFilter;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
@@ -42,27 +43,70 @@ class WorkspaceSidebarLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final border = cs.outline.withValues(alpha: 0.22);
+    final glassBorderColor = Colors.white.withValues(alpha: 0.08);
+    final borderSide = BorderSide(color: glassBorderColor);
+
+    // Get the current path to highlight active state
+    String currentPath = '/';
+    try {
+      currentPath = GoRouterState.of(context).uri.path;
+    } catch (_) {}
 
     Widget squareNav({
       required IconData icon,
       required String tooltip,
+      required String route,
       required VoidCallback onTap,
+      Color? activeColor,
     }) {
+      final bool isActive = currentPath.startsWith(route) || (route == '/' && currentPath == '/');
+      final activeAcc = activeColor ?? cs.primary;
+
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: 6),
         child: Tooltip(
           message: tooltip,
-          child: Material(
-            color: cs.surfaceContainerHighest.withValues(alpha: 0.35),
+          child: ClipRRect(
             borderRadius: BorderRadius.circular(10),
-            child: InkWell(
-              onTap: onTap,
-              borderRadius: BorderRadius.circular(10),
-              child: SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(icon, size: 22, color: cs.primary),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: isActive
+                      ? Colors.white.withValues(alpha: 0.08)
+                      : Colors.white.withValues(alpha: 0.04),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: isActive
+                        ? activeAcc.withValues(alpha: 0.4)
+                        : Colors.white.withValues(alpha: 0.08),
+                    width: 1,
+                  ),
+                  boxShadow: isActive
+                      ? [
+                          BoxShadow(
+                            color: activeAcc.withValues(alpha: 0.12),
+                            blurRadius: 12,
+                          )
+                        ]
+                      : null,
+                ),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: onTap,
+                    borderRadius: BorderRadius.circular(10),
+                    child: SizedBox(
+                      width: 40,
+                      height: 40,
+                      child: Icon(
+                        icon,
+                        size: 22,
+                        color: isActive ? activeAcc : Colors.white.withValues(alpha: 0.5),
+                      ),
+                    ),
+                  ),
+                ),
               ),
             ),
           ),
@@ -74,27 +118,30 @@ class WorkspaceSidebarLayout extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Column 1: vertical “Analysis”
-        Material(
-          color: EntryLandscapePalette.midnightNavy.withValues(alpha: 0.35),
-          child: InkWell(
-            onTap: () => context.go('/profile'),
-            child: Container(
-              width: 40,
-              decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: border)),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 12),
-              child: Center(
-                child: RotatedBox(
-                  quarterTurns: 3,
-                  child: Text(
-                    AppLocalizations.of(context)!.analysis.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 2.4,
-                      color: EntryLandscapePalette.icyWhiteBlue.withValues(
-                        alpha: 0.85,
+        Container(
+          width: 40,
+          decoration: BoxDecoration(
+            color: Colors.white.withValues(alpha: 0.02),
+            border: Border(right: borderSide),
+          ),
+          child: Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: () => context.go('/profile'),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Center(
+                  child: RotatedBox(
+                    quarterTurns: 3,
+                    child: Text(
+                      AppLocalizations.of(context)!.analysis.toUpperCase(),
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 2.4,
+                        color: EntryLandscapePalette.icyWhiteBlue.withValues(
+                          alpha: 0.85,
+                        ),
                       ),
                     ),
                   ),
@@ -107,8 +154,8 @@ class WorkspaceSidebarLayout extends StatelessWidget {
         Container(
           width: 56,
           decoration: BoxDecoration(
-            color: cs.surface.withValues(alpha: 0.45),
-            border: Border(right: BorderSide(color: border)),
+            color: Colors.white.withValues(alpha: 0.01),
+            border: Border(right: borderSide),
           ),
           child: Column(
             children: [
@@ -122,26 +169,36 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                       squareNav(
                         icon: Icons.favorite_rounded,
                         tooltip: 'Health',
+                        route: '/health',
+                        activeColor: const Color(0xFFa7f3d0), // --ice-health
                         onTap: () => context.go('/health'),
                       ),
                       squareNav(
                         icon: Icons.account_balance_wallet_rounded,
                         tooltip: 'Finance',
+                        route: '/finance',
+                        activeColor: const Color(0xFFbae6fd), // --ice-finance
                         onTap: () => context.go('/finance'),
                       ),
                       squareNav(
                         icon: Icons.psychology_rounded,
                         tooltip: 'Social',
+                        route: '/social',
+                        activeColor: const Color(0xFFe9d5ff), // --ice-mind
                         onTap: () => context.go('/social'),
                       ),
                       squareNav(
                         icon: Icons.rocket_launch_rounded,
                         tooltip: 'Projects',
+                        route: '/projects',
+                        activeColor: const Color(0xFFfef08a), // --ice-projects
                         onTap: () => context.go('/projects'),
                       ),
                       squareNav(
                         icon: Icons.grid_view_rounded,
                         tooltip: 'Canvas',
+                        route: '/canvas',
+                        activeColor: const Color(0xFFbae6fd), // --ice-accent-blue
                         onTap: () => context.go('/canvas'),
                       ),
                     ],

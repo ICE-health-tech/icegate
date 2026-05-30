@@ -8,6 +8,8 @@ class RadialPremiumBackground extends StatelessWidget {
   final double radius;
   /// When set, overrides [Theme.colorScheme.primary] for the radial glow.
   final Color? glowColor;
+  /// When set, overrides [EntryColors.obsidianBase] for the base fill.
+  final Color? baseColor;
 
   const RadialPremiumBackground({
     super.key,
@@ -16,6 +18,7 @@ class RadialPremiumBackground extends StatelessWidget {
     this.center = Alignment.center,
     this.radius = 1.5,
     this.glowColor,
+    this.baseColor,
   });
 
   @override
@@ -28,7 +31,7 @@ class RadialPremiumBackground extends StatelessWidget {
         Container(
           width: double.infinity,
           height: double.infinity,
-          color: EntryColors.obsidianBase,
+          color: baseColor ?? EntryColors.obsidianBase,
         ),
         
         // Dynamic Glow Layer

@@ -32,6 +32,13 @@ class GoogleSignInHub {
     scopes: allScopes,
   );
 
+  /// Login-only — do not request Drive/Calendar scopes during Supabase auth.
+  static final GoogleSignIn authSignIn = GoogleSignIn(
+    clientId: (Platform.isIOS || Platform.isMacOS) ? darwinClientId : null,
+    serverClientId: webClientId,
+    scopes: const ['email', 'profile'],
+  );
+
   static Future<GoogleSignInAccount?> silentAccount() =>
       signIn.signInSilently();
 

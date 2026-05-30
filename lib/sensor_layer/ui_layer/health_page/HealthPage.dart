@@ -12,6 +12,7 @@ import 'package:intl/intl.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
@@ -277,7 +278,9 @@ class _HealthPageState extends State<HealthPage>
       onSwipe: () => Navigator.maybePop(context),
       direction: SwipeablePageDirection.leftToRight,
       child: Scaffold(
-        backgroundColor: colorScheme.surface,
+        backgroundColor: Theme.of(context).brightness == Brightness.dark
+            ? HealthMetricColors.pageBackground
+            : colorScheme.surface,
         floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
