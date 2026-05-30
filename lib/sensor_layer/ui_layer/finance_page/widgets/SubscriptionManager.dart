@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
@@ -8,6 +6,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dar
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
 
 int _clampBillingDay(int billingDay, int year, int month) {
@@ -501,6 +500,9 @@ class SubscriptionManager extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Watch((context) {
       final subs = financeBlock.subscriptions.value;
@@ -521,8 +523,8 @@ class SubscriptionManager extends StatelessWidget {
                     children: [
                       Text(
                         l10n.finance_subscriptions_active_header,
-                        style: const TextStyle(
-                          color: EntryColors.financeSilverAccent,
+                        style: TextStyle(
+                          color: FinanceSurface.mutedInk(isDark: isDark),
                           fontSize: 10,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 2,
@@ -531,8 +533,8 @@ class SubscriptionManager extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         l10n.finance_cat_subscriptions,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: FinanceSurface.ink(isDark: isDark),
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
@@ -548,7 +550,7 @@ class SubscriptionManager extends StatelessWidget {
                       Text(
                         l10n.finance_subscriptions_monthly_total,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
+                          color: FinanceSurface.mutedInk(isDark: isDark),
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.2,
@@ -557,10 +559,11 @@ class SubscriptionManager extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         financeBlock.formatCurrency(monthlyTotal),
-                        style: const TextStyle(
-                          color: EntryColors.financeSilverAccent,
+                        style: TextStyle(
+                          color: FinanceSurface.ink(isDark: isDark),
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
+                          fontFamily: 'JetBrainsMono',
                         ),
                       ),
                     ],
@@ -570,43 +573,50 @@ class SubscriptionManager extends StatelessWidget {
             ),
           ),
           if (subs.isEmpty)
-            _buildEmptyState(context)
+            _buildEmptyState(context, isDark: isDark, cs: cs)
           else
             _SubscriptionCarousel(
               key: ValueKey(useVnd),
               subs: subs,
-              cardBuilder: (ctx, sub) => _buildSubscriptionCard(ctx, sub),
+              cardBuilder: (ctx, sub) =>
+                  _buildSubscriptionCard(ctx, sub, isDark: isDark, cs: cs),
             ),
           const SizedBox(height: 8),
           _NextMonthPlanSection(
             financeBlock: financeBlock,
             subs: subs,
+            isDark: isDark,
+            cs: cs,
           ),
         ],
       );
     });
   }
 
-  Widget _buildEmptyState(BuildContext context) {
+  Widget _buildEmptyState(
+    BuildContext context, {
+    required bool isDark,
+    required ColorScheme cs,
+  }) {
     return Container(
       width: double.infinity,
       height: 140,
       margin: const EdgeInsets.symmetric(horizontal: 24),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.02),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 28),
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.layers_clear_rounded, color: Colors.white.withValues(alpha: 0.1), size: 32),
+            Icon(
+              Icons.layers_clear_rounded,
+              color: FinanceSurface.mutedInk(isDark: isDark),
+              size: 32,
+            ),
             const SizedBox(height: 12),
             Text(
               "NO RECURRING BILLS",
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.2),
+                color: FinanceSurface.mutedInk(isDark: isDark),
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
@@ -618,79 +628,77 @@ class SubscriptionManager extends StatelessWidget {
     );
   }
 
-  Widget _buildSubscriptionCard(BuildContext context, SubscriptionData sub) {
+  Widget _buildSubscriptionCard(
+    BuildContext context,
+    SubscriptionData sub, {
+    required bool isDark,
+    required ColorScheme cs,
+  }) {
     final daysLeft = _calculateDaysLeft(sub);
     final isYearly = sub.billingCycle == 'yearly';
 
     return Container(
       width: 160,
       margin: const EdgeInsets.only(right: 16, bottom: 10, top: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xFF16161E),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(28),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-          child: InkWell(
-            onTap: () => showSubscriptionEditor(context, financeBlock, subscription: sub),
-            child: Padding(
-              padding: const EdgeInsets.all(18),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: EntryColors.financeSilverAccent.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        child: Icon(
-                          _getCategoryIcon(sub.category ?? 'software'),
-                          color: EntryColors.financeSilverAccent,
-                          size: 16,
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 28),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(28),
+          onTap: () =>
+              showSubscriptionEditor(context, financeBlock, subscription: sub),
+          child: Padding(
+            padding: const EdgeInsets.all(18),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: FinanceSurface.silverAccent()
+                            .withValues(alpha: 0.14),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: FinanceSurface.border(isDark: isDark),
                         ),
                       ),
-                      _buildCycleBadge(isYearly),
-                    ],
-                  ),
-                  const Spacer(),
-                  Text(
-                    sub.name.toUpperCase(),
-                    style: const TextStyle(
-                      color: Colors.white70,
-                      fontWeight: FontWeight.w900,
-                      fontSize: 10,
-                      letterSpacing: 1,
+                      child: Icon(
+                        _getCategoryIcon(sub.category ?? 'software'),
+                        color: FinanceSurface.silverAccent(),
+                        size: 16,
+                      ),
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    _buildCycleBadge(isYearly, isDark: isDark),
+                  ],
+                ),
+                const Spacer(),
+                Text(
+                  sub.name.toUpperCase(),
+                  style: TextStyle(
+                    color: FinanceSurface.mutedInk(isDark: isDark),
+                    fontWeight: FontWeight.w900,
+                    fontSize: 10,
+                    letterSpacing: 1,
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    financeBlock.formatCurrency(sub.amount),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  financeBlock.formatCurrency(sub.amount),
+                  style: TextStyle(
+                    color: FinanceSurface.ink(isDark: isDark),
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    fontFamily: 'JetBrainsMono',
                   ),
-                  const SizedBox(height: 12),
-                  _buildCountdownBadge(context, daysLeft),
-                ],
-              ),
+                ),
+                const SizedBox(height: 12),
+                _buildCountdownBadge(context, daysLeft, isDark: isDark),
+              ],
             ),
           ),
         ),
@@ -698,36 +706,53 @@ class SubscriptionManager extends StatelessWidget {
     );
   }
 
-  Widget _buildCycleBadge(bool isYearly) {
+  Widget _buildCycleBadge(bool isYearly, {required bool isDark}) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+        color: FinanceSurface.mutedInk(isDark: isDark).withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: FinanceSurface.border(isDark: isDark)),
       ),
       child: Text(
         isYearly ? "Y" : "M",
-        style: const TextStyle(color: Colors.white30, fontSize: 8, fontWeight: FontWeight.bold),
+        style: TextStyle(
+          color: FinanceSurface.mutedInk(isDark: isDark),
+          fontSize: 8,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
   }
 
-  Widget _buildCountdownBadge(BuildContext context, int days) {
+  Widget _buildCountdownBadge(
+    BuildContext context,
+    int days, {
+    required bool isDark,
+  }) {
     final l10n = AppLocalizations.of(context)!;
     final bool isSoon = days <= 3;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: isSoon ? Colors.red.withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
+        color: isSoon
+            ? Colors.red.withValues(alpha: 0.1)
+            : FinanceSurface.mutedInk(isDark: isDark).withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: isSoon ? Colors.red.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05)),
+        border: Border.all(
+          color: isSoon
+              ? Colors.red.withValues(alpha: 0.25)
+              : FinanceSurface.border(isDark: isDark),
+        ),
       ),
       child: Text(
         days == 0
             ? l10n.finance_subscription_due_today
             : l10n.finance_subscription_days_left(days),
         style: TextStyle(
-          color: isSoon ? Colors.redAccent : Colors.white54,
+          color: isSoon
+              ? Colors.redAccent
+              : FinanceSurface.mutedInk(isDark: isDark),
           fontSize: 8,
           fontWeight: FontWeight.w900,
           letterSpacing: 0.5,
@@ -760,10 +785,14 @@ class _NextMonthPlanSection extends StatelessWidget {
   const _NextMonthPlanSection({
     required this.financeBlock,
     required this.subs,
+    required this.isDark,
+    required this.cs,
   });
 
   final FinanceBlock financeBlock;
   final List<SubscriptionData> subs;
+  final bool isDark;
+  final ColorScheme cs;
 
   @override
   Widget build(BuildContext context) {
@@ -795,8 +824,8 @@ class _NextMonthPlanSection extends StatelessWidget {
                   children: [
                     Text(
                       l10n.finance_subscriptions_next_month_header,
-                      style: const TextStyle(
-                        color: EntryColors.financeSilverAccent,
+                      style: TextStyle(
+                        color: FinanceSurface.mutedInk(isDark: isDark),
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
@@ -805,8 +834,8 @@ class _NextMonthPlanSection extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       monthLabel,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: FinanceSurface.ink(isDark: isDark),
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                       ),
@@ -821,7 +850,7 @@ class _NextMonthPlanSection extends StatelessWidget {
                     Text(
                       l10n.finance_subscriptions_next_month_total,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: FinanceSurface.mutedInk(isDark: isDark),
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1.2,
@@ -830,10 +859,11 @@ class _NextMonthPlanSection extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       financeBlock.formatCurrency(planTotal),
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: FinanceSurface.ink(isDark: isDark),
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
+                        fontFamily: 'JetBrainsMono',
                       ),
                     ),
                   ],
@@ -845,19 +875,29 @@ class _NextMonthPlanSection extends StatelessWidget {
             Text(
               l10n.finance_subscriptions_next_month_empty,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.35),
+                color: FinanceSurface.mutedInk(isDark: isDark),
                 fontSize: 12,
                 height: 1.35,
               ),
             )
           else
-            ...items.map(
-              (entry) => _NextMonthPlanRow(
-                financeBlock: financeBlock,
-                sub: entry.sub,
-                due: entry.due,
-                planYear: planYear,
-                planMonth: planMonth,
+            Container(
+              decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
+              padding: const EdgeInsets.all(8),
+              child: Column(
+                children: items
+                    .map(
+                      (entry) => _NextMonthPlanRow(
+                        financeBlock: financeBlock,
+                        sub: entry.sub,
+                        due: entry.due,
+                        planYear: planYear,
+                        planMonth: planMonth,
+                        isDark: isDark,
+                        cs: cs,
+                      ),
+                    )
+                    .toList(),
               ),
             ),
         ],
@@ -873,6 +913,8 @@ class _NextMonthPlanRow extends StatelessWidget {
     required this.due,
     required this.planYear,
     required this.planMonth,
+    required this.isDark,
+    required this.cs,
   });
 
   final FinanceBlock financeBlock;
@@ -880,6 +922,8 @@ class _NextMonthPlanRow extends StatelessWidget {
   final DateTime due;
   final int planYear;
   final int planMonth;
+  final bool isDark;
+  final ColorScheme cs;
 
   Future<void> _confirmRemoveFromPlan(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
@@ -929,12 +973,11 @@ class _NextMonthPlanRow extends StatelessWidget {
     final dueLabel = DateFormat.MMMd(locale).format(due);
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.only(bottom: 4),
       child: Material(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(16),
+        color: Colors.transparent,
         child: InkWell(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           onTap: () => showSubscriptionEditor(
             context,
             financeBlock,
@@ -943,7 +986,7 @@ class _NextMonthPlanRow extends StatelessWidget {
             planMonth: planMonth,
           ),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
             child: Row(
               children: [
                 Expanded(
@@ -952,8 +995,8 @@ class _NextMonthPlanRow extends StatelessWidget {
                     children: [
                       Text(
                         sub.name,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: FinanceSurface.ink(isDark: isDark),
                           fontWeight: FontWeight.w700,
                           fontSize: 14,
                         ),
@@ -964,7 +1007,7 @@ class _NextMonthPlanRow extends StatelessWidget {
                       Text(
                         dueLabel,
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.45),
+                          color: FinanceSurface.mutedInk(isDark: isDark),
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                         ),
@@ -974,10 +1017,11 @@ class _NextMonthPlanRow extends StatelessWidget {
                 ),
                 Text(
                   financeBlock.formatCurrency(sub.amount),
-                  style: const TextStyle(
-                    color: EntryColors.financeSilverAccent,
+                  style: TextStyle(
+                    color: FinanceSurface.ink(isDark: isDark),
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
+                    fontFamily: 'JetBrainsMono',
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -987,7 +1031,7 @@ class _NextMonthPlanRow extends StatelessWidget {
                   icon: Icon(
                     Icons.close_rounded,
                     size: 18,
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: FinanceSurface.mutedInk(isDark: isDark),
                   ),
                   visualDensity: VisualDensity.compact,
                   padding: EdgeInsets.zero,

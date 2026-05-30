@@ -49,6 +49,26 @@ class MinioService {
     }
   }
 
+  /// Public URL for an object key (same layout as [uploadFileAtKey] return value).
+  String publicUrlForKey(String objectKey) {
+    final key = objectKey.replaceAll('\\', '/').trim();
+    if (endpoint.contains('amazonaws.com')) {
+      return 'https://$bucketName.s3.$region.amazonaws.com/$key';
+    }
+    final port = dotenv.env['S3_PORT'] ?? '443';
+    final proto =
+        (dotenv.env['S3_USE_SSL']?.toLowerCase() == 'true') ? 'https' : 'http';
+    final portString = (port == '443' || port == '80') ? '' : ':$port';
+    return '$proto://$endpoint$portString/$bucketName/$key';
+  }
+
+  /// Upload using the exact object key stored in Drift / Supabase (e.g. `personId/memories/foo.png`).
+  Future<String> uploadFileAtKey(File file, {required String objectKey}) async {
+    final key = objectKey.replaceAll('\\', '/').trim();
+    await minio.fPutObject(bucketName, key, file.path);
+    return publicUrlForKey(key);
+  }
+
   Future<String> uploadFile(File file, {String? fileName, String? subFolder}) async {
     final baseName = fileName ?? p.basename(file.path);
     final fullName = subFolder != null ? '$subFolder/$baseName' : baseName;
@@ -87,5 +107,65 @@ class MinioService {
 
   Future<void> deleteFile(String fileName) async {
     await minio.removeObject(bucketName, fileName);
+  }
+
+  /// Returns true if object exists in bucket.
+  Future<bool> objectExists(String objectName) async {
+    try {
+      await minio.statObject(bucketName, objectName);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  /// Lists object names under a prefix, e.g. `<userId>/memories/`.
+  Future<List<String>> listObjectNames({
+    required String prefix,
+    bool recursive = true,
+  }) async {
+    final names = <String>[];
+    try {
+      final stream = minio.listObjects(
+        bucketName,
+        prefix: prefix,
+        recursive: recursive,
+      );
+      await for (final chunk in stream) {
+        for (final obj in chunk.objects) {
+          final key = obj.key;
+          if (key != null && key.isNotEmpty) names.add(key);
+        }
+      }
+    } catch (e) {
+      appLog('MinioService listObjectNames failed ($prefix): $e');
+    }
+    return names;
+  }
+
+  /// Download an object to [outFile]. Returns true if it was written.
+  Future<bool> downloadToFile({
+    required String objectName,
+    required File outFile,
+  }) async {
+    try {
+      final parent = outFile.parent;
+      if (!await parent.exists()) {
+        await parent.create(recursive: true);
+      }
+      if (await outFile.exists()) {
+        return true;
+      }
+
+      final stream = await minio.getObject(bucketName, objectName);
+      final sink = outFile.openWrite();
+      await stream.pipe(sink);
+      await sink.flush();
+      await sink.close();
+      return await outFile.exists();
+    } catch (e) {
+      appLog('MinioService downloadToFile failed ($objectName): $e');
+      return false;
+    }
   }
 }

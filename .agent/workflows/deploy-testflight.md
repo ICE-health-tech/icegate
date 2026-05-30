@@ -53,12 +53,23 @@ Edit `pubspec.yaml` version or use:
 flutter clean && flutter pub get
 ```
 
-### 3. Build IPA for App Store / TestFlight
+### 3. Family Controls (Distribution) — required for Screen Time / app blocker
+
+The entitlements file stays `com.apple.developer.family-controls = true`. **Distribution vs Development** comes from your **provisioning profile**, not from editing the plist.
+
+1. Request approval (Account Holder): [Family Controls distribution request](https://developer.apple.com/contact/request/family-controls-distribution/) for bundle ID `duylong.art.icegate` (and each Screen Time extension ID if you add any).
+2. After **Assigned** status: [Certificates, Identifiers & Profiles](https://developer.apple.com/account/resources/identifiers/list) → `duylong.art.icegate` → Capabilities → enable **Family Controls (Distribution)** → Save.
+3. In Xcode: Runner target → **Signing & Capabilities** → confirm **Family Controls (Distribution)** (not Development only).
+4. **Product → Clean Build Folder**, quit Xcode, reopen. With automatic signing, Xcode regenerates App Store profiles.
+
+macOS target (`duylong.art.icegate`) does **not** include Family Controls — Mac blocking uses local process control, not the Screen Time API.
+
+### 4. Build IPA for App Store / TestFlight
 ```bash
 flutter build ipa --release --export-options-plist=ios/ExportOptions.plist
 ```
 
-### 4. Upload to TestFlight
+### 5. Upload to TestFlight
 
 **Option A: Using Apple ID**
 ```bash

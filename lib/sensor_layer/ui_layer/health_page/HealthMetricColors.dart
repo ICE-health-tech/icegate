@@ -17,9 +17,68 @@ abstract final class HealthMetricColors {
 
   static const Color progressGreen = Color(0xFF4CD964);
   static const Color cardBorder = Color(0x14FFFFFF);
+
+  /// MainShell Dynamic Island fill (dark).
+  static const Color shellIslandFill = Color(0xFF141A22);
+
+  /// Panel surfaces synced with MainShell — light: white panels, dark: island fill.
+  static BoxDecoration shellPanel(
+    ColorScheme cs, {
+    required bool isDark,
+    double radius = 18,
+    Color? accent,
+  }) {
+    return BoxDecoration(
+      color: isDark
+          ? shellIslandFill
+          : cs.surfaceContainerHighest.withValues(alpha: 0.92),
+      borderRadius: BorderRadius.circular(radius),
+      border: Border.all(
+        color: accent != null
+            ? accent.withValues(alpha: isDark ? 0.48 : 0.5)
+            : (isDark ? borderBright : cs.outline.withValues(alpha: 0.44)),
+        width: isDark ? 1.0 : 1.2,
+      ),
+    );
+  }
   static const Color tempAccent = Color(0xFF64D2FF);
   static const Color aqiModerate = Color(0xFFFFB703);
   static const Color linkAccent = Color(0xFF64D2FF);
+
+  /// Shared dashboard accent palette (health / finance / mind / projects).
+  static const Color pillarGreen = Color(0xFF34C759);
+  static const Color pillarBlue = Color(0xFF0A84FF);
+  static const Color pillarViolet = Color(0xFFBF5AF2);
+  static const Color pillarYellow = Color(0xFFFFD60A);
+  static const Color pillarOrange = Color(0xFFFF9500);
+
+  /// Health metric cards: subtle green outline.
+  static Color metricCardBorder({required bool isDark}) => isDark
+      ? progressGreen.withValues(alpha: 0.38)
+      : pillarGreen.withValues(alpha: 0.42);
+
+  static Color metricCardFill(ColorScheme cs, {required bool isDark}) => isDark
+      ? Color.alphaBlend(
+          pillarGreen.withValues(alpha: 0.04),
+          glassChip,
+        )
+      : cs.surfaceContainerHighest.withValues(alpha: 0.55);
+
+  static const List<Color> pillarAccents = [
+    pillarGreen,
+    pillarBlue,
+    pillarViolet,
+    pillarYellow,
+  ];
+
+  static Color pillarAccentAt(int index) =>
+      pillarAccents[index % pillarAccents.length];
+
+  static Color pillarCardTintAt(int index) =>
+      _cardTintForAccent(pillarAccentAt(index));
+
+  static Color _cardTintForAccent(Color accent) =>
+      Color.alphaBlend(accent.withValues(alpha: 0.16), const Color(0xFF0D1218));
 
   /// AQI value color (matches health + home weather pill).
   static Color aqiColor(int aqi) {
@@ -32,37 +91,8 @@ abstract final class HealthMetricColors {
   }
 
   /// Dark card fill per metric category.
-  static Color cardTintForId(String id) {
-    switch (id.toLowerCase()) {
-      case 'food':
-      case 'calories':
-      case 'net_calories':
-        return const Color(0xFF16221F);
-      case 'steps':
-        return const Color(0xFF141E28);
-      case 'weight':
-        return const Color(0xFF182129);
-      case 'water':
-        return const Color(0xFF152028);
-      case 'exercise':
-        return const Color(0xFF1E1A24);
-      case 'heart_rate':
-        return const Color(0xFF1F1B26);
-      case 'sleep':
-        return const Color(0xFF1C1828);
-      case 'focus':
-        return const Color(0xFF151D2A);
-      case 'oxygen':
-      case 'oxygen_saturation':
-        return const Color(0xFF182129);
-      case 'weather':
-        return const Color(0xFF1C1E22);
-      case 'air_quality':
-        return const Color(0xFF1A2218);
-      default:
-        return const Color(0xFF151A22);
-    }
-  }
+  static Color cardTintForId(String id) =>
+      _cardTintForAccent(accentForId(id));
 
   /// Icon / progress accent per metric.
   static Color accentForId(String id) {
@@ -70,30 +100,23 @@ abstract final class HealthMetricColors {
       case 'food':
       case 'calories':
       case 'net_calories':
-        return const Color(0xFF4CD964);
       case 'steps':
-        return const Color(0xFF34C759);
-      case 'weight':
-        return const Color(0xFF5AC8FA);
+      case 'air_quality':
+        return pillarGreen;
       case 'water':
-        return const Color(0xFF64D2FF);
-      case 'exercise':
-        return const Color(0xFFFF9F0A);
-      case 'heart_rate':
-        return const Color(0xFFFF375F);
-      case 'sleep':
-        return const Color(0xFFBF5AF2);
+      case 'weight':
       case 'focus':
-        return const Color(0xFF0A84FF);
       case 'oxygen':
       case 'oxygen_saturation':
-        return const Color(0xFF64D2FF);
+        return pillarBlue;
+      case 'sleep':
+      case 'heart_rate':
+        return pillarViolet;
+      case 'exercise':
       case 'weather':
-        return const Color(0xFFFFD60A);
-      case 'air_quality':
-        return const Color(0xFF30D158);
+        return pillarYellow;
       default:
-        return const Color(0xFF8E8E93);
+        return textSecondary;
     }
   }
 
@@ -110,32 +133,20 @@ abstract final class HealthMetricColors {
   }
 
   /// Home "4 phía cạnh" pillar card background.
-  static Color homePillarCardTint(String pillar) {
-    switch (pillar) {
-      case 'health':
-        return cardTintForId('steps');
-      case 'finance':
-        return cardTintForId('water');
-      case 'mind':
-        return cardTintForId('sleep');
-      case 'projects':
-        return const Color(0xFF1F1C18);
-      default:
-        return const Color(0xFF151A22);
-    }
-  }
+  static Color homePillarCardTint(String pillar) =>
+      _cardTintForAccent(homePillarAccent(pillar));
 
   /// Home pillar icon / glow accent.
   static Color homePillarAccent(String pillar) {
     switch (pillar) {
       case 'health':
-        return accentForId('steps');
+        return pillarGreen;
       case 'finance':
-        return accentForId('water');
+        return pillarBlue;
       case 'mind':
-        return accentForId('sleep');
+        return pillarViolet;
       case 'projects':
-        return accentForId('weather');
+        return pillarOrange;
       default:
         return textSecondary;
     }
@@ -174,6 +185,10 @@ abstract final class HealthMetricColors {
         return homePillarCardTint('projects');
       case 'focus':
         return cardTintForId('focus');
+      case 'google':
+        return const Color(0xFF1C1E22);
+      case 'integrations':
+        return cardTintForId('focus');
       default:
         return const Color(0xFF151A22);
     }
@@ -186,6 +201,10 @@ abstract final class HealthMetricColors {
         return aqiModerate;
       case 'weather':
         return tempAccent;
+      case 'google':
+        return const Color(0xFFFFD60A);
+      case 'integrations':
+        return linkAccent;
       case 'health':
         return homePillarAccent('health');
       case 'finance':

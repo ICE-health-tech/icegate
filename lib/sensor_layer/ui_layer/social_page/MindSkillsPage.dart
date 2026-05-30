@@ -1,20 +1,40 @@
-import 'dart:ui';
 import 'dart:math' as math;
 import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ice_music/ice_music.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
 
 class MindSkillsPage extends StatelessWidget {
-  const MindSkillsPage({super.key});
+  final String? projectId;
+  final String? altProjectId;
+  final String? projectTitle;
+  final String? startSkill;
+  final List<String>? startSkills;
+  final bool autoStartSession;
+
+  const MindSkillsPage({
+    super.key,
+    this.projectId,
+    this.altProjectId,
+    this.projectTitle,
+    this.startSkill,
+    this.startSkills,
+    this.autoStartSession = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +53,16 @@ class MindSkillsPage extends StatelessWidget {
           onPressed: () => context.pop(),
         ),
       ),
-      body: const MindSkillsView(showBackground: true, popOnSave: true),
+      body: MindSkillsView(
+        showBackground: true,
+        popOnSave: true,
+        projectId: projectId,
+        altProjectId: altProjectId,
+        projectTitle: projectTitle,
+        initialSkillName: startSkill,
+        initialSkillNames: startSkills,
+        autoStartSession: autoStartSession,
+      ),
     );
   }
 }
@@ -42,12 +71,24 @@ class MindSkillsView extends StatefulWidget {
   final bool showBackground;
   final bool popOnSave;
   final VoidCallback? onSessionLogged;
+  final String? projectId;
+  final String? altProjectId;
+  final String? projectTitle;
+  final String? initialSkillName;
+  final List<String>? initialSkillNames;
+  final bool autoStartSession;
 
   const MindSkillsView({
     super.key,
     required this.showBackground,
     required this.popOnSave,
     this.onSessionLogged,
+    this.projectId,
+    this.altProjectId,
+    this.projectTitle,
+    this.initialSkillName,
+    this.initialSkillNames,
+    this.autoStartSession = false,
   });
 
   @override
@@ -57,6 +98,9 @@ class MindSkillsView extends StatefulWidget {
 class _MindSkillsViewState extends State<MindSkillsView>
     with TickerProviderStateMixin {
   final AudioPlayer _sfxPlayer = AudioPlayer();
+  final AudioPlayer _sessionMusicPlayer = AudioPlayer();
+  StreamSubscription<void>? _musicCompleteSub;
+  Timer? _sessionFallbackTimer;
   final List<String> _sessionTracks = const [
     // Put your extracted tracks into `assets/sounds/` and keep names simple.
     // Example filenames:
@@ -71,6 +115,8 @@ class _MindSkillsViewState extends State<MindSkillsView>
   late final AnimationController _levelUpController;
   late final AnimationController _sessionPulseController;
   bool _sessionActive = false;
+  DateTime? _sessionStartedAt;
+  bool _isLoggingSession = false;
   late final AnimationController _selectFxController;
   int _selectFxSeed = 1;
   late final AnimationController _tripleRingController;
@@ -78,18 +124,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
   late final AnimationController _ringIntroController;
   String? _lastRingAddedSkill;
 
-  static const _defaultSkills = <String>[
-    'Meta Mental',
-    'Adaptation',
-    'Health',
-    'Presentation',
-    'Focus',
-    'Logic',
-    'Design',
-    'Syntax',
-    'Growth',
-    'Spirit',
-  ];
+  static const _defaultSkills = MindSkillCatalog.defaults;
 
   /// Const palette for custom skill icons (release builds cannot use IconData(cp)).
   static const _skillIconPalette = <IconData>[
@@ -115,15 +150,16 @@ class _MindSkillsViewState extends State<MindSkillsView>
   String? _loadedForPersonId;
   String? _loadedIconsForPersonId;
   String? _loadedHiddenDefaultsForPersonId;
+  bool _projectSkillsPreselected = false;
+  bool _routeSkillSelectionApplied = false;
   final Set<String> _hiddenDefaultSkillsLower = <String>{};
   final Map<String, int> _iconOverrideCodePoint = <String, int>{};
   final Map<String, int> _popTick = <String, int>{};
   Timer? _surgeTimer;
   Color _orbitColor = const Color(0xFFBFD0FF);
 
-  final _noteController = TextEditingController();
   final Set<String> _selected = <String>{};
-  double _minutes = 25;
+  static const int _fallbackSessionMinutes = 25;
 
   @override
   void initState() {
@@ -156,7 +192,178 @@ class _MindSkillsViewState extends State<MindSkillsView>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _applyRouteSkillSelection();
+    final personId = context.read<PersonBlock>().currentPersonID.value;
+    if (personId != null && personId.isNotEmpty) {
+      context.read<GrowthBlock>().ensurePersonSkillLibrary();
+    }
+  }
+
+  void _applyRouteSkillSelection() {
+    if (_routeSkillSelectionApplied) return;
+    _routeSkillSelectionApplied = true;
+
+    final routeNames = <String>[
+      ...?widget.initialSkillNames,
+      if (widget.initialSkillName != null &&
+          widget.initialSkillName!.trim().isNotEmpty)
+        widget.initialSkillName!.trim(),
+    ];
+    if (routeNames.isNotEmpty) {
+      final all = _allSkills();
+      final matched = <String>[];
+      for (final name in routeNames) {
+        final hit = all.where((s) => MindSkillCatalog.namesMatch(s, name));
+        if (hit.isNotEmpty) matched.add(hit.first);
+      }
+      if (matched.isEmpty) return;
+
+      setState(() {
+        _selected
+          ..clear()
+          ..addAll(matched);
+        _orbitColor = _skillColorFor(matched.last);
+      });
+
+      if (widget.autoStartSession) {
+        WidgetsBinding.instance.addPostFrameCallback((_) async {
+          if (!mounted || _sessionActive) return;
+          await _setSessionActive(true);
+        });
+      }
+      return;
+    }
+
+    _preselectProjectSkillsOnce();
+  }
+
+  void _preselectProjectSkillsOnce() {
+    if (_projectSkillsPreselected || widget.projectId == null) return;
+    _projectSkillsPreselected = true;
+    final growthBlock = context.read<GrowthBlock>();
+    final linked = growthBlock.skillsForProject(
+      widget.projectId!,
+      altProjectId: widget.altProjectId,
+    );
+    if (linked.isEmpty) return;
+    setState(() {
+      for (final skill in linked) {
+        final name = skill.skillName;
+        if (_allSkills().any((s) => MindSkillCatalog.namesMatch(s, name))) {
+          _selected.add(
+            _allSkills().firstWhere((s) => MindSkillCatalog.namesMatch(s, name)),
+          );
+        }
+      }
+    });
+  }
+
+  Future<int> _grantSkillXpForSession(
+    List<String> sessionSkills,
+    int minutes,
+  ) async {
+    if (sessionSkills.isEmpty || minutes <= 0) return 0;
+    final growthBlock = context.read<GrowthBlock>();
+    final projectId = widget.projectId;
+    if (projectId != null && projectId.isNotEmpty) {
+      return growthBlock.grantSessionXpToProjectSkills(
+        projectId: projectId,
+        skillNames: sessionSkills,
+        minutes: minutes,
+        altProjectId: widget.altProjectId,
+      );
+    }
+    return growthBlock.grantSessionXpToMindSkills(
+      skillNames: sessionSkills,
+      minutes: minutes,
+    );
+  }
+
+  Future<int> _logSkillSession({
+    required MindBlock mindBlock,
+    required String personId,
+    required String? tenantId,
+    required int baseMood,
+    required int minutes,
+    String? note,
+  }) async {
+    if (_selected.isEmpty || minutes <= 0) return 0;
+
+    final skills = _selected.toList();
+    final boostedMood = _computeBoostedMood(
+      baseMood,
+      minutes.toDouble(),
+      skills.length,
+    );
+    final activities = <String>[
+      ...skills.map((s) => 'skill:$s'),
+      'learn:${minutes}m',
+    ];
+    final projectId = widget.projectId;
+    if (projectId != null && projectId.isNotEmpty) {
+      activities.add('project:$projectId');
+    }
+    final trimmedNote = note?.trim();
+
+    await mindBlock.addMindLog(
+      moodScore: boostedMood,
+      activities: activities,
+      note: trimmedNote != null && trimmedNote.isNotEmpty ? trimmedNote : null,
+      personId: personId,
+      tenantId: tenantId,
+    );
+
+    return _grantSkillXpForSession(skills, minutes);
+  }
+
+  Future<void> _finishTimedSession({
+    required MindBlock mindBlock,
+    required String personId,
+    required String? tenantId,
+    required int baseMood,
+    bool forceLog = false,
+  }) async {
+    final started = _sessionStartedAt;
+    _sessionStartedAt = null;
+    if (started == null || _isLoggingSession) return;
+
+    final elapsed = DateTime.now().difference(started);
+    if (!forceLog && elapsed.inSeconds < 5) return;
+
+    final minutes = (elapsed.inSeconds / 60).ceil().clamp(1, 180);
+    _isLoggingSession = true;
+    try {
+      final totalXp = await _logSkillSession(
+        mindBlock: mindBlock,
+        personId: personId,
+        tenantId: tenantId,
+        baseMood: baseMood,
+        minutes: minutes,
+      );
+      if (!mounted) return;
+      _levelUpController.forward(from: 0);
+      unawaited(context.read<GrowthBlock>().syncSkills());
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            l10n.mind_skills_session_logged(minutes, totalXp),
+          ),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      widget.onSessionLogged?.call();
+    } finally {
+      _isLoggingSession = false;
+    }
+  }
+
+  @override
   void dispose() {
+    _cancelSessionEndListeners();
+    _sessionMusicPlayer.dispose();
     _sfxPlayer.dispose();
     _spinController.dispose();
     _levelUpController.dispose();
@@ -165,25 +372,61 @@ class _MindSkillsViewState extends State<MindSkillsView>
     _tripleRingController.dispose();
     _ringIntroController.dispose();
     _surgeTimer?.cancel();
-    _noteController.dispose();
     super.dispose();
   }
 
+  void _cancelSessionEndListeners() {
+    _musicCompleteSub?.cancel();
+    _musicCompleteSub = null;
+    _sessionFallbackTimer?.cancel();
+    _sessionFallbackTimer = null;
+  }
+
   Future<void> _playSessionMusicIfAny() async {
-    if (_sessionTracks.isEmpty) return;
+    _cancelSessionEndListeners();
+    if (_sessionTracks.isEmpty) {
+      _startSessionFallbackTimer();
+      return;
+    }
     final pick = math.Random().nextInt(_sessionTracks.length);
     _currentSessionTrack = _sessionTracks[pick];
     try {
-      await IceMusic.instance.playLoopAsset(_currentSessionTrack!, volume: 0.25);
+      await _sessionMusicPlayer.setReleaseMode(ReleaseMode.stop);
+      _musicCompleteSub = _sessionMusicPlayer.onPlayerComplete.listen((_) {
+        if (!mounted || !_sessionActive) return;
+        unawaited(_setSessionActive(false, forceLog: true));
+      });
+      await _sessionMusicPlayer.setVolume(0.25);
+      await _sessionMusicPlayer.play(AssetSource(_currentSessionTrack!));
+      final duration = await _sessionMusicPlayer.getDuration();
+      if (duration != null && duration > Duration.zero) {
+        _sessionFallbackTimer = Timer(duration + const Duration(seconds: 1), () {
+          if (!mounted || !_sessionActive) return;
+          unawaited(_setSessionActive(false, forceLog: true));
+        });
+      }
     } catch (_) {
-      // If the asset is missing, just ignore (UI/animations still work).
+      _startSessionFallbackTimer();
     }
   }
 
+  void _startSessionFallbackTimer() {
+    _sessionFallbackTimer?.cancel();
+    _sessionFallbackTimer = Timer(
+      const Duration(minutes: _fallbackSessionMinutes),
+      () {
+        if (!mounted || !_sessionActive) return;
+        unawaited(_setSessionActive(false, forceLog: true));
+      },
+    );
+  }
+
   Future<void> _stopSessionMusic() async {
+    _cancelSessionEndListeners();
     try {
-      await IceMusic.instance.stop();
+      await _sessionMusicPlayer.stop();
     } catch (_) {}
+    _currentSessionTrack = null;
   }
 
   Future<void> _playSfxSafe(String asset, {double volume = 1.0}) async {
@@ -208,8 +451,31 @@ class _MindSkillsViewState extends State<MindSkillsView>
     _ringIntroController.forward(from: 0);
   }
 
-  Future<void> _setSessionActive(bool active) async {
+  Future<void> _setSessionActive(bool active, {bool forceLog = false}) async {
     if (_sessionActive == active) return;
+
+    if (active && _selected.isEmpty) {
+      if (!mounted) return;
+      final l10n = AppLocalizations.of(context)!;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.mind_skills_session_pick_skills),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      return;
+    }
+
+    final personBlock = context.read<PersonBlock>();
+    final mindBlock = context.read<MindBlock>();
+    final personId = personBlock.currentPersonID.value;
+    final tenantId = personBlock.currentTenantID.value;
+    final baseMood = mindBlock.latestMoodLog.value?.moodScore ?? 3;
+
+    if (active) {
+      _sessionStartedAt = DateTime.now();
+    }
+
     setState(() => _sessionActive = active);
 
     // Make the ring feel “powered up” while a session is active.
@@ -226,6 +492,15 @@ class _MindSkillsViewState extends State<MindSkillsView>
     } else {
       _sessionPulseController.stop();
       await _stopSessionMusic();
+      if (personId != null && personId.isNotEmpty) {
+        await _finishTimedSession(
+          mindBlock: mindBlock,
+          personId: personId,
+          tenantId: tenantId,
+          baseMood: baseMood,
+          forceLog: forceLog,
+        );
+      }
     }
   }
 
@@ -650,12 +925,24 @@ class _MindSkillsViewState extends State<MindSkillsView>
     await prefs.setStringList('mind_custom_skills_$personId', _customSkills);
   }
 
-  List<String> _allSkills() => [
-        ..._defaultSkills.where(
-          (s) => !_hiddenDefaultSkillsLower.contains(s.toLowerCase()),
-        ),
-        ..._customSkills,
-      ];
+  List<String> _allSkills() {
+    final hidden = _hiddenDefaultSkillsLower;
+    final growth = context.read<GrowthBlock>();
+    final base = growth
+        .personSkillNames()
+        .where((s) => !hidden.contains(s.toLowerCase()))
+        .toList();
+    final extra = _customSkills.where(
+      (c) => !base.any((b) => MindSkillCatalog.namesMatch(b, c)),
+    );
+    if (base.isNotEmpty) {
+      return MindSkillCatalog.dedupeNames([...base, ...extra]);
+    }
+    return MindSkillCatalog.dedupeNames([
+      ..._defaultSkills.where((s) => !hidden.contains(s.toLowerCase())),
+      ..._customSkills,
+    ]);
+  }
 
   Future<void> _promptAddSkill(BuildContext context, String personId) async {
     final controller = TextEditingController();
@@ -725,6 +1012,9 @@ class _MindSkillsViewState extends State<MindSkillsView>
       _selected.add(normalized);
     });
     await _persistCustomSkills(personId);
+    if (mounted) {
+      await context.read<GrowthBlock>().ensurePersonLibrarySkill(normalized);
+    }
   }
 
   int _computeBoostedMood(int baseMood, double minutes, int selectedCount) {
@@ -732,213 +1022,187 @@ class _MindSkillsViewState extends State<MindSkillsView>
     return (baseMood + extra).clamp(1, 5);
   }
 
-  Future<void> _openSessionSheet({
-    required BuildContext context,
-    required MindBlock mindBlock,
-    required String personId,
-    required String? tenantId,
-    required int baseMood,
-  }) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      useRootNavigator: true,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (sheetContext) {
-        final colorScheme = Theme.of(sheetContext).colorScheme;
-        final boosted =
-            _computeBoostedMood(baseMood, _minutes, _selected.length);
+  SkillProtocol? _skillDataForName(String name, GrowthBlock growth) {
+    for (final s in growth.personLibrarySkills()) {
+      if (MindSkillCatalog.namesMatch(s.skillName, name)) return s;
+    }
+    return null;
+  }
 
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(sheetContext).viewInsets.bottom,
-          ),
-          child: ClipRRect(
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 26, sigmaY: 26),
-              child: Container(
-                padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
-                decoration: BoxDecoration(
-                  color: colorScheme.surface.withValues(alpha: 0.38),
-                  borderRadius:
-                      const BorderRadius.vertical(top: Radius.circular(28)),
-                  border: Border.all(
-                    color: colorScheme.onSurface.withValues(alpha: 0.10),
+  void _toggleSkillSelection(String skill) {
+    final selected = _selected.contains(skill);
+    setState(() {
+      if (selected) {
+        _selected.remove(skill);
+      } else {
+        _selected.add(skill);
+        _bumpTilePop(skill);
+        _orbitColor = _skillColorFor(skill);
+        _triggerOrbitRingsIntro(skill);
+      }
+    });
+    if (!selected) {
+      _triggerRingSurge();
+      _triggerSelectFx(skill);
+      HapticFeedback.lightImpact();
+      _playSfxSafe('sounds/select.wav', volume: 0.8);
+    }
+  }
+
+  String _proficiencyLabel(String raw) {
+    if (raw.isEmpty) return 'Beginner';
+    return raw[0].toUpperCase() + raw.substring(1);
+  }
+
+  Widget _buildOrbitRing(double size, double ringProgress) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([
+        _spinController,
+        _levelUpController,
+        _sessionPulseController,
+        _selectFxController,
+        _tripleRingController,
+        _ringIntroController,
+      ]),
+      builder: (context, child) {
+        final spinMultiplier = _sessionActive ? 2.2 : 1.0;
+        final spin = (_spinController.value * math.pi * 2) * spinMultiplier;
+        final levelUpBurst =
+            Curves.easeOutCubic.transform(_levelUpController.value);
+        final sessionPulse = _sessionActive
+            ? (0.18 + (0.38 * _sessionPulseController.value))
+            : 0.0;
+        final burst = (levelUpBurst + sessionPulse).clamp(0.0, 1.0);
+        final tripleT = Curves.easeOutCubic.transform(_tripleRingController.value);
+        final introT = Curves.easeOutCubic.transform(_ringIntroController.value);
+
+        return RepaintBoundary(
+          child: SizedBox(
+            width: size,
+            height: size,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  size: Size.square(size),
+                  painter: _SkillOrbitPainter(
+                    progress: ringProgress,
+                    rotation: spin,
+                    burst: burst,
+                    color: _orbitColor,
+                    tripleT: tripleT,
+                    tripleColors: _tripleRingColors,
+                    selectedSkills: _selected.toList(growable: false),
+                    skillColorFor: _skillColorFor,
+                    skillElementFor: _skillElementFor,
+                    introT: introT,
+                    lastAddedSkill: _lastRingAddedSkill,
                   ),
                 ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            color:
-                                colorScheme.primary.withValues(alpha: 0.14),
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color:
-                                  colorScheme.primary.withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Icon(
-                            Icons.auto_awesome_rounded,
-                            color: colorScheme.primary,
-                            size: 18,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'START SESSION'.toUpperCase(),
-                                style: TextStyle(
-                                  color: colorScheme.onSurface
-                                      .withValues(alpha: 0.6),
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 2,
-                                ),
-                              ),
-                              Text(
-                                '${_selected.length} skills • ${_minutes.round()} min',
-                                style: TextStyle(
-                                  color: colorScheme.onSurface,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 10,
-                            vertical: 8,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.primary.withValues(alpha: 0.12),
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(
-                              color:
-                                  colorScheme.primary.withValues(alpha: 0.25),
-                            ),
-                          ),
-                          child: Text(
-                            'MOOD → $boosted',
-                            style: TextStyle(
-                              color: colorScheme.onSurface,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: 1.1,
-                            ),
-                          ),
+                if (_selectFxController.value > 0.001)
+                  IgnorePointer(
+                    child: CustomPaint(
+                      size: Size.square(size),
+                      painter: _SkillSelectFxPainter(
+                        t: _selectFxController.value,
+                        seed: _selectFxSeed,
+                      ),
+                    ),
+                  ),
+                InkWell(
+                  onTap: () async {
+                    await _setSessionActive(!_sessionActive, forceLog: false);
+                    _triggerTripleRingIfReady();
+                  },
+                  borderRadius: BorderRadius.circular(48),
+                  child: Container(
+                    width: size * 0.22,
+                    height: size * 0.22,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF41E3D0).withValues(alpha: 0.22),
+                          blurRadius: 26,
+                          spreadRadius: 6,
                         ),
                       ],
                     ),
-                    const SizedBox(height: 14),
-                    Text(
-                      'DURATION'.toUpperCase(),
-                      style: TextStyle(
-                        color:
-                            colorScheme.onSurface.withValues(alpha: 0.55),
-                        fontSize: 10,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
+                    child: Image.asset(
+                      'assets/images/crystal_logo.png',
+                      fit: BoxFit.contain,
                     ),
-                    Slider(
-                      value: _minutes,
-                      min: 5,
-                      max: 120,
-                      divisions: 23,
-                      label: '${_minutes.round()} min',
-                      onChanged: (v) => setState(() => _minutes = v),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      controller: _noteController,
-                      maxLines: 3,
-                      decoration: InputDecoration(
-                        hintText: 'What did you learn?',
-                        filled: true,
-                        fillColor:
-                            colorScheme.onSurface.withValues(alpha: 0.06),
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide(
-                            color:
-                                colorScheme.onSurface.withValues(alpha: 0.10),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    SizedBox(
-                      height: 52,
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: _selected.isEmpty
-                            ? null
-                            : () async {
-                                final boostedMood = _computeBoostedMood(
-                                  baseMood,
-                                  _minutes,
-                                  _selected.length,
-                                );
-                                final activities = <String>[
-                                  ..._selected.map((s) => 'skill:$s'),
-                                  'learn:${_minutes.round()}m',
-                                ];
-                                await mindBlock.addMindLog(
-                                  moodScore: boostedMood,
-                                  activities: activities,
-                                  note: _noteController.text.trim(),
-                                  personId: personId,
-                                  tenantId: tenantId,
-                                );
-                                if (!mounted) return;
-                                _levelUpController.forward(from: 0);
-                                Navigator.of(sheetContext).pop();
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('Skill session logged.'),
-                                    behavior: SnackBarBehavior.floating,
-                                  ),
-                                );
-                                _noteController.clear();
-                                widget.onSessionLogged?.call();
-                                if (widget.popOnSave && context.canPop()) {
-                                  context.pop();
-                                }
-                              },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: colorScheme.primary,
-                          foregroundColor: colorScheme.onPrimary,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(18),
-                          ),
-                        ),
-                        child: const Text(
-                          'LOG SESSION',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 1.4,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
+              ],
             ),
           ),
+        );
+      },
+    );
+  }
+
+  Widget _buildSkillStatusList({
+    required BuildContext context,
+    required String personId,
+    required List<String> skillNames,
+    required AppLocalizations l10n,
+    required ColorScheme colorScheme,
+  }) {
+    final growth = context.read<GrowthBlock>();
+    final mindBlock = context.read<MindBlock>();
+
+    return StreamBuilder<List<MindLogData>>(
+      stream: mindBlock.watchMindLogs(personId),
+      builder: (context, logSnapshot) {
+        final streakIndex =
+            SkillPracticeStreak.buildDayIndex(logSnapshot.data ?? []);
+
+        return ListView.separated(
+          padding: const EdgeInsets.only(bottom: 8),
+          itemCount: skillNames.length + 1,
+          separatorBuilder: (_, __) => const SizedBox(height: 8),
+          itemBuilder: (context, index) {
+            if (index == skillNames.length) {
+              return OutlinedButton.icon(
+                onPressed: () => _promptAddSkill(context, personId),
+                icon: const Icon(Icons.add_rounded, size: 18),
+                label: Text(l10n.mind_skills_add_skill),
+                style: OutlinedButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              );
+            }
+
+            final name = skillNames[index];
+            final data = _skillDataForName(name, growth);
+            final selected = _selected.contains(name);
+            final streak = SkillPracticeStreak.streakFor(streakIndex, name);
+            final accent = HealthMetricColors.pillarAccentAt(index);
+            final inSession = _sessionActive && selected;
+
+            return _MindSkillStatusRow(
+              name: name,
+              skill: data,
+              accent: accent,
+              selected: selected,
+              inSession: inSession,
+              streak: streak,
+              l10n: l10n,
+              proficiencyLabel: _proficiencyLabel(
+                data?.proficiencyLevel ?? 'beginner',
+              ),
+              onTap: () => _toggleSkillSelection(name),
+              onLongPress: () => _editSkillMenu(
+                context,
+                personId: personId,
+                skill: name,
+              ),
+            );
+          },
         );
       },
     );
@@ -947,14 +1211,11 @@ class _MindSkillsViewState extends State<MindSkillsView>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Watch((context) {
-      final personBlock = context.read<PersonBlock>();
-      final mindBlock = context.read<MindBlock>();
-
-      final personId = personBlock.currentPersonID.value;
-      final tenantId = personBlock.currentTenantID.value;
+      final l10n = AppLocalizations.of(context)!;
+      final personId =
+          context.read<PersonBlock>().currentPersonID.value;
       if (personId == null || personId.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
@@ -962,27 +1223,71 @@ class _MindSkillsViewState extends State<MindSkillsView>
       _ensureHiddenDefaultsLoaded(personId);
       _ensureSkillIconsLoaded(personId);
 
-      final baseMood = mindBlock.latestMoodLog.value?.moodScore ?? 3;
-
       final skills = _allSkills();
-      final ringProgress = ((_minutes / 90) + (_selected.length / 10))
-          .clamp(0.08, 1.0)
-          .toDouble();
+      final ringProgress = _sessionActive
+          ? 0.72
+          : ((_fallbackSessionMinutes / 90) + (_selected.length / 10))
+              .clamp(0.08, 1.0)
+              .toDouble();
 
       final focusTitle = _selected.isEmpty
           ? 'PICK SKILL'
           : (_selected.length == 1
               ? _selected.first.toUpperCase()
               : '${_selected.length} SKILLS');
-      final focusSubtitle = _selected.isEmpty
-          ? 'TAP A TILE BELOW'
-          : 'SESSION READY';
+      final focusSubtitle = _sessionActive
+          ? l10n.mind_skills_session_listening
+              : _selected.isEmpty
+              ? (widget.projectId != null
+                  ? l10n.mind_skills_tap_list_project
+                  : l10n.mind_skills_tap_list)
+              : l10n.mind_skills_session_tap_start;
 
       final content = SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 18),
           child: Column(
             children: [
+              if (widget.projectId != null) ...[
+                Container(
+                  width: double.infinity,
+                  margin: const EdgeInsets.only(bottom: 8),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 8,
+                  ),
+                  decoration: BoxDecoration(
+                    color: HealthMetricColors.glassChip,
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(color: HealthMetricColors.cardBorder),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.folder_special_rounded,
+                        size: 16,
+                        color: colorScheme.primary.withValues(alpha: 0.85),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.projectTitle != null &&
+                                  widget.projectTitle!.isNotEmpty
+                              ? 'Project · ${widget.projectTitle}'
+                              : 'Project skills linked',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            color: colorScheme.onSurface.withValues(alpha: 0.75),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
               Center(
                 child: Text(
                   focusTitle,
@@ -1010,227 +1315,34 @@ class _MindSkillsViewState extends State<MindSkillsView>
                 ),
               ),
               const SizedBox(height: 6),
-
-              // Make the ring bigger and keep skills row lower.
+              SizedBox(
+                height: widget.showBackground ? 220 : 168,
+                child: Center(child: _buildOrbitRing(
+                  widget.showBackground ? 220 : 168,
+                  ringProgress,
+                )),
+              ),
+              const SizedBox(height: 12),
+              Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  l10n.mind_skills_my_list,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                    color: colorScheme.onSurface.withValues(alpha: 0.55),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 8),
               Expanded(
-                child: Center(
-                  child: AnimatedBuilder(
-                    animation: Listenable.merge([
-                      _spinController,
-                      _levelUpController,
-                      _sessionPulseController,
-                      _selectFxController,
-                      _tripleRingController,
-                      _ringIntroController,
-                    ]),
-                    builder: (context, child) {
-                      final spinMultiplier = _sessionActive ? 2.2 : 1.0;
-                      final spin =
-                          (_spinController.value * math.pi * 2) * spinMultiplier;
-
-                      final levelUpBurst =
-                          Curves.easeOutCubic.transform(_levelUpController.value);
-                      final sessionPulse = _sessionActive
-                          ? (0.18 + (0.38 * _sessionPulseController.value))
-                          : 0.0;
-                      final burst = (levelUpBurst + sessionPulse).clamp(0.0, 1.0);
-                      final tripleT = Curves.easeOutCubic.transform(
-                        _tripleRingController.value,
-                      );
-                      final introT = Curves.easeOutCubic.transform(
-                        _ringIntroController.value,
-                      );
-
-                      return RepaintBoundary(
-                        child: SizedBox(
-                          width: 320,
-                          height: 320,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              CustomPaint(
-                                size: const Size.square(320),
-                                painter: _SkillOrbitPainter(
-                                  progress: ringProgress,
-                                  rotation: spin,
-                                  burst: burst,
-                                  color: _orbitColor,
-                                  tripleT: tripleT,
-                                  tripleColors: _tripleRingColors,
-                                  selectedSkills: _selected.toList(growable: false),
-                                  skillColorFor: _skillColorFor,
-                                  skillElementFor: _skillElementFor,
-                                  introT: introT,
-                                  lastAddedSkill: _lastRingAddedSkill,
-                                ),
-                              ),
-                              if (_selectFxController.value > 0.001)
-                                IgnorePointer(
-                                  child: CustomPaint(
-                                    size: const Size.square(320),
-                                    painter: _SkillSelectFxPainter(
-                                      t: _selectFxController.value,
-                                      seed: _selectFxSeed,
-                                    ),
-                                  ),
-                                ),
-                              if (burst > 0.001)
-                                Opacity(
-                                  opacity: (1 - burst).clamp(0.0, 1.0),
-                                  child: Transform.scale(
-                                    scale: 1.0 + (burst * 0.12),
-                                    child: Container(
-                                      width: 260,
-                                      height: 260,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFFBFD0FF)
-                                                .withValues(alpha: 0.28),
-                                            blurRadius: 38,
-                                            spreadRadius: 6,
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-                              // Center icon
-                              Column(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  InkWell(
-                                    onTap: () async {
-                                      await _setSessionActive(!_sessionActive);
-                                      _triggerTripleRingIfReady();
-                                    },
-                                    onLongPress: () => _openSessionSheet(
-                                      context: context,
-                                      mindBlock: mindBlock,
-                                      personId: personId,
-                                      tenantId: tenantId,
-                                      baseMood: baseMood,
-                                    ),
-                                    borderRadius: BorderRadius.circular(48),
-                                    child: Container(
-                                      width: 70,
-                                      height: 70,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: const Color(0xFF41E3D0)
-                                                .withValues(alpha: 0.22),
-                                            blurRadius: 26,
-                                            spreadRadius: 6,
-                                          ),
-                                        ],
-                                      ),
-                                      child: Image.asset(
-                                        'assets/images/iceflowerlogo.png',
-                                        fit: BoxFit.contain,
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
-              ),
-
-              const SizedBox(height: 10),
-              SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton.icon(
-                  onPressed: _selected.isEmpty
-                      ? null
-                      : () => _openSessionSheet(
-                            context: context,
-                            mindBlock: mindBlock,
-                            personId: personId,
-                            tenantId: tenantId,
-                            baseMood: baseMood,
-                          ),
-                  icon: const Icon(Icons.play_arrow_rounded, size: 22),
-                  label: const Text(
-                    'LOG SESSION',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 1.2,
-                    ),
-                  ),
-                  style: FilledButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                    ),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 98,
-                child: ListView.separated(
-                  scrollDirection: Axis.horizontal,
-                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                  itemCount: skills.length + 1,
-                  separatorBuilder: (_, __) => const SizedBox(width: 10),
-                  itemBuilder: (context, idx) {
-                    if (idx == skills.length) {
-                    return SizedBox(
-                        width: 86,
-                        child: _SkillTile(
-                          label: 'New',
-                          selected: false,
-                          onTap: () => _promptAddSkill(context, personId),
-                          iconOverride: Icons.add_rounded,
-                        ),
-                      );
-                    }
-
-                    final s = skills[idx];
-                    final selected = _selected.contains(s);
-                    return SizedBox(
-                      width: 86,
-                      child: _SkillTile(
-                        label: s,
-                        selected: selected,
-                        popTick: _popTick[s] ?? 0,
-                        onTap: () {
-                          setState(() {
-                            if (selected) {
-                              _selected.remove(s);
-                            } else {
-                              _selected.add(s);
-                              _bumpTilePop(s);
-                              _orbitColor = _skillColorFor(s);
-                              _triggerOrbitRingsIntro(s);
-                            }
-                          });
-                          if (!selected) {
-                            _triggerRingSurge();
-                            _triggerSelectFx(s);
-                            HapticFeedback.lightImpact();
-                            _playSfxSafe('sounds/select.wav', volume: 0.8);
-                          }
-                        },
-                      onLongPress: () => _editSkillMenu(
-                          context,
-                          personId: personId,
-                          skill: s,
-                        ),
-                      iconOverride: _iconForSkill(s),
-                        showDeleteHint: _customSkills.contains(s),
-                      ),
-                    );
-                  },
+                child: _buildSkillStatusList(
+                  context: context,
+                  personId: personId,
+                  skillNames: skills,
+                  l10n: l10n,
+                  colorScheme: colorScheme,
                 ),
               ),
           ],
@@ -1242,9 +1354,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
 
       return Stack(
         children: [
-          Container(
-            color: isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5),
-          ),
+          Container(color: colorScheme.surface),
           content,
         ],
       );
@@ -1252,9 +1362,210 @@ class _MindSkillsViewState extends State<MindSkillsView>
   }
 }
 
+class _MindSkillStatusRow extends StatelessWidget {
+  const _MindSkillStatusRow({
+    required this.name,
+    required this.skill,
+    required this.accent,
+    required this.selected,
+    required this.inSession,
+    required this.streak,
+    required this.l10n,
+    required this.proficiencyLabel,
+    required this.onTap,
+    required this.onLongPress,
+  });
+
+  final String name;
+  final SkillProtocol? skill;
+  final Color accent;
+  final bool selected;
+  final bool inSession;
+  final int streak;
+  final AppLocalizations l10n;
+  final String proficiencyLabel;
+  final VoidCallback onTap;
+  final VoidCallback onLongPress;
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    final level = skill?.levelIndex ?? 1;
+    final xp = skill?.practicePoints ?? 0;
+    final xpRemaining = skill?.xpToNextLevel ?? 100;
+    final progress = skill?.levelProgress ?? 0.0;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        onLongPress: onLongPress,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+          decoration: BoxDecoration(
+            color: selected
+                ? accent.withValues(alpha: 0.14)
+                : cs.onSurface.withValues(alpha: 0.03),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected
+                  ? accent.withValues(alpha: 0.45)
+                  : cs.onSurface.withValues(alpha: 0.08),
+            ),
+          ),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 40,
+                height: 40,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: progress,
+                      strokeWidth: 3,
+                      backgroundColor: cs.onSurface.withValues(alpha: 0.08),
+                      color: accent,
+                    ),
+                    Text(
+                      '$level',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        color: accent,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w900,
+                              fontSize: 14,
+                              letterSpacing: -0.2,
+                            ),
+                          ),
+                        ),
+                        if (inSession)
+                          _statusChip(
+                            l10n.mind_skills_status_in_session,
+                            Colors.orange.shade700,
+                            Colors.orange.shade50,
+                          )
+                        else if (selected)
+                          _statusChip(
+                            l10n.mind_skills_status_selected,
+                            cs.primary,
+                            cs.primary.withValues(alpha: 0.12),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      '${l10n.mind_skills_level_short(level)} · $proficiencyLabel',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: cs.onSurface.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(3),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 3,
+                        backgroundColor: cs.onSurface.withValues(alpha: 0.06),
+                        color: accent.withValues(alpha: 0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.local_fire_department_rounded,
+                          size: 13,
+                          color: streak > 0
+                              ? Colors.orange.shade600
+                              : cs.onSurface.withValues(alpha: 0.25),
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          streak > 0
+                              ? l10n.project_skill_streak_days(streak)
+                              : l10n.project_skill_streak_none,
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w700,
+                            color: streak > 0
+                                ? Colors.orange.shade700
+                                : cs.onSurface.withValues(alpha: 0.38),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            l10n.project_skill_xp_hint(xp, xpRemaining),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                              color: cs.onSurface.withValues(alpha: 0.45),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _statusChip(String label, Color fg, Color bg) {
+    return Container(
+      margin: const EdgeInsets.only(left: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: fg.withValues(alpha: 0.25)),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 9,
+          fontWeight: FontWeight.w800,
+          color: fg,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+}
+
 class _SkillTile extends StatelessWidget {
   final String label;
   final bool selected;
+  final Color accent;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
   final IconData? iconOverride;
@@ -1264,6 +1575,7 @@ class _SkillTile extends StatelessWidget {
   const _SkillTile({
     required this.label,
     required this.selected,
+    required this.accent,
     required this.onTap,
     this.onLongPress,
     this.iconOverride,
@@ -1275,11 +1587,11 @@ class _SkillTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final border = selected
-        ? const Color(0xFFBFD0FF).withValues(alpha: 0.55)
-        : cs.onSurface.withValues(alpha: 0.10);
+        ? accent.withValues(alpha: 0.55)
+        : accent.withValues(alpha: 0.22);
     final bg = selected
-        ? const Color(0xFFBFD0FF).withValues(alpha: 0.12)
-        : cs.surface.withValues(alpha: 0.12);
+        ? accent.withValues(alpha: 0.16)
+        : accent.withValues(alpha: 0.08);
 
     final icon = iconOverride ??
         switch (label.toLowerCase()) {
@@ -1321,7 +1633,7 @@ class _SkillTile extends StatelessWidget {
               boxShadow: selected
                   ? [
                       BoxShadow(
-                        color: const Color(0xFFBFD0FF).withValues(alpha: 0.18),
+                        color: accent.withValues(alpha: 0.22),
                         blurRadius: 18,
                         spreadRadius: 1,
                       ),
@@ -1336,8 +1648,8 @@ class _SkillTile extends StatelessWidget {
                   icon,
                   size: 18,
                   color: selected
-                      ? const Color(0xFFBFD0FF)
-                      : cs.onSurface.withValues(alpha: 0.65),
+                      ? accent
+                      : accent.withValues(alpha: 0.72),
                 ),
                 const SizedBox(height: 8),
                 Text(

@@ -308,13 +308,12 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       final success = localPath != null && localPath.isNotEmpty;
 
       if (success) {
-        // Evict Flutter's image cache for this path so the UI reloads from disk
-        final cacheKey = FileImage(File(localPath));
-        imageCache.evict(cacheKey);
+        imageCache.evict(FileImage(File(localPath)));
 
         final personBlock = context.read<PersonBlock>();
+        final remoteUrl = objectBlock.userObjectResource.value.avatarImage;
         personBlock.setAvatarImage(
-          remoteUrl: objectBlock.userObjectResource.value.avatarImage,
+          remoteUrl: remoteUrl,
           localPath: localPath,
         );
 
@@ -503,11 +502,16 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
           body: FadeTransition(
             opacity: _fadeAnimation,
             child: SingleChildScrollView(
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 980),
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    child: Form(
+                      key: _formKey,
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
                     // Premium High-Tech Header
                     _buildModernHeader(
                       context,
@@ -921,7 +925,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         ],
                       ),
                     ),
-                  ],
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
             ),
@@ -1127,7 +1134,9 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                             style: textTheme.headlineSmall?.copyWith(
                               fontWeight: FontWeight.w900,
                               fontSize: 22,
-                              color: Colors.white,
+                              // Use theme-aware foreground to avoid invisible text
+                              // on light surfaces (desktop/web themes).
+                              color: colorScheme.onSurface,
                               letterSpacing: -0.5,
                             ),
                           ),
@@ -1346,7 +1355,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                           fontSize: 9,
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1.5,
-                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.78),
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -1354,10 +1363,10 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
                         controller.text.isNotEmpty
                             ? controller.text
                             : AppLocalizations.of(context)!.hint_enter_your,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w700,
-                          color: Colors.white,
+                          color: colorScheme.onSurface,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -1376,11 +1385,31 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
       keyboardType: keyboardType,
       maxLines: maxLines,
       minLines: minLines,
+      style: TextStyle(
+        color: colorScheme.onSurface,
+        fontWeight: FontWeight.w700,
+      ),
+      cursorColor: colorScheme.primary,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
         filled: true,
         fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.1),
+        labelStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.85),
+          fontWeight: FontWeight.w800,
+          letterSpacing: 0.2,
+        ),
+        floatingLabelStyle: TextStyle(
+          color: colorScheme.primary.withValues(alpha: 0.95),
+          fontWeight: FontWeight.w900,
+          letterSpacing: 0.2,
+        ),
+        hintStyle: TextStyle(
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+          fontWeight: FontWeight.w600,
+        ),
+        prefixIconColor: colorScheme.onSurfaceVariant.withValues(alpha: 0.8),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(20),
           borderSide: BorderSide(color: colorScheme.outlineVariant),
@@ -1451,7 +1480,7 @@ class _PersonalInformationPageState extends State<PersonalInformationPage>
               title,
               style: textTheme.titleSmall?.copyWith(
                 fontWeight: FontWeight.w900,
-                color: Colors.white,
+                color: colorScheme.onSurface,
                 letterSpacing: 0.5,
               ),
             ),

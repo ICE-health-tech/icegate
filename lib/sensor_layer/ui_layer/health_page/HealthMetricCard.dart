@@ -137,15 +137,18 @@ class _HealthMetricCardState extends State<HealthMetricCard>
     final desktopDense = MediaQuery.sizeOf(context).width >= 900;
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final metricId = widget.metrics.id;
-    final cardTint = HealthMetricColors.cardTintForId(metricId);
     final accent = HealthMetricColors.accentForId(metricId);
 
-    final outerR = desktopDense ? 20.0 : 20.0;
-    final pad = desktopDense ? 12.0 : 16.0;
+    final outerR = desktopDense ? 18.0 : 18.0;
+    final pad = desktopDense ? 11.0 : 10.0;
     final title = _localizedMetricName(context, widget.metrics.name);
     final displayValue = widget.metrics.value.trim().isEmpty
         ? '--'
         : widget.metrics.value;
+    final cs = colorScheme;
+    final radius = BorderRadius.circular(outerR);
+    final borderColor = HealthMetricColors.metricCardBorder(isDark: isDark);
+    final fillColor = HealthMetricColors.metricCardFill(cs, isDark: isDark);
 
     return GestureDetector(
       onTapDown: _onTapDown,
@@ -154,77 +157,39 @@ class _HealthMetricCardState extends State<HealthMetricCard>
       child: ScaleTransition(
         scale: _scaleAnimation,
         child: Container(
-              decoration: BoxDecoration(
-                color: isDark
-                    ? cardTint
-                    : colorScheme.surfaceContainerHighest,
-                borderRadius: BorderRadius.circular(outerR),
-                border: Border.all(
-                  color: widget.metrics.isFuture
-                      ? (isDark ? Colors.white24 : Colors.grey.withAlpha(50))
-                      : (isDark
-                          ? HealthMetricColors.cardBorder
-                          : colorScheme.primary.withValues(alpha: 0.08)),
-                  width: 1,
-                ),
-                boxShadow: isDark
-                    ? [
-                        BoxShadow(
-                          color: accent.withValues(alpha: 0.08),
-                          blurRadius: 16,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.06),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-              ),
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            color: fillColor,
+            border: Border.all(color: borderColor, width: 1),
+          ),
+          child: ClipRRect(
+              borderRadius: radius,
               child: Stack(
+                clipBehavior: Clip.hardEdge,
                 children: [
-                  // Metric tint + logo watermark
                   Positioned(
-                    top: -20,
-                    right: -20,
-                    child: Container(
-                      width: 80,
-                      height: 80,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        color: accent.withValues(alpha: 0.08),
-                      ),
+                    right: desktopDense ? -10 : -14,
+                    bottom: desktopDense ? -10 : -14,
+                    child: Icon(
+                      widget.metrics.icon,
+                      size: desktopDense ? 72 : 80,
+                      color: accent.withValues(alpha: 0.07),
                     ),
                   ),
-                  Positioned(
-                    right: -6,
-                    bottom: -8,
-                    child: Opacity(
-                      opacity: 0.07,
-                      child: Image.asset(
-                        'assets/images/iceflowerlogo.png',
-                        width: 64,
-                        height: 64,
-                        fit: BoxFit.contain,
-                        color: accent,
-                        colorBlendMode: BlendMode.srcIn,
-                      ),
-                    ),
-                  ),
-                  
                   Padding(
                     padding: EdgeInsets.all(pad),
                     child: LayoutBuilder(
                       builder: (context, constraints) {
-                        final tight = constraints.maxHeight < 130;
+                        final h = constraints.maxHeight;
+                        final tight = h < 128;
+                        final compact = h < 148;
                         final iconBoxSize = tight
-                            ? 34.0
-                            : (desktopDense ? 40.0 : 44.0);
+                            ? 30.0
+                            : (desktopDense ? 36.0 : 38.0);
 
                         return Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -232,120 +197,101 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                 Container(
                                   width: iconBoxSize,
                                   height: iconBoxSize,
-                                  padding: EdgeInsets.all(tight ? 7 : 9),
                                   decoration: BoxDecoration(
-                                    color: accent.withValues(alpha: 0.18),
                                     borderRadius: BorderRadius.circular(
                                       tight ? 11 : 14,
                                     ),
-                                  ),
-                                  child: Center(
-                                    child: Stack(
-                                      clipBehavior: Clip.none,
-                                      children: [
-                                        Icon(
-                                          widget.metrics.icon,
-                                          color: widget.metrics.isFuture
-                                              ? HealthMetricColors.textSecondary
-                                              : accent,
-                                          size: tight ? 20 : 24,
-                                        ),
-                                        if (widget.metrics.isFuture)
-                                          Positioned(
-                                            right: -4,
-                                            bottom: -4,
-                                            child: Container(
-                                              padding: const EdgeInsets.all(2),
-                                              decoration: BoxDecoration(
-                                                color: colorScheme.surface,
-                                                shape: BoxShape.circle,
-                                              ),
-                                              child: Icon(
-                                                Icons.lock_rounded,
-                                                size: 10,
-                                                color: colorScheme.onSurface
-                                                    .withValues(alpha: 0.45),
-                                              ),
-                                            ),
-                                          ),
+                                    gradient: LinearGradient(
+                                      begin: Alignment.topLeft,
+                                      end: Alignment.bottomRight,
+                                      colors: [
+                                        accent.withValues(alpha: 0.32),
+                                        accent.withValues(alpha: 0.08),
                                       ],
                                     ),
+                                    border: Border.all(
+                                      color: accent.withValues(alpha: 0.28),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    widget.metrics.icon,
+                                    color: widget.metrics.isFuture
+                                        ? HealthMetricColors.textSecondary
+                                        : accent,
+                                    size: tight ? 20 : 24,
                                   ),
                                 ),
-                                const SizedBox(width: 10),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        title.toUpperCase(),
-                                        maxLines: 2,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: isDark
-                                              ? HealthMetricColors
-                                                  .textSecondary
-                                              : colorScheme.onSurface
-                                                  .withValues(alpha: 0.88),
-                                          fontWeight: FontWeight.w900,
-                                          letterSpacing: 0.6,
-                                          fontSize: tight ? 10 : 11,
-                                          height: 1.15,
-                                        ),
-                                      ),
-                                      if (widget.metrics.subtitle != null &&
-                                          widget.metrics.subtitle!
-                                              .isNotEmpty) ...[
-                                        const SizedBox(height: 2),
-                                        Text(
-                                          widget.metrics.subtitle!,
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                          style: TextStyle(
-                                            color: isDark
-                                                ? HealthMetricColors
-                                                    .textSecondary
-                                                : colorScheme.onSurface
-                                                    .withValues(alpha: 0.45),
-                                            fontSize: tight ? 8 : 9,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ),
-                                if (widget.metrics.isFuture)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 7,
-                                      vertical: 3,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.onSurface
-                                          .withValues(alpha: 0.06),
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'FUTURE',
-                                      style: TextStyle(
-                                        color: colorScheme.onSurface
-                                            .withValues(alpha: 0.45),
-                                        fontWeight: FontWeight.w900,
-                                        fontSize: 7,
-                                        letterSpacing: 0.8,
-                                      ),
-                                    ),
-                                  )
-                                else if (widget.metrics.trend != null)
-                                  _buildTrendChip(
-                                    widget.metrics.trend!,
-                                    widget.metrics.trendPositive ?? true,
+                                const Spacer(),
+                                if (!widget.metrics.isFuture)
+                                  Icon(
+                                    Icons.north_east_rounded,
+                                    size: 14,
+                                    color: accent.withValues(alpha: 0.55),
                                   ),
                               ],
                             ),
-                            if (widget.metrics.source != null) ...[
+                            SizedBox(height: tight ? 4 : 6),
+                            AutoSizeText(
+                              title,
+                              maxLines: 2,
+                              minFontSize: 9,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: cs.onSurface,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.2,
+                                fontSize: tight ? 11 : 12,
+                                height: 1.15,
+                              ),
+                            ),
+                            if (widget.metrics.subtitle != null &&
+                                widget.metrics.subtitle!.isNotEmpty) ...[
+                              const SizedBox(height: 2),
+                              Text(
+                                widget.metrics.subtitle!,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: cs.onSurface.withValues(alpha: 0.58),
+                                  fontSize: tight ? 8 : 9,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                            if (widget.metrics.isFuture)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: cs.onSurface.withValues(alpha: 0.06),
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Text(
+                                    'FUTURE',
+                                    style: TextStyle(
+                                      color: cs.onSurface.withValues(
+                                        alpha: 0.45,
+                                      ),
+                                      fontWeight: FontWeight.w900,
+                                      fontSize: 7,
+                                      letterSpacing: 0.8,
+                                    ),
+                                  ),
+                                ),
+                              )
+                            else if (widget.metrics.trend != null)
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4),
+                                child: _buildTrendChip(
+                                  widget.metrics.trend!,
+                                  widget.metrics.trendPositive ?? true,
+                                ),
+                              ),
+                            if (widget.metrics.source != null && !compact) ...[
                               const SizedBox(height: 6),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -391,7 +337,7 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                 ),
                               ),
                             ],
-                            const SizedBox(height: 8),
+                            SizedBox(height: tight ? 4 : 6),
                             Row(
                               crossAxisAlignment: CrossAxisAlignment.end,
                               children: [
@@ -425,8 +371,8 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                                     : colorScheme.onSurface),
                                             fontWeight: FontWeight.w900,
                                             fontSize: tight
-                                                ? 22
-                                                : (desktopDense ? 24 : 28),
+                                                ? 20
+                                                : (desktopDense ? 22 : 24),
                                             height: 1.0,
                                             letterSpacing: -0.5,
                                           ),
@@ -449,8 +395,8 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                                 ),
                               ],
                             ),
-                            if (widget.metrics.progress != null) ...[
-                              const SizedBox(height: 8),
+                            if (widget.metrics.progress != null && !tight) ...[
+                              SizedBox(height: tight ? 4 : 6),
                               _buildProgressBar(
                                 widget.metrics.progress!,
                                 HealthMetricColors.progressColorForId(metricId),
@@ -463,8 +409,9 @@ class _HealthMetricCardState extends State<HealthMetricCard>
                   ),
                 ],
               ),
+            ),
+          ),
         ),
-      ),
     );
   }
 

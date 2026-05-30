@@ -488,6 +488,66 @@ abstract class AppLocalizations {
   /// **'Social Blocker'**
   String get projects_tile_social_blocker;
 
+  /// No description provided for @social_shield_turn_on.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on Shield'**
+  String get social_shield_turn_on;
+
+  /// No description provided for @social_shield_subtitle_no_auth.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap row to grant Screen Time (for rules)'**
+  String get social_shield_subtitle_no_auth;
+
+  /// No description provided for @social_shield_subtitle_pick_apps.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap row to choose apps — blocking follows rules'**
+  String get social_shield_subtitle_pick_apps;
+
+  /// No description provided for @social_shield_subtitle_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'On — blocking runs when your rules are active'**
+  String get social_shield_subtitle_ready;
+
+  /// No description provided for @social_shield_subtitle_off.
+  ///
+  /// In en, this message translates to:
+  /// **'Off — schedules and focus rules are paused'**
+  String get social_shield_subtitle_off;
+
+  /// No description provided for @social_shield_choose_apps.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose apps to block'**
+  String get social_shield_choose_apps;
+
+  /// No description provided for @social_shield_choose_apps_done.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap to change blocked apps'**
+  String get social_shield_choose_apps_done;
+
+  /// No description provided for @social_shield_pick_apps_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose at least one app to block (or turn Shield off).'**
+  String get social_shield_pick_apps_required;
+
+  /// No description provided for @social_shield_apps_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Blocked apps updated.'**
+  String get social_shield_apps_saved;
+
+  /// No description provided for @social_shield_unsupported_platform.
+  ///
+  /// In en, this message translates to:
+  /// **'App blocking is only on iOS and macOS.'**
+  String get social_shield_unsupported_platform;
+
   /// No description provided for @projects_plugin_open.
   ///
   /// In en, this message translates to:
@@ -895,6 +955,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sync failed. Please try again.'**
   String get health_sync_failed;
+
+  /// No description provided for @health_motivation_engine_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Motivation Engine'**
+  String get health_motivation_engine_title;
+
+  /// No description provided for @health_notification_engine_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Notification Engine'**
+  String get health_notification_engine_title;
+
+  /// No description provided for @health_notification_engine_desc.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active reminders'**
+  String health_notification_engine_desc(int count);
+
+  /// No description provided for @health_motivation_all_done.
+  ///
+  /// In en, this message translates to:
+  /// **'All daily targets hit—momentum is yours today.'**
+  String get health_motivation_all_done;
+
+  /// No description provided for @health_motivation_strong.
+  ///
+  /// In en, this message translates to:
+  /// **'Strong day—keep your streak alive.'**
+  String get health_motivation_strong;
+
+  /// No description provided for @health_motivation_mid.
+  ///
+  /// In en, this message translates to:
+  /// **'Steady progress—stack one more small win.'**
+  String get health_motivation_mid;
+
+  /// No description provided for @health_motivation_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Start with water or a short walk—small steps count.'**
+  String get health_motivation_low;
+
+  /// No description provided for @health_motivation_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Set your goals and we\'ll coach you through the day.'**
+  String get health_motivation_empty;
 
   /// No description provided for @health_update_weight.
   ///
@@ -2276,6 +2384,18 @@ abstract class AppLocalizations {
   /// **'Passkey login was canceled.'**
   String get err_passkey_canceled;
 
+  /// No description provided for @err_google_canceled.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in was canceled.'**
+  String get err_google_canceled;
+
+  /// No description provided for @err_google_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Google sign-in failed. Enable Google in Supabase and add the web client ID.'**
+  String get err_google_failed;
+
   /// No description provided for @err_passkey_failed.
   ///
   /// In en, this message translates to:
@@ -3506,6 +3626,114 @@ abstract class AppLocalizations {
   /// **'Avg mood this week: {score}'**
   String mind_focus_avg_mood(String score);
 
+  /// No description provided for @mind_skills_session_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill session'**
+  String get mind_skills_session_title;
+
+  /// No description provided for @mind_skills_session_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick skills, run a focus block, log what you learned.'**
+  String get mind_skills_session_subtitle;
+
+  /// No description provided for @mind_skills_session_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session'**
+  String get mind_skills_session_start;
+
+  /// No description provided for @mind_skills_session_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No skill sessions in the last {days} days.'**
+  String mind_skills_session_empty(int days);
+
+  /// No description provided for @mind_skills_session_stats.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes} min · top: {skill}'**
+  String mind_skills_session_stats(int sessions, int minutes, String skill);
+
+  /// No description provided for @mind_skills_session_live.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LIVE'**
+  String get mind_skills_session_live;
+
+  /// No description provided for @mind_skills_session_tap_start.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP CENTER TO START'**
+  String get mind_skills_session_tap_start;
+
+  /// No description provided for @mind_skills_session_tap_finish.
+  ///
+  /// In en, this message translates to:
+  /// **'TAP CENTER TO STOP EARLY'**
+  String get mind_skills_session_tap_finish;
+
+  /// No description provided for @mind_skills_session_listening.
+  ///
+  /// In en, this message translates to:
+  /// **'SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS'**
+  String get mind_skills_session_listening;
+
+  /// No description provided for @mind_skills_session_pick_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick at least one skill before starting.'**
+  String get mind_skills_session_pick_skills;
+
+  /// No description provided for @mind_skills_my_list.
+  ///
+  /// In en, this message translates to:
+  /// **'My skills'**
+  String get mind_skills_my_list;
+
+  /// No description provided for @mind_skills_add_skill.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get mind_skills_add_skill;
+
+  /// No description provided for @mind_skills_tap_list.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap skills in the list to select'**
+  String get mind_skills_tap_list;
+
+  /// No description provided for @mind_skills_tap_list_project.
+  ///
+  /// In en, this message translates to:
+  /// **'Select skills · project XP on log'**
+  String get mind_skills_tap_list_project;
+
+  /// No description provided for @mind_skills_status_in_session.
+  ///
+  /// In en, this message translates to:
+  /// **'In session'**
+  String get mind_skills_status_in_session;
+
+  /// No description provided for @mind_skills_status_selected.
+  ///
+  /// In en, this message translates to:
+  /// **'Selected'**
+  String get mind_skills_status_selected;
+
+  /// No description provided for @mind_skills_level_short.
+  ///
+  /// In en, this message translates to:
+  /// **'Lv {level}'**
+  String mind_skills_level_short(int level);
+
+  /// No description provided for @mind_skills_session_logged.
+  ///
+  /// In en, this message translates to:
+  /// **'Session logged · {minutes} min · +{xp} XP'**
+  String mind_skills_session_logged(int minutes, int xp);
+
   /// No description provided for @mood_trends_title.
   ///
   /// In en, this message translates to:
@@ -4436,6 +4664,84 @@ abstract class AppLocalizations {
   /// **'After this time, send once per day while the app is open'**
   String get canvas_mail_summary_auto_subtitle;
 
+  /// No description provided for @mail_suggestion_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Report tips'**
+  String get mail_suggestion_title;
+
+  /// No description provided for @mail_suggestion_ai_loading.
+  ///
+  /// In en, this message translates to:
+  /// **'AI is analyzing your day…'**
+  String get mail_suggestion_ai_loading;
+
+  /// No description provided for @mail_suggestion_ai_fallback.
+  ///
+  /// In en, this message translates to:
+  /// **'Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.'**
+  String get mail_suggestion_ai_fallback;
+
+  /// No description provided for @mail_suggestion_negative_net.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s spending exceeded income — review recent transactions.'**
+  String get mail_suggestion_negative_net;
+
+  /// No description provided for @mail_suggestion_no_transactions.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions logged today — add expenses to keep reports accurate.'**
+  String get mail_suggestion_no_transactions;
+
+  /// No description provided for @mail_suggestion_budget_high.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ve used {percent}% of your monthly budget — pace spending.'**
+  String mail_suggestion_budget_high(String percent);
+
+  /// No description provided for @mail_suggestion_monthly_deficit.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly spending exceeds income — consider trimming fixed costs.'**
+  String get mail_suggestion_monthly_deficit;
+
+  /// No description provided for @mail_suggestion_steps_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Steps at {percent}% of goal — a short walk helps hit your target.'**
+  String mail_suggestion_steps_low(String percent);
+
+  /// No description provided for @mail_suggestion_water_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Water intake is below half your goal — hydrate through the day.'**
+  String get mail_suggestion_water_low;
+
+  /// No description provided for @mail_suggestion_sleep_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Sleep below your goal — try an earlier wind-down tonight.'**
+  String get mail_suggestion_sleep_low;
+
+  /// No description provided for @mail_suggestion_log_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'No mood logged today — a quick check-in improves your trends.'**
+  String get mail_suggestion_log_mood;
+
+  /// No description provided for @mail_suggestion_focus_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Focus time is low — schedule a short deep-work block.'**
+  String get mail_suggestion_focus_low;
+
+  /// No description provided for @mail_suggestion_tasks_many.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} active tasks open — pick one priority for tomorrow.'**
+  String mail_suggestion_tasks_many(String count);
+
   /// No description provided for @reports_hub_title.
   ///
   /// In en, this message translates to:
@@ -5162,11 +5468,161 @@ abstract class AppLocalizations {
   /// **'No financial records linked to this project.'**
   String get project_no_finance;
 
+  /// No description provided for @project_skills_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills'**
+  String get project_skills_label;
+
+  /// No description provided for @project_no_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills yet. Tap + to track what you improve on this project.'**
+  String get project_no_skills;
+
+  /// No description provided for @project_add_skill_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get project_add_skill_title;
+
+  /// No description provided for @project_skill_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. Flutter, debugging, system design'**
+  String get project_skill_name_hint;
+
+  /// No description provided for @project_skill_streak_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} day streak'**
+  String project_skill_streak_days(int count);
+
+  /// No description provided for @project_skill_streak_none.
+  ///
+  /// In en, this message translates to:
+  /// **'No streak yet'**
+  String get project_skill_streak_none;
+
+  /// No description provided for @project_skill_xp_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'{total} XP · {remaining} XP to next level'**
+  String project_skill_xp_hint(int total, int remaining);
+
+  /// No description provided for @project_skill_xp_on_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete tasks to earn +15 XP per skill'**
+  String get project_skill_xp_on_complete;
+
+  /// No description provided for @project_skill_log_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Log a Skill Boost session to level these skills.'**
+  String get project_skill_log_session;
+
+  /// No description provided for @project_skill_practice.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Skill Boost'**
+  String get project_skill_practice;
+
+  /// No description provided for @project_skill_tap_to_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Select one or more skills, then start the session'**
+  String get project_skill_tap_to_start;
+
+  /// No description provided for @project_skill_start_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Start session ({count})'**
+  String project_skill_start_session(int count);
+
+  /// No description provided for @project_skill_catalog_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick from the same skills as Mind → Skills tiles.'**
+  String get project_skill_catalog_hint;
+
+  /// No description provided for @project_auto_add_all_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Add all automatically'**
+  String get project_auto_add_all_skills;
+
+  /// No description provided for @project_auto_add_all_skills_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Link every skill from your Mind library to this project'**
+  String get project_auto_add_all_skills_subtitle;
+
+  /// No description provided for @project_skills_all_on_project.
+  ///
+  /// In en, this message translates to:
+  /// **'All library skills are already on this project'**
+  String get project_skills_all_on_project;
+
+  /// No description provided for @project_skills_added_count.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, one{1 skill added} other{{count} skills added}}'**
+  String project_skills_added_count(int count);
+
+  /// No description provided for @project_skill_delete_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{name}\" from this project?'**
+  String project_skill_delete_confirm(String name);
+
+  /// No description provided for @project_skill_added.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill added'**
+  String get project_skill_added;
+
+  /// No description provided for @project_skill_xp_granted.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills gained +{xp} XP'**
+  String project_skill_xp_granted(int xp);
+
+  /// No description provided for @project_sub_projects_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-projects'**
+  String get project_sub_projects_label;
+
+  /// No description provided for @project_no_sub_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'No sub-projects yet. Tap + to add a child project.'**
+  String get project_no_sub_projects;
+
+  /// No description provided for @project_add_sub_project_title.
+  ///
+  /// In en, this message translates to:
+  /// **'New sub-project'**
+  String get project_add_sub_project_title;
+
+  /// No description provided for @project_sub_project_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sub-project name'**
+  String get project_sub_project_name_hint;
+
   /// No description provided for @project_add_task_title.
   ///
   /// In en, this message translates to:
   /// **'New Task'**
   String get project_add_task_title;
+
+  /// No description provided for @project_task_assign_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Assign to project'**
+  String get project_task_assign_to;
 
   /// No description provided for @project_task_title_hint.
   ///
@@ -5281,6 +5737,48 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No content'**
   String get project_note_no_content;
+
+  /// No description provided for @note_editor_write_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Start writing your note…'**
+  String get note_editor_write_hint;
+
+  /// No description provided for @note_editor_saved_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved {when}'**
+  String note_editor_saved_label(String when);
+
+  /// No description provided for @note_editor_saved_just_now.
+  ///
+  /// In en, this message translates to:
+  /// **'just now'**
+  String get note_editor_saved_just_now;
+
+  /// No description provided for @note_editor_saved_minutes.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}m ago'**
+  String note_editor_saved_minutes(int count);
+
+  /// No description provided for @note_editor_saved_hours.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}h ago'**
+  String note_editor_saved_hours(int count);
+
+  /// No description provided for @note_editor_unsaved.
+  ///
+  /// In en, this message translates to:
+  /// **'Unsaved'**
+  String get note_editor_unsaved;
+
+  /// No description provided for @note_editor_saving.
+  ///
+  /// In en, this message translates to:
+  /// **'Saving…'**
+  String get note_editor_saving;
 
   /// No description provided for @focus_select_project.
   ///
@@ -5792,6 +6290,12 @@ abstract class AppLocalizations {
   /// **'DAILY QUEST'**
   String get notification_daily_quest;
 
+  /// No description provided for @notification_no_active_quests.
+  ///
+  /// In en, this message translates to:
+  /// **'No active quests right now. Complete tasks in Projects to earn daily quests.'**
+  String get notification_no_active_quests;
+
   /// No description provided for @notification_quest_completed_snack.
   ///
   /// In en, this message translates to:
@@ -5851,6 +6355,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Track focus timer and information on your Lock Screen.'**
   String get notification_live_activities_subtitle;
+
+  /// No description provided for @notification_morning_briefing_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Show the morning summary the first time you open Home each day.'**
+  String get notification_morning_briefing_subtitle;
 
   /// No description provided for @notification_status_on.
   ///
@@ -6950,6 +7460,246 @@ abstract class AppLocalizations {
   /// **'Connect to a host first to manage live sessions.'**
   String get ssh_connect_host_first;
 
+  /// No description provided for @ssh_cursor_api_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API'**
+  String get ssh_cursor_api_title;
+
+  /// No description provided for @ssh_cursor_api_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Save your API key to drive cursor-agent on the remote host.'**
+  String get ssh_cursor_api_subtitle;
+
+  /// No description provided for @ssh_cursor_api_key_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'cursor_…'**
+  String get ssh_cursor_api_key_hint;
+
+  /// No description provided for @ssh_cursor_api_key_stored.
+  ///
+  /// In en, this message translates to:
+  /// **'API key saved on this device.'**
+  String get ssh_cursor_api_key_stored;
+
+  /// No description provided for @ssh_cursor_api_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save key'**
+  String get ssh_cursor_api_save;
+
+  /// No description provided for @ssh_cursor_api_test.
+  ///
+  /// In en, this message translates to:
+  /// **'Test connection'**
+  String get ssh_cursor_api_test;
+
+  /// No description provided for @ssh_cursor_api_open_terminal.
+  ///
+  /// In en, this message translates to:
+  /// **'Open SSH (Cursor mode)'**
+  String get ssh_cursor_api_open_terminal;
+
+  /// No description provided for @ssh_cursor_api_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API key saved.'**
+  String get ssh_cursor_api_saved;
+
+  /// No description provided for @ssh_cursor_api_test_ok.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor API key is valid.'**
+  String get ssh_cursor_api_test_ok;
+
+  /// No description provided for @ssh_cursor_api_missing_key.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter or save a Cursor API key first.'**
+  String get ssh_cursor_api_missing_key;
+
+  /// No description provided for @cursor_hub_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Cursor'**
+  String get cursor_hub_title;
+
+  /// No description provided for @cursor_hub_page_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.'**
+  String get cursor_hub_page_subtitle;
+
+  /// No description provided for @cursor_hub_canvas_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'My Machines worker, API tasks, and agents dashboard'**
+  String get cursor_hub_canvas_subtitle;
+
+  /// No description provided for @cursor_hub_integration_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'API key, worker setup, send tasks from your phone'**
+  String get cursor_hub_integration_subtitle;
+
+  /// No description provided for @cursor_hub_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'AI & automation'**
+  String get cursor_hub_section_title;
+
+  /// No description provided for @cursor_hub_key_ready.
+  ///
+  /// In en, this message translates to:
+  /// **'API key verified'**
+  String get cursor_hub_key_ready;
+
+  /// No description provided for @cursor_hub_open_full.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Cursor Hub'**
+  String get cursor_hub_open_full;
+
+  /// No description provided for @cursor_hub_open_agents.
+  ///
+  /// In en, this message translates to:
+  /// **'Open Agents'**
+  String get cursor_hub_open_agents;
+
+  /// No description provided for @cursor_hub_worker_title.
+  ///
+  /// In en, this message translates to:
+  /// **'My Machine worker'**
+  String get cursor_hub_worker_title;
+
+  /// No description provided for @cursor_hub_worker_body.
+  ///
+  /// In en, this message translates to:
+  /// **'On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.'**
+  String get cursor_hub_worker_body;
+
+  /// No description provided for @cursor_hub_copy_worker_cmd.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy command'**
+  String get cursor_hub_copy_worker_cmd;
+
+  /// No description provided for @cursor_hub_worker_copied.
+  ///
+  /// In en, this message translates to:
+  /// **'Copied: agent worker start'**
+  String get cursor_hub_worker_copied;
+
+  /// No description provided for @cursor_hub_send_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Send a task'**
+  String get cursor_hub_send_title;
+
+  /// No description provided for @cursor_hub_target_machine.
+  ///
+  /// In en, this message translates to:
+  /// **'My Mac'**
+  String get cursor_hub_target_machine;
+
+  /// No description provided for @cursor_hub_target_cloud.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud repo'**
+  String get cursor_hub_target_cloud;
+
+  /// No description provided for @cursor_hub_machine_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Machine name (optional)'**
+  String get cursor_hub_machine_name;
+
+  /// No description provided for @cursor_hub_machine_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'As shown in Agents environment dropdown'**
+  String get cursor_hub_machine_name_hint;
+
+  /// No description provided for @cursor_hub_pick_repo.
+  ///
+  /// In en, this message translates to:
+  /// **'Your repositories'**
+  String get cursor_hub_pick_repo;
+
+  /// No description provided for @cursor_hub_refresh_repos.
+  ///
+  /// In en, this message translates to:
+  /// **'Refresh repo list'**
+  String get cursor_hub_refresh_repos;
+
+  /// No description provided for @cursor_hub_repos_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No repos found. Enter a URL below or run on Mac to scan ~/Code.'**
+  String get cursor_hub_repos_empty;
+
+  /// No description provided for @cursor_hub_usage_limit.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud agent blocked: enable usage-based pricing on cursor.com (need ~\$2 spend limit). Use My Mac mode instead.'**
+  String get cursor_hub_usage_limit;
+
+  /// No description provided for @cursor_hub_repo_url.
+  ///
+  /// In en, this message translates to:
+  /// **'GitHub repo URL'**
+  String get cursor_hub_repo_url;
+
+  /// No description provided for @cursor_hub_prompt_label.
+  ///
+  /// In en, this message translates to:
+  /// **'What should the agent do?'**
+  String get cursor_hub_prompt_label;
+
+  /// No description provided for @cursor_hub_send_task.
+  ///
+  /// In en, this message translates to:
+  /// **'Send to Cursor'**
+  String get cursor_hub_send_task;
+
+  /// No description provided for @cursor_hub_task_sent.
+  ///
+  /// In en, this message translates to:
+  /// **'Task sent — opening agent…'**
+  String get cursor_hub_task_sent;
+
+  /// No description provided for @cursor_hub_task_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not start agent: {reason}'**
+  String cursor_hub_task_failed(String reason);
+
+  /// No description provided for @cursor_hub_recent_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent agents'**
+  String get cursor_hub_recent_title;
+
+  /// No description provided for @island_cursor_ssh_standby.
+  ///
+  /// In en, this message translates to:
+  /// **'Awaiting SSH link'**
+  String get island_cursor_ssh_standby;
+
+  /// No description provided for @island_cursor_no_api_key.
+  ///
+  /// In en, this message translates to:
+  /// **'No API key'**
+  String get island_cursor_no_api_key;
+
+  /// No description provided for @ssh_cursor_api_test_fail.
+  ///
+  /// In en, this message translates to:
+  /// **'Connection failed: {reason}'**
+  String ssh_cursor_api_test_fail(String reason);
+
   /// No description provided for @ssh_go_to_terminal.
   ///
   /// In en, this message translates to:
@@ -7477,6 +8227,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'TMUX ACTIVE'**
   String get island_tmux_active;
+
+  /// No description provided for @daily_loop_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s loop'**
+  String get daily_loop_title;
+
+  /// No description provided for @daily_loop_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Complete all 4 pillars to extend your streak'**
+  String get daily_loop_subtitle;
+
+  /// No description provided for @daily_loop_complete.
+  ///
+  /// In en, this message translates to:
+  /// **'Loop complete — you\'re on fire!'**
+  String get daily_loop_complete;
+
+  /// No description provided for @daily_loop_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{count}d'**
+  String daily_loop_streak(int count);
+
+  /// No description provided for @daily_loop_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} / {total} done'**
+  String daily_loop_progress(int done, int total);
+
+  /// No description provided for @daily_loop_health.
+  ///
+  /// In en, this message translates to:
+  /// **'Health pulse'**
+  String get daily_loop_health;
+
+  /// No description provided for @daily_loop_finance.
+  ///
+  /// In en, this message translates to:
+  /// **'Money check'**
+  String get daily_loop_finance;
+
+  /// No description provided for @daily_loop_mind.
+  ///
+  /// In en, this message translates to:
+  /// **'Mood log'**
+  String get daily_loop_mind;
+
+  /// No description provided for @daily_loop_projects.
+  ///
+  /// In en, this message translates to:
+  /// **'Project touch'**
+  String get daily_loop_projects;
+
+  /// No description provided for @morning_loop_reminder_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning summary'**
+  String get morning_loop_reminder_title;
+
+  /// No description provided for @morning_loop_reminder_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday recap & today\'s motivation — open Ice Gate first each morning'**
+  String get morning_loop_reminder_subtitle;
+
+  /// No description provided for @morning_briefing_toggle.
+  ///
+  /// In en, this message translates to:
+  /// **'Morning summary on Home'**
+  String get morning_briefing_toggle;
+
+  /// No description provided for @morning_briefing_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning'**
+  String get morning_briefing_title;
+
+  /// No description provided for @morning_briefing_title_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Good morning, {name}'**
+  String morning_briefing_title_name(String name);
+
+  /// No description provided for @morning_briefing_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Care for body and mind — then finish your 4-pillar loop today.'**
+  String get morning_briefing_subtitle;
+
+  /// No description provided for @morning_briefing_yesterday_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get morning_briefing_yesterday_title;
+
+  /// No description provided for @morning_briefing_yesterday_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'A quiet day — today is a fresh start.'**
+  String get morning_briefing_yesterday_empty;
+
+  /// No description provided for @morning_briefing_yesterday_steps.
+  ///
+  /// In en, this message translates to:
+  /// **'{steps} steps'**
+  String morning_briefing_yesterday_steps(int steps);
+
+  /// No description provided for @morning_briefing_yesterday_water.
+  ///
+  /// In en, this message translates to:
+  /// **'{ml} ml water'**
+  String morning_briefing_yesterday_water(int ml);
+
+  /// No description provided for @morning_briefing_yesterday_sleep.
+  ///
+  /// In en, this message translates to:
+  /// **'{hours} h sleep'**
+  String morning_briefing_yesterday_sleep(String hours);
+
+  /// No description provided for @morning_briefing_yesterday_loop.
+  ///
+  /// In en, this message translates to:
+  /// **'{done}/{total} pillars completed'**
+  String morning_briefing_yesterday_loop(int done, int total);
+
+  /// No description provided for @morning_briefing_motivation_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Today\'s motivation'**
+  String get morning_briefing_motivation_title;
+
+  /// No description provided for @morning_briefing_motivation_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday was light — one small win today resets your rhythm.'**
+  String get morning_briefing_motivation_empty;
+
+  /// No description provided for @morning_briefing_motivation_all_done.
+  ///
+  /// In en, this message translates to:
+  /// **'You closed yesterday strong — ride that momentum into today.'**
+  String get morning_briefing_motivation_all_done;
+
+  /// No description provided for @morning_briefing_motivation_strong.
+  ///
+  /// In en, this message translates to:
+  /// **'Solid progress yesterday — one more pillar today keeps the streak alive.'**
+  String get morning_briefing_motivation_strong;
+
+  /// No description provided for @morning_briefing_motivation_mid.
+  ///
+  /// In en, this message translates to:
+  /// **'You moved forward yesterday — stack another small win this morning.'**
+  String get morning_briefing_motivation_mid;
+
+  /// No description provided for @morning_briefing_motivation_low.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday was a rest day — water, a walk, or a mood log is enough to begin.'**
+  String get morning_briefing_motivation_low;
+
+  /// No description provided for @morning_briefing_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{done} of {total} pillars done today'**
+  String morning_briefing_progress(int done, int total);
+
+  /// No description provided for @morning_briefing_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start my day'**
+  String get morning_briefing_start;
+
+  /// No description provided for @morning_briefing_log_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Log mood first'**
+  String get morning_briefing_log_mood;
 }
 
 class _AppLocalizationsDelegate

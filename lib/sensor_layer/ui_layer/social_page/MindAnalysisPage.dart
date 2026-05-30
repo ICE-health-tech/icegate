@@ -17,11 +17,6 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysi
 class MindAnalysisPage extends StatelessWidget {
   const MindAnalysisPage({super.key});
 
-  static DateTime _monthStart() {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, 1);
-  }
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -45,10 +40,7 @@ class MindAnalysisPage extends StatelessWidget {
           return Stack(
             children: [
               // 1. Deep Base Background
-              Container(
-                color:
-                    isDark ? const Color(0xFF0A0A0E) : const Color(0xFFF0F2F5),
-              ),
+              Container(color: colorScheme.surface),
 
               // 2. Tactical Grid Background
               Positioned.fill(
@@ -267,18 +259,20 @@ class MindAnalysisPage extends StatelessWidget {
     required List<AchievementData> achievements,
     required List<MindLogData> mindLogs,
   }) {
-    final monthStart = _monthStart();
+    final monthStart = achievementMonthStart();
     final monthlyAchievements = achievements
         .where((a) => !a.createdAt.isBefore(monthStart))
         .toList();
-    final domainCounts = countAchievementsByDomain(monthlyAchievements);
+    final domainCounts = buildAchievementDomainCounts(
+      achievements: achievements,
+      mindLogs: mindLogs,
+      since: monthStart,
+    );
 
     final monthLogs = mindLogs
         .where((l) => !l.logDate.isBefore(monthStart))
         .toList();
     final skillSessions = countSkillSessionsInRange(monthLogs);
-    domainCounts['knowledge'] =
-        domainCounts['knowledge']! + skillSessions;
 
     final totalFeats = monthlyAchievements.length + skillSessions;
     final maxCount = domainCounts.values.fold<int>(
@@ -635,7 +629,6 @@ class MindAnalysisPage extends StatelessWidget {
     Widget? trailing,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(32),
@@ -644,14 +637,10 @@ class MindAnalysisPage extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(24),
           decoration: BoxDecoration(
-            color: isDark
-                ? Colors.white.withValues(alpha: 0.03)
-                : Colors.black.withValues(alpha: 0.02),
+            color: colorScheme.surfaceContainerHigh.withValues(alpha: 0.55),
             borderRadius: BorderRadius.circular(32),
             border: Border.all(
-              color: isDark
-                  ? Colors.white.withValues(alpha: 0.08)
-                  : Colors.black.withValues(alpha: 0.05),
+              color: colorScheme.outline.withValues(alpha: 0.28),
               width: 1,
             ),
           ),

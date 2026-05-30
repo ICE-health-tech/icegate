@@ -49,13 +49,18 @@
 	<true/>
 	<key>LSSupportsOpeningDocumentsInPlace</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsLocalNetworking</key>
+		<true/>
+	</dict>
 	<key>NSBonjourServices</key>
 	<array>
 		<string>_ssh._tcp</string>
 	</array>
-	<key>NSCalendarsUsageDescription</key>
-	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
 	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
+	<key>NSCalendarsUsageDescription</key>
 	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
@@ -121,10 +126,5 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
-	<key>NSAppTransportSecurity</key>
-	<dict>
-		<key>NSAllowsLocalNetworking</key>
-		<true/>
-	</dict>
 </dict>
 </plist>

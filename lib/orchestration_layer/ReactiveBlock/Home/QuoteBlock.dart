@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningLoopPrefs.dart';
 
 class QuoteBlock {
   final currentQuote = signal<String>(
@@ -13,6 +14,7 @@ class QuoteBlock {
   Timer? _rotationTimer;
   List<QuoteData> _cachedQuotes = [];
   int _currentIndex = 0;
+  bool _morningMotivationActive = false;
 
   static const _defaultQuotes = [
     "The only way to do great work is to love what you do.",
@@ -23,6 +25,8 @@ class QuoteBlock {
   ];
 
   void init(QuoteDAO dao) {
+    unawaited(_restoreMorningQuote());
+
     _quotesSubscription?.cancel();
     _quotesSubscription = dao.watchActiveQuotes().listen((quotes) {
       _cachedQuotes = quotes;
@@ -36,7 +40,25 @@ class QuoteBlock {
     });
   }
 
+  Future<void> _restoreMorningQuote() async {
+    final text = await MorningLoopPrefs.loadMorningHomeQuoteIfToday();
+    if (text == null || text.isEmpty) return;
+    _morningMotivationActive = true;
+    currentQuote.value = text;
+    currentAuthor.value = null;
+  }
+
+  /// Replaces the home quote strip after the morning briefing.
+  Future<void> setMorningMotivation(String text) async {
+    _morningMotivationActive = true;
+    currentQuote.value = text;
+    currentAuthor.value = null;
+    await MorningLoopPrefs.saveMorningHomeQuote(text);
+  }
+
   void _pickQuoteByHour() {
+    if (_morningMotivationActive) return;
+
     final hourKey = DateTime.now().hour + DateTime.now().day * 24;
 
     if (_cachedQuotes.isNotEmpty) {
@@ -52,6 +74,9 @@ class QuoteBlock {
   }
 
   void shuffle() {
+    _morningMotivationActive = false;
+    unawaited(MorningLoopPrefs.clearMorningHomeQuote());
+
     if (_cachedQuotes.isNotEmpty) {
       _currentIndex = Random().nextInt(_cachedQuotes.length);
       final q = _cachedQuotes[_currentIndex];

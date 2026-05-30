@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 import 'package:intl/intl.dart';
@@ -34,10 +35,14 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final dateFmt = DateFormat.yMMMd(l10n.localeName);
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return Watch((context) {
       final txns = widget.financeBlock.transactions.value;
-      final marked = txns.map((t) => _dateOnly(t.transactionDate.toLocal())).toSet();
+      final marked =
+          txns.map((t) => _dateOnly(t.transactionDate.toLocal())).toSet();
 
       final onDay = txns
           .where((t) => _dateOnly(t.transactionDate.toLocal()) == _selectedDay)
@@ -60,9 +65,10 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
             Text(
               l10n.finance_tab_daily_subtitle,
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.45),
+                color: FinanceSurface.mutedInk(isDark: isDark),
                 fontSize: 12,
                 height: 1.35,
+                fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 12),
@@ -70,7 +76,10 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
               markedDays: marked,
               focusedMonth: _focusedMonth,
               selectedDay: _selectedDay,
-              onMonthChanged: (m) => setState(() => _focusedMonth = DateTime(m.year, m.month)),
+              accentColor: FinanceSurface.ink(isDark: isDark),
+              outerDecoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
+              onMonthChanged: (m) =>
+                  setState(() => _focusedMonth = DateTime(m.year, m.month)),
               onDaySelected: (d) => setState(() {
                 _selectedDay = _dateOnly(d);
                 _focusedMonth = DateTime(d.year, d.month);
@@ -79,8 +88,8 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
             const SizedBox(height: 16),
             Text(
               dateFmt.format(_selectedDay).toUpperCase(),
-              style: const TextStyle(
-                color: Colors.white54,
+              style: TextStyle(
+                color: FinanceSurface.ink(isDark: isDark),
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1.5,
@@ -91,17 +100,26 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
               children: [
                 Expanded(
                   child: _dayStat(
-                    l10n.finance_daily_in,
-                    widget.financeBlock.formatCurrency(dayIncome, compact: true),
-                    Colors.greenAccent,
+                    isDark: isDark,
+                    cs: cs,
+                    label: l10n.finance_daily_in,
+                    value: widget.financeBlock.formatCurrency(
+                      dayIncome,
+                      compact: true,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: _dayStat(
-                    l10n.finance_daily_out,
-                    widget.financeBlock.formatCurrency(daySpend, compact: true),
-                    Colors.redAccent,
+                    isDark: isDark,
+                    cs: cs,
+                    label: l10n.finance_daily_out,
+                    value: widget.financeBlock.formatCurrency(
+                      daySpend,
+                      compact: true,
+                    ),
+                    muted: true,
                   ),
                 ),
               ],
@@ -113,7 +131,9 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
                   padding: const EdgeInsets.symmetric(vertical: 32),
                   child: Text(
                     l10n.finance_daily_empty,
-                    style: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+                    style: TextStyle(
+                      color: FinanceSurface.mutedInk(isDark: isDark),
+                    ),
                   ),
                 ),
               )
@@ -130,21 +150,23 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
     });
   }
 
-  Widget _dayStat(String label, String value, Color color) {
+  Widget _dayStat({
+    required bool isDark,
+    required ColorScheme cs,
+    required String label,
+    required String value,
+    bool muted = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25)),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label.toUpperCase(),
             style: TextStyle(
-              color: color.withValues(alpha: 0.7),
+              color: FinanceSurface.mutedInk(isDark: isDark),
               fontSize: 8,
               fontWeight: FontWeight.w900,
               letterSpacing: 1,
@@ -154,9 +176,12 @@ class _FinanceDailyPageState extends State<FinanceDailyPage> {
           Text(
             value,
             style: TextStyle(
-              color: color,
+              color: muted
+                  ? FinanceSurface.mutedInk(isDark: isDark)
+                  : FinanceSurface.ink(isDark: isDark),
               fontSize: 16,
               fontWeight: FontWeight.w900,
+              fontFamily: 'JetBrainsMono',
             ),
           ),
         ],

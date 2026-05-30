@@ -43,8 +43,21 @@ class WorkspaceSidebarLayout extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final glassBorderColor = Colors.white.withValues(alpha: 0.08);
+    final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final glassBorderColor = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : cs.outline.withValues(alpha: 0.22);
     final borderSide = BorderSide(color: glassBorderColor);
+    final inactiveIconColor = isDark
+        ? Colors.white.withValues(alpha: 0.5)
+        : cs.onSurface.withValues(alpha: 0.65);
+    final analysisLabelColor = isDark
+        ? EntryLandscapePalette.icyWhiteBlue.withValues(alpha: 0.85)
+        : cs.onSurface.withValues(alpha: 0.78);
+    final pluginLabelColor = isDark
+        ? cs.onSurface.withValues(alpha: 0.55)
+        : cs.onSurface.withValues(alpha: 0.78);
 
     // Get the current path to highlight active state
     String currentPath = '/';
@@ -73,13 +86,19 @@ class WorkspaceSidebarLayout extends StatelessWidget {
               child: Container(
                 decoration: BoxDecoration(
                   color: isActive
-                      ? Colors.white.withValues(alpha: 0.08)
-                      : Colors.white.withValues(alpha: 0.04),
+                      ? (isDark
+                          ? Colors.white.withValues(alpha: 0.08)
+                          : cs.surfaceContainerHighest)
+                      : (isDark
+                          ? Colors.white.withValues(alpha: 0.04)
+                          : cs.surfaceContainerHighest.withValues(alpha: 0.5)),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
                     color: isActive
                         ? activeAcc.withValues(alpha: 0.4)
-                        : Colors.white.withValues(alpha: 0.08),
+                        : (isDark
+                            ? Colors.white.withValues(alpha: 0.08)
+                            : cs.outline.withValues(alpha: 0.2)),
                     width: 1,
                   ),
                   boxShadow: isActive
@@ -102,7 +121,7 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                       child: Icon(
                         icon,
                         size: 22,
-                        color: isActive ? activeAcc : Colors.white.withValues(alpha: 0.5),
+                        color: isActive ? activeAcc : inactiveIconColor,
                       ),
                     ),
                   ),
@@ -121,7 +140,9 @@ class WorkspaceSidebarLayout extends StatelessWidget {
         Container(
           width: 40,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.02),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.02)
+                : cs.surfaceContainerHigh,
             border: Border(right: borderSide),
           ),
           child: Material(
@@ -139,9 +160,7 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                         fontSize: 11,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2.4,
-                        color: EntryLandscapePalette.icyWhiteBlue.withValues(
-                          alpha: 0.85,
-                        ),
+                        color: analysisLabelColor,
                       ),
                     ),
                   ),
@@ -154,7 +173,9 @@ class WorkspaceSidebarLayout extends StatelessWidget {
         Container(
           width: 56,
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.01),
+            color: isDark
+                ? Colors.white.withValues(alpha: 0.01)
+                : cs.surfaceContainerHigh,
             border: Border(right: borderSide),
           ),
           child: Column(
@@ -201,6 +222,13 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                         activeColor: const Color(0xFFbae6fd), // --ice-accent-blue
                         onTap: () => context.go('/canvas'),
                       ),
+                      squareNav(
+                        icon: Icons.hub_rounded,
+                        tooltip: l10n.integration_hub_title,
+                        route: '/integrations',
+                        activeColor: const Color(0xFF64D2FF),
+                        onTap: () => context.push('/integrations'),
+                      ),
                     ],
                   ),
                 ),
@@ -217,7 +245,7 @@ class WorkspaceSidebarLayout extends StatelessWidget {
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
-                        color: cs.onSurface.withValues(alpha: 0.55),
+                        color: pluginLabelColor,
                       ),
                     ),
                   ),

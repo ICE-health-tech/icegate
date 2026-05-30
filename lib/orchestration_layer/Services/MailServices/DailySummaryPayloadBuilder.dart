@@ -8,6 +8,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryEmailFormatter.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/FinanceDailySummaryBuilder.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummarySuggestions.dart';
+import 'package:flutter/material.dart' show Locale;
+import 'package:ice_gate/l10n/app_localizations.dart';
 
 /// Daily cross-domain snapshot for n8n (finance + health + mood + projects).
 class DailySummaryPayloadBuilder {
@@ -102,6 +105,33 @@ class DailySummaryPayloadBuilder {
     };
   }
 
+  static List<Map<String, dynamic>> transactionsForDay({
+    required List<TransactionData> transactions,
+    required DateTime day,
+    Map<String, String>? categoryLabels,
+    int limit = 15,
+  }) =>
+      _todayTransactions(
+        transactions: transactions,
+        day: day,
+        categoryLabels: categoryLabels,
+        limit: limit,
+      );
+
+  static Map<String, dynamic> projectsSection({
+    required GrowthBlock growth,
+    required ProjectBlock project,
+    int listLimit = 8,
+  }) =>
+      _buildProjectsSection(
+        growth: growth,
+        project: project,
+        listLimit: listLimit,
+      );
+
+  static double progressPercent(num value, num goal) =>
+      _progressPercent(value, goal);
+
   static Map<String, dynamic> build({
     required FinanceBlock finance,
     required HealthBlock health,
@@ -115,6 +145,7 @@ class DailySummaryPayloadBuilder {
     String? recipientName,
     Map<String, String>? categoryLabels,
     DateTime? day,
+    List<String>? suggestions,
   }) {
     final targetDay = (day ?? DateTime.now()).toLocal();
     final financePayload = FinanceDailySummaryBuilder.buildPayload(
@@ -211,6 +242,17 @@ class DailySummaryPayloadBuilder {
     final projectsSection =
         _buildProjectsSection(growth: growth, project: project);
 
+    final l10n = lookupAppLocalizations(Locale(locale));
+    final resolvedSuggestions = suggestions ??
+        DailyMailSummarySuggestions.buildRules(
+          l10n: l10n,
+          finance: finance,
+          health: health,
+          mind: mind,
+          growth: growth,
+          day: targetDay,
+        );
+
     final periodLabel =
         (financePayload['period'] as Map<String, dynamic>)['label'] as String;
     final formatted = DailySummaryEmailFormatter.buildFormattedFields(
@@ -225,6 +267,7 @@ class DailySummaryPayloadBuilder {
       transactionCount: financePayload['transaction_count'] as int,
       todayTransactions: todayTx,
       subscriptionCount: finance.subscriptions.value.length,
+      suggestions: resolvedSuggestions,
     );
     final emailSubject = DailySummaryEmailFormatter.buildSubject(
       locale: locale,
@@ -257,6 +300,10 @@ class DailySummaryPayloadBuilder {
       'health': healthSection,
       'mood': moodSection,
       'projects': projectsSection,
+      'suggestions': resolvedSuggestions,
+      'suggestions_text': resolvedSuggestions.isEmpty
+          ? ''
+          : resolvedSuggestions.map((s) => '• $s').join('\n'),
       // Flat keys for n8n email templates ($json.body.*).
       'finance_daily_income': totals['income'],
       'finance_daily_expense': totals['expense'],

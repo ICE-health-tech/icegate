@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/LidarFoodScanner.dart';
 
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
@@ -58,7 +59,12 @@ class FoodInputPage extends StatefulWidget {
       destination: "/health/food",
       size: size,
       icon: Icons.camera_alt_rounded,
-      mainFunction: () => show(context),
+      mainFunction: () =>{},
+    onSwipeRight: ()=>WidgetNavigatorAction.smartPop(context),
+    onSwipeLeft: ()=>WidgetNavigatorAction.smartPop(context),
+   
+
+      onLongPress:()=>show(context),
     );
   }
 }
@@ -223,9 +229,13 @@ class _FoodInputPageState extends State<FoodInputPage> {
       final String personID = _mealsPersonIdForQuery();
 
       final analysisBlock = context.read<FoodAnalysisBlock>();
+      final localRel = _imagePath.isNotEmpty && !_imagePath.startsWith('http')
+          ? _imagePath
+          : null;
       final outcome = await analysisBlock.analyze(
         foodName: _foodController.text,
         image: _pickedImage,
+        localRelativePath: localRel,
         volume: _measuredVolume,
         distance: _dimensions?['length'],
         personId: personID,

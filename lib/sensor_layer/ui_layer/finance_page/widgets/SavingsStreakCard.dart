@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/utils/SavingsStreak.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
@@ -15,6 +15,8 @@ class SavingsStreakCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Watch((context) {
       final streak = computeSavingsStreak(financeBlock.transactions.value);
+      final cs = Theme.of(context).colorScheme;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       String motivator;
       if (streak.current == 0) {
         motivator = l10n.finance_streak_day_one;
@@ -26,11 +28,7 @@ class SavingsStreakCard extends StatelessWidget {
 
       return Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.04),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Colors.orange.withValues(alpha: 0.25)),
-        ),
+        decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -39,8 +37,8 @@ class SavingsStreakCard extends StatelessWidget {
               children: [
                 Text(
                   l10n.finance_streak_label,
-                  style: const TextStyle(
-                    color: Colors.white54,
+                  style: TextStyle(
+                    color: FinanceSurface.mutedInk(isDark: isDark),
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 2,
@@ -49,7 +47,7 @@ class SavingsStreakCard extends StatelessWidget {
                 Text(
                   l10n.finance_streak_best(streak.longest),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: FinanceSurface.mutedInk(isDark: isDark),
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                   ),
@@ -61,8 +59,8 @@ class SavingsStreakCard extends StatelessWidget {
               streak.current > 0
                   ? l10n.finance_streak_days(streak.current)
                   : l10n.finance_streak_day_one,
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: FinanceSurface.ink(isDark: isDark),
                 fontSize: 24,
                 fontWeight: FontWeight.w900,
               ),
@@ -71,7 +69,7 @@ class SavingsStreakCard extends StatelessWidget {
             Text(
               motivator,
               style: TextStyle(
-                color: Colors.orangeAccent.withValues(alpha: 0.9),
+                color: FinanceSurface.silverAccent(),
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -87,12 +85,13 @@ class SavingsStreakCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: on
-                        ? EntryColors.financeSilverAccent
-                        : Colors.white.withValues(alpha: 0.1),
+                        ? FinanceSurface.silverAccent()
+                        : FinanceSurface.mutedInk(isDark: isDark)
+                            .withValues(alpha: 0.2),
                     border: Border.all(
                       color: on
-                          ? EntryColors.financeSilverAccent
-                          : Colors.white12,
+                          ? FinanceSurface.ink(isDark: isDark)
+                          : FinanceSurface.border(isDark: isDark),
                     ),
                   ),
                 );
@@ -114,6 +113,8 @@ class FinanceOverviewStreakChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Watch((context) {
       final streak = computeSavingsStreak(financeBlock.transactions.value);
       return Semantics(
@@ -128,12 +129,10 @@ class FinanceOverviewStreakChip extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.orange.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(
-                  color: Colors.orange.withValues(alpha: 0.35),
-                ),
+              decoration: FinanceSurface.panel(
+                cs,
+                isDark: isDark,
+                radius: 20,
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -141,15 +140,13 @@ class FinanceOverviewStreakChip extends StatelessWidget {
                   Icon(
                     Icons.local_fire_department_rounded,
                     size: 16,
-                    color: Colors.orangeAccent.withValues(alpha: 0.9),
+                    color: FinanceSurface.silverAccent(),
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    streak.current > 0
-                        ? '${streak.current}'
-                        : '—',
-                    style: const TextStyle(
-                      color: Colors.white,
+                    streak.current > 0 ? '${streak.current}' : '—',
+                    style: TextStyle(
+                      color: cs.onSurface,
                       fontSize: 14,
                       fontWeight: FontWeight.w900,
                       fontFamily: 'JetBrainsMono',
@@ -158,8 +155,8 @@ class FinanceOverviewStreakChip extends StatelessWidget {
                   const SizedBox(width: 4),
                   Text(
                     l10n.finance_streak_label,
-                    style: const TextStyle(
-                      color: Colors.white54,
+                    style: TextStyle(
+                      color: cs.onSurfaceVariant,
                       fontSize: 8,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 1,

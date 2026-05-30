@@ -63,6 +63,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/IntegrationHubPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsCalendarPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/PersonalInformationPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/NoteManagerPage.dart';
@@ -85,6 +86,37 @@ final ValueNotifier<String?> intendedPathNotifier = ValueNotifier(null);
 
 /// True while the user must complete [ChangePasswordPage] after email recovery deep link.
 final ValueNotifier<bool> pendingPasswordRecoveryNotifier = ValueNotifier(false);
+
+/// Fade + slight slide for overlay-style routes (notifications hub, inbox, …).
+CustomTransitionPage<void> _smoothOverlayPage({
+  required GoRouterState state,
+  required Widget child,
+  Offset slideBegin = const Offset(0, 0.04),
+  Duration duration = const Duration(milliseconds: 380),
+  Duration reverseDuration = const Duration(milliseconds: 300),
+}) {
+  return CustomTransitionPage<void>(
+    key: state.pageKey,
+    transitionDuration: duration,
+    reverseTransitionDuration: reverseDuration,
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      final curved = CurvedAnimation(
+        parent: animation,
+        curve: Curves.easeOutCubic,
+        reverseCurve: Curves.easeInCubic,
+      );
+      return FadeTransition(
+        opacity: curved,
+        child: SlideTransition(
+          position: Tween<Offset>(begin: slideBegin, end: Offset.zero)
+              .animate(curved),
+          child: child,
+        ),
+      );
+    },
+    child: child,
+  );
+}
 
 final GoRouter router = GoRouter(
   navigatorKey: _rootNavigatorKey,
@@ -208,12 +240,19 @@ final GoRouter router = GoRouter(
     GoRoute(
       path: '/notifications',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const NotificationManagerPage(),
+      pageBuilder: (context, state) => _smoothOverlayPage(
+        state: state,
+        child: const NotificationManagerPage(),
+      ),
     ),
     GoRoute(
       path: '/notification-inbox',
       parentNavigatorKey: _rootNavigatorKey,
-      builder: (context, state) => const NotificationInboxPage(),
+      pageBuilder: (context, state) => _smoothOverlayPage(
+        state: state,
+        child: const NotificationInboxPage(),
+        slideBegin: const Offset(0.06, 0),
+      ),
     ),
     GoRoute(
       path: '/documentation',
@@ -288,6 +327,10 @@ final GoRouter router = GoRouter(
             GoRoute(
               path: 'sensors',
               builder: (context, state) => const HealthIntegrationPage(),
+            ),
+            GoRoute(
+              path: 'cursor',
+              builder: (context, state) => const CursorHubPage(),
             ),
           ],
         ),
@@ -467,7 +510,27 @@ final GoRouter router = GoRouter(
             ),
             GoRoute(
               path: 'skills',
-              builder: (context, state) => const MindSkillsPage(),
+              builder: (context, state) {
+                final q = state.uri.queryParameters;
+                final startSkillsRaw = q['startSkills'];
+                final startSkills = startSkillsRaw == null ||
+                        startSkillsRaw.isEmpty
+                    ? null
+                    : startSkillsRaw
+                        .split('|')
+                        .map(Uri.decodeComponent)
+                        .where((s) => s.trim().isNotEmpty)
+                        .toList();
+                return MindSkillsPage(
+                  projectId: q['projectId'],
+                  altProjectId: q['altProjectId'],
+                  projectTitle: q['title'],
+                  startSkill: q['startSkill'],
+                  startSkills: startSkills,
+                  autoStartSession: q['autoStart'] == '1' ||
+                      q['autoStart'] == 'true',
+                );
+              },
             ),
             GoRoute(
               path: 'journal',

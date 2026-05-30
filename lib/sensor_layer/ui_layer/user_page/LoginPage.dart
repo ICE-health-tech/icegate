@@ -584,7 +584,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           ),
                         ),
                       ),
-                      const SizedBox(height: 28),
+             
 
                       Center(
                         child: ConstrainedBox(
@@ -664,8 +664,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: Transform.scale(
               scale: scale,
               child: Image.asset(
-                'assets/images/crystal_logo.png',
+                'assets/images/crystal_logo2.png',
                 fit: BoxFit.contain,
+                filterQuality: FilterQuality.high,
               ),
             ),
           ),
@@ -675,33 +676,33 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   Widget _buildAlternativeAuthRow(bool isLoading, BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
         Expanded(
           child: AuthIconButton(
+            pillarKey: 'health',
             icon: Icons.fingerprint_rounded,
-            label: "Face ID",
+            label: 'Face ID',
             onPressed: isLoading ? null : _handleSecureLogin,
-            color: const Color.fromARGB(235, 211, 249, 200),
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: AuthIconButton(
+            pillarKey: 'mind',
             icon: Icons.apple_rounded,
-            label: AppLocalizations.of(context)!.apple_login,
+            label: l10n.apple_login,
             onPressed: isLoading ? null : _handleAppleSignIn,
-            color: EntryLandscapePalette.icyWhiteBlue,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 10),
         Expanded(
           child: AuthIconButton(
-            icon: Icons.g_mobiledata_rounded,
-            label: AppLocalizations.of(context)!.google_login,
+            pillarKey: 'google',
+            leading: AuthIconButton.googleMark(),
+            label: l10n.google_login,
             onPressed: isLoading ? null : _handleGoogleSignIn,
-            isLargeIcon: true,
-            color: const Color.fromARGB(255, 255, 255, 255),
           ),
         ),
       ],
@@ -738,6 +739,12 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   String _getLocalizedError(BuildContext context, String key) {
     final l10n = AppLocalizations.of(context)!;
+    // Allow `AuthBlock` to pass through unexpected error details while still
+    // mapping to the localized `err_unexpected` template.
+    if (key.startsWith('err_unexpected|')) {
+      final details = key.substring('err_unexpected|'.length);
+      return l10n.err_unexpected(details.isEmpty ? 'System Error' : details);
+    }
     switch (key) {
       case "err_invalid_credentials": return l10n.err_invalid_credentials;
       case "err_email_not_confirmed": return l10n.err_email_not_confirmed;
@@ -746,6 +753,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       case "err_auth_timeout": return l10n.err_auth_timeout;
       case "err_passkey_canceled": return l10n.err_passkey_canceled;
       case "err_passkey_failed": return l10n.err_passkey_failed;
+      case "err_google_canceled": return l10n.err_google_canceled;
+      case "err_google_failed": return l10n.err_google_failed;
       case "err_biometric_unsupported": return l10n.err_biometric_unsupported;
       case "err_biometric_disabled": return l10n.err_biometric_disabled;
       case "err_too_many_attempts": return l10n.err_too_many_attempts;
@@ -912,16 +921,23 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleSecureLogin() async {
     FocusScope.of(context).unfocus();
     try {
-      await Future.delayed(const Duration(milliseconds: 300));
+      await Future.delayed(const Duration(milliseconds: 350));
       if (!mounted) return;
-      final success = await _authBlock.loginWithBiometrics(context);
-      if (!success && mounted) {
-        await _authBlock.loginWithPasskey(context);
-      }
+      final emailHint = _emailController.text.trim();
+      await _authBlock.loginWithQuickAccess(
+        context,
+        emailHint: emailHint.isEmpty ? null : emailHint,
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.msg_secure_login_failed(e.toString()))),
+          SnackBar(
+            content: Text(
+              AppLocalizations.of(context)!.msg_secure_login_failed(
+                e.toString(),
+              ),
+            ),
+          ),
         );
       }
     }
@@ -942,15 +958,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   Future<void> _handleGuestLogin() async => await _authBlock.loginAsGuest();
 
   Future<void> _handleGoogleSignIn() async {
-    try {
-      await _authBlock.signInWithGoogle();
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(AppLocalizations.of(context)!.google_signin_error(e.toString()))),
-        );
-      }
-    }
+    FocusScope.of(context).unfocus();
+    await _authBlock.signInWithGoogle();
   }
 
   Future<void> _handleAppleSignIn() async {

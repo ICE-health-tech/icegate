@@ -7,6 +7,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/TalkSSH/SS
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart'
     hide ThemeData;
 import 'package:provider/provider.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/integrations_page/CursorHubPanel.dart';
 
 class SSHManagerPage extends StatefulWidget {
   final String? initialPrompt;
@@ -162,6 +163,7 @@ class _SSHManagerPageState extends State<SSHManagerPage> {
 
     return CustomScrollView(
       slivers: [
+        const CursorHubSliver(compact: true),
         if (!_sshService.isConnected && !_isLoading)
           SliverFillRemaining(
             hasScrollBody: false,

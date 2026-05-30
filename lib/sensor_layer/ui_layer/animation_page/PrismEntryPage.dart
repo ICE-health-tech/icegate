@@ -44,6 +44,12 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   void initState() {
     super.initState();
     _authBlock = context.read<AuthBlock>();
+    // Drop stale login errors (e.g. err_auth_timeout) from a previous attempt.
+    if (_authBlock.status.value != AuthStatus.authenticating &&
+        _authBlock.status.value != AuthStatus.registering) {
+      _authBlock.cancelAuthInteractionTimeout();
+      _authBlock.error.value = null;
+    }
     _assemblyShards = EntryGeometry.generateShardsOnly(
       80,
       seed: 17,
@@ -105,7 +111,11 @@ class _PrismEntryPageState extends State<PrismEntryPage>
     _disposeErrorEffect = effect(() {
       final error = _authBlock.error.value;
       if (error != null && mounted) {
-        _showLoginError(error);
+        // Avoid using Localizations/ScaffoldMessenger before the first frame.
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          _showLoginError(error);
+        });
         // Clear the error after showing it to avoid repeated notifications if logic triggers again
         Future.microtask(() => _authBlock.error.value = null);
       }
@@ -158,6 +168,10 @@ class _PrismEntryPageState extends State<PrismEntryPage>
         return l10n.err_passkey_canceled;
       case "err_passkey_failed":
         return l10n.err_passkey_failed;
+      case "err_google_canceled":
+        return l10n.err_google_canceled;
+      case "err_google_failed":
+        return l10n.err_google_failed;
       case "err_biometric_unsupported":
         return l10n.err_biometric_unsupported;
       case "err_biometric_disabled":
@@ -552,9 +566,11 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                           ),
                         ),
                         Image.asset(
-                          'assets/images/iceflowerlogo.png',
+                          'assets/images/crystal_logo.png',
                           width: 200,
                           height: 200,
+                          fit: BoxFit.contain,
+                          filterQuality: FilterQuality.high,
                         ),
                       ],
                     ),

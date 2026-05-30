@@ -7,7 +7,7 @@
 		<string>webcredentials:passkey.duylong.art?mode=developer</string>
 	</array>
 	<key>com.apple.security.app-sandbox</key>
-	<true/>
+	<false/>
 	<key>com.apple.security.assets.pictures.read-write</key>
 	<true/>
 	<key>com.apple.security.device.bluetooth</key>
@@ -17,8 +17,6 @@
 	<key>com.apple.security.files.user-selected.read-only</key>
 	<true/>
 	<key>com.apple.security.network.client</key>
-	<true/>
-	<key>com.apple.developer.family-controls</key>
 	<true/>
 	<key>com.apple.security.personal-information.location</key>
 	<true/>

@@ -83,6 +83,16 @@
   "projects_tile_focus": "Tập trung",
   "projects_tile_pomodoro": "Cà chua",
   "projects_tile_social_blocker": "Chặn mạng xã hội",
+  "social_shield_turn_on": "Bật Shield",
+  "social_shield_subtitle_no_auth": "Chạm dòng để cấp quyền Thời gian sử dụng",
+  "social_shield_subtitle_pick_apps": "Chạm dòng chọn app — chặn theo quy tắc bên dưới",
+  "social_shield_subtitle_ready": "Đang bật — chỉ chặn khi quy tắc khớp giờ",
+  "social_shield_subtitle_off": "Đang tắt — tạm dừng lịch và quy tắc focus",
+  "social_shield_choose_apps": "Chọn app cần chặn",
+  "social_shield_choose_apps_done": "Chạm để đổi danh sách app",
+  "social_shield_pick_apps_required": "Chọn ít nhất một app (hoặc tắt Shield).",
+  "social_shield_apps_saved": "Đã cập nhật danh sách app chặn.",
+  "social_shield_unsupported_platform": "Chặn app chỉ có trên iOS và macOS.",
   "projects_plugin_open": "Mở",
   "projects_plugin_location_tracker": "Theo dõi vị trí",
   "projects_plugin_live_map": "Bản đồ trực tiếp",
@@ -173,6 +183,21 @@
   "health_sync_msg": "Đang đồng bộ dữ liệu sức khỏe...",
   "health_sync_success": "Đồng bộ dữ liệu thành công!",
   "health_sync_failed": "Đồng bộ thất bại. Vui lòng thử lại.",
+  "health_motivation_engine_title": "Động cơ động lực",
+  "health_notification_engine_title": "Động cơ thông báo",
+  "health_notification_engine_desc": "{count} nhắc nhở đang bật",
+  "@health_notification_engine_desc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "health_motivation_all_done": "Đã chạm mọi mục tiêu hôm nay—đà của bạn đang lên.",
+  "health_motivation_strong": "Tiến độ tốt—giữ chuỗi thói quen nhé.",
+  "health_motivation_mid": "Đang đi đều—thêm một chiến thắng nhỏ nữa.",
+  "health_motivation_low": "Bắt đầu bằng nước hoặc vài bước chân—từng chút đều có ích.",
+  "health_motivation_empty": "Đặt mục tiêu và chúng tôi sẽ đồng hành cả ngày.",
   "health_update_weight": "Cập nhật cân nặng",
   "health_smart_scale_title": "Cân thông minh",
   "health_smart_scale_desc": "Đồng bộ từ Apple Health hoặc Health Connect (Withings, Eufy, Xiaomi, v.v.)",
@@ -506,6 +531,8 @@
   "err_network_fail": "Không thể kết nối đến máy chủ. Vui lòng kiểm tra mạng.",
   "err_auth_timeout": "Đăng nhập quá lâu. Vui lòng thử lại.",
   "err_passkey_canceled": "Đã hủy đăng nhập bằng Passkey.",
+  "err_google_canceled": "Đã hủy đăng nhập Google.",
+  "err_google_failed": "Đăng nhập Google thất bại. Bật Google trên Supabase và thêm web client ID.",
   "err_passkey_failed": "Xác thực bảo mật thất bại. Vui lòng thử lại.",
   "err_biometric_unsupported": "Thiết bị không hỗ trợ đăng nhập sinh trắc học.",
   "err_biometric_disabled": "Đăng nhập sinh trắc học chưa được bật cho tài khoản này.",
@@ -833,6 +860,59 @@
       }
     }
   },
+  "mind_skills_session_title": "Phiên kỹ năng",
+  "mind_skills_session_subtitle": "Chọn kỹ năng, tập trung, ghi lại điều học được.",
+  "mind_skills_session_start": "Bắt đầu phiên",
+  "mind_skills_session_empty": "Chưa có phiên kỹ năng trong {days} ngày qua.",
+  "@mind_skills_session_empty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_stats": "{sessions} phiên · {minutes} phút · nổi bật: {skill}",
+  "@mind_skills_session_stats": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_session_live": "ĐANG TẬP TRUNG",
+  "mind_skills_session_tap_start": "CHẠM GIỮA ĐỂ BẮT ĐẦU",
+  "mind_skills_session_tap_finish": "CHẠM GIỮA ĐỂ DỪNG SỚM",
+  "mind_skills_session_listening": "ĐANG TẬP TRUNG · TỰ GHI KHI NHẠC KẾT THÚC",
+  "mind_skills_session_pick_skills": "Chọn ít nhất một kỹ năng trước khi bắt đầu.",
+  "mind_skills_my_list": "Kỹ năng của tôi",
+  "mind_skills_add_skill": "Thêm kỹ năng",
+  "mind_skills_tap_list": "Chạm kỹ năng trong danh sách để chọn",
+  "mind_skills_tap_list_project": "Chọn kỹ năng · XP dự án khi ghi",
+  "mind_skills_status_in_session": "Đang tập trung",
+  "mind_skills_status_selected": "Đã chọn",
+  "mind_skills_level_short": "Cấp {level}",
+  "@mind_skills_level_short": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "mind_skills_session_logged": "Đã ghi phiên · {minutes} phút · +{xp} XP",
+  "@mind_skills_session_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
   "mood_trends_title": "XU HƯỚNG TÂM TRẠNG",
   "social_notes_title": "GHI CHÉP TINH THẦN",
   "social_empty_state_title": "Câu chuyện của bạn bắt đầu tại đây",
@@ -1067,6 +1147,40 @@
   "canvas_mail_summary_send": "Gửi báo cáo email",
   "canvas_mail_summary_auto_title": "Email tự động hàng ngày",
   "canvas_mail_summary_auto_subtitle": "Sau giờ này, gửi một lần mỗi ngày khi ứng dụng đang mở",
+  "mail_suggestion_title": "Gợi ý báo cáo",
+  "mail_suggestion_ai_loading": "AI đang phân tích ngày của bạn…",
+  "mail_suggestion_ai_fallback": "Gợi ý ngoại tuyến — cấu hình MAIL_SUGGESTIONS_AGENT_URL để dùng AI.",
+  "mail_suggestion_negative_net": "Chi tiêu hôm nay vượt thu nhập — xem lại giao dịch gần đây.",
+  "mail_suggestion_no_transactions": "Chưa ghi giao dịch hôm nay — thêm chi tiêu để báo cáo chính xác.",
+  "mail_suggestion_budget_high": "Đã dùng {percent}% ngân sách tháng — cân nhắc tiết chế chi tiêu.",
+  "@mail_suggestion_budget_high": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_monthly_deficit": "Chi tiêu tháng vượt thu nhập — cân nhắc cắt giảm chi phí cố định.",
+  "mail_suggestion_steps_low": "Bước chân đạt {percent}% mục tiêu — đi bộ ngắn giúp bạn tiến gần hơn.",
+  "@mail_suggestion_steps_low": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_water_low": "Lượng nước dưới một nửa mục tiêu — uống đều trong ngày.",
+  "mail_suggestion_sleep_low": "Giấc ngủ dưới mục tiêu — thử đi ngủ sớm hơn tối nay.",
+  "mail_suggestion_log_mood": "Chưa ghi mood hôm nay — check-in nhanh giúp theo dõi xu hướng.",
+  "mail_suggestion_focus_low": "Thời gian tập trung còn thấp — lên lịch một phiên deep work ngắn.",
+  "mail_suggestion_tasks_many": "{count} task đang mở — chọn một ưu tiên cho ngày mai.",
+  "@mail_suggestion_tasks_many": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "reports_hub_title": "Báo cáo qua mail",
   "reports_hub_subtitle": "Báo cáo tài chính trên máy, gửi email qua n8n",
   "reports_mail_section_title": "Gửi qua n8n",
@@ -1230,7 +1344,65 @@
   "project_doc_api_title": "Đặc tả API",
   "project_finance_label": "Tài chính",
   "project_no_finance": "Chưa có bản ghi tài chính nào cho dự án này.",
+  "project_skills_label": "Kỹ năng",
+  "project_no_skills": "Chưa có kỹ năng nào. Nhấn + để theo dõi thứ bạn cải thiện khi làm dự án.",
+  "project_add_skill_title": "Thêm kỹ năng",
+  "project_skill_name_hint": "VD: Flutter, debug, thiết kế hệ thống",
+  "project_skill_streak_days": "{count} ngày liên tiếp",
+  "@project_skill_streak_days": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "project_skill_streak_none": "Chưa có chuỗi",
+  "project_skill_xp_hint": "{total} XP · còn {remaining} XP lên cấp",
+  "@project_skill_xp_hint": {
+    "placeholders": {
+      "total": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "project_skill_xp_on_complete": "Hoàn thành nhiệm vụ để nhận +15 XP mỗi kỹ năng",
+  "project_skill_log_session": "Ghi phiên Skill Boost để tăng cấp kỹ năng này.",
+  "project_skill_practice": "Mở Skill Boost",
+  "project_skill_tap_to_start": "Chọn một hoặc nhiều kỹ năng, rồi bắt đầu phiên",
+  "project_skill_start_session": "Bắt đầu phiên ({count})",
+  "@project_skill_start_session": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "project_skill_catalog_hint": "Chọn từ các kỹ năng giống tab Skills trong Mind.",
+  "project_auto_add_all_skills": "Thêm tự động tất cả",
+  "project_auto_add_all_skills_subtitle": "Gắn mọi kỹ năng trong thư viện Mind vào dự án này",
+  "project_skills_all_on_project": "Tất cả kỹ năng đã có trong dự án",
+  "project_skills_added_count": "Đã thêm {count} kỹ năng",
+  "@project_skills_added_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_delete_confirm": "Xóa \"{name}\" khỏi dự án này?",
+  "@project_skill_delete_confirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "project_skill_added": "Đã thêm kỹ năng",
+  "project_skill_xp_granted": "Kỹ năng +{xp} XP",
+  "@project_skill_xp_granted": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "project_sub_projects_label": "Dự án con",
+  "project_no_sub_projects": "Chưa có dự án con. Nhấn + để thêm.",
+  "project_add_sub_project_title": "Dự án con mới",
+  "project_sub_project_name_hint": "Tên dự án con",
   "project_add_task_title": "Nhiệm vụ mới",
+  "project_task_assign_to": "Gán cho dự án",
   "project_task_title_hint": "Tiêu đề nhiệm vụ",
   "task_delete_tooltip": "Xóa nhiệm vụ",
   "task_delete_confirm_title": "Xóa nhiệm vụ",
@@ -1264,6 +1436,34 @@
   "project_delete_note_title": "Xóa ghi chú",
   "project_delete_note_msg": "Bạn có chắc chắn muốn xóa ghi chú này không?",
   "project_note_no_content": "Không có nội dung",
+  "note_editor_write_hint": "Bắt đầu viết ghi chú…",
+  "note_editor_saved_label": "Đã lưu {when}",
+  "@note_editor_saved_label": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "note_editor_saved_just_now": "vừa xong",
+  "note_editor_saved_minutes": "{count} phút trước",
+  "@note_editor_saved_minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_saved_hours": "{count} giờ trước",
+  "@note_editor_saved_hours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_unsaved": "Chưa lưu",
+  "note_editor_saving": "Đang lưu…",
   "focus_select_project": "CHẠM ĐỂ CHỌN DỰ ÁN",
   "focus_select_task": "CHỌN NHIỆM VỤ",
   "focus_active_exercise": "BÀI TẬP ĐANG HOẠT ĐỘNG: {type}",
@@ -1378,7 +1578,7 @@
   "delete_account_err_not_signed_in": "Không có phiên đăng nhập.",
   "remaining": "Còn lại",
   "notification_manager_title": "Thông báo",
-  "notification_hunter_hub": "Trung tâm Thợ săn",
+  "notification_hunter_hub": "Trung tâm thông báo",
   "notification_tab_active": "ĐANG CHẠY",
   "notification_tab_reminders": "NHẮC NHỞ",
   "notification_tab_wisdom": "TRÍ TUỆ",
@@ -1387,6 +1587,7 @@
   "notification_ai_waiting": "Đang thu thập tình báo...",
   "notification_ai_analysis": "PHÂN TÍCH AI",
   "notification_daily_quest": "NHIỆM VỤ HÀNG NGÀY",
+  "notification_no_active_quests": "Chưa có nhiệm vụ đang hoạt động. Hoàn thành công việc trong Dự án để nhận nhiệm vụ hàng ngày.",
   "notification_quest_completed_snack": "Đã hoàn thành: {title} (+{exp} EXP)",
   "@notification_quest_completed_snack": {
     "placeholders": {
@@ -1407,6 +1608,7 @@
   "notification_pomodoro_reminder_subtitle": "Nhận thông báo khi hoàn thành một phiên Pomodoro hoặc kết thúc giờ nghỉ.",
   "notification_live_activities_title": "Hoạt động trực tiếp",
   "notification_live_activities_subtitle": "Theo dõi bộ đếm tập trung trên Màn hình khóa.",
+  "notification_morning_briefing_subtitle": "Hiện tóm tắt buổi sáng lần đầu mở Home trong ngày.",
   "notification_status_on": "bật",
   "notification_status_off": "tắt",
   "notification_wisdom_board": "Bảng trí tuệ",
@@ -1639,6 +1841,58 @@
   "ssh_disconnect": "Ngắt Kết Nối",
   "ssh_search_hint": "Tìm kiếm...",
   "ssh_connect_host_first": "Hãy kết nối máy chủ trước khi quản lý phiên tmux.",
+  "ssh_cursor_api_title": "Cursor API",
+  "ssh_cursor_api_subtitle": "Lưu API key để dùng cursor-agent trên máy chủ từ xa.",
+  "ssh_cursor_api_key_hint": "cursor_…",
+  "ssh_cursor_api_key_stored": "Đã lưu API key trên thiết bị.",
+  "ssh_cursor_api_save": "Lưu key",
+  "ssh_cursor_api_test": "Kiểm tra kết nối",
+  "ssh_cursor_api_open_terminal": "Mở SSH (chế độ Cursor)",
+  "ssh_cursor_api_saved": "Đã lưu Cursor API key.",
+  "ssh_cursor_api_test_ok": "Cursor API key hợp lệ.",
+  "ssh_cursor_api_missing_key": "Nhập hoặc lưu Cursor API key trước.",
+  "cursor_hub_title": "Cursor",
+  "cursor_hub_page_subtitle": "Điều khiển Cursor trên Mac qua My Machines và Cloud Agents — không cần SSH.",
+  "cursor_hub_canvas_subtitle": "Worker My Machines, gửi task API, bảng agents",
+  "cursor_hub_integration_subtitle": "API key, thiết lập worker, gửi task từ điện thoại",
+  "cursor_hub_section_title": "AI & tự động hóa",
+  "cursor_hub_key_ready": "API key đã xác minh",
+  "cursor_hub_open_full": "Mở Cursor Hub",
+  "cursor_hub_open_agents": "Mở Agents",
+  "cursor_hub_worker_title": "Worker My Machine",
+  "cursor_hub_worker_body": "Trên Mac, chạy lệnh sau trong Terminal và giữ cửa sổ mở. Máy sẽ hiện tại cursor.com/agents.",
+  "cursor_hub_copy_worker_cmd": "Sao chép lệnh",
+  "cursor_hub_worker_copied": "Đã sao chép: agent worker start",
+  "cursor_hub_send_title": "Gửi tác vụ",
+  "cursor_hub_target_machine": "Mac của tôi",
+  "cursor_hub_target_cloud": "Repo cloud",
+  "cursor_hub_machine_name": "Tên máy (tùy chọn)",
+  "cursor_hub_machine_name_hint": "Như trong menu môi trường Agents",
+  "cursor_hub_pick_repo": "Kho lưu trữ của bạn",
+  "cursor_hub_refresh_repos": "Làm mới danh sách repo",
+  "cursor_hub_repos_empty": "Không tìm thấy repo. Nhập URL bên dưới hoặc dùng trên Mac để quét ~/Code.",
+  "cursor_hub_usage_limit": "Cloud agent bị chặn: bật usage-based pricing trên cursor.com (~$2). Dùng chế độ Mac của tôi.",
+  "cursor_hub_repo_url": "URL repo GitHub",
+  "cursor_hub_prompt_label": "Agent cần làm gì?",
+  "cursor_hub_send_task": "Gửi tới Cursor",
+  "cursor_hub_task_sent": "Đã gửi — đang mở agent…",
+  "cursor_hub_task_failed": "Không khởi chạy agent: {reason}",
+  "@cursor_hub_task_failed": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "cursor_hub_recent_title": "Agents gần đây",
+  "island_cursor_ssh_standby": "Chờ kết nối SSH",
+  "island_cursor_no_api_key": "Thiếu API key",
+  "ssh_cursor_api_test_fail": "Kết nối thất bại: {reason}",
+  "@ssh_cursor_api_test_fail": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "ssh_go_to_terminal": "MỞ TERMINAL",
   "ssh_no_tmux_sessions": "Không có phiên tmux đang chạy.",
   "journal": "Nhật ký",
@@ -1755,5 +2009,100 @@
   "island_connected": "ĐÃ KẾT NỐI",
   "island_not_active": "CHƯA HOẠT ĐỘNG",
   "island_connect": "KẾT NỐI",
-  "island_tmux_active": "TMUX ĐANG CHẠY"
+  "island_tmux_active": "TMUX ĐANG CHẠY",
+  "daily_loop_title": "Vòng hôm nay",
+  "daily_loop_subtitle": "Hoàn thành cả 4 trụ cột để giữ chuỗi",
+  "daily_loop_complete": "Xong vòng hôm nay — quá đỉnh!",
+  "daily_loop_streak": "{count} ngày",
+  "@daily_loop_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_progress": "{done} / {total} xong",
+  "@daily_loop_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_health": "Sức khỏe",
+  "daily_loop_finance": "Tài chính",
+  "daily_loop_mind": "Tâm trạng",
+  "daily_loop_projects": "Dự án",
+  "morning_loop_reminder_title": "Tóm tắt buổi sáng",
+  "morning_loop_reminder_subtitle": "Tóm tắt hôm qua & động lực hôm nay — mở Ice Gate đầu tiên mỗi sáng",
+  "morning_briefing_toggle": "Tóm tắt sáng trên Home",
+  "morning_briefing_title": "Chào buổi sáng",
+  "morning_briefing_title_name": "Chào buổi sáng, {name}",
+  "@morning_briefing_title_name": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_subtitle": "Chăm cơ thể, ổn định tinh thần — rồi hoàn thành vòng 4 trụ cột trong ngày.",
+  "morning_briefing_yesterday_title": "Hôm qua",
+  "morning_briefing_yesterday_empty": "Ngày êm ả — hôm nay là khởi đầu mới.",
+  "morning_briefing_yesterday_steps": "{steps} bước chân",
+  "@morning_briefing_yesterday_steps": {
+    "placeholders": {
+      "steps": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_water": "{ml} ml nước",
+  "@morning_briefing_yesterday_water": {
+    "placeholders": {
+      "ml": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_sleep": "Ngủ {hours} giờ",
+  "@morning_briefing_yesterday_sleep": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_yesterday_loop": "Hoàn thành {done}/{total} trụ cột",
+  "@morning_briefing_yesterday_loop": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_motivation_title": "Động lực hôm nay",
+  "morning_briefing_motivation_empty": "Hôm qua nhẹ nhàng — một chiến thắng nhỏ hôm nay là đủ để lấy lại nhịp.",
+  "morning_briefing_motivation_all_done": "Bạn kết thúc hôm qua rất tốt — giữ đà đó sang hôm nay nhé.",
+  "morning_briefing_motivation_strong": "Tiến bộ vững hôm qua — thêm một trụ cột hôm nay để giữ chuỗi.",
+  "morning_briefing_motivation_mid": "Bạn đã tiến lên hôm qua — thêm một bước nhỏ sáng nay.",
+  "morning_briefing_motivation_low": "Hôm qua là ngày nghỉ — uống nước, đi bộ hoặc ghi tâm trạng cũng là khởi đầu tốt.",
+  "morning_briefing_progress": "Đã xong {done}/{total} trụ cột hôm nay",
+  "@morning_briefing_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_start": "Bắt đầu ngày mới",
+  "morning_briefing_log_mood": "Ghi tâm trạng trước"
 }

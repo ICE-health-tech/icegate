@@ -28,34 +28,39 @@ class GoalConfigurationWidget extends StatelessWidget {
               ),
             ),
             SafeArea(
-              child: CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
-                  SliverAppBar(
-                    backgroundColor: Colors.transparent,
-                    elevation: 0,
-                    leading: IconButton(
-                      icon: const Icon(
-                        Icons.chevron_left_rounded,
-                        color: Colors.white,
+              child: Center(
+                child: ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 1320),
+                  child: CustomScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    slivers: [
+                      SliverAppBar(
+                        backgroundColor: Colors.transparent,
+                        elevation: 0,
+                        leading: IconButton(
+                          icon: const Icon(
+                            Icons.chevron_left_rounded,
+                            color: Colors.white,
+                          ),
+                          onPressed: () => context.pop(),
+                        ),
+                        title: Text(
+                          l10n.goal_mission,
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w800,
+                          ),
+                        ),
                       ),
-                      onPressed: () => context.pop(),
-                    ),
-                    title: Text(
-                      l10n.goal_mission,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
+                      SliverPadding(
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
+                        sliver: const SliverToBoxAdapter(
+                          child: HealthGoalConfigurationPanel(),
+                        ),
                       ),
-                    ),
+                    ],
                   ),
-                  SliverPadding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 80),
-                    sliver: const SliverToBoxAdapter(
-                      child: HealthGoalConfigurationPanel(),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
           ],

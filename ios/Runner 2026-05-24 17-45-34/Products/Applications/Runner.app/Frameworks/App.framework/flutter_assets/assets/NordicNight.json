@@ -1,0 +1,59 @@
+{
+    "theme_name": "Nordic Night",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF37474F",
+    "color_scheme": {
+        "primary": "0xFF90CAF9",
+        "onPrimary": "0xFF0D1B2A",
+        "primaryContainer": "0xFF1B263B",
+        "onPrimaryContainer": "0xFFE0E1DD",
+        "secondary": "0xFF778DA9",
+        "onSecondary": "0xFF0D1B2A",
+        "surface": "0xFF0D1B2A",
+        "onSurface": "0xFFE0E1DD",
+        "surfaceContainer": "0xFF1B263B",
+        "outline": "0xFF415A77",
+        "outlineVariant": "0xFF778DA9"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF0D1B2A",
+            "foregroundColor": "0xFF90CAF9",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF90CAF9",
+            "foregroundColor": "0xFF0D1B2A",
+            "borderRadius": 8.0,
+            "elevation": 2.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1B263B",
+            "elevation": 1.0,
+            "borderRadius": 12.0
+        },
+        "icon": {
+            "color": "0xFF90CAF9",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Roboto",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFF90CAF9"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFE0E1DD"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

@@ -3,6 +3,7 @@ import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
+import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:flutter/widgets.dart'; // For BuildContext
 
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
@@ -24,6 +25,9 @@ class ProjectBlock {
     _personId = personId;
 
     _projectsSubscription?.cancel();
+    // Upload local sub-project links (parent_project_id) so other devices get hierarchy.
+    Future.microtask(() => dao.pushAllProjectsForPerson(personId));
+
     _projectsSubscription = dao
         .watchAllProjects(personId)
         .listen(
@@ -43,6 +47,7 @@ class ProjectBlock {
                     sshHostId: e.sshHostId,
                     remotePath: e.remotePath,
                     aiModel: e.aiModel,
+                    parentProjectId: e.parentProjectId,
                     createdAt: e.createdAt,
                     updatedAt: e.updatedAt,
                     status: e.status,
@@ -57,17 +62,23 @@ class ProjectBlock {
         );
   }
 
+  /// Canonical link id for tasks, notes, and finance on this project.
+  static String linkId(ProjectProtocol project) =>
+      project.projectID.isNotEmpty ? project.projectID : project.id;
+
   Future<String> createProject(
     String name,
     String? description,
-    String? color,
-  ) async {
+    String? color, {
+    String? parentProjectId,
+  }) async {
     if (_personId.isEmpty) return "";
     final uuid = IDGen.UUIDV7();
     await _dao.insertProject(
       ProjectsTableCompanion.insert(
-        id: uuid, // Use the same UUID
-        projectID: Value(uuid), // Consistently set projectID
+        id: uuid,
+        projectID: Value(uuid),
+        parentProjectId: Value(parentProjectId),
         personID: Value(_personId),
         name: name,
         description: Value(description),
@@ -79,8 +90,47 @@ class ProjectBlock {
     return uuid;
   }
 
+  List<ProjectProtocol> childrenOf(String parentId) =>
+      projects.value.childrenOf(parentId);
+
+  List<ProjectProtocol> get rootProjects => projects.value.rootsOnly;
+
+  /// Project id + projectID values used for goals, notes, and finance links.
+  Set<String> scopeIdsFor(ProjectProtocol project) {
+    final ids = <String>{project.id, project.projectID}
+      ..removeWhere((id) => id.isEmpty);
+    for (final child in childrenOf(project.id)) {
+      ids.add(child.id);
+      if (child.projectID.isNotEmpty) ids.add(child.projectID);
+    }
+    return ids;
+  }
+
+  bool goalBelongsToScope(GoalProtocol goal, ProjectProtocol project) {
+    final pid = goal.projectID;
+    if (pid == null || pid.isEmpty) return false;
+    return scopeIdsFor(project).contains(pid);
+  }
+
+  /// Sub-project name when [goal] belongs to a child of [project]; null if own task.
+  String? subProjectLabelForGoal(GoalProtocol goal, ProjectProtocol project) {
+    final pid = goal.projectID;
+    if (pid == null || pid.isEmpty) return null;
+    if (pid == project.id || pid == project.projectID) return null;
+    for (final child in childrenOf(project.id)) {
+      if (pid == child.id || pid == child.projectID) return child.name;
+    }
+    return null;
+  }
+
+  List<GoalProtocol> goalsInScope(
+    List<GoalProtocol> allGoals,
+    ProjectProtocol project,
+  ) =>
+      allGoals.where((g) => goalBelongsToScope(g, project)).toList();
+
   Future<void> deleteProject(String id) async {
-    await _dao.deleteProjectByProjectId(id);
+    await _dao.deleteProjectByUuid(id);
   }
 
   void selectProject(ProjectProtocol? project) {
@@ -95,6 +145,7 @@ class ProjectBlock {
       ProjectData(
         id: project.id,
         projectID: project.projectID,
+        parentProjectId: project.parentProjectId,
         personID: project.personID,
         name: project.name,
         description: project.description,

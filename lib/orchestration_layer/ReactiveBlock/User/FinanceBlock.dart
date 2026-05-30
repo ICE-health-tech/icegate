@@ -581,10 +581,9 @@ class FinanceBlock {
           ..orderBy([(t) => OrderingTerm.desc(t.transactionDate)]))
         .get();
 
-    Timer(Duration.zero, () {
-      untracked(() {
-        batch(() {
-          updateAccounts(
+    untracked(() {
+      batch(() {
+        updateAccounts(
             accRows
                 .map(
                   (e) => FinancialAccountProtocol(
@@ -620,8 +619,7 @@ class FinanceBlock {
                 )
                 .toList(),
           );
-          transactions.value = txnRows;
-        });
+        transactions.value = txnRows;
       });
     });
     await _reloadSubscriptionsFromDb();

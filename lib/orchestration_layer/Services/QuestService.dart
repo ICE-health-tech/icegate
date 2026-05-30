@@ -1,5 +1,5 @@
-import 'package:flutter/foundation.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/orchestration_layer/Services/DailyLoopService.dart';
 
 class QuestService {
   final AppDatabase _db;
@@ -32,8 +32,6 @@ class QuestService {
   }
 
   Future<void> _generateNewDailyQuests(String personId) async {
-    // Random daily quest generation has been disabled per user request.
-    // Quests should now be managed manually or through specific triggers.
-    debugPrint("Daily quest generation skipped for $personId");
+    await DailyLoopService(_db).ensureDailyQuests(personId);
   }
 }

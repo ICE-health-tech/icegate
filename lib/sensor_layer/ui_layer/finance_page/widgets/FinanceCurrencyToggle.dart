@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 
 /// Compact USD | VND pill used above amount fields (transaction dialog, subscription sheet, etc.).
 class FinanceInlineCurrencyToggle extends StatelessWidget {
@@ -19,29 +19,29 @@ class FinanceInlineCurrencyToggle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Watch((context) {
       final useVnd = financeBlock.useVnd.value;
-      const accent = EntryColors.financeSilverAccent;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
       return GestureDetector(
         onTap: () => onTap(),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: accent.withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: accent.withValues(alpha: 0.35)),
+          decoration: FinanceSurface.panel(
+            Theme.of(context).colorScheme,
+            isDark: isDark,
+            radius: 18,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _pill('USD', !useVnd, accent),
+              _pill('USD', !useVnd, isDark: isDark),
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 6),
                 child: Icon(
                   Icons.sync_alt_rounded,
                   size: 12,
-                  color: accent.withValues(alpha: 0.55),
+                  color: FinanceSurface.mutedInk(isDark: isDark),
                 ),
               ),
-              _pill('VND', useVnd, accent),
+              _pill('VND', useVnd, isDark: isDark),
             ],
           ),
         ),
@@ -49,12 +49,15 @@ class FinanceInlineCurrencyToggle extends StatelessWidget {
     });
   }
 
-  static Widget _pill(String label, bool active, Color accent) {
+  static Widget _pill(String label, bool active, {required bool isDark}) {
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
       decoration: BoxDecoration(
-        color: active ? accent : Colors.transparent,
+        color: FinanceSurface.currencyPillBackground(
+          isDark: isDark,
+          active: active,
+        ),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
@@ -62,7 +65,10 @@ class FinanceInlineCurrencyToggle extends StatelessWidget {
         style: TextStyle(
           fontWeight: FontWeight.w900,
           fontSize: 9,
-          color: active ? Colors.black : accent.withValues(alpha: 0.55),
+          color: FinanceSurface.currencyPillForeground(
+            isDark: isDark,
+            active: active,
+          ),
         ),
       ),
     );

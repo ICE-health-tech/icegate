@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'dart:ui';
 import 'dart:io';
@@ -6,7 +7,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dar
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Project/ProjectProtocol.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
+import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:provider/provider.dart';
@@ -18,6 +21,8 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
     
 import 'TaskItem.dart';
 import 'ProjectNoteItem.dart';
+import 'ProjectSkillItem.dart';
+import 'ProjectSkillsPicker.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SnowfallOverlay.dart';
 
@@ -42,8 +47,11 @@ class ProjectDetailsPage extends StatelessWidget {
           CustomScrollView(
             slivers: [
               SliverAppBar(
-                expandedHeight: 200,
+                expandedHeight: 212,
                 pinned: true,
+                backgroundColor: colorScheme.surface,
+                surfaceTintColor: Colors.transparent,
+                scrolledUnderElevation: 3,
                 actions: [
                   if (project.status == 0)
                     IconButton(
@@ -178,20 +186,18 @@ class ProjectDetailsPage extends StatelessWidget {
                   ),
                 ],
                 flexibleSpace: FlexibleSpaceBar(
+                  centerTitle: false,
+                  expandedTitleScale: 1.0,
+                  titlePadding: const EdgeInsets.only(left: 56, bottom: 14, right: 8),
                   title: Text(
                     project.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     style: TextStyle(
                       color: colorScheme.onSurface,
                       fontWeight: FontWeight.w900,
-                      letterSpacing: -1.0,
-                      shadows: [
-                        Shadow(
-                          color: colorScheme.surfaceContainerHighest.withValues(
-                            alpha: 0.3,
-                          ),
-                          blurRadius: 10,
-                        ),
-                      ],
+                      fontSize: 16,
+                      letterSpacing: -0.5,
                     ),
                   ),
                   background: Stack(
@@ -238,19 +244,17 @@ class ProjectDetailsPage extends StatelessWidget {
                       ),
                       // Content with Modern Typography
                       Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0,
-                          vertical: 32.0,
-                        ),
+                        padding: const EdgeInsets.fromLTRB(24, 20, 24, 52),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.end,
+                          mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             if (project.description != null)
                               Container(
                                 padding: const EdgeInsets.symmetric(
                                   horizontal: 12,
-                                  vertical: 6,
+                                  vertical: 4,
                                 ),
                                 decoration: BoxDecoration(
                                   color: colorScheme.onSurface.withValues(
@@ -260,19 +264,21 @@ class ProjectDetailsPage extends StatelessWidget {
                                 ),
                                 child: Text(
                                   project.description!,
-                                  maxLines: 2,
+                                  maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
                                     color: colorScheme.onSurface.withValues(
                                       alpha: 0.7,
                                     ),
-                                    fontSize: 13,
+                                    fontSize: 12,
                                     fontWeight: FontWeight.w600,
                                     letterSpacing: 0.2,
                                   ),
                                 ),
                               ),
-                            const SizedBox(height: 24),
+                            SizedBox(
+                              height: project.description != null ? 10 : 0,
+                            ),
                             StreamBuilder<List<GoalData>>(
                               stream: database.growthDAO.watchGoalsByProject(
                                 project.projectID,
@@ -303,7 +309,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                               style: TextStyle(
                                                 color: colorScheme.onSurface,
                                                 fontWeight: FontWeight.w900,
-                                                fontSize: 32,
+                                                fontSize: 28,
                                                 letterSpacing: -1.5,
                                               ),
                                             ),
@@ -345,7 +351,7 @@ class ProjectDetailsPage extends StatelessWidget {
                                         ),
                                       ],
                                     ),
-                                    const SizedBox(height: 16),
+                                    const SizedBox(height: 10),
                                     Stack(
                                       children: [
                                         // Track
@@ -405,6 +411,39 @@ class ProjectDetailsPage extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      if (!project.isRoot)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 12),
+                          child: _buildParentProjectLink(context, colorScheme),
+                        ),
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context)!.project_sub_projects_label,
+                        () => _showAddSubProjectDialog(context, project),
+                      ),
+                      const SizedBox(height: 16),
+                      Watch((context) {
+                        final children = context
+                            .read<ProjectBlock>()
+                            .childrenOf(project.id);
+                        if (children.isEmpty) {
+                          return _buildEmptyState(
+                            context,
+                            AppLocalizations.of(context)!
+                                .project_no_sub_projects,
+                          );
+                        }
+                        return Column(
+                          children: children.map((child) {
+                            return _buildSubProjectTile(
+                              context,
+                              colorScheme,
+                              child,
+                            );
+                          }).toList(),
+                        );
+                      }),
+                      const SizedBox(height: 24),
                       _buildSectionHeader(
                         context,
                         AppLocalizations.of(context)!.tasks,
@@ -412,7 +451,7 @@ class ProjectDetailsPage extends StatelessWidget {
                           _showAddTaskDialog(
                             context,
                             growthBlock,
-                            project.id,
+                            project,
                           );
                         },
                         onSync: () async {
@@ -446,14 +485,11 @@ class ProjectDetailsPage extends StatelessWidget {
                       ),
                       const SizedBox(height: 16),
                       Watch((context) {
-                        final allGoals = growthBlock.goals.value;
-                        final tasks = allGoals
-                            .where(
-                              (g) =>
-                                  g.projectID == project.id ||
-                                  g.projectID == project.projectID,
-                            )
-                            .toList();
+                        final projectBlock = context.read<ProjectBlock>();
+                        final tasks = projectBlock.goalsInScope(
+                          growthBlock.goals.value,
+                          project,
+                        );
                         if (tasks.isEmpty) {
                           return _buildEmptyState(
                             context,
@@ -477,8 +513,36 @@ class ProjectDetailsPage extends StatelessWidget {
                           children: sortedTasks.map((protocol) {
                             return TaskItem(
                               task: protocol,
-                              onComplete: () =>
-                                  growthBlock.completeGoal(protocol.id),
+                              projectName: projectBlock.subProjectLabelForGoal(
+                                protocol,
+                                project,
+                              ),
+                              onComplete: () async {
+                                final hadSkills = growthBlock
+                                    .skillsForProject(
+                                      project.id,
+                                      altProjectId: project.projectID,
+                                    )
+                                    .isNotEmpty;
+                                await growthBlock.completeGoal(
+                                  protocol.id,
+                                  projectId: project.id,
+                                  altProjectId: project.projectID,
+                                );
+                                if (context.mounted &&
+                                    hadSkills &&
+                                    protocol.status != 'done') {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        AppLocalizations.of(context)!
+                                            .project_skill_xp_granted(15),
+                                      ),
+                                      behavior: SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                }
+                              },
                               onDeleteRequested: () => confirmDeleteTask(
                                 context,
                                 growthBlock,
@@ -489,7 +553,7 @@ class ProjectDetailsPage extends StatelessWidget {
                         );
                       }),
 
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       _buildSectionHeader(
                         context,
                         AppLocalizations.of(context)!.project_notes_label,
@@ -525,7 +589,7 @@ class ProjectDetailsPage extends StatelessWidget {
                           );
                         },
                       ),
-                      const SizedBox(height: 32),
+                      const SizedBox(height: 24),
                       _buildSectionHeader(
                         context,
                         AppLocalizations.of(context)!.project_finance_label,
@@ -629,12 +693,234 @@ class ProjectDetailsPage extends StatelessWidget {
                           }).toList(),
                         );
                       }),
+                      const SizedBox(height: 24),
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context)!.project_skills_label,
+                        () => showProjectSkillsPicker(context, project: project),
+                      ),
+                      const SizedBox(height: 10),
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 14,
+                          vertical: 12,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primary.withValues(alpha: 0.06),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: colorScheme.primary.withValues(alpha: 0.12),
+                          ),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              AppLocalizations.of(context)!
+                                  .project_skill_xp_on_complete,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.55,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              AppLocalizations.of(context)!
+                                  .project_skill_tap_to_start,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w700,
+                                height: 1.35,
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.85,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 14),
+                      Watch((context) {
+                        final projectSkills = growthBlock.skillsForProject(
+                          project.id,
+                          altProjectId: project.projectID,
+                        );
+                        if (projectSkills.isEmpty) {
+                          return _buildEmptyState(
+                            context,
+                            AppLocalizations.of(context)!.project_no_skills,
+                          );
+                        }
+                        final personId = context
+                                .read<PersonBlock>()
+                                .information
+                                .value
+                                .profiles
+                                .id ??
+                            '';
+                        return StreamBuilder<List<MindLogData>>(
+                          stream: personId.isEmpty
+                              ? const Stream<List<MindLogData>>.empty()
+                              : context
+                                  .read<MindBlock>()
+                                  .watchMindLogs(personId),
+                          builder: (context, logSnapshot) {
+                            final streakIndex = SkillPracticeStreak.buildDayIndex(
+                              logSnapshot.data ?? [],
+                            );
+                            return _ProjectSkillSessionPicker(
+                              project: project,
+                              skills: projectSkills,
+                              streakIndex: streakIndex,
+                              onDeleteSkill: (skill) => _confirmDeleteSkill(
+                                context,
+                                growthBlock,
+                                skill,
+                              ),
+                            );
+                          },
+                        );
+                      }),
                       const SizedBox(height: 100),
                     ],
                   ),
                 ),
               ),
             ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildParentProjectLink(
+    BuildContext context,
+    ColorScheme colorScheme,
+  ) {
+    final parentId = project.parentProjectId;
+    if (parentId == null || parentId.isEmpty) {
+      return const SizedBox.shrink();
+    }
+    final parent = context.read<ProjectBlock>().projects.value
+        .cast<ProjectProtocol?>()
+        .firstWhere((p) => p?.id == parentId, orElse: () => null);
+    if (parent == null) return const SizedBox.shrink();
+
+    return InkWell(
+      onTap: () => context.push('/projects/${parent.id}'),
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Icon(
+              Icons.subdirectory_arrow_left_rounded,
+              size: 18,
+              color: colorScheme.primary.withValues(alpha: 0.85),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                parent.name,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  color: colorScheme.primary,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+            Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: colorScheme.onSurface.withValues(alpha: 0.45),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSubProjectTile(
+    BuildContext context,
+    ColorScheme colorScheme,
+    ProjectProtocol child,
+  ) {
+    final done = child.status == 1;
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      decoration: BoxDecoration(
+        color: colorScheme.onSurface.withValues(alpha: 0.03),
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: ListTile(
+        onTap: () => context.push('/projects/${child.id}'),
+        leading: Icon(
+          Icons.folder_outlined,
+          color: done
+              ? colorScheme.onSurface.withValues(alpha: 0.35)
+              : colorScheme.primary,
+        ),
+        title: Text(
+          child.name,
+          style: TextStyle(
+            fontWeight: FontWeight.w800,
+            decoration: done ? TextDecoration.lineThrough : null,
+            color: done
+                ? colorScheme.onSurface.withValues(alpha: 0.45)
+                : colorScheme.onSurface,
+          ),
+        ),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: colorScheme.onSurface.withValues(alpha: 0.35),
+        ),
+      ),
+    );
+  }
+
+  void _showAddSubProjectDialog(
+    BuildContext context,
+    ProjectProtocol parent,
+  ) {
+    final nameController = TextEditingController();
+    final l10n = AppLocalizations.of(context)!;
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.project_add_sub_project_title),
+        content: TextField(
+          controller: nameController,
+          decoration: InputDecoration(
+            hintText: l10n.project_sub_project_name_hint,
+          ),
+          autofocus: true,
+          textCapitalization: TextCapitalization.sentences,
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          FilledButton(
+            onPressed: () async {
+              final name = nameController.text.trim();
+              if (name.isEmpty) return;
+              await context.read<ProjectBlock>().createProject(
+                    name,
+                    null,
+                    parent.color,
+                    parentProjectId: parent.id,
+                  );
+              if (dialogContext.mounted) Navigator.pop(dialogContext);
+            },
+            child: Text(l10n.add),
           ),
         ],
       ),
@@ -708,74 +994,151 @@ class ProjectDetailsPage extends StatelessWidget {
 
   Widget _buildEmptyState(BuildContext context, String message) {
     final colorScheme = Theme.of(context).colorScheme;
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: colorScheme.onSurface.withValues(alpha: 0.03),
-              shape: BoxShape.circle,
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 8),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.inbox_outlined,
+              size: 32,
+              color: colorScheme.onSurface.withValues(alpha: 0.28),
             ),
-            child: Icon(
-              Icons.inventory_2_outlined,
-              size: 40,
-              color: colorScheme.onSurface.withValues(alpha: 0.1),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                height: 1.4,
+                color: colorScheme.onSurface.withValues(alpha: 0.45),
+              ),
+              textAlign: TextAlign.center,
             ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _confirmDeleteSkill(
+    BuildContext context,
+    GrowthBlock growthBlock,
+    SkillProtocol skill,
+  ) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.delete),
+        content: Text(l10n.project_skill_delete_confirm(skill.skillName)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(dialogContext.l10n.cancel),
           ),
-          const SizedBox(height: 16),
-          Text(
-            message.toUpperCase(),
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w900,
-              color: colorScheme.onSurface.withValues(alpha: 0.2),
-              letterSpacing: 1.5,
-            ),
-            textAlign: TextAlign.center,
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(l10n.delete),
           ),
         ],
       ),
     );
+    if (confirmed == true) {
+      await growthBlock.deleteSkill(skill.id);
+    }
   }
 
   void _showAddTaskDialog(
     BuildContext context,
     GrowthBlock growthBlock,
-    String projectID,
+    ProjectProtocol project,
   ) {
+    final projectBlock = context.read<ProjectBlock>();
+    final children = projectBlock.childrenOf(project.id);
+  final targets = <({String id, String label})>[
+      (id: ProjectBlock.linkId(project), label: project.name),
+      for (final c in children)
+        (id: ProjectBlock.linkId(c), label: c.name),
+    ];
+
     final titleController = TextEditingController();
+    var targetProjectId = targets.first.id;
+    final l10n = AppLocalizations.of(context)!;
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text(AppLocalizations.of(context)!.project_add_task_title),
-        content: TextField(
-          controller: titleController,
-          decoration: InputDecoration(
-            hintText: AppLocalizations.of(context)!.project_task_title_hint,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setState) => AlertDialog(
+          title: Text(l10n.project_add_task_title),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              if (targets.length > 1) ...[
+                Text(
+                  l10n.project_task_assign_to,
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: Theme.of(context)
+                        .colorScheme
+                        .onSurface
+                        .withValues(alpha: 0.55),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                DropdownButtonFormField<String>(
+                  initialValue: targetProjectId,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    isDense: true,
+                  ),
+                  items: targets
+                      .map(
+                        (t) => DropdownMenuItem(
+                          value: t.id,
+                          child: Text(t.label, overflow: TextOverflow.ellipsis),
+                        ),
+                      )
+                      .toList(),
+                  onChanged: (v) {
+                    if (v != null) setState(() => targetProjectId = v);
+                  },
+                ),
+                const SizedBox(height: 16),
+              ],
+              TextField(
+                controller: titleController,
+                decoration: InputDecoration(
+                  hintText: l10n.project_task_title_hint,
+                ),
+                autofocus: true,
+                textCapitalization: TextCapitalization.sentences,
+              ),
+            ],
           ),
-          autofocus: true,
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: Text(context.l10n.cancel),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              if (titleController.text.isNotEmpty) {
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text(l10n.cancel),
+            ),
+            FilledButton(
+              onPressed: () async {
+                final title = titleController.text.trim();
+                if (title.isEmpty) return;
                 await growthBlock.createNewTask(
-                  titleController.text,
+                  title,
                   '',
-                  projectID: projectID,
+                  projectID: targetProjectId,
                 );
-                if (context.mounted) Navigator.pop(context);
-              }
-            },
-            child: Text(AppLocalizations.of(context)!.add),
-          ),
-        ],
+                if (dialogContext.mounted) Navigator.pop(dialogContext);
+              },
+              child: Text(l10n.add),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1031,6 +1394,120 @@ class _DocumentTypePicker extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ProjectSkillSessionPicker extends StatefulWidget {
+  final ProjectProtocol project;
+  final List<SkillProtocol> skills;
+  final Map<String, Set<DateTime>> streakIndex;
+  final void Function(SkillProtocol skill) onDeleteSkill;
+
+  const _ProjectSkillSessionPicker({
+    required this.project,
+    required this.skills,
+    required this.streakIndex,
+    required this.onDeleteSkill,
+  });
+
+  @override
+  State<_ProjectSkillSessionPicker> createState() =>
+      _ProjectSkillSessionPickerState();
+}
+
+class _ProjectSkillSessionPickerState extends State<_ProjectSkillSessionPicker> {
+  final Set<String> _selectedNames = <String>{};
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      unawaited(context.read<GrowthBlock>().syncSkills());
+    });
+  }
+
+  void _toggleSkill(String name) {
+    setState(() {
+      if (_selectedNames.contains(name)) {
+        _selectedNames.remove(name);
+      } else {
+        _selectedNames.add(name);
+      }
+    });
+  }
+
+  void _startSession() {
+    if (_selectedNames.isEmpty) return;
+    final title = Uri.encodeComponent(widget.project.name);
+    final pid = Uri.encodeComponent(widget.project.id);
+    final alt = Uri.encodeComponent(widget.project.projectID);
+    final skillsParam = _selectedNames
+        .map(Uri.encodeComponent)
+        .join('|');
+    context.push(
+      '/social/skills?projectId=$pid&altProjectId=$alt&title=$title'
+      '&startSkills=$skillsParam&autoStart=1',
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final count = _selectedNames.length;
+
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...widget.skills.map((skill) {
+          final name = skill.skillName;
+          final selected = _selectedNames.contains(name);
+          return ProjectSkillItem(
+            skill: skill,
+            isSelected: selected,
+            practiceStreak: SkillPracticeStreak.streakForProtocol(
+              widget.streakIndex,
+              name,
+            ),
+            onTap: () => _toggleSkill(name),
+            onDelete: () => widget.onDeleteSkill(skill),
+          );
+        }),
+        if (count > 0) ...[
+          const SizedBox(height: 4),
+          FilledButton.icon(
+            onPressed: _startSession,
+            icon: const Icon(Icons.play_arrow_rounded, size: 22),
+            label: Text(l10n.project_skill_start_session(count)),
+            style: FilledButton.styleFrom(
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+            ),
+          ),
+        ],
+        const SizedBox(height: 8),
+        TextButton.icon(
+          onPressed: () {
+            final title = Uri.encodeComponent(widget.project.name);
+            final pid = Uri.encodeComponent(widget.project.id);
+            final alt = Uri.encodeComponent(widget.project.projectID);
+            context.push(
+              '/social/skills?projectId=$pid&altProjectId=$alt&title=$title',
+            );
+          },
+          icon: Icon(
+            Icons.auto_awesome_rounded,
+            size: 18,
+            color: colorScheme.primary.withValues(alpha: 0.8),
+          ),
+          label: Text(l10n.project_skill_practice),
+        ),
+      ],
     );
   }
 }

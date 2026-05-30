@@ -44,30 +44,41 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
       onSwipe: () => context.pop(),
       direction: SwipeablePageDirection.leftToRight,
       child: Scaffold(
-        backgroundColor: const Color(0xFF0A1018),
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          title: Text(
-            l10n.integration_hub_title,
-            style: const TextStyle(fontWeight: FontWeight.w800),
-          ),
-        ),
+        backgroundColor: theme.colorScheme.surface,
         body: Watch((context) {
           final accounts = block.accounts.value;
-          return ListView(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
-            children: [
-              Text(
-                l10n.integration_hub_subtitle,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.55),
-                  height: 1.35,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _sectionLabel(l10n.integration_hub_calendars_section),
-              const SizedBox(height: 10),
+          final topSafe = MediaQuery.paddingOf(context).top;
+          // Clear MainShell Dynamic Island (~50) + breathing room.
+          final headerClearance = topSafe + 88;
+
+          return CustomScrollView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            slivers: [
+              SliverToBoxAdapter(child: SizedBox(height: headerClearance)),
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    Text(
+                      l10n.integration_hub_title,
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.integration_hub_subtitle,
+                      style: theme.textTheme.bodyMedium?.copyWith(
+                        color: theme.colorScheme.onSurface.withValues(alpha: 0.62),
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    _sectionLabel(l10n.integration_hub_calendars_section),
+                    const SizedBox(height: 12),
               _providerCard(
                 context,
                 title: l10n.projects_calendar_connect_google,
@@ -85,7 +96,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                 ),
               ),
               if (DeviceCalendarService.isSupported) ...[
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 _providerCard(
                   context,
                   title: isIos
@@ -111,7 +122,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
               ],
               const SizedBox(height: 28),
               _sectionLabel(l10n.integration_hub_health_section),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _providerCard(
                 context,
                 title: l10n.integration_hub_apple_health,
@@ -128,7 +139,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                   IntegrationProviderId.appleHealth,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _providerCard(
                 context,
                 title: l10n.integration_hub_google_fit,
@@ -145,7 +156,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                   IntegrationProviderId.googleFit,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _providerCard(
                 context,
                 title: l10n.integration_hub_huawei_health,
@@ -163,8 +174,21 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                 ),
               ),
               const SizedBox(height: 28),
+              _sectionLabel(l10n.cursor_hub_section_title),
+              const SizedBox(height: 12),
+              _providerCard(
+                context,
+                title: l10n.cursor_hub_title,
+                subtitle: l10n.cursor_hub_integration_subtitle,
+                icon: Icons.smart_toy_outlined,
+                iconColor: Colors.tealAccent,
+                connected: false,
+                onConnect: () => context.push('/integrations/cursor'),
+                alwaysShowOpen: true,
+              ),
+              const SizedBox(height: 28),
               _sectionLabel(l10n.integration_hub_sensors_section),
-              const SizedBox(height: 10),
+              const SizedBox(height: 12),
               _providerCard(
                 context,
                 title: l10n.integration_hub_open_sensor_hub,
@@ -178,9 +202,11 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
               const SizedBox(height: 16),
               Text(
                 l10n.integration_hub_phase2_notice,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: Colors.white.withValues(alpha: 0.35),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.42),
+                ),
+              ),
+                  ]),
                 ),
               ),
             ],
@@ -269,7 +295,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
     return Text(
       text.toUpperCase(),
       style: TextStyle(
-        color: Colors.white.withValues(alpha: 0.4),
+        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.45),
         fontSize: 10,
         fontWeight: FontWeight.w900,
         letterSpacing: 1.2,
@@ -287,38 +313,128 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
     required VoidCallback onConnect,
     bool alwaysShowOpen = false,
   }) {
+    final theme = Theme.of(context);
+    final l10n = AppLocalizations.of(context)!;
+    final faceTop = Color.lerp(
+      theme.colorScheme.surfaceContainerHigh,
+      iconColor,
+      0.1,
+    )!;
+    final faceBottom = theme.colorScheme.surfaceContainerHigh;
+
     return Material(
-      color: Colors.white.withValues(alpha: 0.04),
-      borderRadius: BorderRadius.circular(16),
-      child: ListTile(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-          side: BorderSide(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        leading: Icon(icon, color: iconColor),
-        title: Text(title, style: const TextStyle(fontWeight: FontWeight.w700)),
-        subtitle: Text(
-          subtitle,
-          style: TextStyle(
-            fontSize: 12,
-            color: Colors.white.withValues(alpha: 0.5),
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: connected && !alwaysShowOpen ? null : onConnect,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [faceTop, faceBottom],
+            ),
+            border: Border.all(
+              color: theme.colorScheme.outline.withValues(alpha: 0.28),
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(14, 14, 14, 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  width: 44,
+                  height: 44,
+                  decoration: BoxDecoration(
+                    color: iconColor.withValues(alpha: 0.16),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: iconColor, size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(
+                            alpha: 0.62,
+                          ),
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 8),
+                if (connected && !alwaysShowOpen)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.45),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          Icons.check_circle_rounded,
+                          size: 14,
+                          color: theme.colorScheme.primary,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          l10n.integration_hub_status_connected,
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.primary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  OutlinedButton(
+                    onPressed: onConnect,
+                    style: OutlinedButton.styleFrom(
+                      visualDensity: VisualDensity.compact,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      side: BorderSide(
+                        color: theme.colorScheme.primary.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    child: Text(
+                      alwaysShowOpen
+                          ? l10n.integration_hub_open_sensor_hub
+                          : l10n.integration_hub_connect,
+                      style: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+              ],
+            ),
           ),
         ),
-        trailing: connected && !alwaysShowOpen
-            ? Chip(
-                label: Text(
-                  AppLocalizations.of(context)!.integration_hub_status_connected,
-                  style: const TextStyle(fontSize: 10),
-                ),
-              )
-            : OutlinedButton(
-                onPressed: onConnect,
-                child: Text(
-                  alwaysShowOpen
-                      ? AppLocalizations.of(context)!.integration_hub_open_sensor_hub
-                      : AppLocalizations.of(context)!.integration_hub_connect,
-                ),
-              ),
       ),
     );
   }

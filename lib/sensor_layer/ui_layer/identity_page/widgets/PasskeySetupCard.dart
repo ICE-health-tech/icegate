@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/AuthErrorHelper.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:provider/provider.dart';
-import 'package:ice_gate/l10n/app_localizations.dart';
 
 class PasskeySetupCard extends StatelessWidget {
   const PasskeySetupCard({super.key});
@@ -201,43 +201,33 @@ class PasskeySetupCard extends StatelessWidget {
   }
 
   Future<void> _handleSetup(BuildContext context, AuthBlock authBlock) async {
-    final result = await authBlock.enrollPasskey(context);
-    
-    if (result == "success" && context.mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
+    // ASAuthorization must present from the root window — not inside this dialog.
+    final messenger = ScaffoldMessenger.maybeOf(context);
+    final enrollContext = Overlay.of(context, rootOverlay: true).context;
+    Navigator.of(context, rootNavigator: true).pop();
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (!enrollContext.mounted) return;
+
+    final result = await authBlock.enrollPasskey(enrollContext);
+
+    if (result == "success") {
+      messenger?.showSnackBar(
         const SnackBar(
           content: Text("✅ Passkey enrolled successfully!"),
           backgroundColor: Colors.green,
         ),
       );
-    } else if (result != "canceled" && context.mounted) {
-      final String localizedMsg = _getLocalizedError(context, result);
-      ScaffoldMessenger.of(context).showSnackBar(
+    } else if (result != "canceled") {
+      final localizedMsg = AuthErrorHelper.getLocalizedError(
+        enrollContext,
+        result,
+      );
+      messenger?.showSnackBar(
         SnackBar(
           content: Text("❌ Failed to enroll: $localizedMsg"),
           backgroundColor: Colors.redAccent,
         ),
       );
-    }
-    // "canceled" result is quietly ignored
-  }
-
-  String _getLocalizedError(BuildContext context, String key) {
-    final l10n = AppLocalizations.of(context);
-    if (l10n == null) return key;
-    
-    switch (key) {
-      case "err_invalid_credentials": return l10n.err_invalid_credentials;
-      case "err_email_not_confirmed": return l10n.err_email_not_confirmed;
-      case "err_user_not_found": return l10n.err_user_not_found;
-      case "err_network_fail": return l10n.err_network_fail;
-      case "err_passkey_canceled": return l10n.err_passkey_canceled;
-      case "err_passkey_failed": return l10n.err_passkey_failed;
-      case "err_biometric_unsupported": return l10n.err_biometric_unsupported;
-      case "err_biometric_disabled": return l10n.err_biometric_disabled;
-      case "err_too_many_attempts": return l10n.err_too_many_attempts;
-      case "err_unexpected": return l10n.err_unexpected("System Error");
-      default: return key;
     }
   }
 }

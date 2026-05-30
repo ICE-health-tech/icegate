@@ -12,6 +12,7 @@ import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTodosSection.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillsSessionCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:intl/intl.dart';
@@ -178,6 +179,9 @@ class _MindFocusTrendsTabState extends State<MindFocusTrendsTab> {
                     ],
                   ),
                 ),
+              ),
+              SliverToBoxAdapter(
+                child: MindSkillsSessionCard(logs: logs),
               ),
               if (_trends.isEmpty)
                 SliverToBoxAdapter(

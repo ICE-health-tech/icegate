@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionCard.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -13,6 +13,10 @@ class FinanceSavingsPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Watch((context) {
       final txns = financeBlock.transactions.value;
       final now = DateTime.now();
@@ -41,6 +45,8 @@ class FinanceSavingsPage extends StatelessWidget {
             const SizedBox(height: 16),
             _buildSummaryCard(
               context,
+              isDark: isDark,
+              cs: cs,
               total: total,
               monthly: monthlySavings,
               savingsRatePercent: rate,
@@ -51,10 +57,10 @@ class FinanceSavingsPage extends StatelessWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Text(
+                  Text(
                     "RECENT SAVINGS",
                     style: TextStyle(
-                      color: Colors.white54,
+                      color: FinanceSurface.ink(isDark: isDark),
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       letterSpacing: 2,
@@ -63,7 +69,7 @@ class FinanceSavingsPage extends StatelessWidget {
                   Text(
                     "${savingsTxns.length} ENTRIES",
                     style: TextStyle(
-                      color: EntryColors.financeSilverAccent.withValues(alpha: 0.9),
+                      color: FinanceSurface.silverAccent(),
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                     ),
@@ -80,25 +86,17 @@ class FinanceSavingsPage extends StatelessWidget {
                     Icon(
                       Icons.savings_outlined,
                       size: 48,
-                      color: Colors.white.withValues(alpha: 0.12),
+                      color: FinanceSurface.mutedInk(isDark: isDark),
                     ),
                     const SizedBox(height: 16),
                     Text(
                       "No savings logged yet",
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: FinanceSurface.mutedInk(isDark: isDark),
                         fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
-                    // const SizedBox(height: 8),
-                    // Text(
-                    //   "Tap Add savings above to record your first transfer",
-                    //   textAlign: TextAlign.center,
-                    //   style: TextStyle(
-                    //     color: Colors.white.withValues(alpha: 0.22),
-                    //     fontSize: 12,
-                    //   ),
-                    // ),
                   ],
                 ),
               )
@@ -118,17 +116,15 @@ class FinanceSavingsPage extends StatelessWidget {
 
   Widget _buildSummaryCard(
     BuildContext context, {
+    required bool isDark,
+    required ColorScheme cs,
     required double total,
     required double monthly,
     required double savingsRatePercent,
   }) {
     return Container(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -136,14 +132,14 @@ class FinanceSavingsPage extends StatelessWidget {
             children: [
               Icon(
                 Icons.account_balance_wallet_rounded,
-                color: Colors.greenAccent.withValues(alpha: 0.85),
+                color: FinanceSurface.silverAccent(),
                 size: 22,
               ),
               const SizedBox(width: 10),
               Text(
                 "Total saved",
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.55),
+                  color: FinanceSurface.mutedInk(isDark: isDark),
                   fontSize: 12,
                   fontWeight: FontWeight.w600,
                 ),
@@ -153,8 +149,8 @@ class FinanceSavingsPage extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             financeBlock.formatCurrency(total),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: FinanceSurface.ink(isDark: isDark),
               fontSize: 28,
               fontWeight: FontWeight.w900,
               fontFamily: 'JetBrainsMono',
@@ -165,17 +161,19 @@ class FinanceSavingsPage extends StatelessWidget {
             children: [
               Expanded(
                 child: _miniStat(
-                  "This month",
-                  financeBlock.formatCurrency(monthly),
-                  Colors.greenAccent,
+                  isDark: isDark,
+                  cs: cs,
+                  label: "This month",
+                  value: financeBlock.formatCurrency(monthly),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: _miniStat(
-                  "Of income",
-                  "${savingsRatePercent.clamp(0, 999).toStringAsFixed(1)}%",
-                  EntryColors.financeSilverAccent,
+                  isDark: isDark,
+                  cs: cs,
+                  label: "Of income",
+                  value: "${savingsRatePercent.clamp(0, 999).toStringAsFixed(1)}%",
                 ),
               ),
             ],
@@ -185,21 +183,22 @@ class FinanceSavingsPage extends StatelessWidget {
     );
   }
 
-  Widget _miniStat(String label, String value, Color accent) {
+  Widget _miniStat({
+    required bool isDark,
+    required ColorScheme cs,
+    required String label,
+    required String value,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(
-        color: accent.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: accent.withValues(alpha: 0.2)),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.45),
+              color: FinanceSurface.mutedInk(isDark: isDark),
               fontSize: 10,
               fontWeight: FontWeight.w700,
             ),
@@ -208,7 +207,7 @@ class FinanceSavingsPage extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: accent.withValues(alpha: 0.95),
+              color: FinanceSurface.ink(isDark: isDark),
               fontSize: 14,
               fontWeight: FontWeight.w800,
               fontFamily: 'JetBrainsMono',

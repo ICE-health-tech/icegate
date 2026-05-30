@@ -19,7 +19,7 @@ class MindBlock {
   MindBlock(this.dao);
 
   void init(String personId) {
-    dao.watchLatestLog(personId).delay(Duration(milliseconds: 300)).listen((
+    dao.watchLatestLog(personId).listen((
       log,
     ) {
       // This callback can fire while another signal computation/batch is in

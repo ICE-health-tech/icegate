@@ -19,6 +19,7 @@ import 'package:rxdart/rxdart.dart';
 // For File
 import 'dart:math'; // For Random() used in DAOs
 import 'dart:convert';
+import 'package:crypto/crypto.dart';
 // For finding the database path
 // For path joining
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,6 +43,7 @@ part 'daos/AiPromptsDao.dart';
 part 'daos/ConfigsDao.dart';
 part 'daos/IntegrationAccountDao.dart';
 part 'daos/PortfolioSnapshotsDao.dart';
+part 'daos/LocalMediaIndexDao.dart';
 
 // NOTE: I'm using 'app_database.g.dart' as the standard naming convention.
 
@@ -253,6 +255,8 @@ class ProjectsTable extends Table {
       .withDefault(const Constant(DEFAULT_TENANT_ID))
       .named('tenant_id')();
   TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get parentProjectId =>
+      text().nullable().named('parent_project_id')();
   TextColumn get personID => text().nullable().named('person_id')();
   TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
   TextColumn get description => text().nullable().named('description')();
@@ -343,6 +347,42 @@ enum EmailStatus { pending, verified, bounced, disabled }
 enum CurrencyType { USD, EUR, VND, JPY, GBP, CNY }
 
 enum SkillLevel { beginner, intermediate, advanced, expert }
+
+/// Local-only media index for files stored under app documents directory.
+/// This enables "auto scan → save path to local DB" features and later allows
+/// background sync to S3/Supabase.
+@DataClassName('LocalMediaIndexData')
+class LocalMediaIndexTable extends Table {
+  @override
+  String get tableName => 'local_media_index';
+
+  TextColumn get id => text()(); // deterministic hash ID recommended
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get relativePath => text().named('relative_path')(); // e.g. "<pid>/meals/abc.jpg"
+  TextColumn get subFolder => text().named('sub_folder')(); // e.g. "meals"
+  TextColumn get fileName => text().named('file_name')(); // basename
+  IntColumn get fileBytes => integer().nullable().named('file_bytes')();
+  DateTimeColumn get lastModifiedAt => dateTime()
+      .nullable()
+      .map(const DateTimeUTCConverter())
+      .named('last_modified_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {personID, relativePath},
+  ];
+}
 
 @DataClassName('OrganizationData')
 class OrganizationsTable extends Table {
@@ -2385,6 +2425,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
       id: Value(r['id'] as String),
       tenantID: Value(r['tenant_id'] as String?),
       projectID: Value(r['project_id'] as String?),
+      parentProjectId: Value(r['parent_project_id'] as String?),
       personID: Value(r['person_id'] as String?),
       name: Value(r['name'] as String? ?? 'Untitled Project'),
       description: Value(r['description'] as String?),
@@ -2430,6 +2471,7 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
             (row) => ProjectData(
               id: row.data['id'] as String,
               projectID: row.data['project_id'] as String?,
+              parentProjectId: row.data['parent_project_id'] as String?,
               personID: (row.data['person_id'] as String?) ?? personID,
               name: (row.data['name'] as String?) ?? 'Untitled',
               description: row.data['description'] as String?,
@@ -2456,9 +2498,72 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
 
   Future<void> updateProject(ProjectData project) async {
     await update(projectsTable).replace(project);
-    // Convert data class to map
-    final payload = project.toJson();
-    await db.pushToSupabase(table: 'projects', payload: payload);
+    await db.pushToSupabase(
+      table: 'projects',
+      payload: _projectDataToSupabasePayload(project),
+    );
+  }
+
+  /// PostgREST column names (includes [parent_project_id] for sub-projects).
+  static Map<String, dynamic> _projectDataToSupabasePayload(ProjectData project) {
+    return {
+      'id': project.id,
+      'tenant_id': project.tenantID,
+      'project_id': project.projectID,
+      'parent_project_id': project.parentProjectId,
+      'person_id': project.personID,
+      'name': project.name,
+      'description': project.description,
+      'category': project.category,
+      'color': project.color,
+      'status': project.status,
+      'ssh_host_id': project.sshHostId,
+      'remote_path': project.remotePath,
+      'ai_model': project.aiModel,
+      'created_at': project.createdAt.toUtc().toIso8601String(),
+      'updated_at': project.updatedAt.toUtc().toIso8601String(),
+    };
+  }
+
+  /// Re-push all local projects (repairs child [parent_project_id] after upgrade).
+  Future<void> pushAllProjectsForPerson(String personId) async {
+    if (personId.isEmpty) return;
+    final rows = await customSelect(
+      'SELECT * FROM projects WHERE person_id = ?',
+      variables: [Variable.withString(personId)],
+      readsFrom: {projectsTable},
+    ).get();
+    for (final row in rows) {
+      final data = row.data;
+      if (data['id'] == null) continue;
+      await db.pushToSupabase(
+        table: 'projects',
+        payload: _projectDataToSupabasePayload(
+          ProjectData(
+            id: data['id'] as String,
+            projectID: data['project_id'] as String?,
+            parentProjectId: data['parent_project_id'] as String?,
+            personID: data['person_id'] as String?,
+            name: (data['name'] as String?) ?? 'Untitled',
+            description: data['description'] as String?,
+            category: data['category'] as String?,
+            color: data['color'] as String?,
+            sshHostId: data['ssh_host_id'] as String?,
+            remotePath: data['remote_path'] as String?,
+            aiModel: data['ai_model'] as String?,
+            status: (data['status'] as int?) ?? 0,
+            createdAt: data['created_at'] != null
+                ? DateTime.tryParse(data['created_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+            updatedAt: data['updated_at'] != null
+                ? DateTime.tryParse(data['updated_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+          ),
+        ),
+      );
+    }
   }
 
   Future<void> updateProjectManual(
@@ -7005,6 +7110,7 @@ class ConfigsTable extends Table {
 @DriftDatabase(
   tables: [
     OrganizationsTable,
+    LocalMediaIndexTable,
     ExternalWidgetsTable,
     ThemesTable,
     InternalWidgetsTable,
@@ -7092,6 +7198,7 @@ class ConfigsTable extends Table {
     AchievementsDAO,
     MindLogsDAO,
     JournalActivityOptionsDAO,
+    LocalMediaIndexDAO,
   ],
 )
 class AppDatabase extends _$AppDatabase {
@@ -7283,6 +7390,8 @@ class AppDatabase extends _$AppDatabase {
     var result = Map<String, dynamic>.from(data);
     if (table == 'project_notes') {
       result = _mapProjectNotesPayloadToSqlColumns(result);
+    } else if (table == 'projects') {
+      result = _mapProjectsPayloadToSqlColumns(result);
     }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
@@ -7301,6 +7410,28 @@ class AppDatabase extends _$AppDatabase {
       'noteID': 'note_id',
       'personID': 'person_id',
       'projectID': 'project_id',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      out[dartToSql[key] ?? key] = value;
+    });
+    return out;
+  }
+
+  /// Aligns Drift / [ProjectData.toJson] keys with Postgres column names.
+  Map<String, dynamic> _mapProjectsPayloadToSqlColumns(
+    Map<String, dynamic> row,
+  ) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'projectID': 'project_id',
+      'parentProjectId': 'parent_project_id',
+      'personID': 'person_id',
+      'sshHostId': 'ssh_host_id',
+      'remotePath': 'remote_path',
+      'aiModel': 'ai_model',
       'createdAt': 'created_at',
       'updatedAt': 'updated_at',
     };
@@ -7373,7 +7504,7 @@ class AppDatabase extends _$AppDatabase {
   // v76 → adds recurring_incomes (local scheduled income)
   // v77 → achievements.local_image_path (offline story photos)
   // v78 → integration_accounts (calendar + health hub)
-  int get schemaVersion => 78;
+  int get schemaVersion => 79;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7521,6 +7652,14 @@ class AppDatabase extends _$AppDatabase {
         if (from < 78) {
           try {
             await m.createTable(integrationAccountsTable);
+          } catch (_) {}
+        }
+        if (from < 79) {
+          try {
+            await m.addColumn(
+              projectsTable,
+              projectsTable.parentProjectId,
+            );
           } catch (_) {}
         }
         if (from < 60) {

@@ -37,6 +37,18 @@ class InternalWidgetsDAO extends DatabaseAccessor<AppDatabase>
     )..where((tbl) => tbl.name.isIn(listName))).get();
   }
 
+  Future<List<InternalWidgetData>> getScopedWidgets(
+    String personID,
+    String scope,
+  ) {
+    return (select(internalWidgetsTable)..where(
+          (tbl) =>
+              (tbl.personID.equals(personID) | tbl.personID.isNull()) &
+              tbl.scope.equals(scope),
+        ))
+        .get();
+  }
+
   Stream<List<InternalWidgetData>> watchScopedWidgets(
     String personID,
     String scope,

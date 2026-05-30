@@ -1,9 +1,9 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceEntryInsightPanel.dart';
@@ -293,6 +293,8 @@ class FixedIncomeManager extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final dateFmt = DateFormat.MMMd(l10n.localeName);
 
     return Watch((context) {
@@ -311,8 +313,8 @@ class FixedIncomeManager extends StatelessWidget {
                   children: [
                     Text(
                       l10n.finance_fixed_income_title.toUpperCase(),
-                      style: const TextStyle(
-                        color: Color(0xFF4CAF50),
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
@@ -322,7 +324,7 @@ class FixedIncomeManager extends StatelessWidget {
                     Text(
                       l10n.finance_fixed_income_subtitle,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.45),
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 11,
                         height: 1.3,
                       ),
@@ -338,7 +340,7 @@ class FixedIncomeManager extends StatelessWidget {
                     Text(
                       l10n.finance_fixed_income_monthly_total.toUpperCase(),
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.4),
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 8,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1,
@@ -346,8 +348,8 @@ class FixedIncomeManager extends StatelessWidget {
                     ),
                     Text(
                       financeBlock.formatCurrency(monthlyTotal, compact: true),
-                      style: const TextStyle(
-                        color: Color(0xFF4CAF50),
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
                       ),
@@ -363,25 +365,23 @@ class FixedIncomeManager extends StatelessWidget {
                     horizontal: 10,
                     vertical: 6,
                   ),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: const Color(0xFF4CAF50).withValues(alpha: 0.3),
-                    ),
+                  decoration: FinanceSurface.panel(
+                    colorScheme,
+                    isDark: isDark,
+                    radius: 12,
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.add_rounded,
-                        color: Color(0xFF4CAF50),
+                        color: FinanceSurface.ink(isDark: isDark),
                         size: 14,
                       ),
                       const SizedBox(width: 4),
                       Text(
                         l10n.finance_fixed_income_add.toUpperCase(),
-                        style: const TextStyle(
-                          color: Color(0xFF4CAF50),
+                        style: TextStyle(
+                          color: colorScheme.onSurface,
                           fontSize: 8,
                           fontWeight: FontWeight.w900,
                         ),
@@ -399,25 +399,23 @@ class FixedIncomeManager extends StatelessWidget {
               child: Container(
                 width: double.infinity,
                 padding: const EdgeInsets.symmetric(vertical: 28),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.02),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: const Color(0xFF4CAF50).withValues(alpha: 0.15),
-                  ),
+                decoration: FinanceSurface.panel(
+                  colorScheme,
+                  isDark: isDark,
+                  radius: 24,
                 ),
                 child: Column(
                   children: [
                     Icon(
                       Icons.account_balance_wallet_outlined,
-                      color: Colors.white.withValues(alpha: 0.15),
+                      color: colorScheme.onSurfaceVariant,
                       size: 32,
                     ),
                     const SizedBox(height: 10),
                     Text(
                       l10n.finance_fixed_income_empty.toUpperCase(),
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.25),
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 10,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 1,
@@ -442,6 +440,8 @@ class FixedIncomeManager extends StatelessWidget {
                     financeBlock: financeBlock,
                     dateFmt: dateFmt,
                     l10n: l10n,
+                    colorScheme: colorScheme,
+                    isDark: isDark,
                   );
                 },
               ),
@@ -457,12 +457,16 @@ class _IncomeCard extends StatelessWidget {
   final FinanceBlock financeBlock;
   final DateFormat dateFmt;
   final AppLocalizations l10n;
+  final ColorScheme colorScheme;
+  final bool isDark;
 
   const _IncomeCard({
     required this.item,
     required this.financeBlock,
     required this.dateFmt,
     required this.l10n,
+    required this.colorScheme,
+    required this.isDark,
   });
 
   String _intervalLabel(String interval) {
@@ -484,26 +488,21 @@ class _IncomeCard extends StatelessWidget {
 
     return Container(
       width: 168,
-      decoration: BoxDecoration(
-        color: const Color(0xFF16161E),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: const Color(0xFF4CAF50).withValues(alpha: 0.25),
-        ),
+      decoration: FinanceSurface.panel(
+        colorScheme,
+        isDark: isDark,
+        radius: 24,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
-          child: Material(
-            color: Colors.transparent,
-            child: InkWell(
-              onTap: () => showFixedIncomeEditor(
-                context,
-                financeBlock,
-                income: item,
-              ),
-              onLongPress: () async {
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(24),
+          onTap: () => showFixedIncomeEditor(
+            context,
+            financeBlock,
+            income: item,
+          ),
+          onLongPress: () async {
                 final ok = await showDialog<bool>(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -538,12 +537,13 @@ class _IncomeCard extends StatelessWidget {
                         Container(
                           padding: const EdgeInsets.all(8),
                           decoration: BoxDecoration(
-                            color: const Color(0xFF4CAF50).withValues(alpha: 0.12),
+                            color: FinanceSurface.silverAccent()
+                                .withValues(alpha: 0.14),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.south_west_rounded,
-                            color: Color(0xFF4CAF50),
+                            color: FinanceSurface.silverAccent(),
                             size: 16,
                           ),
                         ),
@@ -551,7 +551,7 @@ class _IncomeCard extends StatelessWidget {
                         Text(
                           _intervalLabel(item.interval).toUpperCase(),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.35),
+                            color: colorScheme.onSurfaceVariant,
                             fontSize: 8,
                             fontWeight: FontWeight.w900,
                           ),
@@ -563,8 +563,8 @@ class _IncomeCard extends StatelessWidget {
                       title.toUpperCase(),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontWeight: FontWeight.w900,
                         fontSize: 10,
                         letterSpacing: 0.5,
@@ -573,8 +573,8 @@ class _IncomeCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       financeBlock.formatCurrency(item.amount, compact: true),
-                      style: const TextStyle(
-                        color: Color(0xFF4CAF50),
+                      style: TextStyle(
+                        color: colorScheme.onSurface,
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
                       ),
@@ -583,7 +583,7 @@ class _IncomeCard extends StatelessWidget {
                     Text(
                       '${l10n.finance_fixed_income_next}: ${dateFmt.format(item.nextDueAt.toLocal())}',
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.35),
+                        color: colorScheme.onSurfaceVariant,
                         fontSize: 9,
                       ),
                     ),
@@ -592,8 +592,6 @@ class _IncomeCard extends StatelessWidget {
               ),
             ),
           ),
-        ),
-      ),
     );
   }
 }

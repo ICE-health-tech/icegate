@@ -7,6 +7,7 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:ice_gate/orchestration_layer/Services/Health/MotivationEngine.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 const _kSpo2TargetPrefsKey = 'health_spo2_target_percent';
@@ -126,12 +127,8 @@ class _OxygenSaturationPageState extends State<OxygenSaturationPage> {
   }
 
   String _motivationFor(AppLocalizations l10n, double v, int target) {
-    if (v <= 0) return l10n.health_spo2_motivation_empty;
-    if (v >= 98) return l10n.health_spo2_motivation_peak;
-    if (v >= 96) return l10n.health_spo2_motivation_high;
-    if (v >= target) return l10n.health_spo2_motivation_on_target;
-    if (v >= target - 3) return l10n.health_spo2_motivation_near;
-    return l10n.health_spo2_motivation_low;
+    final tier = MotivationEngine.evaluateSpo2Tier(v, target);
+    return MotivationEngine.resolveSpo2Message(l10n, tier);
   }
 
   @override

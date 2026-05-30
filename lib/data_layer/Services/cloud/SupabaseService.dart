@@ -151,6 +151,7 @@ class SupabaseService {
       'mind_logs',
       'projects',
       'goals',
+      'skills',
       'focus_sessions',
       'health_metrics',
       'meals',
@@ -245,6 +246,11 @@ class SupabaseService {
       case 'goals':
         for (final r in records) {
           await database.growthDAO.upsertFromSupabaseGoal(r);
+        }
+        break;
+      case 'skills':
+        for (final r in records) {
+          await database.growthDAO.upsertFromSupabaseSkill(r);
         }
         break;
       case 'focus_sessions':
@@ -371,6 +377,8 @@ class SupabaseService {
     var result = Map<String, dynamic>.from(data);
     if (table == 'project_notes') {
       result = _projectNotesToRemoteColumns(result);
+    } else if (table == 'projects') {
+      result = _projectsToRemoteColumns(result);
     }
     result.removeWhere((key, _) => _globalLocalOnlyColumns.contains(key));
     final tableSpecific = _tableLocalOnlyColumns[table];
@@ -381,6 +389,25 @@ class SupabaseService {
   }
 
   /// PostgREST expects snake_case; Drift [toJson] / some maps use Dart names.
+  Map<String, dynamic> _projectsToRemoteColumns(Map<String, dynamic> row) {
+    const dartToSql = <String, String>{
+      'tenantID': 'tenant_id',
+      'projectID': 'project_id',
+      'parentProjectId': 'parent_project_id',
+      'personID': 'person_id',
+      'sshHostId': 'ssh_host_id',
+      'remotePath': 'remote_path',
+      'aiModel': 'ai_model',
+      'createdAt': 'created_at',
+      'updatedAt': 'updated_at',
+    };
+    final out = <String, dynamic>{};
+    row.forEach((key, value) {
+      out[dartToSql[key] ?? key] = value;
+    });
+    return out;
+  }
+
   Map<String, dynamic> _projectNotesToRemoteColumns(Map<String, dynamic> row) {
     const dartToSql = <String, String>{
       'tenantID': 'tenant_id',

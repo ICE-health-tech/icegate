@@ -33,6 +33,7 @@ class FoodAnalysisBlock {
   Future<FoodAnalysisOutcome> analyze({
     required String foodName,
     XFile? image,
+    String? localRelativePath,
     String? existingPublicImageUrl,
     double? volume,
     double? distance,
@@ -54,6 +55,7 @@ class FoodAnalysisBlock {
       final outcome = await AIFoodCaloriesService.analyzeFood(
         foodName,
         image: image,
+        localRelativePath: localRelativePath,
         existingPublicImageUrl: existingPublicImageUrl,
         volume: volume,
         distance: distance,
@@ -75,6 +77,7 @@ class FoodAnalysisBlock {
     required String mealId,
     required String foodName,
     XFile? image,
+    String? localRelativePath,
     double? volume,
     double? distance,
     String? personId,
@@ -85,16 +88,20 @@ class FoodAnalysisBlock {
 
     try {
       XFile? effectiveImage = image;
+      String? effectiveLocalPath = localRelativePath;
       String? existingHttpsUrl;
-      if (effectiveImage == null) {
+      if (effectiveImage == null && (effectiveLocalPath == null || effectiveLocalPath.isEmpty)) {
         final meal = await (_db.select(_db.mealsTable)
               ..where((t) => t.id.equals(mealId)))
             .getSingleOrNull();
+        final u = meal?.mealImageUrl;
+        if (u != null && !u.startsWith('http')) {
+          effectiveLocalPath = u;
+        }
         effectiveImage = await _mealImageToXFile(
           meal?.mealImageUrl,
           personId ?? meal?.personID,
         );
-        final u = meal?.mealImageUrl;
         if (effectiveImage == null &&
             u != null &&
             (u.startsWith('http://') || u.startsWith('https://'))) {
@@ -105,6 +112,7 @@ class FoodAnalysisBlock {
       final outcome = await analyze(
         foodName: foodName,
         image: effectiveImage,
+        localRelativePath: effectiveLocalPath,
         existingPublicImageUrl: existingHttpsUrl,
         volume: volume,
         distance: distance,

@@ -63,12 +63,12 @@ class MoodTrendsChart extends StatelessWidget {
 
     return Container(
       height: _chartHeight,
-      padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.2),
-        borderRadius: BorderRadius.circular(24),
+        color: colorScheme.surface.withValues(alpha: 0.35),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color: colorScheme.outlineVariant.withValues(alpha: 0.25),
+          color: colorScheme.outline.withValues(alpha: 0.22),
         ),
       ),
       child: Padding(
@@ -101,7 +101,7 @@ class MoodTrendsChart extends StatelessWidget {
                 sideTitles: SideTitles(
                   showTitles: true,
                   interval: 1,
-                  reservedSize: 26,
+                  reservedSize: 28,
                   getTitlesWidget: (value, meta) {
                     final i = value.round();
                     if (i < 0 || i >= n || !labelAt.contains(i)) {
@@ -115,12 +115,12 @@ class MoodTrendsChart extends StatelessWidget {
                         overflow: TextOverflow.fade,
                         softWrap: false,
                         style: TextStyle(
-                          fontSize: 9,
+                          fontSize: 10,
                           letterSpacing: 0.2,
-                          color: colorScheme.onSurfaceVariant.withValues(
-                            alpha: 0.75,
+                          color: colorScheme.onSurface.withValues(
+                            alpha: 0.88,
                           ),
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.w700,
                         ),
                       ),
                     );

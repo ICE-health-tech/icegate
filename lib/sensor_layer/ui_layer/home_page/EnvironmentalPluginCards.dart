@@ -18,6 +18,10 @@ class AQIPluginCard extends StatelessWidget {
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
     final aqi = envData?.aqi ?? 0;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.78);
 
     return _BasePluginCard(
       pluginId: 'aqi',
@@ -31,34 +35,26 @@ class AQIPluginCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (isLoading)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else ...[
-            Text(
-              envData?.aqi.toString() ?? '--',
-              style: TextStyle(
-                fontWeight: FontWeight.w900,
-                fontSize: 22,
-                color: HealthMetricColors.aqiColor(aqi),
-              ),
+          Text(
+            isLoading ? '…' : (envData?.aqi.toString() ?? '--'),
+            style: TextStyle(
+              fontWeight: FontWeight.w900,
+              fontSize: 22,
+              color: HealthMetricColors.aqiColor(aqi),
             ),
-            const SizedBox(height: 2),
-            AutoSizeText(
-              l10n.health_metrics_air_quality.toUpperCase(),
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 9,
-                color: HealthMetricColors.textSecondary,
-                letterSpacing: 0.5,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
+          ),
+          const SizedBox(height: 2),
+          AutoSizeText(
+            l10n.health_metrics_air_quality.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
             ),
-          ],
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
         ],
       ),
     );
@@ -74,6 +70,13 @@ class WeatherPluginCard extends StatelessWidget {
     final envData = envBlock.currentData.watch(context);
     final isLoading = envBlock.isLoading.watch(context);
     final l10n = AppLocalizations.of(context)!;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.78);
+    final tempColor = isDark
+        ? HealthMetricColors.tempAccent
+        : Theme.of(context).colorScheme.primary;
 
     return _BasePluginCard(
       pluginId: 'weather',
@@ -81,48 +84,82 @@ class WeatherPluginCard extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          if (isLoading)
-            const SizedBox(
-              width: 20,
-              height: 20,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          else ...[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  envData?.temperature.toStringAsFixed(0) ?? '--',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 22,
-                    color: HealthMetricColors.tempAccent,
-                  ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                isLoading
+                    ? '…'
+                    : (envData?.temperature.toStringAsFixed(0) ?? '--'),
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 22,
+                  color: tempColor,
                 ),
-                const Text(
-                  '°',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    color: HealthMetricColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 2),
-            AutoSizeText(
-              l10n.health_metrics_weather.toUpperCase(),
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 9,
-                color: HealthMetricColors.textSecondary,
-                letterSpacing: 0.5,
               ),
-              textAlign: TextAlign.center,
-              maxLines: 1,
+              Text(
+                '°',
+                style: TextStyle(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 14,
+                  color: labelColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 2),
+          AutoSizeText(
+            l10n.health_metrics_weather.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
             ),
-          ],
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class IntegrationHubPluginCard extends StatelessWidget {
+  const IntegrationHubPluginCard({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? HealthMetricColors.linkAccent
+        : Theme.of(context).colorScheme.primary;
+    final labelColor = isDark
+        ? HealthMetricColors.textSecondary
+        : colorScheme.onSurface.withValues(alpha: 0.78);
+
+    return _BasePluginCard(
+      pluginId: 'integrations',
+      onTap: () => context.push('/integrations'),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.hub_rounded, color: iconColor, size: 28),
+          const SizedBox(height: 6),
+          AutoSizeText(
+            l10n.integration_hub_connect.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w700,
+              fontSize: 9,
+              color: labelColor,
+              letterSpacing: 0.5,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+          ),
         ],
       ),
     );
@@ -143,8 +180,14 @@ class _BasePluginCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
-    final tint = HealthMetricColors.pluginCardTint(pluginId);
-    final accent = HealthMetricColors.pluginAccent(pluginId);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final fill = isDark
+        ? colorScheme.surfaceContainerHigh
+        : colorScheme.surfaceContainerHighest;
+    final border = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : colorScheme.outline.withValues(alpha: 0.18);
 
     return InkWell(
       onTap: onTap,
@@ -153,15 +196,12 @@ class _BasePluginCard extends StatelessWidget {
         width: sizeOfWidget,
         height: sizeOfWidget,
         decoration: BoxDecoration(
-          color: tint,
+          color: fill,
           borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: HealthMetricColors.cardBorder,
-            width: 1,
-          ),
+          border: Border.all(color: border, width: 1),
           boxShadow: [
             BoxShadow(
-              color: accent.withValues(alpha: 0.08),
+              color: Colors.black.withValues(alpha: isDark ? 0.12 : 0.06),
               blurRadius: 12,
               offset: const Offset(0, 4),
             ),

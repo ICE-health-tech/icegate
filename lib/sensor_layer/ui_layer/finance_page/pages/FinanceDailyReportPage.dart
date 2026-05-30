@@ -84,6 +84,12 @@ class FinanceDailyReportPage extends StatelessWidget {
                 return CustomScrollView(
                   physics: const BouncingScrollPhysics(),
                   slivers: [
+                    // Clear MainShell Dynamic Island (~50) + breathing room.
+                    SliverToBoxAdapter(
+                      child: SizedBox(
+                        height: MediaQuery.paddingOf(context).top + 88,
+                      ),
+                    ),
                     SliverAppBar(
                       backgroundColor: Colors.transparent,
                       elevation: 0,

@@ -13,7 +13,7 @@ class GoogleSignInHub {
   GoogleSignInHub._();
 
   static const String webClientId =
-      '1076295055088-s88o9d59unnd0p68be5pmsiv6h2a0rgo.apps.googleusercontent.com';
+      '807274985161-9vcbjdabnbtm65u6khmapoh0naal13he.apps.googleusercontent.com';
   static const String darwinClientId =
       '807274985161-2tgda6mbjop0k2vnf85q5plac7t6d1aq.apps.googleusercontent.com';
 

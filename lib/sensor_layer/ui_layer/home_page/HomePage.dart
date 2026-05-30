@@ -1,4 +1,3 @@
-import 'dart:async' show unawaited;
 import 'dart:ui' show ImageFilter;
 
 import 'package:flutter/foundation.dart'
@@ -8,7 +7,6 @@ import 'package:flutter/services.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../UIConstants.dart';
-import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricsData.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/InternalWidgetBlock.dart'
     show InternalWidgetBlock;
 // import 'package:ice_gate/orchestration_layer/Services/FireAPI/UrlNavigate.dart' as WidgetNavigatorAction;
@@ -16,7 +14,6 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/AuthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Widgets/ScoreBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/data_layer/Protocol/Home/InternalWidgetProtocol.dart';
@@ -37,11 +34,14 @@ import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/AvailablePlugins.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/widget_page/PluginList/WebPlugin/GoogleCalendar.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/MorningBriefingSheet.dart';
+import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/EnvironmentalPluginCards.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/HomePageSettings.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
@@ -137,10 +137,6 @@ class _HomePageState extends State<HomePage> {
   late InternalWidgetBlock internalWidgetBlock;
   late AuthBlock authBlock;
   late PersonBlock personBlock;
-  late HealthMetricsDAO healthMetricsDAO;
-  late Map<String, HealthMetricProtocol> healthMetricsData = {};
-  late Map<String, HealthMetricProtocol> financeMetricsData = {};
-  late Map<String, HealthMetricProtocol> socialMetricsData = {};
   late ScoreBlock scoreBlock;
   late FinanceBlock financeBlock;
   late ExternalWidgetBlock externalWidgetBlock;
@@ -166,13 +162,16 @@ class _HomePageState extends State<HomePage> {
     scoreBlock = context.read<ScoreBlock>();
     personBlock = context.read<PersonBlock>();
     growthBlock = context.read<GrowthBlock>();
-    healthMetricsDAO = context.read<HealthMetricsDAO>();
     financeBlock = context.read<FinanceBlock>();
     healthBlock = context.read<HealthBlock>();
     projectBlock = context.read<ProjectBlock>();
     quoteBlock = context.read<QuoteBlock>();
     mindBlock = context.read<MindBlock>();
     configBlock = context.read<ConfigBlock>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _scheduleMorningHooks();
+    });
 
     final userId = Supabase.instance.client.auth.currentUser?.id ?? '';
     if (userId.isEmpty) {
@@ -196,39 +195,47 @@ class _HomePageState extends State<HomePage> {
     // });
   }
 
+  Future<void> _scheduleMorningHooks() async {
+    if (!mounted) return;
+    try {
+      await context.read<LocalNotificationService>().scheduleMorningLoopFromPrefs();
+    } catch (e) {
+      appLog('Morning notification schedule skipped: $e');
+    }
+    // Let home pillars paint first, then optional morning sheet.
+    await Future<void>.delayed(const Duration(milliseconds: 2200));
+    if (!mounted) return;
+    await MorningBriefingSheet.maybeShow(context);
+  }
+
   void _fetchInitialData() {
     final jwtValue = authBlock.jwt.value;
     if (jwtValue != null) {
       personBlock.fetchFromDatabase(jwtValue);
     }
 
-    Future.microtask(() {
-      appLog("DUYLONG>>");
-      unawaited(financeBlock.refreshFromLocalDatabase());
-      final String personIdToUse =
-          Supabase.instance.client.auth.currentUser?.id ?? "";
-      internalWidgetBlock.refreshBlock(
-        database.internalWidgetsDAO,
-        personIdToUse,
-        'home',
-      );
-      externalWidgetBlock.refreshBlock(
-        database.externalWidgetsDAO,
-        personIdToUse,
-      );
+    final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
+    if (personId.isEmpty) return;
 
-      // appLog("DUYLONG<>:internal widget block: "+internalWidgetBlock.listInternalWidgetHomePage.value.toString()
-      // );
-      final personId = Supabase.instance.client.auth.currentUser?.id ?? "";
-      HealthMetricsData.shared.getMetricsByDay(personId, DateTime.now(), context).then(
-        (newData) {
-          if (mounted) {
-            setState(() {
-              healthMetricsData = newData;
-            });
-          }
-        },
-      );
+    // DataLayer already warms finance/health/widgets on personId — only fill gaps.
+    Future.microtask(() async {
+      if (internalWidgetBlock.listInternalWidgetHomePage.value.isEmpty) {
+        internalWidgetBlock.refreshBlock(
+          database.internalWidgetsDAO,
+          personId,
+          'home',
+        );
+      }
+      if (externalWidgetBlock.listExternalWidgets.value.isEmpty) {
+        externalWidgetBlock.refreshBlock(
+          database.externalWidgetsDAO,
+          personId,
+        );
+      }
+      if (financeBlock.accounts.value.isEmpty &&
+          financeBlock.transactions.value.isEmpty) {
+        await financeBlock.refreshFromLocalDatabase();
+      }
     });
   }
 
@@ -335,7 +342,7 @@ class _HomePageState extends State<HomePage> {
                       _buildQuotesSection(context),
 
                       // const SizedBox(height: 20),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 8),
 
                       // --- SECTION: 4 life elements ---
                       _buildSectionHeader(
@@ -409,11 +416,10 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.health,
                                 Icons.favorite_rounded,
-                                const Color(0xFFa7f3d0), // --ice-health
+                                HealthMetricColors.homePillarAccent('health'),
                                 metrics: visibleMetrics,
                                 route: '/health',
                                 scoreData: scoreBlock.score.healthGlobalScore,
-                                useL1IceGlass: true,
                               );
                             }),
                             Watch((context) {
@@ -495,7 +501,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.finance,
                                 Icons.account_balance_wallet_rounded,
-                                EntryColors.primaryIceBlue,
+                                HealthMetricColors.homePillarAccent('finance'),
                                 metrics: visibleMetrics,
                                 route: '/finance',
                                 scoreData:
@@ -623,7 +629,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.social,
                                 Icons.psychology_rounded,
-                                Colors.purple,
+                                HealthMetricColors.homePillarAccent('mind'),
                                 metrics: visibleMetrics,
                                 route: '/social',
                                 scoreData: socialScore,
@@ -690,7 +696,7 @@ class _HomePageState extends State<HomePage> {
                                 context,
                                 l10n.projects,
                                 Icons.rocket_launch_rounded,
-                                Colors.orange,
+                                HealthMetricColors.homePillarAccent('projects'),
                                 metrics: visibleMetrics,
                                 route: '/projects',
                                 scoreData: scoreBlock.score.careerGlobalScore,
@@ -783,21 +789,30 @@ class _HomePageState extends State<HomePage> {
                             );
                           }
 
-                          // 2. All Internal Plugins
-                          for (final pluginDef in AvailablePlugins.internal) {
-                            pluginItems.add(
-                              Padding(
-                                padding: const EdgeInsets.only(right: 16),
-                                child: SizedBox(
-                                  width: sizeOfWidget,
-                                  height: sizeOfWidget,
-                                  child: _buildInternalWidget(
-                                    context,
-                                    pluginDef.createInstance(),
+                          pluginItems.add(
+                            const Padding(
+                              padding: EdgeInsets.only(right: 16),
+                              child: IntegrationHubPluginCard(),
+                            ),
+                          );
+
+                          // 2. Internal plugins — phones only; macOS/web sidebar covers these.
+                          if (!WorkspaceSidebarLayout.useHomeWorkspace(context)) {
+                            for (final pluginDef in AvailablePlugins.internal) {
+                              pluginItems.add(
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 16),
+                                  child: SizedBox(
+                                    width: sizeOfWidget,
+                                    height: sizeOfWidget,
+                                    child: _buildInternalWidget(
+                                      context,
+                                      pluginDef.createInstance(),
+                                    ),
                                   ),
                                 ),
-                              ),
-                            );
+                              );
+                            }
                           }
 
                           // 3. External Widgets
@@ -899,7 +914,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   /// L1 glass + --ice-health wash (duylongart_glass_ui.md). Health pillar only.
-  static const Color _iceHealth = Color(0xFFa7f3d0);
+  static const Color _iceHealth = HealthMetricColors.pillarGreen;
 
   BoxDecoration _healthL1IceDecoration() {
     const glassBg = Color.fromRGBO(255, 255, 255, 0.03);
@@ -953,6 +968,7 @@ class _HomePageState extends State<HomePage> {
         ? 26.0
         : (isLaptop ? 22.0 : 25.0);
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final iceEtchedPrimary = Colors.white.withValues(alpha: 0.95);
     final iceEtchedSecondary =
         const Color.fromRGBO(173, 216, 230, 0.5);
@@ -960,10 +976,15 @@ class _HomePageState extends State<HomePage> {
         useL1IceGlass ? iceEtchedPrimary : colorScheme.onSurface;
     final labelColor = useL1IceGlass
         ? iceEtchedSecondary
-        : colorScheme.onSurface.withValues(alpha: 0.5);
+        : colorScheme.onSurface.withValues(alpha: isDark ? 0.5 : 0.72);
     final valueColor = useL1IceGlass
         ? iceEtchedPrimary
-        : colorScheme.onSurface.withValues(alpha: 0.9);
+        : colorScheme.onSurface.withValues(alpha: isDark ? 0.9 : 0.95);
+    final pillarGradientTop = isDark ? 0.18 : 0.36;
+    final pillarGradientMid = isDark ? 0.08 : 0.20;
+    final pillarGradientBottom = isDark ? 0.02 : 0.08;
+    final iconBadgeAlpha = isDark ? 0.1 : 0.22;
+    final glowAlpha = isDark ? 0.1 : 0.18;
 
     final cardBody = InkWell(
           onTap: () => context.push(route),
@@ -993,9 +1014,9 @@ class _HomePageState extends State<HomePage> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          color.withValues(alpha: 0.18),
-                          color.withValues(alpha: 0.08),
-                          color.withValues(alpha: 0.02),
+                          color.withValues(alpha: pillarGradientTop),
+                          color.withValues(alpha: pillarGradientMid),
+                          color.withValues(alpha: pillarGradientBottom),
                         ],
                         stops: const [0.0, 0.5, 1.0],
                       ),
@@ -1009,7 +1030,7 @@ class _HomePageState extends State<HomePage> {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: color.withValues(alpha: 0.1),
+                      color: color.withValues(alpha: glowAlpha),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -1028,7 +1049,7 @@ class _HomePageState extends State<HomePage> {
                           height: iconContainerSize,
                           alignment: Alignment.center,
                           decoration: BoxDecoration(
-                            color: color.withValues(alpha: 0.1),
+                            color: color.withValues(alpha: iconBadgeAlpha),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
@@ -1148,11 +1169,13 @@ class _HomePageState extends State<HomePage> {
       width: width,
       margin: margin,
       child: Card(
-        elevation: 0,
-        color: colorScheme.onPrimary,
+        elevation: isDark ? 0 : 1,
+        color: isDark ? colorScheme.onPrimary : colorScheme.surfaceContainerHigh,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(28),
-          side: BorderSide(color: color.withValues(alpha: 0.12)),
+          side: BorderSide(
+            color: color.withValues(alpha: isDark ? 0.12 : 0.32),
+          ),
         ),
         clipBehavior: Clip.antiAlias,
         child: cardBody,
@@ -1166,6 +1189,13 @@ class _HomePageState extends State<HomePage> {
   ) {
     final colorScheme = Theme.of(context).colorScheme;
     final sizeOfWidget = UIConstants.getSizeOfWidget(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? colorScheme.primary.withValues(alpha: 0.8)
+        : colorScheme.onSurface.withValues(alpha: 0.85);
+    final labelColor = isDark
+        ? colorScheme.primary.withValues(alpha: 0.7)
+        : colorScheme.onSurface.withValues(alpha: 0.72);
 
     if (widgetData == null) {
       return InkWell(
@@ -1195,17 +1225,21 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: isDark
+            ? colorScheme.surface
+            : colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.primary.withValues(alpha: 0.1),
+          color: isDark
+              ? colorScheme.primary.withValues(alpha: 0.1)
+              : colorScheme.outline.withValues(alpha: 0.28),
           width: 1.5,
         ),
       ),
@@ -1234,7 +1268,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(
                     widgetData.icon,
-                    color: colorScheme.primary.withValues(alpha: 0.8),
+                    color: iconColor,
                     size: sizeOfWidget * 0.3,
                   ),
                   const SizedBox(height: 6),
@@ -1245,7 +1279,7 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
-                        color: colorScheme.primary.withValues(alpha: 0.7),
+                        color: labelColor,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
@@ -1318,6 +1352,13 @@ class _HomePageState extends State<HomePage> {
 
   Widget _buildExternalWidget(BuildContext context, ExternalWidgetData data) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final iconColor = isDark
+        ? colorScheme.secondary.withValues(alpha: 0.8)
+        : colorScheme.onSurface.withValues(alpha: 0.85);
+    final labelColor = isDark
+        ? colorScheme.secondary.withValues(alpha: 0.7)
+        : colorScheme.onSurface.withValues(alpha: 0.72);
     final String fullUrl = GoogleCalendarPlugin.resolveLaunchUrl(
       protocol: data.protocol ?? 'https',
       host: data.host ?? '',
@@ -1329,17 +1370,21 @@ class _HomePageState extends State<HomePage> {
       width: sizeOfWidget,
       height: sizeOfWidget,
       decoration: BoxDecoration(
-        color: colorScheme.surface,
+        color: isDark
+            ? colorScheme.surface
+            : colorScheme.surfaceContainerHigh,
         borderRadius: BorderRadius.circular(24),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: Colors.black.withValues(alpha: isDark ? 0.05 : 0.10),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
         border: Border.all(
-          color: colorScheme.secondary.withValues(alpha: 0.1),
+          color: isDark
+              ? colorScheme.secondary.withValues(alpha: 0.1)
+              : colorScheme.outline.withValues(alpha: 0.28),
           width: 1.5,
         ),
       ),
@@ -1367,7 +1412,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   Icon(
                     Icons.language_rounded,
-                    color: colorScheme.secondary.withValues(alpha: 0.8),
+                    color: iconColor,
                     size: sizeOfWidget * 0.3,
                   ),
                   const SizedBox(height: 6),
@@ -1378,7 +1423,7 @@ class _HomePageState extends State<HomePage> {
                       style: TextStyle(
                         fontWeight: FontWeight.w700,
                         fontSize: 10,
-                        color: colorScheme.secondary.withValues(alpha: 0.7),
+                        color: labelColor,
                         letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
@@ -1531,10 +1576,16 @@ class _HomePageState extends State<HomePage> {
     final configBlock = context.read<ConfigBlock>();
     final envBlock = context.read<EnvironmentalBlock>();
 
-    const tempTint = Color(0xFF8BD4F0);
-    const aqiTint = Color(0xFF8FD9A8);
-
     return Watch((context) {
+      final colorScheme = Theme.of(context).colorScheme;
+      final isDark = Theme.of(context).brightness == Brightness.dark;
+
+      final tempTint = colorScheme.primary.withValues(alpha: isDark ? 0.95 : 0.85);
+      final aqiTint = colorScheme.tertiary.withValues(alpha: isDark ? 0.95 : 0.85);
+      final containerColor = Colors.transparent;
+      final separatorColor = colorScheme.onSurface.withValues(alpha: 0.18);
+      final conditionColor = colorScheme.onSurfaceVariant.withValues(alpha: 0.9);
+
       final showAqi = configBlock.showAqi.value;
       final showWeather = configBlock.showWeather.value;
 
@@ -1577,104 +1628,100 @@ class _HomePageState extends State<HomePage> {
                 alpha: 0.15,
               ),
               child: Ink(
-                decoration: BoxDecoration(
+                decoration: BoxDecoration(borderRadius: BorderRadius.circular(999)),
+                child: ClipRRect(
                   borderRadius: BorderRadius.circular(999),
-                  color: const Color(0xFF252A38).withValues(alpha: 0.92),
-                  border: Border.all(
-                    color: Colors.white.withValues(alpha: 0.1),
-                    width: 1,
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.35),
-                      blurRadius: 16,
-                      offset: const Offset(0, 6),
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(999),
+                      // Make the header truly transparent: no blur, no frosted fill,
+                      // no outline, and no drop shadow.
+                      color: containerColor,
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 14,
-                    vertical: 11,
-                  ),
-                  child: Row(
-                    children: [
-                      if (showWeather) ...[
-                        Icon(
-                          Icons.thermostat_rounded,
-                          color: tempTint,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          tempLabel,
-                          style: const TextStyle(
-                            color: tempTint,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                            letterSpacing: 0.2,
-                          ),
-                        ),
-                      ],
-                      if (showAqi && showWeather)
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Container(
-                            width: 1,
-                            height: 22,
-                            color: Colors.white.withValues(alpha: 0.18),
-                          ),
-                        ),
-                      if (showAqi) ...[
-                        Icon(
-                          Icons.waves_rounded,
-                          size: 20,
-                          color: envData != null
-                              ? _getAQIColor(envData.aqi)
-                              : aqiTint,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          aqiLabel,
-                          style: TextStyle(
-                            color: envData != null
-                                ? _getAQIColor(envData.aqi)
-                                : aqiTint,
-                            fontWeight: FontWeight.w800,
-                            fontSize: 15,
-                            letterSpacing: 0.15,
-                          ),
-                        ),
-                      ],
-                      if (showCondition) ...[
-                        Padding(
-                          padding: const EdgeInsets.only(left: 10),
-                          child: Container(
-                            width: 1,
-                            height: 22,
-                            color: Colors.white.withValues(alpha: 0.14),
-                          ),
-                        ),
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.only(left: 10),
-                            child: Text(
-                              envData.weatherDescription,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.right,
-                              style: TextStyle(
-                                color: EntryLandscapePalette.dustySkyBlue
-                                    .withValues(alpha: 0.9),
-                                fontSize: 12.5,
-                                fontWeight: FontWeight.w600,
-                                height: 1.2,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 11,
+                      ),
+                      child: Row(
+                        children: [
+                            if (showWeather) ...[
+                              Icon(
+                                Icons.thermostat_rounded,
+                                color: tempTint,
+                                size: 20,
                               ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ],
+                              const SizedBox(width: 8),
+                              Text(
+                                tempLabel,
+                                style: TextStyle(
+                                  color: tempTint,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            ],
+                            if (showAqi && showWeather)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 10),
+                                child: Container(
+                                  width: 1,
+                                  height: 22,
+                                  color: separatorColor,
+                                ),
+                              ),
+                            if (showAqi) ...[
+                              Icon(
+                                Icons.waves_rounded,
+                                size: 20,
+                                color: envData != null
+                                    ? _getAQIColor(envData.aqi)
+                                    : aqiTint,
+                              ),
+                              const SizedBox(width: 8),
+                              Text(
+                                aqiLabel,
+                                style: TextStyle(
+                                  color: envData != null
+                                      ? _getAQIColor(envData.aqi)
+                                      : aqiTint,
+                                  fontWeight: FontWeight.w800,
+                                  fontSize: 15,
+                                  letterSpacing: 0.15,
+                                ),
+                              ),
+                            ],
+                            if (showCondition) ...[
+                              Padding(
+                                padding: const EdgeInsets.only(left: 10),
+                                child: Container(
+                                  width: 1,
+                                  height: 22,
+                                  color: separatorColor.withValues(alpha: 0.78),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: Text(
+                                    envData.weatherDescription,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      color: conditionColor,
+                                      fontSize: 12.5,
+                                      fontWeight: FontWeight.w600,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                        ],
+                      ),
+                    ),
                   ),
                 ),
               ),

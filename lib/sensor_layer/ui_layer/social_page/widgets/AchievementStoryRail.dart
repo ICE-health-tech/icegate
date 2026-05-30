@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_actions.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryActions.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
 
 /// Right column: photo story grid (3×3 laptop, 2×2 phone).
@@ -120,6 +120,11 @@ class AchievementStoryRail extends StatelessWidget {
                         stories,
                         storyIndex,
                       ),
+                      onLongPress: () =>
+                          AchievementStoryActions.showStoryActionSheet(
+                        context,
+                        a,
+                      ),
                     );
                   },
                 ),
@@ -152,6 +157,7 @@ class _StoryGridCell extends StatelessWidget {
   final double size;
   final double radius;
   final VoidCallback onTap;
+  final VoidCallback? onLongPress;
 
   const _StoryGridCell({
     required this.title,
@@ -160,6 +166,7 @@ class _StoryGridCell extends StatelessWidget {
     required this.size,
     required this.radius,
     required this.onTap,
+    this.onLongPress,
   });
 
   @override
@@ -171,6 +178,7 @@ class _StoryGridCell extends StatelessWidget {
       color: Colors.transparent,
       child: InkWell(
         onTap: onTap,
+        onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(radius),
         child: Container(
           width: size,

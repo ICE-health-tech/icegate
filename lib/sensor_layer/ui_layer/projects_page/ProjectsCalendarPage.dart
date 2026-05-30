@@ -30,6 +30,16 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
   static const double _desktopBreakpoint = 900;
   static const double _contentMaxWidth = 1140;
 
+  /// Survives route pop/push so reopening Lịch does not refetch the same month.
+  static String? _sessionMonthKey;
+  static DateTime? _sessionFocusedMonth;
+  static DateTime? _sessionSelectedDay;
+  static List<GoogleCalendarEventItem> _sessionGoogleEvents = [];
+  static List<DeviceCalendarEventItem> _sessionDeviceEvents = [];
+  static bool _sessionGoogleConnected = false;
+  static bool _sessionDeviceConnected = false;
+  static bool _sessionEventsLoaded = false;
+
   late DateTime _focusedMonth;
   late DateTime _selectedDay;
 
@@ -67,25 +77,99 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
     }
   }
 
+  String _monthKey(DateTime month) => '${month.year}-${month.month}';
+
+  void _invalidateSessionCache() {
+    _sessionEventsLoaded = false;
+    _sessionMonthKey = null;
+  }
+
+  void _persistSessionCache() {
+    _sessionMonthKey = _monthKey(_focusedMonth);
+    _sessionFocusedMonth = _focusedMonth;
+    _sessionSelectedDay = _selectedDay;
+    _sessionGoogleEvents = List<GoogleCalendarEventItem>.from(_googleEvents);
+    _sessionDeviceEvents = List<DeviceCalendarEventItem>.from(_deviceEvents);
+    _sessionGoogleConnected = _googleConnected;
+    _sessionDeviceConnected = _deviceConnected;
+    _sessionEventsLoaded = true;
+  }
+
+  bool _canReuseSessionCache({
+    required bool googleConnected,
+    required bool deviceConnected,
+  }) {
+    if (!_sessionEventsLoaded || _sessionMonthKey != _monthKey(_focusedMonth)) {
+      return false;
+    }
+    return _sessionGoogleConnected == googleConnected &&
+        _sessionDeviceConnected == deviceConnected;
+  }
+
+  void _applySessionCache() {
+    _googleEvents = List<GoogleCalendarEventItem>.from(_sessionGoogleEvents);
+    _deviceEvents = List<DeviceCalendarEventItem>.from(_sessionDeviceEvents);
+  }
+
   @override
   void initState() {
     super.initState();
     final today = DateTime.now();
-    _focusedMonth = DateTime(today.year, today.month);
-    _selectedDay = _dateOnly(today);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _restoreGoogleSession();
-      _restoreDeviceCalendar();
-    });
+    if (_sessionFocusedMonth != null && _sessionSelectedDay != null) {
+      _focusedMonth = _sessionFocusedMonth!;
+      _selectedDay = _sessionSelectedDay!;
+    } else {
+      _focusedMonth = DateTime(today.year, today.month);
+      _selectedDay = _dateOnly(today);
+    }
+    WidgetsBinding.instance.addPostFrameCallback((_) => _bootstrapCalendar());
   }
 
-  Future<void> _restoreGoogleSession() async {
-    final service = context.read<GoogleCalendarService>();
-    var ok = service.isSignedIn;
-    if (!ok) ok = await service.restoreSession();
+  @override
+  void dispose() {
+    _sessionFocusedMonth = _focusedMonth;
+    _sessionSelectedDay = _selectedDay;
+    super.dispose();
+  }
+
+  Future<void> _bootstrapCalendar() async {
+    final googleService = context.read<GoogleCalendarService>();
+    final deviceService = DeviceCalendarService.isSupported
+        ? context.read<DeviceCalendarService>()
+        : null;
+    var googleOk = googleService.isSignedIn;
+    if (!googleOk) googleOk = await googleService.restoreSession();
+
+    var deviceOk = false;
+    if (deviceService != null) {
+      deviceOk = await deviceService.restoreAccess();
+    }
+
     if (!mounted) return;
-    setState(() => _googleConnected = ok);
-    if (ok) await _syncGoogleEvents();
+
+    final reuseCache = _canReuseSessionCache(
+      googleConnected: googleOk,
+      deviceConnected: deviceOk,
+    );
+    setState(() {
+      _googleConnected = googleOk;
+      _deviceConnected = deviceOk;
+      if (reuseCache) {
+        _applySessionCache();
+      }
+    });
+
+    if (reuseCache) return;
+
+    if (googleOk) {
+      await _syncGoogleEvents(showSnackBar: false);
+    }
+    if (deviceOk) {
+      await _syncDeviceEvents(showSnackBar: false);
+    }
+    if (mounted && (_googleConnected || _deviceConnected)) {
+      _persistSessionCache();
+    }
   }
 
   Future<void> _connectGoogle() async {
@@ -147,15 +231,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
       _googleConnected = false;
       _googleEvents = [];
     });
-  }
-
-  Future<void> _restoreDeviceCalendar() async {
-    if (!DeviceCalendarService.isSupported) return;
-    final service = context.read<DeviceCalendarService>();
-    final ok = await service.restoreAccess();
-    if (!mounted) return;
-    setState(() => _deviceConnected = ok);
-    if (ok) await _syncDeviceEvents();
+    _invalidateSessionCache();
   }
 
   Future<void> _connectDeviceCalendar() async {
@@ -193,9 +269,10 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
       _deviceConnected = false;
       _deviceEvents = [];
     });
+    _invalidateSessionCache();
   }
 
-  Future<void> _syncDeviceEvents() async {
+  Future<void> _syncDeviceEvents({bool showSnackBar = true}) async {
     if (!_deviceConnected || !DeviceCalendarService.isSupported) return;
     setState(() => _deviceLoading = true);
     final service = context.read<DeviceCalendarService>();
@@ -212,23 +289,26 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
           _deviceEvents = events;
           _deviceLoading = false;
         });
+        _persistSessionCache();
       }
     } catch (e) {
       if (mounted) {
         setState(() => _deviceLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              '${AppLocalizations.of(context)!.projects_calendar_sign_in_failed}: $e',
+        if (showSnackBar) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                '${AppLocalizations.of(context)!.projects_calendar_sign_in_failed}: $e',
+              ),
+              duration: const Duration(seconds: 5),
             ),
-            duration: const Duration(seconds: 5),
-          ),
-        );
+          );
+        }
       }
     }
   }
 
-  Future<void> _syncGoogleEvents() async {
+  Future<void> _syncGoogleEvents({bool showSnackBar = true}) async {
     if (!_googleConnected) return;
     setState(() => _googleLoading = true);
     final service = context.read<GoogleCalendarService>();
@@ -245,17 +325,20 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
           _googleEvents = events;
           _googleLoading = false;
         });
-        final l10n = AppLocalizations.of(context)!;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              events.isEmpty
-                  ? l10n.projects_calendar_sync_empty_month
-                  : l10n.projects_calendar_synced_count(events.length),
+        _persistSessionCache();
+        if (showSnackBar) {
+          final l10n = AppLocalizations.of(context)!;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                events.isEmpty
+                    ? l10n.projects_calendar_sync_empty_month
+                    : l10n.projects_calendar_synced_count(events.length),
+              ),
+              duration: const Duration(seconds: 3),
             ),
-            duration: const Duration(seconds: 3),
-          ),
-        );
+          );
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -589,8 +672,9 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   setState(
                     () => _focusedMonth = DateTime(month.year, month.month),
                   );
-                  _syncGoogleEvents();
-                  _syncDeviceEvents();
+                  _invalidateSessionCache();
+                  _syncGoogleEvents(showSnackBar: false);
+                  _syncDeviceEvents(showSnackBar: false);
                 },
                 onDaySelected: (day) {
                   setState(() {

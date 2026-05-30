@@ -9,6 +9,8 @@ class AppSessionCalendar extends StatelessWidget {
     required this.selectedDay,
     required this.onMonthChanged,
     required this.onDaySelected,
+    this.accentColor,
+    this.outerDecoration,
   });
 
   final Set<DateTime> markedDays;
@@ -16,13 +18,23 @@ class AppSessionCalendar extends StatelessWidget {
   final DateTime selectedDay;
   final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<DateTime> onDaySelected;
+  final Color? accentColor;
+  final BoxDecoration? outerDecoration;
 
   static DateTime _dateOnly(DateTime value) =>
       DateTime(value.year, value.month, value.day);
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final accent = accentColor ?? colorScheme.primary;
+    final onAccent =
+        accent.computeLuminance() > 0.45 ? Colors.black : Colors.white;
+    final highContrast = accentColor != null;
+    final ink = isDark ? const Color(0xFFF2F2F7) : const Color(0xFF1C1C1E);
+    final mutedInk = isDark ? const Color(0xFF8E8E93) : const Color(0xFF848482);
     final monthStart = DateTime(focusedMonth.year, focusedMonth.month, 1);
     final daysInMonth =
         DateTime(focusedMonth.year, focusedMonth.month + 1, 0).day;
@@ -37,11 +49,14 @@ class AppSessionCalendar extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: colorScheme.outlineVariant.withValues(alpha: 0.35)),
-      ),
+      decoration: outerDecoration ??
+          BoxDecoration(
+            color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+            ),
+          ),
       child: Column(
         children: [
           Row(
@@ -59,6 +74,7 @@ class AppSessionCalendar extends StatelessWidget {
                   textAlign: TextAlign.center,
                   style: Theme.of(context).textTheme.titleSmall?.copyWith(
                         fontWeight: FontWeight.w800,
+                        color: highContrast ? ink : null,
                       ),
                 ),
               ),
@@ -82,7 +98,9 @@ class AppSessionCalendar extends StatelessWidget {
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w700,
-                          color: colorScheme.onSurface.withValues(alpha: 0.45),
+                          color: highContrast
+                              ? mutedInk
+                              : colorScheme.onSurface.withValues(alpha: 0.45),
                         ),
                       ),
                     ),
@@ -117,14 +135,18 @@ class AppSessionCalendar extends StatelessWidget {
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: isSelected
-                          ? colorScheme.primary
+                          ? accent
                           : (hasUsage
-                              ? colorScheme.primary.withValues(alpha: 0.12)
+                              ? accent.withValues(alpha: 0.14)
                               : Colors.transparent),
                       borderRadius: BorderRadius.circular(12),
                       border: isToday
-                          ? Border.all(color: colorScheme.primary, width: 1.5)
-                          : null,
+                          ? Border.all(color: accent, width: 1.5)
+                          : (hasUsage && !isSelected
+                              ? Border.all(
+                                  color: accent.withValues(alpha: 0.35),
+                                )
+                              : null),
                     ),
                     child: Center(
                       child: Text(
@@ -134,10 +156,12 @@ class AppSessionCalendar extends StatelessWidget {
                           fontWeight:
                               isSelected || isToday ? FontWeight.w800 : FontWeight.w500,
                           color: isSelected
-                              ? colorScheme.onPrimary
-                              : colorScheme.onSurface.withValues(
-                                  alpha: hasUsage ? 0.95 : 0.45,
-                                ),
+                              ? onAccent
+                              : (highContrast
+                                  ? ink.withValues(alpha: hasUsage ? 1 : 0.55)
+                                  : colorScheme.onSurface.withValues(
+                                      alpha: hasUsage ? 0.95 : 0.45,
+                                    )),
                         ),
                       ),
                     ),

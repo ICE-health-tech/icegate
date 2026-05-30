@@ -1,11 +1,16 @@
 import 'dart:convert';
-import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:http/http.dart' as http;
 import 'package:ice_gate/data_layer/Protocol/Health/CaloriesProtocol.dart';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaS3Paths.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaSync.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
-import 'dart:io';
 import 'package:ice_gate/utils/app_log.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:path/path.dart' as p;
+import 'package:path_provider/path_provider.dart';
 
 /// Result of calling the food AI agent (HTTP + parsing).
 class AIFoodCaloriesOutcome {
@@ -20,13 +25,66 @@ class AIFoodCaloriesOutcome {
 }
 
 class AIFoodCaloriesService {
-  // Gemini 1.5 Flash: Cheap, Fast, and supports Vision
   static String get _agentUrl =>
       dotenv.env['FOOD_AGENT_URL'] ?? "http://localhost:8001";
+
+  /// Uploads to `{personId}/food/…` (and `{personId}/meals/…` when [localRelativePath] is set).
+  static Future<String?> _resolvePublicImageUrl({
+    XFile? image,
+    String? localRelativePath,
+    String? existingPublicImageUrl,
+    String? personId,
+  }) async {
+    if (existingPublicImageUrl != null &&
+        (existingPublicImageUrl.startsWith('http://') ||
+            existingPublicImageUrl.startsWith('https://'))) {
+      appLog("AIFoodCaloriesService: Using existing public image URL for agent");
+      return existingPublicImageUrl;
+    }
+
+    if (localRelativePath != null &&
+        localRelativePath.isNotEmpty &&
+        !localRelativePath.startsWith('http')) {
+      final normalized = localRelativePath.replaceAll('\\', '/');
+      final url = await MediaSync.uploadRelativePath(normalized);
+      if (url != null) {
+        appLog("AIFoodCaloriesService: Uploaded saved meal image to S3: $url");
+        return url;
+      }
+    }
+
+    if (image == null) return null;
+
+    try {
+      final pid = personId?.trim().isNotEmpty == true ? personId! : 'guest';
+      final fileName = p.basename(image.path);
+      final foodKey = mealImageS3Key(personId: pid, fileName: fileName);
+
+      File uploadFile = File(image.path);
+      if (localRelativePath != null &&
+          localRelativePath.isNotEmpty &&
+          !localRelativePath.startsWith('http')) {
+        final appDir = await getApplicationDocumentsDirectory();
+        final saved = File(p.join(appDir.path, localRelativePath));
+        if (await saved.exists()) uploadFile = saved;
+      }
+
+      final url = await MinioService().uploadFileAtKey(
+        uploadFile,
+        objectKey: foodKey,
+      );
+      appLog("AIFoodCaloriesService: Image uploaded to S3 ($foodKey): $url");
+      return url;
+    } catch (e) {
+      appLog("AIFoodCaloriesService: S3 upload failed: $e");
+      return null;
+    }
+  }
 
   static Future<AIFoodCaloriesOutcome> analyzeFood(
     String foodName, {
     XFile? image,
+    String? localRelativePath,
     String? existingPublicImageUrl,
     double? distance,
     double? volume,
@@ -34,21 +92,14 @@ class AIFoodCaloriesService {
     String? personId,
   }) async {
     try {
-      // 1. Public HTTPS URL: upload local file, or reuse URL already stored on the meal row.
-      String? imageUrl;
-      if (image != null) {
-        final s3 = MinioService();
-        final subFolder = personId != null ? '$personId/food' : 'guest/food';
-        imageUrl = await s3.uploadFile(File(image.path), subFolder: subFolder);
-        appLog("AIFoodCaloriesService: Image uploaded to S3: $imageUrl");
-      } else if (existingPublicImageUrl != null &&
-          (existingPublicImageUrl.startsWith('http://') ||
-              existingPublicImageUrl.startsWith('https://'))) {
-        imageUrl = existingPublicImageUrl;
-        appLog("AIFoodCaloriesService: Using existing public image URL for agent");
-      }
+      final imageUrl = await _resolvePublicImageUrl(
+        image: image,
+        localRelativePath: localRelativePath,
+        existingPublicImageUrl: existingPublicImageUrl,
+        personId: personId,
+      );
 
-      final String s3UrlForAgent =
+      final s3UrlForAgent =
           (imageUrl != null &&
               (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')))
           ? imageUrl

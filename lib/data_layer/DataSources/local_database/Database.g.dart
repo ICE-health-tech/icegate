@@ -474,6 +474,594 @@ class OrganizationsTableCompanion extends UpdateCompanion<OrganizationData> {
   }
 }
 
+class $LocalMediaIndexTableTable extends LocalMediaIndexTable
+    with TableInfo<$LocalMediaIndexTableTable, LocalMediaIndexData> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LocalMediaIndexTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _personIDMeta = const VerificationMeta(
+    'personID',
+  );
+  @override
+  late final GeneratedColumn<String> personID = GeneratedColumn<String>(
+    'person_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _relativePathMeta = const VerificationMeta(
+    'relativePath',
+  );
+  @override
+  late final GeneratedColumn<String> relativePath = GeneratedColumn<String>(
+    'relative_path',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _subFolderMeta = const VerificationMeta(
+    'subFolder',
+  );
+  @override
+  late final GeneratedColumn<String> subFolder = GeneratedColumn<String>(
+    'sub_folder',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileNameMeta = const VerificationMeta(
+    'fileName',
+  );
+  @override
+  late final GeneratedColumn<String> fileName = GeneratedColumn<String>(
+    'file_name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fileBytesMeta = const VerificationMeta(
+    'fileBytes',
+  );
+  @override
+  late final GeneratedColumn<int> fileBytes = GeneratedColumn<int>(
+    'file_bytes',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime?, DateTime>
+  lastModifiedAt =
+      GeneratedColumn<DateTime>(
+        'last_modified_at',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      ).withConverter<DateTime?>(
+        $LocalMediaIndexTableTable.$converterlastModifiedAtn,
+      );
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> createdAt =
+      GeneratedColumn<DateTime>(
+        'created_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($LocalMediaIndexTableTable.$convertercreatedAt);
+  @override
+  late final GeneratedColumnWithTypeConverter<DateTime, DateTime> updatedAt =
+      GeneratedColumn<DateTime>(
+        'updated_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+        defaultValue: currentDateAndTime,
+      ).withConverter<DateTime>($LocalMediaIndexTableTable.$converterupdatedAt);
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    personID,
+    relativePath,
+    subFolder,
+    fileName,
+    fileBytes,
+    lastModifiedAt,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'local_media_index';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<LocalMediaIndexData> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('person_id')) {
+      context.handle(
+        _personIDMeta,
+        personID.isAcceptableOrUnknown(data['person_id']!, _personIDMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_personIDMeta);
+    }
+    if (data.containsKey('relative_path')) {
+      context.handle(
+        _relativePathMeta,
+        relativePath.isAcceptableOrUnknown(
+          data['relative_path']!,
+          _relativePathMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_relativePathMeta);
+    }
+    if (data.containsKey('sub_folder')) {
+      context.handle(
+        _subFolderMeta,
+        subFolder.isAcceptableOrUnknown(data['sub_folder']!, _subFolderMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_subFolderMeta);
+    }
+    if (data.containsKey('file_name')) {
+      context.handle(
+        _fileNameMeta,
+        fileName.isAcceptableOrUnknown(data['file_name']!, _fileNameMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_fileNameMeta);
+    }
+    if (data.containsKey('file_bytes')) {
+      context.handle(
+        _fileBytesMeta,
+        fileBytes.isAcceptableOrUnknown(data['file_bytes']!, _fileBytesMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  List<Set<GeneratedColumn>> get uniqueKeys => [
+    {personID, relativePath},
+  ];
+  @override
+  LocalMediaIndexData map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LocalMediaIndexData(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      personID: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}person_id'],
+      )!,
+      relativePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}relative_path'],
+      )!,
+      subFolder: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sub_folder'],
+      )!,
+      fileName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}file_name'],
+      )!,
+      fileBytes: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}file_bytes'],
+      ),
+      lastModifiedAt: $LocalMediaIndexTableTable.$converterlastModifiedAtn
+          .fromSql(
+            attachedDatabase.typeMapping.read(
+              DriftSqlType.dateTime,
+              data['${effectivePrefix}last_modified_at'],
+            ),
+          ),
+      createdAt: $LocalMediaIndexTableTable.$convertercreatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}created_at'],
+        )!,
+      ),
+      updatedAt: $LocalMediaIndexTableTable.$converterupdatedAt.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.dateTime,
+          data['${effectivePrefix}updated_at'],
+        )!,
+      ),
+    );
+  }
+
+  @override
+  $LocalMediaIndexTableTable createAlias(String alias) {
+    return $LocalMediaIndexTableTable(attachedDatabase, alias);
+  }
+
+  static TypeConverter<DateTime, DateTime> $converterlastModifiedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime?, DateTime?> $converterlastModifiedAtn =
+      NullAwareTypeConverter.wrap($converterlastModifiedAt);
+  static TypeConverter<DateTime, DateTime> $convertercreatedAt =
+      const DateTimeUTCConverter();
+  static TypeConverter<DateTime, DateTime> $converterupdatedAt =
+      const DateTimeUTCConverter();
+}
+
+class LocalMediaIndexData extends DataClass
+    implements Insertable<LocalMediaIndexData> {
+  final String id;
+  final String personID;
+  final String relativePath;
+  final String subFolder;
+  final String fileName;
+  final int? fileBytes;
+  final DateTime? lastModifiedAt;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const LocalMediaIndexData({
+    required this.id,
+    required this.personID,
+    required this.relativePath,
+    required this.subFolder,
+    required this.fileName,
+    this.fileBytes,
+    this.lastModifiedAt,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['person_id'] = Variable<String>(personID);
+    map['relative_path'] = Variable<String>(relativePath);
+    map['sub_folder'] = Variable<String>(subFolder);
+    map['file_name'] = Variable<String>(fileName);
+    if (!nullToAbsent || fileBytes != null) {
+      map['file_bytes'] = Variable<int>(fileBytes);
+    }
+    if (!nullToAbsent || lastModifiedAt != null) {
+      map['last_modified_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$converterlastModifiedAtn.toSql(
+          lastModifiedAt,
+        ),
+      );
+    }
+    {
+      map['created_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$convertercreatedAt.toSql(createdAt),
+      );
+    }
+    {
+      map['updated_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$converterupdatedAt.toSql(updatedAt),
+      );
+    }
+    return map;
+  }
+
+  LocalMediaIndexTableCompanion toCompanion(bool nullToAbsent) {
+    return LocalMediaIndexTableCompanion(
+      id: Value(id),
+      personID: Value(personID),
+      relativePath: Value(relativePath),
+      subFolder: Value(subFolder),
+      fileName: Value(fileName),
+      fileBytes: fileBytes == null && nullToAbsent
+          ? const Value.absent()
+          : Value(fileBytes),
+      lastModifiedAt: lastModifiedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastModifiedAt),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory LocalMediaIndexData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LocalMediaIndexData(
+      id: serializer.fromJson<String>(json['id']),
+      personID: serializer.fromJson<String>(json['personID']),
+      relativePath: serializer.fromJson<String>(json['relativePath']),
+      subFolder: serializer.fromJson<String>(json['subFolder']),
+      fileName: serializer.fromJson<String>(json['fileName']),
+      fileBytes: serializer.fromJson<int?>(json['fileBytes']),
+      lastModifiedAt: serializer.fromJson<DateTime?>(json['lastModifiedAt']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'personID': serializer.toJson<String>(personID),
+      'relativePath': serializer.toJson<String>(relativePath),
+      'subFolder': serializer.toJson<String>(subFolder),
+      'fileName': serializer.toJson<String>(fileName),
+      'fileBytes': serializer.toJson<int?>(fileBytes),
+      'lastModifiedAt': serializer.toJson<DateTime?>(lastModifiedAt),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  LocalMediaIndexData copyWith({
+    String? id,
+    String? personID,
+    String? relativePath,
+    String? subFolder,
+    String? fileName,
+    Value<int?> fileBytes = const Value.absent(),
+    Value<DateTime?> lastModifiedAt = const Value.absent(),
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => LocalMediaIndexData(
+    id: id ?? this.id,
+    personID: personID ?? this.personID,
+    relativePath: relativePath ?? this.relativePath,
+    subFolder: subFolder ?? this.subFolder,
+    fileName: fileName ?? this.fileName,
+    fileBytes: fileBytes.present ? fileBytes.value : this.fileBytes,
+    lastModifiedAt: lastModifiedAt.present
+        ? lastModifiedAt.value
+        : this.lastModifiedAt,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  LocalMediaIndexData copyWithCompanion(LocalMediaIndexTableCompanion data) {
+    return LocalMediaIndexData(
+      id: data.id.present ? data.id.value : this.id,
+      personID: data.personID.present ? data.personID.value : this.personID,
+      relativePath: data.relativePath.present
+          ? data.relativePath.value
+          : this.relativePath,
+      subFolder: data.subFolder.present ? data.subFolder.value : this.subFolder,
+      fileName: data.fileName.present ? data.fileName.value : this.fileName,
+      fileBytes: data.fileBytes.present ? data.fileBytes.value : this.fileBytes,
+      lastModifiedAt: data.lastModifiedAt.present
+          ? data.lastModifiedAt.value
+          : this.lastModifiedAt,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalMediaIndexData(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('relativePath: $relativePath, ')
+          ..write('subFolder: $subFolder, ')
+          ..write('fileName: $fileName, ')
+          ..write('fileBytes: $fileBytes, ')
+          ..write('lastModifiedAt: $lastModifiedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    personID,
+    relativePath,
+    subFolder,
+    fileName,
+    fileBytes,
+    lastModifiedAt,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LocalMediaIndexData &&
+          other.id == this.id &&
+          other.personID == this.personID &&
+          other.relativePath == this.relativePath &&
+          other.subFolder == this.subFolder &&
+          other.fileName == this.fileName &&
+          other.fileBytes == this.fileBytes &&
+          other.lastModifiedAt == this.lastModifiedAt &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LocalMediaIndexTableCompanion
+    extends UpdateCompanion<LocalMediaIndexData> {
+  final Value<String> id;
+  final Value<String> personID;
+  final Value<String> relativePath;
+  final Value<String> subFolder;
+  final Value<String> fileName;
+  final Value<int?> fileBytes;
+  final Value<DateTime?> lastModifiedAt;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  final Value<int> rowid;
+  const LocalMediaIndexTableCompanion({
+    this.id = const Value.absent(),
+    this.personID = const Value.absent(),
+    this.relativePath = const Value.absent(),
+    this.subFolder = const Value.absent(),
+    this.fileName = const Value.absent(),
+    this.fileBytes = const Value.absent(),
+    this.lastModifiedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  LocalMediaIndexTableCompanion.insert({
+    required String id,
+    required String personID,
+    required String relativePath,
+    required String subFolder,
+    required String fileName,
+    this.fileBytes = const Value.absent(),
+    this.lastModifiedAt = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       personID = Value(personID),
+       relativePath = Value(relativePath),
+       subFolder = Value(subFolder),
+       fileName = Value(fileName);
+  static Insertable<LocalMediaIndexData> custom({
+    Expression<String>? id,
+    Expression<String>? personID,
+    Expression<String>? relativePath,
+    Expression<String>? subFolder,
+    Expression<String>? fileName,
+    Expression<int>? fileBytes,
+    Expression<DateTime>? lastModifiedAt,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (personID != null) 'person_id': personID,
+      if (relativePath != null) 'relative_path': relativePath,
+      if (subFolder != null) 'sub_folder': subFolder,
+      if (fileName != null) 'file_name': fileName,
+      if (fileBytes != null) 'file_bytes': fileBytes,
+      if (lastModifiedAt != null) 'last_modified_at': lastModifiedAt,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  LocalMediaIndexTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? personID,
+    Value<String>? relativePath,
+    Value<String>? subFolder,
+    Value<String>? fileName,
+    Value<int?>? fileBytes,
+    Value<DateTime?>? lastModifiedAt,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
+    return LocalMediaIndexTableCompanion(
+      id: id ?? this.id,
+      personID: personID ?? this.personID,
+      relativePath: relativePath ?? this.relativePath,
+      subFolder: subFolder ?? this.subFolder,
+      fileName: fileName ?? this.fileName,
+      fileBytes: fileBytes ?? this.fileBytes,
+      lastModifiedAt: lastModifiedAt ?? this.lastModifiedAt,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (personID.present) {
+      map['person_id'] = Variable<String>(personID.value);
+    }
+    if (relativePath.present) {
+      map['relative_path'] = Variable<String>(relativePath.value);
+    }
+    if (subFolder.present) {
+      map['sub_folder'] = Variable<String>(subFolder.value);
+    }
+    if (fileName.present) {
+      map['file_name'] = Variable<String>(fileName.value);
+    }
+    if (fileBytes.present) {
+      map['file_bytes'] = Variable<int>(fileBytes.value);
+    }
+    if (lastModifiedAt.present) {
+      map['last_modified_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$converterlastModifiedAtn.toSql(
+          lastModifiedAt.value,
+        ),
+      );
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$convertercreatedAt.toSql(createdAt.value),
+      );
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(
+        $LocalMediaIndexTableTable.$converterupdatedAt.toSql(updatedAt.value),
+      );
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LocalMediaIndexTableCompanion(')
+          ..write('id: $id, ')
+          ..write('personID: $personID, ')
+          ..write('relativePath: $relativePath, ')
+          ..write('subFolder: $subFolder, ')
+          ..write('fileName: $fileName, ')
+          ..write('fileBytes: $fileBytes, ')
+          ..write('lastModifiedAt: $lastModifiedAt, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $ExternalWidgetsTableTable extends ExternalWidgetsTable
     with TableInfo<$ExternalWidgetsTableTable, ExternalWidgetData> {
   @override
@@ -20662,6 +21250,17 @@ class $ProjectsTableTable extends ProjectsTable
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _parentProjectIdMeta = const VerificationMeta(
+    'parentProjectId',
+  );
+  @override
+  late final GeneratedColumn<String> parentProjectId = GeneratedColumn<String>(
+    'parent_project_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _personIDMeta = const VerificationMeta(
     'personID',
   );
@@ -20785,6 +21384,7 @@ class $ProjectsTableTable extends ProjectsTable
     id,
     tenantID,
     projectID,
+    parentProjectId,
     personID,
     name,
     description,
@@ -20824,6 +21424,15 @@ class $ProjectsTableTable extends ProjectsTable
       context.handle(
         _projectIDMeta,
         projectID.isAcceptableOrUnknown(data['project_id']!, _projectIDMeta),
+      );
+    }
+    if (data.containsKey('parent_project_id')) {
+      context.handle(
+        _parentProjectIdMeta,
+        parentProjectId.isAcceptableOrUnknown(
+          data['parent_project_id']!,
+          _parentProjectIdMeta,
+        ),
       );
     }
     if (data.containsKey('person_id')) {
@@ -20906,6 +21515,10 @@ class $ProjectsTableTable extends ProjectsTable
         DriftSqlType.string,
         data['${effectivePrefix}project_id'],
       ),
+      parentProjectId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_project_id'],
+      ),
       personID: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}person_id'],
@@ -20972,6 +21585,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
   final String id;
   final String? tenantID;
   final String? projectID;
+  final String? parentProjectId;
   final String? personID;
   final String name;
   final String? description;
@@ -20987,6 +21601,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     required this.id,
     this.tenantID,
     this.projectID,
+    this.parentProjectId,
     this.personID,
     required this.name,
     this.description,
@@ -21008,6 +21623,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     }
     if (!nullToAbsent || projectID != null) {
       map['project_id'] = Variable<String>(projectID);
+    }
+    if (!nullToAbsent || parentProjectId != null) {
+      map['parent_project_id'] = Variable<String>(parentProjectId);
     }
     if (!nullToAbsent || personID != null) {
       map['person_id'] = Variable<String>(personID);
@@ -21054,6 +21672,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       projectID: projectID == null && nullToAbsent
           ? const Value.absent()
           : Value(projectID),
+      parentProjectId: parentProjectId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(parentProjectId),
       personID: personID == null && nullToAbsent
           ? const Value.absent()
           : Value(personID),
@@ -21091,6 +21712,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       id: serializer.fromJson<String>(json['id']),
       tenantID: serializer.fromJson<String?>(json['tenantID']),
       projectID: serializer.fromJson<String?>(json['projectID']),
+      parentProjectId: serializer.fromJson<String?>(json['parentProjectId']),
       personID: serializer.fromJson<String?>(json['personID']),
       name: serializer.fromJson<String>(json['name']),
       description: serializer.fromJson<String?>(json['description']),
@@ -21111,6 +21733,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       'id': serializer.toJson<String>(id),
       'tenantID': serializer.toJson<String?>(tenantID),
       'projectID': serializer.toJson<String?>(projectID),
+      'parentProjectId': serializer.toJson<String?>(parentProjectId),
       'personID': serializer.toJson<String?>(personID),
       'name': serializer.toJson<String>(name),
       'description': serializer.toJson<String?>(description),
@@ -21129,6 +21752,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     String? id,
     Value<String?> tenantID = const Value.absent(),
     Value<String?> projectID = const Value.absent(),
+    Value<String?> parentProjectId = const Value.absent(),
     Value<String?> personID = const Value.absent(),
     String? name,
     Value<String?> description = const Value.absent(),
@@ -21144,6 +21768,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
     projectID: projectID.present ? projectID.value : this.projectID,
+    parentProjectId: parentProjectId.present
+        ? parentProjectId.value
+        : this.parentProjectId,
     personID: personID.present ? personID.value : this.personID,
     name: name ?? this.name,
     description: description.present ? description.value : this.description,
@@ -21161,6 +21788,9 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
       id: data.id.present ? data.id.value : this.id,
       tenantID: data.tenantID.present ? data.tenantID.value : this.tenantID,
       projectID: data.projectID.present ? data.projectID.value : this.projectID,
+      parentProjectId: data.parentProjectId.present
+          ? data.parentProjectId.value
+          : this.parentProjectId,
       personID: data.personID.present ? data.personID.value : this.personID,
       name: data.name.present ? data.name.value : this.name,
       description: data.description.present
@@ -21185,6 +21815,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
           ..write('projectID: $projectID, ')
+          ..write('parentProjectId: $parentProjectId, ')
           ..write('personID: $personID, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -21205,6 +21836,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
     id,
     tenantID,
     projectID,
+    parentProjectId,
     personID,
     name,
     description,
@@ -21224,6 +21856,7 @@ class ProjectData extends DataClass implements Insertable<ProjectData> {
           other.id == this.id &&
           other.tenantID == this.tenantID &&
           other.projectID == this.projectID &&
+          other.parentProjectId == this.parentProjectId &&
           other.personID == this.personID &&
           other.name == this.name &&
           other.description == this.description &&
@@ -21241,6 +21874,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
   final Value<String> id;
   final Value<String?> tenantID;
   final Value<String?> projectID;
+  final Value<String?> parentProjectId;
   final Value<String?> personID;
   final Value<String> name;
   final Value<String?> description;
@@ -21257,6 +21891,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     this.id = const Value.absent(),
     this.tenantID = const Value.absent(),
     this.projectID = const Value.absent(),
+    this.parentProjectId = const Value.absent(),
     this.personID = const Value.absent(),
     this.name = const Value.absent(),
     this.description = const Value.absent(),
@@ -21274,6 +21909,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     required String id,
     this.tenantID = const Value.absent(),
     this.projectID = const Value.absent(),
+    this.parentProjectId = const Value.absent(),
     this.personID = const Value.absent(),
     required String name,
     this.description = const Value.absent(),
@@ -21292,6 +21928,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Expression<String>? id,
     Expression<String>? tenantID,
     Expression<String>? projectID,
+    Expression<String>? parentProjectId,
     Expression<String>? personID,
     Expression<String>? name,
     Expression<String>? description,
@@ -21309,6 +21946,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       if (id != null) 'id': id,
       if (tenantID != null) 'tenant_id': tenantID,
       if (projectID != null) 'project_id': projectID,
+      if (parentProjectId != null) 'parent_project_id': parentProjectId,
       if (personID != null) 'person_id': personID,
       if (name != null) 'name': name,
       if (description != null) 'description': description,
@@ -21328,6 +21966,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     Value<String>? id,
     Value<String?>? tenantID,
     Value<String?>? projectID,
+    Value<String?>? parentProjectId,
     Value<String?>? personID,
     Value<String>? name,
     Value<String?>? description,
@@ -21345,6 +21984,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
       id: id ?? this.id,
       tenantID: tenantID ?? this.tenantID,
       projectID: projectID ?? this.projectID,
+      parentProjectId: parentProjectId ?? this.parentProjectId,
       personID: personID ?? this.personID,
       name: name ?? this.name,
       description: description ?? this.description,
@@ -21371,6 +22011,9 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
     }
     if (projectID.present) {
       map['project_id'] = Variable<String>(projectID.value);
+    }
+    if (parentProjectId.present) {
+      map['parent_project_id'] = Variable<String>(parentProjectId.value);
     }
     if (personID.present) {
       map['person_id'] = Variable<String>(personID.value);
@@ -21421,6 +22064,7 @@ class ProjectsTableCompanion extends UpdateCompanion<ProjectData> {
           ..write('id: $id, ')
           ..write('tenantID: $tenantID, ')
           ..write('projectID: $projectID, ')
+          ..write('parentProjectId: $parentProjectId, ')
           ..write('personID: $personID, ')
           ..write('name: $name, ')
           ..write('description: $description, ')
@@ -36181,6 +36825,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $OrganizationsTableTable organizationsTable =
       $OrganizationsTableTable(this);
+  late final $LocalMediaIndexTableTable localMediaIndexTable =
+      $LocalMediaIndexTableTable(this);
   late final $ExternalWidgetsTableTable externalWidgetsTable =
       $ExternalWidgetsTableTable(this);
   late final $ThemesTableTable themesTable = $ThemesTableTable(this);
@@ -36322,12 +36968,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final MindLogsDAO mindLogsDAO = MindLogsDAO(this as AppDatabase);
   late final JournalActivityOptionsDAO journalActivityOptionsDAO =
       JournalActivityOptionsDAO(this as AppDatabase);
+  late final LocalMediaIndexDAO localMediaIndexDAO = LocalMediaIndexDAO(
+    this as AppDatabase,
+  );
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     organizationsTable,
+    localMediaIndexTable,
     externalWidgetsTable,
     themesTable,
     internalWidgetsTable,
@@ -36596,6 +37246,306 @@ typedef $$OrganizationsTableTableProcessedTableManager =
         >,
       ),
       OrganizationData,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalMediaIndexTableTableCreateCompanionBuilder =
+    LocalMediaIndexTableCompanion Function({
+      required String id,
+      required String personID,
+      required String relativePath,
+      required String subFolder,
+      required String fileName,
+      Value<int?> fileBytes,
+      Value<DateTime?> lastModifiedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LocalMediaIndexTableTableUpdateCompanionBuilder =
+    LocalMediaIndexTableCompanion Function({
+      Value<String> id,
+      Value<String> personID,
+      Value<String> relativePath,
+      Value<String> subFolder,
+      Value<String> fileName,
+      Value<int?> fileBytes,
+      Value<DateTime?> lastModifiedAt,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
+
+class $$LocalMediaIndexTableTableFilterComposer
+    extends Composer<_$AppDatabase, $LocalMediaIndexTableTable> {
+  $$LocalMediaIndexTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get subFolder => $composableBuilder(
+    column: $table.subFolder,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get fileBytes => $composableBuilder(
+    column: $table.fileBytes,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime?, DateTime, DateTime>
+  get lastModifiedAt => $composableBuilder(
+    column: $table.lastModifiedAt,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get createdAt =>
+      $composableBuilder(
+        column: $table.createdAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+
+  ColumnWithTypeConverterFilters<DateTime, DateTime, DateTime> get updatedAt =>
+      $composableBuilder(
+        column: $table.updatedAt,
+        builder: (column) => ColumnWithTypeConverterFilters(column),
+      );
+}
+
+class $$LocalMediaIndexTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $LocalMediaIndexTableTable> {
+  $$LocalMediaIndexTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get personID => $composableBuilder(
+    column: $table.personID,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get subFolder => $composableBuilder(
+    column: $table.subFolder,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get fileName => $composableBuilder(
+    column: $table.fileName,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get fileBytes => $composableBuilder(
+    column: $table.fileBytes,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastModifiedAt => $composableBuilder(
+    column: $table.lastModifiedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$LocalMediaIndexTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $LocalMediaIndexTableTable> {
+  $$LocalMediaIndexTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get personID =>
+      $composableBuilder(column: $table.personID, builder: (column) => column);
+
+  GeneratedColumn<String> get relativePath => $composableBuilder(
+    column: $table.relativePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get subFolder =>
+      $composableBuilder(column: $table.subFolder, builder: (column) => column);
+
+  GeneratedColumn<String> get fileName =>
+      $composableBuilder(column: $table.fileName, builder: (column) => column);
+
+  GeneratedColumn<int> get fileBytes =>
+      $composableBuilder(column: $table.fileBytes, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime?, DateTime> get lastModifiedAt =>
+      $composableBuilder(
+        column: $table.lastModifiedAt,
+        builder: (column) => column,
+      );
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<DateTime, DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LocalMediaIndexTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $LocalMediaIndexTableTable,
+          LocalMediaIndexData,
+          $$LocalMediaIndexTableTableFilterComposer,
+          $$LocalMediaIndexTableTableOrderingComposer,
+          $$LocalMediaIndexTableTableAnnotationComposer,
+          $$LocalMediaIndexTableTableCreateCompanionBuilder,
+          $$LocalMediaIndexTableTableUpdateCompanionBuilder,
+          (
+            LocalMediaIndexData,
+            BaseReferences<
+              _$AppDatabase,
+              $LocalMediaIndexTableTable,
+              LocalMediaIndexData
+            >,
+          ),
+          LocalMediaIndexData,
+          PrefetchHooks Function()
+        > {
+  $$LocalMediaIndexTableTableTableManager(
+    _$AppDatabase db,
+    $LocalMediaIndexTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LocalMediaIndexTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LocalMediaIndexTableTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$LocalMediaIndexTableTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> personID = const Value.absent(),
+                Value<String> relativePath = const Value.absent(),
+                Value<String> subFolder = const Value.absent(),
+                Value<String> fileName = const Value.absent(),
+                Value<int?> fileBytes = const Value.absent(),
+                Value<DateTime?> lastModifiedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalMediaIndexTableCompanion(
+                id: id,
+                personID: personID,
+                relativePath: relativePath,
+                subFolder: subFolder,
+                fileName: fileName,
+                fileBytes: fileBytes,
+                lastModifiedAt: lastModifiedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String personID,
+                required String relativePath,
+                required String subFolder,
+                required String fileName,
+                Value<int?> fileBytes = const Value.absent(),
+                Value<DateTime?> lastModifiedAt = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LocalMediaIndexTableCompanion.insert(
+                id: id,
+                personID: personID,
+                relativePath: relativePath,
+                subFolder: subFolder,
+                fileName: fileName,
+                fileBytes: fileBytes,
+                lastModifiedAt: lastModifiedAt,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$LocalMediaIndexTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $LocalMediaIndexTableTable,
+      LocalMediaIndexData,
+      $$LocalMediaIndexTableTableFilterComposer,
+      $$LocalMediaIndexTableTableOrderingComposer,
+      $$LocalMediaIndexTableTableAnnotationComposer,
+      $$LocalMediaIndexTableTableCreateCompanionBuilder,
+      $$LocalMediaIndexTableTableUpdateCompanionBuilder,
+      (
+        LocalMediaIndexData,
+        BaseReferences<
+          _$AppDatabase,
+          $LocalMediaIndexTableTable,
+          LocalMediaIndexData
+        >,
+      ),
+      LocalMediaIndexData,
       PrefetchHooks Function()
     >;
 typedef $$ExternalWidgetsTableTableCreateCompanionBuilder =
@@ -46116,6 +47066,7 @@ typedef $$ProjectsTableTableCreateCompanionBuilder =
       required String id,
       Value<String?> tenantID,
       Value<String?> projectID,
+      Value<String?> parentProjectId,
       Value<String?> personID,
       required String name,
       Value<String?> description,
@@ -46134,6 +47085,7 @@ typedef $$ProjectsTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String?> tenantID,
       Value<String?> projectID,
+      Value<String?> parentProjectId,
       Value<String?> personID,
       Value<String> name,
       Value<String?> description,
@@ -46169,6 +47121,11 @@ class $$ProjectsTableTableFilterComposer
 
   ColumnFilters<String> get projectID => $composableBuilder(
     column: $table.projectID,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get parentProjectId => $composableBuilder(
+    column: $table.parentProjectId,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -46254,6 +47211,11 @@ class $$ProjectsTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get parentProjectId => $composableBuilder(
+    column: $table.parentProjectId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get personID => $composableBuilder(
     column: $table.personID,
     builder: (column) => ColumnOrderings(column),
@@ -46328,6 +47290,11 @@ class $$ProjectsTableTableAnnotationComposer
   GeneratedColumn<String> get projectID =>
       $composableBuilder(column: $table.projectID, builder: (column) => column);
 
+  GeneratedColumn<String> get parentProjectId => $composableBuilder(
+    column: $table.parentProjectId,
+    builder: (column) => column,
+  );
+
   GeneratedColumn<String> get personID =>
       $composableBuilder(column: $table.personID, builder: (column) => column);
 
@@ -46400,6 +47367,7 @@ class $$ProjectsTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
+                Value<String?> parentProjectId = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 Value<String> name = const Value.absent(),
                 Value<String?> description = const Value.absent(),
@@ -46416,6 +47384,7 @@ class $$ProjectsTableTableTableManager
                 id: id,
                 tenantID: tenantID,
                 projectID: projectID,
+                parentProjectId: parentProjectId,
                 personID: personID,
                 name: name,
                 description: description,
@@ -46434,6 +47403,7 @@ class $$ProjectsTableTableTableManager
                 required String id,
                 Value<String?> tenantID = const Value.absent(),
                 Value<String?> projectID = const Value.absent(),
+                Value<String?> parentProjectId = const Value.absent(),
                 Value<String?> personID = const Value.absent(),
                 required String name,
                 Value<String?> description = const Value.absent(),
@@ -46450,6 +47420,7 @@ class $$ProjectsTableTableTableManager
                 id: id,
                 tenantID: tenantID,
                 projectID: projectID,
+                parentProjectId: parentProjectId,
                 personID: personID,
                 name: name,
                 description: description,
@@ -53854,6 +54825,8 @@ class $AppDatabaseManager {
   $AppDatabaseManager(this._db);
   $$OrganizationsTableTableTableManager get organizationsTable =>
       $$OrganizationsTableTableTableManager(_db, _db.organizationsTable);
+  $$LocalMediaIndexTableTableTableManager get localMediaIndexTable =>
+      $$LocalMediaIndexTableTableTableManager(_db, _db.localMediaIndexTable);
   $$ExternalWidgetsTableTableTableManager get externalWidgetsTable =>
       $$ExternalWidgetsTableTableTableManager(_db, _db.externalWidgetsTable);
   $$ThemesTableTableTableManager get themesTable =>
@@ -54033,4 +55006,8 @@ mixin _$MindLogsDAOMixin on DatabaseAccessor<AppDatabase> {
 mixin _$JournalActivityOptionsDAOMixin on DatabaseAccessor<AppDatabase> {
   $JournalActivityOptionsTableTable get journalActivityOptionsTable =>
       attachedDatabase.journalActivityOptionsTable;
+}
+mixin _$LocalMediaIndexDAOMixin on DatabaseAccessor<AppDatabase> {
+  $LocalMediaIndexTableTable get localMediaIndexTable =>
+      attachedDatabase.localMediaIndexTable;
 }

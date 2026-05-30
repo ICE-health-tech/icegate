@@ -1,15 +1,13 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/AnalysisCharts.dart';
-import '../finance_form/AddAccountDialog.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceAlertPanel.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import '../finance_form/AddAccountDialog.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
   final FinanceBlock financeBlock;
@@ -63,21 +61,8 @@ class FinanceOverviewPage extends StatelessWidget {
           }),
           const SizedBox(height: 40),
 
-          // Dynamic Analytics Charts
-          Watch((context) {
-            final txns = financeBlock.transactions.value;
-            final currentTotal = financeBlock.totalBalance.value;
-            return Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildAnalysisHeader(context),
-                const SizedBox(height: 16),
-                _buildBalanceTrend(context, txns, currentTotal),
-                const SizedBox(height: 24),
-                _buildComparisonSection(context, financeBlock),
-              ],
-            );
-          }),
+          // Finance health alerts (net worth + breakdown)
+          FinanceAlertPanel(financeBlock: financeBlock),
           const SizedBox(height: 120), // Bottom space
             ],
           ),
@@ -87,6 +72,9 @@ class FinanceOverviewPage extends StatelessWidget {
   }
 
   Widget _buildPremiumIceCard(BuildContext context, FinanceBlock block) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final dense = MediaQuery.sizeOf(context).width >= 900;
     final burnRate = block.monthlyBurnRate.value;
     final totalSpent = block.monthlySpending.value;
@@ -100,156 +88,125 @@ class FinanceOverviewPage extends StatelessWidget {
 
     return Container(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: EntryColors.glassBorder.withValues(alpha: 0.1)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: dense ? 28 : 40,
-            offset: Offset(0, dense ? 12 : 20),
-          ),
-        ],
+      padding: EdgeInsets.all(pad),
+      decoration: FinanceSurface.panel(
+        cs,
+        isDark: isDark,
+        radius: radius,
       ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(radius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: Stack(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            "MONTHLY BURN",
+            style: TextStyle(
+              color: FinanceSurface.mutedInk(isDark: isDark),
+              fontSize: 9,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
-              Positioned(
-                right: -40,
-                top: -40,
-                child: Container(
-                  width: dense ? 120 : 150,
-                  height: dense ? 120 : 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [
-                        EntryColors.financeSilverAccent.withValues(alpha: 0.12),
-                        Colors.transparent,
-                      ],
-                    ),
+              Flexible(
+                child: Text(
+                  block.formatCurrency(burnRate),
+                  style: TextStyle(
+                    color: FinanceSurface.ink(isDark: isDark),
+                    fontSize: mainAmtSize,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: -1,
                   ),
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               Padding(
-                padding: EdgeInsets.all(pad),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      "MONTHLY BURN",
-                      style: TextStyle(
-                        color: Colors.white54,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 2,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            block.formatCurrency(burnRate),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontSize: mainAmtSize,
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -1,
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        Padding(
-                          padding: EdgeInsets.only(
-                            bottom: dense ? 6 : 10,
-                            left: 4,
-                          ),
-                          child: Text(
-                            "/ mo",
-                            style: TextStyle(
-                              color: Colors.white38,
-                              fontSize: dense ? 12 : 14,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: gapAfterTitle),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildIceSubStat(
-                            label: "ACTUAL SPENT",
-                            value: block.formatCurrency(
-                              totalSpent,
-                              compact: true,
-                            ),
-                            icon: Icons.payments_rounded,
-                            dense: dense,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _buildIceSubStat(
-                            label: "BUDGET HEALTH",
-                            value: "${(progress * 100).toStringAsFixed(0)}%",
-                            icon: Icons.shield_moon_rounded,
-                            color: progress > 0.8
-                                ? Colors.redAccent
-                                : Colors.tealAccent,
-                            dense: dense,
-                          ),
-                        ),
-                      ],
-                    ),
-                    SizedBox(height: gapBeforeBar),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(10),
-                      child: LinearProgressIndicator(
-                        value: progress.clamp(0.0, 1.0),
-                        minHeight: dense ? 5 : 6,
-                        backgroundColor: Colors.white.withValues(alpha: 0.05),
-                        valueColor: AlwaysStoppedAnimation<Color>(
-                          progress > 0.9
-                              ? Colors.redAccent
-                              : EntryColors.financeSilverAccent,
-                        ),
-                      ),
-                    ),
-                  ],
+                padding: EdgeInsets.only(
+                  bottom: dense ? 6 : 10,
+                  left: 4,
+                ),
+                child: Text(
+                  "/ mo",
+                  style: TextStyle(
+                    color: FinanceSurface.mutedInk(isDark: isDark),
+                    fontSize: dense ? 12 : 14,
+                  ),
                 ),
               ),
             ],
           ),
-        ),
+          SizedBox(height: gapAfterTitle),
+          Row(
+            children: [
+              Expanded(
+                child: _buildIceSubStat(
+                  cs: cs,
+                  isDark: isDark,
+                  label: "ACTUAL SPENT",
+                  value: block.formatCurrency(
+                    totalSpent,
+                    compact: true,
+                  ),
+                  icon: Icons.payments_rounded,
+                  dense: dense,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: _buildIceSubStat(
+                  cs: cs,
+                  isDark: isDark,
+                  label: "BUDGET HEALTH",
+                  value: "${(progress * 100).toStringAsFixed(0)}%",
+                  icon: Icons.shield_moon_rounded,
+                  color: progress > 0.8
+                      ? cs.error
+                      : FinanceSurface.silverAccent(),
+                  dense: dense,
+                ),
+              ),
+            ],
+          ),
+          SizedBox(height: gapBeforeBar),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(10),
+            child: LinearProgressIndicator(
+              value: progress.clamp(0.0, 1.0),
+              minHeight: dense ? 5 : 6,
+              backgroundColor: cs.outline.withValues(alpha: isDark ? 0.25 : 0.18),
+              valueColor: AlwaysStoppedAnimation<Color>(
+                progress > 0.9 ? cs.error : FinanceSurface.silverAccent(),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildIceSubStat({
+    required ColorScheme cs,
+    required bool isDark,
     required String label,
     required String value,
     required IconData icon,
-    Color color = EntryColors.financeSilverAccent,
+    Color? color,
     bool dense = false,
   }) {
+    final accent = color ?? FinanceSurface.ink(isDark: isDark);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
           children: [
-            Icon(icon, color: Colors.white24, size: 10),
+            Icon(icon, color: FinanceSurface.mutedInk(isDark: isDark), size: 10),
             const SizedBox(width: 4),
             Text(
               label,
-              style: const TextStyle(
-                color: Colors.white38,
+              style: TextStyle(
+                color: FinanceSurface.mutedInk(isDark: isDark),
                 fontSize: 8,
                 fontWeight: FontWeight.bold,
               ),
@@ -260,7 +217,7 @@ class FinanceOverviewPage extends StatelessWidget {
         Text(
           value,
           style: TextStyle(
-            color: color,
+            color: accent,
             fontSize: dense ? 14 : 16,
             fontWeight: FontWeight.w900,
           ),
@@ -282,7 +239,7 @@ class FinanceOverviewPage extends StatelessWidget {
               block.totalSavings.value,
               compact: true,
             ),
-            color: const Color(0xFF4CAF50),
+            color: FinanceSurface.silverAccent(),
             icon: Icons.savings_rounded,
             dense: dense,
           ),
@@ -296,7 +253,7 @@ class FinanceOverviewPage extends StatelessWidget {
               block.monthlyFixedIncome.value,
               compact: true,
             ),
-            color: const Color(0xFF66BB6A),
+            color: FinanceSurface.mutedInk(isDark: Theme.of(context).brightness == Brightness.dark),
             icon: Icons.trending_up_rounded,
             dense: dense,
           ),
@@ -310,7 +267,9 @@ class FinanceOverviewPage extends StatelessWidget {
               block.monthlySpending.value,
               compact: true,
             ),
-            color: const Color(0xFFF44336),
+            color: FinanceSurface.ink(
+              isDark: Theme.of(context).brightness == Brightness.dark,
+            ),
             icon: Icons.shopping_cart_rounded,
             dense: dense,
           ),
@@ -327,14 +286,17 @@ class FinanceOverviewPage extends StatelessWidget {
     required IconData icon,
     bool dense = false,
   }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     final pad = dense ? 12.0 : 16.0;
     final radius = dense ? 20.0 : 24.0;
     return Container(
       padding: EdgeInsets.all(pad),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: color.withValues(alpha: 0.3), width: 1.2),
+      decoration: FinanceSurface.panel(
+        cs,
+        isDark: isDark,
+        radius: radius,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,7 +306,7 @@ class FinanceOverviewPage extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              color: color.withValues(alpha: 0.7),
+              color: FinanceSurface.mutedInk(isDark: isDark),
               fontSize: 8,
               fontWeight: FontWeight.bold,
               letterSpacing: 0.5,
@@ -354,7 +316,7 @@ class FinanceOverviewPage extends StatelessWidget {
           Text(
             value,
             style: TextStyle(
-              color: Colors.white,
+              color: FinanceSurface.ink(isDark: isDark),
               fontSize: dense ? 16 : 18,
               fontWeight: FontWeight.w900,
             ),
@@ -364,97 +326,9 @@ class FinanceOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAnalysisHeader(BuildContext context) {
-    return const Text(
-      "FINANCIAL EFFICIENCY",
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 10,
-        fontWeight: FontWeight.w900,
-        letterSpacing: 2,
-      ),
-    );
-  }
-
-  Widget _buildBalanceTrend(
-    BuildContext context,
-    List<TransactionData> txns,
-    double currentTotal,
-  ) {
-    final dense = MediaQuery.sizeOf(context).width >= 900;
-    final pad = dense ? 18.0 : 24.0;
-    final radius = dense ? 26.0 : 32.0;
-    final headlineSize = dense ? 26.0 : 32.0;
-    final chartH = dense ? 110.0 : 140.0;
-    // Reverse engineer balance history (simplified logic)
-    List<double> history = [currentTotal];
-    double running = currentTotal;
-
-    // Take last 15 txns to show a trend
-    for (var i = 0; i < txns.length && i < 15; i++) {
-      final t = txns[i];
-      if (t.type == 'income' || t.type == 'savings') {
-        running -= t.amount;
-      } else {
-        running += t.amount;
-      }
-      history.add(running);
-    }
-
-    final chartData = history.reversed.toList();
-
-    return Container(
-      padding: EdgeInsets.all(pad),
-      decoration: BoxDecoration(
-        color: EntryColors.financeSilverAccent.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: EntryColors.financeSilverAccent.withValues(alpha: 0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'NET WORTH TREND',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 10,
-              letterSpacing: 1.5,
-              color: EntryColors.financeSilverAccent.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            financeBlock.formatCurrency(currentTotal),
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: headlineSize,
-              letterSpacing: -1,
-            ),
-          ),
-          SizedBox(height: dense ? 18 : 24),
-          if (chartData.length > 1)
-            SimpleLineChart(
-              data: chartData,
-              color: EntryColors.financeSilverAccent,
-              height: chartH,
-            )
-          else
-            SizedBox(
-              height: chartH,
-              child: const Center(
-                child: Text(
-                  'Need more data for trend',
-                  style: TextStyle(color: Colors.white38),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildAccountsSection(BuildContext context, FinanceBlock block) {
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final accounts = block.accounts.value;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -462,10 +336,10 @@ class FinanceOverviewPage extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text(
+            Text(
               "LIQUID ASSETS",
               style: TextStyle(
-                color: Colors.white,
+                color: cs.onSurface,
                 fontSize: 10,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 2,
@@ -475,21 +349,23 @@ class FinanceOverviewPage extends StatelessWidget {
               onTap: () => AddAccountDialog.show(context),
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: BoxDecoration(
-                  color: EntryColors.financeSilverAccent.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: EntryColors.financeSilverAccent.withValues(alpha: 0.2),
-                  ),
+                decoration: FinanceSurface.panel(
+                  cs,
+                  isDark: isDark,
+                  radius: 12,
                 ),
-                child: const Row(
+                child: Row(
                   children: [
-                    Icon(Icons.add_rounded, color: EntryColors.financeSilverAccent, size: 14),
-                    SizedBox(width: 4),
+                    Icon(
+                      Icons.add_rounded,
+                      color: FinanceSurface.silverAccent(),
+                      size: 14,
+                    ),
+                    const SizedBox(width: 4),
                     Text(
                       "ADD",
                       style: TextStyle(
-                        color: EntryColors.financeSilverAccent,
+                        color: cs.onSurface,
                         fontSize: 9,
                         fontWeight: FontWeight.w900,
                       ),
@@ -532,15 +408,16 @@ class FinanceOverviewPage extends StatelessWidget {
     FinancialAccountProtocol account,
     FinanceBlock block,
   ) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Container(
       width: 160,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(
-          color: Colors.white.withValues(alpha: 0.05),
-        ),
+      decoration: FinanceSurface.panel(
+        cs,
+        isDark: isDark,
+        radius: 24,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -548,13 +425,13 @@ class FinanceOverviewPage extends StatelessWidget {
         children: [
           Row(
             children: [
-              _getAccountIcon(account.accountType),
+              _getAccountIcon(account.accountType, isDark: isDark),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   account.accountName.toUpperCase(),
-                  style: const TextStyle(
-                    color: Colors.white38,
+                  style: TextStyle(
+                    color: cs.onSurfaceVariant,
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 0.5,
@@ -567,8 +444,8 @@ class FinanceOverviewPage extends StatelessWidget {
           ),
           Text(
             block.formatCurrency(account.balance, compact: true),
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: cs.onSurface,
               fontSize: 18,
               fontWeight: FontWeight.w900,
               letterSpacing: -0.5,
@@ -579,27 +456,26 @@ class FinanceOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _getAccountIcon(String type) {
+  Widget _getAccountIcon(String type, {required bool isDark}) {
     IconData icon;
-    Color color;
     switch (type.toLowerCase()) {
       case 'savings':
         icon = Icons.savings_rounded;
-        color = Colors.greenAccent;
         break;
       case 'credit_card':
         icon = Icons.credit_card_rounded;
-        color = Colors.orangeAccent;
         break;
       case 'cash':
         icon = Icons.payments_rounded;
-        color = Colors.yellowAccent;
         break;
       default:
         icon = Icons.account_balance_rounded;
-        color = EntryColors.financeSilverAccent;
     }
-    return Icon(icon, color: color.withValues(alpha: 0.5), size: 14);
+    return Icon(
+      icon,
+      color: FinanceSurface.mutedInk(isDark: isDark),
+      size: 14,
+    );
   }
 
   Widget _buildEmptyState(
@@ -609,27 +485,31 @@ class FinanceOverviewPage extends StatelessWidget {
     required String subtitle,
     required VoidCallback onTap,
   }) {
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: double.infinity,
         padding: const EdgeInsets.symmetric(vertical: 32),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.02),
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.05),
-            style: BorderStyle.solid,
-          ),
+        decoration: FinanceSurface.panel(
+          cs,
+          isDark: isDark,
+          radius: 24,
         ),
         child: Column(
           children: [
-            Icon(icon, color: Colors.white12, size: 32),
+            Icon(
+              icon,
+              color: cs.onSurfaceVariant,
+              size: 32,
+            ),
             const SizedBox(height: 12),
             Text(
               title,
-              style: const TextStyle(
-                color: Colors.white38,
+              style: TextStyle(
+                color: cs.onSurface,
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
               ),
@@ -637,64 +517,13 @@ class FinanceOverviewPage extends StatelessWidget {
             const SizedBox(height: 4),
             Text(
               subtitle,
-              style: const TextStyle(
-                color: Colors.white24,
+              style: TextStyle(
+                color: cs.onSurfaceVariant,
                 fontSize: 11,
               ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildComparisonSection(BuildContext context, FinanceBlock block) {
-    final categories = block.spendingByCategory.value;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'BREAKDOWN',
-            style: TextStyle(
-              fontWeight: FontWeight.w900,
-              fontSize: 10,
-              letterSpacing: 1.5,
-              color: Colors.white.withValues(alpha: 0.5),
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (categories.isNotEmpty)
-            Center(
-              child: SimplePieChart(
-                data: categories,
-                colors: const [
-                  EntryColors.financeSilverAccent,
-                  Color(0xFF839BF3),
-                  Color(0xFFA5B4FC),
-                  Color(0xFFF0FDFA),
-                  Color(0xFF00E5FF),
-                  Color(0xFF4F46E5),
-                ],
-                size: 140,
-              ),
-            )
-          else
-            const SizedBox(
-              height: 140,
-              child: Center(
-                child: Text('No data', style: TextStyle(color: Colors.white38)),
-              ),
-            ),
-        ],
       ),
     );
   }

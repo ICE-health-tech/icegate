@@ -12,13 +12,14 @@ import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementSt
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/achievement_story_utils.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementTimeline.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/DomainAnalysisChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 
@@ -280,44 +281,43 @@ class _SocialPageState extends State<SocialPage>
       final baseTheme = Theme.of(context);
       final pageTheme = mindFocusThemed(baseTheme, focus);
 
+      final colorScheme = pageTheme.colorScheme;
+
       return Theme(
         data: pageTheme,
         child: SwipeablePage(
           onSwipe: () => Navigator.maybePop(context),
           direction: SwipeablePageDirection.leftToRight,
-          child: RadialPremiumBackground(
-            glowColor: focus?.color,
-            child: Scaffold(
+          child: Scaffold(
+            backgroundColor: colorScheme.surface,
+            appBar: AppBar(
+              toolbarHeight: 80,
               backgroundColor: Colors.transparent,
-              appBar: AppBar(
-                toolbarHeight: 80,
-                backgroundColor: Colors.transparent,
-                elevation: 0,
-                automaticallyImplyLeading: false,
-              ),
-              body: Column(
-                children: [
-                  Expanded(
-                    child: Watch((context) {
-                      final _ = _socialBlock.activeTab.value;
+              elevation: 0,
+              automaticallyImplyLeading: false,
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: Watch((context) {
+                    final _ = _socialBlock.activeTab.value;
 
-                      return Stack(
-                        children: [
-                          TabBarView(
-                            controller: _tabController,
-                            children: [
-                              const SocialNotesDashboard(),
-                              const MindFocusTrendsTab(),
-                              _buildAchievementsDashboard(context),
-                              const SocialAnalysisPage(),
-                            ],
-                          ),
-                        ],
-                      );
-                    }),
-                  ),
-                ],
-              ),
+                    return Stack(
+                      children: [
+                        TabBarView(
+                          controller: _tabController,
+                          children: [
+                            const SocialNotesDashboard(),
+                            const MindFocusTrendsTab(),
+                            _buildAchievementsDashboard(context),
+                            const SocialAnalysisPage(),
+                          ],
+                        ),
+                      ],
+                    );
+                  }),
+                ),
+              ],
             ),
           ),
         ),
@@ -364,6 +364,7 @@ class _SocialPageState extends State<SocialPage>
   Widget _buildAchievementsDashboard(BuildContext context) {
     return Watch((context) {
       final achievementsDAO = context.read<AchievementsDAO>();
+      final mindBlock = context.read<MindBlock>();
       final personBlock = context.read<PersonBlock>();
       final currentPersonId = personBlock.currentPersonID.value ?? "";
 
@@ -378,29 +379,38 @@ class _SocialPageState extends State<SocialPage>
           final feats = achievementLoggedFeats(achievements);
           final l10n = AppLocalizations.of(context)!;
 
-          return Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                flex: AchievementStoryRail.recordColumnFlex,
-                child: CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    const SliverToBoxAdapter(child: SizedBox(height: 4)),
-                    if (feats.isEmpty && achievements.isEmpty)
-                      SliverFillRemaining(
-                        hasScrollBody: false,
-                        child: _buildEmptyState(
-                          context,
-                          l10n.social_no_achievements_msg,
-                          Icons.emoji_events_outlined,
-                        ),
-                      )
-                    else ...[
-                      if (feats.isNotEmpty) ...[
-                        SliverToBoxAdapter(
-                          child: DomainAnalysisChart(achievements: feats),
-                        ),
+          return StreamBuilder<List<MindLogData>>(
+            stream: mindBlock.watchMindLogsRange(currentPersonId, 60),
+            builder: (context, logSnap) {
+              final mindLogs = logSnap.data ?? [];
+
+              return Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    flex: AchievementStoryRail.recordColumnFlex,
+                    child: CustomScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      slivers: [
+                        const SliverToBoxAdapter(child: SizedBox(height: 4)),
+                        if (feats.isEmpty && achievements.isEmpty && mindLogs.isEmpty)
+                          SliverFillRemaining(
+                            hasScrollBody: false,
+                            child: _buildEmptyState(
+                              context,
+                              l10n.social_no_achievements_msg,
+                              Icons.emoji_events_outlined,
+                            ),
+                          )
+                        else ...[
+                          if (feats.isNotEmpty ||
+                              countSkillSessionsInRange(mindLogs) > 0) ...[
+                            SliverToBoxAdapter(
+                              child: DomainAnalysisChart(
+                                achievements: feats,
+                                mindLogs: mindLogs,
+                              ),
+                            ),
                         SliverToBoxAdapter(
                           child: Padding(
                             padding: const EdgeInsets.fromLTRB(20, 10, 12, 2),
@@ -450,6 +460,8 @@ class _SocialPageState extends State<SocialPage>
                 child: AchievementStoryRail(achievements: achievements),
               ),
             ],
+          );
+            },
           );
         },
       );

@@ -47,8 +47,9 @@ class MyApp extends StatelessWidget {
         // Assume ThemeStore now provides a standard ThemeData property
         // Replace currentNeumorphicTheme with your actual Material theme observable,
         // for example: themeStore.currentMaterialTheme
+        final ThemeData? loadedTheme = themeStore.currentTheme.value;
         final ThemeData currentTheme =
-            themeStore.currentTheme.value ?? ThemeAdapter.lightTheme;
+            loadedTheme ?? ThemeAdapter.lightTheme;
 
         // Đọc locale hiện tại từ LocaleBlock (reactive)
         Locale? appLocale;
@@ -65,6 +66,7 @@ class MyApp extends StatelessWidget {
 
         // --- Use MaterialApp instead of NeumorphicApp ---
         return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
           // Apply the retrieved Material theme
           routerConfig: router,
           theme: currentTheme,

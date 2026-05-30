@@ -1,5 +1,7 @@
 import 'dart:convert';
-import 'dart:ui';
+
+import 'package:flutter/foundation.dart'
+    show TargetPlatform, defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:go_router/go_router.dart';
@@ -8,7 +10,10 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
+import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
@@ -24,10 +29,19 @@ class SocialNotesDashboard extends StatefulWidget {
 }
 
 class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
+  /// Space for [MainShell] bottom FAB / home button strip.
+  double _bottomClearance(BuildContext context) {
+    final width = MediaQuery.sizeOf(context).width;
+    final wideMac = defaultTargetPlatform == TargetPlatform.macOS && width >= 560;
+    return wideMac ? 72 : 104;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
     return Watch((context) {
       final personBlock = context.read<PersonBlock>();
       final personId = personBlock.currentPersonID.value;
@@ -39,19 +53,21 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       return Container(
         color: Colors.transparent,
         child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
+          physics: const BouncingScrollPhysics(
+            parent: AlwaysScrollableScrollPhysics(),
+          ),
           slivers: [
             SliverToBoxAdapter(
               child: Column(
                 children: [
-                  _buildQuickEntryBar(context, colorScheme, textTheme),
-                  const Divider(height: 1, thickness: 0.2),
+                  _buildQuickEntryBar(context, colorScheme, textTheme, isDark),
+                  const SizedBox(height: 8),
                   Padding(
                     padding: EdgeInsets.symmetric(
                       horizontal: MediaQuery.sizeOf(context).width >= 900
                           ? 32
                           : 16,
-                      vertical: 16.0,
+                      vertical: 12,
                     ),
                     child: Align(
                       alignment: Alignment.center,
@@ -66,39 +82,45 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                         if (!snapshot.hasData || snapshot.data!.isEmpty) {
                           return const SizedBox.shrink();
                         }
-                        return Column(
+                        return Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+                          decoration: HealthMetricColors.shellPanel(
+                            colorScheme,
+                            isDark: isDark,
+                            radius: 22,
+                            accent: HealthMetricColors.pillarViolet,
+                          ),
+                          child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               AppLocalizations.of(context)!.mood_trends_title.toUpperCase(),
                               style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
+                                letterSpacing: 1.4,
+                                fontWeight: FontWeight.w900,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                             const SizedBox(height: 12),
                             MoodTrendsChart(logs: snapshot.data!),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
                             _buildRecentLogsPreview(
                               context,
                               snapshot.data!,
                               personId,
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 8),
                             Text(
                               AppLocalizations.of(context)!.social_notes_title.toUpperCase(),
                               style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 2,
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.5,
-                                ),
+                                letterSpacing: 1.4,
+                                fontWeight: FontWeight.w900,
+                                color: colorScheme.onSurface,
                               ),
                             ),
                           ],
+                        ),
                         );
                       },
                     ),
@@ -142,28 +164,29 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   builder: (context, constraints) {
                     final cw = constraints.crossAxisExtent;
                     var crossCount = 2;
-                    var aspect = 0.75;
-                    var gap = 16.0;
+                    var aspect = 0.82;
+                    var gap = 14.0;
                     var hPad = 16.0;
+                    final bottomPad = _bottomClearance(context);
                     if (cw >= 1200) {
                       crossCount = 5;
-                      aspect = 1.02;
-                      gap = 12;
+                      aspect = 0.88;
+                      gap = 14;
                       hPad = 32;
                     } else if (cw >= 900) {
                       crossCount = 4;
-                      aspect = 0.98;
-                      gap = 12;
+                      aspect = 0.86;
+                      gap = 14;
                       hPad = 28;
                     } else if (cw >= 640) {
                       crossCount = 3;
-                      aspect = 0.88;
+                      aspect = 0.84;
                       gap = 14;
                       hPad = 20;
                     }
 
                     return SliverPadding(
-                      padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 12),
+                      padding: EdgeInsets.fromLTRB(hPad, 8, hPad, bottomPad),
                       sliver: SliverGrid(
                         gridDelegate:
                             SliverGridDelegateWithFixedCrossAxisCount(
@@ -173,8 +196,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                           childAspectRatio: aspect,
                         ),
                         delegate: SliverChildBuilderDelegate(
-                          (context, index) =>
-                              _SocialNoteCard(note: sortedNotes[index]),
+                          (context, index) => _SocialNoteCard(
+                            note: sortedNotes[index],
+                            accent: HealthMetricColors.pillarAccentAt(index),
+                          ),
                           childCount: sortedNotes.length,
                         ),
                       ),
@@ -193,6 +218,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     BuildContext context,
     ColorScheme colorScheme,
     TextTheme textTheme,
+    bool isDark,
   ) {
     final isDesktop = MediaQuery.sizeOf(context).width >= 900;
 
@@ -217,30 +243,25 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                   horizontal: isDesktop ? 16 : 20,
                   vertical: isDesktop ? 10 : 12,
                 ),
-                decoration: BoxDecoration(
-                  color: colorScheme.surfaceContainerHigh.withValues(
-                    alpha: 0.5,
-                  ),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: colorScheme.outlineVariant.withValues(alpha: 0.3),
-                  ),
+                decoration: HealthMetricColors.shellPanel(
+                  colorScheme,
+                  isDark: isDark,
+                  radius: 30,
+                  accent: HealthMetricColors.pillarViolet,
                 ),
                 child: Row(
                   children: [
                     Icon(
                       Icons.sentiment_satisfied_alt_rounded,
                       size: isDesktop ? 18 : 20,
-                      color: colorScheme.primary.withValues(alpha: 0.7),
+                      color: colorScheme.onSurface,
                     ),
                     const SizedBox(width: 12),
                     Text(
                       AppLocalizations.of(context)!.mind_quick_entry_hint,
                       style: textTheme.bodyMedium?.copyWith(
-                        color: colorScheme.onSurfaceVariant.withValues(
-                          alpha: 0.8,
-                        ),
-                        fontWeight: FontWeight.w500,
+                        color: colorScheme.onSurface.withValues(alpha: 0.78),
+                        fontWeight: FontWeight.w600,
                         fontSize: isDesktop ? 14 : null,
                       ),
                     ),
@@ -328,8 +349,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
     List<MindLogData> logs,
     String personId,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     // Sort by when the entry was saved (createdAt); logDate is only the day bucket.
     final sortedLogs = List<MindLogData>.from(logs)
@@ -347,7 +370,7 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
         final l10n = AppLocalizations.of(context)!;
 
         return SizedBox(
-          height: 100,
+          height: 112,
           child: ListView.builder(
             scrollDirection: Axis.horizontal,
             physics: const BouncingScrollPhysics(),
@@ -357,23 +380,14 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
 
               final mood = mindMoodAccent(log.moodScore);
               return Container(
-                width: 160,
-                margin: const EdgeInsets.only(right: 12),
+                width: 168,
+                margin: EdgeInsets.only(right: index == sortedLogs.length - 1 ? 0 : 12),
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      mood.withValues(alpha: 0.18),
-                      colorScheme.surfaceContainerHigh.withValues(alpha: 0.45),
-                    ],
-                  ),
-                  border: Border.all(
-                    color: mood.withValues(alpha: 0.45),
-                    width: 1,
-                  ),
+                decoration: HealthMetricColors.shellPanel(
+                  colorScheme,
+                  isDark: isDark,
+                  radius: 16,
+                  accent: HealthMetricColors.pillarViolet,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -388,9 +402,9 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                             DateFormat('MMM d, HH:mm')
                                 .format(log.createdAt.toLocal()),
                             style: textTheme.labelSmall?.copyWith(
-                              fontSize: 9,
-                              color: colorScheme.onSurface.withValues(alpha: 0.88),
-                              fontWeight: FontWeight.w600,
+                              fontSize: 10,
+                              color: colorScheme.onSurface,
+                              fontWeight: FontWeight.w700,
                             ),
                             maxLines: 1,
                           ),
@@ -405,8 +419,10 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                         optMap,
                       ),
                       style: textTheme.bodySmall?.copyWith(
-                        color: colorScheme.onSurfaceVariant,
-                        fontSize: 10,
+                        color: colorScheme.onSurface.withValues(alpha: 0.82),
+                        fontSize: 11,
+                        height: 1.25,
+                        fontWeight: FontWeight.w500,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -504,170 +520,168 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
 
 class _SocialNoteCard extends StatelessWidget {
   final ProjectNoteData note;
+  final Color accent;
 
-  const _SocialNoteCard({required this.note});
+  const _SocialNoteCard({
+    required this.note,
+    required this.accent,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
     final imageUrl = _getPreviewImage(note.content);
     final previewText = _getPreviewText(note.content);
 
     return Hero(
       tag: 'note_${note.id}',
       child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.04),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+        decoration: HealthMetricColors.shellPanel(
+          colorScheme,
+          isDark: isDark,
+          radius: 20,
+          accent: HealthMetricColors.pillarViolet,
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(24),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
-            child: Material(
-              color: colorScheme.surfaceContainerLow.withValues(alpha: 0.7),
-              child: InkWell(
-                onTap: () => context.push('/projects/editor', extra: note),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    Expanded(
-                      flex: 4,
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          if (imageUrl != null)
-                            LocalFirstImage(
-                              ownerId: note.personID ?? "",
-                              localPath: imageUrl,
-                              remoteUrl: "",
-                              subFolder: "user_markdown_documentation",
-                              fit: BoxFit.cover,
-                            )
-                          else
-                            Container(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                  colors: [
-                                    colorScheme.primaryContainer.withValues(
-                                      alpha: 0.3,
-                                    ),
-                                    colorScheme.secondaryContainer.withValues(
-                                      alpha: 0.1,
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              child: Icon(
-                                Icons.auto_awesome_rounded,
-                                color: colorScheme.primary.withValues(
-                                  alpha: 0.2,
-                                ),
-                                size: 40,
+          borderRadius: BorderRadius.circular(20),
+          child: Material(
+            color: isDark
+                ? HealthMetricColors.shellIslandFill
+                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.82),
+            child: InkWell(
+              onTap: () => context.push('/projects/editor', extra: note),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  AspectRatio(
+                    aspectRatio: 1.45,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (imageUrl != null)
+                          LocalFirstImage(
+                            ownerId: note.personID ?? "",
+                            localPath: imageUrl,
+                            remoteUrl: _s3RemoteUrl(imageUrl, note.personID),
+                            subFolder: "user_markdown_documentation",
+                            fit: BoxFit.cover,
+                          )
+                        else
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [
+                                  accent.withValues(alpha: 0.38),
+                                  accent.withValues(alpha: 0.14),
+                                  colorScheme.surfaceContainerHighest
+                                      .withValues(alpha: 0.65),
+                                ],
                               ),
                             ),
-                          // Premium overlay gradient
-                          Positioned.fill(
-                            child: DecoratedBox(
-                              decoration: BoxDecoration(
-                                gradient: LinearGradient(
-                                  begin: Alignment.topCenter,
-                                  end: Alignment.bottomCenter,
-                                  colors: [
-                                    Colors.black.withValues(alpha: 0.1),
-                                    Colors.transparent,
-                                    Colors.black.withValues(alpha: 0.3),
-                                  ],
-                                  stops: const [0.0, 0.5, 1.0],
-                                ),
+                            child: Icon(
+                              Icons.auto_awesome_rounded,
+                              color: accent.withValues(alpha: 0.55),
+                              size: 32,
+                            ),
+                          ),
+                        Positioned.fill(
+                          child: DecoratedBox(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.transparent,
+                                  Colors.black.withValues(alpha: 0.45),
+                                ],
                               ),
                             ),
                           ),
+                        ),
+                        Positioned(
+                          bottom: 10,
+                          left: 10,
+                          child: Text(
+                            DateFormat('MMM d').format(note.updatedAt),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.3,
+                            ),
+                          ),
+                        ),
+                        if (note.mood != null && note.mood!.isNotEmpty)
                           Positioned(
-                            bottom: 12,
-                            left: 12,
-                            child: Text(
-                              DateFormat('MMM d').format(note.updatedAt),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 0.5,
+                            bottom: 10,
+                            right: 10,
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 7,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: colorScheme.primary.withValues(
+                                  alpha: 0.92,
+                                ),
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                note.mood!.toUpperCase(),
+                                style: TextStyle(
+                                  color: colorScheme.onPrimary,
+                                  fontSize: 9,
+                                  fontWeight: FontWeight.w900,
+                                ),
                               ),
                             ),
                           ),
-                          if (note.mood != null && note.mood!.isNotEmpty)
-                            Positioned(
-                              bottom: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
-                                  vertical: 2,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  note.mood!.toUpperCase(),
-                                  style: TextStyle(
-                                    color: colorScheme.onPrimary,
-                                    fontSize: 8,
-                                    fontWeight: FontWeight.w900,
-                                  ),
-                                ),
-                              ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            note.title,
+                            style: textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w900,
+                              letterSpacing: -0.2,
+                              height: 1.2,
+                              color: colorScheme.onSurface,
                             ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          const SizedBox(height: 6),
+                          Expanded(
+                            child: Text(
+                              previewText,
+                              style: textTheme.bodySmall?.copyWith(
+                                color: colorScheme.onSurface.withValues(
+                                  alpha: 0.78,
+                                ),
+                                height: 1.35,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w500,
+                              ),
+                              maxLines: 3,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
                         ],
                       ),
                     ),
-                    Expanded(
-                      flex: 3,
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              note.title,
-                              style: textTheme.titleSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: -0.2,
-                                height: 1.2,
-                              ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 6),
-                            Expanded(
-                              child: Text(
-                                previewText,
-                                style: textTheme.bodySmall?.copyWith(
-                                  color: colorScheme.onSurfaceVariant
-                                      .withValues(alpha: 0.7),
-                                  height: 1.4,
-                                  fontSize: 11,
-                                ),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -758,5 +772,19 @@ class _SocialNoteCard extends StatelessWidget {
     }
 
     return null;
+  }
+
+  static String _s3RemoteUrl(String? localPath, String? personId) {
+    if (localPath == null || localPath.isEmpty) return '';
+    if (localPath.startsWith('http://') || localPath.startsWith('https://')) {
+      return localPath;
+    }
+    final normalized = localPath.replaceAll('\\', '/');
+    final key = normalized.contains('/')
+        ? normalized
+        : (personId != null && personId.isNotEmpty
+            ? '$personId/user_markdown_documentation/${p.basename(normalized)}'
+            : normalized);
+    return MinioService().publicUrlForKey(key);
   }
 }

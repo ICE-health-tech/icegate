@@ -187,7 +187,7 @@ class CustomAuthService {
 
       if (response.statusCode != 200 && response.statusCode != 201) {
         final error = jsonDecode(response.body);
-        final details = error['details'] ?? 'No extra details';
+        final details = error['details'] ?? response.body;
         _logger.severe('Registration verification failed: $details');
         throw Exception(
           error['error'] ?? 'Registration verification failed: $details',
@@ -195,7 +195,7 @@ class CustomAuthService {
       }
     } catch (e) {
       _logger.severe('Error verifying passkey registration: $e');
-      throw Exception('Connection error: $e');
+      rethrow;
     }
   }
 

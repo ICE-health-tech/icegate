@@ -1,0 +1,61 @@
+{
+  "theme_name": "Diamond Ice",
+  "brightness": "dark",
+  "useMaterial3": true,
+  "seed_color": "0xFF00E5FF",
+  "color_scheme": {
+    "primary": "0xFF00E5FF",
+    "onPrimary": "0xFF0A0E14",
+    "primaryContainer": "0xFF004D55",
+    "onPrimaryContainer": "0xFF80F3FF",
+    "secondary": "0xFF7C4DFF",
+    "onSecondary": "0xFFFFFFFF",
+    "secondaryContainer": "0xFF311B92",
+    "onSecondaryContainer": "0xFFE0E0FF",
+    "surface": "0xFF0A0E14",
+    "onSurface": "0xFFE1E2E5",
+    "surfaceContainer": "0xFF161B22",
+    "outline": "0xFF30363D",
+    "outlineVariant": "0xFF484F58"
+  },
+  "components": {
+    "appBar": {
+      "backgroundColor": "0xFF0A0E14",
+      "foregroundColor": "0xFFE1E2E5",
+      "elevation": 0.0
+    },
+    "elevatedButton": {
+      "backgroundColor": "0xFF00E5FF",
+      "foregroundColor": "0xFF0A0E14",
+      "borderRadius": 12.0,
+      "elevation": 4.0
+    },
+    "card": {
+      "backgroundColor": "0xFF161B22",
+      "elevation": 0.0,
+      "borderRadius": 16.0
+    },
+    "icon": {
+      "color": "0xFF00E5FF",
+      "size": 24.0
+    }
+  },
+  "text_theme": {
+    "fontFamily": "Outfit",
+    "headlineLarge": {
+      "size": 32.0,
+      "weight": "bold",
+      "color": "0xFFFFFFFF"
+    },
+    "bodyMedium": {
+      "size": 16.0,
+      "weight": "normal",
+      "color": "0xFFE1E2E5"
+    },
+    "labelLarge": {
+      "size": 14.0,
+      "weight": "medium",
+      "color": "0xFF0A0E14"
+    }
+  }
+}

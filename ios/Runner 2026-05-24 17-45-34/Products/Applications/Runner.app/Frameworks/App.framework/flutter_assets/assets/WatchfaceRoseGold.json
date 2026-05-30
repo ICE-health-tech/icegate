@@ -1,0 +1,59 @@
+{
+    "theme_name": "Watchface Rose Gold",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFFC48B91",
+    "color_scheme": {
+        "primary": "0xFFE8B4B8",
+        "onPrimary": "0xFF2A1618",
+        "primaryContainer": "0xFF3D2528",
+        "onPrimaryContainer": "0xFFFFE4E6",
+        "secondary": "0xFFD7CCC8",
+        "onSecondary": "0xFF1C1012",
+        "surface": "0xFF0D0C0C",
+        "onSurface": "0xFFF8F0F0",
+        "surfaceContainer": "0xFF1E1819",
+        "outline": "0xFF4A3E40",
+        "outlineVariant": "0xFF6D5A5D"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF0D0C0C",
+            "foregroundColor": "0xFFE8B4B8",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFE8B4B8",
+            "foregroundColor": "0xFF2A1618",
+            "borderRadius": 12.0,
+            "elevation": 0.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1E1819",
+            "elevation": 0.0,
+            "borderRadius": 16.0
+        },
+        "icon": {
+            "color": "0xFFE8B4B8",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Roboto",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFF8F0F0"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFE8DEDF"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFFE8B4B8"
+        }
+    }
+}

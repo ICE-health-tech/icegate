@@ -1,5 +1,5 @@
-import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
@@ -13,7 +13,10 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ContentBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlockerBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningLoopPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/NotificationMaskChip.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DotGridPainter.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 
 class NotificationManagerPage extends StatefulWidget {
   const NotificationManagerPage({super.key});
@@ -23,23 +26,63 @@ class NotificationManagerPage extends StatefulWidget {
       _NotificationManagerPageState();
 }
 
-class _NotificationManagerPageState extends State<NotificationManagerPage>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _pulseController;
+class _NotificationManagerPageState extends State<NotificationManagerPage> {
+  static const double _hubMaxWidth = 560;
+  static const double _headerClearance = 56;
+
+  bool _morningPrefsLoading = true;
+  bool _morningReminderEnabled = true;
+  bool _morningBriefingEnabled = true;
+  TimeOfDay _morningReminderTime = const TimeOfDay(hour: 7, minute: 0);
+
+  Color _hubAccent(BuildContext context) =>
+      Theme.of(context).colorScheme.primary;
 
   @override
   void initState() {
     super.initState();
-    _pulseController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat(reverse: true);
+    _loadMorningPrefs();
   }
 
-  @override
-  void dispose() {
-    _pulseController.dispose();
-    super.dispose();
+  Future<void> _loadMorningPrefs() async {
+    final reminder = await MorningLoopPrefs.getReminderEnabled();
+    final briefing = await MorningLoopPrefs.getBriefingEnabled();
+    final hour = await MorningLoopPrefs.getHour();
+    final minute = await MorningLoopPrefs.getMinute();
+    if (!mounted) return;
+    setState(() {
+      _morningReminderEnabled = reminder;
+      _morningBriefingEnabled = briefing;
+      _morningReminderTime = TimeOfDay(hour: hour, minute: minute);
+      _morningPrefsLoading = false;
+    });
+  }
+
+  Future<void> _persistMorningPrefs() async {
+    await MorningLoopPrefs.setReminderEnabled(_morningReminderEnabled);
+    await MorningLoopPrefs.setBriefingEnabled(_morningBriefingEnabled);
+    await MorningLoopPrefs.setTime(
+      _morningReminderTime.hour,
+      _morningReminderTime.minute,
+    );
+    if (!mounted) return;
+    try {
+      await context
+          .read<LocalNotificationService>()
+          .scheduleMorningLoopFromPrefs();
+    } catch (e) {
+      debugPrint('NotificationManagerPage: morning schedule failed — $e');
+    }
+  }
+
+  Future<void> _pickMorningReminderTime() async {
+    final picked = await showTimePicker(
+      context: context,
+      initialTime: _morningReminderTime,
+    );
+    if (picked == null) return;
+    setState(() => _morningReminderTime = picked);
+    await _persistMorningPrefs();
   }
 
   @override
@@ -64,191 +107,226 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       },
     ];
 
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final panelColor = isDark
+        ? colorScheme.surfaceContainerHigh.withValues(alpha: 0.72)
+        : colorScheme.surfaceContainerHigh.withValues(alpha: 0.95);
+
     return DefaultTabController(
       length: tabs.length,
+      animationDuration: const Duration(milliseconds: 320),
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        body: Stack(
-          children: [
-            // Premium Glassmorphic Background
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: Theme.of(context).brightness == Brightness.light
-                      ? [
-                          const Color(0xFFF1F5F9),
-                          colorScheme.surface,
-                          const Color(0xFFE2E8F0),
-                        ]
-                      : [
-                          const Color(0xFF0F172A),
-                          colorScheme.surface,
-                          const Color(0xFF1E293B),
-                        ],
-                ),
+        backgroundColor: colorScheme.surface.withValues(alpha: 0.98),
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: _headerClearance),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildPremiumHeader(context),
               ),
-            ),
-            Positioned.fill(
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(color: Colors.black.withValues(alpha: 0.2)),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                child: _buildTabBar(context, tabs),
               ),
-            ),
-            SafeArea(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                    child: Column(
+              const SizedBox(height: 12),
+              Expanded(
+                child: Container(
+                  margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                  decoration: BoxDecoration(
+                    color: panelColor,
+                    borderRadius: BorderRadius.circular(32),
+                    border: Border.all(
+                      color: colorScheme.outlineVariant.withValues(alpha: 0.35),
+                    ),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(32),
+                    child: Stack(
                       children: [
-                        const SizedBox(height: 16),
-                        _buildPremiumHeader(context),
-                        const SizedBox(height: 24),
-                        _buildTabBar(context, tabs),
+                        Positioned.fill(
+                          child: CustomPaint(
+                            painter: DotGridPainter(
+                              color: colorScheme.onSurface,
+                              opacity: isDark ? 0.06 : 0.04,
+                              spacing: 25,
+                            ),
+                          ),
+                        ),
+                        TabBarView(
+                          physics: const BouncingScrollPhysics(
+                            parent: AlwaysScrollableScrollPhysics(),
+                          ),
+                          clipBehavior: Clip.hardEdge,
+                          children:
+                              tabs.map((t) => t['view'] as Widget).toList(),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  Expanded(
-                    child: TabBarView(
-                      physics: const BouncingScrollPhysics(),
-                      children: tabs.map((t) => t['view'] as Widget).toList(),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildPremiumHeader(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final accent = _hubAccent(context);
+
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.notification_manager_title,
-              style: TextStyle(
-                color: Colors.blueAccent.withValues(alpha: 0.8),
-                fontSize: 12,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2.0,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                l10n.notification_manager_title.toUpperCase(),
+                style: TextStyle(
+                  color: accent.withValues(alpha: 0.9),
+                  fontSize: 11,
+                  fontWeight: FontWeight.w800,
+                  letterSpacing: 1.6,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              AppLocalizations.of(context)!.notification_hunter_hub,
-              style: TextStyle(
-                color: colorScheme.onSurface,
-                fontSize: 22, // Reduced from 28 to prevent overflow
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+              const SizedBox(height: 6),
+              Text(
+                l10n.notification_hunter_hub,
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.4,
+                      height: 1.1,
+                    ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            IconButton(
-              onPressed: () => GoRouter.of(context).push('/notification-inbox'),
-              icon: const Icon(
-                Icons.history,
-                color: Colors.blueAccent,
-                size: 26,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: Colors.blueAccent.withValues(alpha: 0.1),
-                padding: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(color: Colors.blueAccent.withValues(alpha: 0.2)),
-                ),
-              ),
-            ),
-            const SizedBox(width: 12),
-            IconButton(
-              onPressed: () => Navigator.pop(context),
-              icon: Icon(
-                Icons.close_rounded,
-                color: colorScheme.onSurface,
-                size: 28,
-              ),
-              style: IconButton.styleFrom(
-                backgroundColor: colorScheme.onSurface.withValues(alpha: 0.05),
-                padding: const EdgeInsets.all(12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  side: BorderSide(
-                    color: colorScheme.onSurface.withValues(alpha: 0.1),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        _headerIconButton(
+          context,
+          icon: Icons.history_rounded,
+          onPressed: () {
+            HapticFeedback.lightImpact();
+            context.push('/notification-inbox');
+          },
+        ),
+        const SizedBox(width: 10),
+        _headerIconButton(
+          context,
+          icon: Icons.close_rounded,
+          onPressed: () => Navigator.maybePop(context),
         ),
       ],
     );
   }
 
+  Widget _headerIconButton(
+    BuildContext context, {
+    required IconData icon,
+    required VoidCallback onPressed,
+  }) {
+    final accent = _hubAccent(context);
+    final cs = Theme.of(context).colorScheme;
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(14),
+        child: Ink(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
+            border: Border.all(color: accent.withValues(alpha: 0.4), width: 1.2),
+          ),
+          child: SizedBox(
+            width: 44,
+            height: 44,
+            child: Icon(icon, color: cs.onSurface, size: 22),
+          ),
+        ),
+      ),
+    );
+  }
+
   Widget _buildTabBar(BuildContext context, List<Map<String, dynamic>> tabs) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final cs = Theme.of(context).colorScheme;
+    final accent = _hubAccent(context);
+
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.onSurface.withValues(alpha: 0.05)),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: cs.outlineVariant.withValues(alpha: 0.4),
+          width: 1.2,
+        ),
       ),
       child: TabBar(
         indicator: BoxDecoration(
-          borderRadius: BorderRadius.circular(12),
-          gradient: const LinearGradient(
-            colors: [Colors.blueAccent, Color.fromARGB(255, 58, 129, 187)],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.blueAccent.withValues(alpha: 0.3),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          borderRadius: BorderRadius.circular(14),
+          color: accent.withValues(alpha: 0.14),
+          border: Border.all(color: accent.withValues(alpha: 0.55), width: 1.3),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.white,
-        unselectedLabelColor: colorScheme.onSurface.withValues(alpha: 0.5),
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+        labelColor: cs.onSurface,
+        unselectedLabelColor: cs.onSurfaceVariant,
+        labelStyle: const TextStyle(
+          fontWeight: FontWeight.w800,
+          fontSize: 11.5,
+          letterSpacing: 0.4,
+        ),
+        unselectedLabelStyle: const TextStyle(
+          fontWeight: FontWeight.w600,
+          fontSize: 11.5,
+          letterSpacing: 0.4,
+        ),
         dividerColor: Colors.transparent,
+        splashFactory: NoSplash.splashFactory,
+        overlayColor: WidgetStateProperty.all(Colors.transparent),
         tabs: tabs.map((t) => Tab(text: t['title'] as String)).toList(),
       ),
     );
   }
 
   Widget _buildActiveHunterTab(BuildContext context, bool isEnabled) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      physics: const BouncingScrollPhysics(),
+    return _hubScroll(
+      context,
       children: [
         _buildAIAdvisorCard(context),
-        const SizedBox(height: 24),
+        const SizedBox(height: 14),
         _buildSystemQuestsSection(context),
         const SizedBox(height: 32),
       ],
     );
   }
 
+  Widget _hubScroll(BuildContext context, {required List<Widget> children}) {
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: _hubMaxWidth),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(20, 20, 20, 108),
+          physics: const BouncingScrollPhysics(),
+          children: children,
+        ),
+      ),
+    );
+  }
+
   Widget _buildAIAdvisorCard(BuildContext context) {
     final contentBlock = context.watch<ContentBlock>();
     final analyses = contentBlock.analyses.watch(context);
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final accent = _hubAccent(context);
 
     // Pick the latest featured analysis, or just the latest one
     final featured = analyses.where((a) => a.isFeatured == true).toList()
@@ -261,79 +339,178 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         ? featured.first
         : (analyses.isNotEmpty ? analyses.first : null);
 
-    final displayText =
-        latest?.summary ??
-        latest?.detailedAnalysis ??
-        AppLocalizations.of(context)!.notification_ai_no_data;
-    final subtitle = latest != null
-        ? AppLocalizations.of(context)!.notification_ai_advice
-        : AppLocalizations.of(context)!.notification_ai_waiting;
     final hasLiveData = latest != null;
+    final displayText =
+        latest?.summary ?? latest?.detailedAnalysis;
+    final subtitle = hasLiveData
+        ? l10n.notification_ai_advice
+        : l10n.notification_ai_waiting;
 
-    return _buildGlassCard(
-      borderColor: Colors.blueAccent.withValues(alpha: 0.3),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Colors.blueAccent.withValues(alpha: 0.1), Colors.transparent],
-          ),
-        ),
+    return _buildSurfaceCard(
+      context,
+      accent: accent,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                const Icon(
-                  Icons.psychology_outlined,
-                  color: Colors.blueAccent,
-                  size: 24,
-                ),
+                _accentIcon(context, Icons.psychology_outlined, accent: accent),
                 const SizedBox(width: 12),
-                Text(
-                  AppLocalizations.of(context)!.notification_ai_analysis,
-                  style: const TextStyle(
-                    color: Colors.blueAccent,
-                    fontWeight: FontWeight.w900,
-                    fontSize: 14,
-                    letterSpacing: 1.2,
+                Expanded(
+                  child: Text(
+                    l10n.notification_ai_analysis,
+                    style: TextStyle(
+                      color: accent,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                      letterSpacing: 0.8,
+                    ),
                   ),
                 ),
-                const Spacer(),
                 Icon(
                   Icons.sensors_rounded,
                   color: hasLiveData
-                      ? Colors.greenAccent
-                      : Colors.greenAccent.withValues(alpha: 0.3),
+                      ? HealthMetricColors.pillarGreen
+                      : cs.onSurfaceVariant,
                   size: 16,
                 ),
               ],
             ),
-            const SizedBox(height: 16),
-            Text(
-              "\"$displayText\"",
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 15,
-                fontFamily: 'Courier', // Typewriter feel
-                height: 1.4,
+            const SizedBox(height: 14),
+            if (!hasLiveData)
+              _hubInlineEmpty(
+                context,
+                icon: Icons.insights_outlined,
+                title: l10n.notification_ai_no_data,
+                subtitle: subtitle,
+              )
+            else ...[
+              Text(
+                displayText!,
+                style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.w600,
+                      height: 1.45,
+                    ),
               ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              subtitle,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.6),
-                fontSize: 11,
-                fontStyle: FontStyle.italic,
+              const SizedBox(height: 8),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: cs.onSurfaceVariant,
+                      fontWeight: FontWeight.w500,
+                    ),
               ),
-            ),
+            ],
           ],
         ),
       ),
+    );
+  }
+
+  Widget _hubSectionLabel(BuildContext context, String label) {
+    final cs = Theme.of(context).colorScheme;
+    return Text(
+      label,
+      style: TextStyle(
+        color: cs.onSurfaceVariant,
+        fontSize: 11,
+        fontWeight: FontWeight.w800,
+        letterSpacing: 1.2,
+      ),
+    );
+  }
+
+  Widget _hubInlineEmpty(
+    BuildContext context, {
+    required IconData icon,
+    required String title,
+    required String subtitle,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
+      child: Column(
+        children: [
+          Icon(icon, size: 36, color: cs.onSurfaceVariant.withValues(alpha: 0.7)),
+          const SizedBox(height: 10),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w700,
+                ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            subtitle,
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: cs.onSurfaceVariant,
+                  height: 1.35,
+                ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _hubEmptyCard(
+    BuildContext context, {
+    required IconData icon,
+    required String message,
+    String? actionLabel,
+    VoidCallback? onAction,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    return _buildSurfaceCard(
+      context,
+      accent: cs.outline,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+        child: Column(
+          children: [
+            Icon(icon, size: 40, color: cs.onSurfaceVariant),
+            const SizedBox(height: 12),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                    color: cs.onSurfaceVariant,
+                  ),
+            ),
+            if (actionLabel != null && onAction != null) ...[
+              const SizedBox(height: 16),
+              FilledButton.tonal(
+                onPressed: onAction,
+                child: Text(actionLabel),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _accentIcon(
+    BuildContext context,
+    IconData icon, {
+    Color? accent,
+  }) {
+    final tone = accent ?? _hubAccent(context);
+    return Container(
+      width: 44,
+      height: 44,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: tone.withValues(alpha: 0.12),
+        border: Border.all(color: tone.withValues(alpha: 0.35), width: 1.2),
+      ),
+      child: Icon(icon, color: tone, size: 22),
     );
   }
 
@@ -341,28 +518,35 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     final dao = context.watch<QuestDAO>();
     final personBlock = context.watch<PersonBlock>();
     final personId = personBlock.currentPersonID.watch(context) ?? "";
+    final l10n = AppLocalizations.of(context)!;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "${AppLocalizations.of(context)!.notification_daily_quest}: ",
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.8),
-            fontSize: 11,
-            fontWeight: FontWeight.w900,
-            letterSpacing: 1.0,
-          ),
+        _hubSectionLabel(
+          context,
+          l10n.notification_daily_quest.toUpperCase(),
         ),
         const SizedBox(height: 12),
         StreamBuilder<List<QuestData>>(
           stream: dao.watchActiveQuests(personId),
           builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data == null) {
-              return const SizedBox.shrink();
+            if (!snapshot.hasData) {
+              return const Center(
+                child: Padding(
+                  padding: EdgeInsets.all(24),
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              );
             }
-            final quests = snapshot.data!;
-            if (quests.isEmpty) return const SizedBox.shrink();
+            final quests = snapshot.data ?? [];
+            if (quests.isEmpty) {
+              return _hubEmptyCard(
+                context,
+                icon: Icons.flag_outlined,
+                message: l10n.notification_no_active_quests,
+              );
+            }
 
             return Column(
               children: quests.map((quest) {
@@ -396,67 +580,87 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     required String progress,
     required double percent,
   }) {
-    return _buildGlassCard(
+    final cs = Theme.of(context).colorScheme;
+
+    return _buildSurfaceCard(
+      context,
+      accent: HealthMetricColors.pillarYellow,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           children: [
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                _accentIcon(
+                  context,
+                  Icons.flag_rounded,
+                  accent: HealthMetricColors.pillarYellow,
+                ),
+                const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        quest.title ?? AppLocalizations.of(context)!.project_note_untitled,
+                        quest.title ??
+                            AppLocalizations.of(context)!.project_note_untitled,
                         style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
+                          color: cs.onSurface,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 15,
+                          letterSpacing: -0.1,
                         ),
                       ),
-                      const SizedBox(height: 2),
+                      const SizedBox(height: 4),
                       Text(
-                        quest.description ?? AppLocalizations.of(context)!.notification_tab_active,
+                        quest.description ??
+                            AppLocalizations.of(context)!.notification_tab_active,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.6),
-                          fontSize: 13,
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.92),
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w500,
+                          height: 1.25,
                         ),
                       ),
                     ],
                   ),
                 ),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+                const SizedBox(width: 8),
+                Column(
                   children: [
                     Text(
                       progress,
-                      style: const TextStyle(
-                        color: Colors.blueAccent,
-                        fontWeight: FontWeight.w900,
-                        fontSize: 14,
+                      style: TextStyle(
+                        color: HealthMetricColors.pillarYellow,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    InkWell(
-                      onTap: () => _handleCompleteQuest(context, quest),
-                      borderRadius: BorderRadius.circular(20),
-                      child: Container(
-                        padding: const EdgeInsets.all(4),
-                        decoration: BoxDecoration(
-                          color: Colors.greenAccent.withValues(alpha: 0.1),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.greenAccent.withValues(alpha: 0.5),
+                    const SizedBox(height: 8),
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _handleCompleteQuest(context, quest),
+                        borderRadius: BorderRadius.circular(20),
+                        child: Ink(
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: HealthMetricColors.pillarGreen
+                                  .withValues(alpha: 0.55),
+                            ),
                           ),
-                        ),
-                        child: const Icon(
-                          Icons.check_rounded,
-                          color: Colors.greenAccent,
-                          size: 20,
+                          child: const Padding(
+                            padding: EdgeInsets.all(6),
+                            child: Icon(
+                              Icons.check_rounded,
+                              color: HealthMetricColors.pillarGreen,
+                              size: 18,
+                            ),
+                          ),
                         ),
                       ),
                     ),
@@ -464,16 +668,16 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 ),
               ],
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: 14),
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: LinearProgressIndicator(
                 value: percent,
-                backgroundColor: Theme.of(
-                  context,
-                ).colorScheme.onSurface.withValues(alpha: 0.1),
-                valueColor: const AlwaysStoppedAnimation(Colors.blueAccent),
-                minHeight: 4,
+                backgroundColor: cs.outlineVariant.withValues(alpha: 0.25),
+                valueColor: AlwaysStoppedAnimation(
+                  HealthMetricColors.pillarYellow.withValues(alpha: 0.95),
+                ),
+                minHeight: 3,
               ),
             ),
           ],
@@ -508,35 +712,28 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
   Widget _buildRemindersTab(BuildContext context, bool isEnabled) {
     final customNotificationDao = context.watch<CustomNotificationDAO>();
+    final cs = Theme.of(context).colorScheme;
+    final accent = _hubAccent(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      physics: const BouncingScrollPhysics(),
+    return _hubScroll(
+      context,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              AppLocalizations.of(context)!.notification_personal_reminders,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            Row(
-              children: [
-               
-                
-                TextButton.icon(
-                  onPressed: () => _showAddNotificationDialog(context),
-                  icon: const Icon(Icons.add_rounded, size: 20),
-                  label: Text(AppLocalizations.of(context)!.notification_add_new),
-                  style: TextButton.styleFrom(
-                    foregroundColor: Colors.blueAccent,
+              l10n.notification_personal_reminders,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.bold,
                   ),
-                ),
-              ],
+            ),
+            TextButton.icon(
+              onPressed: () => _showAddNotificationDialog(context),
+              icon: const Icon(Icons.add_rounded, size: 20),
+              label: Text(l10n.notification_add_new),
+              style: TextButton.styleFrom(foregroundColor: accent),
             ),
           ],
         ),
@@ -551,29 +748,12 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 builder: (context, snapshot) {
                   final notifications = snapshot.data ?? [];
                   if (notifications.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 64),
-                        child: Column(
-                          children: [
-                            Icon(
-                              Icons.notifications_none_rounded,
-                              size: 48,
-                              color: Theme.of(context).colorScheme.onSurface,
-                            ),
-                            const SizedBox(height: 16),
-                            Text(
-                              AppLocalizations.of(context)!.notification_no_reminders,
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: Theme.of(context).colorScheme.onSurface,
-                                fontSize: 14,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                    return _hubEmptyCard(
+                      context,
+                      icon: Icons.notifications_none_rounded,
+                      message: l10n.notification_no_reminders,
+                      actionLabel: l10n.notification_add_new,
+                      onAction: () => _showAddNotificationDialog(context),
                     );
                   }
                   return Column(
@@ -589,29 +769,10 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
             },
           )
         else
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 64),
-              child: Column(
-                children: [
-                  Icon(
-                    Icons.notifications_off_rounded,
-                    size: 48,
-                    color: Colors.white.withValues(alpha: 0.1),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.of(context)!.notification_disabled_desc,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.3),
-                      fontSize: 14,
-                      fontStyle: FontStyle.italic,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+          _hubEmptyCard(
+            context,
+            icon: Icons.notifications_off_rounded,
+            message: l10n.notification_disabled_desc,
           ),
         const SizedBox(height: 32),
         _buildSystemPreferencesSection(context),
@@ -632,13 +793,78 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
         Text(
           l10n.notification_system_preferences,
           style: TextStyle(
-            color: colorScheme.onSurface.withValues(alpha: 0.5),
+            color: colorScheme.onSurfaceVariant,
             fontSize: 11,
             fontWeight: FontWeight.w900,
             letterSpacing: 1.2,
           ),
         ),
         const SizedBox(height: 16),
+        if (_morningPrefsLoading)
+          const Center(
+            child: Padding(
+              padding: EdgeInsets.symmetric(vertical: 12),
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          )
+        else ...[
+          _buildPreferenceTile(
+            context,
+            title: l10n.morning_loop_reminder_title,
+            subtitle: l10n.morning_loop_reminder_subtitle,
+            icon: Icons.wb_sunny_outlined,
+            color: HealthMetricColors.pillarYellow,
+            trailing: Switch.adaptive(
+              value: _morningReminderEnabled,
+              activeColor: HealthMetricColors.pillarYellow,
+              onChanged: (value) async {
+                setState(() => _morningReminderEnabled = value);
+                await _persistMorningPrefs();
+              },
+            ),
+            footer: _morningReminderEnabled
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: NotificationMaskChip.schedule(
+                        label: DateFormat.jm().format(
+                          DateTime(
+                            0,
+                            1,
+                            1,
+                            _morningReminderTime.hour,
+                            _morningReminderTime.minute,
+                          ),
+                        ),
+                        onTap: _pickMorningReminderTime,
+                      ),
+                    ),
+                  )
+                : null,
+          ),
+          const SizedBox(height: 12),
+          _buildPreferenceTile(
+            context,
+            title: l10n.morning_briefing_toggle,
+            subtitle: l10n.notification_morning_briefing_subtitle,
+            icon: Icons.waving_hand_outlined,
+            color: HealthMetricColors.pillarViolet,
+            trailing: Switch.adaptive(
+              value: _morningBriefingEnabled,
+              activeColor: HealthMetricColors.pillarViolet,
+              onChanged: (value) async {
+                setState(() => _morningBriefingEnabled = value);
+                await _persistMorningPrefs();
+              },
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
         _buildPreferenceTile(
           context,
           title: l10n.notification_pomodoro_reminder_title,
@@ -651,14 +877,14 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
               Text(
                 l10n.notification_status_on,
                 style: TextStyle(
-                  color: colorScheme.onSurface.withValues(alpha: 0.5),
+                  color: colorScheme.onSurfaceVariant,
                   fontSize: 13,
                 ),
               ),
               const SizedBox(width: 8),
               Icon(
                 Icons.chevron_right_rounded,
-                color: colorScheme.onSurface.withValues(alpha: 0.3),
+                color: colorScheme.onSurfaceVariant,
               ),
             ],
           ),
@@ -687,17 +913,23 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     required IconData icon,
     required Color color,
     Widget? trailing,
+    Widget? footer,
   }) {
-    return _buildGlassCard(
+    return _buildSurfaceCard(
+      context,
+      accent: color,
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              padding: const EdgeInsets.all(10),
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
-                color: color.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.12),
+                border: Border.all(color: color.withValues(alpha: 0.35), width: 1.2),
               ),
               child: Icon(icon, color: color, size: 20),
             ),
@@ -708,19 +940,19 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
+                    style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).colorScheme.onSurface,
+                        ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
-                      color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
-                      fontSize: 12,
-                    ),
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
                   ),
+                  if (footer != null) footer,
                 ],
               ),
             ),
@@ -734,27 +966,28 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
   Widget _buildWisdomBoardTab(BuildContext context) {
     final dao = context.watch<QuoteDAO>();
+    final cs = Theme.of(context).colorScheme;
+    final accent = _hubAccent(context);
+    final l10n = AppLocalizations.of(context)!;
 
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      physics: const BouncingScrollPhysics(),
+    return _hubScroll(
+      context,
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              AppLocalizations.of(context)!.notification_wisdom_board,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.onSurface,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              l10n.notification_wisdom_board,
+              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.bold,
+                  ),
             ),
             TextButton.icon(
               onPressed: () => _showAddQuoteDialog(context),
               icon: const Icon(Icons.add_rounded, size: 20),
-              label: Text(AppLocalizations.of(context)!.notification_add_quote),
-              style: TextButton.styleFrom(foregroundColor: Colors.blueAccent),
+              label: Text(l10n.notification_add_quote),
+              style: TextButton.styleFrom(foregroundColor: accent),
             ),
           ],
         ),
@@ -763,29 +996,12 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
           stream: dao.watchAllQuotes(),
           builder: (context, snapshot) {
             if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 64),
-                  child: Column(
-                    children: [
-                      Icon(
-                        Icons.auto_stories_rounded,
-                        size: 48,
-                        color: Theme.of(context).colorScheme.onSurface,
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        AppLocalizations.of(context)!.notification_quote_empty,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.onSurface,
-                          fontSize: 14,
-                          fontStyle: FontStyle.italic,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+              return _hubEmptyCard(
+                context,
+                icon: Icons.auto_stories_rounded,
+                message: l10n.notification_quote_empty,
+                actionLabel: l10n.notification_add_quote,
+                onAction: () => _showAddQuoteDialog(context),
               );
             }
 
@@ -805,19 +1021,21 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
 
   Widget _buildQuoteTile(BuildContext context, QuoteData quote) {
     final dao = context.read<QuoteDAO>();
-    return _buildGlassCard(
+    return _buildSurfaceCard(
+      context,
+      accent: HealthMetricColors.pillarViolet,
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
+                _accentIcon(
+                  context,
                   Icons.format_quote_rounded,
-                  color: Colors.blueAccent,
-                  size: 24,
+                  accent: HealthMetricColors.pillarViolet,
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -947,44 +1165,26 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
     );
   }
 
-  Widget _buildGlassCard({required Widget child, Color? borderColor}) {
+  Widget _buildSurfaceCard(
+    BuildContext context, {
+    required Widget child,
+    Color? accent,
+  }) {
+    final cs = Theme.of(context).colorScheme;
+    final tone = accent ?? _hubAccent(context);
+    const radius = 22.0;
     return Container(
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.2),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-          child: Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.08),
-                  Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.03),
-                ],
-              ),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                color:
-                    borderColor ??
-                    Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.1),
-                width: 1.5,
-              ),
-            ),
-            child: child,
-          ),
+        color: cs.surfaceContainerHighest.withValues(
+          alpha: Theme.of(context).brightness == Brightness.dark ? 0.55 : 0.85,
+        ),
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(
+          color: tone.withValues(alpha: 0.4),
+          width: 1.2,
         ),
       ),
+      child: child,
     );
   }
 
@@ -1008,26 +1208,20 @@ class _NotificationManagerPageState extends State<NotificationManagerPage>
       'Projects': Icons.rocket_launch_rounded,
     };
 
-    return _buildGlassCard(
+    return _buildSurfaceCard(
+      context,
+      accent: _hubAccent(context),
       child: Padding(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Row(
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.blueAccent.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    categoryIcons[notification.category] ??
-                        Icons.notifications_none_rounded,
-                    color: Colors.blueAccent,
-                    size: 20,
-                  ),
+                _accentIcon(
+                  context,
+                  categoryIcons[notification.category] ??
+                      Icons.notifications_none_rounded,
                 ),
                 const SizedBox(width: 12),
                 Expanded(

@@ -169,28 +169,8 @@ class _AchievementStoryViewerState extends State<AchievementStoryViewer> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: Row(
-                          children: List.generate(widget.stories.length, (i) {
-                            final active = i == _index;
-                            return Expanded(
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                height: 3,
-                                margin: EdgeInsets.only(
-                                  right: i < widget.stories.length - 1 ? 4 : 0,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: active
-                                      ? Colors.white
-                                      : Colors.white.withValues(alpha: 0.28),
-                                  borderRadius: BorderRadius.circular(2),
-                                ),
-                              ),
-                            );
-                          }),
-                        ),
-                      ),
+                      // Remove story progress bars for a cleaner, premium look.
+                      const Expanded(child: SizedBox.shrink()),
                       const SizedBox(width: 8),
                       IconButton.filled(
                         style: IconButton.styleFrom(

@@ -231,6 +231,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_tile_social_blocker => 'Social Blocker';
 
   @override
+  String get social_shield_turn_on => 'Turn on Shield';
+
+  @override
+  String get social_shield_subtitle_no_auth =>
+      'Tap row to grant Screen Time (for rules)';
+
+  @override
+  String get social_shield_subtitle_pick_apps =>
+      'Tap row to choose apps — blocking follows rules';
+
+  @override
+  String get social_shield_subtitle_ready =>
+      'On — blocking runs when your rules are active';
+
+  @override
+  String get social_shield_subtitle_off =>
+      'Off — schedules and focus rules are paused';
+
+  @override
+  String get social_shield_choose_apps => 'Choose apps to block';
+
+  @override
+  String get social_shield_choose_apps_done => 'Tap to change blocked apps';
+
+  @override
+  String get social_shield_pick_apps_required =>
+      'Choose at least one app to block (or turn Shield off).';
+
+  @override
+  String get social_shield_apps_saved => 'Blocked apps updated.';
+
+  @override
+  String get social_shield_unsupported_platform =>
+      'App blocking is only on iOS and macOS.';
+
+  @override
   String get projects_plugin_open => 'Open';
 
   @override
@@ -439,6 +475,36 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get health_sync_failed => 'Sync failed. Please try again.';
+
+  @override
+  String get health_motivation_engine_title => 'Motivation Engine';
+
+  @override
+  String get health_notification_engine_title => 'Notification Engine';
+
+  @override
+  String health_notification_engine_desc(int count) {
+    return '$count active reminders';
+  }
+
+  @override
+  String get health_motivation_all_done =>
+      'All daily targets hit—momentum is yours today.';
+
+  @override
+  String get health_motivation_strong => 'Strong day—keep your streak alive.';
+
+  @override
+  String get health_motivation_mid =>
+      'Steady progress—stack one more small win.';
+
+  @override
+  String get health_motivation_low =>
+      'Start with water or a short walk—small steps count.';
+
+  @override
+  String get health_motivation_empty =>
+      'Set your goals and we\'ll coach you through the day.';
 
   @override
   String get health_update_weight => 'Update Weight';
@@ -1189,6 +1255,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get err_passkey_canceled => 'Passkey login was canceled.';
 
   @override
+  String get err_google_canceled => 'Google sign-in was canceled.';
+
+  @override
+  String get err_google_failed =>
+      'Google sign-in failed. Enable Google in Supabase and add the web client ID.';
+
+  @override
   String get err_passkey_failed => 'Security check failed. Please try again.';
 
   @override
@@ -1861,6 +1934,72 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String get mind_skills_session_title => 'Skill session';
+
+  @override
+  String get mind_skills_session_subtitle =>
+      'Pick skills, run a focus block, log what you learned.';
+
+  @override
+  String get mind_skills_session_start => 'Start session';
+
+  @override
+  String mind_skills_session_empty(int days) {
+    return 'No skill sessions in the last $days days.';
+  }
+
+  @override
+  String mind_skills_session_stats(int sessions, int minutes, String skill) {
+    return '$sessions sessions · $minutes min · top: $skill';
+  }
+
+  @override
+  String get mind_skills_session_live => 'SESSION LIVE';
+
+  @override
+  String get mind_skills_session_tap_start => 'TAP CENTER TO START';
+
+  @override
+  String get mind_skills_session_tap_finish => 'TAP CENTER TO STOP EARLY';
+
+  @override
+  String get mind_skills_session_listening =>
+      'SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS';
+
+  @override
+  String get mind_skills_session_pick_skills =>
+      'Pick at least one skill before starting.';
+
+  @override
+  String get mind_skills_my_list => 'My skills';
+
+  @override
+  String get mind_skills_add_skill => 'Add skill';
+
+  @override
+  String get mind_skills_tap_list => 'Tap skills in the list to select';
+
+  @override
+  String get mind_skills_tap_list_project =>
+      'Select skills · project XP on log';
+
+  @override
+  String get mind_skills_status_in_session => 'In session';
+
+  @override
+  String get mind_skills_status_selected => 'Selected';
+
+  @override
+  String mind_skills_level_short(int level) {
+    return 'Lv $level';
+  }
+
+  @override
+  String mind_skills_session_logged(int minutes, int xp) {
+    return 'Session logged · $minutes min · +$xp XP';
+  }
+
+  @override
   String get mood_trends_title => 'Mood Trends';
 
   @override
@@ -2371,6 +2510,59 @@ class AppLocalizationsEn extends AppLocalizations {
       'After this time, send once per day while the app is open';
 
   @override
+  String get mail_suggestion_title => 'Report tips';
+
+  @override
+  String get mail_suggestion_ai_loading => 'AI is analyzing your day…';
+
+  @override
+  String get mail_suggestion_ai_fallback =>
+      'Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.';
+
+  @override
+  String get mail_suggestion_negative_net =>
+      'Today\'s spending exceeded income — review recent transactions.';
+
+  @override
+  String get mail_suggestion_no_transactions =>
+      'No transactions logged today — add expenses to keep reports accurate.';
+
+  @override
+  String mail_suggestion_budget_high(String percent) {
+    return 'You\'ve used $percent% of your monthly budget — pace spending.';
+  }
+
+  @override
+  String get mail_suggestion_monthly_deficit =>
+      'Monthly spending exceeds income — consider trimming fixed costs.';
+
+  @override
+  String mail_suggestion_steps_low(String percent) {
+    return 'Steps at $percent% of goal — a short walk helps hit your target.';
+  }
+
+  @override
+  String get mail_suggestion_water_low =>
+      'Water intake is below half your goal — hydrate through the day.';
+
+  @override
+  String get mail_suggestion_sleep_low =>
+      'Sleep below your goal — try an earlier wind-down tonight.';
+
+  @override
+  String get mail_suggestion_log_mood =>
+      'No mood logged today — a quick check-in improves your trends.';
+
+  @override
+  String get mail_suggestion_focus_low =>
+      'Focus time is low — schedule a short deep-work block.';
+
+  @override
+  String mail_suggestion_tasks_many(String count) {
+    return '$count active tasks open — pick one priority for tomorrow.';
+  }
+
+  @override
   String get reports_hub_title => 'Report via mail';
 
   @override
@@ -2751,7 +2943,109 @@ class AppLocalizationsEn extends AppLocalizations {
       'No financial records linked to this project.';
 
   @override
+  String get project_skills_label => 'Skills';
+
+  @override
+  String get project_no_skills =>
+      'No skills yet. Tap + to track what you improve on this project.';
+
+  @override
+  String get project_add_skill_title => 'Add skill';
+
+  @override
+  String get project_skill_name_hint =>
+      'e.g. Flutter, debugging, system design';
+
+  @override
+  String project_skill_streak_days(int count) {
+    return '$count day streak';
+  }
+
+  @override
+  String get project_skill_streak_none => 'No streak yet';
+
+  @override
+  String project_skill_xp_hint(int total, int remaining) {
+    return '$total XP · $remaining XP to next level';
+  }
+
+  @override
+  String get project_skill_xp_on_complete =>
+      'Complete tasks to earn +15 XP per skill';
+
+  @override
+  String get project_skill_log_session =>
+      'Log a Skill Boost session to level these skills.';
+
+  @override
+  String get project_skill_practice => 'Open Skill Boost';
+
+  @override
+  String get project_skill_tap_to_start =>
+      'Select one or more skills, then start the session';
+
+  @override
+  String project_skill_start_session(int count) {
+    return 'Start session ($count)';
+  }
+
+  @override
+  String get project_skill_catalog_hint =>
+      'Pick from the same skills as Mind → Skills tiles.';
+
+  @override
+  String get project_auto_add_all_skills => 'Add all automatically';
+
+  @override
+  String get project_auto_add_all_skills_subtitle =>
+      'Link every skill from your Mind library to this project';
+
+  @override
+  String get project_skills_all_on_project =>
+      'All library skills are already on this project';
+
+  @override
+  String project_skills_added_count(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count skills added',
+      one: '1 skill added',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String project_skill_delete_confirm(String name) {
+    return 'Remove \"$name\" from this project?';
+  }
+
+  @override
+  String get project_skill_added => 'Skill added';
+
+  @override
+  String project_skill_xp_granted(int xp) {
+    return 'Skills gained +$xp XP';
+  }
+
+  @override
+  String get project_sub_projects_label => 'Sub-projects';
+
+  @override
+  String get project_no_sub_projects =>
+      'No sub-projects yet. Tap + to add a child project.';
+
+  @override
+  String get project_add_sub_project_title => 'New sub-project';
+
+  @override
+  String get project_sub_project_name_hint => 'Sub-project name';
+
+  @override
   String get project_add_task_title => 'New Task';
+
+  @override
+  String get project_task_assign_to => 'Assign to project';
 
   @override
   String get project_task_title_hint => 'Task title';
@@ -2815,6 +3109,33 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get project_note_no_content => 'No content';
+
+  @override
+  String get note_editor_write_hint => 'Start writing your note…';
+
+  @override
+  String note_editor_saved_label(String when) {
+    return 'Saved $when';
+  }
+
+  @override
+  String get note_editor_saved_just_now => 'just now';
+
+  @override
+  String note_editor_saved_minutes(int count) {
+    return '${count}m ago';
+  }
+
+  @override
+  String note_editor_saved_hours(int count) {
+    return '${count}h ago';
+  }
+
+  @override
+  String get note_editor_unsaved => 'Unsaved';
+
+  @override
+  String get note_editor_saving => 'Saving…';
 
   @override
   String get focus_select_project => 'TAP TO SELECT PROJECT';
@@ -3091,6 +3412,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notification_daily_quest => 'DAILY QUEST';
 
   @override
+  String get notification_no_active_quests =>
+      'No active quests right now. Complete tasks in Projects to earn daily quests.';
+
+  @override
   String notification_quest_completed_snack(String title, int exp) {
     return 'Quest completed: $title (+$exp EXP)';
   }
@@ -3124,6 +3449,10 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get notification_live_activities_subtitle =>
       'Track focus timer and information on your Lock Screen.';
+
+  @override
+  String get notification_morning_briefing_subtitle =>
+      'Show the morning summary the first time you open Home each day.';
 
   @override
   String get notification_status_on => 'on';
@@ -3731,6 +4060,139 @@ class AppLocalizationsEn extends AppLocalizations {
       'Connect to a host first to manage live sessions.';
 
   @override
+  String get ssh_cursor_api_title => 'Cursor API';
+
+  @override
+  String get ssh_cursor_api_subtitle =>
+      'Save your API key to drive cursor-agent on the remote host.';
+
+  @override
+  String get ssh_cursor_api_key_hint => 'cursor_…';
+
+  @override
+  String get ssh_cursor_api_key_stored => 'API key saved on this device.';
+
+  @override
+  String get ssh_cursor_api_save => 'Save key';
+
+  @override
+  String get ssh_cursor_api_test => 'Test connection';
+
+  @override
+  String get ssh_cursor_api_open_terminal => 'Open SSH (Cursor mode)';
+
+  @override
+  String get ssh_cursor_api_saved => 'Cursor API key saved.';
+
+  @override
+  String get ssh_cursor_api_test_ok => 'Cursor API key is valid.';
+
+  @override
+  String get ssh_cursor_api_missing_key =>
+      'Enter or save a Cursor API key first.';
+
+  @override
+  String get cursor_hub_title => 'Cursor';
+
+  @override
+  String get cursor_hub_page_subtitle =>
+      'Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.';
+
+  @override
+  String get cursor_hub_canvas_subtitle =>
+      'My Machines worker, API tasks, and agents dashboard';
+
+  @override
+  String get cursor_hub_integration_subtitle =>
+      'API key, worker setup, send tasks from your phone';
+
+  @override
+  String get cursor_hub_section_title => 'AI & automation';
+
+  @override
+  String get cursor_hub_key_ready => 'API key verified';
+
+  @override
+  String get cursor_hub_open_full => 'Open Cursor Hub';
+
+  @override
+  String get cursor_hub_open_agents => 'Open Agents';
+
+  @override
+  String get cursor_hub_worker_title => 'My Machine worker';
+
+  @override
+  String get cursor_hub_worker_body =>
+      'On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.';
+
+  @override
+  String get cursor_hub_copy_worker_cmd => 'Copy command';
+
+  @override
+  String get cursor_hub_worker_copied => 'Copied: agent worker start';
+
+  @override
+  String get cursor_hub_send_title => 'Send a task';
+
+  @override
+  String get cursor_hub_target_machine => 'My Mac';
+
+  @override
+  String get cursor_hub_target_cloud => 'Cloud repo';
+
+  @override
+  String get cursor_hub_machine_name => 'Machine name (optional)';
+
+  @override
+  String get cursor_hub_machine_name_hint =>
+      'As shown in Agents environment dropdown';
+
+  @override
+  String get cursor_hub_pick_repo => 'Your repositories';
+
+  @override
+  String get cursor_hub_refresh_repos => 'Refresh repo list';
+
+  @override
+  String get cursor_hub_repos_empty =>
+      'No repos found. Enter a URL below or run on Mac to scan ~/Code.';
+
+  @override
+  String get cursor_hub_usage_limit =>
+      'Cloud agent blocked: enable usage-based pricing on cursor.com (need ~\$2 spend limit). Use My Mac mode instead.';
+
+  @override
+  String get cursor_hub_repo_url => 'GitHub repo URL';
+
+  @override
+  String get cursor_hub_prompt_label => 'What should the agent do?';
+
+  @override
+  String get cursor_hub_send_task => 'Send to Cursor';
+
+  @override
+  String get cursor_hub_task_sent => 'Task sent — opening agent…';
+
+  @override
+  String cursor_hub_task_failed(String reason) {
+    return 'Could not start agent: $reason';
+  }
+
+  @override
+  String get cursor_hub_recent_title => 'Recent agents';
+
+  @override
+  String get island_cursor_ssh_standby => 'Awaiting SSH link';
+
+  @override
+  String get island_cursor_no_api_key => 'No API key';
+
+  @override
+  String ssh_cursor_api_test_fail(String reason) {
+    return 'Connection failed: $reason';
+  }
+
+  @override
   String get ssh_go_to_terminal => 'GO TO TERMINAL';
 
   @override
@@ -3998,4 +4460,119 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get island_tmux_active => 'TMUX ACTIVE';
+
+  @override
+  String get daily_loop_title => 'Today\'s loop';
+
+  @override
+  String get daily_loop_subtitle =>
+      'Complete all 4 pillars to extend your streak';
+
+  @override
+  String get daily_loop_complete => 'Loop complete — you\'re on fire!';
+
+  @override
+  String daily_loop_streak(int count) {
+    return '${count}d';
+  }
+
+  @override
+  String daily_loop_progress(int done, int total) {
+    return '$done / $total done';
+  }
+
+  @override
+  String get daily_loop_health => 'Health pulse';
+
+  @override
+  String get daily_loop_finance => 'Money check';
+
+  @override
+  String get daily_loop_mind => 'Mood log';
+
+  @override
+  String get daily_loop_projects => 'Project touch';
+
+  @override
+  String get morning_loop_reminder_title => 'Morning summary';
+
+  @override
+  String get morning_loop_reminder_subtitle =>
+      'Yesterday recap & today\'s motivation — open Ice Gate first each morning';
+
+  @override
+  String get morning_briefing_toggle => 'Morning summary on Home';
+
+  @override
+  String get morning_briefing_title => 'Good morning';
+
+  @override
+  String morning_briefing_title_name(String name) {
+    return 'Good morning, $name';
+  }
+
+  @override
+  String get morning_briefing_subtitle =>
+      'Care for body and mind — then finish your 4-pillar loop today.';
+
+  @override
+  String get morning_briefing_yesterday_title => 'Yesterday';
+
+  @override
+  String get morning_briefing_yesterday_empty =>
+      'A quiet day — today is a fresh start.';
+
+  @override
+  String morning_briefing_yesterday_steps(int steps) {
+    return '$steps steps';
+  }
+
+  @override
+  String morning_briefing_yesterday_water(int ml) {
+    return '$ml ml water';
+  }
+
+  @override
+  String morning_briefing_yesterday_sleep(String hours) {
+    return '$hours h sleep';
+  }
+
+  @override
+  String morning_briefing_yesterday_loop(int done, int total) {
+    return '$done/$total pillars completed';
+  }
+
+  @override
+  String get morning_briefing_motivation_title => 'Today\'s motivation';
+
+  @override
+  String get morning_briefing_motivation_empty =>
+      'Yesterday was light — one small win today resets your rhythm.';
+
+  @override
+  String get morning_briefing_motivation_all_done =>
+      'You closed yesterday strong — ride that momentum into today.';
+
+  @override
+  String get morning_briefing_motivation_strong =>
+      'Solid progress yesterday — one more pillar today keeps the streak alive.';
+
+  @override
+  String get morning_briefing_motivation_mid =>
+      'You moved forward yesterday — stack another small win this morning.';
+
+  @override
+  String get morning_briefing_motivation_low =>
+      'Yesterday was a rest day — water, a walk, or a mood log is enough to begin.';
+
+  @override
+  String morning_briefing_progress(int done, int total) {
+    return '$done of $total pillars done today';
+  }
+
+  @override
+  String get morning_briefing_start => 'Start my day';
+
+  @override
+  String get morning_briefing_log_mood => 'Log mood first';
 }

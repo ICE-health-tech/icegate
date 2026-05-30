@@ -1,0 +1,57 @@
+{
+    "theme_name": "Midnight Nebula",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF9D50BB",
+    "color_scheme": {
+        "primary": "0xFF9D50BB",
+        "onPrimary": "0xFFFFFFFF",
+        "secondary": "0xFF6E48AA",
+        "onSecondary": "0xFFFFFFFF",
+        "tertiary": "0xFFE91E63",
+        "surface": "0xFF1A1A2E",
+        "onSurface": "0xFFE0E0E0",
+        "background": "0xFF16213E",
+        "onBackground": "0xFFFFFFFF"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF1A1A2E",
+            "foregroundColor": "0xFFFFFFFF",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF9D50BB",
+            "foregroundColor": "0xFFFFFFFF",
+            "borderRadius": 16.0,
+            "elevation": 4.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1F4068",
+            "elevation": 4.0,
+            "borderRadius": 24.0
+        },
+        "icon": {
+            "color": "0xFFE91E63",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Inter",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFE0E0E0"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

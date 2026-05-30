@@ -13,6 +13,7 @@ import 'package:provider/provider.dart';
 import 'package:xterm/xterm.dart';
 import 'TerminalViewAdapter.dart';
 import 'package:ice_gate/orchestration_layer/Services/SSHService.dart';
+import 'package:ice_gate/orchestration_layer/Services/CursorApiService.dart';
 import '../../../home_page/MainButton.dart';
 import 'widgets/SSHCommandInput.dart';
 import 'widgets/SSHConnectionSheet.dart';
@@ -157,6 +158,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     if (widget.aiMode != null) {
       _sshService.aiMode.value = widget.aiMode!;
     }
+    unawaited(CursorApiService.instance.refreshKeyState());
 
     // Initialize from existing connection if any
     _isConnected = _sshService.isConnected;
@@ -288,7 +290,7 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
   String get _currentAiMode => _sshService.aiMode.value;
 
   void toggleAiMode() async {
-    final modes = ['standard', 'gemini', 'opencode', 'openclaw'];
+    final modes = ['standard', 'gemini', 'opencode', 'openclaw', 'cursor'];
     final currentIndex = modes.indexOf(_currentAiMode);
     final nextMode = modes[(currentIndex + 1) % modes.length];
     
@@ -433,6 +435,10 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
         autoStartCommand: autoCmd,
       );
 
+      if (_currentAiMode == 'cursor') {
+        await CursorApiService.instance.applyToRemoteSession(_sshService);
+      }
+
       // Save host info if successful
       await _storageService.saveHost(
         SSHHostModel(
@@ -527,7 +533,12 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
     final cmd = _commandController.text;
 
     if (_isConnected) {
-      if (_currentAiMode != 'standard' || cmd.startsWith('/') || cmd.contains('gemini') || cmd.contains('opencode')) {
+      if (_currentAiMode != 'standard' ||
+          cmd.startsWith('/') ||
+          cmd.contains('gemini') ||
+          cmd.contains('opencode') ||
+          cmd.contains('cursor-agent') ||
+          cmd.startsWith('agent ')) {
         // AI Command - Provide context if path is set
         _sendAiPrompt(cmd);
       } else {
@@ -637,6 +648,14 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       if (promptText.startsWith('prompt ')) {
         promptText = promptText.substring(7).trim();
       }
+    } else if (promptText.startsWith('cursor-agent ') ||
+        promptText.startsWith('agent ')) {
+      final prefixLen =
+          promptText.startsWith('cursor-agent ') ? 13 : 6;
+      promptText = promptText.substring(prefixLen).trim();
+      if (promptText.startsWith('-p ')) {
+        promptText = promptText.substring(3).trim();
+      }
     }
 
     String aiContext = '';
@@ -659,6 +678,9 @@ class _TalkSSHPageState extends State<TalkSSHPage> {
       _sshService.write('\x15opencode prompt $escapedPrompt\r');
     } else if (mode == 'openclaw') {
       _sshService.write('\x15openclaw run $escapedPrompt\r');
+    } else if (mode == 'cursor') {
+      // Cursor CLI binary is `agent` (see cursor.com/docs/cli/installation).
+      _sshService.write('\x15agent -p --force $escapedPrompt\r');
     }
   }
 

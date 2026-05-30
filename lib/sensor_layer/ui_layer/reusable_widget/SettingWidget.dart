@@ -336,6 +336,14 @@ class SettingsWidget extends StatelessWidget {
                     },
                   );
                 }),
+                _buildPremiumSettingTile(
+                  context: context,
+                  title: AppLocalizations.of(context)!.integration_hub_title,
+                  subtitle: AppLocalizations.of(context)!.integration_hub_subtitle,
+                  icon: Icons.hub_rounded,
+                  color: const Color(0xFF64D2FF),
+                  onTap: () => context.push('/integrations'),
+                ),
               ],
             ),
 
@@ -368,7 +376,7 @@ class SettingsWidget extends StatelessWidget {
                 _buildPremiumSettingTile(
                   context: context,
                   title: AppLocalizations.of(context)!.version,
-                  subtitle: '3.2.5',
+                  subtitle: '4.0.0',
                   icon: Icons.info_outline_rounded,
                   color: Colors.grey,
                   trailingWidget: const SizedBox.shrink(),

@@ -1,0 +1,59 @@
+{
+    "theme_name": "Nostalgia",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFFFFB000",
+    "color_scheme": {
+        "primary": "0xFFFFB000",
+        "onPrimary": "0xFF000000",
+        "primaryContainer": "0xFF4D3300",
+        "onPrimaryContainer": "0xFFFFB000",
+        "secondary": "0xFFE59400",
+        "onSecondary": "0xFF000000",
+        "surface": "0xFF0D0D0D",
+        "onSurface": "0xFFFFB000",
+        "surfaceContainer": "0xFF1A1A1A",
+        "outline": "0xFF333333",
+        "outlineVariant": "0xFFFFB000"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF0D0D0D",
+            "foregroundColor": "0xFFFFB000",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFFFB000",
+            "foregroundColor": "0xFF000000",
+            "borderRadius": 0.0,
+            "elevation": 4.0
+        },
+        "card": {
+            "backgroundColor": "0xFF1A1A1A",
+            "elevation": 2.0,
+            "borderRadius": 0.0
+        },
+        "icon": {
+            "color": "0xFFFFB000",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Courier Prime",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFFFB000"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFFFB000"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "bold",
+            "color": "0xFF000000"
+        }
+    }
+}

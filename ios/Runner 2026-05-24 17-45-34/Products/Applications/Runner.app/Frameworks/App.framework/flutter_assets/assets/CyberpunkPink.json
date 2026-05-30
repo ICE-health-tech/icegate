@@ -1,0 +1,56 @@
+{
+    "theme_name": "Cyberpunk Pink",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFFFF00FF",
+    "color_scheme": {
+        "primary": "0xFFFF00FF",
+        "onPrimary": "0xFF000000",
+        "secondary": "0xFF00FFFF",
+        "onSecondary": "0xFF000000",
+        "surface": "0xFF1A001A",
+        "onSurface": "0xFFFFFFFF",
+        "background": "0xFF0D000D",
+        "onBackground": "0xFFFFFFFF"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF1A001A",
+            "foregroundColor": "0xFFFF00FF",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFFFF00FF",
+            "foregroundColor": "0xFF000000",
+            "borderRadius": 4.0,
+            "elevation": 10.0
+        },
+        "card": {
+            "backgroundColor": "0xFF260026",
+            "elevation": 5.0,
+            "borderRadius": 0.0
+        },
+        "icon": {
+            "color": "0xFF00FFFF",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Orbitron",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFFFFFFF"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "bold",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

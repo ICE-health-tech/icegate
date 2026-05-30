@@ -10,11 +10,13 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:signals/signals.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
-import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'dart:async';
 import 'dart:io';
+import 'dart:math';
 import 'package:ice_gate/utils/app_log.dart';
+import 'package:crypto/crypto.dart';
+import 'dart:convert';
 
 enum AuthStatus {
   init,
@@ -303,6 +305,16 @@ class AuthBlock {
     if (str.contains("biometric") && str.contains("not enabled")) {
       return "err_biometric_disabled";
     }
+    if (str.contains("google") &&
+        (str.contains("canceled") ||
+            str.contains("cancelled") ||
+            str.contains("sign_in_canceled"))) {
+      return "err_google_canceled";
+    }
+    // Preserve detailed Google/Supabase errors for debugging.
+    // The UI will show raw text for unknown keys (see LoginPage._getLocalizedError).
+    if (str.contains("id token missing")) return "err_google_failed";
+    if (str.contains("google")) return e.toString();
     if (str.contains("passkey") &&
         (str.contains("canceled") ||
             str.contains("dismissed") ||
@@ -313,7 +325,40 @@ class AuthBlock {
       return "err_passkey_failed";
     }
 
-    return "err_unexpected";
+    // Preserve the original exception text so the UI can show something more
+    // useful than a generic "System Error". UI helpers treat this as
+    // `err_unexpected` with details after the delimiter.
+    //
+    // NOTE: This is still safe because:
+    // - on release builds, the UI can choose to display a generic message, and
+    // - the log still has the raw exception for debugging.
+    final raw = e.toString().trim();
+    if (raw.isEmpty) return "err_unexpected";
+    // Avoid extremely long banners.
+    final compact = raw.length > 200 ? '${raw.substring(0, 200)}…' : raw;
+    return 'err_unexpected|$compact';
+  }
+
+  /// Face ID / passkey button on login — one path only (no double prompts).
+  Future<bool> loginWithQuickAccess(
+    BuildContext context, {
+    String? emailHint,
+  }) async {
+    await _migrateLegacyPasskeyFlag();
+    final passkeyOn = await _secureStorage.isPasskeyEnabled();
+    if (passkeyOn) {
+      return loginWithPasskey(
+        context,
+        email: emailHint ?? rememberedUser.value?['username'],
+      );
+    }
+    final biometricOn = await _secureStorage.isBiometricEnabled();
+    if (biometricOn) {
+      return loginWithBiometrics(context);
+    }
+    error.value = 'err_biometric_disabled';
+    status.value = AuthStatus.unauthenticated;
+    return false;
   }
 
   /// Biometric Login Flow (Returns true if successful)
@@ -342,38 +387,32 @@ class AuthBlock {
         reason: "Please authenticate to log in to ICE Gate",
       );
 
-      if (authenticated) {
-        // HARDENING: Check if we should use the Passkey Hub instead of legacy passwords
-        final isPasskeyRegistered = await _secureStorage
-            .isBiometricEnabled(); // Re-using this flag for passkey context
-        final credentials = await _secureStorage.getCredentials();
-        final email = credentials['username'];
-
-        if (isPasskeyRegistered && email != null) {
-          appLog(
-            "🛡️ [AuthBlock] Hardened Flow: Using Passkey Hub for biometric login...",
-          );
-          return await loginWithPasskey(
-            context,
-            email: email,
-            isInternal: true,
-          );
-        }
-
-        // Fallback for users who haven't migrated to Passkey yet
-        final password = credentials['password'];
-        if (email != null && password != null) {
-          appLog("⚠️ [AuthBlock] Legacy Flow: Using stored password...");
-          await login(email, password, context);
-          return status.value == AuthStatus.authenticated;
-        } else {
-          throw Exception(
-            "No stored credentials found. Please log in with password first.",
-          );
-        }
-      } else {
-        throw Exception("Biometric authentication failed or canceled.");
+      if (!authenticated) {
+        error.value = 'err_passkey_canceled';
+        status.value = AuthStatus.unauthenticated;
+        return false;
       }
+
+      final credentials = await _secureStorage.getCredentials();
+      final email = credentials['username'];
+      final password = credentials['password'];
+
+      if (email == null || password == null || password.isEmpty) {
+        throw Exception(
+          "No stored credentials found. Please log in with password first.",
+        );
+      }
+
+      // Passkey accounts use WebAuthn only — do not chain a second system prompt.
+      if (password == 'PASSKEY_AUTH' || password == 'APPLE_AUTH') {
+        throw Exception(
+          "Passkey login required. Use the passkey button, not quick biometric.",
+        );
+      }
+
+      appLog("🔐 [AuthBlock] Quick access: signing in with stored password...");
+      await login(email, password, context);
+      return status.value == AuthStatus.authenticated;
     } catch (e) {
       appLog("❌ [AuthBlock] Biometric Login failed: $e");
       error.value = _mapError(e);
@@ -458,7 +497,7 @@ class AuthBlock {
 
         // Save username for possible biometric/re-auth if passkey is tied to user
         await _secureStorage.saveCredentials(username.value!, "PASSKEY_AUTH");
-        await _secureStorage.setBiometricEnabled(true);
+        await _secureStorage.setPasskeyEnabled(true);
 
         await fetchUser();
         return true;
@@ -472,10 +511,8 @@ class AuthBlock {
       status.value = AuthStatus.unauthenticated;
       return false;
     } finally {
-      if (!isInternal) {
-        _isLocked = false;
-        appLog("🔐 [AuthBlock] Passkey Login Guard: Released");
-      }
+      _isLocked = false;
+      appLog("🔐 [AuthBlock] Passkey Login Guard: Released");
     }
   }
 
@@ -517,7 +554,7 @@ class AuthBlock {
       appLog("✅ [AuthBlock] Passkey Enrollment successful.");
       isPasskeyEnrolled.value = true;
 
-      // Save info that we have a passkey for this user
+      await _secureStorage.setPasskeyEnabled(true);
       await _secureStorage.setBiometricEnabled(true);
 
       return "success";
@@ -525,14 +562,37 @@ class AuthBlock {
       final errorStr = e.toString();
       appLog("❌ [AuthBlock] Passkey Enrollment failed: $errorStr");
 
-      if (errorStr.contains('1001') || errorStr.contains('canceled')) {
+      if (errorStr.contains('1001') ||
+          errorStr.contains('canceled') ||
+          errorStr.contains('cancelled')) {
         return "canceled";
       }
 
-      final mappedError = _mapError(e);
+      if (errorStr.contains('1004')) {
+        const msg =
+            'Passkey domain not verified (1004). Use a physical iPhone/iPad '
+            '(not Simulator), then reinstall the app so Associated Domains apply.';
+        error.value = 'err_unexpected|$msg';
+        return error.value!;
+      }
+
+      final mappedError = _mapEnrollmentError(e);
       error.value = mappedError;
       return mappedError;
     }
+  }
+
+  /// Enrollment errors — keep hub/server text instead of generic passkey_failed.
+  String _mapEnrollmentError(Object e) {
+    final str = e.toString().toLowerCase();
+    if (str.contains('not supported')) return 'err_biometric_unsupported';
+    if (str.contains('network') || str.contains('connection refused')) {
+      return 'err_network_fail';
+    }
+    if (str.contains('hub returned')) {
+      return 'err_unexpected|${e.toString().trim()}';
+    }
+    return _mapError(e);
   }
   // --- Actions ---
 
@@ -697,11 +757,16 @@ class AuthBlock {
 
     try {
       if (Platform.isIOS || Platform.isMacOS) {
+        // Apple nonce handling (required for reliable Supabase verification).
+        // Apple places the SHA256(nonce) into the id_token. Supabase expects the
+        // provided nonce to match the nonce claim inside id_token.
+        final nonce = _createAppleNonce();
         final credential = await SignInWithApple.getAppleIDCredential(
           scopes: [
             AppleIDAuthorizationScopes.email,
             AppleIDAuthorizationScopes.fullName,
           ],
+          nonce: nonce,
         );
 
         final idToken = credential.identityToken;
@@ -712,6 +777,7 @@ class AuthBlock {
         await Supabase.instance.client.auth.signInWithIdToken(
           provider: OAuthProvider.apple,
           idToken: idToken,
+          nonce: nonce,
         );
       } else {
         // Fallback to OAuth for other platforms
@@ -766,6 +832,17 @@ class AuthBlock {
     }
   }
 
+  /// Generate a cryptographically secure Apple nonce (SHA256 string).
+  /// Apple will embed this nonce into `id_token` (nonce claim), and Supabase
+  /// will verify it matches the nonce we pass to `signInWithIdToken`.
+  String _createAppleNonce() {
+    final random = Random.secure();
+    final bytes = List<int>.generate(32, (_) => random.nextInt(256));
+    final raw = base64Url.encode(bytes).replaceAll('=', '');
+    final digest = sha256.convert(utf8.encode(raw)).toString();
+    return digest;
+  }
+
   /// Google Sign-In with Supabase
   Future<void> signInWithGoogle() async {
     status.value = AuthStatus.authenticating;
@@ -774,72 +851,15 @@ class AuthBlock {
     appLog("🌐 [AuthBlock] Initiating Google Sign-In via Supabase...");
 
     try {
-      if (Platform.isIOS || Platform.isMacOS) {
-        await _signInWithGoogleNative();
-      } else {
-        await _signInWithGoogleOAuth();
-      }
-
-      final user = Supabase.instance.client.auth.currentUser;
-
-      if (user != null) {
-        appLog(
-          "👤 [AuthBlock] User already present, syncing identity... with ${user.id}",
-        );
-        await syncUserWithSupabase(user);
-        final session = Supabase.instance.client.auth.currentSession;
-        if (session != null) {
-          // unawaited(_authService.appSync(session.accessToken));
-        }
-
-        // Save metadata for credential persistence
-        final email = user.email ?? "GoogleUser";
-        await _secureStorage.saveCredentials(
-          email,
-          "GOOGLE_AUTH",
-          displayName:
-              user.userMetadata?['full_name'] ?? user.userMetadata?['name'],
-          avatarUrl: user.userMetadata?['avatar_url'],
-        );
-        await _secureStorage.setBiometricEnabled(true);
-        await _loadRememberedUser();
-      }
-
-      appLog("✅ [AuthBlock] User account synced to database.");
-
-      appLog(
-        "✅ [AuthBlock] Google OAuth command sent. State change will be handled in DataLayer.",
-      );
-
-      if (Supabase.instance.client.auth.currentSession != null) {
-        cancelAuthInteractionTimeout();
-      }
+      // Single-path OAuth flow (external browser) on all platforms.
+      await _signInWithGoogleOAuth();
+      return; // Browser flow completes via deep link + onAuthStateChange.
     } catch (e) {
       appLog("❌ [AuthBlock] Google Sign-In initiation failed: $e");
       error.value = _mapError(e);
       status.value = AuthStatus.unauthenticated;
       cancelAuthInteractionTimeout();
     }
-  }
-
-  /// Native Google account picker → Supabase session (avoids invalid `/auth/v1/...` URL on iOS).
-  Future<void> _signInWithGoogleNative() async {
-    final account = await GoogleSignInHub.authSignIn.signIn();
-    if (account == null) {
-      throw Exception('err_passkey_canceled');
-    }
-    final googleAuth = await account.authentication;
-    final idToken = googleAuth.idToken;
-    if (idToken == null || idToken.isEmpty) {
-      throw Exception(
-        'Google ID token missing. Check GIDClientID / serverClientId.',
-      );
-    }
-    await Supabase.instance.client.auth.signInWithIdToken(
-      provider: OAuthProvider.google,
-      idToken: idToken,
-      accessToken: googleAuth.accessToken,
-    );
   }
 
   Future<void> _signInWithGoogleOAuth() async {
@@ -850,10 +870,11 @@ class AuthBlock {
       );
     }
     const redirectTo = 'io.supabase.icegate://login-callback';
+    // User preference: go directly to external browser (Safari).
     await Supabase.instance.client.auth.signInWithOAuth(
       OAuthProvider.google,
       redirectTo: redirectTo,
-      authScreenLaunchMode: LaunchMode.inAppBrowserView,
+      authScreenLaunchMode: LaunchMode.externalApplication,
     );
     _idleLoginUiWhileOAuthContinuesInBrowser();
   }
@@ -1014,10 +1035,9 @@ class AuthBlock {
         hasLocalPassword.value =
             hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
 
-        // Check for passkey enrollment on this device/account
-        final passkeyEnrolled = await _secureStorage.isBiometricEnabled();
-        isPasskeyEnrolled.value = passkeyEnrolled;
-        hasLocalPassword.value = true;
+        isPasskeyEnrolled.value = await _secureStorage.isPasskeyEnabled();
+        hasLocalPassword.value =
+            hash != null && hash != 'EXTERNAL_AUTH' && hash.isNotEmpty;
 
         // isPasskeyEnrolled.value = passkeyEnrolled; // Already set above
 
@@ -1207,6 +1227,15 @@ class AuthBlock {
     await _secureStorage.clearCredentials();
     await logout();
     return null;
+  }
+
+  /// Users enrolled before passkey_enabled existed used biometric_enabled only.
+  Future<void> _migrateLegacyPasskeyFlag() async {
+    if (await _secureStorage.isPasskeyEnabled()) return;
+    final creds = await _secureStorage.getCredentials();
+    if (creds['password'] == 'PASSKEY_AUTH') {
+      await _secureStorage.setPasskeyEnabled(true);
+    }
   }
 
   Future<void> _loadRememberedUser() async {

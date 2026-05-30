@@ -48,6 +48,8 @@ class SocialBlockRule {
   final List<int> blockedDays; // 1=Mon, 7=Sun
   final ChallengeType challengeType;
   final ChallengeLevel challengeLevel;
+  /// Per-rule blocked apps (macOS: bundle IDs JSON; iOS: marker + native storage by [id]).
+  final String? appSelectionJson;
   final int? _totalChallenges;
   final int? _challengesPassed;
 
@@ -65,6 +67,7 @@ class SocialBlockRule {
     this.blockedDays = const [1, 2, 3, 4, 5, 6, 7],
     this.challengeType = ChallengeType.none,
     this.challengeLevel = ChallengeLevel.normal,
+    this.appSelectionJson,
     int totalChallenges = 0,
     int challengesPassed = 0,
   }) : _totalChallenges = totalChallenges,
@@ -86,6 +89,7 @@ class SocialBlockRule {
     List<int>? blockedDays,
     ChallengeType? challengeType,
     ChallengeLevel? challengeLevel,
+    String? appSelectionJson,
     int? totalChallenges,
     int? challengesPassed,
   }) {
@@ -100,6 +104,7 @@ class SocialBlockRule {
       blockedDays: blockedDays ?? this.blockedDays,
       challengeType: challengeType ?? this.challengeType,
       challengeLevel: challengeLevel ?? this.challengeLevel,
+      appSelectionJson: appSelectionJson ?? this.appSelectionJson,
       totalChallenges: totalChallenges ?? this.totalChallenges,
       challengesPassed: challengesPassed ?? this.challengesPassed,
     );
@@ -121,6 +126,7 @@ class SocialBlockRule {
       'blockedDays': blockedDays,
       'challengeType': challengeType.name,
       'challengeLevel': challengeLevel.name,
+      'appSelectionJson': appSelectionJson,
       'totalChallenges': totalChallenges,
       'challengesPassed': challengesPassed,
     };
@@ -153,6 +159,7 @@ class SocialBlockRule {
         (e) => e.name == json['challengeLevel'],
         orElse: () => ChallengeLevel.normal,
       ),
+      appSelectionJson: json['appSelectionJson'] as String?,
       totalChallenges: (json['totalChallenges'] as num?)?.toInt() ?? 0,
       challengesPassed: (json['challengesPassed'] as num?)?.toInt() ?? 0,
     );

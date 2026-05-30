@@ -8,6 +8,7 @@ class SecureStorageService {
   static const String _keyUsername = 'auth_username';
   static const String _keyPassword = 'auth_password';
   static const String _keyBiometricEnabled = 'biometric_enabled';
+  static const String _keyPasskeyEnabled = 'passkey_enabled';
   static const String _keyDisplayName = 'auth_display_name';
   static const String _keyAvatarUrl = 'auth_avatar_url';
 
@@ -59,6 +60,8 @@ class SecureStorageService {
       await _storage.delete(key: _keyPassword);
       await _storage.delete(key: _keyDisplayName);
       await _storage.delete(key: _keyAvatarUrl);
+      await _storage.delete(key: _keyBiometricEnabled);
+      await _storage.delete(key: _keyPasskeyEnabled);
     } catch (e) {
       _logger.severe('Error clearing credentials from secure storage: $e');
     }
@@ -81,6 +84,27 @@ class SecureStorageService {
       return value == 'true';
     } catch (e) {
       _logger.severe('Error reading biometric enabled state: $e');
+      return false;
+    }
+  }
+
+  Future<void> setPasskeyEnabled(bool enabled) async {
+    try {
+      await _storage.write(
+        key: _keyPasskeyEnabled,
+        value: enabled.toString(),
+      );
+    } catch (e) {
+      _logger.severe('Error setting passkey enabled state: $e');
+    }
+  }
+
+  Future<bool> isPasskeyEnabled() async {
+    try {
+      final value = await _storage.read(key: _keyPasskeyEnabled);
+      return value == 'true';
+    } catch (e) {
+      _logger.severe('Error reading passkey enabled state: $e');
       return false;
     }
   }

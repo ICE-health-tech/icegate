@@ -1,5 +1,13 @@
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 
+/// One block in the daily summary email / morning briefing UI.
+class DailySummarySection {
+  const DailySummarySection({required this.title, required this.lines});
+
+  final String title;
+  final List<String> lines;
+}
+
 /// Pre-formatted strings for n8n email nodes (avoids empty fields when values are 0).
 class DailySummaryEmailFormatter {
   static String _label(String locale, String en, String vi) =>
@@ -107,6 +115,7 @@ class DailySummaryEmailFormatter {
     required int transactionCount,
     required List<Map<String, dynamic>> todayTransactions,
     required int subscriptionCount,
+    List<String> suggestions = const [],
   }) {
     final income = (totals['income'] as num?)?.toDouble() ?? 0;
     final expense = (totals['expense'] as num?)?.toDouble() ?? 0;
@@ -174,6 +183,10 @@ class DailySummaryEmailFormatter {
         _label(locale, 'No active projects.', 'Không có dự án đang chạy.');
     final tasksEmpty =
         _label(locale, 'No active tasks.', 'Không có task đang mở.');
+    final suggestionsTitle = _label(locale, 'Suggestions', 'Gợi ý');
+    final suggestionsText = suggestions.isEmpty
+        ? _label(locale, '—', '—')
+        : suggestions.map((s) => '• $s').join(_nl);
 
     return {
       'period_label': periodLabel,
@@ -241,6 +254,8 @@ class DailySummaryEmailFormatter {
         names: activeTasks,
         emptyMessage: tasksEmpty,
       ),
+      'suggestions_title': suggestionsTitle,
+      'suggestions_text': suggestionsText,
     };
   }
 
@@ -263,60 +278,119 @@ class DailySummaryEmailFormatter {
     required String locale,
     required Map<String, String> f,
   }) {
+    return buildPlainTextFromSections(buildSections(locale: locale, f: f));
+  }
+
+  /// Same structure as [buildPlainText], split into titled sections for UI.
+  static List<DailySummarySection> buildSections({
+    required String locale,
+    required Map<String, String> f,
+  }) {
+    final summaryTitle = _label(locale, 'Daily summary', 'Tóm tắt ngày');
     final financeTitle = _label(locale, 'Finance', 'Tài chính');
     final healthTitle = _label(locale, 'Health', 'Sức khỏe');
     final moodTitle = _label(locale, 'Mood', 'Tâm trạng');
     final projectsTitle = _label(locale, 'Projects', 'Dự án');
+    final suggestionsTitle = _label(locale, 'Suggestions', 'Gợi ý');
     final txTitle = _label(locale, "Today's transactions", 'Giao dịch hôm nay');
 
-    final lines = <String>[
-      '${_label(locale, 'Daily summary', 'Tóm tắt ngày')} — ${f['period_label']}',
-      '',
-      financeTitle,
-      '• ${_label(locale, 'Net today', 'Chênh lệch hôm nay')}: ${f['net_today']}',
-      '• ${_label(locale, 'Income today', 'Thu nhập hôm nay')}: ${f['income_today']}',
-      '• ${_label(locale, 'Spending today', 'Chi tiêu hôm nay')}: ${f['expense_today']}',
-      '• ${_label(locale, 'Net worth', 'Tài sản ròng')}: ${f['net_worth']}',
-      '• ${_label(locale, 'Month income', 'Thu nhập tháng')}: ${f['month_income']}',
-      '• ${_label(locale, 'Month spending', 'Chi tiêu tháng')}: ${f['month_spending']}',
-      '• ${_label(locale, 'Month net', 'Ròng tháng')}: ${f['month_net']}',
-      '• ${_label(locale, 'Total savings', 'Tiết kiệm')}: ${f['total_savings']}',
-      '• ${_label(locale, 'Daily delta', 'Biến động ngày')}: ${f['daily_delta']}',
-      '• ${_label(locale, 'Remaining budget', 'Ngân sách còn')}: ${f['remaining_budget']}',
-      '• ${_label(locale, 'Budget used', 'Đã dùng ngân sách')}: ${f['budget_usage']}',
-      '• ${_label(locale, 'Savings rate', 'Tỷ lệ tiết kiệm')}: ${f['savings_rate']}',
-      '• ${_label(locale, 'Drawdown', 'Drawdown')}: ${f['drawdown']}',
-      '• ${_label(locale, 'Transactions today', 'Giao dịch hôm nay')}: ${f['transactions_today']}',
-      '• ${_label(locale, 'Subscriptions', 'Đăng ký')}: ${f['subscriptions_count']}',
-      '',
-      healthTitle,
-      '• ${_label(locale, 'Steps', 'Bước chân')}: ${f['steps_display']} (${f['steps_progress']})',
-      '• ${_label(locale, 'Sleep', 'Giấc ngủ')}: ${f['sleep_display']} (${f['sleep_progress']})',
-      '• ${_label(locale, 'Water', 'Nước')}: ${f['water_display']} (${f['water_progress']})',
-      '• ${_label(locale, 'Heart rate', 'Nhịp tim')}: ${f['heart_rate_display']}',
-      '• ${_label(locale, 'Blood oxygen', 'SpO₂')}: ${f['oxygen_display']}',
-      '• ${_label(locale, 'Calories burned', 'Calo đốt')}: ${f['calories_burned_display']}',
-      '• ${_label(locale, 'Calories consumed', 'Calo nạp')}: ${f['calories_consumed_display']}',
-      '• ${_label(locale, 'Exercise', 'Tập luyện')}: ${f['exercise_display']}',
-      '• ${_label(locale, 'Focus', 'Tập trung')}: ${f['focus_display']}',
-      '• ${_label(locale, 'Weight', 'Cân nặng')}: ${f['weight_display']}',
-      '',
-      moodTitle,
-      '• ${_label(locale, 'Today', 'Hôm nay')}: ${f['mood_display']}',
-      '• ${_label(locale, 'Activities', 'Hoạt động')}: ${f['mood_activities_display']}',
-      '• ${_label(locale, 'Note', 'Ghi chú')}: ${f['mood_note_display']}',
-      '',
-      projectsTitle,
-      '• ${_label(locale, 'Projects', 'Dự án')}: ${f['projects_summary']}',
-      '• ${_label(locale, 'Active projects', 'Dự án đang chạy')}:',
-      f['projects_active_list_multiline']!,
-      '• ${_label(locale, 'Tasks', 'Task')}: ${f['tasks_summary']}',
-      '• ${_label(locale, 'Active tasks', 'Task đang mở')}:',
-      f['tasks_active_list_multiline']!,
-      '',
-      txTitle,
-      f['today_transactions_text']!,
+    final sections = <DailySummarySection>[
+      DailySummarySection(
+        title: '$summaryTitle — ${f['period_label']}',
+        lines: const [],
+      ),
+      DailySummarySection(
+        title: financeTitle,
+        lines: [
+          '• ${_label(locale, 'Net today', 'Chênh lệch hôm nay')}: ${f['net_today']}',
+          '• ${_label(locale, 'Income today', 'Thu nhập hôm nay')}: ${f['income_today']}',
+          '• ${_label(locale, 'Spending today', 'Chi tiêu hôm nay')}: ${f['expense_today']}',
+          '• ${_label(locale, 'Net worth', 'Tài sản ròng')}: ${f['net_worth']}',
+          '• ${_label(locale, 'Month income', 'Thu nhập tháng')}: ${f['month_income']}',
+          '• ${_label(locale, 'Month spending', 'Chi tiêu tháng')}: ${f['month_spending']}',
+          '• ${_label(locale, 'Month net', 'Ròng tháng')}: ${f['month_net']}',
+          '• ${_label(locale, 'Total savings', 'Tiết kiệm')}: ${f['total_savings']}',
+          '• ${_label(locale, 'Daily delta', 'Biến động ngày')}: ${f['daily_delta']}',
+          '• ${_label(locale, 'Remaining budget', 'Ngân sách còn')}: ${f['remaining_budget']}',
+          '• ${_label(locale, 'Budget used', 'Đã dùng ngân sách')}: ${f['budget_usage']}',
+          '• ${_label(locale, 'Savings rate', 'Tỷ lệ tiết kiệm')}: ${f['savings_rate']}',
+          '• ${_label(locale, 'Drawdown', 'Drawdown')}: ${f['drawdown']}',
+          '• ${_label(locale, 'Transactions today', 'Giao dịch hôm nay')}: ${f['transactions_today']}',
+          '• ${_label(locale, 'Subscriptions', 'Đăng ký')}: ${f['subscriptions_count']}',
+        ],
+      ),
+      DailySummarySection(
+        title: healthTitle,
+        lines: [
+          '• ${_label(locale, 'Steps', 'Bước chân')}: ${f['steps_display']} (${f['steps_progress']})',
+          '• ${_label(locale, 'Sleep', 'Giấc ngủ')}: ${f['sleep_display']} (${f['sleep_progress']})',
+          '• ${_label(locale, 'Water', 'Nước')}: ${f['water_display']} (${f['water_progress']})',
+          '• ${_label(locale, 'Heart rate', 'Nhịp tim')}: ${f['heart_rate_display']}',
+          '• ${_label(locale, 'Blood oxygen', 'SpO₂')}: ${f['oxygen_display']}',
+          '• ${_label(locale, 'Calories burned', 'Calo đốt')}: ${f['calories_burned_display']}',
+          '• ${_label(locale, 'Calories consumed', 'Calo nạp')}: ${f['calories_consumed_display']}',
+          '• ${_label(locale, 'Exercise', 'Tập luyện')}: ${f['exercise_display']}',
+          '• ${_label(locale, 'Focus', 'Tập trung')}: ${f['focus_display']}',
+          '• ${_label(locale, 'Weight', 'Cân nặng')}: ${f['weight_display']}',
+        ],
+      ),
+      DailySummarySection(
+        title: moodTitle,
+        lines: [
+          '• ${_label(locale, 'Today', 'Hôm nay')}: ${f['mood_display']}',
+          '• ${_label(locale, 'Activities', 'Hoạt động')}: ${f['mood_activities_display']}',
+          '• ${_label(locale, 'Note', 'Ghi chú')}: ${f['mood_note_display']}',
+        ],
+      ),
+      DailySummarySection(
+        title: projectsTitle,
+        lines: [
+          '• ${_label(locale, 'Projects', 'Dự án')}: ${f['projects_summary']}',
+          '• ${_label(locale, 'Active projects', 'Dự án đang chạy')}:',
+          ..._splitMultiline(f['projects_active_list_multiline']!),
+          '• ${_label(locale, 'Tasks', 'Task')}: ${f['tasks_summary']}',
+          '• ${_label(locale, 'Active tasks', 'Task đang mở')}:',
+          ..._splitMultiline(f['tasks_active_list_multiline']!),
+        ],
+      ),
     ];
+
+    if (f['suggestions_text'] != null &&
+        f['suggestions_text']!.trim().isNotEmpty &&
+        f['suggestions_text'] != '—') {
+      sections.add(
+        DailySummarySection(
+          title: suggestionsTitle,
+          lines: _splitMultiline(f['suggestions_text']!),
+        ),
+      );
+    }
+
+    sections.add(
+      DailySummarySection(
+        title: txTitle,
+        lines: _splitMultiline(f['today_transactions_text']!),
+      ),
+    );
+
+    return sections;
+  }
+
+  static List<String> _splitMultiline(String text) {
+    return text
+        .replaceAll('\r\n', '\n')
+        .split('\n')
+        .where((line) => line.trim().isNotEmpty)
+        .toList();
+  }
+
+  static String buildPlainTextFromSections(List<DailySummarySection> sections) {
+    final lines = <String>[];
+    for (final section in sections) {
+      if (lines.isNotEmpty) lines.add('');
+      lines.add(section.title);
+      lines.addAll(section.lines);
+    }
     return lines.join(_nl);
   }
 

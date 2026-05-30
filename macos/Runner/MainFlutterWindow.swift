@@ -10,6 +10,11 @@ class MainFlutterWindow: NSWindow {
 
     RegisterGeneratedPlugins(registry: flutterViewController)
 
+    IceGateScreenTimePlugin.register(
+      with: flutterViewController.registrar(forPlugin: "IceGateScreenTimePlugin")
+    )
+    IceGateScreenTimePlugin.attachWindow(self)
+
     super.awakeFromNib()
   }
 }

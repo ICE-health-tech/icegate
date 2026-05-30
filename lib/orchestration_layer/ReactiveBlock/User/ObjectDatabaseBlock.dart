@@ -1,8 +1,10 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaSync.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:signals/signals.dart';
@@ -61,10 +63,17 @@ class ObjectDatabaseBlock {
       imageCache.evict(FileImage(File(localPath)));
 
       // Return structured relative path for better identification
+      final String relativePath;
       if (personId != null) {
-        return p.join(personId, subFolder, p.basename(savedFile.path));
+        relativePath = p.join(personId, subFolder, p.basename(savedFile.path));
+      } else {
+        relativePath = p.join(subFolder, p.basename(savedFile.path));
       }
-      return p.join(subFolder, p.basename(savedFile.path));
+
+      // Best-effort S3 + Supabase profile URL sync.
+      unawaited(MediaSync.uploadRelativePath(relativePath));
+
+      return relativePath;
     } catch (e) {
       appLog('❌ [ObjectDB] saveAnyLocalImage failed: $e');
       rethrow;
@@ -191,13 +200,29 @@ class ObjectDatabaseBlock {
 
       // 1. Save locally FIRST (Ensures offline persistence)
       final localPath = await _saveLocalImage(pickedFile, 'avatar.png');
-      final file = File(localPath);
+      final relKey = localPath.replaceAll('\\', '/');
+      final appDir = await getApplicationDocumentsDirectory();
+      final file = File(p.join(appDir.path, relKey));
 
-      // 2. Attempt upload in background/try-catch
+      // 2. S3 + Supabase (also triggered from saveAnyLocalImage; await for UI URL)
+      String? s3Url;
+      try {
+        s3Url = await MediaSync.uploadRelativePath(relKey);
+        if (s3Url != null) {
+          userObjectResource.value = UserObjectResource(
+            avatarImage: s3Url,
+            coverImage: userObjectResource.value.coverImage,
+          );
+        }
+      } catch (e) {
+        appLog('⚠️ [ObjectDB] S3 avatar upload failed (local kept): $e');
+      }
+
+      // 3. Attempt backend upload
       try {
         final success = await uploadImageToMinio(
           userId: userId,
-          fileName: 'admin.png',
+          fileName: p.basename(relKey),
           imageFile: file,
           token: token,
         );
@@ -238,7 +263,21 @@ class ObjectDatabaseBlock {
 
       // 1. Save locally FIRST
       final localPath = await _saveLocalImage(pickedFile, 'cover.png');
-      final file = File(localPath);
+      final relKey = localPath.replaceAll('\\', '/');
+      final appDir = await getApplicationDocumentsDirectory();
+      final file = File(p.join(appDir.path, relKey));
+
+      try {
+        final s3Url = await MediaSync.uploadRelativePath(relKey);
+        if (s3Url != null) {
+          userObjectResource.value = UserObjectResource(
+            avatarImage: userObjectResource.value.avatarImage,
+            coverImage: s3Url,
+          );
+        }
+      } catch (e) {
+        appLog('⚠️ [ObjectDB] S3 cover upload failed (local kept): $e');
+      }
 
       // 2. Attempt upload
       try {

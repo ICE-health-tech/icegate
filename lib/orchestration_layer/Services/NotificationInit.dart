@@ -6,6 +6,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/link_layer/ui_route/InternalRoute.dart';
 import 'package:ice_gate/orchestration_layer/Services/DailyFinanceReportPrefs.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummaryPrefs.dart';
+import 'package:ice_gate/orchestration_layer/Services/MorningLoopPrefs.dart';
 import 'package:signals/signals.dart';
 
 import 'package:timezone/data/latest.dart' as tz;
@@ -28,6 +29,11 @@ class LocalNotificationService {
   static const int dailyMailSummaryNotificationId = 920002;
 
   static const String dailyMailSummaryPayload = 'action:send_daily_mail_summary';
+
+  static const int morningLoopNotificationId = 920003;
+
+  /// Opens Home — daily loop card + morning briefing.
+  static const String morningLoopPayload = 'route:/';
 
   /// Invoked when the user opens the app from the daily mail reminder.
   Future<void> Function()? onDailyMailSummaryTriggered;
@@ -233,6 +239,96 @@ class LocalNotificationService {
     debugPrint('📅 Daily mail summary reminder scheduled at $hour:$minute');
   }
 
+  /// Morning nudge — be the first app you open.
+  Future<void> scheduleMorningLoopFromPrefs() async {
+    if (kIsWeb) return;
+    await _notificationsPlugin.cancel(id: morningLoopNotificationId);
+
+    final prefsEnabled = await MorningLoopPrefs.getReminderEnabled();
+    if (!prefsEnabled || !notificationsEnabled.value) return;
+
+    final hour = await MorningLoopPrefs.getHour();
+    final minute = await MorningLoopPrefs.getMinute();
+    final scheduledClock = DateTime(1970, 1, 1, hour, minute);
+    final scheduledDate = _nextInstanceOfTime(scheduledClock);
+    final copy = await MorningLoopPrefs.notificationCopy();
+
+    const android = AndroidNotificationDetails(
+      'morning_loop_channel',
+      'Morning loop',
+      channelDescription: 'Start your day with Ice Gate',
+      importance: Importance.high,
+      priority: Priority.high,
+    );
+    const details = NotificationDetails(
+      android: android,
+      iOS: DarwinNotificationDetails(
+        interruptionLevel: InterruptionLevel.active,
+      ),
+      macOS: DarwinNotificationDetails(
+        interruptionLevel: InterruptionLevel.active,
+      ),
+    );
+
+    await _notificationsPlugin.zonedSchedule(
+      id: morningLoopNotificationId,
+      title: copy.title,
+      body: copy.body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: morningLoopPayload,
+    );
+    debugPrint('🌅 Morning loop notification scheduled at $hour:$minute');
+  }
+
+  /// Recurring daily health nudge (Motivation / Notification Engine).
+  Future<void> scheduleDailyHealthNudge({
+    required int id,
+    required String channelId,
+    required String channelName,
+    required String title,
+    required String body,
+    required int hour,
+    required int minute,
+    required String payload,
+  }) async {
+    if (kIsWeb) return;
+    if (!notificationsEnabled.value) return;
+
+    final scheduledClock = DateTime(1970, 1, 1, hour, minute);
+    final scheduledDate = _nextInstanceOfTime(scheduledClock);
+
+    final android = AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: 'Health motivation nudges from Ice Gate',
+      importance: Importance.defaultImportance,
+      priority: Priority.defaultPriority,
+    );
+    const ios = DarwinNotificationDetails(
+      interruptionLevel: InterruptionLevel.passive,
+    );
+    final details = NotificationDetails(
+      android: android,
+      iOS: ios,
+      macOS: ios,
+    );
+
+    await _notificationsPlugin.zonedSchedule(
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: scheduledDate,
+      notificationDetails: details,
+      androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      matchDateTimeComponents: DateTimeComponents.time,
+      payload: payload,
+    );
+    debugPrint('💚 Health nudge $id scheduled at $hour:$minute');
+  }
+
   /// Request permissions for macOS and iOS
   Future<void> requestPermissions() async {
     if (defaultTargetPlatform == TargetPlatform.macOS ||
@@ -264,6 +360,7 @@ class LocalNotificationService {
       debugPrint('🔔 Notifications manual toggle: ENABLED');
       await scheduleDailyFinanceReportFromPrefs();
       await scheduleDailyMailSummaryFromPrefs();
+      await scheduleMorningLoopFromPrefs();
     } else {
       await cancelAllNotifications();
       debugPrint('🔕 Notifications manual toggle: DISABLED (All cancelled)');
@@ -332,6 +429,7 @@ class LocalNotificationService {
 
     await scheduleDailyFinanceReportFromPrefs();
     await scheduleDailyMailSummaryFromPrefs();
+    await scheduleMorningLoopFromPrefs();
   }
 
   Future<void> scheduleCustomNotification(CustomNotificationData data) async {

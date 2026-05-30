@@ -35,6 +35,8 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FocusBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MusicBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Health/MotivationEngineBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/Health/NotificationEngine.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FoodAnalysisBlock.dart';
@@ -94,6 +96,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late FocusBlock focusBlock;
   late MusicBlock musicBlock;
   late HealthBlock healthBlock;
+  late MotivationEngineBlock motivationEngineBlock;
+  late NotificationEngine notificationEngine;
   late ProjectBlock projectBlock;
   late FinanceBlock financeBlock;
   late ContentBlock contentBlock;
@@ -413,6 +417,9 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         healthMealDao: database.healthMealDAO,
         hourlyLogDao: database.hourlyActivityLogDAO,
       );
+      motivationEngineBlock = MotivationEngineBlock();
+      motivationEngineBlock.bindHealth(healthBlock);
+      notificationEngine = NotificationEngine(notificationService);
       growthBlock = GrowthBlock();
       scoreBlock = ScoreBlock();
       projectBlock = ProjectBlock();
@@ -420,6 +427,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       externalWidgetBlock = ExternalWidgetBlock();
       financeBlock = FinanceBlock();
       quoteBlock = QuoteBlock();
+      quoteBlock.init(database.quoteDAO);
       questBlock = QuestBlock();
       socialBlock = SocialBlock();
       mindBlock = MindBlock(database.mindLogsDAO);
@@ -450,7 +458,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
 
 
       environmentalBlock = EnvironmentalBlock();
-      storageBlock = StorageBlock();
+      storageBlock = StorageBlock(mediaIndexDao: database.localMediaIndexDAO);
       Future.microtask(() => storageBlock.init());
 
 
@@ -470,6 +478,20 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 appLog(
                   "👤 [DataLayer] PersonID resolved to $personId. Re-initializing dependent blocks...",
                 );
+                storageBlock.startAutoScan(personId: personId);
+                Future.microtask(() async {
+                  try {
+                    final achievements = await database.achievementsDAO
+                        .getAchievementsByPerson(personId);
+                    await storageBlock.syncAchievementStories(
+                      personId: personId,
+                      achievements: achievements,
+                      achievementsDao: database.achievementsDAO,
+                    );
+                  } catch (e) {
+                    appLog('Story sync backfill skipped: $e');
+                  }
+                });
                 healthBlock.personId = personId;
                 Future.microtask(() => healthBlock.init());
                 Future.microtask(() => mindBlock.init(personId));
@@ -501,9 +523,12 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 focusBlock.personId = personId;
                 focusBlock.fetchDailyStats();
                 notificationService.syncAllNotifications(personId);
+                _resyncHealthNudges(force: true);
 
-                // Sync Social Blocker selection from cloud
-                socialBlockerBlock.initWithSync(focusBlock, personId);
+                // Sync Social Blocker rules + shield evaluation
+                Future.microtask(() async {
+                  await socialBlockerBlock.initWithSync(focusBlock, personId);
+                });
 
                 // NEW: Trigger Cloud Sync
                 database.supabaseSync?.syncFullDown(personId).then((_) async {
@@ -511,6 +536,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                   await growthBlock.sync();
                   // Reschedule notifications once cloud data is local
                   notificationService.syncAllNotifications(personId);
+                _resyncHealthNudges(force: true);
                   financeBlock.refreshFromLocalDatabase();
                 });
 
@@ -667,6 +693,16 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
           }
         }),
       );
+
+      _effectCleanups.add(
+        effect(() {
+          final motivation = motivationEngineBlock.dailyResult.value;
+          if (motivation == null) return;
+          untracked(() {
+            notificationEngine.syncHealthNudges(motivation: motivation);
+          });
+        }),
+      );
     } catch (e, stack) {
       debugPrint("DataLayer: Initialization CRITICAL error: $e");
       debugPrintStack(stackTrace: stack);
@@ -741,6 +777,19 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _resyncHealthNudges({bool force = false}) async {
+    final motivation = motivationEngineBlock.dailyResult.value;
+    if (motivation == null) return;
+    try {
+      await notificationEngine.syncHealthNudges(
+        motivation: motivation,
+        force: force,
+      );
+    } catch (e) {
+      debugPrint('DataLayer: health nudge sync failed: $e');
+    }
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -761,6 +810,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       foodAnalysisBlock.dispose();
       environmentalBlock.dispose();
       storageBlock.dispose();
+      growthBlock.dispose();
+      motivationEngineBlock.dispose();
     }
 
 
@@ -879,6 +930,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<MusicBlock>.value(value: musicBlock),
         Provider<FocusBlock>.value(value: focusBlock),
         Provider<HealthBlock>.value(value: healthBlock),
+        Provider<MotivationEngineBlock>.value(value: motivationEngineBlock),
+        Provider<NotificationEngine>.value(value: notificationEngine),
         Provider<LocaleBlock>.value(value: localeBlock),
         Provider<ConfigBlock>.value(value: configBlock),
         Provider<DocumentationBlock>.value(value: documentationBlock),

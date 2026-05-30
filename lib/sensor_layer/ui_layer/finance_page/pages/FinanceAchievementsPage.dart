@@ -3,7 +3,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 import 'package:intl/intl.dart';
@@ -128,6 +128,9 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
     final l10n = AppLocalizations.of(context)!;
     final personId = context.watch<PersonBlock>().currentPersonID.value ?? '';
     final dao = context.read<AchievementsDAO>();
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
     return StreamBuilder<List<AchievementData>>(
       stream: dao.watchAchievementsByPerson(personId),
@@ -166,9 +169,10 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
               Text(
                 l10n.finance_achievements_subtitle,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.45),
+                  color: FinanceSurface.mutedInk(isDark: isDark),
                   fontSize: 12,
                   height: 1.35,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
               const SizedBox(height: 12),
@@ -190,16 +194,20 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                 style: ButtonStyle(
                   foregroundColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return Colors.black;
+                      return FinanceSurface.ink(isDark: isDark);
                     }
-                    return Colors.white70;
+                    return FinanceSurface.mutedInk(isDark: isDark);
                   }),
                   backgroundColor: WidgetStateProperty.resolveWith((states) {
                     if (states.contains(WidgetState.selected)) {
-                      return EntryColors.financeSilverAccent;
+                      return FinanceSurface.silverAccent();
                     }
-                    return Colors.white.withValues(alpha: 0.05);
+                    return FinanceSurface.panel(cs, isDark: isDark, radius: 12)
+                        .color;
                   }),
+                  side: WidgetStateProperty.all(
+                    BorderSide(color: FinanceSurface.border(isDark: isDark)),
+                  ),
                 ),
               ),
               const SizedBox(height: 16),
@@ -208,6 +216,9 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                   markedDays: marked,
                   focusedMonth: _focusedMonth,
                   selectedDay: _selectedDay,
+                  accentColor: FinanceSurface.ink(isDark: isDark),
+                  outerDecoration:
+                      FinanceSurface.panel(cs, isDark: isDark, radius: 20),
                   onMonthChanged: (m) =>
                       setState(() => _focusedMonth = DateTime(m.year, m.month)),
                   onDaySelected: (d) => setState(() {
@@ -217,7 +228,7 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                 ),
                 if (onSelectedDay.isNotEmpty) ...[
                   const SizedBox(height: 12),
-                  ...onSelectedDay.map((a) => _achievementTile(a, l10n)),
+                  ...onSelectedDay.map((a) => _achievementTile(a, l10n, isDark, cs)),
                 ],
               ],
               const SizedBox(height: 20),
@@ -227,8 +238,8 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                         .format(_focusedMonth)
                         .toUpperCase()
                     : '${_focusedMonth.year}',
-                style: const TextStyle(
-                  color: Colors.white54,
+                style: TextStyle(
+                  color: FinanceSurface.ink(isDark: isDark),
                   fontSize: 10,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 1.5,
@@ -243,14 +254,16 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                       l10n.finance_achievements_empty,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Colors.white.withValues(alpha: 0.3),
+                        color: FinanceSurface.mutedInk(isDark: isDark),
                       ),
                     ),
                   ),
                 )
               else ...[
-                ...periodAuto.map((m) => _milestoneTile(m)),
-                ...periodAchievements.map((a) => _achievementTile(a, l10n)),
+                ...periodAuto.map((m) => _milestoneTile(m, isDark, cs)),
+                ...periodAchievements.map(
+                  (a) => _achievementTile(a, l10n, isDark, cs),
+                ),
               ],
               const SizedBox(height: 12),
               Center(
@@ -270,21 +283,24 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
     );
   }
 
-  Widget _achievementTile(AchievementData a, AppLocalizations l10n) {
+  Widget _achievementTile(
+    AchievementData a,
+    AppLocalizations l10n,
+    bool isDark,
+    ColorScheme cs,
+  ) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: EntryColors.financeSilverAccent.withValues(alpha: 0.2),
-        ),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.emoji_events_rounded, color: Color(0xFFFFD54F), size: 22),
+          Icon(
+            Icons.emoji_events_rounded,
+            color: FinanceSurface.silverAccent(),
+            size: 22,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -292,9 +308,10 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
               children: [
                 Text(
                   a.title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 14,
+                    color: FinanceSurface.ink(isDark: isDark),
                   ),
                 ),
                 if (a.description != null && a.description!.isNotEmpty) ...[
@@ -302,7 +319,7 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                   Text(
                     a.description!,
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.45),
+                      color: FinanceSurface.mutedInk(isDark: isDark),
                       fontSize: 12,
                     ),
                   ),
@@ -311,7 +328,7 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
                 Text(
                   DateFormat.yMMMd(l10n.localeName).format(a.createdAt.toLocal()),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: FinanceSurface.mutedInk(isDark: isDark),
                     fontSize: 10,
                   ),
                 ),
@@ -323,18 +340,18 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
     );
   }
 
-  Widget _milestoneTile(_Milestone m) {
+  Widget _milestoneTile(_Milestone m, bool isDark, ColorScheme cs) {
     return Container(
       margin: const EdgeInsets.only(bottom: 10),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFFFD54F).withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD54F).withValues(alpha: 0.25)),
-      ),
+      decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 20),
       child: Row(
         children: [
-          const Icon(Icons.auto_awesome_rounded, color: Color(0xFFFFD54F), size: 20),
+          Icon(
+            Icons.auto_awesome_rounded,
+            color: FinanceSurface.silverAccent(),
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -342,13 +359,17 @@ class _FinanceAchievementsPageState extends State<FinanceAchievementsPage> {
               children: [
                 Text(
                   m.title,
-                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 14),
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    color: FinanceSurface.ink(isDark: isDark),
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   m.subtitle,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.5),
+                    color: FinanceSurface.mutedInk(isDark: isDark),
                     fontSize: 12,
                   ),
                 ),

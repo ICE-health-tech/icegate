@@ -2,6 +2,8 @@
 
 Personal productivity app driven by **time management** (focus sessions, timers, routines) and **note management** (projects as notebooks, synced notes). Health, social, and finance modules extend that core.
 
+**Project context (purpose, technique, doc map):** [docs/PROJECT_CONTEXT.md](docs/PROJECT_CONTEXT.md)
+
 ## Getting Started
 
 Flutter SDK `^3.9.2`. Configure `.env` from `.env.example`, then:

@@ -10,6 +10,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/MailServices/DailyMailSummarySuggestions.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryEmailFormatter.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/DailySummaryPayloadBuilder.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/FinanceDailySummaryBuilder.dart';
@@ -134,6 +135,15 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
         );
       }
 
+      final suggestions = await DailyMailSummarySuggestions.resolveAsync(
+        l10n: l10nNow,
+        finance: financeBlock,
+        health: healthBlock,
+        mind: mindBlock,
+        growth: growthBlock,
+        localeCode: locale,
+      );
+
       final payload = DailySummaryPayloadBuilder.build(
         finance: financeBlock,
         health: healthBlock,
@@ -146,6 +156,7 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
         recipientEmail: email,
         recipientName: ReportRecipientResolver.displayName(personBlock),
         categoryLabels: categoryLabels,
+        suggestions: suggestions.suggestions,
       );
 
       await N8nSummaryDispatch.send(payload);
@@ -552,6 +563,8 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                   ],
                 );
               }),
+              const SizedBox(height: 16),
+              const _MailAiSuggestionsSection(),
               const SizedBox(height: 18),
               const DailyMailSummaryAutoSection(),
               const SizedBox(height: 18),
@@ -609,6 +622,256 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _MailAiSuggestionsSection extends StatelessWidget {
+  const _MailAiSuggestionsSection();
+
+  @override
+  Widget build(BuildContext context) {
+    return Watch((context) {
+      final finance = context.read<FinanceBlock>();
+      final health = context.read<HealthBlock>();
+      final mind = context.read<MindBlock>();
+      final growth = context.read<GrowthBlock>();
+      final refreshKey = Object.hash(
+        finance.transactions.value.length,
+        health.todaySteps.value,
+        health.todayWater.value,
+        health.todaySleep.value,
+        health.todayFocusMinutes.value,
+        mind.latestMoodLog.value?.id,
+        growth.goals.value.length,
+      );
+
+      return _MailAiSuggestionsLoader(
+        key: ValueKey(refreshKey),
+        finance: finance,
+        health: health,
+        mind: mind,
+        growth: growth,
+      );
+    });
+  }
+}
+
+class _MailAiSuggestionsLoader extends StatefulWidget {
+  const _MailAiSuggestionsLoader({
+    super.key,
+    required this.finance,
+    required this.health,
+    required this.mind,
+    required this.growth,
+  });
+
+  final FinanceBlock finance;
+  final HealthBlock health;
+  final MindBlock mind;
+  final GrowthBlock growth;
+
+  @override
+  State<_MailAiSuggestionsLoader> createState() =>
+      _MailAiSuggestionsLoaderState();
+}
+
+class _MailAiSuggestionsLoaderState extends State<_MailAiSuggestionsLoader> {
+  late Future<DailyMailSummarySuggestionsResult> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = _load();
+  }
+
+  Future<DailyMailSummarySuggestionsResult> _load() {
+    final l10n = AppLocalizations.of(context)!;
+    final locale = Localizations.localeOf(context).languageCode;
+    return DailyMailSummarySuggestions.resolveAsync(
+      l10n: l10n,
+      finance: widget.finance,
+      health: widget.health,
+      mind: widget.mind,
+      growth: widget.growth,
+      localeCode: locale,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+
+    return FutureBuilder<DailyMailSummarySuggestionsResult>(
+      future: _future,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return _MailSuggestionsPanel.loading(
+            title: l10n.mail_suggestion_title,
+            subtitle: l10n.mail_suggestion_ai_loading,
+          );
+        }
+
+        final result = snapshot.data;
+        final suggestions = result?.suggestions ?? const <String>[];
+        if (suggestions.isEmpty) return const SizedBox.shrink();
+
+        return _MailSuggestionsPanel(
+          title: l10n.mail_suggestion_title,
+          suggestions: suggestions,
+          poweredByAi: result?.source == DailyMailSummarySuggestionSource.ai,
+          fallbackNote: result?.source == DailyMailSummarySuggestionSource.rules
+              ? l10n.mail_suggestion_ai_fallback
+              : null,
+        );
+      },
+    );
+  }
+}
+
+class _MailSuggestionsPanel extends StatelessWidget {
+  const _MailSuggestionsPanel({
+    required this.title,
+    required this.suggestions,
+    this.poweredByAi = false,
+    this.fallbackNote,
+    this.loading = false,
+    this.subtitle,
+  });
+
+  factory _MailSuggestionsPanel.loading({
+    required String title,
+    String? subtitle,
+  }) {
+    return _MailSuggestionsPanel(
+      title: title,
+      suggestions: const [],
+      loading: true,
+      subtitle: subtitle,
+    );
+  }
+
+  final String title;
+  final List<String> suggestions;
+  final bool poweredByAi;
+  final String? fallbackNote;
+  final bool loading;
+  final String? subtitle;
+
+  @override
+  Widget build(BuildContext context) {
+    const accent = EntryColors.financeSilverAccent;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                poweredByAi ? Icons.auto_awesome_rounded : Icons.lightbulb_outline_rounded,
+                color: accent,
+                size: 18,
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: TextStyle(
+                    color: accent,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                    letterSpacing: 1.2,
+                  ),
+                ),
+              ),
+              if (poweredByAi)
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: accent.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    'AI',
+                    style: TextStyle(
+                      color: accent,
+                      fontSize: 9,
+                      fontWeight: FontWeight.w900,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+          if (subtitle != null) ...[
+            const SizedBox(height: 6),
+            Text(
+              subtitle!,
+              style: TextStyle(
+                color: Colors.white.withValues(alpha: 0.55),
+                fontSize: 11,
+              ),
+            ),
+          ],
+          if (loading) ...[
+            const SizedBox(height: 12),
+            const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ] else ...[
+            const SizedBox(height: 8),
+            ...suggestions.map(
+              (s) => Padding(
+                padding: const EdgeInsets.only(bottom: 4),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '• ',
+                      style: TextStyle(
+                        color: accent.withValues(alpha: 0.9),
+                        fontSize: 12,
+                      ),
+                    ),
+                    Expanded(
+                      child: Text(
+                        s,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.72),
+                          fontSize: 11,
+                          height: 1.35,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            if (fallbackNote != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                fallbackNote!,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.38),
+                  fontSize: 10,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ],
+        ],
       ),
     );
   }

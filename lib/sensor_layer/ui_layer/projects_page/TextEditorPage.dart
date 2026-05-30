@@ -139,6 +139,7 @@ class _TextEditorPageState extends State<TextEditorPage>
     }
 
     _contentController = TextEditingController(text: initialContent);
+    _undoStack.add(initialContent);
     _activeNote = widget.note;
     _editorFocusNode = FocusNode();
     _titleFocusNode = FocusNode();
@@ -1035,6 +1036,9 @@ class _TextEditorPageState extends State<TextEditorPage>
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final keyboardOpen = viewInsets.bottom > 0;
 
     return PopScope(
         canPop: !_hasUnsavedChanges,
@@ -1152,20 +1156,23 @@ class _TextEditorPageState extends State<TextEditorPage>
                                 TextField(
                                   controller: _titleController,
                                   focusNode: _titleFocusNode,
+                                  maxLines: 2,
+                                  minLines: 1,
+                                  textInputAction: TextInputAction.next,
                                   style: TextStyle(
-                                    fontSize: 30,
-                                    fontWeight: FontWeight.w900,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
                                     color: colorScheme.onSurface,
-                                    letterSpacing: -0.8,
-                                    height: 1.2,
+                                    letterSpacing: -0.6,
+                                    height: 1.25,
                                   ),
                                   decoration: InputDecoration(
-                                    hintText: 'Untitled',
+                                    hintText: l10n.project_note_untitled,
                                     hintStyle: TextStyle(
-                                      color: colorScheme.onSurface.withOpacity(
-                                        0.2,
+                                      color: colorScheme.onSurface.withValues(
+                                        alpha: 0.25,
                                       ),
-                                      fontWeight: FontWeight.w900,
+                                      fontWeight: FontWeight.w800,
                                     ),
                                     border: InputBorder.none,
                                     contentPadding: EdgeInsets.zero,
@@ -1174,162 +1181,93 @@ class _TextEditorPageState extends State<TextEditorPage>
                                       _editorFocusNode.requestFocus(),
                                 ),
 
-                                // Metadata row
                                 if (!_focusMode) ...[
-                                  const SizedBox(height: 4),
-                                  ValueListenableBuilder(
+                                  const SizedBox(height: 10),
+                                  ValueListenableBuilder<String?>(
                                     valueListenable: syncStatus,
-                                    builder: (context, status, child) {
-                                      return LayoutBuilder(
-                                        builder: (context, constraints) {
-                                          return SingleChildScrollView(
-                                            scrollDirection: Axis.horizontal,
-                                            physics:
-                                                const BouncingScrollPhysics(),
-                                            child: Row(
+                                    builder: (context, aiStatus, _) {
+                                      return Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          _buildSaveStatusRow(
+                                            colorScheme,
+                                            l10n,
+                                          ),
+                                          if (aiStatus != null) ...[
+                                            const SizedBox(height: 6),
+                                            Row(
                                               children: [
-                                                  if (_lastSaved != null) ...[
-                                                    Icon(
-                                                      Icons.access_time_rounded,
-                                                      size: 12,
+                                                const Icon(
+                                                  Icons.auto_awesome_rounded,
+                                                  size: 14,
+                                                  color: Colors.amber,
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    aiStatus,
+                                                    style: TextStyle(
+                                                      color: Colors.amber
+                                                          .shade800,
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                          if (_openedFile != null) ...[
+                                            const SizedBox(height: 6),
+                                            Row(
+                                              children: [
+                                                Icon(
+                                                  Icons
+                                                      .folder_open_rounded,
+                                                  size: 14,
+                                                  color: colorScheme.primary
+                                                      .withValues(alpha: 0.7),
+                                                ),
+                                                const SizedBox(width: 6),
+                                                Expanded(
+                                                  child: Text(
+                                                    p.basename(
+                                                      _openedFile!.path,
+                                                    ),
+                                                    style: TextStyle(
                                                       color: colorScheme
-                                                          .onSurface
-                                                          .withValues(
-                                                              alpha: 0.3),
+                                                          .onSurfaceVariant,
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.w500,
                                                     ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Saved ${_formatRelativeTime(_lastSaved!)}',
-                                                      style: TextStyle(
-                                                        color: colorScheme
-                                                            .onSurface
-                                                            .withValues(
-                                                                alpha: 0.3),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w500,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_openedFile !=
-                                                      null) ...[
-                                                    const SizedBox(width: 8),
-                                                    Icon(
-                                                      Icons.folder_open_rounded,
-                                                      size: 12,
-                                                      color: colorScheme.primary
-                                                          .withValues(
-                                                              alpha: 0.5),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    ConstrainedBox(
-                                                      constraints:
-                                                          BoxConstraints(
-                                                        maxWidth: constraints
-                                                                .maxWidth *
-                                                            0.45,
-                                                      ),
-                                                      child: Text(
-                                                        _openedFile!.path,
-                                                        style: TextStyle(
-                                                          color: colorScheme
-                                                              .primary
-                                                              .withValues(
-                                                                  alpha: 0.5),
-                                                          fontSize: 10,
-                                                          fontWeight:
-                                                              FontWeight.w500,
-                                                        ),
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                        maxLines: 1,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_hasUnsavedChanges) ...[
-                                                    const SizedBox(width: 8),
-                                                    Container(
-                                                      width: 6,
-                                                      height: 6,
-                                                      decoration:
-                                                          const BoxDecoration(
-                                                        color: Colors.orange,
-                                                        shape: BoxShape.circle,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Unsaved',
-                                                      style: TextStyle(
-                                                        color: Colors.orange
-                                                            .withValues(
-                                                                alpha: 0.7),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (_isSaving) ...[
-                                                    const SizedBox(width: 8),
-                                                    SizedBox(
-                                                      width: 10,
-                                                      height: 10,
-                                                      child:
-                                                          CircularProgressIndicator(
-                                                        strokeWidth: 1.5,
-                                                        color: colorScheme
-                                                            .primary,
-                                                      ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      'Saving...',
-                                                      style: TextStyle(
-                                                        color: colorScheme
-                                                            .primary
-                                                            .withValues(
-                                                                alpha: 0.7),
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                  if (status != null) ...[
-                                                    const SizedBox(width: 8),
-                                                    const Icon(
-                                                      Icons.auto_awesome_rounded,
-                                                      size: 12,
-                                                      color: Colors.amber,
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Text(
-                                                      status,
-                                                      style: const TextStyle(
-                                                        color: Colors.amber,
-                                                        fontSize: 11,
-                                                        fontWeight:
-                                                            FontWeight.w600,
-                                                      ),
-                                                      maxLines: 1,
-                                                      overflow: TextOverflow
-                                                          .ellipsis,
-                                                    ),
-                                                  ],
-                                                ],
-                                              ),
-                                          );
-                                        },
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        ],
                                       );
                                     },
                                   ),
-                                  const SizedBox(height: 16),
+                                  const SizedBox(height: 12),
                                 ] else
                                   const SizedBox(height: 12),
 
                                 Expanded(
-                                  child: _buildMarkdownEditor(colorScheme),
+                                  child: _buildMarkdownEditor(
+                                    colorScheme,
+                                    l10n,
+                                    reserveToolbarSpace: keyboardOpen,
+                                  ),
                                 ),
                               ],
                             ),
@@ -1357,7 +1295,84 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
-  Widget _buildMarkdownEditor(ColorScheme colorScheme) {
+  Widget _buildSaveStatusRow(ColorScheme colorScheme, AppLocalizations l10n) {
+    if (_isSaving) {
+      return Row(
+        children: [
+          SizedBox(
+            width: 14,
+            height: 14,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: colorScheme.primary,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l10n.note_editor_saving,
+            style: TextStyle(
+              color: colorScheme.primary,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_hasUnsavedChanges) {
+      return Row(
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            l10n.note_editor_unsaved,
+            style: TextStyle(
+              color: Colors.orange.shade800,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_lastSaved == null) return const SizedBox.shrink();
+
+    final when = _formatRelativeTime(_lastSaved!, l10n);
+    return Row(
+      children: [
+        Icon(
+          Icons.cloud_done_outlined,
+          size: 15,
+          color: colorScheme.onSurfaceVariant,
+        ),
+        const SizedBox(width: 6),
+        Text(
+          l10n.note_editor_saved_label(when),
+          style: TextStyle(
+            color: colorScheme.onSurfaceVariant,
+            fontSize: 12,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMarkdownEditor(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool reserveToolbarSpace,
+  }) {
+    final bottomPad = reserveToolbarSpace ? 72.0 : 24.0;
     return TextField(
       controller: _contentController,
       focusNode: _editorFocusNode,
@@ -1366,21 +1381,20 @@ class _TextEditorPageState extends State<TextEditorPage>
       textAlignVertical: TextAlignVertical.top,
       keyboardType: TextInputType.multiline,
       style: TextStyle(
-        fontSize: 15,
-        height: 1.8,
-        color: colorScheme.onSurface.withValues(alpha: 0.85),
-        fontFamily: 'monospace',
+        fontSize: 17,
+        height: 1.65,
+        color: colorScheme.onSurface.withValues(alpha: 0.9),
+        letterSpacing: 0.1,
       ),
       decoration: InputDecoration(
-        hintText:
-            'Write in markdown...\n\n# Heading\n## Subheading\n**bold** *italic* ~~strikethrough~~\n- bullet list\n1. numbered list\n> blockquote\n`inline code`',
+        hintText: l10n.note_editor_write_hint,
         hintStyle: TextStyle(
-          color: colorScheme.onSurface.withValues(alpha: 0.15),
-          fontSize: 14,
-          height: 1.8,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+          fontSize: 17,
+          height: 1.65,
         ),
         border: InputBorder.none,
-        contentPadding: const EdgeInsets.only(bottom: 120),
+        contentPadding: EdgeInsets.only(bottom: bottomPad),
       ),
     );
   }
@@ -1433,10 +1447,16 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Widget _buildMarkdownToolbar(ColorScheme colorScheme) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    final bottom = viewInsets.bottom > 0
+        ? viewInsets.bottom + 8
+        : safeBottom + 16;
+
     return Positioned(
-      bottom: 24,
-      left: 24,
-      right: 24,
+      bottom: bottom,
+      left: 16,
+      right: 16,
       child: Center(
         child: ClipRRect(
           borderRadius: BorderRadius.circular(24),
@@ -1473,18 +1493,12 @@ class _TextEditorPageState extends State<TextEditorPage>
                     _toolbarBtn(
                       Icons.undo_rounded,
                       'Undo',
-                      _undo,
-                      color: _undoStack.length > 1
-                          ? null
-                          : colorScheme.onSurface.withValues(alpha: 0.2),
+                      _undoStack.length > 1 ? _undo : null,
                     ),
                     _toolbarBtn(
                       Icons.redo_rounded,
                       'Redo',
-                      _redo,
-                      color: _redoStack.isNotEmpty
-                          ? null
-                          : colorScheme.onSurface.withValues(alpha: 0.2),
+                      _redoStack.isNotEmpty ? _redo : null,
                     ),
                     _toolbarDivider(colorScheme),
                     _toolbarBtn(
@@ -1570,27 +1584,31 @@ class _TextEditorPageState extends State<TextEditorPage>
   Widget _toolbarBtn(
     IconData icon,
     String tooltip,
-    VoidCallback onTap, {
+    VoidCallback? onTap, {
     Color? color,
   }) {
     final colorScheme = Theme.of(context).colorScheme;
+    final enabled = onTap != null;
+    final iconColor = color ??
+        (enabled
+            ? colorScheme.onSurface.withValues(alpha: 0.75)
+            : colorScheme.onSurface.withValues(alpha: 0.22));
+
     return Tooltip(
       message: tooltip,
       child: Material(
         color: Colors.transparent,
         child: InkWell(
-          onTap: () {
-            HapticFeedback.lightImpact();
-            onTap();
-          },
+          onTap: enabled
+              ? () {
+                  HapticFeedback.lightImpact();
+                  onTap();
+                }
+              : null,
           borderRadius: BorderRadius.circular(12),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            child: Icon(
-              icon,
-              size: 20,
-              color: color ?? colorScheme.onSurface.withValues(alpha: 0.7),
-            ),
+            child: Icon(icon, size: 20, color: iconColor),
           ),
         ),
       ),
@@ -1701,11 +1719,15 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   // Preview toggle UI removed.
 
-  String _formatRelativeTime(DateTime time) {
+  String _formatRelativeTime(DateTime time, AppLocalizations l10n) {
     final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    if (diff.inSeconds < 60) return l10n.note_editor_saved_just_now;
+    if (diff.inMinutes < 60) {
+      return l10n.note_editor_saved_minutes(diff.inMinutes);
+    }
+    if (diff.inHours < 24) {
+      return l10n.note_editor_saved_hours(diff.inHours);
+    }
     return DateFormat.MMMd().format(time);
   }
 }

@@ -40,9 +40,27 @@ class InternalWidgetBlock {
       _projectsSubscription?.cancel();
     }
 
+    // Instant paint from Drift, then keep watching for changes.
+    unawaited(() async {
+      try {
+        final driftData = await internalWidgetDAO.getScopedWidgets(
+          personID,
+          scope,
+        );
+        final protocolData = driftData
+            .map((e) => InternalWidgetProtocol.adapterList(e))
+            .toList();
+        untracked(() {
+          updateListBlockFromDatabase(protocolData, scope);
+        });
+      } catch (e) {
+        debugPrint('InternalWidgetBlock ($scope): prefetch failed: $e');
+      }
+    }());
+
     final newSubscription = internalWidgetDAO
         .watchScopedWidgets(personID, scope)
-        .debounceTime(const Duration(milliseconds: 300))
+        .debounceTime(const Duration(milliseconds: 80))
         .listen(
           (driftData) {
             final List<InternalWidgetProtocol> protocolData = driftData

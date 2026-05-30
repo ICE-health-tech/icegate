@@ -79,6 +79,16 @@
   "projects_tile_focus": "Focus",
   "projects_tile_pomodoro": "Pomodoro",
   "projects_tile_social_blocker": "Social Blocker",
+  "social_shield_turn_on": "Turn on Shield",
+  "social_shield_subtitle_no_auth": "Tap row to grant Screen Time (for rules)",
+  "social_shield_subtitle_pick_apps": "Tap row to choose apps — blocking follows rules",
+  "social_shield_subtitle_ready": "On — blocking runs when your rules are active",
+  "social_shield_subtitle_off": "Off — schedules and focus rules are paused",
+  "social_shield_choose_apps": "Choose apps to block",
+  "social_shield_choose_apps_done": "Tap to change blocked apps",
+  "social_shield_pick_apps_required": "Choose at least one app to block (or turn Shield off).",
+  "social_shield_apps_saved": "Blocked apps updated.",
+  "social_shield_unsupported_platform": "App blocking is only on iOS and macOS.",
   "projects_plugin_open": "Open",
   "projects_plugin_location_tracker": "Location Tracker",
   "projects_plugin_live_map": "Live Map",
@@ -169,6 +179,21 @@
   "health_sync_msg": "Syncing health data...",
   "health_sync_success": "Health data synced!",
   "health_sync_failed": "Sync failed. Please try again.",
+  "health_motivation_engine_title": "Motivation Engine",
+  "health_notification_engine_title": "Notification Engine",
+  "health_notification_engine_desc": "{count} active reminders",
+  "@health_notification_engine_desc": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "health_motivation_all_done": "All daily targets hit—momentum is yours today.",
+  "health_motivation_strong": "Strong day—keep your streak alive.",
+  "health_motivation_mid": "Steady progress—stack one more small win.",
+  "health_motivation_low": "Start with water or a short walk—small steps count.",
+  "health_motivation_empty": "Set your goals and we'll coach you through the day.",
   "health_update_weight": "Update Weight",
   "health_smart_scale_title": "Smart scale",
   "health_smart_scale_desc": "Sync from Apple Health or Health Connect (Withings, Eufy, Xiaomi, etc.)",
@@ -506,6 +531,8 @@
   "err_network_fail": "Unable to connect to the server. Check your internet.",
   "err_auth_timeout": "Sign-in took too long. Please try again.",
   "err_passkey_canceled": "Passkey login was canceled.",
+  "err_google_canceled": "Google sign-in was canceled.",
+  "err_google_failed": "Google sign-in failed. Enable Google in Supabase and add the web client ID.",
   "err_passkey_failed": "Security check failed. Please try again.",
   "err_biometric_unsupported": "Biometric login is not available on this device.",
   "err_biometric_disabled": "Biometric login is not enabled for this account.",
@@ -833,6 +860,59 @@
       }
     }
   },
+  "mind_skills_session_title": "Skill session",
+  "mind_skills_session_subtitle": "Pick skills, run a focus block, log what you learned.",
+  "mind_skills_session_start": "Start session",
+  "mind_skills_session_empty": "No skill sessions in the last {days} days.",
+  "@mind_skills_session_empty": {
+    "placeholders": {
+      "days": {
+        "type": "int"
+      }
+    }
+  },
+  "mind_skills_session_stats": "{sessions} sessions · {minutes} min · top: {skill}",
+  "@mind_skills_session_stats": {
+    "placeholders": {
+      "sessions": {
+        "type": "int"
+      },
+      "minutes": {
+        "type": "int"
+      },
+      "skill": {
+        "type": "String"
+      }
+    }
+  },
+  "mind_skills_session_live": "SESSION LIVE",
+  "mind_skills_session_tap_start": "TAP CENTER TO START",
+  "mind_skills_session_tap_finish": "TAP CENTER TO STOP EARLY",
+  "mind_skills_session_listening": "SESSION LIVE · AUTO-LOG WHEN MUSIC ENDS",
+  "mind_skills_session_pick_skills": "Pick at least one skill before starting.",
+  "mind_skills_my_list": "My skills",
+  "mind_skills_add_skill": "Add skill",
+  "mind_skills_tap_list": "Tap skills in the list to select",
+  "mind_skills_tap_list_project": "Select skills · project XP on log",
+  "mind_skills_status_in_session": "In session",
+  "mind_skills_status_selected": "Selected",
+  "mind_skills_level_short": "Lv {level}",
+  "@mind_skills_level_short": {
+    "placeholders": {
+      "level": { "type": "int" }
+    }
+  },
+  "mind_skills_session_logged": "Session logged · {minutes} min · +{xp} XP",
+  "@mind_skills_session_logged": {
+    "placeholders": {
+      "minutes": {
+        "type": "int"
+      },
+      "xp": {
+        "type": "int"
+      }
+    }
+  },
   "mood_trends_title": "Mood Trends",
   "social_notes_title": "Social Notes",
   "social_empty_state_title": "Your story begins here",
@@ -1091,6 +1171,40 @@
   "canvas_mail_summary_send": "Send email report",
   "canvas_mail_summary_auto_title": "Automatic daily email",
   "canvas_mail_summary_auto_subtitle": "After this time, send once per day while the app is open",
+  "mail_suggestion_title": "Report tips",
+  "mail_suggestion_ai_loading": "AI is analyzing your day…",
+  "mail_suggestion_ai_fallback": "Offline tips — connect MAIL_SUGGESTIONS_AGENT_URL for AI.",
+  "mail_suggestion_negative_net": "Today's spending exceeded income — review recent transactions.",
+  "mail_suggestion_no_transactions": "No transactions logged today — add expenses to keep reports accurate.",
+  "mail_suggestion_budget_high": "You've used {percent}% of your monthly budget — pace spending.",
+  "@mail_suggestion_budget_high": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_monthly_deficit": "Monthly spending exceeds income — consider trimming fixed costs.",
+  "mail_suggestion_steps_low": "Steps at {percent}% of goal — a short walk helps hit your target.",
+  "@mail_suggestion_steps_low": {
+    "placeholders": {
+      "percent": {
+        "type": "String"
+      }
+    }
+  },
+  "mail_suggestion_water_low": "Water intake is below half your goal — hydrate through the day.",
+  "mail_suggestion_sleep_low": "Sleep below your goal — try an earlier wind-down tonight.",
+  "mail_suggestion_log_mood": "No mood logged today — a quick check-in improves your trends.",
+  "mail_suggestion_focus_low": "Focus time is low — schedule a short deep-work block.",
+  "mail_suggestion_tasks_many": "{count} active tasks open — pick one priority for tomorrow.",
+  "@mail_suggestion_tasks_many": {
+    "placeholders": {
+      "count": {
+        "type": "String"
+      }
+    }
+  },
   "reports_hub_title": "Report via mail",
   "reports_hub_subtitle": "Daily finance on device, email delivery through n8n",
   "reports_mail_section_title": "Email via n8n",
@@ -1254,7 +1368,65 @@
   "project_doc_api_title": "API Specification",
   "project_finance_label": "Finance",
   "project_no_finance": "No financial records linked to this project.",
+  "project_skills_label": "Skills",
+  "project_no_skills": "No skills yet. Tap + to track what you improve on this project.",
+  "project_add_skill_title": "Add skill",
+  "project_skill_name_hint": "e.g. Flutter, debugging, system design",
+  "project_skill_streak_days": "{count} day streak",
+  "@project_skill_streak_days": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "project_skill_streak_none": "No streak yet",
+  "project_skill_xp_hint": "{total} XP · {remaining} XP to next level",
+  "@project_skill_xp_hint": {
+    "placeholders": {
+      "total": {"type": "int"},
+      "remaining": {"type": "int"}
+    }
+  },
+  "project_skill_xp_on_complete": "Complete tasks to earn +15 XP per skill",
+  "project_skill_log_session": "Log a Skill Boost session to level these skills.",
+  "project_skill_practice": "Open Skill Boost",
+  "project_skill_tap_to_start": "Select one or more skills, then start the session",
+  "project_skill_start_session": "Start session ({count})",
+  "@project_skill_start_session": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
+  "project_skill_catalog_hint": "Pick from the same skills as Mind → Skills tiles.",
+  "project_auto_add_all_skills": "Add all automatically",
+  "project_auto_add_all_skills_subtitle": "Link every skill from your Mind library to this project",
+  "project_skills_all_on_project": "All library skills are already on this project",
+  "project_skills_added_count": "{count, plural, one{1 skill added} other{{count} skills added}}",
+  "@project_skills_added_count": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "project_skill_delete_confirm": "Remove \"{name}\" from this project?",
+  "@project_skill_delete_confirm": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "project_skill_added": "Skill added",
+  "project_skill_xp_granted": "Skills gained +{xp} XP",
+  "@project_skill_xp_granted": {
+    "placeholders": {
+      "xp": {"type": "int"}
+    }
+  },
+  "project_sub_projects_label": "Sub-projects",
+  "project_no_sub_projects": "No sub-projects yet. Tap + to add a child project.",
+  "project_add_sub_project_title": "New sub-project",
+  "project_sub_project_name_hint": "Sub-project name",
   "project_add_task_title": "New Task",
+  "project_task_assign_to": "Assign to project",
   "project_task_title_hint": "Task title",
   "task_delete_tooltip": "Delete task",
   "task_delete_confirm_title": "Delete task",
@@ -1288,6 +1460,34 @@
   "project_delete_note_title": "Delete Note",
   "project_delete_note_msg": "Are you sure you want to delete this note?",
   "project_note_no_content": "No content",
+  "note_editor_write_hint": "Start writing your note…",
+  "note_editor_saved_label": "Saved {when}",
+  "@note_editor_saved_label": {
+    "placeholders": {
+      "when": {
+        "type": "String"
+      }
+    }
+  },
+  "note_editor_saved_just_now": "just now",
+  "note_editor_saved_minutes": "{count}m ago",
+  "@note_editor_saved_minutes": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_saved_hours": "{count}h ago",
+  "@note_editor_saved_hours": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "note_editor_unsaved": "Unsaved",
+  "note_editor_saving": "Saving…",
   "focus_select_project": "TAP TO SELECT PROJECT",
   "focus_select_task": "SELECT TASK",
   "focus_active_exercise": "ACTIVE EXERCISE: {type}",
@@ -1411,6 +1611,7 @@
   "notification_ai_waiting": "Gathering intelligence...",
   "notification_ai_analysis": "AI ANALYSIS",
   "notification_daily_quest": "DAILY QUEST",
+  "notification_no_active_quests": "No active quests right now. Complete tasks in Projects to earn daily quests.",
   "notification_quest_completed_snack": "Quest completed: {title} (+{exp} EXP)",
   "@notification_quest_completed_snack": {
     "placeholders": {
@@ -1431,6 +1632,7 @@
   "notification_pomodoro_reminder_subtitle": "Receive notification after you finish a pomodoro or end a break.",
   "notification_live_activities_title": "Live Activities",
   "notification_live_activities_subtitle": "Track focus timer and information on your Lock Screen.",
+  "notification_morning_briefing_subtitle": "Show the morning summary the first time you open Home each day.",
   "notification_status_on": "on",
   "notification_status_off": "off",
   "notification_wisdom_board": "Wisdom Board",
@@ -1709,6 +1911,58 @@
   "ssh_disconnect": "Disconnect",
   "ssh_search_hint": "Search...",
   "ssh_connect_host_first": "Connect to a host first to manage live sessions.",
+  "ssh_cursor_api_title": "Cursor API",
+  "ssh_cursor_api_subtitle": "Save your API key to drive cursor-agent on the remote host.",
+  "ssh_cursor_api_key_hint": "cursor_…",
+  "ssh_cursor_api_key_stored": "API key saved on this device.",
+  "ssh_cursor_api_save": "Save key",
+  "ssh_cursor_api_test": "Test connection",
+  "ssh_cursor_api_open_terminal": "Open SSH (Cursor mode)",
+  "ssh_cursor_api_saved": "Cursor API key saved.",
+  "ssh_cursor_api_test_ok": "Cursor API key is valid.",
+  "ssh_cursor_api_missing_key": "Enter or save a Cursor API key first.",
+  "cursor_hub_title": "Cursor",
+  "cursor_hub_page_subtitle": "Control Cursor on your Mac via My Machines and Cloud Agents — no SSH required.",
+  "cursor_hub_canvas_subtitle": "My Machines worker, API tasks, and agents dashboard",
+  "cursor_hub_integration_subtitle": "API key, worker setup, send tasks from your phone",
+  "cursor_hub_section_title": "AI & automation",
+  "cursor_hub_key_ready": "API key verified",
+  "cursor_hub_open_full": "Open Cursor Hub",
+  "cursor_hub_open_agents": "Open Agents",
+  "cursor_hub_worker_title": "My Machine worker",
+  "cursor_hub_worker_body": "On your Mac, run this in Terminal and keep it open. Your machine then appears at cursor.com/agents.",
+  "cursor_hub_copy_worker_cmd": "Copy command",
+  "cursor_hub_worker_copied": "Copied: agent worker start",
+  "cursor_hub_send_title": "Send a task",
+  "cursor_hub_target_machine": "My Mac",
+  "cursor_hub_target_cloud": "Cloud repo",
+  "cursor_hub_machine_name": "Machine name (optional)",
+  "cursor_hub_machine_name_hint": "As shown in Agents environment dropdown",
+  "cursor_hub_pick_repo": "Your repositories",
+  "cursor_hub_refresh_repos": "Refresh repo list",
+  "cursor_hub_repos_empty": "No repos found. Enter a URL below or run on Mac to scan ~/Code.",
+  "cursor_hub_usage_limit": "Cloud agent blocked: enable usage-based pricing on cursor.com (need ~$2 spend limit). Use My Mac mode instead.",
+  "cursor_hub_repo_url": "GitHub repo URL",
+  "cursor_hub_prompt_label": "What should the agent do?",
+  "cursor_hub_send_task": "Send to Cursor",
+  "cursor_hub_task_sent": "Task sent — opening agent…",
+  "cursor_hub_task_failed": "Could not start agent: {reason}",
+  "@cursor_hub_task_failed": {
+    "placeholders": {
+      "reason": { "type": "String" }
+    }
+  },
+  "cursor_hub_recent_title": "Recent agents",
+  "island_cursor_ssh_standby": "Awaiting SSH link",
+  "island_cursor_no_api_key": "No API key",
+  "ssh_cursor_api_test_fail": "Connection failed: {reason}",
+  "@ssh_cursor_api_test_fail": {
+    "placeholders": {
+      "reason": {
+        "type": "String"
+      }
+    }
+  },
   "ssh_go_to_terminal": "GO TO TERMINAL",
   "ssh_no_tmux_sessions": "No active tmux sessions found.",
   "journal": "Journal",
@@ -1803,5 +2057,100 @@
   "island_connected": "CONNECTED",
   "island_not_active": "NOT ACTIVE",
   "island_connect": "CONNECT",
-  "island_tmux_active": "TMUX ACTIVE"
+  "island_tmux_active": "TMUX ACTIVE",
+  "daily_loop_title": "Today's loop",
+  "daily_loop_subtitle": "Complete all 4 pillars to extend your streak",
+  "daily_loop_complete": "Loop complete — you're on fire!",
+  "daily_loop_streak": "{count}d",
+  "@daily_loop_streak": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_progress": "{done} / {total} done",
+  "@daily_loop_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "daily_loop_health": "Health pulse",
+  "daily_loop_finance": "Money check",
+  "daily_loop_mind": "Mood log",
+  "daily_loop_projects": "Project touch",
+  "morning_loop_reminder_title": "Morning summary",
+  "morning_loop_reminder_subtitle": "Yesterday recap & today's motivation — open Ice Gate first each morning",
+  "morning_briefing_toggle": "Morning summary on Home",
+  "morning_briefing_title": "Good morning",
+  "morning_briefing_title_name": "Good morning, {name}",
+  "@morning_briefing_title_name": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_subtitle": "Care for body and mind — then finish your 4-pillar loop today.",
+  "morning_briefing_yesterday_title": "Yesterday",
+  "morning_briefing_yesterday_empty": "A quiet day — today is a fresh start.",
+  "morning_briefing_yesterday_steps": "{steps} steps",
+  "@morning_briefing_yesterday_steps": {
+    "placeholders": {
+      "steps": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_water": "{ml} ml water",
+  "@morning_briefing_yesterday_water": {
+    "placeholders": {
+      "ml": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_yesterday_sleep": "{hours} h sleep",
+  "@morning_briefing_yesterday_sleep": {
+    "placeholders": {
+      "hours": {
+        "type": "String"
+      }
+    }
+  },
+  "morning_briefing_yesterday_loop": "{done}/{total} pillars completed",
+  "@morning_briefing_yesterday_loop": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_motivation_title": "Today's motivation",
+  "morning_briefing_motivation_empty": "Yesterday was light — one small win today resets your rhythm.",
+  "morning_briefing_motivation_all_done": "You closed yesterday strong — ride that momentum into today.",
+  "morning_briefing_motivation_strong": "Solid progress yesterday — one more pillar today keeps the streak alive.",
+  "morning_briefing_motivation_mid": "You moved forward yesterday — stack another small win this morning.",
+  "morning_briefing_motivation_low": "Yesterday was a rest day — water, a walk, or a mood log is enough to begin.",
+  "morning_briefing_progress": "{done} of {total} pillars done today",
+  "@morning_briefing_progress": {
+    "placeholders": {
+      "done": {
+        "type": "int"
+      },
+      "total": {
+        "type": "int"
+      }
+    }
+  },
+  "morning_briefing_start": "Start my day",
+  "morning_briefing_log_mood": "Log mood first"
 }

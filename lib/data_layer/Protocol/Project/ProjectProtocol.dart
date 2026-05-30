@@ -8,6 +8,7 @@ class ProjectProtocol {
   final String? sshHostId;
   final String? remotePath;
   final String? aiModel;
+  final String? parentProjectId;
   final DateTime createdAt;
   final DateTime updatedAt;
   final int status;
@@ -22,8 +23,21 @@ class ProjectProtocol {
     this.sshHostId,
     this.remotePath,
     this.aiModel,
+    this.parentProjectId,
     required this.createdAt,
     required this.updatedAt,
     this.status = 0,
   });
+
+  bool get isRoot =>
+      parentProjectId == null || parentProjectId!.trim().isEmpty;
+}
+
+extension ProjectProtocolListX on Iterable<ProjectProtocol> {
+  List<ProjectProtocol> get rootsOnly =>
+      where((p) => p.isRoot).toList(growable: false);
+
+  List<ProjectProtocol> childrenOf(String parentId) => where(
+        (p) => p.parentProjectId == parentId,
+      ).toList(growable: false);
 }

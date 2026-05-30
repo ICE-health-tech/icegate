@@ -6,6 +6,10 @@ class AuthErrorHelper {
     final l10n = AppLocalizations.of(context);
     if (l10n == null) return key;
 
+    if (key.startsWith('err_unexpected|')) {
+      final details = key.substring('err_unexpected|'.length);
+      return l10n.err_unexpected(details.isEmpty ? 'System Error' : details);
+    }
     switch (key) {
       case "err_invalid_credentials":
         return l10n.err_invalid_credentials;

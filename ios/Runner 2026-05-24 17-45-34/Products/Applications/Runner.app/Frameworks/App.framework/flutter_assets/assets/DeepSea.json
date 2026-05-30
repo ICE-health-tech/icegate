@@ -1,0 +1,56 @@
+{
+    "theme_name": "Deep Sea",
+    "brightness": "dark",
+    "useMaterial3": true,
+    "seed_color": "0xFF006064",
+    "color_scheme": {
+        "primary": "0xFF00BCD4",
+        "onPrimary": "0xFF000000",
+        "secondary": "0xFFFF7043",
+        "onSecondary": "0xFF000000",
+        "surface": "0xFF002F35",
+        "onSurface": "0xFFB2EBF2",
+        "background": "0xFF00191D",
+        "onBackground": "0xFFB2EBF2"
+    },
+    "components": {
+        "appBar": {
+            "backgroundColor": "0xFF002F35",
+            "foregroundColor": "0xFF00BCD4",
+            "elevation": 0.0
+        },
+        "elevatedButton": {
+            "backgroundColor": "0xFF00BCD4",
+            "foregroundColor": "0xFF000000",
+            "borderRadius": 16.0,
+            "elevation": 2.0
+        },
+        "card": {
+            "backgroundColor": "0xFF003D44",
+            "elevation": 2.0,
+            "borderRadius": 12.0
+        },
+        "icon": {
+            "color": "0xFF00BCD4",
+            "size": 24.0
+        }
+    },
+    "text_theme": {
+        "fontFamily": "Montserrat",
+        "headlineLarge": {
+            "size": 32.0,
+            "weight": "bold",
+            "color": "0xFF00BCD4"
+        },
+        "bodyMedium": {
+            "size": 16.0,
+            "weight": "normal",
+            "color": "0xFFE0F7FA"
+        },
+        "labelLarge": {
+            "size": 16.0,
+            "weight": "medium",
+            "color": "0xFFFFFFFF"
+        }
+    }
+}

@@ -13,6 +13,7 @@ import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:ice_gate/data_layer/Protocol/Health/HealthMetricProtocol.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
@@ -76,9 +77,9 @@ class HealthPage extends StatefulWidget {
   State<HealthPage> createState() => _HealthPageState();
 }
 
-/// Horizontal inset and grid gutters — keep in sync so row gaps match section gaps.
-const double _healthPageGutter = 16;
-const double _healthGridSpacing = 16;
+/// Horizontal inset and grid gutters — aligned with Projects hub density.
+const double _healthPageGutter = 14;
+const double _healthGridSpacing = 10;
 
 class _HealthPageState extends State<HealthPage>
     with WidgetsBindingObserver, TickerProviderStateMixin {
@@ -271,17 +272,13 @@ class _HealthPageState extends State<HealthPage>
     final textTheme = Theme.of(context).textTheme;
     final l10n = AppLocalizations.of(context)!;
     final topSafe = MediaQuery.paddingOf(context).top;
-    // Clear floating shell header + status bar (fixed 80 was short on some notches).
-    final headerClearance = topSafe + 72;
+    // Match Projects hub: island (~50) + small gap.
+    final headerClearance = topSafe + 58;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return SwipeablePage(
-      onSwipe: () => Navigator.maybePop(context),
-      direction: SwipeablePageDirection.leftToRight,
-      child: Scaffold(
-        backgroundColor: Theme.of(context).brightness == Brightness.dark
-            ? HealthMetricColors.pageBackground
-            : colorScheme.surface,
-        floatingActionButton: QuickActionButton(
+    final scaffold = Scaffold(
+      backgroundColor: Colors.transparent,
+      floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
               label: l10n.health_log_water,
@@ -309,26 +306,10 @@ class _HealthPageState extends State<HealthPage>
             ),
           ],
         ),
-        body: Stack(
-          children: [
-            // Background aesthetics
-            Positioned(
-              top: -60,
-              left: -50,
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: colorScheme.primary.withValues(alpha: 0.02),
-                ),
-              ),
-            ),
-
-            RefreshIndicator(
-              onRefresh: _loadHealthData,
-              displacement: 40,
-              child: CustomScrollView(
+        body: RefreshIndicator(
+          onRefresh: _loadHealthData,
+          displacement: 40,
+          child: CustomScrollView(
                 physics: const BouncingScrollPhysics(
                   parent: AlwaysScrollableScrollPhysics(),
                 ),
@@ -341,43 +322,26 @@ class _HealthPageState extends State<HealthPage>
                     child: Padding(
                       padding: const EdgeInsets.fromLTRB(
                         _healthPageGutter,
-                        24,
+                        8,
                         _healthPageGutter,
                         0,
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Row(
-                            children: [
-                              Text(
-                                DateFormat(
-                                  'EEEE, d MMMM',
-                                  Localizations.localeOf(context).toString(),
-                                ).format(DateTime.now()),
-                                style: textTheme.labelLarge?.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 1.2,
-                                ),
-                              ),
-                              _buildHeaderButton(
-                                context,
-                                icon: Icons.hub_rounded,
-                                onPressed: () =>
-                                    context.push('/integrations'),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            l10n.health_at_a_glance,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withValues(
-                                alpha: 0.5,
-                              ),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
+                          Watch((context) {
+                            final hb = context.read<HealthBlock>();
+                            final steps = hb.todaySteps.watch(context);
+                            final kcal = hb.todayCaloriesConsumed.watch(context);
+                            final water = hb.todayWater.watch(context);
+                            return _buildHealthSummaryStrip(
+                              context,
+                              steps: steps,
+                              kcal: kcal,
+                              waterMl: water,
+                              onHubTap: () => context.push('/integrations'),
+                            );
+                          }),
                         ],
                       ),
                     ),
@@ -537,7 +501,7 @@ class _HealthPageState extends State<HealthPage>
                           return SliverPadding(
                             padding: const EdgeInsets.fromLTRB(
                               _healthPageGutter,
-                              _healthGridSpacing,
+                              6,
                               _healthPageGutter,
                               _healthGridSpacing,
                             ),
@@ -546,28 +510,23 @@ class _HealthPageState extends State<HealthPage>
                                 builder: (context, constraints) {
                                   final spacing = _healthGridSpacing;
                                   final maxW = constraints.maxWidth;
+                                  final contentMaxW = maxW > 1200 ? 1200.0 : maxW;
 
                                   late final int crossAxisCount;
-                                  late final double aspect;
-                                  if (maxW >= 1200) {
+                                  // 1.0 = square metric tiles (width / height).
+                                  const aspect = 1.0;
+                                  if (contentMaxW >= 1200) {
                                     crossAxisCount = 5;
-                                    aspect = 1.32;
-                                  } else if (maxW >= 960) {
+                                  } else if (contentMaxW >= 960) {
                                     crossAxisCount = 4;
-                                    aspect = 1.22;
-                                  } else if (maxW >= 720) {
+                                  } else if (contentMaxW >= 720) {
                                     crossAxisCount = 3;
-                                    aspect = 1.08;
-                                  } else if (maxW >= 480) {
-                                    crossAxisCount = 2;
-                                    aspect = 0.92;
                                   } else {
                                     crossAxisCount = 2;
-                                    aspect = 0.78;
                                   }
 
                                   final cellW =
-                                      (maxW -
+                                      (contentMaxW -
                                               spacing *
                                                   (crossAxisCount - 1)) /
                                           crossAxisCount;
@@ -614,11 +573,34 @@ class _HealthPageState extends State<HealthPage>
                                     }
                                   }
 
-                                  return Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.stretch,
-                                    children: rows,
+                                  final grid = Center(
+                                    child: ConstrainedBox(
+                                      constraints: BoxConstraints(
+                                        maxWidth: contentMaxW,
+                                      ),
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.stretch,
+                                        children: rows,
+                                      ),
+                                    ),
+                                  );
+
+                                  return Container(
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.surface.withValues(
+                                        alpha: isDark ? 0.08 : 0.28,
+                                      ),
+                                      borderRadius: BorderRadius.circular(28),
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(28),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12),
+                                        child: grid,
+                                      ),
+                                    ),
                                   );
                                 },
                               ),
@@ -627,13 +609,22 @@ class _HealthPageState extends State<HealthPage>
                         }),
 
                   // Bottom padding to avoid FAB overlap
-                  const SliverToBoxAdapter(child: SizedBox(height: 140)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 96)),
                 ],
               ),
             ),
-          ],
-        ),
-      ),
+    );
+
+    return SwipeablePage(
+      onSwipe: () => Navigator.maybePop(context),
+      direction: SwipeablePageDirection.leftToRight,
+      child: isDark
+          ? RadialPremiumBackground(
+              baseColor: HealthMetricColors.pageBackground,
+              glowColor: const Color(0xFFa7f3d0),
+              child: scaffold,
+            )
+          : ColoredBox(color: colorScheme.surface, child: scaffold),
     );
   }
 
@@ -663,22 +654,135 @@ class _HealthPageState extends State<HealthPage>
     );
   }
 
-  Widget _buildHeaderButton(
+  Widget _buildHealthSummaryStrip(
     BuildContext context, {
-    required IconData icon,
-    required VoidCallback onPressed,
+    required int steps,
+    required int kcal,
+    required int waterMl,
+    VoidCallback? onHubTap,
   }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return IconButton(
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: colorScheme.surfaceContainer.withValues(alpha: 0.5),
-          shape: BoxShape.circle,
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final l10n = AppLocalizations.of(context)!;
+    final hubColor = isDark
+        ? HealthMetricColors.linkAccent
+        : cs.primary;
+
+    Widget item(String value, String label, IconData icon, Color color) {
+      return Expanded(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(5),
+              decoration: BoxDecoration(
+                color: color.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: color, size: 16),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    value,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w800,
+                      color: cs.onSurface,
+                      letterSpacing: -0.35,
+                    ),
+                  ),
+                  Text(
+                    label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: cs.onSurface.withValues(alpha: 0.55),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-        child: Icon(icon, size: 22, color: colorScheme.onSurface),
+      );
+    }
+
+    return Container(
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: HealthMetricColors.metricCardFill(cs, isDark: isDark),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: HealthMetricColors.metricCardBorder(isDark: isDark),
+          width: 1,
+        ),
       ),
-      onPressed: onPressed,
+      child: Row(
+        children: [
+          if (onHubTap != null) ...[
+            Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: onHubTap,
+                borderRadius: BorderRadius.circular(12),
+                child: Tooltip(
+                  message: l10n.integration_hub_connect,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: hubColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.hub_rounded,
+                        color: hubColor,
+                        size: 18,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              width: 1,
+              height: 34,
+              margin: const EdgeInsets.symmetric(horizontal: 4),
+              color: HealthMetricColors.metricCardBorder(isDark: isDark)
+                  .withValues(alpha: 0.6),
+            ),
+          ],
+          item(
+            '$steps',
+            l10n.steps,
+            Icons.directions_walk_rounded,
+            HealthMetricColors.pillarGreen,
+          ),
+          item(
+            '$kcal',
+            l10n.kcal_consume,
+            Icons.restaurant_rounded,
+            HealthMetricColors.pillarYellow,
+          ),
+          item(
+            '$waterMl ml',
+            l10n.home_index_water,
+            Icons.water_drop_rounded,
+            HealthMetricColors.pillarBlue,
+          ),
+        ],
+      ),
     );
   }
 

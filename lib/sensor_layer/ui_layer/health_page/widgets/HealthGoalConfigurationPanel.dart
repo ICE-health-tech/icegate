@@ -55,88 +55,123 @@ class HealthGoalConfigurationPanel extends StatelessWidget {
           ),
           const SizedBox(height: 20),
         ],
-        Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.03),
-            borderRadius: BorderRadius.circular(24),
-            border: Border.all(
-              color: EntryColors.glassBorder.withValues(alpha: 0.12),
-            ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-            child: Column(
-              children: [
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final tiles = <Widget>[
+              _GoalSliderRow(
+                label: l10n.goal_step_target,
+                icon: Icons.directions_run_rounded,
+                color: EntryColors.primaryIceBlue,
+                valueSignal: healthBlock.dailyStepGoal,
+                min: 2000,
+                max: 30000,
+                divisions: 56,
+              ),
+              _GoalSliderRow(
+                label: l10n.goal_calorie_limit,
+                icon: Icons.local_fire_department_rounded,
+                color: Colors.orangeAccent,
+                valueSignal: healthBlock.dailyKcalGoal,
+                min: 1200,
+                max: 5000,
+                divisions: 38,
+                suffix: ' ${l10n.unit_kcal}',
+              ),
+              _GoalSliderRow(
+                label: l10n.goal_water_target,
+                icon: Icons.water_drop_rounded,
+                color: const Color(0xFF00B2FF),
+                valueSignal: healthBlock.dailyWaterGoal,
+                min: 500,
+                max: 5000,
+                divisions: 45,
+                suffix: ' ${l10n.unit_ml}',
+              ),
+              _GoalSliderRow(
+                label: l10n.goal_focus_target,
+                icon: Icons.timer_rounded,
+                color: const Color(0xFFAD00FF),
+                valueSignal: healthBlock.dailyFocusGoal,
+                min: 10,
+                max: 480,
+                divisions: 47,
+                suffix: ' ${l10n.unit_min}',
+              ),
+              if (showExtendedGoals) ...[
                 _GoalSliderRow(
-                  label: l10n.goal_step_target,
-                  icon: Icons.directions_run_rounded,
-                  color: EntryColors.primaryIceBlue,
-                  valueSignal: healthBlock.dailyStepGoal,
-                  min: 2000,
-                  max: 30000,
-                  divisions: 56,
-                ),
-                const SizedBox(height: 12),
-                _GoalSliderRow(
-                  label: l10n.goal_calorie_limit,
-                  icon: Icons.local_fire_department_rounded,
-                  color: Colors.orangeAccent,
-                  valueSignal: healthBlock.dailyKcalGoal,
-                  min: 1200,
-                  max: 5000,
-                  divisions: 38,
-                  suffix: ' ${l10n.unit_kcal}',
-                ),
-                const SizedBox(height: 12),
-                _GoalSliderRow(
-                  label: l10n.goal_water_target,
-                  icon: Icons.water_drop_rounded,
-                  color: const Color(0xFF00B2FF),
-                  valueSignal: healthBlock.dailyWaterGoal,
-                  min: 500,
-                  max: 5000,
-                  divisions: 45,
-                  suffix: ' ${l10n.unit_ml}',
-                ),
-                const SizedBox(height: 12),
-                _GoalSliderRow(
-                  label: l10n.goal_focus_target,
-                  icon: Icons.timer_rounded,
-                  color: const Color(0xFFAD00FF),
-                  valueSignal: healthBlock.dailyFocusGoal,
+                  label: l10n.goal_exercise_target,
+                  icon: Icons.fitness_center_rounded,
+                  color: const Color(0xFFFFD600),
+                  valueSignal: healthBlock.dailyExerciseGoal,
                   min: 10,
-                  max: 480,
-                  divisions: 47,
+                  max: 180,
+                  divisions: 17,
                   suffix: ' ${l10n.unit_min}',
                 ),
-                if (showExtendedGoals) ...[
-                  const SizedBox(height: 12),
-                  _GoalSliderRow(
-                    label: l10n.goal_exercise_target,
-                    icon: Icons.fitness_center_rounded,
-                    color: const Color(0xFFFFD600),
-                    valueSignal: healthBlock.dailyExerciseGoal,
-                    min: 10,
-                    max: 180,
-                    divisions: 17,
-                    suffix: ' ${l10n.unit_min}',
-                  ),
-                  const SizedBox(height: 12),
-                  _DoubleGoalSliderRow(
-                    label: l10n.goal_sleep_target,
-                    icon: Icons.bedtime_rounded,
-                    color: const Color(0xFF5D5FEF),
-                    valueSignal: healthBlock.dailySleepGoal,
-                    min: 4.0,
-                    max: 12.0,
-                    divisions: 16,
-                    suffix: ' ${l10n.unit_hours}',
-                  ),
-                ],
+                _DoubleGoalSliderRow(
+                  label: l10n.goal_sleep_target,
+                  icon: Icons.bedtime_rounded,
+                  color: const Color(0xFF5D5FEF),
+                  valueSignal: healthBlock.dailySleepGoal,
+                  min: 4.0,
+                  max: 12.0,
+                  divisions: 16,
+                  suffix: ' ${l10n.unit_hours}',
+                ),
               ],
-            ),
-          ),
+            ];
+
+            final w = constraints.maxWidth;
+            final crossAxisCount =
+                w >= 1100 ? 3 : w >= 720 ? 2 : 1;
+            final aspectRatio = w >= 1100 ? 2.75 : w >= 720 ? 2.35 : 0.0;
+
+            final panelDecoration = BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.03),
+              borderRadius: BorderRadius.circular(24),
+              border: Border.all(
+                color: EntryColors.glassBorder.withValues(alpha: 0.12),
+              ),
+            );
+
+            if (crossAxisCount == 1) {
+              return Container(
+                width: double.infinity,
+                decoration: panelDecoration,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < tiles.length; i++) ...[
+                        if (i > 0) const SizedBox(height: 12),
+                        tiles[i],
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }
+
+            return Container(
+              width: double.infinity,
+              decoration: panelDecoration,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: aspectRatio,
+                  ),
+                  itemCount: tiles.length,
+                  itemBuilder: (context, index) => tiles[index],
+                ),
+              ),
+            );
+          },
         ),
       ],
     );

@@ -300,6 +300,41 @@ class AchievementsDAO extends DatabaseAccessor<AppDatabase>
         .watch();
   }
 
+  Future<List<AchievementData>> getAchievementsByPerson(String personId) {
+    return (select(achievementsTable)..where((t) => t.personID.equals(personId)))
+        .get();
+  }
+
+  Future<AchievementData?> getAchievementById(String id) {
+    return (select(achievementsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+  }
+
+  /// Local-only upsert for photo stories pulled from `achievement_story_sync`.
+  Future<void> upsertPhotoStoryLocal({
+    required String id,
+    required String personId,
+    required String title,
+    required String localImagePath,
+    required DateTime createdAt,
+  }) async {
+    await into(achievementsTable).insertOnConflictUpdate(
+      AchievementsTableCompanion(
+        id: Value(id),
+        personID: Value(personId),
+        title: Value(title),
+        localImagePath: Value(localImagePath),
+        domain: const Value('project'),
+        meaningScore: const Value(6),
+        impactScore: const Value(5),
+        impactDescWho: const Value('You'),
+        impactDescHow: const Value(''),
+        createdAt: Value(createdAt),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+  }
+
   Future<void> deleteAchievement(String id) async {
     await (delete(achievementsTable)..where((t) => t.id.equals(id))).go();
     await db.pushToSupabase(
@@ -653,43 +688,175 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
   }
 
   // Skills
-  Future<int> createSkill(SkillsTableCompanion skill) =>
-      into(skillsTable).insert(skill);
+  static String projectSkillCategory(String projectId) => 'project:$projectId';
+
+  static SkillLevel skillLevelForPracticePoints(int xp) {
+    if (xp >= 500) return SkillLevel.expert;
+    if (xp >= 250) return SkillLevel.advanced;
+    if (xp >= 100) return SkillLevel.intermediate;
+    return SkillLevel.beginner;
+  }
+
+  Future<int> createSkill(SkillsTableCompanion skill) async {
+    final inserted = await into(skillsTable).insert(skill);
+    final id = skill.id.present ? skill.id.value : null;
+    if (id != null && id.isNotEmpty) {
+      await _pushSkillById(id);
+    }
+    return inserted;
+  }
+
+  Future<void> deleteSkillByUuid(String id) async {
+    await (delete(skillsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(
+      table: 'skills',
+      payload: {'id': id},
+      isDelete: true,
+    );
+  }
+
+  Future<void> addSkillPracticePoints(String id, int delta) async {
+    if (delta <= 0) return;
+    final row = await (select(skillsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+    final newXp = row.yearsOfExperience + delta;
+    await (update(skillsTable)..where((t) => t.id.equals(id))).write(
+      SkillsTableCompanion(
+        yearsOfExperience: Value(newXp),
+        proficiencyLevel: Value(skillLevelForPracticePoints(newXp)),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushSkillById(id);
+  }
+
+  Future<void> upsertFromSupabaseSkill(Map<String, dynamic> r) async {
+    final featured = r['is_featured'];
+    final isFeatured = featured == true ||
+        featured == 1 ||
+        featured == 'true' ||
+        featured == 't';
+    await into(skillsTable).insert(
+      SkillsTableCompanion(
+        id: Value(r['id'] as String),
+        tenantID: Value(r['tenant_id'] as String?),
+        skillID: Value(r['skill_id'] as String?),
+        personID: Value(r['person_id'] as String?),
+        skillName: Value(r['skill_name'] as String? ?? 'Untitled'),
+        skillCategory: Value(r['skill_category'] as String?),
+        proficiencyLevel: Value(
+          SkillLevel.values.firstWhere(
+            (e) => e.name == (r['proficiency_level'] as String?),
+            orElse: () => SkillLevel.beginner,
+          ),
+        ),
+        yearsOfExperience:
+            Value((r['years_of_experience'] as num?)?.toInt() ?? 0),
+        description: Value(r['description'] as String?),
+        isFeatured: Value(isFeatured),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+        updatedAt: Value(
+          r['updated_at'] != null
+              ? DateTime.parse(r['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+  }
+
+  Future<void> syncSkillsFromCloud(String personId) async {
+    await db.syncTableDown('skills', personId);
+  }
+
+  Future<void> pushAllSkillsToCloud(String personId) async {
+    final rows = await customSelect(
+      'SELECT id FROM skills WHERE person_id = ?',
+      variables: [Variable.withString(personId)],
+      readsFrom: {skillsTable},
+    ).get();
+    for (final row in rows) {
+      await _pushSkillById(row.read<String>('id'));
+    }
+  }
+
+  Future<void> _pushSkillById(String id) async {
+    final row = await (select(skillsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    if (row == null) return;
+
+    await db.pushToSupabase(
+      table: 'skills',
+      payload: {
+        'id': row.id,
+        'tenant_id': row.tenantID,
+        'skill_id': row.skillID ?? row.id,
+        'person_id': row.personID,
+        'skill_name': row.skillName,
+        'skill_category': row.skillCategory,
+        'proficiency_level': row.proficiencyLevel.name,
+        'years_of_experience': row.yearsOfExperience,
+        'description': row.description,
+        'is_featured': row.isFeatured,
+        'created_at': row.createdAt.toUtc().toIso8601String(),
+        'updated_at': row.updatedAt.toUtc().toIso8601String(),
+      },
+    );
+  }
+
+  Stream<List<SkillData>> watchProjectSkills(
+    String personId,
+    String projectId,
+  ) {
+    final tag = projectSkillCategory(projectId);
+    return customSelect(
+      'SELECT * FROM skills WHERE person_id = ? AND skill_category = ? ORDER BY updated_at DESC',
+      variables: [Variable.withString(personId), Variable.withString(tag)],
+      readsFrom: {skillsTable},
+    ).watch().map((rows) => _mapSkillRows(rows, personId));
+  }
+
   Stream<List<SkillData>> watchSkills(String personId) {
     return customSelect(
       'SELECT * FROM skills WHERE person_id = ?',
       variables: [Variable.withString(personId)],
       readsFrom: {skillsTable},
-    ).watch().map((rows) {
-      return rows
-          .where((row) => row.data['id'] != null)
-          .map(
-            (row) => SkillData(
-              id: row.data['id'] as String,
-              skillID: row.data['skill_id'] as String?,
-              personID: (row.data['person_id'] as String?) ?? personId,
-              skillName: (row.data['skill_name'] as String?) ?? 'Untitled',
-              skillCategory: row.data['skill_category'] as String?,
-              proficiencyLevel: SkillLevel.values.firstWhere(
-                (e) => e.name == row.data['proficiency_level'],
-                orElse: () => SkillLevel.beginner,
-              ),
-              yearsOfExperience: (row.data['years_of_experience'] as int?) ?? 0,
-              description: row.data['description'] as String?,
-              isFeatured:
-                  (row.data['is_featured'] == 1 ||
-                  row.data['is_featured'] == true),
-              createdAt: row.data['created_at'] != null
-                  ? DateTime.tryParse(row.data['created_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
-              updatedAt: row.data['updated_at'] != null
-                  ? DateTime.tryParse(row.data['updated_at'].toString()) ??
-                        DateTime.now()
-                  : DateTime.now(),
+    ).watch().map((rows) => _mapSkillRows(rows, personId));
+  }
+
+  List<SkillData> _mapSkillRows(List<QueryRow> rows, String personId) {
+    return rows
+        .where((row) => row.data['id'] != null)
+        .map(
+          (row) => SkillData(
+            id: row.data['id'] as String,
+            skillID: row.data['skill_id'] as String?,
+            personID: (row.data['person_id'] as String?) ?? personId,
+            skillName: (row.data['skill_name'] as String?) ?? 'Untitled',
+            skillCategory: row.data['skill_category'] as String?,
+            proficiencyLevel: SkillLevel.values.firstWhere(
+              (e) => e.name == row.data['proficiency_level'],
+              orElse: () => SkillLevel.beginner,
             ),
-          )
-          .toList();
-    });
+            yearsOfExperience: (row.data['years_of_experience'] as int?) ?? 0,
+            description: row.data['description'] as String?,
+            isFeatured:
+                (row.data['is_featured'] == 1 || row.data['is_featured'] == true),
+            createdAt: row.data['created_at'] != null
+                ? DateTime.tryParse(row.data['created_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+            updatedAt: row.data['updated_at'] != null
+                ? DateTime.tryParse(row.data['updated_at'].toString()) ??
+                      DateTime.now()
+                : DateTime.now(),
+          ),
+        )
+        .toList();
   }
 }

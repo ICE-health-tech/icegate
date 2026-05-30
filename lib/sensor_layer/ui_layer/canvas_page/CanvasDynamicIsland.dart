@@ -21,6 +21,9 @@ import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:provider/provider.dart';
 import 'package:ice_gate/utils/app_log.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/MorningBriefingSheet.dart';
+import 'package:ice_gate/orchestration_layer/Services/CursorApiService.dart';
 
 class CanvasDynamicIsland extends StatelessWidget {
   final int? socialIndex;
@@ -147,6 +150,7 @@ class CanvasDynamicIsland extends StatelessWidget {
   }
 
   Color? _pillarAccentForRoute(String path, {Color? socialAccent}) {
+    if (path == '/canvas') return HealthMetricColors.pillarBlue;
     if (path.startsWith('/finance')) return EntryColors.financeSilverAccent;
     if (path.startsWith('/social')) return socialAccent ?? EntryColors.socialPurple;
     if (path.startsWith('/health')) return EntryColors.healthGreen;
@@ -157,6 +161,7 @@ class CanvasDynamicIsland extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final currentRoute = GoRouterState.of(context).uri.path;
     // Hide on canvas sub-pages too
     if (currentRoute.startsWith('/canvas/') && currentRoute != '/canvas') {
@@ -228,84 +233,112 @@ class CanvasDynamicIsland extends StatelessWidget {
       final financeSubTitle = currentRoute.startsWith('/finance')
           ? _financeSubRouteTitle(context, currentRoute)
           : null;
+      final onFinance = currentRoute.startsWith('/finance');
       final borderColor = isFocusRunning
           ? focusColor.withValues(alpha: 0.5)
-          : (currentRoute.startsWith('/social') && socialMindFocus != null
-                ? socialMindFocus.color.withValues(alpha: 0.55)
-                : (useTmux
-                      ? Colors.greenAccent.withValues(alpha: 0.5)
-                      : Colors.white.withValues(alpha: 0.08)));
-      final islandRadius = 27 * scalingFactor;
-
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(islandRadius),
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            curve: Curves.easeOutQuart,
-            width: width,
-            height: 48 * scalingFactor,
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: pillarAccent != null
-                    ? [
-                        pillarAccent.withValues(alpha: 0.12),
-                        Colors.white.withValues(alpha: 0.055),
-                        Colors.white.withValues(alpha: 0.03),
-                      ]
-                    : [
-                        Colors.white.withValues(alpha: 0.055),
-                        Colors.white.withValues(alpha: 0.03),
-                      ],
-                stops: pillarAccent != null
-                    ? const [0.0, 0.35, 1.0]
-                    : const [0.0, 1.0],
-              ),
-              borderRadius: BorderRadius.circular(islandRadius),
-              border: Border.all(color: borderColor, width: 1.2),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFF000F1E).withValues(alpha: 0.37),
-                  blurRadius: (isFocusRunning || useTmux) ? 20 : 16,
-                  offset: Offset(0, 6 * scalingFactor),
-                  spreadRadius: 2,
+          : (onFinance
+                ? EntryColors.financeSilverAccent.withValues(
+                    alpha: isDark ? 0.42 : 0.34,
+                  )
+                : (currentRoute.startsWith('/social') && socialMindFocus != null
+                      ? socialMindFocus.color.withValues(
+                          alpha: isDark ? 0.55 : 0.42,
+                        )
+                      : (useTmux
+                            ? Colors.greenAccent.withValues(alpha: 0.5)
+                            : (isDark
+                                ? Colors.white.withValues(alpha: 0.12)
+                                : colorScheme.outlineVariant.withValues(
+                                    alpha: 0.55,
+                                  )))));
+      final islandHeight = 46 * scalingFactor;
+      final islandRadius = islandHeight / 2;
+      final outerBorderColor =
+          borderColor.withValues(alpha: isDark ? 0.9 : 0.6);
+      final outerBorderWidth = 1.0 * scalingFactor;
+      final islandFill = isDark
+          ? const Color(0xFF141A22)
+          : colorScheme.surfaceContainerHigh.withValues(alpha: 0.98);
+      final islandGradient = LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: isDark
+            ? [
+                Color.alphaBlend(
+                  Colors.white.withValues(alpha: 0.09),
+                  islandFill,
                 ),
-                if (pillarAccent != null)
-                  BoxShadow(
-                    color: pillarAccent.withValues(alpha: 0.12),
-                    blurRadius: 20,
-                    spreadRadius: -4,
-                  ),
+                Color.alphaBlend(
+                  Colors.white.withValues(alpha: 0.03),
+                  islandFill,
+                ),
+                Color.alphaBlend(
+                  Colors.white.withValues(alpha: 0.05),
+                  islandFill,
+                ),
+              ]
+            : [
+                Color.alphaBlend(
+                  colorScheme.onSurface.withValues(alpha: 0.05),
+                  islandFill,
+                ),
+                Color.alphaBlend(
+                  colorScheme.onSurface.withValues(alpha: 0.02),
+                  islandFill,
+                ),
+                Color.alphaBlend(
+                  colorScheme.onSurface.withValues(alpha: 0.04),
+                  islandFill,
+                ),
               ],
-            ),
-            padding: EdgeInsets.symmetric(horizontal: 8 * scalingFactor),
-            child: Stack(
-              children: [
-                Positioned(
-                  top: 0,
-                  left: 12 * scalingFactor,
-                  right: 12 * scalingFactor,
-                  child: Container(
-                    height: 1,
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          Colors.white.withValues(alpha: 0.18),
-                          Colors.white.withValues(alpha: 0.04),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(1),
-                    ),
+        stops: const [0.0, 0.55, 1.0],
+      );
+
+      return AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeOutQuart,
+        width: width,
+        height: islandHeight,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(islandRadius),
+          gradient: islandGradient,
+          border: Border.all(
+            color: outerBorderColor,
+            width: outerBorderWidth,
+          ),
+        ),
+        padding: EdgeInsets.symmetric(horizontal: 8 * scalingFactor),
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.none,
+          children: [
+            Positioned(
+              top: 0,
+              left: 12 * scalingFactor,
+              right: 12 * scalingFactor,
+              child: Container(
+                height: 1,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      (isDark ? Colors.white : colorScheme.onSurface)
+                          .withValues(alpha: isDark ? 0.18 : 0.08),
+                      (isDark ? Colors.white : colorScheme.onSurface)
+                          .withValues(alpha: isDark ? 0.04 : 0.02),
+                    ],
                   ),
+                  borderRadius: BorderRadius.circular(1),
                 ),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    GestureDetector(
-                      onTap: () {
+              ),
+            ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                    _PressableIslandIconButton(
+                      scalingFactor: scalingFactor,
+                      icon: Icons.arrow_back_rounded,
+                      onPressed: () {
                         HapticFeedback.mediumImpact();
                         appLog("Current location: $location");
                         if (location.startsWith('/projects/editor')) {
@@ -318,21 +351,6 @@ class CanvasDynamicIsland extends StatelessWidget {
                           context.go('/');
                         }
                       },
-                      child: Container(
-                        padding: EdgeInsets.all(6 * scalingFactor),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.04),
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: Colors.white.withValues(alpha: 0.08),
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.arrow_back_rounded,
-                          color: const Color(0xF2FFFFFF),
-                          size: 18 * scalingFactor,
-                        ),
-                      ),
                     ),
 
                     Expanded(
@@ -443,34 +461,50 @@ class CanvasDynamicIsland extends StatelessWidget {
                           scalingFactor,
                           colorScheme,
                         ),
-                      // Focus Shortcut
-                      GestureDetector(
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          context.push('/health/focus');
-                        },
-                        child: Container(
-                          padding: EdgeInsets.all(4 * scalingFactor),
-                          decoration: const BoxDecoration(
-                            color: Colors.transparent,
-                            shape: BoxShape.circle,
-                          ),
-                          child: Icon(
-                            Icons.timer_outlined,
-                            color: colorScheme.onSurfaceVariant.withValues(
-                              alpha: 0.8,
+                      // Home: morning loop · elsewhere: focus timer (hidden on canvas hub)
+                      if (currentRoute != '/canvas') ...[
+                        GestureDetector(
+                          onTap: () {
+                            HapticFeedback.selectionClick();
+                            if (currentRoute == '/') {
+                              MorningBriefingSheet.showSummary(context);
+                            } else {
+                              context.push('/health/focus');
+                            }
+                          },
+                          child: Container(
+                            padding: EdgeInsets.all(4 * scalingFactor),
+                            decoration: const BoxDecoration(
+                              color: Colors.transparent,
+                              shape: BoxShape.circle,
                             ),
-                            size: 20 * scalingFactor,
+                            child: Icon(
+                              currentRoute == '/'
+                                  ? Icons.wb_sunny_outlined
+                                  : Icons.timer_outlined,
+                              color: currentRoute == '/'
+                                  ? HealthMetricColors.pillarYellow.withValues(
+                                      alpha: 0.95,
+                                    )
+                                  : colorScheme.onSurfaceVariant.withValues(
+                                      alpha: 0.8,
+                                    ),
+                              size: 20 * scalingFactor,
+                            ),
                           ),
                         ),
-                      ),
+                      ],
 
                       // SizedBox(width: 4 * scalingFactor),
                       // Settings shortcut
                       GestureDetector(
                         onTap: () {
                           HapticFeedback.selectionClick();
-                          context.push('/settings');
+                          if (currentRoute == '/projects') {
+                            context.push('/projects/dashboard');
+                          } else {
+                            context.push('/settings');
+                          }
                         },
                         child: Container(
                           padding: EdgeInsets.all(4 * scalingFactor),
@@ -568,13 +602,11 @@ class CanvasDynamicIsland extends StatelessWidget {
                   ],
                 ),
               ),
+                  ],
+                ),
               ],
             ),
-          ],
-        ),
-      ),
-    ),
-  );
+      );
     });
   }
 
@@ -915,6 +947,23 @@ class CanvasDynamicIsland extends StatelessWidget {
     return Watch((context) {
       final aiMode = sshService.aiMode.value;
       final useTmux = sshService.useTmuxSignal.value;
+      final cursorApi = CursorApiService.instance;
+      final cursorHasKey = cursorApi.hasKeySignal.value;
+      final l10n = AppLocalizations.of(context)!;
+
+      String offlineStatusLabel() {
+        if (aiMode != 'cursor') return l10n.island_not_active;
+        if (!cursorHasKey) return l10n.island_cursor_no_api_key;
+        return l10n.island_cursor_ssh_standby;
+      }
+
+      Color statusDotColor(bool connected) {
+        if (connected) return Colors.greenAccent;
+        if (aiMode == 'cursor' && cursorHasKey) {
+          return Colors.amberAccent;
+        }
+        return Colors.redAccent;
+      }
 
       return StreamBuilder<Map<String, dynamic>>(
         stream: sshService.statsStream,
@@ -940,6 +989,8 @@ class CanvasDynamicIsland extends StatelessWidget {
                 return Icons.code_rounded;
               case 'openclaw':
                 return Icons.hub_rounded;
+              case 'cursor':
+                return Icons.smart_toy_outlined;
               default:
                 return Icons.terminal_rounded;
             }
@@ -953,6 +1004,8 @@ class CanvasDynamicIsland extends StatelessWidget {
                 return Colors.blueAccent;
               case 'openclaw':
                 return Colors.purpleAccent;
+              case 'cursor':
+                return Colors.tealAccent;
               default:
                 return colorScheme.primary;
             }
@@ -966,13 +1019,11 @@ class CanvasDynamicIsland extends StatelessWidget {
                 width: 6 * scalingFactor,
                 height: 6 * scalingFactor,
                 decoration: BoxDecoration(
-                  color: isConnected ? Colors.greenAccent : Colors.redAccent,
+                  color: statusDotColor(isConnected),
                   shape: BoxShape.circle,
                   boxShadow: [
                     BoxShadow(
-                      color:
-                          (isConnected ? Colors.greenAccent : Colors.redAccent)
-                              .withValues(alpha: 0.5),
+                      color: statusDotColor(isConnected).withValues(alpha: 0.5),
                       blurRadius: 4,
                       spreadRadius: 1,
                     ),
@@ -1009,9 +1060,8 @@ class CanvasDynamicIsland extends StatelessWidget {
               Flexible(
                 child: Text(
                   isConnected
-                      ? (sshService.currentHost ??
-                          AppLocalizations.of(context)!.island_connected)
-                      : AppLocalizations.of(context)!.island_not_active,
+                      ? (sshService.currentHost ?? l10n.island_connected)
+                      : offlineStatusLabel(),
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
                     color: isConnected
@@ -1281,7 +1331,26 @@ class CanvasDynamicIsland extends StatelessWidget {
     Color? accentColor,
   }) {
     final bool isActive = index == activeIndex;
-    final primary = accentColor ?? colorScheme.primary;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = accentColor ?? colorScheme.primary;
+    // Light theme: dark ink on pale island. Dark theme: pillar accent / silver.
+    final activeInk = isDark ? accent : colorScheme.onSurface;
+    final inactiveInk = colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.55 : 0.72,
+    );
+    final activeFill = isDark
+        ? accent.withValues(alpha: 0.15)
+        : colorScheme.primary.withValues(alpha: 0.1);
+    final activeBorder = isDark
+        ? accent.withValues(alpha: 0.35)
+        : colorScheme.primary.withValues(alpha: 0.32);
+    final idleFill = isDark
+        ? Colors.white.withValues(alpha: 0.04)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
+    final idleBorder = isDark
+        ? Colors.white.withValues(alpha: 0.06)
+        : colorScheme.outlineVariant.withValues(alpha: 0.35);
+
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -1294,14 +1363,10 @@ class CanvasDynamicIsland extends StatelessWidget {
           vertical: 6 * scalingFactor,
         ),
         decoration: BoxDecoration(
-          color: isActive
-              ? primary.withValues(alpha: 0.15)
-              : Colors.white.withValues(alpha: 0.04),
+          color: isActive ? activeFill : idleFill,
           borderRadius: BorderRadius.circular(20 * scalingFactor),
           border: Border.all(
-            color: isActive
-                ? primary.withValues(alpha: 0.35)
-                : Colors.white.withValues(alpha: 0.06),
+            color: isActive ? activeBorder : idleBorder,
           ),
         ),
         child: Row(
@@ -1310,16 +1375,14 @@ class CanvasDynamicIsland extends StatelessWidget {
             Icon(
               icon,
               size: 18 * scalingFactor,
-              color: isActive
-                  ? primary
-                  : colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+              color: isActive ? activeInk : inactiveInk,
             ),
             if (isActive) ...[
               SizedBox(width: 8 * scalingFactor),
               Text(
                 label,
                 style: TextStyle(
-                  color: primary,
+                  color: activeInk,
                   fontSize: 10 * scalingFactor,
                   fontWeight: FontWeight.w900,
                   letterSpacing: 0.5,
@@ -1327,6 +1390,80 @@ class CanvasDynamicIsland extends StatelessWidget {
               ),
             ],
           ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PressableIslandIconButton extends StatefulWidget {
+  const _PressableIslandIconButton({
+    required this.scalingFactor,
+    required this.icon,
+    required this.onPressed,
+  });
+
+  final double scalingFactor;
+  final IconData icon;
+  final VoidCallback onPressed;
+
+  @override
+  State<_PressableIslandIconButton> createState() =>
+      _PressableIslandIconButtonState();
+}
+
+class _PressableIslandIconButtonState extends State<_PressableIslandIconButton> {
+  bool _pressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cs = Theme.of(context).colorScheme;
+    final s = widget.scalingFactor;
+
+    final baseFill = isDark
+        ? Colors.white.withValues(alpha: 0.04)
+        : cs.surfaceContainerHighest.withValues(alpha: 0.35);
+    final pressedFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : cs.surfaceContainerHighest.withValues(alpha: 0.55);
+    final border = isDark
+        ? Colors.white.withValues(alpha: _pressed ? 0.22 : 0.14)
+        : cs.outlineVariant.withValues(alpha: _pressed ? 0.9 : 0.7);
+    final iconColor = isDark
+        ? const Color(0xF2FFFFFF)
+        : cs.onSurface.withValues(alpha: 0.85);
+
+    return AnimatedScale(
+      scale: _pressed ? 0.96 : 1.0,
+      duration: const Duration(milliseconds: 110),
+      curve: Curves.easeOut,
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: widget.onPressed,
+          onTapDown: (_) => setState(() => _pressed = true),
+          onTapCancel: () => setState(() => _pressed = false),
+          onTapUp: (_) => setState(() => _pressed = false),
+          splashColor: (isDark ? Colors.white : cs.primary).withValues(alpha: 0.14),
+          highlightColor: Colors.transparent,
+          child: Ink(
+            decoration: BoxDecoration(
+              color: _pressed ? pressedFill : baseFill,
+              shape: BoxShape.circle,
+              border: Border.all(color: border, width: 1.2 * s),
+            ),
+            child: Padding(
+              padding: EdgeInsets.all(6 * s),
+              child: Icon(
+                widget.icon,
+                color: iconColor,
+                size: 18 * s,
+              ),
+            ),
+          ),
         ),
       ),
     );

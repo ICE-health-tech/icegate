@@ -228,6 +228,42 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_tile_social_blocker => 'Chặn mạng xã hội';
 
   @override
+  String get social_shield_turn_on => 'Bật Shield';
+
+  @override
+  String get social_shield_subtitle_no_auth =>
+      'Chạm dòng để cấp quyền Thời gian sử dụng';
+
+  @override
+  String get social_shield_subtitle_pick_apps =>
+      'Chạm dòng chọn app — chặn theo quy tắc bên dưới';
+
+  @override
+  String get social_shield_subtitle_ready =>
+      'Đang bật — chỉ chặn khi quy tắc khớp giờ';
+
+  @override
+  String get social_shield_subtitle_off =>
+      'Đang tắt — tạm dừng lịch và quy tắc focus';
+
+  @override
+  String get social_shield_choose_apps => 'Chọn app cần chặn';
+
+  @override
+  String get social_shield_choose_apps_done => 'Chạm để đổi danh sách app';
+
+  @override
+  String get social_shield_pick_apps_required =>
+      'Chọn ít nhất một app (hoặc tắt Shield).';
+
+  @override
+  String get social_shield_apps_saved => 'Đã cập nhật danh sách app chặn.';
+
+  @override
+  String get social_shield_unsupported_platform =>
+      'Chặn app chỉ có trên iOS và macOS.';
+
+  @override
   String get projects_plugin_open => 'Mở';
 
   @override
@@ -437,6 +473,36 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get health_sync_failed => 'Đồng bộ thất bại. Vui lòng thử lại.';
+
+  @override
+  String get health_motivation_engine_title => 'Động cơ động lực';
+
+  @override
+  String get health_notification_engine_title => 'Động cơ thông báo';
+
+  @override
+  String health_notification_engine_desc(int count) {
+    return '$count nhắc nhở đang bật';
+  }
+
+  @override
+  String get health_motivation_all_done =>
+      'Đã chạm mọi mục tiêu hôm nay—đà của bạn đang lên.';
+
+  @override
+  String get health_motivation_strong => 'Tiến độ tốt—giữ chuỗi thói quen nhé.';
+
+  @override
+  String get health_motivation_mid =>
+      'Đang đi đều—thêm một chiến thắng nhỏ nữa.';
+
+  @override
+  String get health_motivation_low =>
+      'Bắt đầu bằng nước hoặc vài bước chân—từng chút đều có ích.';
+
+  @override
+  String get health_motivation_empty =>
+      'Đặt mục tiêu và chúng tôi sẽ đồng hành cả ngày.';
 
   @override
   String get health_update_weight => 'Cập nhật cân nặng';
@@ -1187,6 +1253,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get err_passkey_canceled => 'Đã hủy đăng nhập bằng Passkey.';
 
   @override
+  String get err_google_canceled => 'Đã hủy đăng nhập Google.';
+
+  @override
+  String get err_google_failed =>
+      'Đăng nhập Google thất bại. Bật Google trên Supabase và thêm web client ID.';
+
+  @override
   String get err_passkey_failed =>
       'Xác thực bảo mật thất bại. Vui lòng thử lại.';
 
@@ -1858,6 +1931,71 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
+  String get mind_skills_session_title => 'Phiên kỹ năng';
+
+  @override
+  String get mind_skills_session_subtitle =>
+      'Chọn kỹ năng, tập trung, ghi lại điều học được.';
+
+  @override
+  String get mind_skills_session_start => 'Bắt đầu phiên';
+
+  @override
+  String mind_skills_session_empty(int days) {
+    return 'Chưa có phiên kỹ năng trong $days ngày qua.';
+  }
+
+  @override
+  String mind_skills_session_stats(int sessions, int minutes, String skill) {
+    return '$sessions phiên · $minutes phút · nổi bật: $skill';
+  }
+
+  @override
+  String get mind_skills_session_live => 'ĐANG TẬP TRUNG';
+
+  @override
+  String get mind_skills_session_tap_start => 'CHẠM GIỮA ĐỂ BẮT ĐẦU';
+
+  @override
+  String get mind_skills_session_tap_finish => 'CHẠM GIỮA ĐỂ DỪNG SỚM';
+
+  @override
+  String get mind_skills_session_listening =>
+      'ĐANG TẬP TRUNG · TỰ GHI KHI NHẠC KẾT THÚC';
+
+  @override
+  String get mind_skills_session_pick_skills =>
+      'Chọn ít nhất một kỹ năng trước khi bắt đầu.';
+
+  @override
+  String get mind_skills_my_list => 'Kỹ năng của tôi';
+
+  @override
+  String get mind_skills_add_skill => 'Thêm kỹ năng';
+
+  @override
+  String get mind_skills_tap_list => 'Chạm kỹ năng trong danh sách để chọn';
+
+  @override
+  String get mind_skills_tap_list_project => 'Chọn kỹ năng · XP dự án khi ghi';
+
+  @override
+  String get mind_skills_status_in_session => 'Đang tập trung';
+
+  @override
+  String get mind_skills_status_selected => 'Đã chọn';
+
+  @override
+  String mind_skills_level_short(int level) {
+    return 'Cấp $level';
+  }
+
+  @override
+  String mind_skills_session_logged(int minutes, int xp) {
+    return 'Đã ghi phiên · $minutes phút · +$xp XP';
+  }
+
+  @override
   String get mood_trends_title => 'XU HƯỚNG TÂM TRẠNG';
 
   @override
@@ -2369,6 +2507,59 @@ class AppLocalizationsVi extends AppLocalizations {
       'Sau giờ này, gửi một lần mỗi ngày khi ứng dụng đang mở';
 
   @override
+  String get mail_suggestion_title => 'Gợi ý báo cáo';
+
+  @override
+  String get mail_suggestion_ai_loading => 'AI đang phân tích ngày của bạn…';
+
+  @override
+  String get mail_suggestion_ai_fallback =>
+      'Gợi ý ngoại tuyến — cấu hình MAIL_SUGGESTIONS_AGENT_URL để dùng AI.';
+
+  @override
+  String get mail_suggestion_negative_net =>
+      'Chi tiêu hôm nay vượt thu nhập — xem lại giao dịch gần đây.';
+
+  @override
+  String get mail_suggestion_no_transactions =>
+      'Chưa ghi giao dịch hôm nay — thêm chi tiêu để báo cáo chính xác.';
+
+  @override
+  String mail_suggestion_budget_high(String percent) {
+    return 'Đã dùng $percent% ngân sách tháng — cân nhắc tiết chế chi tiêu.';
+  }
+
+  @override
+  String get mail_suggestion_monthly_deficit =>
+      'Chi tiêu tháng vượt thu nhập — cân nhắc cắt giảm chi phí cố định.';
+
+  @override
+  String mail_suggestion_steps_low(String percent) {
+    return 'Bước chân đạt $percent% mục tiêu — đi bộ ngắn giúp bạn tiến gần hơn.';
+  }
+
+  @override
+  String get mail_suggestion_water_low =>
+      'Lượng nước dưới một nửa mục tiêu — uống đều trong ngày.';
+
+  @override
+  String get mail_suggestion_sleep_low =>
+      'Giấc ngủ dưới mục tiêu — thử đi ngủ sớm hơn tối nay.';
+
+  @override
+  String get mail_suggestion_log_mood =>
+      'Chưa ghi mood hôm nay — check-in nhanh giúp theo dõi xu hướng.';
+
+  @override
+  String get mail_suggestion_focus_low =>
+      'Thời gian tập trung còn thấp — lên lịch một phiên deep work ngắn.';
+
+  @override
+  String mail_suggestion_tasks_many(String count) {
+    return '$count task đang mở — chọn một ưu tiên cho ngày mai.';
+  }
+
+  @override
   String get reports_hub_title => 'Báo cáo qua mail';
 
   @override
@@ -2747,7 +2938,101 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chưa có bản ghi tài chính nào cho dự án này.';
 
   @override
+  String get project_skills_label => 'Kỹ năng';
+
+  @override
+  String get project_no_skills =>
+      'Chưa có kỹ năng nào. Nhấn + để theo dõi thứ bạn cải thiện khi làm dự án.';
+
+  @override
+  String get project_add_skill_title => 'Thêm kỹ năng';
+
+  @override
+  String get project_skill_name_hint => 'VD: Flutter, debug, thiết kế hệ thống';
+
+  @override
+  String project_skill_streak_days(int count) {
+    return '$count ngày liên tiếp';
+  }
+
+  @override
+  String get project_skill_streak_none => 'Chưa có chuỗi';
+
+  @override
+  String project_skill_xp_hint(int total, int remaining) {
+    return '$total XP · còn $remaining XP lên cấp';
+  }
+
+  @override
+  String get project_skill_xp_on_complete =>
+      'Hoàn thành nhiệm vụ để nhận +15 XP mỗi kỹ năng';
+
+  @override
+  String get project_skill_log_session =>
+      'Ghi phiên Skill Boost để tăng cấp kỹ năng này.';
+
+  @override
+  String get project_skill_practice => 'Mở Skill Boost';
+
+  @override
+  String get project_skill_tap_to_start =>
+      'Chọn một hoặc nhiều kỹ năng, rồi bắt đầu phiên';
+
+  @override
+  String project_skill_start_session(int count) {
+    return 'Bắt đầu phiên ($count)';
+  }
+
+  @override
+  String get project_skill_catalog_hint =>
+      'Chọn từ các kỹ năng giống tab Skills trong Mind.';
+
+  @override
+  String get project_auto_add_all_skills => 'Thêm tự động tất cả';
+
+  @override
+  String get project_auto_add_all_skills_subtitle =>
+      'Gắn mọi kỹ năng trong thư viện Mind vào dự án này';
+
+  @override
+  String get project_skills_all_on_project =>
+      'Tất cả kỹ năng đã có trong dự án';
+
+  @override
+  String project_skills_added_count(int count) {
+    return 'Đã thêm $count kỹ năng';
+  }
+
+  @override
+  String project_skill_delete_confirm(String name) {
+    return 'Xóa \"$name\" khỏi dự án này?';
+  }
+
+  @override
+  String get project_skill_added => 'Đã thêm kỹ năng';
+
+  @override
+  String project_skill_xp_granted(int xp) {
+    return 'Kỹ năng +$xp XP';
+  }
+
+  @override
+  String get project_sub_projects_label => 'Dự án con';
+
+  @override
+  String get project_no_sub_projects => 'Chưa có dự án con. Nhấn + để thêm.';
+
+  @override
+  String get project_add_sub_project_title => 'Dự án con mới';
+
+  @override
+  String get project_sub_project_name_hint => 'Tên dự án con';
+
+  @override
   String get project_add_task_title => 'Nhiệm vụ mới';
+
+  @override
+  String get project_task_assign_to => 'Gán cho dự án';
 
   @override
   String get project_task_title_hint => 'Tiêu đề nhiệm vụ';
@@ -2811,6 +3096,33 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get project_note_no_content => 'Không có nội dung';
+
+  @override
+  String get note_editor_write_hint => 'Bắt đầu viết ghi chú…';
+
+  @override
+  String note_editor_saved_label(String when) {
+    return 'Đã lưu $when';
+  }
+
+  @override
+  String get note_editor_saved_just_now => 'vừa xong';
+
+  @override
+  String note_editor_saved_minutes(int count) {
+    return '$count phút trước';
+  }
+
+  @override
+  String note_editor_saved_hours(int count) {
+    return '$count giờ trước';
+  }
+
+  @override
+  String get note_editor_unsaved => 'Chưa lưu';
+
+  @override
+  String get note_editor_saving => 'Đang lưu…';
 
   @override
   String get focus_select_project => 'CHẠM ĐỂ CHỌN DỰ ÁN';
@@ -3059,7 +3371,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get notification_manager_title => 'Thông báo';
 
   @override
-  String get notification_hunter_hub => 'Trung tâm Thợ săn';
+  String get notification_hunter_hub => 'Trung tâm thông báo';
 
   @override
   String get notification_tab_active => 'ĐANG CHẠY';
@@ -3084,6 +3396,10 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get notification_daily_quest => 'NHIỆM VỤ HÀNG NGÀY';
+
+  @override
+  String get notification_no_active_quests =>
+      'Chưa có nhiệm vụ đang hoạt động. Hoàn thành công việc trong Dự án để nhận nhiệm vụ hàng ngày.';
 
   @override
   String notification_quest_completed_snack(String title, int exp) {
@@ -3118,6 +3434,10 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get notification_live_activities_subtitle =>
       'Theo dõi bộ đếm tập trung trên Màn hình khóa.';
+
+  @override
+  String get notification_morning_briefing_subtitle =>
+      'Hiện tóm tắt buổi sáng lần đầu mở Home trong ngày.';
 
   @override
   String get notification_status_on => 'bật';
@@ -3722,6 +4042,138 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy kết nối máy chủ trước khi quản lý phiên tmux.';
 
   @override
+  String get ssh_cursor_api_title => 'Cursor API';
+
+  @override
+  String get ssh_cursor_api_subtitle =>
+      'Lưu API key để dùng cursor-agent trên máy chủ từ xa.';
+
+  @override
+  String get ssh_cursor_api_key_hint => 'cursor_…';
+
+  @override
+  String get ssh_cursor_api_key_stored => 'Đã lưu API key trên thiết bị.';
+
+  @override
+  String get ssh_cursor_api_save => 'Lưu key';
+
+  @override
+  String get ssh_cursor_api_test => 'Kiểm tra kết nối';
+
+  @override
+  String get ssh_cursor_api_open_terminal => 'Mở SSH (chế độ Cursor)';
+
+  @override
+  String get ssh_cursor_api_saved => 'Đã lưu Cursor API key.';
+
+  @override
+  String get ssh_cursor_api_test_ok => 'Cursor API key hợp lệ.';
+
+  @override
+  String get ssh_cursor_api_missing_key =>
+      'Nhập hoặc lưu Cursor API key trước.';
+
+  @override
+  String get cursor_hub_title => 'Cursor';
+
+  @override
+  String get cursor_hub_page_subtitle =>
+      'Điều khiển Cursor trên Mac qua My Machines và Cloud Agents — không cần SSH.';
+
+  @override
+  String get cursor_hub_canvas_subtitle =>
+      'Worker My Machines, gửi task API, bảng agents';
+
+  @override
+  String get cursor_hub_integration_subtitle =>
+      'API key, thiết lập worker, gửi task từ điện thoại';
+
+  @override
+  String get cursor_hub_section_title => 'AI & tự động hóa';
+
+  @override
+  String get cursor_hub_key_ready => 'API key đã xác minh';
+
+  @override
+  String get cursor_hub_open_full => 'Mở Cursor Hub';
+
+  @override
+  String get cursor_hub_open_agents => 'Mở Agents';
+
+  @override
+  String get cursor_hub_worker_title => 'Worker My Machine';
+
+  @override
+  String get cursor_hub_worker_body =>
+      'Trên Mac, chạy lệnh sau trong Terminal và giữ cửa sổ mở. Máy sẽ hiện tại cursor.com/agents.';
+
+  @override
+  String get cursor_hub_copy_worker_cmd => 'Sao chép lệnh';
+
+  @override
+  String get cursor_hub_worker_copied => 'Đã sao chép: agent worker start';
+
+  @override
+  String get cursor_hub_send_title => 'Gửi tác vụ';
+
+  @override
+  String get cursor_hub_target_machine => 'Mac của tôi';
+
+  @override
+  String get cursor_hub_target_cloud => 'Repo cloud';
+
+  @override
+  String get cursor_hub_machine_name => 'Tên máy (tùy chọn)';
+
+  @override
+  String get cursor_hub_machine_name_hint => 'Như trong menu môi trường Agents';
+
+  @override
+  String get cursor_hub_pick_repo => 'Kho lưu trữ của bạn';
+
+  @override
+  String get cursor_hub_refresh_repos => 'Làm mới danh sách repo';
+
+  @override
+  String get cursor_hub_repos_empty =>
+      'Không tìm thấy repo. Nhập URL bên dưới hoặc dùng trên Mac để quét ~/Code.';
+
+  @override
+  String get cursor_hub_usage_limit =>
+      'Cloud agent bị chặn: bật usage-based pricing trên cursor.com (~\$2). Dùng chế độ Mac của tôi.';
+
+  @override
+  String get cursor_hub_repo_url => 'URL repo GitHub';
+
+  @override
+  String get cursor_hub_prompt_label => 'Agent cần làm gì?';
+
+  @override
+  String get cursor_hub_send_task => 'Gửi tới Cursor';
+
+  @override
+  String get cursor_hub_task_sent => 'Đã gửi — đang mở agent…';
+
+  @override
+  String cursor_hub_task_failed(String reason) {
+    return 'Không khởi chạy agent: $reason';
+  }
+
+  @override
+  String get cursor_hub_recent_title => 'Agents gần đây';
+
+  @override
+  String get island_cursor_ssh_standby => 'Chờ kết nối SSH';
+
+  @override
+  String get island_cursor_no_api_key => 'Thiếu API key';
+
+  @override
+  String ssh_cursor_api_test_fail(String reason) {
+    return 'Kết nối thất bại: $reason';
+  }
+
+  @override
   String get ssh_go_to_terminal => 'MỞ TERMINAL';
 
   @override
@@ -3988,4 +4440,118 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get island_tmux_active => 'TMUX ĐANG CHẠY';
+
+  @override
+  String get daily_loop_title => 'Vòng hôm nay';
+
+  @override
+  String get daily_loop_subtitle => 'Hoàn thành cả 4 trụ cột để giữ chuỗi';
+
+  @override
+  String get daily_loop_complete => 'Xong vòng hôm nay — quá đỉnh!';
+
+  @override
+  String daily_loop_streak(int count) {
+    return '$count ngày';
+  }
+
+  @override
+  String daily_loop_progress(int done, int total) {
+    return '$done / $total xong';
+  }
+
+  @override
+  String get daily_loop_health => 'Sức khỏe';
+
+  @override
+  String get daily_loop_finance => 'Tài chính';
+
+  @override
+  String get daily_loop_mind => 'Tâm trạng';
+
+  @override
+  String get daily_loop_projects => 'Dự án';
+
+  @override
+  String get morning_loop_reminder_title => 'Tóm tắt buổi sáng';
+
+  @override
+  String get morning_loop_reminder_subtitle =>
+      'Tóm tắt hôm qua & động lực hôm nay — mở Ice Gate đầu tiên mỗi sáng';
+
+  @override
+  String get morning_briefing_toggle => 'Tóm tắt sáng trên Home';
+
+  @override
+  String get morning_briefing_title => 'Chào buổi sáng';
+
+  @override
+  String morning_briefing_title_name(String name) {
+    return 'Chào buổi sáng, $name';
+  }
+
+  @override
+  String get morning_briefing_subtitle =>
+      'Chăm cơ thể, ổn định tinh thần — rồi hoàn thành vòng 4 trụ cột trong ngày.';
+
+  @override
+  String get morning_briefing_yesterday_title => 'Hôm qua';
+
+  @override
+  String get morning_briefing_yesterday_empty =>
+      'Ngày êm ả — hôm nay là khởi đầu mới.';
+
+  @override
+  String morning_briefing_yesterday_steps(int steps) {
+    return '$steps bước chân';
+  }
+
+  @override
+  String morning_briefing_yesterday_water(int ml) {
+    return '$ml ml nước';
+  }
+
+  @override
+  String morning_briefing_yesterday_sleep(String hours) {
+    return 'Ngủ $hours giờ';
+  }
+
+  @override
+  String morning_briefing_yesterday_loop(int done, int total) {
+    return 'Hoàn thành $done/$total trụ cột';
+  }
+
+  @override
+  String get morning_briefing_motivation_title => 'Động lực hôm nay';
+
+  @override
+  String get morning_briefing_motivation_empty =>
+      'Hôm qua nhẹ nhàng — một chiến thắng nhỏ hôm nay là đủ để lấy lại nhịp.';
+
+  @override
+  String get morning_briefing_motivation_all_done =>
+      'Bạn kết thúc hôm qua rất tốt — giữ đà đó sang hôm nay nhé.';
+
+  @override
+  String get morning_briefing_motivation_strong =>
+      'Tiến bộ vững hôm qua — thêm một trụ cột hôm nay để giữ chuỗi.';
+
+  @override
+  String get morning_briefing_motivation_mid =>
+      'Bạn đã tiến lên hôm qua — thêm một bước nhỏ sáng nay.';
+
+  @override
+  String get morning_briefing_motivation_low =>
+      'Hôm qua là ngày nghỉ — uống nước, đi bộ hoặc ghi tâm trạng cũng là khởi đầu tốt.';
+
+  @override
+  String morning_briefing_progress(int done, int total) {
+    return 'Đã xong $done/$total trụ cột hôm nay';
+  }
+
+  @override
+  String get morning_briefing_start => 'Bắt đầu ngày mới';
+
+  @override
+  String get morning_briefing_log_mood => 'Ghi tâm trạng trước';
 }

@@ -23,25 +23,8 @@ extension HealthBlockInit on HealthBlock {
     _exerciseSubscription?.cancel();
     _weightSubscription?.cancel();
 
-    untracked(() {
-      batch(() {
-        todaySteps.value = 0;
-        hourlySteps.value = {};
-        historicalSteps.value = 0;
-        dailyStepsLast7Days.value = {};
-        todaySleep.value = 0.0;
-        todayHeartRate.value = 0;
-        todayOxygenSaturation.value = 0.0;
-        todayCaloriesBurned.value = 0;
-        todayCaloriesConsumed.value = 0;
-        todayWater.value = 0;
-        todayExerciseMinutes.value = 0;
-        todayFocusMinutes.value = 0;
-        todayWeight.value = 0.0;
-        latestWeight.value = 0.0;
-        hasInitialSync.value = false;
-      });
-    });
+    // Paint today's pillar card from Drift immediately (avoid 0 → real flash).
+    unawaited(_hydrateTodayFromLocal());
 
     _healthDao.cleanupDuplicates(personId).then((_) {
       if (_initializedPersonId != personId) {
@@ -50,7 +33,7 @@ extension HealthBlockInit on HealthBlock {
 
       _metricsSubscription = _healthDao
           .watchAllMetrics(personId)
-          .debounceTime(const Duration(milliseconds: 500))
+          .debounceTime(const Duration(milliseconds: 120))
           .listen(
             (metrics) {
               Timer(Duration.zero, () {
@@ -200,7 +183,7 @@ extension HealthBlockInit on HealthBlock {
 
       _hourlyLogsSubscription = _hourlyLogDao
           .watchHourlyLogs(personId, DateTime.now())
-          .debounceTime(const Duration(milliseconds: 500))
+          .debounceTime(const Duration(milliseconds: 120))
           .listen(
             (logs) {
               Timer(Duration.zero, () {
@@ -415,6 +398,51 @@ extension HealthBlockInit on HealthBlock {
       debugPrint("HealthBlock: 🎯 Goals loaded from SharedPreferences");
     } catch (e) {
       debugPrint("HealthBlock: Error loading goals: $e");
+    }
+  }
+
+  Future<void> _hydrateTodayFromLocal() async {
+    final pid = personId;
+    if (pid.isEmpty) return;
+
+    try {
+      final row = await _healthDao.getMetricsForDate(pid, DateTime.now());
+      if (row == null || _initializedPersonId != pid) return;
+
+      untracked(() {
+        batch(() {
+          final steps = row.steps ?? 0;
+          if (steps > todaySteps.value) todaySteps.value = steps;
+          final sleep = row.sleepHours ?? 0.0;
+          if (sleep > todaySleep.value) todaySleep.value = sleep;
+          final hr = row.heartRate ?? 0;
+          if (hr > todayHeartRate.value) todayHeartRate.value = hr;
+          final burned = row.caloriesBurned ?? 0;
+          if (burned > todayCaloriesBurned.value) {
+            todayCaloriesBurned.value = burned;
+          }
+          final consumed = row.caloriesConsumed ?? 0;
+          if (consumed > todayCaloriesConsumed.value) {
+            todayCaloriesConsumed.value = consumed;
+          }
+          final weight = row.weightKg ?? 0.0;
+          if (weight > 0) {
+            todayWeight.value = weight;
+            latestWeight.value = weight;
+          }
+          final exercise = row.exerciseMinutes ?? 0;
+          if (exercise > todayExerciseMinutes.value) {
+            todayExerciseMinutes.value = exercise;
+          }
+          final focus = row.focusMinutes ?? 0;
+          if (focus > todayFocusMinutes.value) {
+            todayFocusMinutes.value = focus;
+          }
+          hasInitialSync.value = true;
+        });
+      });
+    } catch (e) {
+      debugPrint('HealthBlock: hydrate today failed: $e');
     }
   }
 
