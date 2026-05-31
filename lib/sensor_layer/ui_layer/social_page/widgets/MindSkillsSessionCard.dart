@@ -73,65 +73,50 @@ class MindSkillsSessionCard extends StatelessWidget {
     final stats = summarize(logs, days: days);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 12, 20, 8),
+      padding: const EdgeInsets.fromLTRB(20, 4, 20, 8),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(22),
         child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
           child: DecoratedBox(
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
                 colors: [
-                  accent.withValues(alpha: 0.14),
-                  tint,
+                  accent.withValues(alpha: 0.20),
+                  tint.withValues(alpha: 0.85),
                   HealthMetricColors.glassElevated,
                 ],
-                stops: const [0.0, 0.28, 1.0],
+                stops: const [0.0, 0.45, 1.0],
               ),
-              borderRadius: BorderRadius.circular(20),
-              border: Border(
-                top: BorderSide(
-                  color: HealthMetricColors.borderBright.withValues(alpha: 0.85),
-                ),
-                left: BorderSide(color: HealthMetricColors.cardBorder),
-                right: BorderSide(color: HealthMetricColors.cardBorder),
-                bottom: BorderSide(color: HealthMetricColors.cardBorder),
+              borderRadius: BorderRadius.circular(22),
+              border: Border.all(
+                color: accent.withValues(alpha: 0.35),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: accent.withValues(alpha: 0.10),
-                  blurRadius: 32,
-                  offset: const Offset(0, 8),
-                ),
-              ],
             ),
             child: Material(
               color: Colors.transparent,
               child: InkWell(
                 onTap: () => context.push('/social/skills'),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(22),
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+                  padding: const EdgeInsets.fromLTRB(18, 16, 18, 16),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Row(
                         children: [
                           Container(
-                            width: 36,
-                            height: 36,
+                            width: 40,
+                            height: 40,
                             decoration: BoxDecoration(
-                              color: accent.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: accent.withValues(alpha: 0.35),
-                              ),
+                              color: accent.withValues(alpha: 0.22),
+                              borderRadius: BorderRadius.circular(13),
                             ),
                             child: Icon(
                               Icons.auto_awesome_rounded,
-                              size: 18,
+                              size: 20,
                               color: accent,
                             ),
                           ),
@@ -146,15 +131,15 @@ class MindSkillsSessionCard extends StatelessWidget {
                                     color: cs.onSurface.withValues(alpha: 0.55),
                                     fontSize: 10,
                                     fontWeight: FontWeight.w900,
-                                    letterSpacing: 1.6,
+                                    letterSpacing: 1.5,
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 3),
                                 Text(
                                   l10n.mind_skills_session_subtitle,
                                   style: TextStyle(
-                                    color: cs.onSurface.withValues(alpha: 0.82),
-                                    fontSize: 13,
+                                    color: cs.onSurface.withValues(alpha: 0.88),
+                                    fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                     height: 1.25,
                                   ),
@@ -162,13 +147,9 @@ class MindSkillsSessionCard extends StatelessWidget {
                               ],
                             ),
                           ),
-                          Icon(
-                            Icons.chevron_right_rounded,
-                            color: cs.onSurface.withValues(alpha: 0.45),
-                          ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       if (stats.sessions == 0)
                         Text(
                           l10n.mind_skills_session_empty(days),
@@ -179,36 +160,45 @@ class MindSkillsSessionCard extends StatelessWidget {
                           ),
                         )
                       else
-                        Text(
-                          l10n.mind_skills_session_stats(
-                            stats.sessions,
-                            stats.minutes,
-                            stats.topSkill ?? '—',
-                          ),
-                          style: TextStyle(
-                            color: cs.onSurface.withValues(alpha: 0.72),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            height: 1.35,
-                          ),
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _StatChip(
+                              icon: Icons.timer_outlined,
+                              label: '${stats.sessions}',
+                              accent: accent,
+                            ),
+                            _StatChip(
+                              icon: Icons.schedule_rounded,
+                              label: '${stats.minutes}m',
+                              accent: accent,
+                            ),
+                            if (stats.topSkill != null)
+                              _StatChip(
+                                icon: Icons.star_rounded,
+                                label: stats.topSkill!,
+                                accent: accent,
+                              ),
+                          ],
                         ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 14),
                       SizedBox(
                         width: double.infinity,
-                        height: 44,
+                        height: 46,
                         child: FilledButton.icon(
                           onPressed: () => context.push('/social/skills'),
-                          icon: const Icon(Icons.play_arrow_rounded, size: 20),
+                          icon: const Icon(Icons.play_arrow_rounded, size: 22),
                           label: Text(
                             l10n.mind_skills_session_start.toUpperCase(),
                             style: const TextStyle(
                               fontWeight: FontWeight.w900,
-                              letterSpacing: 1.1,
+                              letterSpacing: 1.0,
                               fontSize: 12,
                             ),
                           ),
                           style: FilledButton.styleFrom(
-                            backgroundColor: accent.withValues(alpha: 0.88),
+                            backgroundColor: accent,
                             foregroundColor: cs.brightness == Brightness.dark
                                 ? Colors.white
                                 : const Color(0xFF0D1117),
@@ -225,6 +215,45 @@ class MindSkillsSessionCard extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+class _StatChip extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color accent;
+
+  const _StatChip({
+    required this.icon,
+    required this.label,
+    required this.accent,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 14, color: accent),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: accent,
+            ),
+          ),
+        ],
       ),
     );
   }

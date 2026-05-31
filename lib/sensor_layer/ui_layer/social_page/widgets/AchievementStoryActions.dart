@@ -8,6 +8,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBl
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryViewer.dart';
+import 'package:ice_gate/utils/app_log.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
@@ -29,6 +30,24 @@ abstract final class AchievementStoryActions {
     final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
     if (personId.isEmpty) return;
 
+    if (!context.mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 16),
+              Expanded(child: Text(l10n.health_smart_scale_syncing)),
+            ],
+          ),
+        ),
+      ),
+    );
+
     final objectBlock = context.read<ObjectDatabaseBlock>();
     String savedPath;
     try {
@@ -36,9 +55,11 @@ abstract final class AchievementStoryActions {
         image,
         subFolder: 'memories',
         personId: personId,
+        awaitCloudSync: true,
       );
     } catch (_) {
       if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.achievement_story_save_failed)),
         );
@@ -46,19 +67,8 @@ abstract final class AchievementStoryActions {
       return;
     }
 
-    // Best-effort sync to S3 `<userId>/memories/` for this achievement image.
-    try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final absolute = File(p.join(appDir.path, savedPath));
-      if (await absolute.exists()) {
-        await context.read<StorageBlock>().uploadFile(
-              absolute,
-              fileName: p.basename(savedPath),
-              subFolder: '$personId/memories',
-            );
-      }
-    } catch (_) {
-      // Silent: local-first still works; download-on-demand will handle later.
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
     }
 
     if (!context.mounted) return;
@@ -71,32 +81,43 @@ abstract final class AchievementStoryActions {
         : DateFormat.yMMMd().format(DateTime.now());
 
     final dao = context.read<AchievementsDAO>();
-    await dao.insertAchievement(
-      AchievementsTableCompanion(
-        id: drift.Value(id),
-        personID: drift.Value(personId),
-        title: drift.Value(storyTitle),
-        description: const drift.Value.absent(),
-        domain: const drift.Value('project'),
-        meaningScore: const drift.Value(6),
-        impactScore: const drift.Value(5),
-        impactDescWho: const drift.Value('You'),
-        impactDescHow: const drift.Value(''),
-        localImagePath: drift.Value(savedPath),
-      ),
-    );
-
-    // If Supabase row is null / stale, keep repushing until it matches S3 key.
     try {
-      await context.read<StorageBlock>().repushStorySyncUntilMatched(
-            achievementId: id,
-            personId: personId,
-            title: storyTitle,
-            storyDatetime: DateTime.now(),
-            imageS3Path: savedPath,
-            isUploading: false,
-          );
-    } catch (_) {}
+      await dao.insertAchievement(
+        AchievementsTableCompanion(
+          id: drift.Value(id),
+          personID: drift.Value(personId),
+          title: drift.Value(storyTitle),
+          description: const drift.Value.absent(),
+          domain: const drift.Value('project'),
+          meaningScore: const drift.Value(6),
+          impactScore: const drift.Value(5),
+          impactDescWho: const drift.Value('You'),
+          impactDescHow: const drift.Value(''),
+          localImagePath: drift.Value(savedPath),
+        ),
+      );
+    } catch (e) {
+      // Local row may exist even if achievements cloud push fails — still sync story row.
+      appLog('AchievementStoryActions: achievements push failed: $e');
+    }
+
+    final synced = await context.read<StorageBlock>().repushStorySyncUntilMatched(
+          achievementId: id,
+          personId: personId,
+          title: storyTitle,
+          storyDatetime: DateTime.now(),
+          imageS3Path: savedPath,
+          isUploading: false,
+        );
+
+    if (!synced) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.achievement_story_save_failed)),
+        );
+      }
+      return;
+    }
 
     if (context.mounted) {
       HapticFeedback.mediumImpact();
@@ -192,15 +213,35 @@ abstract final class AchievementStoryActions {
 
     // Save new image locally under `memories/`.
     final objectBlock = context.read<ObjectDatabaseBlock>();
+    if (!context.mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 16),
+              Expanded(child: Text(l10n.health_smart_scale_syncing)),
+            ],
+          ),
+        ),
+      ),
+    );
+
     String newRel;
     try {
       newRel = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'memories',
         personId: personId,
+        awaitCloudSync: true,
       );
     } catch (_) {
       if (context.mounted) {
+        Navigator.of(context, rootNavigator: true).pop();
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text(l10n.achievement_story_save_failed)),
         );
@@ -208,37 +249,38 @@ abstract final class AchievementStoryActions {
       return;
     }
 
-    // Update DB row.
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+    }
+
+    // Update DB only after image is on S3.
     final updated = story.copyWith(
       localImagePath: drift.Value(newRel),
       updatedAt: DateTime.now(),
     );
-    await context.read<AchievementsDAO>().updateAchievement(updated);
-
-    // Best-effort: upload new image to S3 `<userId>/memories/`.
     try {
-      final appDir = await getApplicationDocumentsDirectory();
-      final absolute = File(p.join(appDir.path, newRel));
-      if (await absolute.exists()) {
-        await context.read<StorageBlock>().uploadFile(
-              absolute,
-              fileName: p.basename(newRel),
-              subFolder: '$personId/memories',
-            );
+      await context.read<AchievementsDAO>().updateAchievement(updated);
+    } catch (e) {
+      appLog('AchievementStoryActions: updateAchievement push failed: $e');
+    }
+
+    final synced = await context.read<StorageBlock>().repushStorySyncUntilMatched(
+          achievementId: story.id,
+          personId: personId,
+          title: story.title,
+          storyDatetime: story.createdAt,
+          imageS3Path: newRel,
+          isUploading: false,
+        );
+
+    if (!synced) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.achievement_story_save_failed)),
+        );
       }
-    } catch (_) {}
-
-    // If Supabase row is null / stale, keep repushing until it matches S3 key.
-    try {
-      await context.read<StorageBlock>().repushStorySyncUntilMatched(
-            achievementId: story.id,
-            personId: personId,
-            title: story.title,
-            storyDatetime: story.createdAt,
-            imageS3Path: newRel,
-            isUploading: false,
-          );
-    } catch (_) {}
+      return;
+    }
 
     // Best-effort: delete old local + old S3 object (if path changed).
     if (oldRel != null && oldRel.trim().isNotEmpty && oldRel != newRel) {

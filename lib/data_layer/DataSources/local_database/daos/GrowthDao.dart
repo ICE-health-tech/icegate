@@ -52,8 +52,42 @@ class MindLogsDAO extends DatabaseAccessor<AppDatabase>
       }
     }
 
+    // PostgREST: jsonb expects decoded JSON; date column expects YYYY-MM-DD.
+    final activities = payload['activities'];
+    if (activities is String && activities.isNotEmpty) {
+      try {
+        payload['activities'] = jsonDecode(activities);
+      } catch (_) {}
+    }
+    final logDate = payload['log_date'];
+    if (logDate is DateTime) {
+      final d = logDate.toLocal();
+      payload['log_date'] =
+          '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+    }
+    if (payload['mood_emoji'] == null && payload['mood_score'] is int) {
+      payload['mood_emoji'] = _mindLogEmoji(payload['mood_score'] as int);
+    }
+
     // Direct push to Supabase
     await db.pushToSupabase(table: 'mind_logs', payload: payload);
+  }
+
+  static String _mindLogEmoji(int score) {
+    switch (score) {
+      case 1:
+        return '😫';
+      case 2:
+        return '😔';
+      case 3:
+        return '😐';
+      case 4:
+        return '😊';
+      case 5:
+        return '🤩';
+      default:
+        return '😐';
+    }
   }
 
   Future<void> deleteLog(String id) async {

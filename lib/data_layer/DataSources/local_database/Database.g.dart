@@ -511,6 +511,26 @@ class $LocalMediaIndexTableTable extends LocalMediaIndexTable
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceMeta = const VerificationMeta('device');
+  @override
+  late final GeneratedColumn<String> device = GeneratedColumn<String>(
+    'device',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _subFolderMeta = const VerificationMeta(
     'subFolder',
   );
@@ -581,6 +601,8 @@ class $LocalMediaIndexTableTable extends LocalMediaIndexTable
     id,
     personID,
     relativePath,
+    remotePath,
+    device,
     subFolder,
     fileName,
     fileBytes,
@@ -623,6 +645,18 @@ class $LocalMediaIndexTableTable extends LocalMediaIndexTable
       );
     } else if (isInserting) {
       context.missing(_relativePathMeta);
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
+    if (data.containsKey('device')) {
+      context.handle(
+        _deviceMeta,
+        device.isAcceptableOrUnknown(data['device']!, _deviceMeta),
+      );
     }
     if (data.containsKey('sub_folder')) {
       context.handle(
@@ -671,6 +705,14 @@ class $LocalMediaIndexTableTable extends LocalMediaIndexTable
         DriftSqlType.string,
         data['${effectivePrefix}relative_path'],
       )!,
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      ),
+      device: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device'],
+      ),
       subFolder: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
         data['${effectivePrefix}sub_folder'],
@@ -725,6 +767,8 @@ class LocalMediaIndexData extends DataClass
   final String id;
   final String personID;
   final String relativePath;
+  final String? remotePath;
+  final String? device;
   final String subFolder;
   final String fileName;
   final int? fileBytes;
@@ -735,6 +779,8 @@ class LocalMediaIndexData extends DataClass
     required this.id,
     required this.personID,
     required this.relativePath,
+    this.remotePath,
+    this.device,
     required this.subFolder,
     required this.fileName,
     this.fileBytes,
@@ -748,6 +794,12 @@ class LocalMediaIndexData extends DataClass
     map['id'] = Variable<String>(id);
     map['person_id'] = Variable<String>(personID);
     map['relative_path'] = Variable<String>(relativePath);
+    if (!nullToAbsent || remotePath != null) {
+      map['remote_path'] = Variable<String>(remotePath);
+    }
+    if (!nullToAbsent || device != null) {
+      map['device'] = Variable<String>(device);
+    }
     map['sub_folder'] = Variable<String>(subFolder);
     map['file_name'] = Variable<String>(fileName);
     if (!nullToAbsent || fileBytes != null) {
@@ -778,6 +830,12 @@ class LocalMediaIndexData extends DataClass
       id: Value(id),
       personID: Value(personID),
       relativePath: Value(relativePath),
+      remotePath: remotePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePath),
+      device: device == null && nullToAbsent
+          ? const Value.absent()
+          : Value(device),
       subFolder: Value(subFolder),
       fileName: Value(fileName),
       fileBytes: fileBytes == null && nullToAbsent
@@ -800,6 +858,8 @@ class LocalMediaIndexData extends DataClass
       id: serializer.fromJson<String>(json['id']),
       personID: serializer.fromJson<String>(json['personID']),
       relativePath: serializer.fromJson<String>(json['relativePath']),
+      remotePath: serializer.fromJson<String?>(json['remotePath']),
+      device: serializer.fromJson<String?>(json['device']),
       subFolder: serializer.fromJson<String>(json['subFolder']),
       fileName: serializer.fromJson<String>(json['fileName']),
       fileBytes: serializer.fromJson<int?>(json['fileBytes']),
@@ -815,6 +875,8 @@ class LocalMediaIndexData extends DataClass
       'id': serializer.toJson<String>(id),
       'personID': serializer.toJson<String>(personID),
       'relativePath': serializer.toJson<String>(relativePath),
+      'remotePath': serializer.toJson<String?>(remotePath),
+      'device': serializer.toJson<String?>(device),
       'subFolder': serializer.toJson<String>(subFolder),
       'fileName': serializer.toJson<String>(fileName),
       'fileBytes': serializer.toJson<int?>(fileBytes),
@@ -828,6 +890,8 @@ class LocalMediaIndexData extends DataClass
     String? id,
     String? personID,
     String? relativePath,
+    Value<String?> remotePath = const Value.absent(),
+    Value<String?> device = const Value.absent(),
     String? subFolder,
     String? fileName,
     Value<int?> fileBytes = const Value.absent(),
@@ -838,6 +902,8 @@ class LocalMediaIndexData extends DataClass
     id: id ?? this.id,
     personID: personID ?? this.personID,
     relativePath: relativePath ?? this.relativePath,
+    remotePath: remotePath.present ? remotePath.value : this.remotePath,
+    device: device.present ? device.value : this.device,
     subFolder: subFolder ?? this.subFolder,
     fileName: fileName ?? this.fileName,
     fileBytes: fileBytes.present ? fileBytes.value : this.fileBytes,
@@ -854,6 +920,10 @@ class LocalMediaIndexData extends DataClass
       relativePath: data.relativePath.present
           ? data.relativePath.value
           : this.relativePath,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
+      device: data.device.present ? data.device.value : this.device,
       subFolder: data.subFolder.present ? data.subFolder.value : this.subFolder,
       fileName: data.fileName.present ? data.fileName.value : this.fileName,
       fileBytes: data.fileBytes.present ? data.fileBytes.value : this.fileBytes,
@@ -871,6 +941,8 @@ class LocalMediaIndexData extends DataClass
           ..write('id: $id, ')
           ..write('personID: $personID, ')
           ..write('relativePath: $relativePath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('device: $device, ')
           ..write('subFolder: $subFolder, ')
           ..write('fileName: $fileName, ')
           ..write('fileBytes: $fileBytes, ')
@@ -886,6 +958,8 @@ class LocalMediaIndexData extends DataClass
     id,
     personID,
     relativePath,
+    remotePath,
+    device,
     subFolder,
     fileName,
     fileBytes,
@@ -900,6 +974,8 @@ class LocalMediaIndexData extends DataClass
           other.id == this.id &&
           other.personID == this.personID &&
           other.relativePath == this.relativePath &&
+          other.remotePath == this.remotePath &&
+          other.device == this.device &&
           other.subFolder == this.subFolder &&
           other.fileName == this.fileName &&
           other.fileBytes == this.fileBytes &&
@@ -913,6 +989,8 @@ class LocalMediaIndexTableCompanion
   final Value<String> id;
   final Value<String> personID;
   final Value<String> relativePath;
+  final Value<String?> remotePath;
+  final Value<String?> device;
   final Value<String> subFolder;
   final Value<String> fileName;
   final Value<int?> fileBytes;
@@ -924,6 +1002,8 @@ class LocalMediaIndexTableCompanion
     this.id = const Value.absent(),
     this.personID = const Value.absent(),
     this.relativePath = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.device = const Value.absent(),
     this.subFolder = const Value.absent(),
     this.fileName = const Value.absent(),
     this.fileBytes = const Value.absent(),
@@ -936,6 +1016,8 @@ class LocalMediaIndexTableCompanion
     required String id,
     required String personID,
     required String relativePath,
+    this.remotePath = const Value.absent(),
+    this.device = const Value.absent(),
     required String subFolder,
     required String fileName,
     this.fileBytes = const Value.absent(),
@@ -952,6 +1034,8 @@ class LocalMediaIndexTableCompanion
     Expression<String>? id,
     Expression<String>? personID,
     Expression<String>? relativePath,
+    Expression<String>? remotePath,
+    Expression<String>? device,
     Expression<String>? subFolder,
     Expression<String>? fileName,
     Expression<int>? fileBytes,
@@ -964,6 +1048,8 @@ class LocalMediaIndexTableCompanion
       if (id != null) 'id': id,
       if (personID != null) 'person_id': personID,
       if (relativePath != null) 'relative_path': relativePath,
+      if (remotePath != null) 'remote_path': remotePath,
+      if (device != null) 'device': device,
       if (subFolder != null) 'sub_folder': subFolder,
       if (fileName != null) 'file_name': fileName,
       if (fileBytes != null) 'file_bytes': fileBytes,
@@ -978,6 +1064,8 @@ class LocalMediaIndexTableCompanion
     Value<String>? id,
     Value<String>? personID,
     Value<String>? relativePath,
+    Value<String?>? remotePath,
+    Value<String?>? device,
     Value<String>? subFolder,
     Value<String>? fileName,
     Value<int?>? fileBytes,
@@ -990,6 +1078,8 @@ class LocalMediaIndexTableCompanion
       id: id ?? this.id,
       personID: personID ?? this.personID,
       relativePath: relativePath ?? this.relativePath,
+      remotePath: remotePath ?? this.remotePath,
+      device: device ?? this.device,
       subFolder: subFolder ?? this.subFolder,
       fileName: fileName ?? this.fileName,
       fileBytes: fileBytes ?? this.fileBytes,
@@ -1011,6 +1101,12 @@ class LocalMediaIndexTableCompanion
     }
     if (relativePath.present) {
       map['relative_path'] = Variable<String>(relativePath.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
+    if (device.present) {
+      map['device'] = Variable<String>(device.value);
     }
     if (subFolder.present) {
       map['sub_folder'] = Variable<String>(subFolder.value);
@@ -1050,6 +1146,8 @@ class LocalMediaIndexTableCompanion
           ..write('id: $id, ')
           ..write('personID: $personID, ')
           ..write('relativePath: $relativePath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('device: $device, ')
           ..write('subFolder: $subFolder, ')
           ..write('fileName: $fileName, ')
           ..write('fileBytes: $fileBytes, ')
@@ -3003,6 +3101,37 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     requiredDuringInsert: false,
     defaultValue: const Constant('.md'),
   );
+  static const VerificationMeta _localPathMeta = const VerificationMeta(
+    'localPath',
+  );
+  @override
+  late final GeneratedColumn<String> localPath = GeneratedColumn<String>(
+    'local_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _remotePathMeta = const VerificationMeta(
+    'remotePath',
+  );
+  @override
+  late final GeneratedColumn<String> remotePath = GeneratedColumn<String>(
+    'remote_path',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _deviceMeta = const VerificationMeta('device');
+  @override
+  late final GeneratedColumn<String> device = GeneratedColumn<String>(
+    'device',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -3017,6 +3146,9 @@ class $ProjectNotesTableTable extends ProjectNotesTable
     category,
     mood,
     extension,
+    localPath,
+    remotePath,
+    device,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -3093,6 +3225,24 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         extension.isAcceptableOrUnknown(data['extension']!, _extensionMeta),
       );
     }
+    if (data.containsKey('local_path')) {
+      context.handle(
+        _localPathMeta,
+        localPath.isAcceptableOrUnknown(data['local_path']!, _localPathMeta),
+      );
+    }
+    if (data.containsKey('remote_path')) {
+      context.handle(
+        _remotePathMeta,
+        remotePath.isAcceptableOrUnknown(data['remote_path']!, _remotePathMeta),
+      );
+    }
+    if (data.containsKey('device')) {
+      context.handle(
+        _deviceMeta,
+        device.isAcceptableOrUnknown(data['device']!, _deviceMeta),
+      );
+    }
     return context;
   }
 
@@ -3154,6 +3304,18 @@ class $ProjectNotesTableTable extends ProjectNotesTable
         DriftSqlType.string,
         data['${effectivePrefix}extension'],
       )!,
+      localPath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}local_path'],
+      ),
+      remotePath: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_path'],
+      ),
+      device: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device'],
+      ),
     );
   }
 
@@ -3181,6 +3343,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
   final String category;
   final String? mood;
   final String extension;
+  final String? localPath;
+  final String? remotePath;
+  final String? device;
   const ProjectNoteData({
     required this.id,
     this.tenantID,
@@ -3194,6 +3359,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     required this.category,
     this.mood,
     required this.extension,
+    this.localPath,
+    this.remotePath,
+    this.device,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -3228,6 +3396,15 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       map['mood'] = Variable<String>(mood);
     }
     map['extension'] = Variable<String>(extension);
+    if (!nullToAbsent || localPath != null) {
+      map['local_path'] = Variable<String>(localPath);
+    }
+    if (!nullToAbsent || remotePath != null) {
+      map['remote_path'] = Variable<String>(remotePath);
+    }
+    if (!nullToAbsent || device != null) {
+      map['device'] = Variable<String>(device);
+    }
     return map;
   }
 
@@ -3253,6 +3430,15 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       category: Value(category),
       mood: mood == null && nullToAbsent ? const Value.absent() : Value(mood),
       extension: Value(extension),
+      localPath: localPath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(localPath),
+      remotePath: remotePath == null && nullToAbsent
+          ? const Value.absent()
+          : Value(remotePath),
+      device: device == null && nullToAbsent
+          ? const Value.absent()
+          : Value(device),
     );
   }
 
@@ -3274,6 +3460,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       category: serializer.fromJson<String>(json['category']),
       mood: serializer.fromJson<String?>(json['mood']),
       extension: serializer.fromJson<String>(json['extension']),
+      localPath: serializer.fromJson<String?>(json['localPath']),
+      remotePath: serializer.fromJson<String?>(json['remotePath']),
+      device: serializer.fromJson<String?>(json['device']),
     );
   }
   @override
@@ -3292,6 +3481,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       'category': serializer.toJson<String>(category),
       'mood': serializer.toJson<String?>(mood),
       'extension': serializer.toJson<String>(extension),
+      'localPath': serializer.toJson<String?>(localPath),
+      'remotePath': serializer.toJson<String?>(remotePath),
+      'device': serializer.toJson<String?>(device),
     };
   }
 
@@ -3308,6 +3500,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     String? category,
     Value<String?> mood = const Value.absent(),
     String? extension,
+    Value<String?> localPath = const Value.absent(),
+    Value<String?> remotePath = const Value.absent(),
+    Value<String?> device = const Value.absent(),
   }) => ProjectNoteData(
     id: id ?? this.id,
     tenantID: tenantID.present ? tenantID.value : this.tenantID,
@@ -3321,6 +3516,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     category: category ?? this.category,
     mood: mood.present ? mood.value : this.mood,
     extension: extension ?? this.extension,
+    localPath: localPath.present ? localPath.value : this.localPath,
+    remotePath: remotePath.present ? remotePath.value : this.remotePath,
+    device: device.present ? device.value : this.device,
   );
   ProjectNoteData copyWithCompanion(ProjectNotesTableCompanion data) {
     return ProjectNoteData(
@@ -3336,6 +3534,11 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
       category: data.category.present ? data.category.value : this.category,
       mood: data.mood.present ? data.mood.value : this.mood,
       extension: data.extension.present ? data.extension.value : this.extension,
+      localPath: data.localPath.present ? data.localPath.value : this.localPath,
+      remotePath: data.remotePath.present
+          ? data.remotePath.value
+          : this.remotePath,
+      device: data.device.present ? data.device.value : this.device,
     );
   }
 
@@ -3353,7 +3556,10 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           ..write('projectID: $projectID, ')
           ..write('category: $category, ')
           ..write('mood: $mood, ')
-          ..write('extension: $extension')
+          ..write('extension: $extension, ')
+          ..write('localPath: $localPath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('device: $device')
           ..write(')'))
         .toString();
   }
@@ -3372,6 +3578,9 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
     category,
     mood,
     extension,
+    localPath,
+    remotePath,
+    device,
   );
   @override
   bool operator ==(Object other) =>
@@ -3388,7 +3597,10 @@ class ProjectNoteData extends DataClass implements Insertable<ProjectNoteData> {
           other.projectID == this.projectID &&
           other.category == this.category &&
           other.mood == this.mood &&
-          other.extension == this.extension);
+          other.extension == this.extension &&
+          other.localPath == this.localPath &&
+          other.remotePath == this.remotePath &&
+          other.device == this.device);
 }
 
 class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
@@ -3404,6 +3616,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
   final Value<String> category;
   final Value<String?> mood;
   final Value<String> extension;
+  final Value<String?> localPath;
+  final Value<String?> remotePath;
+  final Value<String?> device;
   final Value<int> rowid;
   const ProjectNotesTableCompanion({
     this.id = const Value.absent(),
@@ -3418,6 +3633,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.category = const Value.absent(),
     this.mood = const Value.absent(),
     this.extension = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.device = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ProjectNotesTableCompanion.insert({
@@ -3433,6 +3651,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     this.category = const Value.absent(),
     this.mood = const Value.absent(),
     this.extension = const Value.absent(),
+    this.localPath = const Value.absent(),
+    this.remotePath = const Value.absent(),
+    this.device = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
        title = Value(title),
@@ -3450,6 +3671,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Expression<String>? category,
     Expression<String>? mood,
     Expression<String>? extension,
+    Expression<String>? localPath,
+    Expression<String>? remotePath,
+    Expression<String>? device,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -3465,6 +3689,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       if (category != null) 'category': category,
       if (mood != null) 'mood': mood,
       if (extension != null) 'extension': extension,
+      if (localPath != null) 'local_path': localPath,
+      if (remotePath != null) 'remote_path': remotePath,
+      if (device != null) 'device': device,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -3482,6 +3709,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     Value<String>? category,
     Value<String?>? mood,
     Value<String>? extension,
+    Value<String?>? localPath,
+    Value<String?>? remotePath,
+    Value<String?>? device,
     Value<int>? rowid,
   }) {
     return ProjectNotesTableCompanion(
@@ -3497,6 +3727,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
       category: category ?? this.category,
       mood: mood ?? this.mood,
       extension: extension ?? this.extension,
+      localPath: localPath ?? this.localPath,
+      remotePath: remotePath ?? this.remotePath,
+      device: device ?? this.device,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -3544,6 +3777,15 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
     if (extension.present) {
       map['extension'] = Variable<String>(extension.value);
     }
+    if (localPath.present) {
+      map['local_path'] = Variable<String>(localPath.value);
+    }
+    if (remotePath.present) {
+      map['remote_path'] = Variable<String>(remotePath.value);
+    }
+    if (device.present) {
+      map['device'] = Variable<String>(device.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -3565,6 +3807,9 @@ class ProjectNotesTableCompanion extends UpdateCompanion<ProjectNoteData> {
           ..write('category: $category, ')
           ..write('mood: $mood, ')
           ..write('extension: $extension, ')
+          ..write('localPath: $localPath, ')
+          ..write('remotePath: $remotePath, ')
+          ..write('device: $device, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -37253,6 +37498,8 @@ typedef $$LocalMediaIndexTableTableCreateCompanionBuilder =
       required String id,
       required String personID,
       required String relativePath,
+      Value<String?> remotePath,
+      Value<String?> device,
       required String subFolder,
       required String fileName,
       Value<int?> fileBytes,
@@ -37266,6 +37513,8 @@ typedef $$LocalMediaIndexTableTableUpdateCompanionBuilder =
       Value<String> id,
       Value<String> personID,
       Value<String> relativePath,
+      Value<String?> remotePath,
+      Value<String?> device,
       Value<String> subFolder,
       Value<String> fileName,
       Value<int?> fileBytes,
@@ -37296,6 +37545,16 @@ class $$LocalMediaIndexTableTableFilterComposer
 
   ColumnFilters<String> get relativePath => $composableBuilder(
     column: $table.relativePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get device => $composableBuilder(
+    column: $table.device,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -37357,6 +37616,16 @@ class $$LocalMediaIndexTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get device => $composableBuilder(
+    column: $table.device,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<String> get subFolder => $composableBuilder(
     column: $table.subFolder,
     builder: (column) => ColumnOrderings(column),
@@ -37407,6 +37676,14 @@ class $$LocalMediaIndexTableTableAnnotationComposer
     column: $table.relativePath,
     builder: (column) => column,
   );
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get device =>
+      $composableBuilder(column: $table.device, builder: (column) => column);
 
   GeneratedColumn<String> get subFolder =>
       $composableBuilder(column: $table.subFolder, builder: (column) => column);
@@ -37476,6 +37753,8 @@ class $$LocalMediaIndexTableTableTableManager
                 Value<String> id = const Value.absent(),
                 Value<String> personID = const Value.absent(),
                 Value<String> relativePath = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> device = const Value.absent(),
                 Value<String> subFolder = const Value.absent(),
                 Value<String> fileName = const Value.absent(),
                 Value<int?> fileBytes = const Value.absent(),
@@ -37487,6 +37766,8 @@ class $$LocalMediaIndexTableTableTableManager
                 id: id,
                 personID: personID,
                 relativePath: relativePath,
+                remotePath: remotePath,
+                device: device,
                 subFolder: subFolder,
                 fileName: fileName,
                 fileBytes: fileBytes,
@@ -37500,6 +37781,8 @@ class $$LocalMediaIndexTableTableTableManager
                 required String id,
                 required String personID,
                 required String relativePath,
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> device = const Value.absent(),
                 required String subFolder,
                 required String fileName,
                 Value<int?> fileBytes = const Value.absent(),
@@ -37511,6 +37794,8 @@ class $$LocalMediaIndexTableTableTableManager
                 id: id,
                 personID: personID,
                 relativePath: relativePath,
+                remotePath: remotePath,
+                device: device,
                 subFolder: subFolder,
                 fileName: fileName,
                 fileBytes: fileBytes,
@@ -38463,6 +38748,9 @@ typedef $$ProjectNotesTableTableCreateCompanionBuilder =
       Value<String> category,
       Value<String?> mood,
       Value<String> extension,
+      Value<String?> localPath,
+      Value<String?> remotePath,
+      Value<String?> device,
       Value<int> rowid,
     });
 typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
@@ -38479,6 +38767,9 @@ typedef $$ProjectNotesTableTableUpdateCompanionBuilder =
       Value<String> category,
       Value<String?> mood,
       Value<String> extension,
+      Value<String?> localPath,
+      Value<String?> remotePath,
+      Value<String?> device,
       Value<int> rowid,
     });
 
@@ -38552,6 +38843,21 @@ class $$ProjectNotesTableTableFilterComposer
     column: $table.extension,
     builder: (column) => ColumnFilters(column),
   );
+
+  ColumnFilters<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get device => $composableBuilder(
+    column: $table.device,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ProjectNotesTableTableOrderingComposer
@@ -38622,6 +38928,21 @@ class $$ProjectNotesTableTableOrderingComposer
     column: $table.extension,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get localPath => $composableBuilder(
+    column: $table.localPath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get device => $composableBuilder(
+    column: $table.device,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ProjectNotesTableTableAnnotationComposer
@@ -38668,6 +38989,17 @@ class $$ProjectNotesTableTableAnnotationComposer
 
   GeneratedColumn<String> get extension =>
       $composableBuilder(column: $table.extension, builder: (column) => column);
+
+  GeneratedColumn<String> get localPath =>
+      $composableBuilder(column: $table.localPath, builder: (column) => column);
+
+  GeneratedColumn<String> get remotePath => $composableBuilder(
+    column: $table.remotePath,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get device =>
+      $composableBuilder(column: $table.device, builder: (column) => column);
 }
 
 class $$ProjectNotesTableTableTableManager
@@ -38722,6 +39054,9 @@ class $$ProjectNotesTableTableTableManager
                 Value<String> category = const Value.absent(),
                 Value<String?> mood = const Value.absent(),
                 Value<String> extension = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> device = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion(
                 id: id,
@@ -38736,6 +39071,9 @@ class $$ProjectNotesTableTableTableManager
                 category: category,
                 mood: mood,
                 extension: extension,
+                localPath: localPath,
+                remotePath: remotePath,
+                device: device,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -38752,6 +39090,9 @@ class $$ProjectNotesTableTableTableManager
                 Value<String> category = const Value.absent(),
                 Value<String?> mood = const Value.absent(),
                 Value<String> extension = const Value.absent(),
+                Value<String?> localPath = const Value.absent(),
+                Value<String?> remotePath = const Value.absent(),
+                Value<String?> device = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ProjectNotesTableCompanion.insert(
                 id: id,
@@ -38766,6 +39107,9 @@ class $$ProjectNotesTableTableTableManager
                 category: category,
                 mood: mood,
                 extension: extension,
+                localPath: localPath,
+                remotePath: remotePath,
+                device: device,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

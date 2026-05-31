@@ -5,6 +5,7 @@ import 'package:ice_gate/link_layer/storage_services/MediaS3Paths.dart';
 import 'package:ice_gate/link_layer/storage_services/MediaSync.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementStoryImage.dart';
+import 'package:ice_gate/utils/sync_device.dart';
 import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/utils/app_log.dart';
@@ -86,6 +87,7 @@ class StorageBlock {
               fileName: Value(p.basename(entity.path)),
               fileBytes: Value(stat.size),
               lastModifiedAt: Value(stat.modified),
+              device: Value(SyncDevice.current()),
               updatedAt: Value(now),
             ),
           );
@@ -164,6 +166,14 @@ class StorageBlock {
                 await _minioService.uploadFileAtKey(localFile, objectKey: key);
               }
             }
+            await _mediaIndexDao.markSynced(
+              personId: personId,
+              relativePath: localRel,
+              remotePath: localRel,
+              device: SyncDevice.current(),
+              subFolder: _subFolderFromRelative(localRel),
+              fileName: p.basename(localRel),
+            );
             fixed++;
           } catch (e) {
             appLog('syncIndexedMedia upload failed ($localRel): $e');
@@ -175,6 +185,14 @@ class StorageBlock {
                 objectName: key,
                 outFile: localFile,
               )) {
+                await _mediaIndexDao.markSynced(
+                  personId: personId,
+                  relativePath: localRel,
+                  remotePath: key,
+                  device: SyncDevice.current(),
+                  subFolder: _subFolderFromRelative(localRel),
+                  fileName: p.basename(localRel),
+                );
                 fixed++;
                 break;
               }
@@ -301,6 +319,8 @@ class StorageBlock {
     final uid = client.auth.currentUser?.id;
     if (uid == null || uid.isEmpty) return false;
 
+    final normalizedRemote = imageS3Path.replaceAll('\\', '/').trim();
+    final device = SyncDevice.current();
     Duration backoff = const Duration(milliseconds: 250);
     for (var attempt = 1; attempt <= maxAttempts; attempt++) {
       try {
@@ -311,7 +331,10 @@ class StorageBlock {
             'person_id': personId,
             'title': title,
             'story_datetime': storyDatetime.toIso8601String(),
-            'image_s3_path': imageS3Path,
+            'image_s3_path': normalizedRemote,
+            'local_path': normalizedRemote,
+            'remote_path': normalizedRemote,
+            'device': device,
             'is_uploading': isUploading,
             'user_id': uid,
           },
@@ -321,12 +344,13 @@ class StorageBlock {
         // Read-back to confirm.
         final row = await client
             .from('achievement_story_sync')
-            .select('image_s3_path')
+            .select('image_s3_path, remote_path')
             .eq('achievement_id', achievementId)
             .maybeSingle();
 
-        final current = row?['image_s3_path']?.toString();
-        if (current != null && current == imageS3Path) return true;
+        final current = row?['remote_path']?.toString() ??
+            row?['image_s3_path']?.toString();
+        if (current != null && current == normalizedRemote) return true;
       } catch (e) {
         appLog('repushStorySyncUntilMatched attempt $attempt failed: $e');
       }
@@ -435,7 +459,8 @@ class StorageBlock {
 
       for (final row in remoteRows) {
         final id = row['achievement_id']?.toString();
-        final rawPath = row['image_s3_path']?.toString();
+        final rawPath = row['remote_path']?.toString() ??
+            row['image_s3_path']?.toString();
         if (id == null || id.isEmpty || rawPath == null || rawPath.isEmpty) {
           continue;
         }
@@ -566,6 +591,12 @@ class StorageBlock {
       missingLocal: missingLocal,
       orphanOnS3: orphanOnS3,
     );
+  }
+
+  static String _subFolderFromRelative(String relativePath) {
+    final parts = relativePath.replaceAll('\\', '/').split('/');
+    if (parts.length >= 2) return parts[1];
+    return 'general_images';
   }
 
   void dispose() {

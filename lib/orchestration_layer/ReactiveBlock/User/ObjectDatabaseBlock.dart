@@ -33,6 +33,7 @@ class ObjectDatabaseBlock {
     String? customFileName,
     String subFolder = 'general_images',
     String? personId,
+    bool awaitCloudSync = false,
   }) async {
     try {
       final appDir = await getApplicationDocumentsDirectory();
@@ -70,8 +71,15 @@ class ObjectDatabaseBlock {
         relativePath = p.join(subFolder, p.basename(savedFile.path));
       }
 
-      // Best-effort S3 + Supabase profile URL sync.
-      unawaited(MediaSync.uploadRelativePath(relativePath));
+      // Cloud sync: await when caller needs S3 ready before DB / navigation.
+      if (awaitCloudSync) {
+        final url = await MediaSync.uploadRelativePath(relativePath);
+        if (url == null) {
+          throw StateError('Cloud sync failed for $relativePath');
+        }
+      } else {
+        unawaited(MediaSync.uploadRelativePath(relativePath));
+      }
 
       return relativePath;
     } catch (e) {

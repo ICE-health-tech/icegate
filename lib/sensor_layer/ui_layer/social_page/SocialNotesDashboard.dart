@@ -15,6 +15,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
+import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
@@ -491,29 +492,61 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
   }
 
   Future<void> _pickAndCreateImageNote(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
     final ImagePicker picker = ImagePicker();
     final XFile? image = await picker.pickImage(
       source: ImageSource.gallery,
       imageQuality: 85,
     );
 
-    if (image != null && context.mounted) {
-      final personBlock = context.read<PersonBlock>();
-      final objectBlock = context.read<ObjectDatabaseBlock>();
-      final personId = personBlock.currentPersonID.value;
+    if (image == null || !context.mounted) return;
 
-      final savedPath = await objectBlock.saveAnyLocalImage(
+    final personBlock = context.read<PersonBlock>();
+    final objectBlock = context.read<ObjectDatabaseBlock>();
+    final personId = personBlock.currentPersonID.value;
+
+    if (!context.mounted) return;
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => PopScope(
+        canPop: false,
+        child: AlertDialog(
+          content: Row(
+            children: [
+              const CircularProgressIndicator(),
+              const SizedBox(width: 16),
+              Expanded(child: Text(l10n.health_smart_scale_syncing)),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    String savedPath;
+    try {
+      savedPath = await objectBlock.saveAnyLocalImage(
         image,
         subFolder: 'user_markdown_documentation',
         personId: personId,
+        awaitCloudSync: true,
       );
-
+    } catch (_) {
       if (context.mounted) {
-        context.push(
-          '/projects/editor',
-          extra: {'category': 'social', 'initialImage': savedPath},
+        Navigator.of(context, rootNavigator: true).pop();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.achievement_story_save_failed)),
         );
       }
+      return;
+    }
+
+    if (context.mounted) {
+      Navigator.of(context, rootNavigator: true).pop();
+      context.push(
+        '/projects/editor',
+        extra: {'category': 'social', 'initialImage': savedPath},
+      );
     }
   }
 }
@@ -533,7 +566,11 @@ class _SocialNoteCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
-    final imageUrl = _getPreviewImage(note.content);
+    final imageUrl = note.localPath ??
+        _getPreviewImage(note.content) ??
+        note.remotePath;
+    final remoteKey = note.remotePath ??
+        JournalMedia.canonicalRemotePath(imageUrl, personId: note.personID);
     final previewText = _getPreviewText(note.content);
 
     return Hero(
@@ -564,8 +601,8 @@ class _SocialNoteCard extends StatelessWidget {
                         if (imageUrl != null)
                           LocalFirstImage(
                             ownerId: note.personID ?? "",
-                            localPath: imageUrl,
-                            remoteUrl: _s3RemoteUrl(imageUrl, note.personID),
+                            localPath: note.localPath ?? imageUrl,
+                            remoteUrl: _s3RemoteUrl(remoteKey, note.personID),
                             subFolder: "user_markdown_documentation",
                             fit: BoxFit.cover,
                           )
@@ -620,25 +657,36 @@ class _SocialNoteCard extends StatelessWidget {
                           Positioned(
                             bottom: 10,
                             right: 10,
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 7,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary.withValues(
-                                  alpha: 0.92,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                if (note.device != null &&
+                                    note.device!.isNotEmpty)
+                                  Padding(
+                                    padding: const EdgeInsets.only(right: 6),
+                                    child: _deviceBadge(note.device!),
+                                  ),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 7,
+                                    vertical: 3,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.primary.withValues(
+                                      alpha: 0.92,
+                                    ),
+                                    borderRadius: BorderRadius.circular(6),
+                                  ),
+                                  child: Text(
+                                    note.mood!.toUpperCase(),
+                                    style: TextStyle(
+                                      color: colorScheme.onPrimary,
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                    ),
+                                  ),
                                 ),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                note.mood!.toUpperCase(),
-                                style: TextStyle(
-                                  color: colorScheme.onPrimary,
-                                  fontSize: 9,
-                                  fontWeight: FontWeight.w900,
-                                ),
-                              ),
+                              ],
                             ),
                           ),
                       ],
@@ -736,50 +784,32 @@ class _SocialNoteCard extends StatelessWidget {
   }
 
   String? _getPreviewImage(String content) {
-    if (content.isEmpty) return null;
-
-    String textToSearch = content;
-
-    // 1. Handle JSON (Quill Delta)
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is List) {
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            final insert = op['insert'];
-
-            // Check for direct image map
-            if (insert is Map && insert.containsKey('image')) {
-              return insert['image'] as String;
-            }
-
-            if (insert is String) {
-              buffer.write(insert);
-            }
-          }
-        }
-        textToSearch = buffer.toString();
-      }
-    } catch (_) {}
-
-    // 2. Robust Markdown extraction
-    // Also support standard markdown image
-    final regExp = RegExp(r'!\[.*?\]\((.*?)\)');
-    final match = regExp.firstMatch(textToSearch);
-    if (match != null && match.groupCount >= 1) {
-      return match.group(1);
-    }
-
-    return null;
+    return JournalMedia.extractFirstImagePath(content);
   }
 
-  static String _s3RemoteUrl(String? localPath, String? personId) {
-    if (localPath == null || localPath.isEmpty) return '';
-    if (localPath.startsWith('http://') || localPath.startsWith('https://')) {
-      return localPath;
+  static Widget _deviceBadge(String device) {
+    final icon = switch (device) {
+      'ios' => Icons.phone_iphone_rounded,
+      'mac' => Icons.laptop_mac_rounded,
+      'android' => Icons.phone_android_rounded,
+      _ => Icons.devices_rounded,
+    };
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Icon(icon, size: 12, color: Colors.white70),
+    );
+  }
+
+  static String _s3RemoteUrl(String? remoteKey, String? personId) {
+    if (remoteKey == null || remoteKey.isEmpty) return '';
+    if (remoteKey.startsWith('http://') || remoteKey.startsWith('https://')) {
+      return remoteKey;
     }
-    final normalized = localPath.replaceAll('\\', '/');
+    final normalized = remoteKey.replaceAll('\\', '/');
     final key = normalized.contains('/')
         ? normalized
         : (personId != null && personId.isNotEmpty

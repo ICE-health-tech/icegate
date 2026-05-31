@@ -22,6 +22,8 @@ import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/utils/app_log.dart';
+import 'package:ice_gate/utils/journal_media.dart';
+import 'package:ice_gate/utils/sync_device.dart';
 
 class TextEditorPage extends StatefulWidget {
   final ProjectNoteData? note;
@@ -409,11 +411,21 @@ class _TextEditorPageState extends State<TextEditorPage>
       final extension =
           _activeNote?.extension ?? widget.initialExtension ?? '.md';
 
+      final imageLocal = JournalMedia.extractFirstImagePath(content);
+      final imageRemote = JournalMedia.canonicalRemotePath(
+        imageLocal,
+        personId: personId,
+      );
+      final imageDevice = imageLocal != null ? SyncDevice.current() : null;
+
       if (_activeNote != null) {
         final updated = _activeNote!.copyWith(
           title: title,
           content: content,
           mood: Value(_selectedMood),
+          localPath: Value(imageLocal),
+          remotePath: Value(imageRemote),
+          device: Value(imageDevice),
           updatedAt: DateTime.now(),
         );
         await dao.updateNote(updated);
@@ -431,6 +443,9 @@ class _TextEditorPageState extends State<TextEditorPage>
           category: category,
           mood: _selectedMood,
           extension: extension,
+          localPath: imageLocal,
+          remotePath: imageRemote,
+          device: imageDevice,
         );
         final saved = await dao.getNoteById(id);
         if (!mounted) return false;

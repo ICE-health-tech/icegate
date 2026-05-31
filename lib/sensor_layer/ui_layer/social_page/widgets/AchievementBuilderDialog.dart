@@ -95,6 +95,15 @@ class _AchievementBuilderDialogState extends State<AchievementBuilderDialog> {
   Future<void> _saveAchievement() async {
     final personBlock = context.read<PersonBlock>();
     final personId = personBlock.currentPersonID.value;
+    if (personId == null || personId.isEmpty) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Sign in to log achievements')),
+        );
+      }
+      return;
+    }
+
     final dao = context.read<AchievementsDAO>();
 
     if (widget.initialData != null) {

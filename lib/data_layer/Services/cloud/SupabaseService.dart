@@ -414,6 +414,8 @@ class SupabaseService {
       'noteID': 'note_id',
       'personID': 'person_id',
       'projectID': 'project_id',
+      'localPath': 'local_path',
+      'remotePath': 'remote_path',
       'createdAt': 'created_at',
       'updatedAt': 'updated_at',
     };

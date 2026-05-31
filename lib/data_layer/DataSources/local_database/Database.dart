@@ -241,6 +241,10 @@ class ProjectNotesTable extends Table {
   TextColumn get extension =>
       text().withDefault(const Constant('.md')).named('extension')();
 
+  TextColumn get localPath => text().nullable().named('local_path')();
+  TextColumn get remotePath => text().nullable().named('remote_path')();
+  TextColumn get device => text().nullable().named('device')();
+
   @override
   Set<Column> get primaryKey => {id};
 }
@@ -358,7 +362,9 @@ class LocalMediaIndexTable extends Table {
 
   TextColumn get id => text()(); // deterministic hash ID recommended
   TextColumn get personID => text().named('person_id')();
-  TextColumn get relativePath => text().named('relative_path')(); // e.g. "<pid>/meals/abc.jpg"
+  TextColumn get relativePath => text().named('relative_path')(); // local path: "<pid>/meals/abc.jpg"
+  TextColumn get remotePath => text().nullable().named('remote_path')(); // S3 object key
+  TextColumn get device => text().nullable().named('device')(); // ios | mac | android | other
   TextColumn get subFolder => text().named('sub_folder')(); // e.g. "meals"
   TextColumn get fileName => text().named('file_name')(); // basename
   IntColumn get fileBytes => integer().nullable().named('file_bytes')();
@@ -2285,6 +2291,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
     String? category,
     String? mood,
     String extension = '.md',
+    String? localPath,
+    String? remotePath,
+    String? device,
   }) async {
     final uuid = IDGen.UUIDV7();
     final companion = ProjectNotesTableCompanion.insert(
@@ -2297,6 +2306,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
       category: Value(category ?? 'projects'),
       mood: Value(mood),
       extension: Value(extension),
+      localPath: Value(localPath),
+      remotePath: Value(remotePath),
+      device: Value(device),
       createdAt: Value(DateTime.now()),
       updatedAt: Value(DateTime.now()),
     );
@@ -2321,6 +2333,9 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
         category: Value(record['category'] as String? ?? 'projects'),
         mood: Value(record['mood'] as String?),
         extension: Value(record['extension'] as String? ?? '.md'),
+        localPath: Value(record['local_path'] as String?),
+        remotePath: Value(record['remote_path'] as String?),
+        device: Value(record['device'] as String?),
         createdAt: Value(
           record['created_at'] != null
               ? DateTime.parse(record['created_at'].toString())
@@ -7381,6 +7396,7 @@ class AppDatabase extends _$AppDatabase {
     'focus_sessions': {'created_at', 'updated_at'},
     'feedbacks': {'status'},
     'subscriptions': {'tenant_id'},
+    'achievements': {'local_image_path'},
   };
 
   Map<String, dynamic> _transformOpData(
@@ -7410,6 +7426,8 @@ class AppDatabase extends _$AppDatabase {
       'noteID': 'note_id',
       'personID': 'person_id',
       'projectID': 'project_id',
+      'localPath': 'local_path',
+      'remotePath': 'remote_path',
       'createdAt': 'created_at',
       'updatedAt': 'updated_at',
     };
@@ -7504,7 +7522,10 @@ class AppDatabase extends _$AppDatabase {
   // v76 → adds recurring_incomes (local scheduled income)
   // v77 → achievements.local_image_path (offline story photos)
   // v78 → integration_accounts (calendar + health hub)
-  int get schemaVersion => 79;
+  // v79 → projects.parent_project_id
+  // v80 → local_media_index.remote_path + device (ios/mac S3 sync)
+  // v81 → project_notes.local_path + remote_path + device (journal S3 sync)
+  int get schemaVersion => 81;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7547,6 +7568,32 @@ class AppDatabase extends _$AppDatabase {
             'ALTER TABLE focus_sessions ADD COLUMN categories TEXT;',
           );
         } catch (_) {}
+      }
+    } catch (_) {}
+  }
+
+  /// Ensures journal sync columns exist (hot reload skips [onUpgrade]).
+  Future<void> repairProjectNotesMediaColumnsForDrift() async {
+    try {
+      final rows = await customSelect(
+        'PRAGMA table_info(project_notes)',
+        readsFrom: {projectNotesTable},
+      ).get();
+      final names = rows.map((r) => r.read<String>('name')).toSet();
+      if (!names.contains('local_path')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN local_path TEXT;',
+        );
+      }
+      if (!names.contains('remote_path')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN remote_path TEXT;',
+        );
+      }
+      if (!names.contains('device')) {
+        await customStatement(
+          'ALTER TABLE project_notes ADD COLUMN device TEXT;',
+        );
       }
     } catch (_) {}
   }
@@ -7659,6 +7706,40 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(
               projectsTable,
               projectsTable.parentProjectId,
+            );
+          } catch (_) {}
+        }
+        if (from < 80) {
+          try {
+            await m.addColumn(
+              localMediaIndexTable,
+              localMediaIndexTable.remotePath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              localMediaIndexTable,
+              localMediaIndexTable.device,
+            );
+          } catch (_) {}
+        }
+        if (from < 81) {
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.localPath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.remotePath,
+            );
+          } catch (_) {}
+          try {
+            await m.addColumn(
+              projectNotesTable,
+              projectNotesTable.device,
             );
           } catch (_) {}
         }
@@ -8095,6 +8176,7 @@ class AppDatabase extends _$AppDatabase {
           "Drift: beforeOpen triggered. Version: ${details.versionBefore} -> ${details.versionNow}",
         );
         await repairFocusSessionsSchemaForDrift();
+        await repairProjectNotesMediaColumnsForDrift();
         // Consolidated cleanups
         try {
           await customStatement(
