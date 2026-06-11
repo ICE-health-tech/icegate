@@ -33,6 +33,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Home/QuoteBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/home_page/PulseFeedCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
@@ -341,7 +342,8 @@ class _HomePageState extends State<HomePage> {
                       _buildEnvironmentalSummary(context),
                       _buildQuotesSection(context),
 
-                      // const SizedBox(height: 20),
+                      // --- SECTION: PULSE FEED (AdSMind play layer) ---
+                      const PulseFeedCard(),
                       const SizedBox(height: 8),
 
                       // --- SECTION: 4 life elements ---

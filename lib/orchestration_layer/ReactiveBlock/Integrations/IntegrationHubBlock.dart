@@ -29,6 +29,7 @@ class IntegrationHubBlock {
       accounts.value = [];
       return;
     }
+    await _coordinator.migrateLegacyConnectionState(personId);
     final rows = await _dao.listForPerson(personId);
     accounts.value = rows.map(IntegrationAccount.fromRow).toList();
   }
@@ -74,5 +75,27 @@ class IntegrationHubBlock {
     final ok = await _coordinator.syncNow(provider, personId: personId);
     await refresh();
     return ok;
+  }
+
+  Future<void> recordStatus({
+    required IntegrationProviderId provider,
+    required IntegrationConnectionStatus status,
+    required String displayName,
+    String? externalAccountId,
+    String? configJson,
+    DateTime? lastSyncAt,
+    String? lastError,
+  }) async {
+    await _coordinator.recordStatus(
+      personId: personId,
+      provider: provider,
+      status: status,
+      displayName: displayName,
+      externalAccountId: externalAccountId,
+      configJson: configJson,
+      lastSyncAt: lastSyncAt,
+      lastError: lastError,
+    );
+    await refresh();
   }
 }

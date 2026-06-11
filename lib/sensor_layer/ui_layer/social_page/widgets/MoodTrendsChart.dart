@@ -1,15 +1,44 @@
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:intl/intl.dart';
 
 class MoodTrendsChart extends StatelessWidget {
   final List<MindLogData> logs;
 
-  const MoodTrendsChart({super.key, required this.logs});
+  /// When true, averages mood per calendar day before plotting.
+  final bool groupByDay;
+
+  const MoodTrendsChart({
+    super.key,
+    required this.logs,
+    this.groupByDay = false,
+  });
 
   static const double _chartHeight = 200;
+
+  /// Absorbs horizontal drags so parent [TabBarView] / page swipes don't fire.
+  static Widget _lockHorizontalSwipe(Widget child) {
+    return RawGestureDetector(
+      behavior: HitTestBehavior.opaque,
+      gestures: <Type, GestureRecognizerFactory>{
+        HorizontalDragGestureRecognizer:
+            GestureRecognizerFactoryWithHandlers<HorizontalDragGestureRecognizer>(
+          () => HorizontalDragGestureRecognizer(),
+          (HorizontalDragGestureRecognizer instance) {
+            instance
+              ..onStart = (_) {}
+              ..onUpdate = (_) {}
+              ..onEnd = (_) {};
+          },
+        ),
+      },
+      child: child,
+    );
+  }
 
   /// Which x-indices get a bottom label (max ~4 labels to avoid overlap).
   static Set<int> _labelIndices(int n) {
@@ -26,13 +55,16 @@ class MoodTrendsChart extends StatelessWidget {
     };
   }
 
-  static String _axisLabel(MindLogData log) {
-    final local = log.createdAt.toLocal();
+  static String _axisLabel(MindLogData log, {required bool groupByDay}) {
+    final local = log.logDate.toLocal();
+    if (groupByDay) {
+      return DateFormat('MM/dd').format(local);
+    }
     final now = DateTime.now();
     final dayLog = DateTime(local.year, local.month, local.day);
     final dayNow = DateTime(now.year, now.month, now.day);
     if (dayLog == dayNow) {
-      return DateFormat('HH:mm').format(local);
+      return DateFormat('HH:mm').format(log.createdAt.toLocal());
     }
     return DateFormat('MM/dd').format(local);
   }
@@ -41,8 +73,9 @@ class MoodTrendsChart extends StatelessWidget {
   Widget build(BuildContext context) {
     if (logs.isEmpty) return const SizedBox.shrink();
 
-    final sortedLogs = List<MindLogData>.from(logs)
-      ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+    final sortedLogs = List<MindLogData>.from(
+      groupByDay ? MindLogInsights.dailyMoodSeries(logs) : logs,
+    )..sort((a, b) => a.logDate.compareTo(b.logDate));
 
     final recentLogs = sortedLogs.length > 14
         ? sortedLogs.sublist(sortedLogs.length - 14)
@@ -61,23 +94,24 @@ class MoodTrendsChart extends StatelessWidget {
 
     final colorScheme = Theme.of(context).colorScheme;
 
-    return Container(
-      height: _chartHeight,
-      padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
-      decoration: BoxDecoration(
-        color: colorScheme.surface.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: colorScheme.outline.withValues(alpha: 0.22),
+    return _lockHorizontalSwipe(
+      Container(
+        height: _chartHeight,
+        padding: const EdgeInsets.fromLTRB(4, 4, 4, 0),
+        decoration: BoxDecoration(
+          color: colorScheme.surface.withValues(alpha: 0.35),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color: colorScheme.outline.withValues(alpha: 0.22),
+          ),
         ),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
-        child: LineChart(
-          LineChartData(
-            clipData: const FlClipData.all(),
-            minX: 0,
-            maxX: (n - 1).toDouble().clamp(0, double.infinity),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(8, 12, 8, 4),
+          child: LineChart(
+            LineChartData(
+              clipData: const FlClipData.all(),
+              minX: -0.35,
+              maxX: (n - 1 + 0.35).toDouble().clamp(0, double.infinity),
             gridData: FlGridData(
               show: true,
               drawVerticalLine: false,
@@ -110,7 +144,7 @@ class MoodTrendsChart extends StatelessWidget {
                     return Padding(
                       padding: const EdgeInsets.only(top: 6),
                       child: Text(
-                        _axisLabel(recentLogs[i]),
+                        _axisLabel(recentLogs[i], groupByDay: groupByDay),
                         maxLines: 1,
                         overflow: TextOverflow.fade,
                         softWrap: false,
@@ -131,6 +165,7 @@ class MoodTrendsChart extends StatelessWidget {
             borderData: FlBorderData(show: false),
             minY: 0.5,
             maxY: 5.5,
+            lineTouchData: const LineTouchData(enabled: false),
             lineBarsData: [
               LineChartBarData(
                 spots: spots,
@@ -167,6 +202,7 @@ class MoodTrendsChart extends StatelessWidget {
             ],
           ),
         ),
+      ),
       ),
     );
   }

@@ -29,4 +29,6 @@ mixin ScoreBlockState {
 
   String? _initializedPersonID;
 
+  /// Bumped on each [ScoreBlock.init] so stale stream/timer callbacks are ignored.
+  int _streamEpoch = 0;
 }

@@ -95,6 +95,13 @@ class ProjectBlock {
 
   List<ProjectProtocol> get rootProjects => projects.value.rootsOnly;
 
+  /// Push local projects (incl. sub-project links), then pull from Supabase.
+  Future<void> syncFromCloud() async {
+    if (_personId.isEmpty) return;
+    await _dao.pushAllProjectsForPerson(_personId);
+    await _dao.syncFromCloud(_personId);
+  }
+
   /// Project id + projectID values used for goals, notes, and finance links.
   Set<String> scopeIdsFor(ProjectProtocol project) {
     final ids = <String>{project.id, project.projectID}

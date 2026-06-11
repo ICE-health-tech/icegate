@@ -420,6 +420,34 @@ class ProjectDetailsPage extends StatelessWidget {
                         context,
                         AppLocalizations.of(context)!.project_sub_projects_label,
                         () => _showAddSubProjectDialog(context, project),
+                        onSync: () async {
+                          try {
+                            await context.read<ProjectBlock>().syncFromCloud();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.project_sync_success,
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    context.l10n.project_sync_failed(
+                                      e.toString(),
+                                    ),
+                                  ),
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          }
+                        },
                       ),
                       const SizedBox(height: 16),
                       Watch((context) {

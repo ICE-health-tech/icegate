@@ -7,8 +7,10 @@ import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleDriveService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/Services/CursorApiService.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/HuaweiCloudService.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Connects integration providers and persists status in [integration_accounts].
 class IntegrationSyncCoordinator {
@@ -48,7 +50,7 @@ class IntegrationSyncCoordinator {
     final now = DateTime.now();
 
     if (calendarOk && account != null) {
-      await _upsert(
+      await _recordStatus(
         personId: personId,
         provider: IntegrationProviderId.googleCalendar,
         status: IntegrationConnectionStatus.connected,
@@ -56,7 +58,7 @@ class IntegrationSyncCoordinator {
         externalAccountId: account.id,
         lastSyncAt: now,
       );
-      await _upsert(
+      await _recordStatus(
         personId: personId,
         provider: IntegrationProviderId.googleFit,
         status: IntegrationConnectionStatus.connected,
@@ -64,8 +66,18 @@ class IntegrationSyncCoordinator {
         externalAccountId: account.id,
         lastSyncAt: now,
       );
+      if (_driveService.driveApi != null) {
+        await _recordStatus(
+          personId: personId,
+          provider: IntegrationProviderId.googleDrive,
+          status: IntegrationConnectionStatus.connected,
+          displayName: account.email,
+          externalAccountId: account.id,
+          lastSyncAt: now,
+        );
+      }
     } else {
-      await _upsert(
+      await _recordStatus(
         personId: personId,
         provider: IntegrationProviderId.googleCalendar,
         status: IntegrationConnectionStatus.needsReauth,
@@ -77,6 +89,63 @@ class IntegrationSyncCoordinator {
 
     return calendarOk;
   }
+
+  /// Backfill rows from legacy SharedPreferences / live OAuth state.
+  Future<void> migrateLegacyConnectionState(String personId) async {
+    if (personId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    final notionSecret = prefs.getString('notion_secret');
+    if (notionSecret != null && notionSecret.trim().isNotEmpty) {
+      await _recordStatus(
+        personId: personId,
+        provider: IntegrationProviderId.notion,
+        status: IntegrationConnectionStatus.connected,
+        displayName: 'Notion',
+        configJson: '{"configured":true}',
+      );
+    }
+    await _driveService.signIn(interactive: false);
+    if (_driveService.driveApi != null) {
+      final account = GoogleSignInHub.signIn.currentUser;
+      await _recordStatus(
+        personId: personId,
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.connected,
+        displayName: account?.email ?? 'Google Drive',
+        externalAccountId: account?.id,
+        lastSyncAt: DateTime.now(),
+      );
+    }
+    if (await CursorApiService.instance.hasApiKey()) {
+      await _recordStatus(
+        personId: personId,
+        provider: IntegrationProviderId.cursor,
+        status: IntegrationConnectionStatus.connected,
+        displayName: 'Cursor',
+        configJson: '{"api_key":true}',
+      );
+    }
+  }
+
+  Future<void> recordStatus({
+    required String personId,
+    required IntegrationProviderId provider,
+    required IntegrationConnectionStatus status,
+    required String displayName,
+    String? externalAccountId,
+    String? configJson,
+    DateTime? lastSyncAt,
+    String? lastError,
+  }) => _recordStatus(
+    personId: personId,
+    provider: provider,
+    status: status,
+    displayName: displayName,
+    externalAccountId: externalAccountId,
+    configJson: configJson,
+    lastSyncAt: lastSyncAt,
+    lastError: lastError,
+  );
 
   /// Silent restore for returning users (no OAuth UI unless scopes missing).
   Future<void> restoreGoogleEcosystem({required String personId}) async {
@@ -105,7 +174,7 @@ class IntegrationSyncCoordinator {
         final providerId = defaultTargetPlatform == TargetPlatform.iOS
             ? IntegrationProviderId.appleDeviceCalendar
             : IntegrationProviderId.androidDeviceCalendar;
-        await _upsert(
+        await _recordStatus(
           personId: personId,
           provider: providerId,
           status: ok
@@ -126,7 +195,7 @@ class IntegrationSyncCoordinator {
       case IntegrationProviderId.appleHealth:
         if (defaultTargetPlatform != TargetPlatform.iOS) return false;
         final healthOk = await HealthService.requestPermissions();
-        await _upsert(
+        await _recordStatus(
           personId: personId,
           provider: provider,
           status: healthOk
@@ -138,7 +207,7 @@ class IntegrationSyncCoordinator {
         return healthOk;
       case IntegrationProviderId.huaweiHealth:
         final huaweiOk = await HuaweiCloudService.isConnected();
-        await _upsert(
+        await _recordStatus(
           personId: personId,
           provider: provider,
           status: huaweiOk
@@ -149,6 +218,35 @@ class IntegrationSyncCoordinator {
           lastError: huaweiOk ? null : 'Configure credentials in Sensor Hub',
         );
         return huaweiOk;
+      case IntegrationProviderId.googleDrive:
+        final ok = await _driveService.signIn(interactive: interactive);
+        final account = GoogleSignInHub.signIn.currentUser;
+        await _recordStatus(
+          personId: personId,
+          provider: provider,
+          status: ok && _driveService.driveApi != null
+              ? IntegrationConnectionStatus.connected
+              : IntegrationConnectionStatus.needsReauth,
+          displayName: account?.email ?? 'Google Drive',
+          externalAccountId: account?.id,
+          lastSyncAt: ok ? DateTime.now() : null,
+          lastError: ok ? null : 'Google Drive sign-in failed',
+        );
+        return ok && _driveService.driveApi != null;
+      case IntegrationProviderId.notion:
+        return false;
+      case IntegrationProviderId.cursor:
+        final hasKey = await CursorApiService.instance.hasApiKey();
+        await _recordStatus(
+          personId: personId,
+          provider: provider,
+          status: hasKey
+              ? IntegrationConnectionStatus.connected
+              : IntegrationConnectionStatus.disconnected,
+          displayName: 'Cursor',
+          configJson: hasKey ? '{"api_key":true}' : null,
+        );
+        return hasKey;
     }
   }
 
@@ -162,7 +260,7 @@ class IntegrationSyncCoordinator {
       case IntegrationProviderId.googleCalendar:
         await _calendarService.signOut();
         await _driveService.signOut();
-        await _upsert(
+        await _recordStatus(
           personId: personId,
           provider: provider,
           status: IntegrationConnectionStatus.disconnected,
@@ -174,7 +272,7 @@ class IntegrationSyncCoordinator {
         final providerId = defaultTargetPlatform == TargetPlatform.iOS
             ? IntegrationProviderId.appleDeviceCalendar
             : IntegrationProviderId.androidDeviceCalendar;
-        await _upsert(
+        await _recordStatus(
           personId: personId,
           provider: providerId,
           status: IntegrationConnectionStatus.disconnected,
@@ -185,6 +283,17 @@ class IntegrationSyncCoordinator {
       case IntegrationProviderId.appleHealth:
       case IntegrationProviderId.huaweiHealth:
       case IntegrationProviderId.googleFit:
+        break;
+      case IntegrationProviderId.googleDrive:
+        await _driveService.signOut();
+        await _recordStatus(
+          personId: personId,
+          provider: provider,
+          status: IntegrationConnectionStatus.disconnected,
+          displayName: 'Google Drive',
+        );
+      case IntegrationProviderId.notion:
+      case IntegrationProviderId.cursor:
         break;
     }
   }
@@ -212,7 +321,7 @@ class IntegrationSyncCoordinator {
             rangeStart: start,
             rangeEnd: end,
           );
-          await _upsert(
+          await _recordStatus(
             personId: personId,
             provider: provider,
             status: IntegrationConnectionStatus.connected,
@@ -223,7 +332,7 @@ class IntegrationSyncCoordinator {
           );
           return true;
         } catch (e) {
-          await _upsert(
+          await _recordStatus(
             personId: personId,
             provider: provider,
             status: IntegrationConnectionStatus.error,
@@ -239,15 +348,21 @@ class IntegrationSyncCoordinator {
       case IntegrationProviderId.huaweiHealth:
       case IntegrationProviderId.googleFit:
         return false;
+      case IntegrationProviderId.googleDrive:
+        return _driveService.driveApi != null;
+      case IntegrationProviderId.notion:
+      case IntegrationProviderId.cursor:
+        return false;
     }
   }
 
-  Future<void> _upsert({
+  Future<void> _recordStatus({
     required String personId,
     required IntegrationProviderId provider,
     required IntegrationConnectionStatus status,
     required String displayName,
     String? externalAccountId,
+    String? configJson,
     DateTime? lastSyncAt,
     String? lastError,
   }) async {
@@ -261,6 +376,7 @@ class IntegrationSyncCoordinator {
         status: Value(status.name),
         displayName: Value(displayName),
         externalAccountId: Value(externalAccountId),
+        configJson: Value(configJson),
         lastSyncAt: Value(lastSyncAt),
         lastError: Value(lastError),
         updatedAt: Value(now),

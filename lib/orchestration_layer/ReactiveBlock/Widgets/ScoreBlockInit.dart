@@ -1,6 +1,13 @@
 part of 'ScoreBlock.dart';
 
 extension ScoreBlockInit on ScoreBlock {
+  void _deferStreamUpdate(int epoch, void Function() apply) {
+    scheduleMicrotask(() {
+      if (epoch != _streamEpoch) return;
+      untracked(apply);
+    });
+  }
+
   Future<void> init(
     ScoreDAO dao,
     FinanceDAO financeDAO,
@@ -19,6 +26,10 @@ extension ScoreBlockInit on ScoreBlock {
     isReady.value = false;
     debugPrint("ScoreBlock: 🚀 Initializing for personID: $personID");
     _initializedPersonID = personID;
+    _streamEpoch++;
+    final epoch = _streamEpoch;
+    _scoreUpdateTimer?.cancel();
+    _todaySocialUpdateTimer?.cancel();
 
     // Clear old subscriptions
     for (var s in _subscriptions) {
@@ -44,7 +55,9 @@ extension ScoreBlockInit on ScoreBlock {
           .listen((data) {
             if (data != null) {
               _scoreUpdateTimer?.cancel();
+              final e = epoch;
               _scoreUpdateTimer = Timer(const Duration(milliseconds: 100), () {
+                if (e != _streamEpoch) return;
                 updateScore(
                   ScoreData(
                     healthGlobalScore: data.healthGlobalScore ?? 0.0,
@@ -64,11 +77,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchAccounts(personID)
           .debounceTime(const Duration(milliseconds: 500))
           .listen((accounts) {
-            Timer(Duration.zero, () {
-              untracked(() {
-                _latestAccounts.value = accounts;
-              });
-            });
+            _deferStreamUpdate(epoch, () => _latestAccounts.value = accounts);
           }),
     );
     _subscriptions.add(
@@ -76,11 +85,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchAssets(personID)
           .debounceTime(const Duration(milliseconds: 500))
           .listen((assets) {
-            Timer(Duration.zero, () {
-              untracked(() {
-                _latestAssets.value = assets;
-              });
-            });
+            _deferStreamUpdate(epoch, () => _latestAssets.value = assets);
           }),
     );
     _subscriptions.add(
@@ -88,11 +93,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchAllTransactions(personID)
           .debounceTime(const Duration(milliseconds: 500))
           .listen((txs) {
-            Timer(Duration.zero, () {
-              untracked(() {
-                _latestTransactions.value = txs;
-              });
-            });
+            _deferStreamUpdate(epoch, () => _latestTransactions.value = txs);
           }),
     );
     _subscriptions.add(
@@ -100,10 +101,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchAllNotes(personID)
           .debounceTime(const Duration(milliseconds: 500))
           .listen((notes) {
-            Timer(
-              Duration.zero,
-              () => untracked(() => _latestNotes.value = notes),
-            );
+            _deferStreamUpdate(epoch, () => _latestNotes.value = notes);
           }),
     );
     _subscriptions.add(
@@ -111,10 +109,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchDaysWithMeals(personID)
           .debounceTime(const Duration(milliseconds: 300))
           .listen((meals) {
-            Timer(
-              Duration.zero,
-              () => untracked(() => _latestMeals.value = meals),
-            );
+            _deferStreamUpdate(epoch, () => _latestMeals.value = meals);
           }),
     );
 
@@ -123,10 +118,7 @@ extension ScoreBlockInit on ScoreBlock {
           .watchLastNDaysUsage(personID, 90)
           .debounceTime(const Duration(milliseconds: 300))
           .listen((data) {
-            Timer(
-              Duration.zero,
-              () => untracked(() => usageHistory.value = data),
-            );
+            _deferStreamUpdate(epoch, () => usageHistory.value = data);
           }),
     );
 

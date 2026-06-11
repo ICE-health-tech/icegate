@@ -1,6 +1,10 @@
+import 'dart:async';
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -16,6 +20,19 @@ class NoteManagerPage extends StatefulWidget {
 class _NoteManagerPageState extends State<NoteManagerPage> {
   final _searchController = TextEditingController();
   final _notionSecretController = TextEditingController();
+  bool _journalSyncStarted = false;
+
+  void _maybeSyncJournalImages(String personId) {
+    if (_journalSyncStarted || personId.isEmpty) return;
+    _journalSyncStarted = true;
+
+    unawaited(
+      context.read<StorageBlock>().syncJournalNotes(
+        personId: personId,
+        notesDao: context.read<ProjectNoteDAO>(),
+      ),
+    );
+  }
 
   @override
   void dispose() {
@@ -30,6 +47,10 @@ class _NoteManagerPageState extends State<NoteManagerPage> {
     final colorScheme = theme.colorScheme;
     final block = context.watch<DocumentationBlock>();
     final l10n = context.l10n;
+    final personId = context.read<PersonBlock>().currentPersonID.value;
+    if (personId != null && personId.isNotEmpty) {
+      _maybeSyncJournalImages(personId);
+    }
 
     return Scaffold(
       backgroundColor: colorScheme.surface,

@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
@@ -33,6 +35,7 @@ class _NotificationManagerPageState extends State<NotificationManagerPage> {
   bool _morningPrefsLoading = true;
   bool _morningReminderEnabled = true;
   bool _morningBriefingEnabled = true;
+  bool _quotesSyncStarted = false;
   TimeOfDay _morningReminderTime = const TimeOfDay(hour: 7, minute: 0);
 
   Color _hubAccent(BuildContext context) =>
@@ -42,6 +45,15 @@ class _NotificationManagerPageState extends State<NotificationManagerPage> {
   void initState() {
     super.initState();
     _loadMorningPrefs();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _syncQuotesFromCloud());
+  }
+
+  void _syncQuotesFromCloud() {
+    if (_quotesSyncStarted || !mounted) return;
+    final personId = context.read<PersonBlock>().currentPersonID.value;
+    if (personId == null || personId.isEmpty) return;
+    _quotesSyncStarted = true;
+    unawaited(context.read<QuoteDAO>().syncFromCloud(personId));
   }
 
   Future<void> _loadMorningPrefs() async {
@@ -965,58 +977,68 @@ class _NotificationManagerPageState extends State<NotificationManagerPage> {
   }
 
   Widget _buildWisdomBoardTab(BuildContext context) {
-    final dao = context.watch<QuoteDAO>();
     final cs = Theme.of(context).colorScheme;
     final accent = _hubAccent(context);
     final l10n = AppLocalizations.of(context)!;
 
-    return _hubScroll(
-      context,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              l10n.notification_wisdom_board,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: cs.onSurface,
-                    fontWeight: FontWeight.bold,
-                  ),
-            ),
-            TextButton.icon(
-              onPressed: () => _showAddQuoteDialog(context),
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: Text(l10n.notification_add_quote),
-              style: TextButton.styleFrom(foregroundColor: accent),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        StreamBuilder<List<QuoteData>>(
-          stream: dao.watchAllQuotes(),
-          builder: (context, snapshot) {
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return _hubEmptyCard(
-                context,
-                icon: Icons.auto_stories_rounded,
-                message: l10n.notification_quote_empty,
-                actionLabel: l10n.notification_add_quote,
-                onAction: () => _showAddQuoteDialog(context),
-              );
-            }
+    return Watch((context) {
+      final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
+      final dao = context.read<QuoteDAO>();
 
-            return Column(
-              children: snapshot.data!.map((quote) {
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildQuoteTile(context, quote),
+      return _hubScroll(
+        context,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                l10n.notification_wisdom_board,
+                style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: cs.onSurface,
+                      fontWeight: FontWeight.bold,
+                    ),
+              ),
+              TextButton.icon(
+                onPressed: () => _showAddQuoteDialog(context),
+                icon: const Icon(Icons.add_rounded, size: 20),
+                label: Text(l10n.notification_add_quote),
+                style: TextButton.styleFrom(foregroundColor: accent),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          StreamBuilder<List<QuoteData>>(
+            stream: personId.isEmpty
+                ? const Stream.empty()
+                : dao.watchQuotesByPerson(personId),
+            builder: (context, snapshot) {
+              if (personId.isEmpty) {
+                return const Center(child: CircularProgressIndicator());
+              }
+
+              if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return _hubEmptyCard(
+                  context,
+                  icon: Icons.auto_stories_rounded,
+                  message: l10n.notification_quote_empty,
+                  actionLabel: l10n.notification_add_quote,
+                  onAction: () => _showAddQuoteDialog(context),
                 );
-              }).toList(),
-            );
-          },
-        ),
-      ],
-    );
+              }
+
+              return Column(
+                children: snapshot.data!.map((quote) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 12),
+                    child: _buildQuoteTile(context, quote),
+                  );
+                }).toList(),
+              );
+            },
+          ),
+        ],
+      );
+    });
   }
 
   Widget _buildQuoteTile(BuildContext context, QuoteData quote) {

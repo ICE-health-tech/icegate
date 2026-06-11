@@ -19,7 +19,6 @@ import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 

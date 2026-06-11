@@ -59,9 +59,11 @@
 		<string>_ssh._tcp</string>
 	</array>
 	<key>NSCalendarsFullAccessUsageDescription</key>
-	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
+	<string>ICE Gate needs full calendar access to show and add events alongside your tasks and reminders.</string>
 	<key>NSCalendarsUsageDescription</key>
-	<string>ICE Gate reads your calendars to show Apple Calendar events alongside your tasks and reminders.</string>
+	<string>ICE Gate needs calendar access to show and add events alongside your tasks and reminders.</string>
+	<key>NSCalendarsWriteOnlyUsageDescription</key>
+	<string>ICE Gate can add events, but full access is required to display them in the app calendar.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>We need camera access to let you take photos of your food for calorie tracking</string>
 	<key>NSFaceIDUsageDescription</key>

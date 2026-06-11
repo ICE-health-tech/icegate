@@ -93,6 +93,71 @@ class AppLocalizationsEn extends AppLocalizations {
   String get projects_calendar_add_reminder => 'Add reminder';
 
   @override
+  String get projects_calendar_add_event => 'Add event';
+
+  @override
+  String get projects_calendar_event_title => 'Event title';
+
+  @override
+  String get projects_calendar_event_title_required => 'Enter an event title';
+
+  @override
+  String get projects_calendar_event_start => 'Start';
+
+  @override
+  String get projects_calendar_event_end => 'End';
+
+  @override
+  String get projects_calendar_event_saved => 'Event saved to calendar';
+
+  @override
+  String get projects_calendar_event_deleted => 'Event removed';
+
+  @override
+  String get projects_calendar_event_failed => 'Could not save event';
+
+  @override
+  String get projects_calendar_edit_event => 'Edit event';
+
+  @override
+  String get projects_calendar_delete_event => 'Delete event';
+
+  @override
+  String get projects_calendar_edit_reminder => 'Edit reminder';
+
+  @override
+  String get projects_calendar_save => 'Save';
+
+  @override
+  String get projects_calendar_select_calendar => 'Calendar';
+
+  @override
+  String get projects_calendar_tap_day_add_hint =>
+      'Tap the selected day again to add an event';
+
+  @override
+  String get projects_calendar_hold_day_add_hint =>
+      'Hold a day to add an event';
+
+  @override
+  String get projects_calendar_timeline_empty => 'No timed events this day';
+
+  @override
+  String get projects_calendar_timeline_tap_slot =>
+      'Tap an hour row to add · tap an event to edit or delete';
+
+  @override
+  String get projects_calendar_timeline_remove => 'Remove from timeline';
+
+  @override
+  String projects_calendar_timeline_remove_confirm(String title) {
+    return 'Remove \"$title\" from this day\'s timeline?';
+  }
+
+  @override
+  String get projects_calendar_day_timeline => 'Daily timeline';
+
+  @override
   String get projects_calendar_reminder_title => 'Reminder title';
 
   @override
@@ -185,6 +250,17 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get integration_hub_health_section => 'Health';
+
+  @override
+  String get integration_hub_notes_section => 'Notes & documents';
+
+  @override
+  String get integration_hub_google_drive_hint =>
+      'Sync project notes and vault files from Google Drive.';
+
+  @override
+  String get integration_hub_notion_hint =>
+      'Import shared Notion pages and databases into your vault.';
 
   @override
   String get integration_hub_connect => 'Connect';
@@ -1856,6 +1932,45 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_focus_title => 'Focus areas';
 
   @override
+  String get mind_focus_weekly_title => 'Weekly focus';
+
+  @override
+  String get mind_focus_monthly_title => 'Monthly focus';
+
+  @override
+  String mind_focus_goal_level(int level) {
+    return 'Goal: Lv. $level';
+  }
+
+  @override
+  String mind_focus_xp_progress(int current, int cap) {
+    return '$current / $cap XP';
+  }
+
+  @override
+  String get mind_focus_badge => 'FOCUS';
+
+  @override
+  String get mind_total_level => 'Total level';
+
+  @override
+  String get mind_streak_label => 'Streak';
+
+  @override
+  String mind_streak_days(int days) {
+    return '$days days';
+  }
+
+  @override
+  String get mind_streak_bonus => '+15% EXP bonus';
+
+  @override
+  String get mind_skill_tree_title => 'Skill tree';
+
+  @override
+  String get mind_skill_certificates_title => 'Certificates';
+
+  @override
   String get mind_focus_subtitle =>
       'Define weekly trends so you know where to put your energy.';
 
@@ -1944,6 +2059,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mind_skills_session_start => 'Start session';
 
   @override
+  String get mind_skills_session_empty_month =>
+      'No skill sessions this month yet.';
+
+  @override
+  String mind_skills_session_skill_meta(int sessions, int minutes) {
+    return '$sessions sessions · ${minutes}m';
+  }
+
+  @override
   String mind_skills_session_empty(int days) {
     return 'No skill sessions in the last $days days.';
   }
@@ -1998,6 +2122,110 @@ class AppLocalizationsEn extends AppLocalizations {
   String mind_skills_session_logged(int minutes, int xp) {
     return 'Session logged · $minutes min · +$xp XP';
   }
+
+  @override
+  String get mind_skills_celebration_title => 'Skill proof saved';
+
+  @override
+  String mind_skills_celebration_proof(int minutes, int xp) {
+    return 'You focused $minutes min and earned +$xp XP — real practice on your record.';
+  }
+
+  @override
+  String mind_skills_celebration_level_up(String skills) {
+    return 'Level up: $skills';
+  }
+
+  @override
+  String mind_skills_celebration_streak(int days) {
+    return '$days-day streak — keep the chain alive.';
+  }
+
+  @override
+  String get mind_skills_celebration_goal =>
+      'Tomorrow’s you is built from sessions like this.';
+
+  @override
+  String get mind_skill_name_invalid => 'Name must be 1–24 characters.';
+
+  @override
+  String get mind_skill_name_duplicate => 'That skill already exists.';
+
+  @override
+  String get mind_skill_add_title => 'Add skill';
+
+  @override
+  String get mind_skill_edit_title => 'Edit skill';
+
+  @override
+  String get mind_skill_delete_title => 'Delete skill?';
+
+  @override
+  String mind_skill_delete_body(String name) {
+    return 'Remove “$name” from your library?';
+  }
+
+  @override
+  String get mind_skill_certificate_header => 'CERTIFICATE OF PRACTICE';
+
+  @override
+  String get mind_skill_certificate_subtitle =>
+      'Human capital · verified progress';
+
+  @override
+  String get mind_skill_certificate_awarded_to =>
+      'Awarded for sustained skill practice';
+
+  @override
+  String get mind_skill_certificate_level => 'Rank';
+
+  @override
+  String get mind_skill_certificate_xp => 'Experience';
+
+  @override
+  String get mind_skill_certificate_streak => 'Streak';
+
+  @override
+  String get mind_skill_certificate_proof =>
+      'This record reflects real sessions logged in ice_gate — your proof of growth.';
+
+  @override
+  String get mind_skill_certificate_seal => 'ICEGATE SEAL';
+
+  @override
+  String get mind_skill_certificate_select_session => 'Select for session';
+
+  @override
+  String get mind_skill_certificate_close => 'Close';
+
+  @override
+  String get mind_skill_certificate_created => 'Created';
+
+  @override
+  String get mind_skill_certificate_updated => 'Last updated';
+
+  @override
+  String get mind_skill_certificate_description => 'Description';
+
+  @override
+  String get mind_skill_certificate_description_hint =>
+      'What this skill means to you, or how you earned it…';
+
+  @override
+  String get mind_skill_certificate_edit => 'Edit certificate';
+
+  @override
+  String get mind_skill_certificate_save => 'Save certificate';
+
+  @override
+  String get mind_skill_certificates_table_title => 'Practice certificates';
+
+  @override
+  String get mind_skill_certificates_table_empty =>
+      'No skills in your library yet. Open Skills to start earning certificates.';
+
+  @override
+  String get mind_skill_certificates_col_skill => 'Skill';
 
   @override
   String get mood_trends_title => 'Mood Trends';
@@ -2074,6 +2302,37 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get stat_sentiment => 'Sentiment';
+
+  @override
+  String get stat_mind_logs => 'Logs (30d)';
+
+  @override
+  String get stat_active_days => 'Active days';
+
+  @override
+  String get stat_avg_mood => 'Avg mood';
+
+  @override
+  String get journal_hourly_logs => 'Logs by hour (today)';
+
+  @override
+  String get mind_insights_skill_title => 'Skill practice (30d)';
+
+  @override
+  String mind_insights_skill_summary(int sessions, int minutes) {
+    return '$sessions sessions · $minutes min';
+  }
+
+  @override
+  String mind_insights_top_skill_streak(String skill, int days) {
+    return 'Top streak · $skill · ${days}d';
+  }
+
+  @override
+  String get mind_insights_open_notes => 'Mind notes';
+
+  @override
+  String get mind_insights_open_skills => 'Skill certificates';
 
   @override
   String get weekly_mood_trend => 'Weekly Mood Trend';
@@ -2994,15 +3253,22 @@ class AppLocalizationsEn extends AppLocalizations {
       'Pick from the same skills as Mind → Skills tiles.';
 
   @override
-  String get project_auto_add_all_skills => 'Add all automatically';
+  String get project_auto_add_all_skills => 'Create new skill';
 
   @override
   String get project_auto_add_all_skills_subtitle =>
-      'Link every skill from your Mind library to this project';
+      'Add a brand-new skill to Mind and this project';
+
+  @override
+  String get project_skill_already_exists => 'That skill already exists';
+
+  @override
+  String get project_skill_name_too_long =>
+      'Skill name too long (max 24 characters)';
 
   @override
   String get project_skills_all_on_project =>
-      'All library skills are already on this project';
+      'All Mind skills are already on this project';
 
   @override
   String project_skills_added_count(int count) {
@@ -3366,6 +3632,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'I understand my account may not be fully erased from the server until backend deletion is enabled.';
 
   @override
+  String get delete_account_type_key_word => 'DELETE-ACCOUNT';
+
+  @override
+  String delete_account_type_key_prompt(String word) {
+    return 'Type $word to confirm:';
+  }
+
+  @override
   String get delete_account_confirm => 'Delete and sign out';
 
   @override
@@ -3548,6 +3822,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String get finance_label_description_optional => 'Description (optional)';
 
   @override
+  String get finance_txn_source_account => 'Paid from';
+
+  @override
+  String get finance_txn_source_account_none => 'Not specified';
+
+  @override
+  String get finance_txn_source_account_empty =>
+      'Save a wallet or account first, then choose it when logging spend.';
+
+  @override
+  String get finance_txn_source_account_add => 'Add account';
+
+  @override
+  String get finance_txn_source_account_required =>
+      'Choose which account this money left.';
+
+  @override
   String get finance_recurring_income => 'Recurring income';
 
   @override
@@ -3558,7 +3849,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_fixed_income_subtitle =>
-      'Salary, rent received, and other steady income';
+      'Human capital (skills), salary, rent received, and other steady inflows';
 
   @override
   String get finance_fixed_income_monthly_total => 'Monthly total';
@@ -3807,6 +4098,181 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get finance_cat_general => 'General';
+
+  @override
+  String get finance_cat_human_capital => 'Human capital';
+
+  @override
+  String get finance_inflow_pillar_human_capital => 'Human capital';
+
+  @override
+  String get finance_inflow_pillar_liquidity => 'Liquidity';
+
+  @override
+  String get finance_inflow_pillar_fixed_income => 'Fixed income';
+
+  @override
+  String get finance_inflow_pillar_investment => 'Investment';
+
+  @override
+  String get finance_inflow_pillar_cashflow => 'Cashflow';
+
+  @override
+  String get finance_inflow_pillars_title => 'Inflow layers';
+
+  @override
+  String get finance_inflow_pillars_subtitle =>
+      'Skills & work, cash buffer, steady yield, growth assets, recurring systems';
+
+  @override
+  String get finance_asset_pillars_title => 'Asset layers';
+
+  @override
+  String get finance_asset_pillars_subtitle =>
+      'Liquidity, fixed income, investment, cashflow';
+
+  @override
+  String get finance_asset_pillar_liquidity => 'Liquidity';
+
+  @override
+  String get finance_asset_pillar_fixed_income => 'Fixed income';
+
+  @override
+  String get finance_asset_pillar_investment => 'Investment';
+
+  @override
+  String get finance_asset_pillar_cashflow => 'Cashflow';
+
+  @override
+  String get finance_record_section_title => 'Record';
+
+  @override
+  String get finance_record_section_subtitle =>
+      'Add accounts, assets, human capital, and subscriptions';
+
+  @override
+  String get finance_record_human_capital => 'Human capital';
+
+  @override
+  String get finance_record_human_capital_hint => 'Capacity (imputed value)';
+
+  @override
+  String get finance_record_liquidity_account => 'Liquidity account';
+
+  @override
+  String get finance_record_liquidity_hint => 'Cash, checking';
+
+  @override
+  String get finance_record_fixed_income_asset => 'Fixed income asset';
+
+  @override
+  String get finance_record_fixed_income_hint => 'Bond, savings';
+
+  @override
+  String get finance_record_investment_account => 'Investment account';
+
+  @override
+  String get finance_record_investment_account_hint => 'Broker, crypto wallet';
+
+  @override
+  String get finance_record_investment_holding => 'Investment holding';
+
+  @override
+  String get finance_record_investment_holding_hint =>
+      'Stock, crypto, real estate';
+
+  @override
+  String get finance_account_type_checking => 'Checking';
+
+  @override
+  String get finance_account_type_savings => 'Savings';
+
+  @override
+  String get finance_account_type_cash => 'Cash';
+
+  @override
+  String get finance_account_type_credit_card => 'Credit card';
+
+  @override
+  String get finance_account_type_deposit => 'Term deposit';
+
+  @override
+  String get finance_account_type_investment => 'Investment account';
+
+  @override
+  String get finance_add_account_title => 'Add account';
+
+  @override
+  String get finance_account_type_section => 'Account type';
+
+  @override
+  String get finance_accounts_liquidity_title => 'Liquidity accounts';
+
+  @override
+  String get finance_accounts_investment_title => 'Investment accounts';
+
+  @override
+  String get finance_account_investment_name_hint =>
+      'e.g. VNDirect, SSI, Binance';
+
+  @override
+  String get finance_record_cashflow_asset => 'Cashflow asset';
+
+  @override
+  String get finance_record_cashflow_hint => 'SaaS, recurring system';
+
+  @override
+  String get finance_record_subscription => 'Subscription';
+
+  @override
+  String get finance_record_subscription_hint => 'Recurring expense';
+
+  @override
+  String get finance_hc_capacity_label => 'Capacity';
+
+  @override
+  String get finance_hc_realized_label => 'Received';
+
+  @override
+  String get finance_hc_gap_title => 'Human capital';
+
+  @override
+  String finance_hc_gap_message(String capacity, String received, String gap) {
+    return 'Capacity $capacity · received $received · gap $gap';
+  }
+
+  @override
+  String get finance_add_asset_title => 'Add asset';
+
+  @override
+  String get finance_add_asset_category => 'Asset type';
+
+  @override
+  String get finance_add_asset_name => 'Name / symbol';
+
+  @override
+  String get finance_add_asset_value => 'Estimated value';
+
+  @override
+  String get finance_add_asset_save => 'Save asset';
+
+  @override
+  String get finance_asset_cat_stock => 'Stock';
+
+  @override
+  String get finance_asset_cat_crypto => 'Crypto';
+
+  @override
+  String get finance_asset_cat_bond => 'Bond';
+
+  @override
+  String get finance_asset_cat_deposit => 'Deposit';
+
+  @override
+  String get finance_asset_cat_real_estate => 'Real estate';
+
+  @override
+  String get finance_asset_cat_cashflow => 'Cashflow (SaaS)';
 
   @override
   String get finance_cat_salary => 'Salary';

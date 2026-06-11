@@ -8,8 +8,11 @@ import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 // import 'package:ice_gate/orchestration_layer/Services/PowerPoint/GameConst.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceAssetPillars.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/utils/QuantMath.dart';
 import 'package:intl/intl.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class FinanceBlock {
   final activeTab = signal(0);
@@ -29,6 +32,10 @@ class FinanceBlock {
   late FinanceDAO _dao;
   late PortfolioSnapshotsDAO _snapshotDao;
   String _personId = '';
+  String? _lastSourceAccountId;
+
+  static String _lastSourceAccountKey(String personId) =>
+      'finance_last_source_account_$personId';
 
   /// Logged-in person; empty before [init] or when unauthenticated.
   String get personId => _personId;
@@ -79,17 +86,102 @@ class FinanceBlock {
   /// Sum of active fixed/recurring incomes normalized to a monthly amount.
   late final monthlyFixedIncome = computed(() {
     return recurringIncomes.value.fold(0.0, (sum, item) {
-      switch (item.interval) {
-        case 'weekly':
-          return sum + (item.amount * 52 / 12);
-        case 'yearly':
-          return sum + (item.amount / 12);
-        case 'monthly':
-        default:
-          return sum + item.amount;
-      }
+      return sum + _recurringToMonthly(item.amount, item.interval);
     });
   });
+
+  /// Imputed earning power (category human_capital only — not cash).
+  late final monthlyHumanCapitalCapacity = computed(() {
+    var sum = 0.0;
+    for (final item in recurringIncomes.value) {
+      if (item.category == 'human_capital') {
+        sum += _recurringToMonthly(item.amount, item.interval);
+      }
+    }
+    final now = DateTime.now();
+    for (final t in transactions.value) {
+      if (t.type == 'income' &&
+          t.category == 'human_capital' &&
+          t.transactionDate.month == now.month &&
+          t.transactionDate.year == now.year) {
+        sum += t.amount;
+      }
+    }
+    return sum;
+  });
+
+  /// Cash from work (salary, freelance, bonus).
+  late final monthlyHumanCapitalRealized = computed(() {
+    const realized = {'salary', 'freelance', 'bonus'};
+    var sum = 0.0;
+    for (final item in recurringIncomes.value) {
+      if (realized.contains(item.category)) {
+        sum += _recurringToMonthly(item.amount, item.interval);
+      }
+    }
+    final now = DateTime.now();
+    for (final t in transactions.value) {
+      if (t.type == 'income' &&
+          realized.contains(t.category) &&
+          t.transactionDate.month == now.month &&
+          t.transactionDate.year == now.year) {
+        sum += t.amount;
+      }
+    }
+    return sum;
+  });
+
+  /// Monthly cash inflow by pillar (excludes imputed human_capital capacity).
+  late final monthlyInflowByPillar = computed(() {
+    final map = {for (final p in FinanceInflowPillar.ordered) p: 0.0};
+    for (final item in recurringIncomes.value) {
+      if (item.category == 'human_capital') continue;
+      final pillar = FinanceInflowPillar.pillarForCategory(item.category);
+      if (pillar != null) {
+        map[pillar] =
+            (map[pillar] ?? 0) + _recurringToMonthly(item.amount, item.interval);
+      }
+    }
+    final now = DateTime.now();
+    for (final t in transactions.value) {
+      if (t.type != 'income' ||
+          t.category == 'human_capital' ||
+          t.transactionDate.month != now.month ||
+          t.transactionDate.year != now.year) {
+        continue;
+      }
+      final pillar = FinanceInflowPillar.pillarForCategory(t.category);
+      if (pillar != null) {
+        map[pillar] = (map[pillar] ?? 0) + t.amount;
+      }
+    }
+    final realized = monthlyHumanCapitalRealized.value;
+    if (realized > 0) {
+      map[FinanceInflowPillar.humanCapital] =
+          (map[FinanceInflowPillar.humanCapital] ?? 0) + realized;
+    }
+    return map;
+  });
+
+  /// Net worth split by asset pillar (accounts + holdings).
+  late final netWorthByAssetPillar = computed(() {
+    return FinanceAssetPillar.sumByPillar(
+      accounts: accounts.value,
+      assets: assets.value,
+    );
+  });
+
+  static double _recurringToMonthly(double amount, String interval) {
+    switch (interval) {
+      case 'weekly':
+        return amount * 52 / 12;
+      case 'yearly':
+        return amount / 12;
+      case 'monthly':
+      default:
+        return amount;
+    }
+  }
 
   /// Monthly income for the current month
   late final monthlyIncome = computed(() {
@@ -343,6 +435,7 @@ class FinanceBlock {
     _dao = dao;
     _snapshotDao = snapshotDao;
     _configBlock.value = configBlock;
+    await _loadLastSourceAccount();
 
     // Load persistent ATH and latest timestamp
     DateTime? lastSnapshotTime;
@@ -389,7 +482,7 @@ class FinanceBlock {
                 final protocols = data
                     .map(
                       (e) => FinancialAccountProtocol(
-                        financialAccountID: e.accountID ?? "",
+                        financialAccountID: e.id,
                         personID: e.personID ?? "",
                         accountName: e.accountName,
                         accountType: e.accountType,
@@ -587,7 +680,7 @@ class FinanceBlock {
             accRows
                 .map(
                   (e) => FinancialAccountProtocol(
-                    financialAccountID: e.accountID ?? "",
+                    financialAccountID: e.id,
                     personID: e.personID ?? "",
                     accountName: e.accountName,
                     accountType: e.accountType,
@@ -643,6 +736,117 @@ class FinanceBlock {
     }
   }
 
+  TransactionData? _transactionById(String id) {
+    for (final t in transactions.value) {
+      if (t.id == id) return t;
+    }
+    return null;
+  }
+
+  Future<void> _loadLastSourceAccount() async {
+    if (_personId.isEmpty) return;
+    final prefs = await SharedPreferences.getInstance();
+    _lastSourceAccountId = prefs.getString(_lastSourceAccountKey(_personId));
+  }
+
+  Future<void> _persistLastSourceAccount(String? id) async {
+    if (_personId.isEmpty) return;
+    _lastSourceAccountId = id;
+    final prefs = await SharedPreferences.getInstance();
+    final key = _lastSourceAccountKey(_personId);
+    if (id == null || id.isEmpty) {
+      await prefs.remove(key);
+    } else {
+      await prefs.setString(key, id);
+    }
+  }
+
+  /// Default wallet for a new expense/savings log (last used → primary → liquidity).
+  String? suggestSourceAccountId() {
+    if (_lastSourceAccountId != null &&
+        accountById(_lastSourceAccountId) != null) {
+      return _lastSourceAccountId;
+    }
+    FinancialAccountProtocol? primary;
+    FinancialAccountProtocol? firstLiquidity;
+    for (final a in accounts.value) {
+      if (!a.isActive) continue;
+      if (a.isPrimary) primary = a;
+      if (firstLiquidity == null &&
+          FinanceAssetPillar.pillarForAccountType(a.accountType) ==
+              FinanceAssetPillar.liquidity) {
+        firstLiquidity = a;
+      }
+    }
+    return primary?.financialAccountID ??
+        firstLiquidity?.financialAccountID ??
+        (accounts.value.where((a) => a.isActive).isNotEmpty
+            ? accounts.value.firstWhere((a) => a.isActive).financialAccountID
+            : null);
+  }
+
+  bool get hasActiveAccounts =>
+      accounts.value.any((a) => a.isActive);
+
+  FinancialAccountProtocol? accountById(String? id) {
+    if (id == null || id.isEmpty) return null;
+    for (final a in accounts.value) {
+      if (a.financialAccountID == id && a.isActive) return a;
+    }
+    return null;
+  }
+
+  String? accountDisplayName(String? accountId) =>
+      accountById(accountId)?.accountName;
+
+  CurrencyType _currencyFromName(String name) {
+    return CurrencyType.values.firstWhere(
+      (e) => e.name == name,
+      orElse: () => CurrencyType.USD,
+    );
+  }
+
+  /// Balance delta when money leaves [accountId] (expense / savings).
+  double _outflowDelta(String type, double amount, {bool reverse = false}) {
+    if (type != 'expense' && type != 'savings') return 0;
+    final delta = -amount;
+    return reverse ? -delta : delta;
+  }
+
+  Future<void> _adjustAccountBalance(String accountId, double delta) async {
+    if (delta == 0) return;
+    final acc = accountById(accountId);
+    if (acc == null) return;
+    await updateAccount(
+      id: acc.financialAccountID,
+      accountName: acc.accountName,
+      accountType: acc.accountType,
+      balance: acc.balance + delta,
+      currency: _currencyFromName(acc.currency),
+    );
+  }
+
+  Future<void> _revertTransactionAccountEffect(TransactionData txn) async {
+    final id = txn.sourceAccountId;
+    if (id == null || id.isEmpty) return;
+    await _adjustAccountBalance(
+      id,
+      _outflowDelta(txn.type, txn.amount, reverse: true),
+    );
+  }
+
+  Future<void> _applyTransactionAccountEffect({
+    required String type,
+    required double amount,
+    String? sourceAccountId,
+  }) async {
+    if (sourceAccountId == null || sourceAccountId.isEmpty) return;
+    await _adjustAccountBalance(
+      sourceAccountId,
+      _outflowDelta(type, amount),
+    );
+  }
+
   Future<void> addTransaction({
     required String category,
     required String type,
@@ -651,6 +855,7 @@ class FinanceBlock {
     DateTime? date,
     String? projectID,
     int? moodScore,
+    String? sourceAccountId,
   }) async {
     if (_personId.isEmpty) return;
     await _dao.insertTransaction(
@@ -666,8 +871,19 @@ class FinanceBlock {
         description: Value(description),
         transactionDate: Value(date ?? DateTime.now()),
         projectID: Value(projectID),
+        sourceAccountId: Value(sourceAccountId),
       ),
     );
+    await _applyTransactionAccountEffect(
+      type: type,
+      amount: amount,
+      sourceAccountId: sourceAccountId,
+    );
+    if (sourceAccountId != null &&
+        sourceAccountId.isNotEmpty &&
+        (type == 'expense' || type == 'savings')) {
+      await _persistLastSourceAccount(sourceAccountId);
+    }
   }
 
   Future<void> updateTransaction({
@@ -679,8 +895,13 @@ class FinanceBlock {
     DateTime? date,
     String? projectID,
     int? moodScore,
+    String? sourceAccountId,
   }) async {
     if (_personId.isEmpty) return;
+    final previous = _transactionById(id);
+    if (previous != null) {
+      await _revertTransactionAccountEffect(previous);
+    }
     await _dao.updateTransaction(
       TransactionsTableCompanion(
         id: Value(id),
@@ -692,8 +913,19 @@ class FinanceBlock {
         description: Value(description),
         transactionDate: Value(date ?? DateTime.now()),
         projectID: Value(projectID),
+        sourceAccountId: Value(sourceAccountId),
       ),
     );
+    await _applyTransactionAccountEffect(
+      type: type,
+      amount: amount,
+      sourceAccountId: sourceAccountId,
+    );
+    if (sourceAccountId != null &&
+        sourceAccountId.isNotEmpty &&
+        (type == 'expense' || type == 'savings')) {
+      await _persistLastSourceAccount(sourceAccountId);
+    }
   }
 
   Future<void> addSubscription({
@@ -780,7 +1012,38 @@ class FinanceBlock {
   }
 
   Future<void> deleteTransaction(String id) async {
+    final previous = _transactionById(id);
+    if (previous != null) {
+      await _revertTransactionAccountEffect(previous);
+    }
     await _dao.deleteTransaction(id);
+  }
+
+  Future<void> updateAccount({
+    required String id,
+    required String accountName,
+    required String accountType,
+    required double balance,
+    required CurrencyType currency,
+  }) async {
+    if (_personId.isEmpty) return;
+    await _dao.updateFinancialAccount(
+      FinancialAccountsTableCompanion(
+        id: Value(id),
+        personID: Value(_personId),
+        accountName: Value(accountName),
+        accountType: Value(accountType),
+        balance: Value(balance),
+        currency: Value(currency),
+        updatedAt: Value(DateTime.now()),
+      ),
+    );
+    await refreshFromLocalDatabase();
+  }
+
+  Future<void> deleteAccount(String id) async {
+    await _dao.deleteAccount(id);
+    await refreshFromLocalDatabase();
   }
 
   Future<void> toggleCurrency() async {

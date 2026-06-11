@@ -15,6 +15,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurfa
 import 'package:live_activities/live_activities.dart';
 
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/QuickSaveSheet.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_form/AddAccountDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/TransactionBuilderDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceOverviewPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyPage.dart';
@@ -22,7 +23,6 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSubscri
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceSavingsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceAchievementsPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SubscriptionManager.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/AchievementBuilderDialog.dart';
 
 class FinancePage extends StatefulWidget {
@@ -54,6 +54,8 @@ class FinancePage extends StatefulWidget {
         return l10n.finance_cat_education;
       case 'investing':
         return l10n.finance_cat_investing;
+      case 'human_capital':
+        return l10n.finance_cat_human_capital;
       case 'salary':
         return l10n.finance_cat_salary;
       case 'freelance':
@@ -98,7 +100,7 @@ class FinancePage extends StatefulWidget {
         icon: Icons.add,
         mainFunction: () {
           if (tab == 0) {
-            showFixedIncomeEditor(context, financeBlock);
+            AddAccountDialog.show(context);
           } else if (tab == 1) {
             TransactionBuilderDialog.show(context, financeBlock: financeBlock);
           } else if (tab == 2) {

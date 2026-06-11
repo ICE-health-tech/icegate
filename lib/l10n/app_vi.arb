@@ -29,6 +29,26 @@
   "projects_calendar_insufficient_scopes": "Chưa cấp quyền Lịch. Ngắt kết nối Google, kết nối lại và chấp nhận đủ quyền.",
   "projects_calendar_connect_hint": "Đăng nhập Google để đồng bộ mọi lịch Google lên màn hình Lịch.",
   "projects_calendar_add_reminder": "Thêm nhắc nhở",
+  "projects_calendar_add_event": "Thêm sự kiện",
+  "projects_calendar_event_title": "Tiêu đề sự kiện",
+  "projects_calendar_event_title_required": "Nhập tiêu đề sự kiện",
+  "projects_calendar_event_start": "Bắt đầu",
+  "projects_calendar_event_end": "Kết thúc",
+  "projects_calendar_event_saved": "Đã lưu sự kiện vào lịch",
+  "projects_calendar_event_deleted": "Đã xóa sự kiện",
+  "projects_calendar_event_failed": "Không thể lưu sự kiện",
+  "projects_calendar_edit_event": "Sửa sự kiện",
+  "projects_calendar_delete_event": "Xóa sự kiện",
+  "projects_calendar_edit_reminder": "Sửa nhắc nhở",
+  "projects_calendar_save": "Lưu",
+  "projects_calendar_select_calendar": "Lịch",
+  "projects_calendar_tap_day_add_hint": "Chạm lại ngày đã chọn để thêm sự kiện",
+  "projects_calendar_hold_day_add_hint": "Giữ ngày để thêm sự kiện",
+  "projects_calendar_timeline_empty": "Không có sự kiện theo giờ trong ngày",
+  "projects_calendar_timeline_tap_slot": "Chạm khung giờ để thêm · chạm sự kiện để sửa hoặc xóa",
+  "projects_calendar_timeline_remove": "Ẩn khỏi timeline",
+  "projects_calendar_timeline_remove_confirm": "Ẩn \"{title}\" khỏi timeline ngày này?",
+  "projects_calendar_day_timeline": "Dòng thời gian",
   "projects_calendar_reminder_title": "Tiêu đề nhắc nhở",
   "projects_calendar_sync_google": "Đồng bộ sự kiện",
   "projects_calendar_all_day": "Cả ngày",
@@ -62,6 +82,9 @@
   "projects_calendar_sync_empty_month": "Đã kết nối — không có sự kiện trong tháng này. Thử tháng khác hoặc kiểm tra Google Calendar.",
   "integration_hub_calendars_section": "Lịch",
   "integration_hub_health_section": "Sức khỏe",
+  "integration_hub_notes_section": "Ghi chú & tài liệu",
+  "integration_hub_google_drive_hint": "Đồng bộ ghi chú dự án và tệp vault từ Google Drive.",
+  "integration_hub_notion_hint": "Nhập trang và cơ sở dữ liệu Notion được chia sẻ vào vault.",
   "integration_hub_connect": "Kết nối",
   "integration_hub_status_connected": "Đã kết nối",
   "integration_hub_apple_health": "Apple Health",
@@ -823,6 +846,29 @@
   "mind_focus_none": "Chưa chọn",
   "mind_quick_entry_hint": "Bạn đang nghĩ gì thế?",
   "mind_focus_title": "KHU VỰC TẬP TRUNG",
+  "mind_focus_weekly_title": "Trọng tâm tuần này",
+  "mind_focus_monthly_title": "Trọng tâm tháng này",
+  "mind_focus_goal_level": "Mục tiêu: Lv. {level}",
+  "@mind_focus_goal_level": {
+    "placeholders": { "level": { "type": "int" } }
+  },
+  "mind_focus_xp_progress": "{current} / {cap} XP",
+  "@mind_focus_xp_progress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+  "mind_focus_badge": "FOCUS",
+  "mind_total_level": "Level tổng",
+  "mind_streak_label": "Chuỗi",
+  "mind_streak_days": "{days} ngày",
+  "@mind_streak_days": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "mind_streak_bonus": "+15% EXP bonus",
+  "mind_skill_tree_title": "Cây kỹ năng",
+  "mind_skill_certificates_title": "Chứng nhận",
   "mind_focus_subtitle": "Định nghĩa xu hướng theo tuần để biết nên tập trung vào đâu.",
   "mind_focus_empty": "Chưa có khu vực tập trung. Chọn mẫu hoặc tạo mới.",
   "mind_focus_add": "Khu vực mới",
@@ -863,6 +909,14 @@
   "mind_skills_session_title": "Phiên kỹ năng",
   "mind_skills_session_subtitle": "Chọn kỹ năng, tập trung, ghi lại điều học được.",
   "mind_skills_session_start": "Bắt đầu phiên",
+  "mind_skills_session_empty_month": "Chưa có phiên kỹ năng trong tháng này.",
+  "mind_skills_session_skill_meta": "{sessions} phiên · {minutes} phút",
+  "@mind_skills_session_skill_meta": {
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
   "mind_skills_session_empty": "Chưa có phiên kỹ năng trong {days} ngày qua.",
   "@mind_skills_session_empty": {
     "placeholders": {
@@ -913,6 +967,57 @@
       }
     }
   },
+  "mind_skills_celebration_title": "Đã lưu bằng chứng luyện tập",
+  "mind_skills_celebration_proof": "Bạn tập trung {minutes} phút và +{xp} XP — đã ghi vào hồ sơ kỹ năng.",
+  "@mind_skills_celebration_proof": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "xp": { "type": "int" }
+    }
+  },
+  "mind_skills_celebration_level_up": "Lên cấp: {skills}",
+  "@mind_skills_celebration_level_up": {
+    "placeholders": {
+      "skills": { "type": "String" }
+    }
+  },
+  "mind_skills_celebration_streak": "Chuỗi {days} ngày — giữ nhịp luyện tập.",
+  "@mind_skills_celebration_streak": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "mind_skills_celebration_goal": "Phiên hôm nay là nền cho phiên bản bạn ngày mai.",
+  "mind_skill_name_invalid": "Tên kỹ năng từ 1–24 ký tự.",
+  "mind_skill_name_duplicate": "Kỹ năng này đã có trong danh sách.",
+  "mind_skill_add_title": "Thêm kỹ năng",
+  "mind_skill_edit_title": "Sửa tên kỹ năng",
+  "mind_skill_delete_title": "Xóa kỹ năng?",
+  "mind_skill_delete_body": "Gỡ “{name}” khỏi thư viện kỹ năng?",
+  "@mind_skill_delete_body": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "mind_skill_certificate_header": "CHỨNG NHẬN LUYỆN TẬP",
+  "mind_skill_certificate_subtitle": "Năng lực con người · tiến độ đã xác minh",
+  "mind_skill_certificate_awarded_to": "Trao tặng cho quá trình rèn luyện kỹ năng",
+  "mind_skill_certificate_level": "Cấp bậc",
+  "mind_skill_certificate_xp": "Kinh nghiệm",
+  "mind_skill_certificate_streak": "Chuỗi ngày",
+  "mind_skill_certificate_proof": "Bản ghi này từ các phiên thật trên ice_gate — bằng chứng tiến bộ của bạn.",
+  "mind_skill_certificate_seal": "ẤN ICEGATE",
+  "mind_skill_certificate_select_session": "Chọn cho phiên",
+  "mind_skill_certificate_close": "Đóng",
+  "mind_skill_certificate_created": "Ngày tạo",
+  "mind_skill_certificate_updated": "Cập nhật lần cuối",
+  "mind_skill_certificate_description": "Mô tả",
+  "mind_skill_certificate_description_hint": "Ý nghĩa kỹ năng này với bạn, hoặc cách bạn đạt được…",
+  "mind_skill_certificate_edit": "Sửa chứng nhận",
+  "mind_skill_certificate_save": "Lưu chứng nhận",
+  "mind_skill_certificates_table_title": "Chứng nhận luyện tập",
+  "mind_skill_certificates_table_empty": "Chưa có kỹ năng trong thư viện. Mở Kỹ năng để bắt đầu tích lũy chứng nhận.",
+  "mind_skill_certificates_col_skill": "Kỹ năng",
   "mood_trends_title": "XU HƯỚNG TÂM TRẠNG",
   "social_notes_title": "GHI CHÉP TINH THẦN",
   "social_empty_state_title": "Câu chuyện của bạn bắt đầu tại đây",
@@ -944,6 +1049,27 @@
   "stat_entries": "MỤC NHẬP",
   "stat_images": "HÌNH ẢNH",
   "stat_sentiment": "TÂM TRẠNG",
+  "stat_mind_logs": "Log (30 ngày)",
+  "stat_active_days": "Ngày có log",
+  "stat_avg_mood": "Mood TB",
+  "journal_hourly_logs": "Log theo giờ (hôm nay)",
+  "mind_insights_skill_title": "Luyện kỹ năng (30 ngày)",
+  "mind_insights_skill_summary": "{sessions} phiên · {minutes} phút",
+  "@mind_insights_skill_summary": {
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "mind_insights_top_skill_streak": "Chuỗi · {skill} · {days} ngày",
+  "@mind_insights_top_skill_streak": {
+    "placeholders": {
+      "skill": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "mind_insights_open_notes": "Ghi chép tinh thần",
+  "mind_insights_open_skills": "Chứng nhận kỹ năng",
   "weekly_mood_trend": "XU HƯỚNG TÂM TRẠNG TUẦN",
   "no_records_last_7_days": "Không có dữ liệu trong 7 ngày qua",
   "frequent_activities": "HOẠT ĐỘNG THƯỜNG XUYÊN",
@@ -1373,9 +1499,11 @@
     }
   },
   "project_skill_catalog_hint": "Chọn từ các kỹ năng giống tab Skills trong Mind.",
-  "project_auto_add_all_skills": "Thêm tự động tất cả",
-  "project_auto_add_all_skills_subtitle": "Gắn mọi kỹ năng trong thư viện Mind vào dự án này",
-  "project_skills_all_on_project": "Tất cả kỹ năng đã có trong dự án",
+  "project_auto_add_all_skills": "Tạo kỹ năng mới",
+  "project_auto_add_all_skills_subtitle": "Tạo kỹ năng hoàn toàn mới cho Mind và dự án này",
+  "project_skill_already_exists": "Kỹ năng này đã tồn tại",
+  "project_skill_name_too_long": "Tên kỹ năng quá dài (tối đa 24 ký tự)",
+  "project_skills_all_on_project": "Tất cả kỹ năng Mind đã có trong dự án",
   "project_skills_added_count": "Đã thêm {count} kỹ năng",
   "@project_skills_added_count": {
     "placeholders": {
@@ -1572,6 +1700,15 @@
   "delete_account_plan_step2": "Nếu dự án triển khai Edge Function Supabase \"delete-account\", tài khoản xác thực và dòng liên quan có thể được xóa phía máy chủ.",
   "delete_account_plan_step3": "Trước khi có endpoint đó, dữ liệu đám mây có thể vẫn tồn tại — liên hệ hỗ trợ hoặc yêu cầu xóa đầy đủ theo chính sách bảo mật.",
   "delete_account_acknowledge": "Tôi hiểu tài khoản có thể chưa bị xóa hoàn toàn trên máy chủ cho đến khi backend bật xóa.",
+  "delete_account_type_key_word": "XOA-TAI-KHOAN",
+  "delete_account_type_key_prompt": "Nhập {word} để xác nhận:",
+  "@delete_account_type_key_prompt": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "delete_account_confirm": "Xóa và đăng xuất",
   "delete_account_cancel": "Hủy",
   "delete_account_success": "Bạn đã đăng xuất. Việc xóa hoàn toàn trên đám mây có thể mất tới 48 giờ sau khi bật.",
@@ -1646,10 +1783,15 @@
   "finance_label_amount": "Số tiền",
   "finance_label_category": "Hạng mục",
   "finance_label_description_optional": "Mô tả (tùy chọn)",
+  "finance_txn_source_account": "Chi từ",
+  "finance_txn_source_account_none": "Không chọn",
+  "finance_txn_source_account_empty": "Hãy lưu ví/tài khoản trước, sau đó chọn nguồn khi ghi chi tiêu.",
+  "finance_txn_source_account_add": "Thêm tài khoản",
+  "finance_txn_source_account_required": "Hãy chọn ví/tài khoản chi tiền.",
   "finance_recurring_income": "Thu nhập định kỳ",
   "finance_recurring_interval": "Lặp lại mỗi",
   "finance_fixed_income_title": "Thu nhập cố định",
-  "finance_fixed_income_subtitle": "Lương, tiền thuê và các khoản thu ổn định khác",
+  "finance_fixed_income_subtitle": "Vốn con người (kỹ năng), lương, tiền thuê và các khoản thu ổn định khác",
   "finance_fixed_income_monthly_total": "Tổng / tháng",
   "finance_fixed_income_empty": "Chưa có thu nhập cố định",
   "finance_fixed_income_add": "Thêm thu nhập cố định",
@@ -1748,6 +1890,69 @@
   "finance_cat_education": "Giáo dục",
   "finance_cat_investing": "Đầu tư",
   "finance_cat_general": "Chung",
+  "finance_cat_human_capital": "Vốn con người",
+  "finance_inflow_pillar_human_capital": "Vốn con người",
+  "finance_inflow_pillar_liquidity": "Thanh khoản",
+  "finance_inflow_pillar_fixed_income": "Thu nhập cố định",
+  "finance_inflow_pillar_investment": "Đầu tư",
+  "finance_inflow_pillar_cashflow": "Dòng tiền",
+  "finance_inflow_pillars_title": "Các lớp thu vào",
+  "finance_inflow_pillars_subtitle": "Kỹ năng & việc làm, tiền mặt, thu ổn định, tài sản tăng trưởng, hệ thống định kỳ",
+  "finance_asset_pillars_title": "Lớp tài sản",
+  "finance_asset_pillars_subtitle": "Thanh khoản, thu nhập cố định, đầu tư, dòng tiền",
+  "finance_asset_pillar_liquidity": "Thanh khoản",
+  "finance_asset_pillar_fixed_income": "Thu nhập cố định",
+  "finance_asset_pillar_investment": "Đầu tư",
+  "finance_asset_pillar_cashflow": "Dòng tiền",
+  "finance_record_section_title": "Ghi nhận",
+  "finance_record_section_subtitle": "Thêm tài khoản, tài sản, vốn con người và subscription",
+  "finance_record_human_capital": "Vốn con người",
+  "finance_record_human_capital_hint": "Năng lực / capacity (ước tính)",
+  "finance_record_liquidity_account": "TK thanh khoản",
+  "finance_record_liquidity_hint": "Tiền mặt, ngân hàng",
+  "finance_record_fixed_income_asset": "TS thu nhập cố định",
+  "finance_record_fixed_income_hint": "Trái phiếu, tiết kiệm",
+  "finance_record_investment_account": "TK đầu tư",
+  "finance_record_investment_account_hint": "CTCK, crypto, ví broker",
+  "finance_record_investment_holding": "TS đầu tư",
+  "finance_record_investment_holding_hint": "Cổ phiếu, crypto, BĐS",
+  "finance_account_type_checking": "Thanh toán",
+  "finance_account_type_savings": "Tiết kiệm",
+  "finance_account_type_cash": "Tiền mặt",
+  "finance_account_type_credit_card": "Thẻ tín dụng",
+  "finance_account_type_deposit": "Gửi có kỳ hạn",
+  "finance_account_type_investment": "Tài khoản đầu tư",
+  "finance_add_account_title": "Thêm tài khoản",
+  "finance_account_type_section": "Loại tài khoản",
+  "finance_accounts_liquidity_title": "Tài khoản thanh khoản",
+  "finance_accounts_investment_title": "Tài khoản đầu tư",
+  "finance_account_investment_name_hint": "VD: VNDirect, SSI, Binance",
+  "finance_record_cashflow_asset": "TS dòng tiền",
+  "finance_record_cashflow_hint": "SaaS, hệ thống định kỳ",
+  "finance_record_subscription": "Subscription",
+  "finance_record_subscription_hint": "Chi phí lặp lại",
+  "finance_hc_capacity_label": "Capacity",
+  "finance_hc_realized_label": "Đã nhận",
+  "finance_hc_gap_title": "Vốn con người",
+  "finance_hc_gap_message": "Capacity {capacity} · nhận {received} · chênh {gap}",
+  "@finance_hc_gap_message": {
+    "placeholders": {
+      "capacity": {"type": "String"},
+      "received": {"type": "String"},
+      "gap": {"type": "String"}
+    }
+  },
+  "finance_add_asset_title": "Thêm tài sản",
+  "finance_add_asset_category": "Loại tài sản",
+  "finance_add_asset_name": "Tên / mã",
+  "finance_add_asset_value": "Giá trị ước tính",
+  "finance_add_asset_save": "Lưu tài sản",
+  "finance_asset_cat_stock": "Cổ phiếu",
+  "finance_asset_cat_crypto": "Crypto",
+  "finance_asset_cat_bond": "Trái phiếu",
+  "finance_asset_cat_deposit": "Tiết kiệm",
+  "finance_asset_cat_real_estate": "Bất động sản",
+  "finance_asset_cat_cashflow": "Dòng tiền (SaaS)",
   "finance_cat_salary": "Lương",
   "finance_cat_freelance": "Làm tự do",
   "finance_cat_investment": "Đầu tư",

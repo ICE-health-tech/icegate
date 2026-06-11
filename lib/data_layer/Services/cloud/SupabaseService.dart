@@ -172,8 +172,11 @@ class SupabaseService {
       'external_widgets',
       'person_widgets',
       'achievements',
+      'quotes',
       'heart_rate_logs',
       'oxygen_saturation_logs',
+      'integration_accounts',
+      'events',
     ];
 
     for (final table in tablesToSync) {
@@ -358,9 +361,24 @@ class SupabaseService {
           await database.achievementsDAO.upsertFromSupabase(r);
         }
         break;
+      case 'quotes':
+        for (final r in records) {
+          await database.quoteDAO.upsertFromSupabase(r);
+        }
+        break;
       case 'meals':
         for (final r in records) {
           await database.healthMealDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'integration_accounts':
+        for (final r in records) {
+          await database.integrationAccountDAO.upsertFromSupabase(r);
+        }
+        break;
+      case 'events':
+        for (final r in records) {
+          await database.eventsDAO.upsertFromSupabase(r);
         }
         break;
       default:

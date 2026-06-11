@@ -13,9 +13,9 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart
 import 'package:ice_gate/orchestration_layer/Services/MindFocusTrendPrefs.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillFocusHub.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTrendEditor.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindFocusTodosSection.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindSkillsSessionCard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindLogEntryDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:intl/intl.dart';
@@ -235,18 +235,7 @@ class _MindFocusTrendsTabState extends State<MindFocusTrendsTab> {
             ),
             slivers: [
               SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.fromLTRB(hPad, 12, hPad, 8),
-                  child: _FocusIntroCard(
-                    accent: accent,
-                    isDark: isDark,
-                    title: l10n.mind_focus_title,
-                    subtitle: l10n.mind_focus_subtitle,
-                  ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: MindSkillsSessionCard(logs: logs),
+                child: MindSkillFocusHub(logs: logs),
               ),
               if (_trends.isEmpty) ...[
                 SliverToBoxAdapter(
@@ -432,75 +421,6 @@ class _MindFocusTrendsTabState extends State<MindFocusTrendsTab> {
         },
       );
     });
-  }
-}
-
-class _FocusIntroCard extends StatelessWidget {
-  final Color accent;
-  final bool isDark;
-  final String title;
-  final String subtitle;
-
-  const _FocusIntroCard({
-    required this.accent,
-    required this.isDark,
-    required this.title,
-    required this.subtitle,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: HealthMetricColors.shellPanel(
-        cs,
-        isDark: isDark,
-        radius: 22,
-        accent: accent,
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: accent.withValues(alpha: isDark ? 0.22 : 0.14),
-              borderRadius: BorderRadius.circular(14),
-            ),
-            child: Icon(Icons.center_focus_strong_rounded, color: accent),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title.toUpperCase(),
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 1.5,
-                    color: cs.onSurface.withValues(alpha: 0.55),
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    height: 1.35,
-                    color: cs.onSurface.withValues(alpha: 0.82),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
   }
 }
 

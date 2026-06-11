@@ -199,6 +199,7 @@ class HubGridTile extends StatelessWidget {
             ),
             child: dense
                 ? Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Container(
                         width: 28,

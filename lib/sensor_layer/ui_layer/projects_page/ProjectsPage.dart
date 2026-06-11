@@ -15,10 +15,9 @@ import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DotGridPainter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/WorkspaceSidebarLayout.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/HubEntryCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/ProjectsQuickActionsHub.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'TaskItem.dart';
 import 'CreateProjectDialog.dart';
@@ -38,61 +37,8 @@ const _builtInQuickActionPaths = {
   '/focus-history',
 };
 
-/// Responsive hub grid + page chrome for phone vs desktop.
-class _ProjectsHubGridSpec {
-  const _ProjectsHubGridSpec({
-    required this.crossAxisCount,
-    required this.childAspectRatio,
-    required this.dense,
-    required this.showDotGrid,
-  });
-
-  final int crossAxisCount;
-  final double childAspectRatio;
-  final bool dense;
-  final bool showDotGrid;
-
-  static _ProjectsHubGridSpec forWidth(double w) {
-    if (w >= 1280) {
-      return const _ProjectsHubGridSpec(
-        crossAxisCount: 8,
-        childAspectRatio: 1.62,
-        dense: true,
-        showDotGrid: false,
-      );
-    }
-    if (w >= 1040) {
-      return const _ProjectsHubGridSpec(
-        crossAxisCount: 7,
-        childAspectRatio: 1.5,
-        dense: true,
-        showDotGrid: false,
-      );
-    }
-    if (w >= 860) {
-      return const _ProjectsHubGridSpec(
-        crossAxisCount: 6,
-        childAspectRatio: 1.38,
-        dense: true,
-        showDotGrid: false,
-      );
-    }
-    if (w >= 680) {
-      return const _ProjectsHubGridSpec(
-        crossAxisCount: 5,
-        childAspectRatio: 1.22,
-        dense: true,
-        showDotGrid: false,
-      );
-    }
-    return const _ProjectsHubGridSpec(
-      crossAxisCount: 3,
-      childAspectRatio: 1.48,
-      dense: true,
-      showDotGrid: true,
-    );
-  }
-
+/// Responsive layout breakpoints for Projects page.
+abstract final class _ProjectsHubGridSpec {
   static bool useSplitLayout(double w) => w >= 1120;
   static bool isDesktop(double w) => w >= 900;
 }
@@ -212,7 +158,7 @@ class ProjectsPage extends StatelessWidget {
             const islandHeight = 56.0;
             final contentTop = isDesktop
                 ? topPad + 12.0
-                : topPad + islandHeight + 20;
+                : topPad + islandHeight + 8;
 
             final tagline = Text(
               context.l10n.projects_page_tagline,
@@ -247,8 +193,7 @@ class ProjectsPage extends StatelessWidget {
                     : Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // tagline,
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 8),
                     Watch((context) {
                       final projectBlock = context.read<ProjectBlock>();
                       final growthBlock = context.read<GrowthBlock>();
@@ -393,11 +338,8 @@ class ProjectsPage extends StatelessWidget {
                     }),
                     // const SizedBox(height: 18),
                     const SizedBox(height: 4),
-                    _buildSectionTitle(context, context.l10n.quick_actions),
-                    const SizedBox(height: 6),
-                    _buildQuickActionsHub(
+                    _buildQuickActionsBlock(
                       context,
-                      colorScheme,
                       internalWidgetBlock,
                     ),
                     if (!useSplit) ...[
@@ -669,9 +611,8 @@ class ProjectsPage extends StatelessWidget {
               const SizedBox(height: 16),
               _buildSummaryPanel(context, colorScheme, internalWidgetBlock, database),
               const SizedBox(height: 18),
-              _buildSectionTitle(context, context.l10n.quick_actions),
-              const SizedBox(height: 12),
-              _buildQuickActionsHub(context, colorScheme, internalWidgetBlock),
+              _buildQuickActionsBlock(context, internalWidgetBlock),
+              const SizedBox(height: 6),
             ],
           ),
         ),
@@ -791,23 +732,22 @@ class ProjectsPage extends StatelessWidget {
     });
   }
 
-  Widget _buildQuickActionsHub(
+  Widget _buildQuickActionsBlock(
     BuildContext context,
-    ColorScheme colorScheme,
     InternalWidgetBlock internalWidgetBlock,
   ) {
     return Watch((context) {
       final l10n = context.l10n;
+      final colorScheme = Theme.of(context).colorScheme;
       final allApps = internalWidgetBlock.listInternalWidgetProjectsPage.value;
       final apps = List<InternalWidgetProtocol>.from(allApps)
         ..removeWhere((a) => _builtInQuickActionPaths.contains(a.url))
         ..sort((a, b) => b.dateAdded.compareTo(a.dateAdded));
-      final isDark = Theme.of(context).brightness == Brightness.dark;
 
       Future<void> openNewNote() async {
         final ext = await showDialog<String>(
           context: context,
-          builder: (context) => SimpleDialog(
+          builder: (context) => Center(child: SimpleDialog(
             title: const Text('Choose Note Type'),
             children: [
               SimpleDialogOption(
@@ -824,176 +764,76 @@ class ProjectsPage extends StatelessWidget {
               ),
             ],
           ),
-        );
+        ));
         if (ext != null && context.mounted) {
           context.push('/projects/editor', extra: {'extension': ext});
         }
       }
 
-      HubGridTile tile({
-        required String label,
-        required IconData icon,
-        required Color accent,
-        required VoidCallback onTap,
-        VoidCallback? onLongPress,
-        bool isAddSlot = false,
-        required bool dense,
-      }) {
-        return HubGridTile(
-          label: label,
-          icon: icon,
-          accent: accent,
-          onTap: onTap,
-          onLongPress: onLongPress,
-          isAddSlot: isAddSlot,
-          dense: dense,
-        );
-      }
+      final tiles = <QuickActionTileSpec>[
+        QuickActionTileSpec(
+          label: l10n.new_label,
+          icon: Icons.note_add_rounded,
+          accent: HealthMetricColors.pillarAccentAt(0),
+          onTap: openNewNote,
+        ),
+        QuickActionTileSpec(
+          label: l10n.project_notes_label,
+          icon: Icons.edit_note_rounded,
+          accent: HealthMetricColors.pillarAccentAt(1),
+          onTap: () => context.push('/projects/notes'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_social_blocker,
+          icon: Icons.groups_rounded,
+          accent: HealthMetricColors.pillarAccentAt(2),
+          onTap: () => context.push('/social/blocker'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_reminders,
+          icon: Icons.notifications_active_rounded,
+          accent: HealthMetricColors.pillarAccentAt(3),
+          onTap: () => context.push('/health/block-reminder'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_calendar,
+          icon: Icons.calendar_month_rounded,
+          accent: HealthMetricColors.pillarAccentAt(0),
+          onTap: () => context.push('/projects/calendar'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_focus,
+          icon: Icons.bolt_rounded,
+          accent: HealthMetricColors.pillarAccentAt(1),
+          onTap: () => context.push('/health/focus'),
+        ),
+        QuickActionTileSpec(
+          label: l10n.projects_tile_pomodoro,
+          icon: Icons.timer_rounded,
+          accent: HealthMetricColors.pillarAccentAt(2),
+          onTap: () => context.push('/focus-history'),
+        ),
+        ...apps.asMap().entries.map(
+          (entry) => QuickActionTileSpec(
+            label: _pluginDisplayLabel(context, entry.value.name),
+            icon: _getAppIcon(entry.value.name),
+            accent: HealthMetricColors.pillarAccentAt(3 + entry.key),
+            onTap: () => context.push(entry.value.url),
+            onLongPress: () => _showDeletePluginDialog(context, entry.value),
+          ),
+        ),
+        QuickActionTileSpec(
+          label: l10n.add,
+          icon: Icons.add_rounded,
+          accent: colorScheme.primary,
+          isAddSlot: true,
+          onTap: () => _showAddPluginDialog(context),
+        ),
+      ];
 
-      return LayoutBuilder(
-        builder: (context, constraints) {
-          final spec = _ProjectsHubGridSpec.forWidth(constraints.maxWidth);
-
-          List<Widget> buildTiles(bool dense) => [
-                tile(
-                  label: l10n.new_label,
-                  icon: Icons.note_add_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(0),
-                  onTap: openNewNote,
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.project_notes_label,
-                  icon: Icons.edit_note_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(1),
-                  onTap: () => context.push('/projects/notes'),
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.projects_tile_social_blocker,
-                  icon: Icons.groups_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(2),
-                  onTap: () => context.push('/social/blocker'),
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.projects_tile_reminders,
-                  icon: Icons.notifications_active_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(3),
-                  onTap: () => context.push('/health/block-reminder'),
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.projects_tile_calendar,
-                  icon: Icons.calendar_month_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(0),
-                  onTap: () => context.push('/projects/calendar'),
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.projects_tile_focus,
-                  icon: Icons.bolt_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(1),
-                  onTap: () => context.push('/health/focus'),
-                  dense: dense,
-                ),
-                tile(
-                  label: l10n.projects_tile_pomodoro,
-                  icon: Icons.timer_rounded,
-                  accent: HealthMetricColors.pillarAccentAt(2),
-                  onTap: () => context.push('/focus-history'),
-                  dense: dense,
-                ),
-                ...apps.asMap().entries.map(
-                  (entry) => tile(
-                    label: _pluginDisplayLabel(context, entry.value.name),
-                    icon: _getAppIcon(entry.value.name),
-                    accent: HealthMetricColors.pillarAccentAt(3 + entry.key),
-                    onTap: () => context.push(entry.value.url),
-                    onLongPress: () =>
-                        _showDeletePluginDialog(context, entry.value),
-                    dense: dense,
-                  ),
-                ),
-                tile(
-                  label: l10n.add,
-                  icon: Icons.add_rounded,
-                  accent: colorScheme.primary,
-                  isAddSlot: true,
-                  onTap: () => _showAddPluginDialog(context),
-                  dense: dense,
-                ),
-              ];
-
-          final coreTiles = buildTiles(spec.dense).take(6).toList();
-          final extraTiles = buildTiles(spec.dense).skip(6).toList();
-
-          Widget grid(List<Widget> items) => GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: spec.crossAxisCount,
-                  mainAxisSpacing: 6,
-                  crossAxisSpacing: 6,
-                  childAspectRatio: spec.childAspectRatio,
-                ),
-                itemCount: items.length,
-                itemBuilder: (context, i) => items[i],
-              );
-
-          final panelChild = spec.dense
-              ? grid(buildTiles(true))
-              : Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    grid(coreTiles),
-                    if (extraTiles.isNotEmpty) ...[
-                      const SizedBox(height: 5),
-                      _buildSectionTitle(context, l10n.projects_quick_more),
-                      const SizedBox(height: 5),
-                      grid(extraTiles),
-                    ],
-                  ],
-                );
-
-          if (!spec.showDotGrid) {
-            return Container(
-              padding: const EdgeInsets.all(12),
-              decoration: _ProjectsSurface.panel(colorScheme, radius: 20),
-              child: panelChild,
-            );
-          }
-
-          return Container(
-            decoration: _ProjectsSurface.panel(colorScheme, radius: 22).copyWith(
-              color: Color.alphaBlend(
-                colorScheme.surface.withValues(alpha: isDark ? 0.2 : 0.55),
-                colorScheme.surfaceContainerHighest.withValues(alpha: 0.75),
-              ),
-            ),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(28),
-              child: Stack(
-                children: [
-                  Positioned.fill(
-                    child: CustomPaint(
-                      painter: DotGridPainter(
-                        color: isDark ? Colors.white : Colors.black,
-                        opacity: isDark ? 0.12 : 0.09,
-                        spacing: 25,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    // Reduce redundant top breathing room above the first row of tiles.
-                    padding: const EdgeInsets.fromLTRB(10, 6, 10, 8),
-                    child: panelChild,
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
+      return ProjectsQuickActionsBlock(
+        title: l10n.quick_actions,
+        tiles: tiles,
       );
     });
   }
@@ -1640,7 +1480,7 @@ class _ProjectsWorkspaceCard extends StatelessWidget {
     final cs = Theme.of(context).colorScheme;
     final l10n = context.l10n;
     final w = MediaQuery.sizeOf(context).width;
-    final wide = w >= 900;
+    final wide = w >= 800;
     final narrow = _ProjectGridSpec.usePhoneList(w);
 
     return Container(
@@ -1649,17 +1489,17 @@ class _ProjectsWorkspaceCard extends StatelessWidget {
         cs,
         radius: wide ? 18 : (narrow ? 16 : 20),
       ),
-      padding: EdgeInsets.all(
-        activeProjects.isEmpty
-            ? (wide ? 22 : (narrow ? 20 : 24))
-            : (wide ? 12 : (narrow ? 8 : 14)),
-      ),
+      // padding: EdgeInsets.all(
+      //   activeProjects.isEmpty
+      //       ? (wide ? 22 : (narrow ? 20 : 24))
+      //       : (wide ? 12 : (narrow ? 8 : 14)),
+      // ),
       child: activeProjects.isEmpty
           ? Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  padding: EdgeInsets.all(wide ? 18 : 22),
+                  padding: EdgeInsets.all(wide ? 16: 22),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: cs.primary.withValues(alpha: 0.08),
@@ -1681,7 +1521,7 @@ class _ProjectsWorkspaceCard extends StatelessWidget {
                     color: cs.onSurface.withValues(alpha: 0.72),
                   ),
                 ),
-                SizedBox(height: wide ? 16 : 22),
+                // SizedBox(height: wide ? 16 : 22),
                 FilledButton.tonal(
                   onPressed: onCreateProject,
                   style: FilledButton.styleFrom(

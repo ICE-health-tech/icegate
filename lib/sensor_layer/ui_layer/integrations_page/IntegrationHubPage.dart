@@ -6,9 +6,10 @@ import 'package:ice_gate/data_layer/Protocol/Integrations/integration_domain.dar
 import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
-import 'package:ice_gate/data_layer/Services/cloud/google_api_error.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleApiError.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/IntegrationHubBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/DocumentationBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:provider/provider.dart';
 import 'package:signals_flutter/signals_flutter.dart';
@@ -25,6 +26,14 @@ class IntegrationHubPage extends StatefulWidget {
 }
 
 class _IntegrationHubPageState extends State<IntegrationHubPage> {
+  final _notionSecretController = TextEditingController();
+
+  @override
+  void dispose() {
+    _notionSecretController.dispose();
+    super.dispose();
+  }
+
   @override
   void initState() {
     super.initState();
@@ -38,6 +47,7 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
     final l10n = AppLocalizations.of(context)!;
     final theme = Theme.of(context);
     final block = context.read<IntegrationHubBlock>();
+    final docsBlock = context.read<DocumentationBlock>();
     final isIos = defaultTargetPlatform == TargetPlatform.iOS;
 
     return SwipeablePage(
@@ -47,6 +57,16 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
         backgroundColor: theme.colorScheme.surface,
         body: Watch((context) {
           final accounts = block.accounts.value;
+          final driveConnected =
+              _isConnected(accounts, IntegrationProviderId.googleDrive) ||
+              docsBlock.isGoogleDriveConnected.value;
+          final notionConnected =
+              _isConnected(accounts, IntegrationProviderId.notion) ||
+              docsBlock.notionSecret.value != null;
+          final driveSyncing =
+              docsBlock.isSyncing.value && docsBlock.syncType.value == 'drive';
+          final notionSyncing =
+              docsBlock.isSyncing.value && docsBlock.syncType.value == 'notion';
           final topSafe = MediaQuery.paddingOf(context).top;
           // Clear MainShell Dynamic Island (~50) + breathing room.
           final headerClearance = topSafe + 88;
@@ -174,6 +194,40 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                 ),
               ),
               const SizedBox(height: 28),
+              _sectionLabel(l10n.integration_hub_notes_section),
+              const SizedBox(height: 12),
+              _providerCard(
+                context,
+                title: l10n.integrations_google_drive,
+                subtitle: driveConnected
+                    ? l10n.integrations_synced_cloud
+                    : l10n.integration_hub_google_drive_hint,
+                icon: Icons.add_to_drive_rounded,
+                iconColor: const Color(0xFF34A853),
+                connected: driveConnected,
+                isLoading: driveSyncing,
+                interactiveWhenConnected: true,
+                actionLabel: driveConnected
+                    ? l10n.integrations_sync_now
+                    : l10n.integration_hub_connect,
+                onConnect: () => _handleGoogleDrive(context, docsBlock),
+              ),
+              const SizedBox(height: 12),
+              _providerCard(
+                context,
+                title: l10n.integrations_notion_sync,
+                subtitle: l10n.integration_hub_notion_hint,
+                icon: Icons.grid_view_rounded,
+                iconColor: const Color(0xFF6366F1),
+                connected: notionConnected,
+                isLoading: notionSyncing,
+                interactiveWhenConnected: true,
+                actionLabel: notionConnected
+                    ? l10n.integrations_fetch
+                    : l10n.integrations_setup,
+                onConnect: () => _handleNotion(context, docsBlock),
+              ),
+              const SizedBox(height: 28),
               _sectionLabel(l10n.cursor_hub_section_title),
               const SizedBox(height: 12),
               _providerCard(
@@ -182,7 +236,10 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                 subtitle: l10n.cursor_hub_integration_subtitle,
                 icon: Icons.smart_toy_outlined,
                 iconColor: Colors.tealAccent,
-                connected: false,
+                connected: _isConnected(
+                  accounts,
+                  IntegrationProviderId.cursor,
+                ),
                 onConnect: () => context.push('/integrations/cursor'),
                 alwaysShowOpen: true,
               ),
@@ -212,6 +269,70 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
             ],
           );
         }),
+      ),
+    );
+  }
+
+  Future<void> _handleGoogleDrive(
+    BuildContext context,
+    DocumentationBlock block,
+  ) async {
+    if (block.isGoogleDriveConnected.value) {
+      if (block.googleDriveRootDir != null) {
+        context.push('/projects/documents/folder', extra: block.googleDriveRootDir);
+      } else {
+        await block.syncWithGoogleDrive();
+      }
+      return;
+    }
+    await block.syncWithGoogleDrive();
+    if (!context.mounted) return;
+    if (block.isGoogleDriveConnected.value) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(AppLocalizations.of(context)!.integration_hub_status_connected),
+        ),
+      );
+    }
+  }
+
+  void _handleNotion(BuildContext context, DocumentationBlock block) {
+    if (block.notionSecret.value != null) {
+      block.fetchFromNotionAuto();
+      return;
+    }
+    _showNotionSetupDialog(context, block);
+  }
+
+  void _showNotionSetupDialog(BuildContext context, DocumentationBlock block) {
+    final l10n = AppLocalizations.of(context)!;
+    _notionSecretController.text = block.notionSecret.value ?? '';
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Text(l10n.integrations_notion_config_title),
+        content: TextField(
+          controller: _notionSecretController,
+          decoration: InputDecoration(
+            labelText: l10n.integrations_notion_secret_label,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext),
+            child: Text(l10n.cancel),
+          ),
+          TextButton(
+            onPressed: () {
+              block.setNotionSecret(_notionSecretController.text);
+              Navigator.pop(dialogContext);
+              if (_notionSecretController.text.isNotEmpty) {
+                block.fetchFromNotionAuto();
+              }
+            },
+            child: Text(l10n.integrations_save_fetch),
+          ),
+        ],
       ),
     );
   }
@@ -312,6 +433,9 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
     required bool connected,
     required VoidCallback onConnect,
     bool alwaysShowOpen = false,
+    bool interactiveWhenConnected = false,
+    bool isLoading = false,
+    String? actionLabel,
   }) {
     final theme = Theme.of(context);
     final l10n = AppLocalizations.of(context)!;
@@ -325,7 +449,9 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: connected && !alwaysShowOpen ? null : onConnect,
+        onTap: connected && !alwaysShowOpen && !interactiveWhenConnected
+            ? null
+            : onConnect,
         borderRadius: BorderRadius.circular(16),
         child: Ink(
           decoration: BoxDecoration(
@@ -378,7 +504,13 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                   ),
                 ),
                 const SizedBox(width: 8),
-                if (connected && !alwaysShowOpen)
+                if (isLoading)
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                else if (connected && !alwaysShowOpen && !interactiveWhenConnected)
                   Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
@@ -425,9 +557,10 @@ class _IntegrationHubPageState extends State<IntegrationHubPage> {
                       ),
                     ),
                     child: Text(
-                      alwaysShowOpen
-                          ? l10n.integration_hub_open_sensor_hub
-                          : l10n.integration_hub_connect,
+                      actionLabel ??
+                          (alwaysShowOpen
+                              ? l10n.integration_hub_open_sensor_hub
+                              : l10n.integration_hub_connect),
                       style: const TextStyle(fontSize: 12),
                     ),
                   ),

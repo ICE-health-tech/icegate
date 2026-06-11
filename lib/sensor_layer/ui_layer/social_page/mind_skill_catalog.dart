@@ -23,6 +23,27 @@ abstract final class MindSkillCatalog {
   static bool namesMatch(String a, String b) =>
       a.trim().toLowerCase() == b.trim().toLowerCase();
 
+  static const int maxNameLength = 24;
+
+  /// Standard display name: trim, single spaces, Title Case, max [maxNameLength].
+  static String? normalizeName(String raw) {
+    var s = raw.trim().replaceAll(RegExp(r'\s+'), ' ');
+    if (s.isEmpty) return null;
+    if (s.length > maxNameLength) return null;
+    s = s
+        .split(' ')
+        .map((w) {
+          if (w.isEmpty) return w;
+          if (w.length == 1) return w.toUpperCase();
+          return '${w[0].toUpperCase()}${w.substring(1).toLowerCase()}';
+        })
+        .join(' ');
+    for (final d in defaults) {
+      if (namesMatch(d, s)) return d;
+    }
+    return s;
+  }
+
   /// One tile per skill name (case-insensitive), first occurrence wins.
   static List<String> dedupeNames(Iterable<String> names) {
     final out = <String>[];

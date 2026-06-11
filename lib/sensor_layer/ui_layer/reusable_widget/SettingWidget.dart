@@ -514,16 +514,23 @@ class SettingsWidget extends StatelessWidget {
   void _showDeleteAccountPlanDialog(BuildContext context, AuthBlock authBlock) {
     final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final confirmWord = l10n.delete_account_type_key_word;
 
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         var acknowledged = false;
+        var typedKey = '';
         var busy = false;
+
+        bool keyMatches(String input) =>
+            input.trim().toUpperCase() == confirmWord.toUpperCase();
 
         return StatefulBuilder(
           builder: (context, setLocalState) {
+            final canDelete = acknowledged && keyMatches(typedKey) && !busy;
+
             return AlertDialog(
               icon: Icon(
                 Icons.warning_amber_rounded,
@@ -571,6 +578,31 @@ class SettingsWidget extends StatelessWidget {
                       ),
                       controlAffinity: ListTileControlAffinity.leading,
                     ),
+                    const SizedBox(height: 8),
+                    Text(
+                      l10n.delete_account_type_key_prompt(confirmWord),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: colorScheme.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    TextField(
+                      enabled: !busy,
+                      autocorrect: false,
+                      enableSuggestions: false,
+                      textCapitalization: TextCapitalization.characters,
+                      onChanged: (v) => setLocalState(() => typedKey = v),
+                      decoration: InputDecoration(
+                        hintText: confirmWord,
+                        isDense: true,
+                        border: const OutlineInputBorder(),
+                        errorText: typedKey.isEmpty || keyMatches(typedKey)
+                            ? null
+                            : l10n.delete_account_type_key_prompt(confirmWord),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -586,10 +618,9 @@ class SettingsWidget extends StatelessWidget {
                     backgroundColor: colorScheme.error,
                     foregroundColor: colorScheme.onError,
                   ),
-                  onPressed:
-                      (!acknowledged || busy)
-                          ? null
-                          : () async {
+                  onPressed: !canDelete
+                      ? null
+                      : () async {
                               setLocalState(() => busy = true);
                               final err = await authBlock.deleteAccount();
                               if (!dialogContext.mounted) return;

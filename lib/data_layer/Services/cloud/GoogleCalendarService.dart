@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:googleapis/calendar/v3.dart' as cal;
 import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
-import 'package:ice_gate/data_layer/Services/cloud/google_api_error.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleApiError.dart';
 
 /// A normalized event from Google Calendar for in-app display.
 class GoogleCalendarEventItem {

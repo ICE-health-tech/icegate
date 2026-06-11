@@ -1,18 +1,19 @@
-import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
-import 'package:ice_gate/l10n/app_localizations.dart';
-import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+import 'package:intl/intl.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
-import 'package:signals_flutter/signals_flutter.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
-
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/SocialBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/UIConstants.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
+import 'package:provider/provider.dart';
+import 'package:signals_flutter/signals_flutter.dart';
 
 class SocialAnalysisPage extends StatelessWidget {
   const SocialAnalysisPage({super.key});
@@ -22,8 +23,8 @@ class SocialAnalysisPage extends StatelessWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
     final personBlock = context.read<PersonBlock>();
-    final healthBlock = context.read<HealthBlock>();
     final mindBlock = context.read<MindBlock>();
+    final l10n = AppLocalizations.of(context)!;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -33,69 +34,58 @@ class SocialAnalysisPage extends StatelessWidget {
           return const Center(child: CircularProgressIndicator());
         }
 
-        return StreamBuilder<List<ProjectNoteData>>(
-          stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
-                personId,
-                'social',
-              ),
-          builder: (context, noteSnapshot) {
-            final notes = noteSnapshot.data ?? [];
-            
-            return StreamBuilder<List<MindLogData>>(
-              stream: mindBlock.watchMindLogsRange(personId, 30),
-              builder: (context, logSnapshot) {
-                final logs = logSnapshot.data ?? [];
-                
-                // Calculate average sentiment (1 to 5) and convert to % (0% to 100%)
-                double sentiment = 0.0;
-                if (logs.isNotEmpty) {
-                  final avgScore = logs.fold<double>(0.0, (sum, log) => sum + log.moodScore) / logs.length;
-                  sentiment = ((avgScore - 1) / 4) * 100;
-                }
+        return StreamBuilder<List<MindLogData>>(
+          stream: mindBlock.watchMindLogsRange(personId, 30),
+          builder: (context, logSnapshot) {
+            final logs = logSnapshot.data ?? [];
+            final summary = MindLogInsights.summarize(logs);
+            final skills = MindLogInsights.skillSummary(logs, days: 30);
 
-                return CustomScrollView(
-                  physics: const BouncingScrollPhysics(),
-                  slivers: [
-                    SliverToBoxAdapter(
-                      child: Padding(
-                        padding: const EdgeInsets.all(24.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.mind_insights_title.toUpperCase(),
-                              style: textTheme.labelLarge?.copyWith(
-                                color: colorScheme.primary,
-                                fontWeight: FontWeight.w900,
-                                letterSpacing: 2,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              AppLocalizations.of(context)!.mind_insights_subtitle,
-                              style: textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 32),
-                            // _buildMonthlyReflectionCard(context, personId),
-                            const SizedBox(height: 24),
-                            _buildSummaryCard(context, notes, sentiment),
-                            const SizedBox(height: 24),
-                            _buildStepsDistribution(context, healthBlock),
-                            const SizedBox(height: 24),
-                            _buildMoodChart(context, mindBlock, personId),
-                            const SizedBox(height: 24),
-                            _buildWordCloud(context, mindBlock, personId),
-                            const SizedBox(height: 24),
-                            _buildRecentLogsList(context, mindBlock, personId),
-                          ],
+            return CustomScrollView(
+              physics: const BouncingScrollPhysics(),
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          l10n.mind_insights_title.toUpperCase(),
+                          style: textTheme.labelLarge?.copyWith(
+                            color: colorScheme.primary,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 2,
+                          ),
                         ),
-                      ),
+                        const SizedBox(height: 8),
+                        Text(
+                          l10n.mind_insights_subtitle,
+                          style: textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.w900,
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        _buildMonthlyReflectionCard(context, personId),
+                        const SizedBox(height: 20),
+                        _buildSummaryCard(context, summary),
+                        const SizedBox(height: 20),
+                        _buildQuickLinks(context, l10n),
+                        const SizedBox(height: 20),
+                        _buildHourlyLogsChart(context, logs, l10n),
+                        const SizedBox(height: 20),
+                        _buildMoodChart(context, mindBlock, personId, l10n),
+                        const SizedBox(height: 20),
+                        _buildActivitiesSection(context, mindBlock, personId),
+                        const SizedBox(height: 20),
+                        _buildSkillSection(context, skills, l10n),
+                        const SizedBox(height: 20),
+                        _buildRecentLogsList(context, mindBlock, personId),
+                      ],
                     ),
-                  ],
-                );
-              },
+                  ),
+                ),
+              ],
             );
           },
         );
@@ -103,7 +93,433 @@ class SocialAnalysisPage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentLogsList(BuildContext context, MindBlock mindBlock, String personId) {
+  Widget _buildQuickLinks(BuildContext context, AppLocalizations l10n) {
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () {
+              context.read<SocialBlock>().activeTab.value = 0;
+            },
+            icon: const Icon(Icons.menu_book_rounded, size: 18),
+            label: Text(l10n.mind_insights_open_notes),
+          ),
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () => context.push('/social/skills'),
+            icon: const Icon(Icons.workspace_premium_outlined, size: 18),
+            label: Text(l10n.mind_insights_open_skills),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryCard(
+    BuildContext context,
+    ({int logCount, int activeDays, double avgMood}) summary,
+  ) {
+    final l10n = AppLocalizations.of(context)!;
+    final colorScheme = Theme.of(context).colorScheme;
+    final moodLabel = summary.logCount == 0
+        ? '—'
+        : '${summary.avgMood.toStringAsFixed(1)}/5';
+
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildStatItem(
+            context,
+            '${summary.logCount}',
+            l10n.stat_mind_logs.toUpperCase(),
+          ),
+          _buildStatItem(
+            context,
+            '${summary.activeDays}',
+            l10n.stat_active_days.toUpperCase(),
+          ),
+          _buildStatItem(
+            context,
+            moodLabel,
+            l10n.stat_avg_mood.toUpperCase(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildStatItem(BuildContext context, String value, String label) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Column(
+      children: [
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w900,
+            color: colorScheme.primary,
+          ),
+        ),
+        Text(
+          label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+            letterSpacing: 1,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildHourlyLogsChart(
+    BuildContext context,
+    List<MindLogData> logs,
+    AppLocalizations l10n,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final containerHeight = UIConstants.getChartContainerHeight(context);
+    final barMaxHeight = UIConstants.getChartBarMaxHeight(context);
+    final barWidth = UIConstants.getChartBarWidth(context);
+    final hourly = MindLogInsights.hourlyLogsToday(logs);
+    final maxCount = hourly.values.fold<int>(1, (m, v) => v > m ? v : m);
+    final currentHour = DateTime.now().hour;
+    final todayTotal = hourly.values.fold<int>(0, (s, v) => s + v);
+
+    return Container(
+      height: containerHeight,
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  l10n.journal_hourly_logs.toUpperCase(),
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                ),
+              ),
+              if (todayTotal > 0)
+                Text(
+                  '$todayTotal',
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w800,
+                    color: colorScheme.primary,
+                  ),
+                ),
+            ],
+          ),
+          const Spacer(),
+          if (todayTotal == 0)
+            Center(
+              child: Text(
+                l10n.track_patterns_msg,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+                ),
+              ),
+            )
+          else
+            SizedBox(
+              height: barMaxHeight + 20,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
+                itemCount: 24,
+                itemBuilder: (context, index) {
+                  final count = hourly[index] ?? 0;
+                  final height = count == 0
+                      ? 4.0
+                      : (count / maxCount * barMaxHeight)
+                          .clamp(6.0, barMaxHeight);
+                  final isCurrent = index == currentHour;
+
+                  return Container(
+                    width: barWidth,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        Container(
+                          width: barWidth,
+                          height: height,
+                          decoration: BoxDecoration(
+                            color: count == 0
+                                ? colorScheme.outlineVariant.withValues(
+                                    alpha: 0.35,
+                                  )
+                                : (isCurrent
+                                    ? colorScheme.primary
+                                    : colorScheme.primary.withValues(
+                                        alpha: 0.45,
+                                      )),
+                            borderRadius: BorderRadius.circular(barWidth / 2),
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          '${index}h',
+                          style: TextStyle(
+                            fontSize: barWidth < 15 ? 8 : 10,
+                            color: isCurrent
+                                ? colorScheme.primary
+                                : colorScheme.onSurfaceVariant,
+                            fontWeight:
+                                isCurrent ? FontWeight.bold : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMoodChart(
+    BuildContext context,
+    MindBlock mindBlock,
+    String personId,
+    AppLocalizations l10n,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      height: 220,
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: colorScheme.outlineVariant),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.weekly_mood_trend.toUpperCase(),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+          ),
+          const SizedBox(height: 16),
+          Expanded(
+            child: StreamBuilder<List<MindLogData>>(
+              stream: mindBlock.watchMindLogsRange(personId, 7),
+              builder: (context, snapshot) {
+                final logs = snapshot.data ?? [];
+                if (logs.isEmpty) {
+                  return Center(
+                    child: Text(
+                      l10n.no_records_last_7_days,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    ),
+                  );
+                }
+                return MoodTrendsChart(logs: logs, groupByDay: true);
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActivitiesSection(
+    BuildContext context,
+    MindBlock mindBlock,
+    String personId,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final l10n = AppLocalizations.of(context)!;
+
+    return StreamBuilder<List<JournalActivityOptionData>>(
+      stream: context
+          .read<AppDatabase>()
+          .journalActivityOptionsDAO
+          .watchForPerson(personId),
+      builder: (context, optSnap) {
+        final optMap = <String, String>{
+          for (final o in optSnap.data ?? []) o.id: o.label,
+        };
+
+        return StreamBuilder<List<MindLogData>>(
+          stream: mindBlock.watchMindLogsRange(personId, 30),
+          builder: (context, logSnap) {
+            final logs = logSnap.data ?? [];
+            final counts = MindLogInsights.activityLabelCounts(
+              logs,
+              l10n,
+              optMap,
+            );
+            final sorted = counts.entries.toList()
+              ..sort((a, b) => b.value.compareTo(a.value));
+
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: colorScheme.surface,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: colorScheme.outlineVariant),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    l10n.frequent_activities.toUpperCase(),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  if (sorted.isEmpty)
+                    Text(
+                      l10n.track_patterns_msg,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurfaceVariant.withValues(
+                          alpha: 0.5,
+                        ),
+                      ),
+                    )
+                  else
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: sorted.take(8).map((e) {
+                        return Chip(
+                          label: Text('${e.key} (${e.value})'),
+                          backgroundColor: colorScheme.primaryContainer
+                              .withValues(alpha: 0.3),
+                          side: BorderSide.none,
+                        );
+                      }).toList(),
+                    ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Widget _buildSkillSection(
+    BuildContext context,
+    ({
+      int sessions,
+      int minutes,
+      String? topSkill,
+      int topStreak,
+    }) skills,
+    AppLocalizations l10n,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final accent = HealthMetricColors.homePillarAccent('mind');
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: accent.withValues(alpha: 0.35)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.mind_insights_skill_title.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 12,
+              color: accent,
+            ),
+          ),
+          const SizedBox(height: 12),
+          if (skills.sessions == 0)
+            Text(
+              l10n.track_patterns_msg,
+              style: TextStyle(
+                fontSize: 11,
+                color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+              ),
+            )
+          else ...[
+            Text(
+              l10n.mind_insights_skill_summary(
+                skills.sessions,
+                skills.minutes,
+              ),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: cs.onSurface,
+              ),
+            ),
+            if (skills.topSkill != null && skills.topStreak > 0) ...[
+              const SizedBox(height: 6),
+              Text(
+                l10n.mind_insights_top_skill_streak(
+                  skills.topSkill!,
+                  skills.topStreak,
+                ),
+                style: TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: cs.onSurfaceVariant,
+                ),
+              ),
+            ],
+          ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () {
+                context.read<SocialBlock>().activeTab.value = 1;
+              },
+              icon: const Icon(Icons.center_focus_strong_rounded, size: 18),
+              label: Text(l10n.mind_focus_title),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRecentLogsList(
+    BuildContext context,
+    MindBlock mindBlock,
+    String personId,
+  ) {
     final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
@@ -119,7 +535,7 @@ class SocialAnalysisPage extends StatelessWidget {
         final l10n = AppLocalizations.of(context)!;
 
         return StreamBuilder<List<MindLogData>>(
-          stream: mindBlock.watchMindLogsRange(personId, 3), // Show last 3 days
+          stream: mindBlock.watchMindLogsRange(personId, 3),
           builder: (context, snapshot) {
             final logs = snapshot.data ?? [];
             if (logs.isEmpty) return const SizedBox.shrink();
@@ -128,8 +544,11 @@ class SocialAnalysisPage extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  AppLocalizations.of(context)!.todays_reflections.toUpperCase(),
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
+                  l10n.todays_reflections.toUpperCase(),
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 12,
+                  ),
                 ),
                 const SizedBox(height: 16),
                 ...logs.take(5).map((log) {
@@ -144,7 +563,9 @@ class SocialAnalysisPage extends StatelessWidget {
                         end: Alignment.bottomRight,
                         colors: [
                           mood.withValues(alpha: 0.14),
-                          colorScheme.surfaceContainerHigh.withValues(alpha: 0.4),
+                          colorScheme.surfaceContainerHigh.withValues(
+                            alpha: 0.4,
+                          ),
                         ],
                       ),
                       border: Border.all(color: mood.withValues(alpha: 0.4)),
@@ -154,7 +575,10 @@ class SocialAnalysisPage extends StatelessWidget {
                       children: [
                         Row(
                           children: [
-                            Text(_getMoodEmoji(log.moodScore), style: const TextStyle(fontSize: 18)),
+                            Text(
+                              _getMoodEmoji(log.moodScore),
+                              style: const TextStyle(fontSize: 18),
+                            ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Column(
@@ -187,7 +611,9 @@ class SocialAnalysisPage extends StatelessWidget {
                           Text(
                             log.note!,
                             style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurface.withValues(alpha: 0.8),
+                              color: colorScheme.onSurface.withValues(
+                                alpha: 0.8,
+                              ),
                               fontStyle: FontStyle.italic,
                             ),
                           ),
@@ -206,294 +632,82 @@ class SocialAnalysisPage extends StatelessWidget {
 
   String _getMoodEmoji(int score) {
     switch (score) {
-      case 1: return "😫";
-      case 2: return "😔";
-      case 3: return "😐";
-      case 4: return "😊";
-      case 5: return "🤩";
-      default: return "😐";
+      case 1:
+        return '😫';
+      case 2:
+        return '😔';
+      case 3:
+        return '😐';
+      case 4:
+        return '😊';
+      case 5:
+        return '🤩';
+      default:
+        return '😐';
     }
-  }
-
-  Widget _buildStepsDistribution(BuildContext context, HealthBlock healthBlock) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final textTheme = Theme.of(context).textTheme;
-    final containerHeight = UIConstants.getChartContainerHeight(context);
-    final barMaxHeight = UIConstants.getChartBarMaxHeight(context);
-    final barWidth = UIConstants.getChartBarWidth(context);
-
-    return Watch((context) {
-      final hourly = healthBlock.hourlySteps.value;
-      final maxSteps = hourly.values.fold<int>(1, (max, val) => val > max ? val : max);
-      final currentHour = DateTime.now().hour;
-
-      return Container(
-        height: containerHeight,
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: colorScheme.surface,
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: colorScheme.outlineVariant),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              AppLocalizations.of(context)!.daily_step_distribution.toUpperCase(),
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-            ),
-            const Spacer(),
-            SizedBox(
-              height: barMaxHeight + 20, // Add space for labels
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                physics: const BouncingScrollPhysics(),
-                itemCount: 24,
-                itemBuilder: (context, index) {
-                  final steps = hourly[index] ?? 0;
-                  final height = (steps / maxSteps * barMaxHeight).clamp(4.0, barMaxHeight);
-                  final isCurrent = index == currentHour;
-
-                  return Container(
-                    width: barWidth,
-                    margin: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: barWidth,
-                          height: height,
-                          decoration: BoxDecoration(
-                            color: isCurrent 
-                                ? colorScheme.primary 
-                                : colorScheme.primary.withValues(alpha: 0.3),
-                            borderRadius: BorderRadius.circular(barWidth / 2),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          "${index}h",
-                          style: TextStyle(
-                            fontSize: barWidth < 15 ? 8 : 10,
-                            color: isCurrent ? colorScheme.primary : colorScheme.onSurfaceVariant,
-                            fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-    });
-  }
-
-  Widget _buildSummaryCard(BuildContext context, List<ProjectNoteData> notes, double sentiment) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.primaryContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.primary.withValues(alpha: 0.1)),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          _buildStatItem(context, notes.length.toString(), AppLocalizations.of(context)!.stat_entries.toUpperCase()),
-          _buildStatItem(context, _countImages(notes).toString(), AppLocalizations.of(context)!.stat_images.toUpperCase()),
-          _buildStatItem(context, "${sentiment.toStringAsFixed(0)}%", AppLocalizations.of(context)!.stat_sentiment.toUpperCase()),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildStatItem(BuildContext context, String value, String label) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Column(
-      children: [
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 24,
-            fontWeight: FontWeight.w900,
-            color: colorScheme.primary,
-          ),
-        ),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 10,
-            fontWeight: FontWeight.bold,
-            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-            letterSpacing: 1,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildMoodChart(BuildContext context, MindBlock mindBlock, String personId) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      height: 220,
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.weekly_mood_trend.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          Expanded(
-            child: StreamBuilder<List<MindLogData>>(
-              stream: mindBlock.watchMindLogsRange(personId, 7),
-              builder: (context, snapshot) {
-                final logs = snapshot.data ?? [];
-                if (logs.isEmpty) {
-                  return Center(
-                    child: Text(
-                      AppLocalizations.of(context)!.no_records_last_7_days,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
-                      ),
-                    ),
-                  );
-                }
-                return MoodTrendsChart(logs: logs);
-              },
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWordCloud(BuildContext context, MindBlock mindBlock, String personId) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.outlineVariant),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            AppLocalizations.of(context)!.frequent_activities.toUpperCase(),
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-          ),
-          const SizedBox(height: 16),
-          FutureBuilder<Map<String, int>>(
-            future: mindBlock.getTopActivitiesForMood(personId, 5), // High energy activities
-            builder: (context, snapshot) {
-              if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return Text(AppLocalizations.of(context)!.track_patterns_msg, 
-                    style: TextStyle(fontSize: 11, color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5)));
-              }
-              final activities = snapshot.data!.entries.toList()
-                ..sort((a, b) => b.value.compareTo(a.value));
-              
-              return Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: activities.take(6).map((e) => Chip(
-                  label: Text("${e.key} (${e.value})"),
-                  backgroundColor: colorScheme.primaryContainer.withValues(alpha: 0.3),
-                  side: BorderSide.none,
-                )).toList(),
-              );
-            },
-          ),
-        ],
-      ),
-    );
-  }
-
-  int _countImages(List<ProjectNoteData> notes) {
-    int imageCount = 0;
-    for (final note in notes) {
-      if (note.content.contains('![')) {
-        // Count how many ![ occurrences are in the text
-        imageCount += '!['.allMatches(note.content).length;
-      }
-    }
-    return imageCount;
   }
 
   Widget _buildMonthlyReflectionCard(BuildContext context, String personId) {
     final colorScheme = Theme.of(context).colorScheme;
     final socialBlock = context.read<SocialBlock>();
     final achievementsDao = context.read<AchievementsDAO>();
-    
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.auto_awesome, color: colorScheme.tertiary),
-              const SizedBox(width: 8),
-              Text(
-                AppLocalizations.of(context)!.monthly_reflection.toUpperCase(),
-                style: TextStyle(
-                  color: colorScheme.tertiary,
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 1.5,
-                  fontSize: 12,
-                ),
-              ),
-            ],
+
+    return StreamBuilder<List<AchievementData>>(
+      stream: achievementsDao.watchAchievementsByPerson(personId),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const SizedBox.shrink();
+        }
+
+        final achievements = snapshot.data ?? [];
+        final thirtyDaysAgo = DateTime.now().subtract(const Duration(days: 30));
+        final recent = achievements
+            .where((a) => a.createdAt.isAfter(thirtyDaysAgo))
+            .toList();
+        if (recent.isEmpty) return const SizedBox.shrink();
+
+        final reflection = socialBlock.generateReflection(achievements);
+
+        return Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(20),
+          decoration: BoxDecoration(
+            color: colorScheme.tertiaryContainer.withValues(alpha: 0.3),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colorScheme.tertiary.withValues(alpha: 0.3)),
           ),
-          const SizedBox(height: 16),
-          StreamBuilder<List<AchievementData>>(
-            stream: achievementsDao.watchAchievementsByPerson(personId),
-            builder: (context, snapshot) {
-              if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(16.0),
-                    child: CircularProgressIndicator(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.auto_awesome, color: colorScheme.tertiary),
+                  const SizedBox(width: 8),
+                  Text(
+                    AppLocalizations.of(context)!
+                        .monthly_reflection
+                        .toUpperCase(),
+                    style: TextStyle(
+                      color: colorScheme.tertiary,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.5,
+                      fontSize: 12,
+                    ),
                   ),
-                );
-              }
-              
-              final achievements = snapshot.data ?? [];
-              final reflection = socialBlock.generateReflection(achievements);
-              
-              return Text(
+                ],
+              ),
+              const SizedBox(height: 16),
+              Text(
                 reflection,
                 style: TextStyle(
                   color: colorScheme.onSurface,
                   height: 1.5,
                 ),
-              );
-            },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

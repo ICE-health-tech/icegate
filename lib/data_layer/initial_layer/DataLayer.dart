@@ -63,6 +63,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ChallengeBlock.d
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/RemoteControllerBlock.dart';
 import 'package:ice_gate/data_layer/Services/cloud/SupabaseService.dart';
 import 'package:ice_gate/link_layer/environmental_block/EnvironmentalBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PulseFeedBlock.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:ice_gate/utils/app_log.dart';
 
@@ -117,6 +118,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
   late FoodAnalysisBlock foodAnalysisBlock;
   late EnvironmentalBlock environmentalBlock;
   late StorageBlock storageBlock;
+  late PulseFeedBlock pulseFeedBlock;
 
   DateTime? _lastPausedTime;
   String? _lastInitializedPersonId; // Guard for redundant re-inits
@@ -437,6 +439,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
       configBlock = ConfigBlock();
       documentationBlock = DocumentationBlock();
       challengeBlock = ChallengeBlock();
+      pulseFeedBlock = PulseFeedBlock();
 
       musicBlock = MusicBlock(audioHandler: audioHandler);
       socialBlockerBlock = SocialBlockerBlock();
@@ -559,6 +562,8 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
                 );
 
                 integrationHubBlock?.updatePersonId(personId);
+                documentationBlock.bindIntegrationHub(integrationHubBlock!);
+                unawaited(integrationHubBlock?.refresh());
                 if (_pendingGoogleEcosystemConnect) {
                   _pendingGoogleEcosystemConnect = false;
                   unawaited(
@@ -941,6 +946,7 @@ class _DataLayerState extends State<DataLayer> with WidgetsBindingObserver {
         Provider<FoodAnalysisBlock>.value(value: foodAnalysisBlock),
         Provider<EnvironmentalBlock>.value(value: environmentalBlock),
         Provider<StorageBlock>.value(value: storageBlock),
+        Provider<PulseFeedBlock>.value(value: pulseFeedBlock),
         if (integrationHubBlock != null)
           Provider<IntegrationHubBlock>.value(value: integrationHubBlock!),
 

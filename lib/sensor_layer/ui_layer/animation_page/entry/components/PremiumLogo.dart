@@ -94,9 +94,11 @@ class PremiumLogo extends StatelessWidget {
                           ),
                           IcePetalBurst(progress: chargeVal, size: 240),
                           Image.asset(
-                            'assets/images/crystal_logo.png',
+                            'assets/images/icegate_entry_icon.png',
                             width: 200,
                             height: 200,
+                            fit: BoxFit.contain,
+                            filterQuality: FilterQuality.high,
                           ),
                         ],
                       ),

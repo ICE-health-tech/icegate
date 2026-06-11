@@ -4,7 +4,9 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceEntryInsightPanel.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSourceAccountPicker.dart';
 
 class TransactionBuilderDialog extends StatefulWidget {
   final TransactionData? initialData;
@@ -44,6 +46,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
   final descController = TextEditingController();
   late String selectedType;
   late String selectedCategory;
+  String? selectedSourceAccountId;
   bool recurringIncome = false;
   String recurringInterval = 'monthly';
 
@@ -63,7 +66,15 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
       'investing',
       'general',
     ],
-    'income': ['salary', 'freelance', 'investment', 'gift', 'bonus', 'general'],
+    'income': [
+      'human_capital',
+      'salary',
+      'freelance',
+      'investment',
+      'gift',
+      'bonus',
+      'general',
+    ],
     'savings': [
       'emergency',
       'goal',
@@ -87,9 +98,13 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
       descController.text = widget.initialData!.description ?? '';
       selectedType = widget.initialData!.type;
       selectedCategory = widget.initialData!.category;
+      selectedSourceAccountId = widget.initialData!.sourceAccountId;
     } else {
       selectedType = widget.preferredType ?? 'expense';
       selectedCategory = 'general';
+      if (selectedType == 'expense' || selectedType == 'savings') {
+        selectedSourceAccountId = widget.financeBlock.suggestSourceAccountId();
+      }
     }
   }
 
@@ -134,6 +149,8 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
         return l10n.finance_cat_investing;
       case 'general':
         return l10n.finance_cat_general;
+      case 'human_capital':
+        return l10n.finance_cat_human_capital;
       case 'salary':
         return l10n.finance_cat_salary;
       case 'freelance':
@@ -202,6 +219,13 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                       if (selectedType != 'income') {
                         recurringIncome = false;
                       }
+                      if (selectedType != 'expense' &&
+                          selectedType != 'savings') {
+                        selectedSourceAccountId = null;
+                      } else if (selectedSourceAccountId == null) {
+                        selectedSourceAccountId =
+                            widget.financeBlock.suggestSourceAccountId();
+                      }
                     });
                   },
                 ),
@@ -236,6 +260,15 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 ),
               );
             }),
+            if (selectedType == 'expense' || selectedType == 'savings') ...[
+              const SizedBox(height: 12),
+              FinanceSourceAccountPicker(
+                financeBlock: widget.financeBlock,
+                selectedAccountId: selectedSourceAccountId,
+                onChanged: (id) =>
+                    setState(() => selectedSourceAccountId = id),
+              ),
+            ],
             const SizedBox(height: 12),
             DropdownButtonFormField<String>(
               initialValue: selectedCategory,
@@ -354,6 +387,21 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
             final amount =
                 widget.financeBlock.convertToBase(rawAmount);
 
+            final needsSource = selectedType == 'expense' ||
+                selectedType == 'savings';
+            if (needsSource &&
+                widget.financeBlock.hasActiveAccounts &&
+                (selectedSourceAccountId == null ||
+                    selectedSourceAccountId!.isEmpty)) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.finance_txn_source_account_required),
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+              return;
+            }
+
             if (isEdit) {
               await widget.financeBlock.updateTransaction(
                 id: widget.initialData!.id,
@@ -364,6 +412,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 date: widget.initialData!.transactionDate,
                 projectID: widget.initialData!.projectID,
                 moodScore: widget.initialData!.moodScore,
+                sourceAccountId: selectedSourceAccountId,
               );
             } else {
               final description =
@@ -373,6 +422,7 @@ class _TransactionBuilderDialogState extends State<TransactionBuilderDialog> {
                 type: selectedType,
                 amount: amount,
                 description: description,
+                sourceAccountId: selectedSourceAccountId,
               );
               if (selectedType == 'income' && recurringIncome) {
                 await widget.financeBlock.addRecurringIncome(

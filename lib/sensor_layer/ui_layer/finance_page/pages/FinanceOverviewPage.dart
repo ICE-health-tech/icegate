@@ -5,8 +5,12 @@ import 'package:signals_flutter/signals_flutter.dart';
 import 'package:ice_gate/data_layer/Protocol/User/FinanceProtocols.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceAlertPanel.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FixedIncomeManager.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinancePortfolioRecordSection.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/SavingsStreakCard.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceAssetPillars.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/finance_form/AddAssetDialog.dart';
 import '../finance_form/AddAccountDialog.dart';
 
 class FinanceOverviewPage extends StatelessWidget {
@@ -48,10 +52,18 @@ class FinanceOverviewPage extends StatelessWidget {
           Watch((context) {
             return _buildSummaryCardRow(context, financeBlock);
           }),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
+          FinanceInflowPillarsStrip(financeBlock: financeBlock),
+          const SizedBox(height: 24),
+          FinancePortfolioRecordSection(financeBlock: financeBlock),
+          const SizedBox(height: 24),
 
           Watch((context) {
             return FixedIncomeManager(financeBlock: financeBlock);
+          }),
+          const SizedBox(height: 24),
+          Watch((context) {
+            return _buildAssetPillarsRow(context, financeBlock);
           }),
           const SizedBox(height: 32),
 
@@ -326,10 +338,12 @@ class FinanceOverviewPage extends StatelessWidget {
     );
   }
 
-  Widget _buildAccountsSection(BuildContext context, FinanceBlock block) {
+  Widget _buildAssetPillarsRow(BuildContext context, FinanceBlock block) {
+    final l10n = AppLocalizations.of(context)!;
     final cs = Theme.of(context).colorScheme;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final accounts = block.accounts.value;
+    final totals = block.netWorthByAssetPillar.value;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -337,7 +351,7 @@ class FinanceOverviewPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              "LIQUID ASSETS",
+              l10n.finance_asset_pillars_title.toUpperCase(),
               style: TextStyle(
                 color: cs.onSurface,
                 fontSize: 10,
@@ -346,80 +360,245 @@ class FinanceOverviewPage extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () => AddAccountDialog.show(context),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                decoration: FinanceSurface.panel(
-                  cs,
-                  isDark: isDark,
-                  radius: 12,
-                ),
-                child: Row(
-                  children: [
-                    Icon(
-                      Icons.add_rounded,
-                      color: FinanceSurface.silverAccent(),
-                      size: 14,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      "ADD",
-                      style: TextStyle(
-                        color: cs.onSurface,
-                        fontSize: 9,
-                        fontWeight: FontWeight.w900,
-                      ),
-                    ),
-                  ],
+              onTap: () => AddAssetDialog.show(context),
+              child: Text(
+                l10n.add.toUpperCase(),
+                style: TextStyle(
+                  color: FinanceSurface.silverAccent(),
+                  fontSize: 9,
+                  fontWeight: FontWeight.w900,
                 ),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
-        if (accounts.isEmpty)
+        const SizedBox(height: 8),
+        Text(
+          l10n.finance_asset_pillars_subtitle,
+          style: TextStyle(color: cs.onSurfaceVariant, fontSize: 11),
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final pillar in FinanceAssetPillar.ordered)
+              Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: pillar == FinanceAssetPillar.investment
+                      ? () => AddAccountDialog.show(
+                            context,
+                            initialAccountType: 'investment',
+                          )
+                      : pillar == FinanceAssetPillar.liquidity
+                      ? () => AddAccountDialog.show(
+                            context,
+                            initialAccountType: 'checking',
+                          )
+                      : null,
+                  borderRadius: BorderRadius.circular(12),
+                  child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          FinanceAssetPillar.icon(pillar),
+                          size: 14,
+                          color: FinanceSurface.mutedInk(isDark: isDark),
+                        ),
+                        const SizedBox(width: 6),
+                        Text(
+                          FinanceAssetPillar.label(l10n, pillar),
+                          style: TextStyle(
+                            fontSize: 10,
+                            fontWeight: FontWeight.w800,
+                            color: FinanceSurface.ink(isDark: isDark),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      block.formatCurrency(totals[pillar] ?? 0, compact: true),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        color: FinanceSurface.ink(isDark: isDark),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+                ),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAccountsSection(BuildContext context, FinanceBlock block) {
+    final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accounts = block.accounts.value;
+    final liquid = accounts
+        .where(
+          (a) =>
+              FinanceAssetPillar.pillarForAccountType(a.accountType) ==
+              FinanceAssetPillar.liquidity,
+        )
+        .toList();
+    final investment = accounts
+        .where((a) => a.accountType.toLowerCase() == 'investment')
+        .toList();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _accountsGroupHeader(
+          context,
+          title: l10n.finance_accounts_liquidity_title,
+          onAdd: () => AddAccountDialog.show(context, initialAccountType: 'checking'),
+          cs: cs,
+          isDark: isDark,
+        ),
+        const SizedBox(height: 12),
+        if (liquid.isEmpty)
           _buildEmptyState(
             context,
             icon: Icons.account_balance_wallet_rounded,
-            title: "No accounts linked",
-            subtitle: "Add your first bank account or wallet",
-            onTap: () => AddAccountDialog.show(context),
+            title: l10n.finance_record_liquidity_account,
+            subtitle: l10n.finance_record_liquidity_hint,
+            onTap: () => AddAccountDialog.show(context, initialAccountType: 'checking'),
           )
         else
-          SizedBox(
-            height: 100,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              physics: const BouncingScrollPhysics(),
-              itemCount: accounts.length,
-              separatorBuilder: (_, __) => const SizedBox(width: 12),
-              itemBuilder: (context, index) {
-                final account = accounts[index];
-                return _buildAccountCard(context, account, block);
-              },
+          _accountsHorizontalList(context, liquid, block, isDark: isDark),
+        const SizedBox(height: 24),
+        _accountsGroupHeader(
+          context,
+          title: l10n.finance_accounts_investment_title,
+          onAdd: () => AddAccountDialog.show(context, initialAccountType: 'investment'),
+          cs: cs,
+          isDark: isDark,
+        ),
+        const SizedBox(height: 12),
+        if (investment.isEmpty)
+          _buildEmptyState(
+            context,
+            icon: Icons.candlestick_chart_rounded,
+            title: l10n.finance_record_investment_account,
+            subtitle: l10n.finance_record_investment_account_hint,
+            onTap: () => AddAccountDialog.show(context, initialAccountType: 'investment'),
+          )
+        else
+          _accountsHorizontalList(context, investment, block, isDark: isDark),
+      ],
+    );
+  }
+
+  Widget _accountsGroupHeader(
+    BuildContext context, {
+    required String title,
+    required VoidCallback onAdd,
+    required ColorScheme cs,
+    required bool isDark,
+  }) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          title.toUpperCase(),
+          style: TextStyle(
+            color: cs.onSurface,
+            fontSize: 10,
+            fontWeight: FontWeight.w900,
+            letterSpacing: 2,
+          ),
+        ),
+        GestureDetector(
+          onTap: onAdd,
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: FinanceSurface.panel(cs, isDark: isDark, radius: 12),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.add_rounded,
+                  color: FinanceSurface.silverAccent(),
+                  size: 14,
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  AppLocalizations.of(context)!.add.toUpperCase(),
+                  style: TextStyle(
+                    color: cs.onSurface,
+                    fontSize: 9,
+                    fontWeight: FontWeight.w900,
+                  ),
+                ),
+              ],
             ),
           ),
+        ),
       ],
+    );
+  }
+
+  Widget _accountsHorizontalList(
+    BuildContext context,
+    List<FinancialAccountProtocol> accounts,
+    FinanceBlock block, {
+    required bool isDark,
+  }) {
+    return SizedBox(
+      height: 100,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        physics: const BouncingScrollPhysics(),
+        itemCount: accounts.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (context, index) {
+          return _buildAccountCard(
+            context,
+            accounts[index],
+            block,
+            isDark: isDark,
+          );
+        },
+      ),
     );
   }
 
   Widget _buildAccountCard(
     BuildContext context,
     FinancialAccountProtocol account,
-    FinanceBlock block,
-  ) {
+    FinanceBlock block, {
+    required bool isDark,
+  }) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
-    final isDark = theme.brightness == Brightness.dark;
-    return Container(
-      width: 160,
-      padding: const EdgeInsets.all(16),
-      decoration: FinanceSurface.panel(
-        cs,
-        isDark: isDark,
-        radius: 24,
-      ),
-      child: Column(
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        borderRadius: BorderRadius.circular(24),
+        onTap: () => AddAccountDialog.show(context, account: account),
+        onLongPress: () => AddAccountDialog.show(context, account: account),
+        child: Container(
+          width: 160,
+          padding: const EdgeInsets.all(16),
+          decoration: FinanceSurface.panel(
+            cs,
+            isDark: isDark,
+            radius: 24,
+          ),
+          child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
@@ -452,6 +631,8 @@ class FinanceOverviewPage extends StatelessWidget {
             ),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
@@ -459,7 +640,11 @@ class FinanceOverviewPage extends StatelessWidget {
   Widget _getAccountIcon(String type, {required bool isDark}) {
     IconData icon;
     switch (type.toLowerCase()) {
+      case 'investment':
+        icon = Icons.candlestick_chart_rounded;
+        break;
       case 'savings':
+      case 'deposit':
         icon = Icons.savings_rounded;
         break;
       case 'credit_card':

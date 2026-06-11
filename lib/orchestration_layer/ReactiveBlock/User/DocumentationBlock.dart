@@ -12,6 +12,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:path/path.dart' as p;
 import '../../../data_layer/Services/cloud/GoogleDriveService.dart';
 import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
+import 'package:ice_gate/data_layer/Protocol/Integrations/integration_domain.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/Integrations/IntegrationHubBlock.dart';
 import 'package:ice_gate/utils/app_log.dart';
 
 class DocumentationBlock {
@@ -73,6 +75,12 @@ class DocumentationBlock {
 
   Directory? get rootDir => _docDir;
   Directory? get googleDriveRootDir => _googleDriveDir;
+
+  IntegrationHubBlock? _integrationHub;
+
+  void bindIntegrationHub(IntegrationHubBlock hub) {
+    _integrationHub = hub;
+  }
 
   DocumentationBlock() {
     _init();
@@ -140,9 +148,20 @@ class DocumentationBlock {
     if (secret == null || secret.isEmpty) {
       await prefs.remove('notion_secret');
       notionSecret.value = null;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.notion,
+        status: IntegrationConnectionStatus.disconnected,
+        displayName: 'Notion',
+      );
     } else {
       await prefs.setString('notion_secret', secret);
       notionSecret.value = secret;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.notion,
+        status: IntegrationConnectionStatus.connected,
+        displayName: 'Notion',
+        configJson: '{"configured":true}',
+      );
     }
   }
 
@@ -650,9 +669,22 @@ class DocumentationBlock {
         logActivity("Auth Failed", details: "Google Drive sign-in unsuccessful", isError: true);
         syncStatus.value = "❌ Sign-in failed";
         isGoogleDriveConnected.value = false;
+        await _integrationHub?.recordStatus(
+          provider: IntegrationProviderId.googleDrive,
+          status: IntegrationConnectionStatus.needsReauth,
+          displayName: 'Google Drive',
+          lastError: 'Sign-in failed',
+        );
         return;
       }
       isGoogleDriveConnected.value = true;
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.connected,
+        displayName:
+            Supabase.instance.client.auth.currentUser?.email ?? 'Google Drive',
+        externalAccountId: Supabase.instance.client.auth.currentUser?.id,
+      );
 
       final driveApi = driveService.driveApi!;
 
@@ -689,10 +721,24 @@ class DocumentationBlock {
 
       logActivity("Sync Complete", details: "Two-way mirroring finished successfully");
       syncStatus.value = "✅ Full Recursive Sync Complete!";
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.connected,
+        displayName:
+            Supabase.instance.client.auth.currentUser?.email ?? 'Google Drive',
+        externalAccountId: Supabase.instance.client.auth.currentUser?.id,
+        lastSyncAt: DateTime.now(),
+      );
     } catch (e) {
       logActivity("Sync Error", details: e.toString(), isError: true);
       appLog('❌ Google Drive Sync Error: $e');
       syncStatus.value = "❌ Sync failed: $e";
+      await _integrationHub?.recordStatus(
+        provider: IntegrationProviderId.googleDrive,
+        status: IntegrationConnectionStatus.error,
+        displayName: 'Google Drive',
+        lastError: e.toString(),
+      );
     } finally {
       isSyncing.value = false;
       syncType.value = null;

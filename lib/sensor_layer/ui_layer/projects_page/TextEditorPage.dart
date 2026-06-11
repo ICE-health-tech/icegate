@@ -20,7 +20,11 @@ import 'package:ice_gate/link_layer/note_export/NoteExportService.dart';
 import 'package:ice_gate/link_layer/note_export/NoteExportSettingsSheet.dart';
 import 'package:ice_gate/link_layer/note_export/DocxUtils.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
+import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/common/LocalFirstImage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
 import 'package:ice_gate/utils/app_log.dart';
 import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/utils/sync_device.dart';
@@ -63,6 +67,10 @@ class _TextEditorPageState extends State<TextEditorPage>
   DateTime? _lastSaved;
   File? _openedFile; // Track the currently opened local file
 
+  /// Image paths parsed out of markdown — shown as previews above the editor body.
+  List<String> _inlineImagePaths = [];
+  bool _editorImagesSynced = false;
+
   // Mood selection
   String? _selectedMood;
   static const List<String> _moodOptions = [
@@ -72,6 +80,108 @@ class _TextEditorPageState extends State<TextEditorPage>
     'Bad',
     'Awful',
   ];
+
+  IconData _moodIconData(String mood) {
+    return switch (mood.toLowerCase()) {
+      'awesome' => Icons.sentiment_very_satisfied_rounded,
+      'good' => Icons.sentiment_satisfied_alt_rounded,
+      'meh' => Icons.sentiment_neutral_rounded,
+      'bad' => Icons.sentiment_dissatisfied_rounded,
+      'awful' => Icons.sentiment_very_dissatisfied_rounded,
+      _ => Icons.sentiment_neutral_rounded,
+    };
+  }
+
+  String _moodLabel(AppLocalizations l10n, String mood) {
+    return switch (mood) {
+      'Awesome' => l10n.mood_rad,
+      'Good' => l10n.mood_good,
+      'Meh' => l10n.mood_meh,
+      'Bad' => l10n.mood_bad,
+      'Awful' => l10n.mood_awful,
+      _ => mood,
+    };
+  }
+
+  Widget _buildMoodIconBubble({
+    required ColorScheme colorScheme,
+    required String mood,
+    required bool selected,
+    double size = 52,
+  }) {
+    final color = mindMoodAccent(_moodScore(mood));
+    final icon = _moodIconData(mood);
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 240),
+      curve: Curves.easeOutCubic,
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: selected
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color.lerp(color, Colors.white, 0.18) ?? color,
+                  color.withValues(alpha: 0.62),
+                ],
+              )
+            : null,
+        color: selected ? null : colorScheme.surface.withValues(alpha: 0.48),
+        border: Border.all(
+          color: selected
+              ? color.withValues(alpha: 0.95)
+              : color.withValues(alpha: 0.28),
+          width: selected ? 2.4 : 1.2,
+        ),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.42),
+                  blurRadius: 18,
+                  spreadRadius: 1,
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.12),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.08),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+      ),
+      child: Icon(
+        icon,
+        size: size * 0.5,
+        color: selected ? Colors.white : color,
+      ),
+    );
+  }
+
+  bool get _isJournalNote {
+    final category = _activeNote?.category ?? widget.initialCategory;
+    return category == 'social';
+  }
+
+  int _moodScore(String? mood) {
+    return switch (mood?.toLowerCase()) {
+      'awful' => 1,
+      'bad' => 2,
+      'meh' => 3,
+      'good' => 4,
+      'awesome' => 5,
+      _ => 3,
+    };
+  }
+
+  Color _journalAccent() => mindMoodAccent(_moodScore(_selectedMood));
 
   /// Maps legacy DB values (emoji / old labels) to current [_moodOptions].
   static String? _normalizeMoodForDropdown(String? stored) {
@@ -123,21 +233,30 @@ class _TextEditorPageState extends State<TextEditorPage>
       try {
         initialContent = widget.initialFile!.readAsStringSync();
         _lastSaved = widget.initialFile!.lastModifiedSync();
+        final parsed = _parseInitialContent(initialContent);
+        _inlineImagePaths = parsed.images;
+        initialContent = parsed.body;
       } catch (e) {
         appLog("Error reading initial file: $e");
       }
     } else if (widget.note != null) {
       _lastSaved = widget.note?.updatedAt;
       if (widget.note!.content.isNotEmpty) {
-        initialContent = _extractContent(widget.note!.content);
+        final parsed = _parseInitialContent(widget.note!.content);
+        _inlineImagePaths = parsed.images;
+        initialContent = parsed.body;
       }
     }
 
     _titleController = TextEditingController(text: title);
 
-    // If initialImage is provided for a new note, insert it into the content
     if (widget.initialImage != null && initialContent.isEmpty) {
-      initialContent = "![Image](${widget.initialImage})\n\n";
+      _inlineImagePaths = [widget.initialImage!];
+    } else if (widget.initialImage != null) {
+      _inlineImagePaths = [
+        widget.initialImage!,
+        ..._inlineImagePaths,
+      ];
     }
 
     _contentController = TextEditingController(text: initialContent);
@@ -176,26 +295,57 @@ class _TextEditorPageState extends State<TextEditorPage>
       }
       _scheduleAutoSave();
     });
+
+    WidgetsBinding.instance.addPostFrameCallback((_) => _pullEditorImages());
   }
 
-  /// Extract content — if JSON (old Quill Delta), convert to plain text.
-  /// Otherwise return as-is (markdown).
-  String _extractContent(String raw) {
+  String _fullNoteContent() {
+    return JournalMedia.composeContent(
+      imagePaths: _inlineImagePaths,
+      body: _contentController.text,
+    );
+  }
+
+  ({List<String> images, String body}) _parseInitialContent(String raw) {
+    final images = JournalMedia.extractAllImagePaths(raw);
+    final body = JournalMedia.extractPlainBody(raw);
+    return (images: images, body: body);
+  }
+
+  Future<void> _pullEditorImages() async {
+    if (_editorImagesSynced || !mounted || _inlineImagePaths.isEmpty) return;
+
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id;
+    if (personId == null || personId.isEmpty) return;
+
+    _editorImagesSynced = true;
     try {
-      final decoded = jsonDecode(raw);
-      if (decoded is List) {
-        // Quill Delta format — extract plain text
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            buffer.write(op['insert']);
-          }
-        }
-        return buffer.toString().trim();
+      final storage = context.read<StorageBlock>();
+      final dao = context.read<ProjectNoteDAO>();
+      await storage.backfillProjectNoteMediaFromContent(
+        personId: personId,
+        notesDao: dao,
+        category: _activeNote?.category,
+      );
+      if (_activeNote != null) {
+        final fresh = await dao.getNoteById(_activeNote!.id);
+        if (fresh != null) _activeNote = fresh;
+        await storage.pullProjectNoteImagesFromCloud(
+          personId: personId,
+          notes: [if (_activeNote != null) _activeNote!],
+        );
+      } else {
+        await storage.pullJournalImagePaths(
+          personId: personId,
+          imagePaths: _inlineImagePaths,
+        );
       }
-    } catch (_) {}
-    // Already plain text / markdown
-    return raw;
+      if (mounted) setState(() {});
+    } catch (e) {
+      appLog('TextEditorPage: image pull failed: $e');
+    }
   }
 
   void _scheduleAutoSave() {
@@ -270,8 +420,18 @@ class _TextEditorPageState extends State<TextEditorPage>
         final destination = File('${vaultDir.path}/$fileName');
         await imageFile.copy(destination.path);
 
-        // Insert markdown link at cursor
-        _insertMarkdown('![Image]($fileName)');
+        final personId =
+            context.read<PersonBlock>().currentPersonID.value ??
+            Supabase.instance.client.auth.currentUser?.id;
+        final relativePath = personId != null && personId.isNotEmpty
+            ? p.join(personId, 'user_markdown_documentation', fileName)
+                .replaceAll('\\', '/')
+            : fileName;
+
+        setState(() {
+          _inlineImagePaths = [..._inlineImagePaths, relativePath];
+          _hasUnsavedChanges = true;
+        });
         HapticFeedback.mediumImpact();
       }
     } catch (e) {
@@ -372,7 +532,9 @@ class _TextEditorPageState extends State<TextEditorPage>
       }
 
       setState(() {
-        _contentController.text = content;
+        final parsed = _parseInitialContent(content);
+        _inlineImagePaths = parsed.images;
+        _contentController.text = parsed.body;
         _titleController.text = title;
         _openedFile = file;
         _hasUnsavedChanges = false;
@@ -405,13 +567,14 @@ class _TextEditorPageState extends State<TextEditorPage>
       final title = _titleController.text.trim().isEmpty
           ? 'Untitled'
           : _titleController.text.trim();
-      final content = _contentController.text;
+      final content = _fullNoteContent();
       final category =
           _activeNote?.category ?? widget.initialCategory ?? 'projects';
       final extension =
           _activeNote?.extension ?? widget.initialExtension ?? '.md';
 
-      final imageLocal = JournalMedia.extractFirstImagePath(content);
+      final imageLocal =
+          _inlineImagePaths.isNotEmpty ? _inlineImagePaths.first : null;
       final imageRemote = JournalMedia.canonicalRemotePath(
         imageLocal,
         personId: personId,
@@ -518,10 +681,10 @@ class _TextEditorPageState extends State<TextEditorPage>
       final ext = p.extension(_openedFile!.path).toLowerCase();
       if (ext == '.docx') {
         final bytes =
-            DocxUtils.createDocxBytesFromPlainText(_contentController.text);
+            DocxUtils.createDocxBytesFromPlainText(_fullNoteContent());
         await _openedFile!.writeAsBytes(bytes, flush: true);
       } else {
-        await _openedFile!.writeAsString(_contentController.text, flush: true);
+        await _openedFile!.writeAsString(_fullNoteContent(), flush: true);
       }
       if (mounted) {
         setState(() {
@@ -535,8 +698,8 @@ class _TextEditorPageState extends State<TextEditorPage>
       final fileName = '${_titleController.text}$ext';
       final bytes =
           ext.toLowerCase() == '.docx'
-              ? DocxUtils.createDocxBytesFromPlainText(_contentController.text)
-              : Uint8List.fromList(utf8.encode(_contentController.text));
+              ? DocxUtils.createDocxBytesFromPlainText(_fullNoteContent())
+              : Uint8List.fromList(utf8.encode(_fullNoteContent()));
       final path = await FilePicker.saveFile(
         dialogTitle: 'Save file',
         fileName: fileName,
@@ -550,10 +713,10 @@ class _TextEditorPageState extends State<TextEditorPage>
         final ext = p.extension(file.path).toLowerCase();
         if (ext == '.docx') {
           final bytes =
-              DocxUtils.createDocxBytesFromPlainText(_contentController.text);
+              DocxUtils.createDocxBytesFromPlainText(_fullNoteContent());
           await file.writeAsBytes(bytes, flush: true);
         } else {
-          await file.writeAsString(_contentController.text, flush: true);
+          await file.writeAsString(_fullNoteContent(), flush: true);
         }
         if (mounted) {
           setState(() {
@@ -590,7 +753,7 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   Future<void> _exportToNotionFromEditor() async {
     final title = _titleController.text;
-    final content = _contentController.text;
+    final content = _fullNoteContent();
     if (title.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -640,7 +803,7 @@ class _TextEditorPageState extends State<TextEditorPage>
 
   Future<void> _exportToGoogleDocFromEditor() async {
     final title = _titleController.text;
-    final content = _contentController.text;
+    final content = _fullNoteContent();
     if (title.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -882,7 +1045,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                           onTap: () {
                             Navigator.pop(ctx);
                             Share.share(
-                              _contentController.text,
+                              _fullNoteContent(),
                               subject: _titleController.text,
                             );
                           },
@@ -917,7 +1080,7 @@ class _TextEditorPageState extends State<TextEditorPage>
                           onTap: () async {
                             Navigator.pop(ctx);
                             await Clipboard.setData(
-                              ClipboardData(text: _contentController.text),
+                              ClipboardData(text: _fullNoteContent()),
                             );
                             if (!mounted) return;
                             ScaffoldMessenger.of(context).showSnackBar(
@@ -1116,20 +1279,23 @@ class _TextEditorPageState extends State<TextEditorPage>
             resizeToAvoidBottomInset: true,
             body: Stack(
               children: [
-                // Background gradient
+                // Background
                 Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colorScheme.surface,
-                          colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
-                        ],
-                      ),
-                    ),
-                  ),
+                  child: _isJournalNote
+                      ? _buildJournalBackground(colorScheme)
+                      : Container(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                              colors: [
+                                colorScheme.surface,
+                                colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.3),
+                              ],
+                            ),
+                          ),
+                        ),
                 ),
 
                 Positioned.fill(
@@ -1161,131 +1327,20 @@ class _TextEditorPageState extends State<TextEditorPage>
                           onTap: _dismissKeyboard,
                           onDoubleTap: _toggleFocusMode,
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16.0,
+                            padding: EdgeInsets.symmetric(
+                              horizontal: _isJournalNote ? 20.0 : 16.0,
                             ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                // Title
-                                TextField(
-                                  controller: _titleController,
-                                  focusNode: _titleFocusNode,
-                                  maxLines: 2,
-                                  minLines: 1,
-                                  textInputAction: TextInputAction.next,
-                                  style: TextStyle(
-                                    fontSize: 28,
-                                    fontWeight: FontWeight.w800,
-                                    color: colorScheme.onSurface,
-                                    letterSpacing: -0.6,
-                                    height: 1.25,
-                                  ),
-                                  decoration: InputDecoration(
-                                    hintText: l10n.project_note_untitled,
-                                    hintStyle: TextStyle(
-                                      color: colorScheme.onSurface.withValues(
-                                        alpha: 0.25,
-                                      ),
-                                      fontWeight: FontWeight.w800,
-                                    ),
-                                    border: InputBorder.none,
-                                    contentPadding: EdgeInsets.zero,
-                                  ),
-                                  onSubmitted: (_) =>
-                                      _editorFocusNode.requestFocus(),
-                                ),
-
-                                if (!_focusMode) ...[
-                                  const SizedBox(height: 10),
-                                  ValueListenableBuilder<String?>(
-                                    valueListenable: syncStatus,
-                                    builder: (context, aiStatus, _) {
-                                      return Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          _buildSaveStatusRow(
-                                            colorScheme,
-                                            l10n,
-                                          ),
-                                          if (aiStatus != null) ...[
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                const Icon(
-                                                  Icons.auto_awesome_rounded,
-                                                  size: 14,
-                                                  color: Colors.amber,
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Text(
-                                                    aiStatus,
-                                                    style: TextStyle(
-                                                      color: Colors.amber
-                                                          .shade800,
-                                                      fontSize: 12,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                          if (_openedFile != null) ...[
-                                            const SizedBox(height: 6),
-                                            Row(
-                                              children: [
-                                                Icon(
-                                                  Icons
-                                                      .folder_open_rounded,
-                                                  size: 14,
-                                                  color: colorScheme.primary
-                                                      .withValues(alpha: 0.7),
-                                                ),
-                                                const SizedBox(width: 6),
-                                                Expanded(
-                                                  child: Text(
-                                                    p.basename(
-                                                      _openedFile!.path,
-                                                    ),
-                                                    style: TextStyle(
-                                                      color: colorScheme
-                                                          .onSurfaceVariant,
-                                                      fontSize: 11,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        ],
-                                      );
-                                    },
-                                  ),
-                                  const SizedBox(height: 12),
-                                ] else
-                                  const SizedBox(height: 12),
-
-                                Expanded(
-                                  child: _buildMarkdownEditor(
+                            child: _isJournalNote
+                                ? _buildJournalEditorBody(
                                     colorScheme,
                                     l10n,
-                                    reserveToolbarSpace: keyboardOpen,
+                                    keyboardOpen: keyboardOpen,
+                                  )
+                                : _buildProjectEditorBody(
+                                    colorScheme,
+                                    l10n,
+                                    keyboardOpen: keyboardOpen,
                                   ),
-                                ),
-                              ],
-                            ),
                           ),
                         ),
                       ),
@@ -1294,7 +1349,9 @@ class _TextEditorPageState extends State<TextEditorPage>
                 ),
                 // Floating Markdown Toolbar
                 if (!_focusMode)
-                  _buildMarkdownToolbar(colorScheme),
+                  _isJournalNote
+                      ? _buildJournalToolbar(colorScheme)
+                      : _buildMarkdownToolbar(colorScheme),
                 if (_focusMode)
                   Positioned(
                     right: 20,
@@ -1307,6 +1364,527 @@ class _TextEditorPageState extends State<TextEditorPage>
             ),
           ),
         ),
+    );
+  }
+
+  Widget _buildProjectEditorBody(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool keyboardOpen,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        TextField(
+          controller: _titleController,
+          focusNode: _titleFocusNode,
+          maxLines: 2,
+          minLines: 1,
+          textInputAction: TextInputAction.next,
+          style: TextStyle(
+            fontSize: 28,
+            fontWeight: FontWeight.w800,
+            color: colorScheme.onSurface,
+            letterSpacing: -0.6,
+            height: 1.25,
+          ),
+          decoration: InputDecoration(
+            hintText: l10n.project_note_untitled,
+            hintStyle: TextStyle(
+              color: colorScheme.onSurface.withValues(alpha: 0.25),
+              fontWeight: FontWeight.w800,
+            ),
+            border: InputBorder.none,
+            contentPadding: EdgeInsets.zero,
+          ),
+          onSubmitted: (_) => _editorFocusNode.requestFocus(),
+        ),
+        if (!_focusMode) ...[
+          const SizedBox(height: 10),
+          ValueListenableBuilder<String?>(
+            valueListenable: syncStatus,
+            builder: (context, aiStatus, _) {
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildSaveStatusRow(colorScheme, l10n),
+                  if (aiStatus != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.auto_awesome_rounded,
+                          size: 14,
+                          color: Colors.amber,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            aiStatus,
+                            style: TextStyle(
+                              color: Colors.amber.shade800,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                  if (_openedFile != null) ...[
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.folder_open_rounded,
+                          size: 14,
+                          color: colorScheme.primary.withValues(alpha: 0.7),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            p.basename(_openedFile!.path),
+                            style: TextStyle(
+                              color: colorScheme.onSurfaceVariant,
+                              fontSize: 11,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 12),
+        ] else
+          const SizedBox(height: 12),
+        if (!_focusMode && _inlineImagePaths.isNotEmpty) ...[
+          _buildInlineImagePreviews(colorScheme),
+          const SizedBox(height: 8),
+        ],
+        Expanded(
+          child: _buildMarkdownEditor(
+            colorScheme,
+            l10n,
+            reserveToolbarSpace: keyboardOpen,
+            showTopHint: _inlineImagePaths.isEmpty,
+          ),
+        ),
+      ],
+    );
+  }
+
+  DateTime get _journalLogTime =>
+      _activeNote?.createdAt.toLocal() ?? DateTime.now();
+
+  Widget _buildJournalEditorBody(
+    ColorScheme colorScheme,
+    AppLocalizations l10n, {
+    required bool keyboardOpen,
+  }) {
+    final accent = _journalAccent();
+    final when = _journalLogTime;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (!_focusMode) ...[
+          const SizedBox(height: 2),
+          _buildJournalMoodSection(colorScheme, l10n, when),
+          const SizedBox(height: 14),
+        ],
+        Expanded(
+          child: Container(
+            margin: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+            padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+            decoration: BoxDecoration(
+              color: isDark
+                  ? colorScheme.surface.withValues(alpha: 0.88)
+                  : colorScheme.surface.withValues(alpha: 0.96),
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(
+                color: isDark
+                    ? Colors.white.withValues(alpha: 0.07)
+                    : accent.withValues(alpha: 0.12),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: accent.withValues(alpha: 0.08),
+                  blurRadius: 32,
+                  offset: const Offset(0, 12),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  controller: _titleController,
+                  focusNode: _titleFocusNode,
+                  maxLines: 1,
+                  textInputAction: TextInputAction.next,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    color: colorScheme.onSurface.withValues(alpha: 0.92),
+                    letterSpacing: -0.2,
+                    height: 1.35,
+                  ),
+                  decoration: InputDecoration(
+                    hintText: l10n.project_note_untitled,
+                    hintStyle: TextStyle(
+                      color: colorScheme.onSurface.withValues(alpha: 0.38),
+                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                    ),
+                    border: InputBorder.none,
+                    contentPadding: EdgeInsets.zero,
+                    isDense: true,
+                  ),
+                  onSubmitted: (_) => _editorFocusNode.requestFocus(),
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  child: Divider(
+                    height: 1,
+                    color: colorScheme.onSurface.withValues(alpha: 0.08),
+                  ),
+                ),
+                if (_inlineImagePaths.isNotEmpty) ...[
+                  _buildInlineImagePreviews(
+                    colorScheme,
+                    journalStyle: true,
+                  ),
+                  const SizedBox(height: 16),
+                ],
+                Expanded(
+                  child: _buildMarkdownEditor(
+                    colorScheme,
+                    l10n,
+                    reserveToolbarSpace: keyboardOpen,
+                    showTopHint: _inlineImagePaths.isEmpty,
+                    hintText: l10n.mind_quick_entry_hint,
+                    fontSize: 15.5,
+                    lineHeight: 1.6,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalMoodSection(
+    ColorScheme colorScheme,
+    AppLocalizations l10n,
+    DateTime when,
+  ) {
+    return Column(
+      children: [
+        _buildDaylioMoodPicker(colorScheme, l10n),
+        const SizedBox(height: 12),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.calendar_today_rounded,
+              size: 12,
+              color: colorScheme.onSurface.withValues(alpha: 0.5),
+            ),
+            const SizedBox(width: 6),
+            Text(
+              DateFormat('EEEE, MMM d').format(when),
+              style: TextStyle(
+                color: colorScheme.onSurface.withValues(alpha: 0.62),
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: colorScheme.onSurface.withValues(alpha: 0.25),
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
+            _buildJournalSaveChip(colorScheme, l10n),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalSaveChip(ColorScheme colorScheme, AppLocalizations l10n) {
+    if (_isSaving) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 12,
+            height: 12,
+            child: CircularProgressIndicator(
+              strokeWidth: 1.5,
+              color: _journalAccent(),
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.note_editor_saving,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colorScheme.onSurface.withValues(alpha: 0.55),
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_hasUnsavedChanges) {
+      return Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: const BoxDecoration(
+              color: Colors.orange,
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            l10n.note_editor_unsaved,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: Colors.orange.shade700,
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_lastSaved == null) return const SizedBox.shrink();
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(
+          Icons.cloud_done_rounded,
+          size: 13,
+          color: _journalAccent().withValues(alpha: 0.85),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          l10n.note_editor_saved_label(_formatRelativeTime(_lastSaved!, l10n)),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w600,
+            color: colorScheme.onSurface.withValues(alpha: 0.55),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildJournalBackground(ColorScheme colorScheme) {
+    final accent = _journalAccent();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final base = isDark ? const Color(0xFF0E1419) : colorScheme.surface;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        ColoredBox(color: base),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: RadialGradient(
+              center: const Alignment(0, -0.72),
+              radius: 1.1,
+              colors: [
+                accent.withValues(alpha: isDark ? 0.32 : 0.22),
+                accent.withValues(alpha: isDark ? 0.1 : 0.06),
+                Colors.transparent,
+              ],
+              stops: const [0.0, 0.42, 1.0],
+            ),
+          ),
+        ),
+        DecoratedBox(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                accent.withValues(alpha: 0.06),
+                Colors.transparent,
+                base,
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildDaylioMoodPicker(ColorScheme colorScheme, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: _moodOptions.map((mood) {
+          final selected = _selectedMood == mood;
+          final color = mindMoodAccent(_moodScore(mood));
+          final label = _moodLabel(l10n, mood);
+
+          return Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                HapticFeedback.selectionClick();
+                setState(() {
+                  _selectedMood = mood;
+                  _hasUnsavedChanges = true;
+                });
+              },
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedScale(
+                    scale: selected ? 1.08 : 1.0,
+                    duration: const Duration(milliseconds: 240),
+                    curve: Curves.easeOutBack,
+                    child: _buildMoodIconBubble(
+                      colorScheme: colorScheme,
+                      mood: mood,
+                      selected: selected,
+                      size: selected ? 56 : 46,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: TextStyle(
+                      fontSize: selected ? 10.5 : 9.5,
+                      fontWeight: selected ? FontWeight.w800 : FontWeight.w500,
+                      color: selected
+                          ? color
+                          : colorScheme.onSurface.withValues(alpha: 0.45),
+                      letterSpacing: 0.1,
+                    ),
+                    child: Text(
+                      label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildJournalToolbar(ColorScheme colorScheme) {
+    final viewInsets = MediaQuery.viewInsetsOf(context);
+    final safeBottom = MediaQuery.paddingOf(context).bottom;
+    // Body already shrinks for the keyboard — do not add viewInsets again.
+    final keyboardOpen = viewInsets.bottom > 0;
+    final bottom = keyboardOpen ? 8.0 : safeBottom + 14;
+    final accent = _journalAccent();
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Positioned(
+      bottom: bottom,
+      left: 20,
+      right: 20,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        decoration: BoxDecoration(
+          color: isDark
+              ? colorScheme.surface.withValues(alpha: 0.92)
+              : colorScheme.surface,
+          borderRadius: BorderRadius.circular(32),
+          border: Border.all(
+            color: colorScheme.onSurface.withValues(alpha: 0.06),
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.1),
+              blurRadius: 28,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          children: [
+            Material(
+              color: accent,
+              shape: const CircleBorder(),
+              elevation: 2,
+              shadowColor: accent.withValues(alpha: 0.5),
+              child: InkWell(
+                onTap: _pickAndInsertImage,
+                customBorder: const CircleBorder(),
+                child: const SizedBox(
+                  width: 48,
+                  height: 48,
+                  child: Icon(
+                    Icons.add_a_photo_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
+            const Spacer(),
+            TextButton.icon(
+              onPressed: _dismissKeyboard,
+              icon: Icon(
+                Icons.check_rounded,
+                size: 18,
+                color: accent,
+              ),
+              label: Text(
+                'Done',
+                style: TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.w700,
+                  fontSize: 14,
+                ),
+              ),
+            ),
+            IconButton(
+              onPressed: _showMoreOptions,
+              icon: Icon(
+                Icons.more_horiz_rounded,
+                color: colorScheme.onSurface.withValues(alpha: 0.65),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -1382,10 +1960,146 @@ class _TextEditorPageState extends State<TextEditorPage>
     );
   }
 
+  Future<void> _openInlineImageGallery(int initialIndex) async {
+    if (!mounted || _inlineImagePaths.isEmpty) return;
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id ??
+        '';
+    final paths = List<String>.from(_inlineImagePaths);
+    final index = initialIndex.clamp(0, paths.length - 1);
+    await Navigator.of(context, rootNavigator: true).push<void>(
+      MaterialPageRoute(
+        fullscreenDialog: true,
+        builder: (ctx) => _JournalImageGalleryScreen(
+          imagePaths: paths,
+          initialIndex: index,
+          personId: personId,
+          remoteUrlForPath: (path) => _editorImageRemoteUrl(path, personId),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInlineImagePreviews(
+    ColorScheme colorScheme, {
+    bool journalStyle = false,
+  }) {
+    final personId =
+        context.read<PersonBlock>().currentPersonID.value ??
+        Supabase.instance.client.auth.currentUser?.id ??
+        '';
+    final width = MediaQuery.sizeOf(context).width;
+    final imageHeight = journalStyle
+        ? (width >= 600 ? 148.0 : 128.0)
+        : (width >= 900 ? 200.0 : width >= 600 ? 180.0 : 150.0);
+    final radius = journalStyle ? 20.0 : 14.0;
+    final total = _inlineImagePaths.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < _inlineImagePaths.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          GestureDetector(
+            onTap: () => _openInlineImageGallery(i),
+            child: Container(
+              decoration: journalStyle
+                  ? BoxDecoration(
+                      borderRadius: BorderRadius.circular(radius),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.22),
+                          blurRadius: 16,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    )
+                  : null,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(radius),
+                child: Stack(
+                  alignment: Alignment.bottomRight,
+                  children: [
+                    SizedBox(
+                      height: imageHeight,
+                      width: double.infinity,
+                      child: LocalFirstImage(
+                        ownerId: personId,
+                        localPath: _inlineImagePaths[i],
+                        remoteUrl: _editorImageRemoteUrl(
+                          _inlineImagePaths[i],
+                          personId,
+                        ),
+                        subFolder: 'user_markdown_documentation',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    if (total > 1)
+                      Padding(
+                        padding: const EdgeInsets.all(10),
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.55),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const Icon(
+                                  Icons.collections_rounded,
+                                  color: Colors.white,
+                                  size: 14,
+                                ),
+                                const SizedBox(width: 5),
+                                Text(
+                                  '${i + 1}/$total',
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  String _editorImageRemoteUrl(String path, String personId) {
+    final remoteKey = JournalMedia.canonicalRemotePath(
+      path,
+      personId: personId.isEmpty ? null : personId,
+    );
+    if (remoteKey == null || remoteKey.isEmpty) return '';
+    if (remoteKey.startsWith('http://') || remoteKey.startsWith('https://')) {
+      return remoteKey;
+    }
+    return MinioService().publicUrlForKey(remoteKey);
+  }
+
   Widget _buildMarkdownEditor(
     ColorScheme colorScheme,
     AppLocalizations l10n, {
     required bool reserveToolbarSpace,
+    bool showTopHint = true,
+    String? hintText,
+    double fontSize = 17,
+    double lineHeight = 1.65,
   }) {
     final bottomPad = reserveToolbarSpace ? 72.0 : 24.0;
     return TextField(
@@ -1396,20 +2110,24 @@ class _TextEditorPageState extends State<TextEditorPage>
       textAlignVertical: TextAlignVertical.top,
       keyboardType: TextInputType.multiline,
       style: TextStyle(
-        fontSize: 17,
-        height: 1.65,
-        color: colorScheme.onSurface.withValues(alpha: 0.9),
+        fontSize: fontSize,
+        height: lineHeight,
+        color: colorScheme.onSurface.withValues(alpha: 0.88),
         letterSpacing: 0.1,
+        fontWeight: FontWeight.w400,
       ),
       decoration: InputDecoration(
-        hintText: l10n.note_editor_write_hint,
+        hintText: showTopHint
+            ? (hintText ?? l10n.note_editor_write_hint)
+            : hintText,
         hintStyle: TextStyle(
-          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
-          fontSize: 17,
-          height: 1.65,
+          color: colorScheme.onSurfaceVariant.withValues(alpha: 0.5),
+          fontSize: fontSize,
+          height: lineHeight,
+          fontWeight: FontWeight.w400,
         ),
         border: InputBorder.none,
-        contentPadding: EdgeInsets.only(bottom: bottomPad),
+        contentPadding: EdgeInsets.only(top: showTopHint ? 0 : 4, bottom: bottomPad),
       ),
     );
   }
@@ -1464,9 +2182,8 @@ class _TextEditorPageState extends State<TextEditorPage>
   Widget _buildMarkdownToolbar(ColorScheme colorScheme) {
     final viewInsets = MediaQuery.viewInsetsOf(context);
     final safeBottom = MediaQuery.paddingOf(context).bottom;
-    final bottom = viewInsets.bottom > 0
-        ? viewInsets.bottom + 8
-        : safeBottom + 16;
+    final keyboardOpen = viewInsets.bottom > 0;
+    final bottom = keyboardOpen ? 8.0 : safeBottom + 16;
 
     return Positioned(
       bottom: bottom,
@@ -1650,11 +2367,14 @@ class _TextEditorPageState extends State<TextEditorPage>
   }
 
   Widget _buildCustomHeader(BuildContext context, ColorScheme colorScheme) {
+    final journal = _isJournalNote;
     return ClipRRect(
       child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        filter: ui.ImageFilter.blur(sigmaX: journal ? 6 : 10, sigmaY: journal ? 6 : 10),
         child: Container(
-          color: colorScheme.surface.withValues(alpha: 0.5),
+          color: journal
+              ? Colors.transparent
+              : colorScheme.surface.withValues(alpha: 0.5),
           child: SafeArea(
             bottom: false,
             child: Padding(
@@ -1664,14 +2384,15 @@ class _TextEditorPageState extends State<TextEditorPage>
               ),
               child: Row(
                 children: [
-                  // Back button
                   Container(
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.3,
-                      ),
+                      color: journal
+                          ? colorScheme.surface.withValues(alpha: 0.55)
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.3,
+                            ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: colorScheme.outline.withValues(alpha: 0.05),
@@ -1696,19 +2417,16 @@ class _TextEditorPageState extends State<TextEditorPage>
                     ),
                   ),
                   const Spacer(),
-
-                  // Preview toggle removed.
-
                   const SizedBox(width: 12),
-
-                  // More options button
                   Container(
                     height: 44,
                     width: 44,
                     decoration: BoxDecoration(
-                      color: colorScheme.surfaceContainerHighest.withOpacity(
-                        0.5,
-                      ),
+                      color: journal
+                          ? colorScheme.surface.withValues(alpha: 0.55)
+                          : colorScheme.surfaceContainerHighest.withValues(
+                              alpha: 0.5,
+                            ),
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: colorScheme.outline.withValues(alpha: 0.05),
@@ -1744,5 +2462,91 @@ class _TextEditorPageState extends State<TextEditorPage>
       return l10n.note_editor_saved_hours(diff.inHours);
     }
     return DateFormat.MMMd().format(time);
+  }
+}
+
+/// Full-screen swipe gallery for journal inline images.
+class _JournalImageGalleryScreen extends StatefulWidget {
+  const _JournalImageGalleryScreen({
+    required this.imagePaths,
+    required this.initialIndex,
+    required this.personId,
+    required this.remoteUrlForPath,
+  });
+
+  final List<String> imagePaths;
+  final int initialIndex;
+  final String personId;
+  final String Function(String path) remoteUrlForPath;
+
+  @override
+  State<_JournalImageGalleryScreen> createState() =>
+      _JournalImageGalleryScreenState();
+}
+
+class _JournalImageGalleryScreenState extends State<_JournalImageGalleryScreen> {
+  late final PageController _pageController;
+  late int _index;
+
+  @override
+  void initState() {
+    super.initState();
+    _index = widget.initialIndex;
+    _pageController = PageController(initialPage: widget.initialIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final total = widget.imagePaths.length;
+
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        title: Text(total > 1 ? '${_index + 1} / $total' : ''),
+        centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.close_rounded),
+          onPressed: () => Navigator.pop(context),
+        ),
+      ),
+      body: PageView.builder(
+        controller: _pageController,
+        itemCount: total,
+        onPageChanged: (i) => setState(() => _index = i),
+        itemBuilder: (context, i) {
+          final path = widget.imagePaths[i];
+          return LayoutBuilder(
+            builder: (context, constraints) {
+              return InteractiveViewer(
+                minScale: 0.85,
+                maxScale: 4,
+                child: Center(
+                  child: LocalFirstImage(
+                    ownerId: widget.personId,
+                    localPath: path,
+                    remoteUrl: widget.remoteUrlForPath(path),
+                    subFolder: 'user_markdown_documentation',
+                    width: constraints.maxWidth,
+                    height: constraints.maxHeight,
+                    fit: BoxFit.contain,
+                    placeholder: const Center(
+                      child: CircularProgressIndicator(color: Colors.white54),
+                    ),
+                  ),
+                ),
+              );
+            },
+          );
+        },
+      ),
+    );
   }
 }

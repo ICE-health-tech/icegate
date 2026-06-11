@@ -129,7 +129,7 @@ class DataSeeder {
         personID: Value(personId),
         skillName: const Value('Sample skill'),
         proficiencyLevel: const Value(SkillLevel.beginner),
-        yearsOfExperience: const Value(0),
+        point: const Value(0),
         isFeatured: const Value(true),
       ),
     );

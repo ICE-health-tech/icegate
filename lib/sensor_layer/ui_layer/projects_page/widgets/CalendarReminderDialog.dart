@@ -12,6 +12,7 @@ Future<void> showCalendarReminderDialog(
   BuildContext context, {
   required DateTime initialDay,
   required String personId,
+  CustomNotificationData? existing,
 }) {
   final wide = MediaQuery.sizeOf(context).width >= 600;
   return showDialog(
@@ -19,6 +20,7 @@ Future<void> showCalendarReminderDialog(
     builder: (ctx) => _CalendarReminderDialog(
       initialDay: initialDay,
       personId: personId,
+      existing: existing,
       wide: wide,
     ),
   );
@@ -28,12 +30,16 @@ class _CalendarReminderDialog extends StatefulWidget {
   const _CalendarReminderDialog({
     required this.initialDay,
     required this.personId,
+    this.existing,
     required this.wide,
   });
 
   final DateTime initialDay;
   final String personId;
+  final CustomNotificationData? existing;
   final bool wide;
+
+  bool get isEdit => existing != null;
 
   @override
   State<_CalendarReminderDialog> createState() => _CalendarReminderDialogState();
@@ -48,11 +54,20 @@ class _CalendarReminderDialogState extends State<_CalendarReminderDialog> {
   @override
   void initState() {
     super.initState();
-    _selectedDate = DateTime(
-      widget.initialDay.year,
-      widget.initialDay.month,
-      widget.initialDay.day,
-    );
+    final existing = widget.existing;
+    if (existing != null) {
+      final local = existing.scheduledTime.toLocal();
+      _selectedDate = DateTime(local.year, local.month, local.day);
+      _selectedTime = TimeOfDay.fromDateTime(local);
+      _titleController.text = existing.title;
+      _contentController.text = existing.content;
+    } else {
+      _selectedDate = DateTime(
+        widget.initialDay.year,
+        widget.initialDay.month,
+        widget.initialDay.day,
+      );
+    }
   }
 
   @override
@@ -71,7 +86,11 @@ class _CalendarReminderDialogState extends State<_CalendarReminderDialog> {
       insetPadding: widget.wide
           ? const EdgeInsets.symmetric(horizontal: 80, vertical: 48)
           : null,
-      title: Text(l10n.projects_calendar_add_reminder),
+      title: Text(
+        widget.isEdit
+            ? l10n.projects_calendar_edit_reminder
+            : l10n.projects_calendar_add_reminder,
+      ),
       content: SizedBox(
         width: widget.wide ? 440 : null,
         child: SingleChildScrollView(
@@ -186,7 +205,7 @@ class _CalendarReminderDialogState extends State<_CalendarReminderDialog> {
         ),
         FilledButton(
           onPressed: _save,
-          child: Text(l10n.add),
+          child: Text(widget.isEdit ? l10n.projects_calendar_save : l10n.add),
         ),
       ],
     );
@@ -216,23 +235,35 @@ class _CalendarReminderDialogState extends State<_CalendarReminderDialog> {
 
     final dao = context.read<CustomNotificationDAO>();
     final notificationService = context.read<LocalNotificationService>();
-    final id = IDGen.UUIDV7();
+    final existing = widget.existing;
 
-    await dao.insertNotification(
-      CustomNotificationsTableCompanion.insert(
-        id: id,
-        title: title,
-        content: _contentController.text.trim(),
-        notificationID: Value(numericId),
-        scheduledTime: scheduled,
-        repeatFrequency: const Value('none'),
-        category: const Value('Projects'),
-        priority: const Value('Normal'),
-        personID: Value(widget.personId),
-        isEnabled: const Value(true),
-        createdAt: Value(DateTime.now()),
-      ),
-    );
+    if (existing != null) {
+      await dao.updateNotification(
+        existing.copyWith(
+          title: title,
+          content: _contentController.text.trim(),
+          notificationID: Value(numericId),
+          scheduledTime: scheduled,
+        ),
+      );
+    } else {
+      final id = IDGen.UUIDV7();
+      await dao.insertNotification(
+        CustomNotificationsTableCompanion.insert(
+          id: id,
+          title: title,
+          content: _contentController.text.trim(),
+          notificationID: Value(numericId),
+          scheduledTime: scheduled,
+          repeatFrequency: const Value('none'),
+          category: const Value('Projects'),
+          priority: const Value('Normal'),
+          personID: Value(widget.personId),
+          isEnabled: const Value(true),
+          createdAt: Value(DateTime.now()),
+        ),
+      );
+    }
 
     if (!mounted) return;
     await notificationService.syncAllNotifications(widget.personId);

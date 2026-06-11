@@ -42,6 +42,8 @@ class TransactionCard extends StatelessWidget {
         return Icons.school_rounded;
       case 'investing':
         return Icons.trending_up_rounded;
+      case 'human_capital':
+        return Icons.psychology_alt_rounded;
       case 'salary':
         return Icons.payments_rounded;
       case 'freelance':
@@ -99,6 +101,8 @@ class TransactionCard extends StatelessWidget {
         return l10n.finance_cat_investing;
       case 'general':
         return l10n.finance_cat_general;
+      case 'human_capital':
+        return l10n.finance_cat_human_capital;
       case 'salary':
         return l10n.finance_cat_salary;
       case 'freelance':
@@ -193,13 +197,15 @@ class TransactionCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    _getCategoryNameDisplay(l10n, txn.category).toUpperCase(),
+                    _subtitle(l10n),
                     style: const TextStyle(
                       fontSize: 8,
                       color: Colors.white24,
                       fontWeight: FontWeight.bold,
                       letterSpacing: 1.0,
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -239,6 +245,15 @@ class TransactionCard extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  String _subtitle(AppLocalizations l10n) {
+    final category = _getCategoryNameDisplay(l10n, txn.category).toUpperCase();
+    final sourceName = block.accountDisplayName(txn.sourceAccountId);
+    if (sourceName != null && sourceName.isNotEmpty) {
+      return '$category · $sourceName'.toUpperCase();
+    }
+    return category;
   }
 
   String _formatDate(DateTime date) {

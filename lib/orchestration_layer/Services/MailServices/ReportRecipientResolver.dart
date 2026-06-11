@@ -1,3 +1,4 @@
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/orchestration_layer/Services/MailServices/ReportRecipientPrefs.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -20,15 +21,41 @@ class ReportRecipientResolver {
     return parts[1].contains('.');
   }
 
-  /// Default recipient for UI hints: logged-in account email, then valid profile email.
-  static String? profileEmail(PersonBlock personBlock) {
-    final auth = _authEmail();
-    if (auth != null && auth.isNotEmpty && isValidEmail(auth)) return auth;
+  static void _addEmail(Set<String> seen, List<String> out, String? raw) {
+    final value = raw?.trim() ?? '';
+    if (value.isEmpty || !isValidEmail(value)) return;
+    final key = value.toLowerCase();
+    if (seen.add(key)) out.add(value);
+  }
 
-    final fromProfile = personBlock.information.value.details.email.trim();
-    if (fromProfile.isNotEmpty && isValidEmail(fromProfile)) return fromProfile;
+  /// All deliverable emails for this user (auth → profile → saved addresses).
+  static List<String> userEmailCandidates(
+    PersonBlock personBlock, {
+    List<EmailAddressData> stored = const [],
+  }) {
+    final seen = <String>{};
+    final out = <String>[];
+    _addEmail(seen, out, _authEmail());
+    _addEmail(seen, out, personBlock.information.value.details.email);
+    final sortedStored = List<EmailAddressData>.from(stored)
+      ..sort((a, b) {
+        if (a.isPrimary != b.isPrimary) return a.isPrimary ? -1 : 1;
+        return a.emailAddress.compareTo(b.emailAddress);
+      });
+    for (final row in sortedStored) {
+      _addEmail(seen, out, row.emailAddress);
+    }
+    return out;
+  }
 
-    return auth?.isNotEmpty == true ? auth : null;
+  /// Default recipient for UI hints: first [userEmailCandidates] entry.
+  static String? profileEmail(
+    PersonBlock personBlock, {
+    List<EmailAddressData> stored = const [],
+  }) {
+    final candidates = userEmailCandidates(personBlock, stored: stored);
+    if (candidates.isNotEmpty) return candidates.first;
+    return null;
   }
 
   /// Display name for email greeting (first + last from profile).

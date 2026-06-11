@@ -749,15 +749,48 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
     );
   }
 
+  Future<void> updateSkillName(String id, String skillName) async {
+    final trimmed = skillName.trim();
+    if (trimmed.isEmpty) return;
+    await (update(skillsTable)..where((t) => t.id.equals(id))).write(
+      SkillsTableCompanion(
+        skillName: Value(trimmed),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushSkillById(id);
+  }
+
+  Future<void> updateSkillCertificateDetails({
+    required String id,
+    String? description,
+    DateTime? createdAt,
+  }) async {
+    await (update(skillsTable)..where((t) => t.id.equals(id))).write(
+      SkillsTableCompanion(
+        description: description != null
+            ? Value(
+                description.trim().isEmpty ? null : description.trim(),
+              )
+            : const Value.absent(),
+        createdAt: createdAt != null
+            ? Value(createdAt.toUtc())
+            : const Value.absent(),
+        updatedAt: Value(DateTime.now().toUtc()),
+      ),
+    );
+    await _pushSkillById(id);
+  }
+
   Future<void> addSkillPracticePoints(String id, int delta) async {
     if (delta <= 0) return;
     final row = await (select(skillsTable)..where((t) => t.id.equals(id)))
         .getSingleOrNull();
     if (row == null) return;
-    final newXp = row.yearsOfExperience + delta;
+    final newXp = row.point + delta;
     await (update(skillsTable)..where((t) => t.id.equals(id))).write(
       SkillsTableCompanion(
-        yearsOfExperience: Value(newXp),
+        point: Value(newXp),
         proficiencyLevel: Value(skillLevelForPracticePoints(newXp)),
         updatedAt: Value(DateTime.now().toUtc()),
       ),
@@ -785,8 +818,9 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
             orElse: () => SkillLevel.beginner,
           ),
         ),
-        yearsOfExperience:
-            Value((r['years_of_experience'] as num?)?.toInt() ?? 0),
+        point: Value((r['point'] as num?)?.toInt() ?? 0),
+        achievedPoints: Value((r['achieved_points'] as num?)?.toInt() ?? 0),
+        eventID: Value(r['event_id'] as String?),
         description: Value(r['description'] as String?),
         isFeatured: Value(isFeatured),
         createdAt: Value(
@@ -834,7 +868,9 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
         'skill_name': row.skillName,
         'skill_category': row.skillCategory,
         'proficiency_level': row.proficiencyLevel.name,
-        'years_of_experience': row.yearsOfExperience,
+        'point': row.point,
+        'achieved_points': row.achievedPoints,
+        if (row.eventID != null) 'event_id': row.eventID,
         'description': row.description,
         'is_featured': row.isFeatured,
         'created_at': row.createdAt.toUtc().toIso8601String(),
@@ -869,6 +905,7 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
         .map(
           (row) => SkillData(
             id: row.data['id'] as String,
+            tenantID: row.data['tenant_id'] as String?,
             skillID: row.data['skill_id'] as String?,
             personID: (row.data['person_id'] as String?) ?? personId,
             skillName: (row.data['skill_name'] as String?) ?? 'Untitled',
@@ -877,7 +914,10 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
               (e) => e.name == row.data['proficiency_level'],
               orElse: () => SkillLevel.beginner,
             ),
-            yearsOfExperience: (row.data['years_of_experience'] as int?) ?? 0,
+            point: (row.data['point'] as num?)?.toInt() ?? 0,
+            achievedPoints:
+                (row.data['achieved_points'] as num?)?.toInt() ?? 0,
+            eventID: row.data['event_id'] as String?,
             description: row.data['description'] as String?,
             isFeatured:
                 (row.data['is_featured'] == 1 || row.data['is_featured'] == true),
@@ -892,5 +932,249 @@ class GrowthDAO extends DatabaseAccessor<AppDatabase> with _$GrowthDAOMixin {
           ),
         )
         .toList();
+  }
+}
+
+@DriftAccessor(tables: [EventsTable])
+class EventsDAO extends DatabaseAccessor<AppDatabase> with _$EventsDAOMixin {
+  EventsDAO(super.db);
+
+  Stream<List<EventData>> watchEventsByPerson(String personId) {
+    return (select(eventsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.occurredAt,
+              mode: OrderingMode.desc,
+            ),
+            (t) => OrderingTerm(expression: t.createdAt, mode: OrderingMode.desc),
+          ]))
+        .watch();
+  }
+
+  Stream<List<EventData>> watchEventsSince(String personId, DateTime since) {
+    return (select(eventsTable)
+          ..where(
+            (t) =>
+                t.personID.equals(personId) &
+                t.occurredAt.isBiggerOrEqualValue(since),
+          )
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.occurredAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch();
+  }
+
+  Future<EventData?> getEventById(String id) {
+    return (select(eventsTable)..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(eventsTable).insertOnConflictUpdate(
+      EventsTableCompanion.insert(
+        id: (r['id'] as String?) ?? '',
+        tenantID: Value((r['tenant_id'] as String?) ?? DEFAULT_TENANT_ID),
+        personID: (r['person_id'] as String?) ?? '',
+        name: (r['name'] as String?) ?? (r['title'] as String?) ?? 'Untitled',
+        description: Value(r['description'] as String?),
+        urlImage: Value(r['url_image'] as String?),
+        urlVideo: Value(r['url_video'] as String?),
+        occurredAt: Value(
+          r['occurred_at'] != null
+              ? DateTime.parse(r['occurred_at'].toString())
+              : DateTime.now(),
+        ),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+        updatedAt: Value(
+          r['updated_at'] != null
+              ? DateTime.parse(r['updated_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+    );
+  }
+
+  Future<String> insertEvent(EventsTableCompanion entry) async {
+    await into(eventsTable).insert(entry, mode: InsertMode.insertOrReplace);
+    final payload = <String, dynamic>{};
+    for (final col in eventsTable.$columns) {
+      final value = entry.toColumns(true)[col.name];
+      if (value is Variable) {
+        var v = value.value;
+        if (v is DateTime) {
+          v = v.toUtc().toIso8601String();
+        }
+        payload[col.name] = v;
+      }
+    }
+    await db.pushToSupabase(table: 'events', payload: payload);
+    return payload['id'] as String;
+  }
+
+  Future<void> updateLoggedEvent({
+    required String id,
+    required String name,
+    required DateTime occurredAt,
+    String? description,
+  }) async {
+    final now = DateTime.now();
+    await (update(eventsTable)..where((t) => t.id.equals(id))).write(
+      EventsTableCompanion(
+        name: Value(name),
+        description: Value(description),
+        occurredAt: Value(occurredAt.toUtc()),
+        updatedAt: Value(now),
+      ),
+    );
+    final row = await getEventById(id);
+    if (row != null) {
+      await db.pushToSupabase(
+        table: 'events',
+        payload: {
+          'id': row.id,
+          'person_id': row.personID,
+          'name': name,
+          'description': description,
+          'occurred_at': occurredAt.toUtc().toIso8601String(),
+          'updated_at': now.toUtc().toIso8601String(),
+        },
+      );
+    }
+  }
+
+  Future<void> deleteLoggedEvent(String id) async {
+    await (delete(eventsTable)..where((t) => t.id.equals(id))).go();
+    await db.pushToSupabase(table: 'events', payload: {'id': id}, isDelete: true);
+  }
+
+  Future<void> syncEventsFromCloud(String personId) async {
+    await db.syncTableDown('events', personId);
+  }
+}
+
+@DriftAccessor(tables: [EventSkillsTable, SkillsTable])
+class EventSkillsDAO extends DatabaseAccessor<AppDatabase>
+    with _$EventSkillsDAOMixin {
+  EventSkillsDAO(super.db);
+
+  Stream<List<EventSkillData>> watchLinksForPerson(String personId) {
+    return (select(eventSkillsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch();
+  }
+
+  Future<List<EventSkillData>> linksForEvent(String eventId) {
+    return (select(eventSkillsTable)
+          ..where((t) => t.eventRowID.equals(eventId)))
+        .get();
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    await into(eventSkillsTable).insertOnConflictUpdate(
+      EventSkillsTableCompanion.insert(
+        id: (r['id'] as String?) ?? '',
+        tenantID: Value((r['tenant_id'] as String?) ?? DEFAULT_TENANT_ID),
+        personID: Value(r['person_id'] as String?),
+        eventRowID: (r['event_id'] as String?) ?? '',
+        skillRowID: (r['skill_id'] as String?) ?? '',
+        earningPoint: Value((r['earning_point'] as num?)?.toInt() ?? 0),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+    );
+  }
+
+  /// Inserts junction row and bumps [SkillsTable.point] + last [event_id].
+  Future<void> linkEventToSkill({
+    required String personId,
+    required String eventId,
+    required String skillId,
+    required int earningPoint,
+    String? tenantId,
+  }) async {
+    if (earningPoint <= 0) return;
+    final linkId = IDGen.UUIDV7();
+    final now = DateTime.now().toUtc();
+
+    await into(eventSkillsTable).insert(
+      EventSkillsTableCompanion.insert(
+        id: linkId,
+        tenantID: Value(tenantId ?? DEFAULT_TENANT_ID),
+        personID: Value(personId),
+        eventRowID: eventId,
+        skillRowID: skillId,
+        earningPoint: Value(earningPoint),
+        createdAt: Value(now),
+      ),
+      mode: InsertMode.insertOrReplace,
+    );
+
+    await db.pushToSupabase(
+      table: 'event_skills',
+      payload: {
+        'id': linkId,
+        'tenant_id': tenantId ?? DEFAULT_TENANT_ID,
+        'person_id': personId,
+        'event_id': eventId,
+        'skill_id': skillId,
+        'earning_point': earningPoint,
+        'created_at': now.toIso8601String(),
+      },
+    );
+
+    final skill = await (select(skillsTable)..where((t) => t.id.equals(skillId)))
+        .getSingleOrNull();
+    if (skill == null) return;
+
+    final newPoints = skill.point + earningPoint;
+    await (update(skillsTable)..where((t) => t.id.equals(skillId))).write(
+      SkillsTableCompanion(
+        point: Value(newPoints),
+        proficiencyLevel: Value(GrowthDAO.skillLevelForPracticePoints(newPoints)),
+        eventID: Value(eventId),
+        updatedAt: Value(now),
+      ),
+    );
+
+    await db.pushToSupabase(
+      table: 'skills',
+      payload: {
+        'id': skill.id,
+        'tenant_id': skill.tenantID,
+        'skill_id': skill.skillID ?? skill.id,
+        'person_id': skill.personID,
+        'skill_name': skill.skillName,
+        'skill_category': skill.skillCategory,
+        'proficiency_level': GrowthDAO.skillLevelForPracticePoints(newPoints).name,
+        'point': newPoints,
+        'achieved_points': skill.achievedPoints,
+        'event_id': eventId,
+        'description': skill.description,
+        'is_featured': skill.isFeatured,
+        'created_at': skill.createdAt.toUtc().toIso8601String(),
+        'updated_at': now.toIso8601String(),
+      },
+    );
+  }
+
+  Future<void> syncEventSkillsFromCloud(String personId) async {
+    await db.syncTableDown('event_skills', personId);
   }
 }

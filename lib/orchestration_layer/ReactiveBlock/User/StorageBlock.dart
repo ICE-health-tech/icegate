@@ -9,6 +9,7 @@ import 'package:ice_gate/utils/sync_device.dart';
 import 'package:drift/drift.dart';
 import 'package:signals/signals.dart';
 import 'package:ice_gate/utils/app_log.dart';
+import 'package:ice_gate/utils/journal_media.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -25,6 +26,7 @@ class StorageBlock {
   Timer? _scanTimer;
   String? _activePersonId;
   bool _storyBackfillRunning = false;
+  bool _journalSyncRunning = false;
 
   StorageBlock({required LocalMediaIndexDAO mediaIndexDao})
       : _mediaIndexDao = mediaIndexDao;
@@ -597,6 +599,184 @@ class StorageBlock {
     final parts = relativePath.replaceAll('\\', '/').split('/');
     if (parts.length >= 2) return parts[1];
     return 'general_images';
+  }
+
+  /// Parse `![…](path)` / Quill image ops from note content → `local_path` / `remote_path`.
+  Future<int> backfillProjectNoteMediaFromContent({
+    required String personId,
+    required ProjectNoteDAO notesDao,
+    String? category,
+  }) async {
+    if (personId.isEmpty) return 0;
+
+    final notes = await notesDao.getNotesForPerson(
+      personId,
+      category: category,
+    );
+    var updated = 0;
+
+    for (final note in notes) {
+      final imageLocal = JournalMedia.extractFirstImagePath(note.content);
+      if (imageLocal == null || imageLocal.isEmpty) continue;
+
+      final imageRemote = JournalMedia.canonicalRemotePath(
+        imageLocal,
+        personId: personId,
+      );
+      final needsLocal = (note.localPath ?? '').trim() != imageLocal.trim();
+      final needsRemote =
+          (note.remotePath ?? '').trim() != (imageRemote ?? '').trim();
+      if (!needsLocal && !needsRemote) continue;
+
+      final ok = await notesDao.updateNoteMediaPaths(
+        id: note.id,
+        localPath: imageLocal,
+        remotePath: imageRemote,
+        device: note.device ?? SyncDevice.current(),
+      );
+      if (ok) updated++;
+    }
+
+    if (updated > 0) {
+      appLog(
+        '📝 [StorageBlock] Parsed journal images for $updated note(s) ($personId)',
+      );
+    }
+    return updated;
+  }
+
+  /// Download missing journal images from S3 (and upload local-only files).
+  Future<int> pullProjectNoteImagesFromCloud({
+    required String personId,
+    required List<ProjectNoteData> notes,
+  }) async {
+    if (personId.isEmpty || notes.isEmpty) return 0;
+
+    final appDir = await getApplicationDocumentsDirectory();
+    var synced = 0;
+
+    for (final note in notes) {
+      final rawPath = (note.localPath ?? note.remotePath ?? '').trim();
+      if (rawPath.isEmpty) continue;
+      if (rawPath.startsWith('http://') || rawPath.startsWith('https://')) {
+        continue;
+      }
+
+      final remoteKey = note.remotePath?.trim().isNotEmpty == true
+          ? note.remotePath!.trim()
+          : JournalMedia.canonicalRemotePath(rawPath, personId: personId);
+      if (remoteKey == null || remoteKey.isEmpty) continue;
+
+      final localRel = canonicalLocalMediaPath(
+        rawPath.contains('/') ? rawPath : remoteKey,
+      );
+      final localFile = File(p.join(appDir.path, localRel));
+
+      if (await localFile.exists()) {
+        var onS3 = false;
+        for (final key in mediaS3KeysForRelativePath(localRel)) {
+          if (await _minioService.objectExists(key)) {
+            onS3 = true;
+            break;
+          }
+        }
+        if (!onS3) {
+          try {
+            await _minioService.uploadFileAtKey(localFile, objectKey: localRel);
+          } catch (_) {}
+        }
+        continue;
+      }
+
+      var downloaded = false;
+      for (final key in mediaS3KeysForRelativePath(
+        canonicalLocalMediaPath(remoteKey),
+      )) {
+        if (!await _minioService.objectExists(key)) continue;
+        await localFile.parent.create(recursive: true);
+        if (await _minioService.downloadToFile(
+          objectName: key,
+          outFile: localFile,
+        )) {
+          downloaded = true;
+          synced++;
+          break;
+        }
+      }
+      if (!downloaded) {
+        appLog(
+          '⚠️ [StorageBlock] Journal image missing locally and on S3: $remoteKey',
+        );
+      }
+    }
+
+    if (synced > 0) {
+      appLog(
+        '📥 [StorageBlock] Pulled $synced journal image(s) for $personId',
+      );
+    }
+    return synced;
+  }
+
+  /// Download journal images when only paths are known (e.g. editor open).
+  Future<int> pullJournalImagePaths({
+    required String personId,
+    required List<String> imagePaths,
+  }) {
+    if (personId.isEmpty || imagePaths.isEmpty) return Future.value(0);
+    final notes = imagePaths
+        .map(
+          (path) => ProjectNoteData(
+            id: path,
+            personID: personId,
+            title: '',
+            content: '',
+            localPath: path,
+            remotePath: JournalMedia.canonicalRemotePath(
+              path,
+              personId: personId,
+            ),
+            category: 'social',
+            extension: '.md',
+            createdAt: DateTime.fromMillisecondsSinceEpoch(0),
+            updatedAt: DateTime.fromMillisecondsSinceEpoch(0),
+          ),
+        )
+        .toList();
+    return pullProjectNoteImagesFromCloud(
+      personId: personId,
+      notes: notes,
+    );
+  }
+
+  /// On documentation/journal entry: parse content → DB columns → S3 pull.
+  Future<void> syncJournalNotes({
+    required String personId,
+    required ProjectNoteDAO notesDao,
+    String? category,
+  }) async {
+    if (personId.isEmpty || _journalSyncRunning) return;
+
+    _journalSyncRunning = true;
+    try {
+      await backfillProjectNoteMediaFromContent(
+        personId: personId,
+        notesDao: notesDao,
+        category: category,
+      );
+      final notes = await notesDao.getNotesForPerson(
+        personId,
+        category: category,
+      );
+      await pullProjectNoteImagesFromCloud(
+        personId: personId,
+        notes: notes,
+      );
+    } catch (e) {
+      appLog('❌ [StorageBlock] syncJournalNotes failed: $e');
+    } finally {
+      _journalSyncRunning = false;
+    }
   }
 
   void dispose() {

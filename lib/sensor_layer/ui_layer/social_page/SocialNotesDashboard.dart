@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:async';
 
 import 'package:flutter/foundation.dart'
     show TargetPlatform, defaultTargetPlatform;
@@ -17,6 +17,8 @@ import 'package:path/path.dart' as p;
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ObjectDatabaseBlock.dart';
 import 'package:ice_gate/utils/journal_media.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/MindBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/StorageBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_log_insights.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MoodTrendsChart.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindActivityTokens.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/MindMoodPalette.dart';
@@ -30,6 +32,20 @@ class SocialNotesDashboard extends StatefulWidget {
 }
 
 class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
+  bool _journalSyncStarted = false;
+
+  void _maybeSyncJournalImages(String personId) {
+    if (_journalSyncStarted || personId.isEmpty) return;
+    _journalSyncStarted = true;
+    unawaited(
+      context.read<StorageBlock>().syncJournalNotes(
+        personId: personId,
+        notesDao: context.read<ProjectNoteDAO>(),
+        category: 'social',
+      ),
+    );
+  }
+
   /// Space for [MainShell] bottom FAB / home button strip.
   double _bottomClearance(BuildContext context) {
     final width = MediaQuery.sizeOf(context).width;
@@ -50,6 +66,8 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       if (personId == null || personId.isEmpty) {
         return const Center(child: CircularProgressIndicator());
       }
+
+      _maybeSyncJournalImages(personId);
 
       return Container(
         color: Colors.transparent,
@@ -74,63 +92,19 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                       alignment: Alignment.center,
                       child: ConstrainedBox(
                         constraints: const BoxConstraints(maxWidth: 920),
-                        child: StreamBuilder<List<MindLogData>>(
-                          stream: context.read<MindBlock>().watchMindLogsRange(
-                            personId,
-                            7,
-                          ),
-                          builder: (context, snapshot) {
-                        if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                          return const SizedBox.shrink();
-                        }
-                        return Container(
-                          width: double.infinity,
-                          padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
-                          decoration: HealthMetricColors.shellPanel(
-                            colorScheme,
-                            isDark: isDark,
-                            radius: 22,
-                            accent: HealthMetricColors.pillarViolet,
-                          ),
-                          child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              AppLocalizations.of(context)!.mood_trends_title.toUpperCase(),
-                              style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 1.4,
-                                fontWeight: FontWeight.w900,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            MoodTrendsChart(logs: snapshot.data!),
-                            const SizedBox(height: 16),
-                            _buildRecentLogsPreview(
-                              context,
-                              snapshot.data!,
-                              personId,
-                            ),
-                            const SizedBox(height: 8),
-                            Text(
-                              AppLocalizations.of(context)!.social_notes_title.toUpperCase(),
-                              style: textTheme.labelSmall?.copyWith(
-                                letterSpacing: 1.4,
-                                fontWeight: FontWeight.w900,
-                                color: colorScheme.onSurface,
-                              ),
-                            ),
-                          ],
+                        child: _buildJournalMoodTrendsPanel(
+                          context,
+                          personId,
+                          colorScheme,
+                          textTheme,
+                          isDark,
                         ),
-                        );
-                      },
+                      ),
                     ),
                   ),
-                ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
             StreamBuilder<List<ProjectNoteData>>(
               stream: context.read<ProjectNoteDAO>().watchNotesByCategory(
                 personId,
@@ -164,42 +138,63 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
                 return SliverLayoutBuilder(
                   builder: (context, constraints) {
                     final cw = constraints.crossAxisExtent;
-                    var crossCount = 2;
-                    var aspect = 0.82;
                     var gap = 14.0;
                     var hPad = 16.0;
+                    var maxTileWidth = 320.0;
+                    var tileHeight = 320.0;
                     final bottomPad = _bottomClearance(context);
+                    final useList = cw < 720;
+
                     if (cw >= 1200) {
-                      crossCount = 5;
-                      aspect = 0.88;
-                      gap = 14;
+                      maxTileWidth = 300;
+                      tileHeight = 328;
                       hPad = 32;
                     } else if (cw >= 900) {
-                      crossCount = 4;
-                      aspect = 0.86;
-                      gap = 14;
+                      maxTileWidth = 300;
+                      tileHeight = 324;
                       hPad = 28;
                     } else if (cw >= 640) {
-                      crossCount = 3;
-                      aspect = 0.84;
-                      gap = 14;
+                      maxTileWidth = 280;
+                      tileHeight = 316;
                       hPad = 20;
+                    }
+
+                    if (useList) {
+                      return SliverPadding(
+                        padding: EdgeInsets.fromLTRB(hPad, 8, hPad, bottomPad),
+                        sliver: SliverList(
+                          delegate: SliverChildBuilderDelegate(
+                            (context, index) => Padding(
+                              padding: EdgeInsets.only(
+                                bottom: index < sortedNotes.length - 1
+                                    ? gap
+                                    : 0,
+                              ),
+                              child: _SocialNoteCard(
+                                note: sortedNotes[index],
+                                layout: _NoteCardLayout.list,
+                              ),
+                            ),
+                            childCount: sortedNotes.length,
+                          ),
+                        ),
+                      );
                     }
 
                     return SliverPadding(
                       padding: EdgeInsets.fromLTRB(hPad, 8, hPad, bottomPad),
                       sliver: SliverGrid(
                         gridDelegate:
-                            SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: crossCount,
+                            SliverGridDelegateWithMaxCrossAxisExtent(
+                          maxCrossAxisExtent: maxTileWidth,
+                          mainAxisExtent: tileHeight,
                           crossAxisSpacing: gap,
                           mainAxisSpacing: gap,
-                          childAspectRatio: aspect,
                         ),
                         delegate: SliverChildBuilderDelegate(
                           (context, index) => _SocialNoteCard(
                             note: sortedNotes[index],
-                            accent: HealthMetricColors.pillarAccentAt(index),
+                            layout: _NoteCardLayout.grid,
                           ),
                           childCount: sortedNotes.length,
                         ),
@@ -549,19 +544,266 @@ class _SocialNotesDashboardState extends State<SocialNotesDashboard> {
       );
     }
   }
+
+  static const _moodChartDays = 14;
+
+  Widget _buildJournalMoodTrendsPanel(
+    BuildContext context,
+    String personId,
+    ColorScheme colorScheme,
+    TextTheme textTheme,
+    bool isDark,
+  ) {
+    final mindBlock = context.read<MindBlock>();
+    final notesDao = context.read<ProjectNoteDAO>();
+
+    return StreamBuilder<List<ProjectNoteData>>(
+      stream: notesDao.watchNotesByCategory(personId, 'social'),
+      builder: (context, notesSnap) {
+        return StreamBuilder<List<MindLogData>>(
+          stream: mindBlock.watchMindLogsRange(personId, _moodChartDays),
+          builder: (context, logsSnap) {
+            final merged = MindLogInsights.mergeNotesWithMindLogs(
+              mindLogs: logsSnap.data ?? const [],
+              journalNotes: notesSnap.data ?? const [],
+              days: _moodChartDays,
+            );
+
+            if (merged.isEmpty) {
+              return const SizedBox.shrink();
+            }
+
+            return Container(
+              width: double.infinity,
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 14),
+              decoration: HealthMetricColors.shellPanel(
+                colorScheme,
+                isDark: isDark,
+                radius: 22,
+                accent: HealthMetricColors.pillarViolet,
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    AppLocalizations.of(context)!
+                        .mood_trends_title
+                        .toUpperCase(),
+                    style: textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  MoodTrendsChart(logs: merged, groupByDay: true),
+                  const SizedBox(height: 16),
+                  _buildRecentLogsPreview(context, merged, personId),
+                  const SizedBox(height: 8),
+                  Text(
+                    AppLocalizations.of(context)!
+                        .social_notes_title
+                        .toUpperCase(),
+                    style: textTheme.labelSmall?.copyWith(
+                      letterSpacing: 1.4,
+                      fontWeight: FontWeight.w900,
+                      color: colorScheme.onSurface,
+                    ),
+                  ),
+                ],
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+}
+
+enum _NoteCardLayout { grid, list }
+
+int _noteMoodScore(String? mood) {
+  return switch (mood?.toLowerCase()) {
+    'awful' => 1,
+    'bad' => 2,
+    'meh' => 3,
+    'good' => 4,
+    'awesome' => 5,
+    _ => 3,
+  };
+}
+
+IconData _noteMoodIcon(String? mood) {
+  return switch (mood?.toLowerCase()) {
+    'awesome' => Icons.sentiment_very_satisfied_rounded,
+    'good' => Icons.sentiment_satisfied_alt_rounded,
+    'meh' => Icons.sentiment_neutral_rounded,
+    'bad' => Icons.sentiment_dissatisfied_rounded,
+    'awful' => Icons.sentiment_very_dissatisfied_rounded,
+    _ => Icons.sentiment_neutral_rounded,
+  };
 }
 
 class _SocialNoteCard extends StatelessWidget {
   final ProjectNoteData note;
-  final Color accent;
+  final _NoteCardLayout layout;
 
   const _SocialNoteCard({
     required this.note,
-    required this.accent,
+    this.layout = _NoteCardLayout.grid,
   });
+
+  Color get _moodColor => mindMoodAccent(_noteMoodScore(note.mood));
 
   @override
   Widget build(BuildContext context) {
+    return layout == _NoteCardLayout.list
+        ? _buildListCard(context)
+        : _buildGridCard(context);
+  }
+
+  Widget _moodBubble({double size = 46}) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.lerp(_moodColor, Colors.white, 0.15) ?? _moodColor,
+            _moodColor.withValues(alpha: 0.65),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _moodColor.withValues(alpha: 0.35),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Icon(
+        _noteMoodIcon(note.mood),
+        size: size * 0.48,
+        color: Colors.white,
+      ),
+    );
+  }
+
+  Widget _buildListCard(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+    final isDark = theme.brightness == Brightness.dark;
+    final imageUrl = note.localPath ??
+        _getPreviewImage(note.content) ??
+        note.remotePath;
+    final remoteKey = note.remotePath ??
+        JournalMedia.canonicalRemotePath(imageUrl, personId: note.personID);
+    final previewText = _getPreviewText(note.content);
+
+    return Hero(
+      tag: 'note_${note.id}',
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.push('/projects/editor', extra: note),
+          borderRadius: BorderRadius.circular(22),
+          child: Ink(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: isDark
+                  ? colorScheme.surface.withValues(alpha: 0.55)
+                  : colorScheme.surface,
+              border: Border.all(
+                color: _moodColor.withValues(alpha: 0.22),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: _moodColor.withValues(alpha: 0.1),
+                  blurRadius: 16,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _moodBubble(size: 50),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        children: [
+                          Expanded(
+                            child: Text(
+                              note.title,
+                              style: textTheme.titleSmall?.copyWith(
+                                fontWeight: FontWeight.w800,
+                                fontSize: 15,
+                                color: colorScheme.onSurface,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          Text(
+                            DateFormat('MMM d').format(note.updatedAt),
+                            style: textTheme.labelSmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              fontWeight: FontWeight.w700,
+                              fontSize: 11,
+                            ),
+                          ),
+                        ],
+                      ),
+                      if (previewText.isNotEmpty) ...[
+                        const SizedBox(height: 5),
+                        Text(
+                          previewText,
+                          style: textTheme.bodySmall?.copyWith(
+                            color: colorScheme.onSurface.withValues(alpha: 0.72),
+                            height: 1.4,
+                            fontSize: 13,
+                          ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                      if (imageUrl != null) ...[
+                        const SizedBox(height: 10),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(14),
+                          child: SizedBox(
+                            height: 88,
+                            width: double.infinity,
+                            child: LocalFirstImage(
+                              ownerId: note.personID ?? '',
+                              localPath: note.localPath ?? imageUrl,
+                              remoteUrl: _s3RemoteUrl(remoteKey, note.personID),
+                              subFolder: 'user_markdown_documentation',
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGridCard(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
@@ -576,25 +818,30 @@ class _SocialNoteCard extends StatelessWidget {
     return Hero(
       tag: 'note_${note.id}',
       child: Container(
-        decoration: HealthMetricColors.shellPanel(
-          colorScheme,
-          isDark: isDark,
-          radius: 20,
-          accent: HealthMetricColors.pillarViolet,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _moodColor.withValues(alpha: 0.2)),
+          boxShadow: [
+            BoxShadow(
+              color: _moodColor.withValues(alpha: 0.12),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
+            ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: BorderRadius.circular(20),
           child: Material(
             color: isDark
-                ? HealthMetricColors.shellIslandFill
-                : colorScheme.surfaceContainerHighest.withValues(alpha: 0.82),
+                ? colorScheme.surface.withValues(alpha: 0.62)
+                : colorScheme.surface,
             child: InkWell(
               onTap: () => context.push('/projects/editor', extra: note),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   AspectRatio(
-                    aspectRatio: 1.45,
+                    aspectRatio: 2.2,
                     child: Stack(
                       fit: StackFit.expand,
                       children: [
@@ -613,118 +860,79 @@ class _SocialNoteCard extends StatelessWidget {
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  accent.withValues(alpha: 0.38),
-                                  accent.withValues(alpha: 0.14),
+                                  _moodColor.withValues(alpha: 0.38),
+                                  _moodColor.withValues(alpha: 0.12),
                                   colorScheme.surfaceContainerHighest
-                                      .withValues(alpha: 0.65),
-                                ],
-                              ),
-                            ),
-                            child: Icon(
-                              Icons.auto_awesome_rounded,
-                              color: accent.withValues(alpha: 0.55),
-                              size: 32,
-                            ),
-                          ),
-                        Positioned.fill(
-                          child: DecoratedBox(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.transparent,
-                                  Colors.black.withValues(alpha: 0.45),
+                                      .withValues(alpha: 0.5),
                                 ],
                               ),
                             ),
                           ),
+                        Positioned(
+                          top: 10,
+                          left: 10,
+                          child: _moodBubble(size: 36),
                         ),
                         Positioned(
-                          bottom: 10,
-                          left: 10,
-                          child: Text(
-                            DateFormat('MMM d').format(note.updatedAt),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 11,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.3,
+                          top: 10,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withValues(alpha: 0.45),
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              DateFormat('MMM d').format(note.updatedAt),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ),
                         ),
-                        if (note.mood != null && note.mood!.isNotEmpty)
-                          Positioned(
-                            bottom: 10,
-                            right: 10,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                if (note.device != null &&
-                                    note.device!.isNotEmpty)
-                                  Padding(
-                                    padding: const EdgeInsets.only(right: 6),
-                                    child: _deviceBadge(note.device!),
-                                  ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 7,
-                                    vertical: 3,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    color: colorScheme.primary.withValues(
-                                      alpha: 0.92,
-                                    ),
-                                    borderRadius: BorderRadius.circular(6),
-                                  ),
-                                  child: Text(
-                                    note.mood!.toUpperCase(),
-                                    style: TextStyle(
-                                      color: colorScheme.onPrimary,
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.w900,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                       ],
                     ),
                   ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
+                      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             note.title,
                             style: textTheme.titleSmall?.copyWith(
-                              fontWeight: FontWeight.w900,
-                              letterSpacing: -0.2,
-                              height: 1.2,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: -0.15,
+                              height: 1.25,
+                              fontSize: 14,
                               color: colorScheme.onSurface,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
                           ),
-                          const SizedBox(height: 6),
-                          Expanded(
-                            child: Text(
-                              previewText,
-                              style: textTheme.bodySmall?.copyWith(
-                                color: colorScheme.onSurface.withValues(
-                                  alpha: 0.78,
+                          if (previewText.isNotEmpty) ...[
+                            const SizedBox(height: 6),
+                            Expanded(
+                              child: Text(
+                                previewText,
+                                style: textTheme.bodySmall?.copyWith(
+                                  color: colorScheme.onSurface.withValues(
+                                    alpha: 0.72,
+                                  ),
+                                  height: 1.45,
+                                  fontSize: 12.5,
                                 ),
-                                height: 1.35,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w500,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              maxLines: 3,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),
@@ -741,31 +949,12 @@ class _SocialNoteCard extends StatelessWidget {
   String _getPreviewText(String content) {
     if (content.isEmpty) return "";
 
-    String plainText = content;
-
-    // 1. Handle JSON (Quill Delta)
-    try {
-      final decoded = jsonDecode(content);
-      if (decoded is List) {
-        final buffer = StringBuffer();
-        for (final op in decoded) {
-          if (op is Map && op.containsKey('insert')) {
-            final insert = op['insert'];
-            if (insert is String) {
-              buffer.write(insert);
-            }
-          }
-        }
-        plainText = buffer.toString();
-      }
-    } catch (_) {}
-
-    // 2. STICKY FIX: Robust Markdown Strip
+    var plainText = JournalMedia.extractPlainBody(content);
     // Strip images: ![alt](url)
     plainText = plainText.replaceAll(RegExp(r'!\[.*?\]\((.*?)\)'), '');
     // Strip links: [text](url) -> text
     plainText = plainText.replaceAllMapped(
-      RegExp(r'\[(.*?)\]\(.*?\文明\)'),
+      RegExp(r'\[(.*?)\]\(.*?\)'),
       (match) => match.group(1) ?? '',
     );
     // Strip bold/italic: **bold**, __bold__, *italic*, _italic_

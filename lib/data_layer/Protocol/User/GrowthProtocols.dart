@@ -63,10 +63,12 @@ class SkillProtocol {
   final String skillName;
   final String? skillCategory;
   final String proficiencyLevel;
-  /// Total practice XP (stored in `skills.years_of_experience` for project skills).
+  /// Total practice points (stored in `skills.point`).
   final int practicePoints;
   final String? description;
   final bool isFeatured;
+  final DateTime createdAt;
+  final DateTime updatedAt;
 
   SkillProtocol({
     required this.id,
@@ -75,11 +77,13 @@ class SkillProtocol {
     required this.skillName,
     this.skillCategory,
     this.proficiencyLevel = 'beginner',
-    int practicePoints = 0,
-    @Deprecated('Use practicePoints') int? yearsOfExperience,
+    this.practicePoints = 0,
     this.description,
     this.isFeatured = false,
-  }) : practicePoints = yearsOfExperience ?? practicePoints;
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  })  : createdAt = createdAt ?? DateTime.now(),
+        updatedAt = updatedAt ?? DateTime.now();
 
   /// `skill_category` = `project:<projectId>`
   String? get linkedProjectId {

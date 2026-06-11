@@ -1281,7 +1281,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             _buildAdaptiveTabIcon(
               context,
               index: 1,
-              icon: Icons.center_focus_strong_rounded,
+              icon: Icons.emoji_events_outlined,
               label: l10n.mind_focus_title.toUpperCase(),
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,
@@ -1293,7 +1293,7 @@ class CanvasDynamicIsland extends StatelessWidget {
             _buildAdaptiveTabIcon(
               context,
               index: 2,
-              icon: Icons.emoji_events_outlined,
+              icon: Icons.event_sharp,
               label: l10n.achievements,
               activeIndex: activeIndex,
               onTap: (idx) => socialBlock.activeTab.value = idx,

@@ -1,18 +1,27 @@
+import 'dart:async';
+
+import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
+import 'package:ice_gate/data_layer/Protocol/Integrations/CalendarEventSaveResult.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
+import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/data_layer/Services/cloud/DeviceCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleCalendarService.dart';
 import 'package:ice_gate/data_layer/Services/cloud/GoogleSignInHub.dart';
-import 'package:ice_gate/data_layer/Services/cloud/google_api_error.dart';
+import 'package:ice_gate/data_layer/Services/cloud/GoogleApiError.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/GrowthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/orchestration_layer/Services/NotificationInit.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TaskItem.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/CalendarDayTimeline.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/CalendarReminderDialog.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/CalendarTimelineEventSheet.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/projects_page/widgets/CreateCalendarEventDialog.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/user_page/widgets/AppSessionCalendar.dart';
 import 'package:intl/intl.dart';
@@ -39,6 +48,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
   static bool _sessionGoogleConnected = false;
   static bool _sessionDeviceConnected = false;
   static bool _sessionEventsLoaded = false;
+  static final Set<String> _sessionHiddenTimelineKeys = {};
 
   late DateTime _focusedMonth;
   late DateTime _selectedDay;
@@ -59,12 +69,295 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
   bool _isDesktop(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= _desktopBreakpoint;
 
+  String _googleTimelineKey(GoogleCalendarEventItem e) => 'g|${e.id}';
+
+  String _deviceTimelineKey(DeviceCalendarEventItem e) => 'd|${e.id}';
+
+  String _reminderTimelineKey(CustomNotificationData n) => 'r|${n.id}';
+
+  void _hideTimelineEntry(String key) {
+    setState(() => _sessionHiddenTimelineKeys.add(key));
+  }
+
+  void _showTimelineEventSheet(_MergedCalendarEvent event) {
+    showCalendarTimelineEventSheet(
+      context,
+      title: event.title,
+      start: event.start,
+      end: event.end,
+      subtitle: event.subtitle,
+      canEdit: event.canEdit,
+      canDelete: event.canDelete,
+      onEdit: event.onEdit,
+      onDelete: event.onDelete,
+    );
+  }
+
+  Future<void> _editDeviceEvent(DeviceCalendarEventItem event) async {
+    final end = event.end ?? event.start.add(const Duration(hours: 1));
+    final saved = await showCreateCalendarEventDialog(
+      context,
+      initialDay: _dateOnly(event.start),
+      initialStart: TimeOfDay.fromDateTime(event.start),
+      initialEnd: TimeOfDay.fromDateTime(end),
+      initialTitle: event.title,
+      initialDescription: event.description,
+      editTarget: CalendarEventEditTarget.device(
+        calendarId: event.calendarId,
+        eventId: event.id,
+      ),
+    );
+    if (saved == null || !mounted) return;
+    await _syncDeviceEvents(showSnackBar: false);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.projects_calendar_event_saved),
+      ),
+    );
+  }
+
+  Future<void> _deleteDeviceEvent(DeviceCalendarEventItem event) async {
+    final l10n = AppLocalizations.of(context)!;
+    final service = context.read<DeviceCalendarService>();
+    final ok = await service.deleteEvent(
+      calendarId: event.calendarId,
+      eventId: event.id,
+    );
+    if (!mounted) return;
+    if (ok) {
+      _hideTimelineEntry(_deviceTimelineKey(event));
+      await _syncDeviceEvents(showSnackBar: false);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.projects_calendar_event_deleted)),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            '${l10n.projects_calendar_event_failed}${service.lastAccessError != null ? ': ${service.lastAccessError}' : ''}',
+          ),
+        ),
+      );
+    }
+  }
+
+  String _loggedDescriptionForEdit(EventData event) {
+    final raw = event.description?.trim() ?? '';
+    if (raw.isEmpty) return '';
+    final lines = raw.split('\n');
+    final kept = lines
+        .where((line) => !line.trim().startsWith('[icegate-end:'))
+        .join('\n')
+        .trim();
+    return kept;
+  }
+
+  Future<void> _editLoggedEvent(EventData event) async {
+    final local = event.occurredAt.toLocal();
+    final end = _loggedEventEnd(event);
+    final saved = await showCreateCalendarEventDialog(
+      context,
+      initialDay: _dateOnly(local),
+      initialStart: TimeOfDay.fromDateTime(local),
+      initialEnd: TimeOfDay.fromDateTime(end),
+      initialTitle: event.name,
+      initialDescription: _loggedDescriptionForEdit(event),
+      editTarget: CalendarEventEditTarget.logged(loggedEventId: event.id),
+    );
+    if (saved == null || !mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(AppLocalizations.of(context)!.projects_calendar_event_saved),
+      ),
+    );
+  }
+
+  Future<void> _deleteLoggedEvent(EventData event) async {
+    final l10n = AppLocalizations.of(context)!;
+    await context.read<AppDatabase>().eventsDAO.deleteLoggedEvent(event.id);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.projects_calendar_event_deleted)),
+    );
+  }
+
+  Future<void> _editReminder(CustomNotificationData reminder) async {
+    final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
+    if (personId.isEmpty) return;
+    await showCalendarReminderDialog(
+      context,
+      initialDay: reminder.scheduledTime.toLocal(),
+      personId: personId,
+      existing: reminder,
+    );
+  }
+
+  Future<void> _deleteReminder(CustomNotificationData reminder) async {
+    final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
+    final dao = context.read<CustomNotificationDAO>();
+    await dao.deleteNotification(reminder.id);
+    if (!mounted) return;
+    await context.read<LocalNotificationService>().syncAllNotifications(
+          personId,
+        );
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppLocalizations.of(context)!.projects_calendar_event_deleted,
+        ),
+      ),
+    );
+  }
+
   void _openAddReminder(String personId) {
     showCalendarReminderDialog(
       context,
       initialDay: _selectedDay,
       personId: personId,
     );
+  }
+
+  Future<void> _logLocalCalendarEvent(
+    CalendarEventSaveResult result,
+    String personId,
+  ) async {
+    if (personId.isEmpty) return;
+    final db = context.read<AppDatabase>();
+    final endTag = '[icegate-end:${result.end.toUtc().toIso8601String()}]';
+    final description = result.description?.trim();
+    final storedDescription = description == null || description.isEmpty
+        ? endTag
+        : '$description\n$endTag';
+
+    await db.eventsDAO.insertEvent(
+      EventsTableCompanion.insert(
+        id: IDGen.UUIDV7(),
+        personID: personId,
+        name: result.title,
+        description: Value(storedDescription),
+        occurredAt: Value(result.start.toUtc()),
+      ),
+    );
+  }
+
+  bool _deviceEventMatchesLogged(
+    DeviceCalendarEventItem device,
+    EventData logged,
+  ) {
+    if (logged.name.trim() != device.title.trim()) return false;
+    final local = logged.occurredAt.toLocal();
+    return local.year == device.start.year &&
+        local.month == device.start.month &&
+        local.day == device.start.day &&
+        local.hour == device.start.hour &&
+        local.minute == device.start.minute;
+  }
+
+  bool _deviceEventDuplicatesLogged(
+    DeviceCalendarEventItem device,
+    List<EventData> loggedOnDay,
+  ) {
+    for (final logged in loggedOnDay) {
+      if (_deviceEventMatchesLogged(device, logged)) return true;
+    }
+    return false;
+  }
+
+  DateTime _loggedEventEnd(EventData event) {
+    final description = event.description;
+    if (description != null) {
+      final match = RegExp(r'\[icegate-end:([^\]]+)\]').firstMatch(description);
+      if (match != null) {
+        return DateTime.parse(match.group(1)!).toLocal();
+      }
+    }
+    return event.occurredAt.toLocal().add(const Duration(hours: 1));
+  }
+
+  Future<void> _openAddEvent(
+    DateTime day, {
+    TimeOfDay? initialStart,
+    TimeOfDay? initialEnd,
+  }) async {
+    final l10n = AppLocalizations.of(context)!;
+    final personId = context.read<PersonBlock>().currentPersonID.value ?? '';
+    if (personId.isEmpty) return;
+
+    if (DeviceCalendarService.isSupported && !_deviceConnected) {
+      final service = context.read<DeviceCalendarService>();
+      final ok = await service.requestAccess();
+      if (!mounted) return;
+      if (!ok) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.projects_calendar_device_denied)),
+        );
+      } else {
+        setState(() => _deviceConnected = true);
+      }
+    }
+
+    final saved = await showCreateCalendarEventDialog(
+      context,
+      initialDay: day,
+      initialStart: initialStart,
+      initialEnd: initialEnd,
+    );
+    if (saved == null || !mounted) return;
+
+    await _logLocalCalendarEvent(saved, personId);
+    if (!mounted) return;
+
+    final eventDay = _dateOnly(saved.day);
+    setState(() {
+      _selectedDay = eventDay;
+      _focusedMonth = DateTime(eventDay.year, eventDay.month);
+    });
+    _invalidateSessionCache();
+
+    if (DeviceCalendarService.isSupported && _deviceConnected) {
+      // EventKit can lag briefly before new events appear in retrieveEvents.
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      await _syncDeviceEvents(showSnackBar: false);
+      if (!mounted) return;
+
+      var deviceVisible =
+          _deviceEvents.any((e) => e.occursOnDay(eventDay));
+      if (!deviceVisible) {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        await _syncDeviceEvents(showSnackBar: false);
+        if (!mounted) return;
+        deviceVisible = _deviceEvents.any((e) => e.occursOnDay(eventDay));
+      }
+
+      if (!saved.savedToDeviceCalendar && !deviceVisible) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              '${l10n.projects_calendar_event_saved} '
+              '${l10n.projects_calendar_device_hint}',
+            ),
+            duration: const Duration(seconds: 6),
+          ),
+        );
+        return;
+      }
+    }
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(l10n.projects_calendar_event_saved)),
+    );
+  }
+
+  void _handleDaySelected(DateTime day) {
+    final d = _dateOnly(day);
+    setState(() {
+      _selectedDay = d;
+      _focusedMonth = DateTime(day.year, day.month);
+    });
   }
 
   Future<void> _syncTasks() async {
@@ -484,7 +777,9 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
     final projectBlock = context.watch<ProjectBlock>();
     final personId = context.watch<PersonBlock>().currentPersonID.value ?? '';
     final notificationDao = context.read<CustomNotificationDAO>();
+    final eventsDao = context.read<AppDatabase>().eventsDAO;
     final isDesktop = _isDesktop(context);
+    final canAddEvent = personId.isNotEmpty;
 
     return SwipeablePage(
       onSwipe: () => context.pop(),
@@ -519,7 +814,15 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                 icon: const Icon(Icons.sync_rounded),
                 onPressed: personId.isEmpty ? null : _syncTasks,
               ),
-            if (isDesktop && personId.isNotEmpty)
+            if (isDesktop && canAddEvent) ...[
+              Padding(
+                padding: const EdgeInsets.only(right: 4),
+                child: FilledButton.tonalIcon(
+                  onPressed: () => _openAddEvent(_selectedDay),
+                  icon: const Icon(Icons.event_rounded, size: 20),
+                  label: Text(l10n.projects_calendar_add_event),
+                ),
+              ),
               Padding(
                 padding: const EdgeInsets.only(right: 4),
                 child: FilledButton.tonalIcon(
@@ -528,6 +831,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   label: Text(l10n.projects_calendar_add_reminder),
                 ),
               ),
+            ],
             if (_googleLoading)
               const Padding(
                 padding: EdgeInsets.all(12),
@@ -559,7 +863,14 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
           builder: (context, notificationSnap) {
             final notifications = notificationSnap.data ?? const [];
 
-            return Watch((context) {
+            return StreamBuilder<List<EventData>>(
+              stream: personId.isEmpty
+                  ? Stream.value(const [])
+                  : eventsDao.watchEventsByPerson(personId),
+              builder: (context, eventsSnap) {
+                final loggedEvents = eventsSnap.data ?? const [];
+
+                return Watch((context) {
               final tasks =
                   growthBlock.goals.value.where(_isCalendarTask).toList();
               final projects = projectBlock.projects.value;
@@ -578,11 +889,15 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                 for (final e in _deviceEvents) ...e.daysSpanned(),
               };
               final reminderDays = _reminderDays(notifications);
+              final loggedEventDays = loggedEvents
+                  .map((e) => _dateOnly(e.occurredAt.toLocal()))
+                  .toSet();
               final markedDays = {
                 ...taskMarkedDays,
                 ...projectCreatedDays,
                 ...googleEventDays,
                 ...deviceEventDays,
+                ...loggedEventDays,
                 ...reminderDays,
               };
 
@@ -601,11 +916,32 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
 
               final googleOnDay = _googleEvents
                   .where((e) => e.occursOnDay(_selectedDay))
+                  .where(
+                    (e) =>
+                        !_sessionHiddenTimelineKeys.contains(
+                          _googleTimelineKey(e),
+                        ),
+                  )
                   .toList()
                 ..sort((a, b) => a.start.compareTo(b.start));
 
+              final loggedOnDay = loggedEvents
+                  .where((e) => _sameDay(e.occurredAt.toLocal(), _selectedDay))
+                  .toList()
+                ..sort(
+                  (a, b) =>
+                      a.occurredAt.toLocal().compareTo(b.occurredAt.toLocal()),
+                );
+
               final deviceOnDay = _deviceEvents
                   .where((e) => e.occursOnDay(_selectedDay))
+                  .where((e) => !_deviceEventDuplicatesLogged(e, loggedOnDay))
+                  .where(
+                    (e) =>
+                        !_sessionHiddenTimelineKeys.contains(
+                          _deviceTimelineKey(e),
+                        ),
+                  )
                   .toList()
                 ..sort((a, b) => a.start.compareTo(b.start));
 
@@ -613,7 +949,10 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   .where(
                     (n) =>
                         n.isEnabled &&
-                        _sameDay(n.scheduledTime.toLocal(), _selectedDay),
+                        _sameDay(n.scheduledTime.toLocal(), _selectedDay) &&
+                        !_sessionHiddenTimelineKeys.contains(
+                          _reminderTimelineKey(n),
+                        ),
                   )
                   .toList()
                 ..sort(
@@ -632,6 +971,12 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                     icon: Icons.event_rounded,
                     iconColor: const Color(0xFF4285F4),
                     start: e.start,
+                    end: e.end,
+                    allDay: e.allDay,
+                    canEdit: false,
+                    canDelete: true,
+                    onDelete: () async =>
+                        _hideTimelineEntry(_googleTimelineKey(e)),
                   ),
                 for (final e in deviceOnDay)
                   _MergedCalendarEvent(
@@ -640,19 +985,77 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                     icon: _isIos ? Icons.apple_rounded : Icons.event_note_rounded,
                     iconColor: colorScheme.secondary,
                     start: e.start,
+                    end: e.end,
+                    allDay: e.allDay,
+                    canEdit: true,
+                    canDelete: true,
+                    onEdit: () => _editDeviceEvent(e),
+                    onDelete: () => _deleteDeviceEvent(e),
+                  ),
+                for (final e in loggedOnDay)
+                  _MergedCalendarEvent(
+                    title: e.name,
+                    subtitle: createdTimeFormat.format(e.occurredAt.toLocal()),
+                    icon: Icons.event_available_rounded,
+                    iconColor: colorScheme.primary,
+                    start: e.occurredAt.toLocal(),
+                    end: _loggedEventEnd(e),
+                    allDay: false,
+                    canEdit: true,
+                    canDelete: true,
+                    onEdit: () => _editLoggedEvent(e),
+                    onDelete: () => _deleteLoggedEvent(e),
                   ),
               ]..sort((a, b) => a.start.compareTo(b.start));
 
-              final hasExternalCalendars = mergedCalendarEvents.isNotEmpty;
-              final hasReminders = remindersOnDay.isNotEmpty;
+              final reminderTimelineEvents = [
+                for (final r in remindersOnDay)
+                  _MergedCalendarEvent(
+                    title: r.title,
+                    subtitle: createdTimeFormat.format(
+                      r.scheduledTime.toLocal(),
+                    ),
+                    icon: Icons.notifications_active_outlined,
+                    iconColor: colorScheme.tertiary,
+                    start: r.scheduledTime.toLocal(),
+                    end: r.scheduledTime.toLocal().add(
+                          const Duration(minutes: 30),
+                        ),
+                    canEdit: true,
+                    canDelete: true,
+                    onEdit: () => _editReminder(r),
+                    onDelete: () => _deleteReminder(r),
+                  ),
+              ];
+
+              final timelineEntries = <CalendarTimelineEntry>[
+                for (final e in mergedCalendarEvents)
+                  CalendarTimelineEntry(
+                    title: e.title,
+                    start: e.start,
+                    end: e.end,
+                    allDay: e.allDay,
+                    color: e.iconColor,
+                    subtitle: e.subtitle,
+                    onTap: (e.canEdit || e.canDelete)
+                        ? () => _showTimelineEventSheet(e)
+                        : null,
+                  ),
+                for (final e in reminderTimelineEvents)
+                  CalendarTimelineEntry(
+                    title: e.title,
+                    start: e.start,
+                    end: e.end,
+                    color: e.iconColor,
+                    subtitle: e.subtitle,
+                    onTap: () => _showTimelineEventSheet(e),
+                  ),
+              ];
+
               final hasTasks = selectedTasks.isNotEmpty;
               final hasProjectsHere = projectsCreatedHere.isNotEmpty;
               final monthExternalCount =
                   _googleEvents.length + _deviceEvents.length;
-              final hasAnything = hasExternalCalendars ||
-                  hasReminders ||
-                  hasTasks ||
-                  hasProjectsHere;
 
               final selectedLabel = _selectedDay == _dateOnly(DateTime.now())
                   ? l10n.date_today
@@ -676,86 +1079,103 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   _syncGoogleEvents(showSnackBar: false);
                   _syncDeviceEvents(showSnackBar: false);
                 },
-                onDaySelected: (day) {
-                  setState(() {
-                    _selectedDay = _dateOnly(day);
-                    _focusedMonth = DateTime(day.year, day.month);
-                  });
-                },
+                onDaySelected: _handleDaySelected,
+                onDayLongPress: canAddEvent
+                    ? (day) => _openAddEvent(_dateOnly(day))
+                    : null,
+                onDaySecondaryTap: canAddEvent
+                    ? (day) => _openAddEvent(_dateOnly(day))
+                    : null,
               );
 
               final agendaChildren = <Widget>[
-                Text(
-                    selectedLabel,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w800,
-                      fontSize: 16,
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        selectedLabel,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                    ),
+                    if (canAddEvent)
+                      TextButton.icon(
+                        onPressed: () => _openAddEvent(_selectedDay),
+                        icon: const Icon(Icons.add_rounded, size: 18),
+                        label: Text(l10n.projects_calendar_add_event),
+                      ),
+                  ],
+                ),
+                if (canAddEvent)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 8),
+                    child: Text(
+                      l10n.projects_calendar_hold_day_add_hint,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurface.withValues(alpha: 0.45),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  if (!hasAnything)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 24),
-                      child: Text(
-                        _dayEmptyMessage(
-                          l10n,
-                          monthExternalCount: monthExternalCount,
-                          googleConnected: _googleConnected,
-                          deviceConnected: _deviceConnected,
-                        ),
-                        style: TextStyle(
-                          color: colorScheme.onSurface.withValues(alpha: 0.5),
-                          height: 1.35,
-                        ),
+                _sectionHeader(
+                  context,
+                  l10n.projects_calendar_day_timeline,
+                  Icons.schedule_rounded,
+                ),
+                const SizedBox(height: 8),
+                if (canAddEvent)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: Text(
+                      l10n.projects_calendar_timeline_tap_slot,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: colorScheme.onSurface.withValues(alpha: 0.45),
                       ),
-                    )
-                  else ...[
-                    if (hasExternalCalendars) ...[
-                      _sectionHeader(
-                        context,
-                        l10n.projects_calendar_all_calendars_events,
-                        Icons.calendar_month_rounded,
+                    ),
+                  ),
+                CalendarDayTimeline(
+                  entries: timelineEntries,
+                  selectedDay: _selectedDay,
+                  onHourTap: canAddEvent
+                      ? (hour) => _openAddEvent(
+                            _selectedDay,
+                            initialStart: TimeOfDay(hour: hour, minute: 0),
+                            initialEnd: hour >= 23
+                                ? const TimeOfDay(hour: 23, minute: 59)
+                                : TimeOfDay(hour: hour + 1, minute: 0),
+                          )
+                      : null,
+                ),
+                const SizedBox(height: 16),
+                if (timelineEntries.isEmpty &&
+                    !hasTasks &&
+                    !hasProjectsHere)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Text(
+                      _dayEmptyMessage(
+                        l10n,
+                        monthExternalCount: monthExternalCount,
+                        googleConnected: _googleConnected,
+                        deviceConnected: _deviceConnected,
                       ),
-                      const SizedBox(height: 8),
-                      ...mergedCalendarEvents.map(
-                        (event) => _simpleEventTile(
-                          context,
-                          title: event.title,
-                          subtitle: event.subtitle,
-                          icon: event.icon,
-                          iconColor: event.iconColor,
-                        ),
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withValues(alpha: 0.5),
+                        height: 1.35,
                       ),
-                      const SizedBox(height: 16),
-                    ],
-                    if (hasReminders) ...[
-                      _sectionHeader(
-                        context,
-                        l10n.projects_calendar_reminders,
-                        Icons.notifications_active_outlined,
-                      ),
-                      const SizedBox(height: 8),
-                      ...remindersOnDay.map((reminder) {
-                        return _simpleEventTile(
-                          context,
-                          title: reminder.title,
-                          subtitle: createdTimeFormat.format(
-                            reminder.scheduledTime.toLocal(),
-                          ),
-                          icon: Icons.alarm_rounded,
-                          iconColor: colorScheme.tertiary,
-                        );
-                      }),
-                      const SizedBox(height: 16),
-                    ],
-                    if (hasProjectsHere) ...[
-                      _sectionHeader(
-                        context,
-                        l10n.projects_calendar_projects_created,
-                        Icons.create_new_folder_outlined,
-                      ),
-                      const SizedBox(height: 8),
-                      ...projectsCreatedHere.map((project) {
+                    ),
+                  ),
+                if (hasProjectsHere) ...[
+                  _sectionHeader(
+                    context,
+                    l10n.projects_calendar_projects_created,
+                    Icons.create_new_folder_outlined,
+                  ),
+                  const SizedBox(height: 8),
+                  ...projectsCreatedHere.map((project) {
                         final createdLocal = project.createdAt.toLocal();
                         return Padding(
                           padding: const EdgeInsets.only(bottom: 8),
@@ -818,9 +1238,9 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                           ),
                         );
                       }),
-                      if (hasTasks) const SizedBox(height: 20),
-                    ],
-                    if (hasTasks) ...[
+                  if (hasTasks) const SizedBox(height: 20),
+                ],
+                if (hasTasks) ...[
                       _sectionHeader(
                         context,
                         l10n.tasks,
@@ -849,8 +1269,7 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                           ),
                         );
                       }),
-                    ],
-                  ],
+                ],
               ];
 
               return LayoutBuilder(
@@ -906,7 +1325,9 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
                   );
                 },
               );
-            });
+                });
+              },
+            );
           },
         ),
       ),
@@ -1045,55 +1466,6 @@ class _ProjectsCalendarPageState extends State<ProjectsCalendarPage> {
     if (name == null || name.isEmpty) return time;
     return '$name · $time';
   }
-
-  Widget _simpleEventTile(
-    BuildContext context, {
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required Color iconColor,
-  }) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Material(
-        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.35),
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: iconColor),
-              const SizedBox(width: 14),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.w800,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      subtitle,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.onSurface.withValues(alpha: 0.55),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 class _MergedCalendarEvent {
@@ -1103,6 +1475,12 @@ class _MergedCalendarEvent {
     required this.icon,
     required this.iconColor,
     required this.start,
+    this.end,
+    this.allDay = false,
+    this.canEdit = false,
+    this.canDelete = false,
+    this.onEdit,
+    this.onDelete,
   });
 
   final String title;
@@ -1110,4 +1488,10 @@ class _MergedCalendarEvent {
   final IconData icon;
   final Color iconColor;
   final DateTime start;
+  final DateTime? end;
+  final bool allDay;
+  final bool canEdit;
+  final bool canDelete;
+  final VoidCallback? onEdit;
+  final Future<void> Function()? onDelete;
 }

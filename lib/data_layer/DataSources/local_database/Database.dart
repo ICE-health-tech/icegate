@@ -673,8 +673,17 @@ class SkillsTable extends Table {
   TextColumn get proficiencyLevel => textEnum<SkillLevel>()
       .withDefault(const Constant('beginner'))
       .named('proficiency_level')();
-  IntColumn get yearsOfExperience =>
-      integer().withDefault(const Constant(0)).named('years_of_experience')();
+
+  /// Running points earned for this skill (accumulated from events).
+  IntColumn get point =>
+      integer().withDefault(const Constant(0)).named('point')();
+
+  /// One-time bonus granted the moment this skill is first achieved.
+  IntColumn get achievedPoints =>
+      integer().withDefault(const Constant(0)).named('achieved_points')();
+
+  /// Last event that impacted this skill. Full event table comes later.
+  TextColumn get eventID => text().nullable().named('event_id')();
   TextColumn get description => text().nullable().named('description')();
   BoolColumn get isFeatured =>
       boolean().withDefault(const Constant(false)).named('is_featured')();
@@ -795,6 +804,8 @@ class TransactionsTable extends Table {
       .map(const DateTimeUTCConverter())
       .named('created_at')();
   TextColumn get projectID => text().nullable().named('project_id')();
+  TextColumn get sourceAccountId =>
+      text().nullable().named('source_account_id')();
 
   @override
   Set<Column> get primaryKey => {id};
@@ -1774,6 +1785,68 @@ class AchievementsTable extends Table {
   Set<Column> get primaryKey => {id};
 }
 
+/// Something that happened — linked to a person; media URLs point at S3/CDN.
+@DataClassName('EventData')
+class EventsTable extends Table {
+  @override
+  String get tableName => 'events';
+
+  TextColumn get id => text()();
+  TextColumn get tenantID => text()
+      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
+      .named('tenant_id')();
+  TextColumn get personID => text().named('person_id')();
+  TextColumn get name => text().withLength(min: 1, max: 200).named('name')();
+  TextColumn get description => text().nullable().named('description')();
+  TextColumn get urlImage => text().nullable().named('url_image')();
+  TextColumn get urlVideo => text().nullable().named('url_video')();
+  DateTimeColumn get occurredAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('occurred_at')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+  DateTimeColumn get updatedAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('updated_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+/// Junction: which [EventsTable] rows affected which [SkillsTable] rows.
+@DataClassName('EventSkillData')
+class EventSkillsTable extends Table {
+  @override
+  String get tableName => 'event_skills';
+  TextColumn get id => text()();
+  TextColumn get tenantID => text()
+      .nullable()
+      .withDefault(const Constant(DEFAULT_TENANT_ID))
+      .named('tenant_id')();
+  TextColumn get personID => text().nullable().named('person_id')();
+  TextColumn get eventRowID => text().named('event_id')();
+  TextColumn get skillRowID => text().named('skill_id')();
+  IntColumn get earningPoint =>
+      integer().withDefault(const Constant(0)).named('earning_point')();
+  DateTimeColumn get createdAt => dateTime()
+      .withDefault(currentDateAndTime)
+      .map(const DateTimeUTCConverter())
+      .named('created_at')();
+
+  @override
+  Set<Column> get primaryKey => {id};
+
+  @override
+  List<Set<Column>> get uniqueKeys => [
+    {eventRowID, skillRowID},
+  ];
+}
+
 @DataClassName('MindLogData')
 class MindLogsTable extends Table {
   @override
@@ -2428,6 +2501,48 @@ class ProjectNoteDAO extends DatabaseAccessor<AppDatabase>
       projectNotesTable,
     )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
   }
+
+  Future<List<ProjectNoteData>> getNotesForPerson(
+    String personID, {
+    String? category,
+  }) {
+    final query = select(projectNotesTable)
+      ..where(
+        (tbl) => tbl.personID.equals(personID) | tbl.personID.isNull(),
+      );
+    if (category != null) {
+      query.where((tbl) => tbl.category.equals(category));
+    }
+    return query.get();
+  }
+
+  /// Updates journal image columns without bumping [updatedAt].
+  Future<bool> updateNoteMediaPaths({
+    required String id,
+    String? localPath,
+    String? remotePath,
+    String? device,
+  }) async {
+    final count = await (update(projectNotesTable)
+          ..where((tbl) => tbl.id.equals(id)))
+        .write(
+      ProjectNotesTableCompanion(
+        localPath: Value(localPath),
+        remotePath: Value(remotePath),
+        device: Value(device),
+      ),
+    );
+    if (count > 0) {
+      final note = await getNoteById(id);
+      if (note != null) {
+        await db.pushToSupabase(
+          table: 'project_notes',
+          payload: note.toJson(),
+        );
+      }
+    }
+    return count > 0;
+  }
 }
 
 @DriftAccessor(tables: [ProjectsTable])
@@ -2579,6 +2694,11 @@ class ProjectsDAO extends DatabaseAccessor<AppDatabase>
         ),
       );
     }
+  }
+
+  /// Pull projects from Supabase (includes sub-project [parent_project_id] links).
+  Future<void> syncFromCloud(String personId) async {
+    await db.syncTableDown('projects', personId);
   }
 
   Future<void> updateProjectManual(
@@ -3856,6 +3976,19 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
     );
   }
 
+  Future<void> updateFinancialAccount(
+    FinancialAccountsTableCompanion account,
+  ) async {
+    final id = account.id.value;
+    await (update(financialAccountsTable)..where((t) => t.id.equals(id))).write(
+      account.copyWith(updatedAt: Value(DateTime.now())),
+    );
+    await db.pushToSupabase(
+      table: 'financial_accounts',
+      payload: db.companionToMap(account, financialAccountsTable),
+    );
+  }
+
   Future<void> deleteAccount(String id) async {
     await (delete(financialAccountsTable)..where((t) => t.id.equals(id))).go();
     await db.pushToSupabase(
@@ -4105,6 +4238,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
               : DateTime.now(),
         ),
         projectID: Value(record['project_id'] as String?),
+        sourceAccountId: Value(record['source_account_id'] as String?),
       ),
       mode: InsertMode.insertOrReplace,
     );
@@ -4180,6 +4314,7 @@ class FinanceDAO extends DatabaseAccessor<AppDatabase> with _$FinanceDAOMixin {
                       DateTime.now()
                 : DateTime.now(),
             projectID: row.data['project_id'] as String?,
+            sourceAccountId: row.data['source_account_id'] as String?,
           ),
         )
         .toList();
@@ -6102,9 +6237,15 @@ class FocusSessionsDAO extends DatabaseAccessor<AppDatabase>
   }
 
   Stream<List<FocusSessionData>> watchSessionsByPerson(String personId) {
-    return (select(
-      focusSessionsTable,
-    )..where((t) => t.personID.equals(personId))).watch();
+    return (select(focusSessionsTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.startTime,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch();
   }
 
   Stream<List<FocusSessionData>> watchAllSessions() {
@@ -6171,17 +6312,47 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
   Future<void> insertQuote(QuotesTableCompanion entry) async {
     await into(quotesTable).insert(entry);
 
-    // Convert companion to map with raw values
     final Map<String, dynamic> payload = {};
     for (final col in quotesTable.$columns) {
       final value = entry.toColumns(true)[col.name];
       if (value is Variable) {
-        payload[col.name] = value.value;
+        var v = value.value;
+        if (v is DateTime) {
+          v = v.toUtc().toIso8601String();
+        }
+        payload[col.name] = v;
       }
     }
 
-    // Direct push to Supabase
     await db.pushToSupabase(table: 'quotes', payload: payload);
+  }
+
+  Future<void> upsertFromSupabase(Map<String, dynamic> r) async {
+    final active = r['is_active'];
+    final isActive = active == true ||
+        active == 1 ||
+        active == 'true' ||
+        active == 't';
+    await into(quotesTable).insertOnConflictUpdate(
+      QuotesTableCompanion.insert(
+        id: (r['id'] as String?) ?? '',
+        tenantID: Value((r['tenant_id'] as String?) ?? DEFAULT_TENANT_ID),
+        personID: Value(r['person_id'] as String?),
+        content: (r['content'] as String?) ?? '',
+        author: Value(r['author'] as String?),
+        isActive: Value(isActive),
+        createdAt: Value(
+          r['created_at'] != null
+              ? DateTime.parse(r['created_at'].toString())
+              : DateTime.now(),
+        ),
+      ),
+    );
+  }
+
+  Future<void> syncFromCloud(String personId) async {
+    if (personId.isEmpty) return;
+    await db.syncTableDown('quotes', personId);
   }
 
   Future<bool> updateQuote(QuoteData entry) =>
@@ -6218,6 +6389,18 @@ class QuoteDAO extends DatabaseAccessor<AppDatabase> with _$QuoteDAOMixin {
         })
         .cast<QuoteData>()
         .toList();
+  }
+
+  Stream<List<QuoteData>> watchQuotesByPerson(String personId) {
+    return (select(quotesTable)
+          ..where((t) => t.personID.equals(personId))
+          ..orderBy([
+            (t) => OrderingTerm(
+              expression: t.createdAt,
+              mode: OrderingMode.desc,
+            ),
+          ]))
+        .watch();
   }
 
   Stream<List<QuoteData>> watchActiveQuotes() {
@@ -7171,6 +7354,8 @@ class ConfigsTable extends Table {
     HourlyActivityLogTable,
     PortfolioSnapshotsTable,
     AchievementsTable,
+    EventsTable,
+    EventSkillsTable,
     MindLogsTable,
     JournalActivityOptionsTable,
     HeartRateLogsTable,
@@ -7211,6 +7396,8 @@ class ConfigsTable extends Table {
     FeedbackDAO,
     HourlyActivityLogDAO,
     AchievementsDAO,
+    EventsDAO,
+    EventSkillsDAO,
     MindLogsDAO,
     JournalActivityOptionsDAO,
     LocalMediaIndexDAO,
@@ -7525,7 +7712,10 @@ class AppDatabase extends _$AppDatabase {
   // v79 → projects.parent_project_id
   // v80 → local_media_index.remote_path + device (ios/mac S3 sync)
   // v81 → project_notes.local_path + remote_path + device (journal S3 sync)
-  int get schemaVersion => 81;
+  // v84 → skills.point replaces years_of_experience
+  // v85 → events + event_skills (person events ↔ skills junction, S3 remote_path)
+  // v86 → simplify events: id, name, description, url_image, url_video, FK person_id
+  int get schemaVersion => 86;
 
   /// Ensures `focus_sessions` columns match Drift (PowerSync / legacy DBs may omit them).
   Future<void> repairFocusSessionsSchemaForDrift() async {
@@ -7740,6 +7930,104 @@ class AppDatabase extends _$AppDatabase {
             await m.addColumn(
               projectNotesTable,
               projectNotesTable.device,
+            );
+          } catch (_) {}
+        }
+        if (from < 82) {
+          try {
+            await customStatement(
+              'ALTER TABLE transactions ADD COLUMN source_account_id TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 83) {
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN point INTEGER DEFAULT 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN achieved_points INTEGER DEFAULT 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills ADD COLUMN event_id TEXT;',
+            );
+          } catch (_) {}
+        }
+        if (from < 86) {
+          try {
+            final rows = await customSelect(
+              'PRAGMA table_info(events)',
+              readsFrom: {eventsTable},
+            ).get();
+            final names = rows.map((r) => r.read<String>('name')).toSet();
+            if (names.contains('title') || names.contains('domain')) {
+              await customStatement(
+                'ALTER TABLE events RENAME TO events_legacy_v85;',
+              );
+              await m.createTable(eventsTable);
+              await customStatement('''
+                INSERT INTO events (
+                  id, tenant_id, person_id, name, description,
+                  url_image, url_video, occurred_at, created_at, updated_at
+                )
+                SELECT
+                  id,
+                  tenant_id,
+                  person_id,
+                  COALESCE(title, 'Untitled'),
+                  description,
+                  remote_path,
+                  NULL,
+                  occurred_at,
+                  created_at,
+                  updated_at
+                FROM events_legacy_v85;
+              ''');
+              await customStatement(
+                'DROP TABLE IF EXISTS events_legacy_v85;',
+              );
+            } else {
+              if (!names.contains('url_image')) {
+                await customStatement(
+                  'ALTER TABLE events ADD COLUMN url_image TEXT;',
+                );
+              }
+              if (!names.contains('url_video')) {
+                await customStatement(
+                  'ALTER TABLE events ADD COLUMN url_video TEXT;',
+                );
+              }
+              if (names.contains('title') && !names.contains('name')) {
+                await customStatement(
+                  'ALTER TABLE events RENAME COLUMN title TO name;',
+                );
+              }
+            }
+          } catch (_) {}
+        }
+        if (from < 85) {
+          try {
+            await m.createTable(eventsTable);
+          } catch (_) {}
+          try {
+            await m.createTable(eventSkillsTable);
+          } catch (_) {}
+        }
+        if (from < 84) {
+          // Consolidate legacy years_of_experience into point, then drop it.
+          try {
+            await customStatement(
+              'UPDATE skills SET point = years_of_experience '
+              'WHERE (point IS NULL OR point = 0) AND years_of_experience > 0;',
+            );
+          } catch (_) {}
+          try {
+            await customStatement(
+              'ALTER TABLE skills DROP COLUMN years_of_experience;',
             );
           } catch (_) {}
         }

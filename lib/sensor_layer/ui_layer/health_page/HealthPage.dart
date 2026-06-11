@@ -8,7 +8,6 @@ import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/SwipeablePage.dar
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricCard.dart';
@@ -77,8 +76,8 @@ class HealthPage extends StatefulWidget {
   State<HealthPage> createState() => _HealthPageState();
 }
 
-/// Horizontal inset and grid gutters — aligned with Projects hub density.
-const double _healthPageGutter = 14;
+/// Horizontal inset — matches [MainShell] island padding and Projects `hPad` (20).
+const double _healthPageGutter = 20;
 const double _healthGridSpacing = 10;
 
 class _HealthPageState extends State<HealthPage>
@@ -277,7 +276,7 @@ class _HealthPageState extends State<HealthPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
     final scaffold = Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: const Color.fromARGB(0, 24, 160, 90),
       floatingActionButton: QuickActionButton(
           actions: [
             QuickAction(
@@ -587,21 +586,7 @@ class _HealthPageState extends State<HealthPage>
                                     ),
                                   );
 
-                                  return Container(
-                                    decoration: BoxDecoration(
-                                      color: colorScheme.surface.withValues(
-                                        alpha: isDark ? 0.08 : 0.28,
-                                      ),
-                                      borderRadius: BorderRadius.circular(28),
-                                    ),
-                                    child: ClipRRect(
-                                      borderRadius: BorderRadius.circular(28),
-                                      child: Padding(
-                                        padding: const EdgeInsets.all(12),
-                                        child: grid,
-                                      ),
-                                    ),
-                                  );
+                                  return grid;
                                 },
                               ),
                             ),
@@ -620,8 +605,8 @@ class _HealthPageState extends State<HealthPage>
       direction: SwipeablePageDirection.leftToRight,
       child: isDark
           ? RadialPremiumBackground(
-              baseColor: HealthMetricColors.pageBackground,
-              glowColor: const Color(0xFFa7f3d0),
+              baseColor: const Color.fromARGB(255, 27, 128, 64),
+              glowColor: const Color.fromARGB(255, 4, 138, 76),
               child: scaffold,
             )
           : ColoredBox(color: colorScheme.surface, child: scaffold),
@@ -665,7 +650,7 @@ class _HealthPageState extends State<HealthPage>
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final l10n = AppLocalizations.of(context)!;
     final hubColor = isDark
-        ? HealthMetricColors.linkAccent
+        ? const Color.fromARGB(255, 48, 183, 86)
         : cs.primary;
 
     Widget item(String value, String label, IconData icon, Color color) {

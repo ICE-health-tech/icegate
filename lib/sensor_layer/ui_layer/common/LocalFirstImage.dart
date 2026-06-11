@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:ice_gate/link_layer/storage_services/MediaImageCache.dart';
 import 'package:ice_gate/link_layer/storage_services/MinioService.dart';
 import 'package:ice_gate/link_layer/storage_services/MediaS3Paths.dart';
 import 'package:path_provider/path_provider.dart';
@@ -219,6 +220,31 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         }
       }
 
+      // 5. HTTP cache — persist public URL to canonical documents path.
+      final cacheRel = MediaImageCache.canonicalRelativePath(
+        localPath: widget.localPath,
+        subFolder: widget.subFolder,
+        ownerId: widget.ownerId,
+      );
+      final remoteUrl = _effectiveRemoteUrl;
+      if (cacheRel.isNotEmpty && remoteUrl.isNotEmpty) {
+        final cached = await MediaImageCache.ensureRelativePath(
+          relativePath: cacheRel,
+          remoteUrl: remoteUrl,
+        );
+        if (cached != null && await cached.exists()) {
+          final size = await cached.length();
+          if (mounted) {
+            setState(() {
+              _resolvedAbsolutePath = cached.path;
+              _fileSize = size;
+              _isLoading = false;
+            });
+          }
+          return;
+        }
+      }
+
       // Not found locally, fallback to remote
       if (mounted) {
         setState(() {
@@ -324,6 +350,16 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
       return _buildPlaceholder();
     }
 
+    final uri = Uri.tryParse(url);
+    if (uri == null ||
+        (uri.scheme != 'http' && uri.scheme != 'https') ||
+        uri.host.isEmpty) {
+      return _buildPlaceholder();
+    }
+
+    // Last resort: stream from network while a background cache attempt runs.
+    _warmCacheFromRemote(url);
+
     return Image.network(
       url,
       key: ValueKey('${widget.ownerId}_$url'),
@@ -339,5 +375,26 @@ class _LocalFirstImageState extends State<LocalFirstImage> {
         return _buildPlaceholder();
       },
     );
+  }
+
+  void _warmCacheFromRemote(String url) {
+    final cacheRel = MediaImageCache.canonicalRelativePath(
+      localPath: widget.localPath,
+      subFolder: widget.subFolder,
+      ownerId: widget.ownerId,
+    );
+    if (cacheRel.isEmpty) return;
+
+    MediaImageCache.ensureRelativePath(
+      relativePath: cacheRel,
+      remoteUrl: url,
+    ).then((file) {
+      if (!mounted || file == null) return;
+      if (_resolvedAbsolutePath != null) return;
+      setState(() {
+        _resolvedAbsolutePath = file.path;
+        _fileSize = file.lengthSync();
+      });
+    });
   }
 }

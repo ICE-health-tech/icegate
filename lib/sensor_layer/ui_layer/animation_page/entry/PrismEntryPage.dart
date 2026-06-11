@@ -301,7 +301,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: EntryColors.winterEdge,
+      backgroundColor: const Color.fromARGB(255, 70, 96, 131),
       body: Listener(
           onPointerMove: (event) {
             final size = MediaQuery.of(context).size;
@@ -566,7 +566,7 @@ class _PrismEntryPageState extends State<PrismEntryPage>
                           ),
                         ),
                         Image.asset(
-                          'assets/images/crystal_logo.png',
+                          'assets/images/icegate_entry_icon.png',
                           width: 200,
                           height: 200,
                           fit: BoxFit.contain,

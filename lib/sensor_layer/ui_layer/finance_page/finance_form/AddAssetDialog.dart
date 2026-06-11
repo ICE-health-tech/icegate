@@ -1,18 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/finance_page/models/FinanceAsset.dart';
-import 'package:provider/provider.dart';
-import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
+import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceAssetPillars.dart';
+import 'package:provider/provider.dart';
 import 'package:drift/drift.dart' as drift;
 
 class AddAssetDialog extends StatefulWidget {
-  const AddAssetDialog({super.key});
+  const AddAssetDialog({super.key, this.initialCategory});
 
-  static Future<void> show(BuildContext context) {
+  final String? initialCategory;
+
+  static Future<void> show(
+    BuildContext context, {
+    String? initialCategory,
+  }) {
     return showDialog(
       context: context,
-      builder: (context) => const AddAssetDialog(),
+      builder: (context) => AddAssetDialog(initialCategory: initialCategory),
     );
   }
 
@@ -21,52 +28,66 @@ class AddAssetDialog extends StatefulWidget {
 }
 
 class _AddAssetDialogState extends State<AddAssetDialog> {
-  final _symbolController = TextEditingController();
-  final _quantityController = TextEditingController();
-  final _priceController = TextEditingController();
-  AssetType _selectedType = AssetType.stock;
+  final _nameController = TextEditingController();
+  final _valueController = TextEditingController();
+  late String _selectedCategory;
+
+  static const _allCategories = [
+    FinanceAssetCategories.stock,
+    FinanceAssetCategories.crypto,
+    FinanceAssetCategories.bond,
+    FinanceAssetCategories.deposit,
+    FinanceAssetCategories.realEstate,
+    FinanceAssetCategories.cashflow,
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedCategory =
+        widget.initialCategory ?? FinanceAssetCategories.stock;
+  }
 
   @override
   void dispose() {
-    _symbolController.dispose();
-    _quantityController.dispose();
-    _priceController.dispose();
+    _nameController.dispose();
+    _valueController.dispose();
     super.dispose();
   }
 
-  void _saveAsset() {
-    final symbol = _symbolController.text.trim().toUpperCase();
-    if (symbol.isEmpty) return;
+  Future<void> _saveAsset() async {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
 
-    final quantity = double.tryParse(_quantityController.text) ?? 0.0;
-    final price = double.tryParse(_priceController.text) ?? 0.0;
+    final value = double.tryParse(_valueController.text.replaceAll(',', '.')) ?? 0.0;
     final personID = context.read<PersonBlock>().currentPersonID.value;
-
     if (personID == null) return;
 
-    context.read<AppDatabase>().financeDAO.createAsset(
+    await context.read<AppDatabase>().financeDAO.createAsset(
       AssetsTableCompanion.insert(
         id: IDGen.UUIDV7(),
         personID: drift.Value(personID),
-        assetName: symbol,
-        assetCategory: _selectedType.name,
-        currentEstimatedValue: drift.Value(quantity * price),
-        currency: drift.Value(CurrencyType.USD), // Default to USD for now
+        assetName: name,
+        assetCategory: _selectedCategory,
+        currentEstimatedValue: drift.Value(value),
+        currency: drift.Value(CurrencyType.USD),
       ),
     );
-
-    Navigator.of(context).pop();
+    await context.read<FinanceBlock>().refreshFromLocalDatabase();
+    if (mounted) Navigator.of(context).pop();
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final colorScheme = Theme.of(context).colorScheme;
+    final pillar = FinanceAssetPillar.pillarForAssetCategory(_selectedCategory);
 
     return Dialog(
       backgroundColor: Colors.transparent,
       insetPadding: const EdgeInsets.all(24),
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 400),
+        constraints: const BoxConstraints(maxWidth: 420),
         decoration: BoxDecoration(
           color: colorScheme.surface,
           borderRadius: BorderRadius.circular(28),
@@ -81,7 +102,6 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
               child: Row(
@@ -93,16 +113,22 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Icon(
-                      Icons.show_chart_rounded,
+                      pillar != null
+                          ? FinanceAssetPillar.icon(pillar)
+                          : Icons.inventory_2_rounded,
                       color: colorScheme.tertiary,
                     ),
                   ),
                   const SizedBox(width: 16),
-                  const Text(
-                    "Add Investment",
-                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                  Expanded(
+                    child: Text(
+                      l10n.finance_add_asset_title,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 18,
+                      ),
+                    ),
                   ),
-                  const Spacer(),
                   IconButton(
                     onPressed: () => Navigator.of(context).pop(),
                     icon: const Icon(Icons.close_rounded),
@@ -110,48 +136,31 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                 ],
               ),
             ),
-
             Flexible(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Type Selection
-                    Container(
-                      padding: const EdgeInsets.all(4),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surfaceContainerHighest.withValues(alpha: 
-                          0.5,
-                        ),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      child: Row(
-                        children: [
-                          _buildTypeTab(
-                            AssetType.stock,
-                            "Saving",
-                            Icons.business,
-                          ),
-                          _buildTypeTab(
-                            AssetType.crypto,
-                            "Crypto",
-                            Icons.currency_bitcoin,
-                          ),
-                        ],
-                      ),
+                    Text(
+                      l10n.finance_add_asset_category,
+                      style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
-                    const SizedBox(height: 24),
-
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 6,
+                      runSpacing: 6,
+                      children: [
+                        for (final cat in _allCategories)
+                          _categoryChip(context, cat, l10n),
+                      ],
+                    ),
+                    const SizedBox(height: 20),
                     TextField(
-                      controller: _symbolController,
-                      textCapitalization: TextCapitalization.characters,
+                      controller: _nameController,
                       style: const TextStyle(fontWeight: FontWeight.bold),
                       decoration: InputDecoration(
-                        labelText: "Symbol / Ticker",
-                        hintText: _selectedType == AssetType.stock
-                            ? "e.g. AAPL, VNM"
-                            : "e.g. BTC, ETH",
+                        labelText: l10n.finance_add_asset_name,
                         filled: true,
                         fillColor: colorScheme.surfaceContainerHighest
                             .withValues(alpha: 0.3),
@@ -159,71 +168,40 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
                           borderRadius: BorderRadius.circular(16),
                           borderSide: BorderSide.none,
                         ),
-                        prefixIcon: const Icon(Icons.search_rounded),
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: TextField(
-                            controller: _quantityController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(
-                              labelText: "Quantity",
-                              hintText: "0.0",
-                              filled: true,
-                              fillColor: colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                            ),
-                          ),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _valueController,
+                      keyboardType: const TextInputType.numberWithOptions(
+                        decimal: true,
+                      ),
+                      style: const TextStyle(fontWeight: FontWeight.bold),
+                      decoration: InputDecoration(
+                        labelText: l10n.finance_add_asset_value,
+                        filled: true,
+                        fillColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: TextField(
-                            controller: _priceController,
-                            keyboardType: TextInputType.number,
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                            decoration: InputDecoration(
-                              labelText: "Avg Price",
-                              hintText: "0.0",
-                              filled: true,
-                              fillColor: colorScheme.surfaceContainerHighest
-                                  .withValues(alpha: 0.3),
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(16),
-                                borderSide: BorderSide.none,
-                              ),
-                              prefixIcon: const Icon(
-                                Icons.attach_money_rounded,
-                                size: 18,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        prefixIcon: const Icon(Icons.attach_money_rounded),
+                      ),
                     ),
-
                     const SizedBox(height: 24),
                     SizedBox(
                       height: 52,
                       child: FilledButton(
                         onPressed: _saveAsset,
                         style: FilledButton.styleFrom(
-                          backgroundColor: colorScheme.tertiary,
-                          foregroundColor: colorScheme.onTertiary,
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                         ),
-                        child: const Text(
-                          "Add Holding",
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        child: Text(
+                          l10n.finance_add_asset_save,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -237,53 +215,22 @@ class _AddAssetDialogState extends State<AddAssetDialog> {
     );
   }
 
-  Widget _buildTypeTab(AssetType type, String label, IconData icon) {
-    final isSelected = _selectedType == type;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => _selectedType = type),
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? colorScheme.surface : Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: isSelected
-                ? [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.05),
-                      blurRadius: 4,
-                      offset: const Offset(0, 2),
-                    ),
-                  ]
-                : [],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                icon,
-                size: 18,
-                color: isSelected
-                    ? colorScheme.primary
-                    : colorScheme.onSurfaceVariant,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: isSelected
-                      ? colorScheme.primary
-                      : colorScheme.onSurfaceVariant,
-                ),
-              ),
-            ],
-          ),
-        ),
+  Widget _categoryChip(
+    BuildContext context,
+    String category,
+    AppLocalizations l10n,
+  ) {
+    final cs = Theme.of(context).colorScheme;
+    final selected = _selectedCategory == category;
+    return FilterChip(
+      selected: selected,
+      label: Text(FinanceAssetCategories.label(l10n, category)),
+      avatar: Icon(
+        FinanceAssetCategories.icon(category),
+        size: 16,
+        color: selected ? cs.onPrimaryContainer : cs.onSurfaceVariant,
       ),
+      onSelected: (_) => setState(() => _selectedCategory = category),
     );
   }
 }

@@ -1,5 +1,7 @@
 import 'dart:ui';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:provider/provider.dart';
@@ -174,84 +176,160 @@ class MindAnalysisPage extends StatelessWidget {
 
   Widget _buildTopPillBar(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final bg = colorScheme.surface.withValues(alpha: 0.22);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final accent = HealthMetricColors.pillarViolet;
+    final tabController = DefaultTabController.of(context);
+    const islandHeight = 52.0;
+    const islandRadius = islandHeight / 2;
+    final islandFill = isDark
+        ? HealthMetricColors.shellIslandFill
+        : colorScheme.surfaceContainerHigh.withValues(alpha: 0.98);
+    final outerBorder = isDark
+        ? HealthMetricColors.borderBright.withValues(alpha: 0.9)
+        : colorScheme.outlineVariant.withValues(alpha: 0.6);
 
-    return ClipRRect(
-      borderRadius: BorderRadius.circular(26),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-        child: Container(
-          height: 56,
-          padding: const EdgeInsets.symmetric(horizontal: 10),
+    return AnimatedBuilder(
+      animation: tabController,
+      builder: (context, _) {
+        final activeIndex = tabController.index;
+        return Container(
+          height: islandHeight,
           decoration: BoxDecoration(
-            color: bg,
-            borderRadius: BorderRadius.circular(26),
-            border: Border.all(
-              color: colorScheme.onSurface.withValues(alpha: 0.10),
+            borderRadius: BorderRadius.circular(islandRadius),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: isDark
+                  ? [
+                      Color.alphaBlend(
+                        Colors.white.withValues(alpha: 0.09),
+                        islandFill,
+                      ),
+                      Color.alphaBlend(
+                        Colors.white.withValues(alpha: 0.03),
+                        islandFill,
+                      ),
+                      Color.alphaBlend(
+                        Colors.white.withValues(alpha: 0.05),
+                        islandFill,
+                      ),
+                    ]
+                  : [
+                      Color.alphaBlend(
+                        colorScheme.onSurface.withValues(alpha: 0.05),
+                        islandFill,
+                      ),
+                      Color.alphaBlend(
+                        colorScheme.onSurface.withValues(alpha: 0.02),
+                        islandFill,
+                      ),
+                      Color.alphaBlend(
+                        colorScheme.onSurface.withValues(alpha: 0.04),
+                        islandFill,
+                      ),
+                    ],
+              stops: const [0.0, 0.55, 1.0],
             ),
-          ),
-          child: Row(
-            children: [
-              _CircleIconButton(
-                icon: Icons.arrow_back_rounded,
-                onPressed: () => WidgetNavigatorAction.smartPop(context),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.all(4),
-                    decoration: BoxDecoration(
-                      color: colorScheme.onSurface.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: colorScheme.onSurface.withValues(alpha: 0.08),
-                      ),
+            border: Border.all(color: outerBorder),
+            boxShadow: isDark
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.45),
+                      blurRadius: 18,
+                      offset: const Offset(0, 8),
                     ),
-                    child: TabBar(
-                      isScrollable: true,
-                      indicator: BoxDecoration(
-                        color: colorScheme.primary.withValues(alpha: 0.35),
-                        borderRadius: BorderRadius.circular(16),
-                      ),
-                      dividerColor: Colors.transparent,
-                      labelColor: colorScheme.onSurface,
-                      unselectedLabelColor:
-                          colorScheme.onSurface.withValues(alpha: 0.55),
-                      labelStyle: const TextStyle(
-                        fontWeight: FontWeight.w900,
-                        letterSpacing: 1.0,
-                        fontSize: 12,
-                      ),
-                      tabs: const [
-                        Tab(
-                          iconMargin: EdgeInsets.zero,
-                          text: 'ACHIEVEMENTS',
-                          icon: Icon(Icons.emoji_events_rounded, size: 16),
-                        ),
-                        Tab(
-                          iconMargin: EdgeInsets.zero,
-                          text: 'SKILLS',
-                          icon: Icon(Icons.auto_awesome_rounded, size: 16),
-                        ),
+                  ]
+                : [
+                    BoxShadow(
+                      color: colorScheme.shadow.withValues(alpha: 0.12),
+                      blurRadius: 12,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+          ),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Positioned(
+                top: 0,
+                left: 14,
+                right: 14,
+                child: Container(
+                  height: 1,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        (isDark ? Colors.white : colorScheme.onSurface)
+                            .withValues(alpha: isDark ? 0.18 : 0.08),
+                        (isDark ? Colors.white : colorScheme.onSurface)
+                            .withValues(alpha: isDark ? 0.04 : 0.02),
                       ],
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 10),
-              _CircleIconButton(
-                icon: Icons.bar_chart_rounded,
-                onPressed: () {
-                  context.read<SocialBlock>().activeTab.value = 3;
-                  context.go('/social');
-                },
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: [
+                    _CircleIconButton(
+                      icon: Icons.arrow_back_rounded,
+                      onPressed: () {
+                        HapticFeedback.mediumImpact();
+                        WidgetNavigatorAction.smartPop(context);
+                      },
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Center(
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            _MindAnalysisSegmentTab(
+                              index: 0,
+                              activeIndex: activeIndex,
+                              icon: Icons.emoji_events_rounded,
+                              label: 'ACHIEVEMENTS',
+                              accent: accent,
+                              onTap: () => _selectTab(context, 0),
+                            ),
+                            const SizedBox(width: 6),
+                            _MindAnalysisSegmentTab(
+                              index: 1,
+                              activeIndex: activeIndex,
+                              icon: Icons.auto_awesome_rounded,
+                              label: 'SKILLS',
+                              accent: accent,
+                              onTap: () => _selectTab(context, 1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    _CircleIconButton(
+                      icon: Icons.bar_chart_rounded,
+                      onPressed: () {
+                        HapticFeedback.selectionClick();
+                        context.read<SocialBlock>().activeTab.value = 3;
+                        context.go('/social');
+                      },
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
-        ),
-      ),
+        );
+      },
     );
+  }
+
+  void _selectTab(BuildContext context, int index) {
+    final controller = DefaultTabController.of(context);
+    if (controller.index == index) return;
+    HapticFeedback.selectionClick();
+    controller.animateTo(index);
   }
 
   Widget _buildInsightsRows(
@@ -801,31 +879,138 @@ class MindAnalysisPage extends StatelessWidget {
   }
 }
 
-class _CircleIconButton extends StatelessWidget {
+class _MindAnalysisSegmentTab extends StatelessWidget {
+  const _MindAnalysisSegmentTab({
+    required this.index,
+    required this.activeIndex,
+    required this.icon,
+    required this.label,
+    required this.accent,
+    required this.onTap,
+  });
+
+  final int index;
+  final int activeIndex;
+  final IconData icon;
+  final String label;
+  final Color accent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = index == activeIndex;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final colorScheme = Theme.of(context).colorScheme;
+    final activeInk = isDark ? accent : colorScheme.onSurface;
+    final inactiveInk = colorScheme.onSurfaceVariant.withValues(
+      alpha: isDark ? 0.55 : 0.72,
+    );
+
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOutCubic,
+        padding: EdgeInsets.symmetric(
+          horizontal: isActive ? 14 : 10,
+          vertical: 6,
+        ),
+        decoration: BoxDecoration(
+          color: isActive
+              ? (isDark
+                  ? accent.withValues(alpha: 0.15)
+                  : colorScheme.primary.withValues(alpha: 0.1))
+              : (isDark
+                  ? Colors.white.withValues(alpha: 0.04)
+                  : colorScheme.surfaceContainerHighest
+                      .withValues(alpha: 0.35)),
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(
+            color: isActive
+                ? (isDark
+                    ? accent.withValues(alpha: 0.35)
+                    : colorScheme.primary.withValues(alpha: 0.32))
+                : (isDark
+                    ? Colors.white.withValues(alpha: 0.06)
+                    : colorScheme.outlineVariant.withValues(alpha: 0.35)),
+          ),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isActive ? activeInk : inactiveInk,
+            ),
+            if (isActive) ...[
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: TextStyle(
+                  color: activeInk,
+                  fontSize: 10,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 0.6,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _CircleIconButton extends StatefulWidget {
   final IconData icon;
   final VoidCallback onPressed;
 
   const _CircleIconButton({required this.icon, required this.onPressed});
 
   @override
+  State<_CircleIconButton> createState() => _CircleIconButtonState();
+}
+
+class _CircleIconButtonState extends State<_CircleIconButton> {
+  bool _pressed = false;
+
+  @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        borderRadius: BorderRadius.circular(18),
-        onTap: onPressed,
-        child: Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: colorScheme.onSurface.withValues(alpha: 0.06),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-              color: colorScheme.onSurface.withValues(alpha: 0.08),
+    final baseFill = isDark
+        ? Colors.white.withValues(alpha: 0.04)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.35);
+    final pressedFill = isDark
+        ? Colors.white.withValues(alpha: 0.08)
+        : colorScheme.surfaceContainerHighest.withValues(alpha: 0.55);
+    final border = isDark
+        ? Colors.white.withValues(alpha: _pressed ? 0.22 : 0.14)
+        : colorScheme.outlineVariant.withValues(alpha: _pressed ? 0.9 : 0.7);
+    final iconColor = isDark
+        ? const Color(0xF2FFFFFF)
+        : colorScheme.onSurface.withValues(alpha: 0.85);
+
+    return AnimatedScale(
+      scale: _pressed ? 0.96 : 1.0,
+      duration: const Duration(milliseconds: 110),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(18),
+          onHighlightChanged: (v) => setState(() => _pressed = v),
+          onTap: widget.onPressed,
+          child: Container(
+            width: 36,
+            height: 36,
+            decoration: BoxDecoration(
+              color: _pressed ? pressedFill : baseFill,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: border),
             ),
+            child: Icon(widget.icon, color: iconColor, size: 18),
           ),
-          child: Icon(icon, color: colorScheme.onSurface, size: 18),
         ),
       ),
     );

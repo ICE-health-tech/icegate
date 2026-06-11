@@ -839,15 +839,15 @@ class TacticalGridPainter extends CustomPainter {
     /// Clear radius around focal center so grid lines don’t stack into a harsh “+”.
     final gridHoleRadius = (short * 0.22).clamp(150.0, 200.0);
 
-    // Soft well glow inside the grid hole.
+    // Soft well glow inside the grid hole (frost, not neon cyan).
     canvas.drawCircle(
       center,
       gridHoleRadius * 1.05,
       Paint()
         ..shader = RadialGradient(
           colors: [
-            EntryColors.iceCyan.withValues(alpha: 0.06),
-            EntryColors.primaryIceBlue.withValues(alpha: 0.03),
+            EntryColors.frostBloomMist.withValues(alpha: 0.05),
+            EntryColors.primaryIceLight.withValues(alpha: 0.025),
             Colors.transparent,
           ],
           stops: const [0.0, 0.45, 1.0],
@@ -919,18 +919,18 @@ class TacticalGridPainter extends CustomPainter {
       final ringAlpha = (0.032 + 0.05 * (1.0 - t)) * pulse;
       ringPaint
         ..strokeWidth = 0.5 + 0.28 * (1.0 - t)
-        ..color = EntryColors.iceCyan.withValues(alpha: ringAlpha);
+        ..color = EntryColors.primaryIceLight.withValues(alpha: ringAlpha * 0.85);
       canvas.drawCircle(center, radius, ringPaint);
       ringPaint
         ..strokeWidth = 0.35
-        ..color = EntryColors.winterMoonCore.withValues(alpha: ringAlpha * 0.55);
+        ..color = EntryColors.frostBloomMist.withValues(alpha: ringAlpha * 0.4);
       canvas.drawCircle(center, radius + 0.85, ringPaint);
     }
 
     // Cardinal tick marks (subtle targeting reticle).
     final tickLen = gridHoleRadius * 0.14;
     final tickPaint = Paint()
-      ..color = EntryColors.iceCyan.withValues(alpha: 0.12)
+      ..color = EntryColors.primaryIceLight.withValues(alpha: 0.08)
       ..strokeWidth = 1.1
       ..strokeCap = StrokeCap.round;
     for (int i = 0; i < 4; i++) {
@@ -963,10 +963,10 @@ class TacticalGridPainter extends CustomPainter {
       ..shader = RadialGradient(
         colors: [
           Colors.transparent,
-          EntryColors.winterDeepHorizon.withValues(alpha: 0.45),
-          EntryColors.winterEdge.withValues(alpha: 0.72),
+          const Color(0xFF050910).withValues(alpha: 0.28),
+          const Color(0xFF050910).withValues(alpha: 0.5),
         ],
-        stops: const [0.42, 0.78, 1.0],
+        stops: const [0.5, 0.82, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
     canvas.drawRect(
       Rect.fromLTWH(0, 0, size.width, size.height),

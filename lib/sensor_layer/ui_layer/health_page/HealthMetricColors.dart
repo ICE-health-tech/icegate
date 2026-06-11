@@ -2,9 +2,9 @@ import 'package:flutter/material.dart';
 
 /// Dashboard palette — health grid + home (duylongart_glass_ui.md).
 abstract final class HealthMetricColors {
-  static const Color pageBackground = Color(0xFF0B121C);
-  static const Color iceBgDeep = Color(0xFF060B13);
-  static const Color iceBgMid = Color(0xFF0D1622);
+  static const Color pageBackground = Color.fromARGB(255, 72, 95, 128);
+  static const Color iceBgDeep = Color.fromARGB(255, 76, 109, 161);
+  static const Color iceBgMid = Color.fromARGB(255, 51, 86, 131);
 
   static const Color textPrimary = Color(0xFFFFFFFF);
   static const Color textSecondary = Color(0xFF8E8E93);
@@ -20,6 +20,59 @@ abstract final class HealthMetricColors {
 
   /// MainShell Dynamic Island fill (dark).
   static const Color shellIslandFill = Color(0xFF141A22);
+
+  /// Page scaffold background — dark immersive base, light matches HealthPage.
+  static Color pageBackgroundColor(ColorScheme cs, {required bool isDark}) =>
+      isDark ? pageBackground : cs.surface;
+
+  /// Primary text/icons on health subpages.
+  static Color ink(ColorScheme cs, {required bool isDark}) =>
+      isDark ? textPrimary : cs.onSurface;
+
+  /// Secondary labels (section headers, subtitles).
+  static Color mutedInk(ColorScheme cs, {required bool isDark}) =>
+      isDark ? textSecondary : cs.onSurfaceVariant;
+
+  /// Faint placeholders / empty states.
+  static Color faintInk(
+    ColorScheme cs, {
+    required bool isDark,
+    double darkAlpha = 0.38,
+    double lightAlpha = 0.45,
+  }) =>
+      isDark
+          ? Colors.white.withValues(alpha: darkAlpha)
+          : cs.onSurface.withValues(alpha: lightAlpha);
+
+  /// Glass card fill — dark: white overlay, light: surface container.
+  static Color glassFill(
+    ColorScheme cs, {
+    required bool isDark,
+    double darkAlpha = 0.05,
+  }) =>
+      isDark
+          ? Colors.white.withValues(alpha: darkAlpha)
+          : cs.surfaceContainerHighest.withValues(alpha: 0.55);
+
+  /// Glass card border.
+  static Color glassBorder(
+    ColorScheme cs, {
+    required bool isDark,
+    double darkAlpha = 0.1,
+  }) =>
+      isDark
+          ? Colors.white.withValues(alpha: darkAlpha)
+          : cs.outline.withValues(alpha: 0.35);
+
+  /// Icon button chip behind back/settings.
+  static Color iconChipFill(ColorScheme cs, {required bool isDark}) =>
+      isDark
+          ? Colors.white.withValues(alpha: 0.05)
+          : cs.surfaceContainerHighest.withValues(alpha: 0.6);
+
+  /// Bottom sheet / modal fill.
+  static Color sheetFill(ColorScheme cs, {required bool isDark}) =>
+      isDark ? const Color(0xFF1A1A1A) : cs.surfaceContainerHigh;
 
   /// Panel surfaces synced with MainShell — light: white panels, dark: island fill.
   static BoxDecoration shellPanel(
@@ -142,11 +195,11 @@ abstract final class HealthMetricColors {
       case 'health':
         return pillarGreen;
       case 'finance':
-        return pillarBlue;
+        return const Color.fromARGB(255, 52, 146, 218);
       case 'mind':
         return pillarViolet;
       case 'projects':
-        return pillarOrange;
+        return const Color.fromARGB(255, 252, 120, 38);
       default:
         return textSecondary;
     }

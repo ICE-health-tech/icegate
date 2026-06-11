@@ -11,6 +11,7 @@ import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
 import 'package:ice_gate/link_layer/skills/skill_practice_streak.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/widgets/skill_session_celebration.dart';
 import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:provider/provider.dart';
@@ -123,8 +124,6 @@ class _MindSkillsViewState extends State<MindSkillsView>
   List<Color> _tripleRingColors = const [];
   late final AnimationController _ringIntroController;
   String? _lastRingAddedSkill;
-
-  static const _defaultSkills = MindSkillCatalog.defaults;
 
   /// Const palette for custom skill icons (release builds cannot use IconData(cp)).
   static const _skillIconPalette = <IconData>[
@@ -335,6 +334,13 @@ class _MindSkillsViewState extends State<MindSkillsView>
     final minutes = (elapsed.inSeconds / 60).ceil().clamp(1, 180);
     _isLoggingSession = true;
     try {
+      final growth = context.read<GrowthBlock>();
+      final beforeLevels = <String, int>{};
+      for (final name in _selected) {
+        final row = _skillDataForName(name, growth);
+        if (row != null) beforeLevels[name] = row.levelIndex;
+      }
+
       final totalXp = await _logSkillSession(
         mindBlock: mindBlock,
         personId: personId,
@@ -344,15 +350,35 @@ class _MindSkillsViewState extends State<MindSkillsView>
       );
       if (!mounted) return;
       _levelUpController.forward(from: 0);
-      unawaited(context.read<GrowthBlock>().syncSkills());
-      final l10n = AppLocalizations.of(context)!;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            l10n.mind_skills_session_logged(minutes, totalXp),
-          ),
-          behavior: SnackBarBehavior.floating,
-        ),
+      await growth.syncSkills();
+      if (!mounted) return;
+
+      final leveledUp = <String>[];
+      for (final name in _selected) {
+        final row = _skillDataForName(name, growth);
+        if (row == null) continue;
+        final prev = beforeLevels[name] ?? row.levelIndex;
+        if (row.levelIndex > prev) leveledUp.add(row.skillName);
+      }
+
+      final db = context.read<AppDatabase>();
+      final logRows = await (db.select(db.mindLogsTable)
+            ..where((t) => t.personID.equals(personId)))
+          .get();
+      final dayIndex = SkillPracticeStreak.buildDayIndex(logRows);
+      var bestStreak = 0;
+      for (final name in _selected) {
+        final s = SkillPracticeStreak.streakForProtocol(dayIndex, name);
+        if (s > bestStreak) bestStreak = s;
+      }
+
+      showSkillSessionCelebration(
+        context,
+        minutes: minutes,
+        totalXp: totalXp,
+        leveledUpSkills: leveledUp,
+        bestStreak: bestStreak,
+        practicedSkills: _selected.toList(),
       );
       widget.onSessionLogged?.call();
     } finally {
@@ -782,21 +808,22 @@ class _MindSkillsViewState extends State<MindSkillsView>
     if (action == 'delete') {
       if (!isCustom) return;
       if (!context.mounted) return;
+      final l10n = AppLocalizations.of(context)!;
       final ok = await showDialog<bool>(
         context: context,
         useRootNavigator: true,
         builder: (dialogContext) {
           return AlertDialog(
-            title: const Text('Delete skill?'),
-            content: Text('Remove “$skill” from your skills?'),
+            title: Text(l10n.mind_skill_delete_title),
+            content: Text(l10n.mind_skill_delete_body(skill)),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(false),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
                 onPressed: () => Navigator.of(dialogContext).pop(true),
-                child: const Text('Delete'),
+                child: Text(l10n.delete),
               ),
             ],
           );
@@ -811,10 +838,16 @@ class _MindSkillsViewState extends State<MindSkillsView>
       });
       await _persistCustomSkills(personId);
       await _persistSkillIcons(personId);
+      if (mounted) {
+        await context
+            .read<GrowthBlock>()
+            .deletePersonLibrarySkillByName(skill);
+      }
       return;
     }
 
     if (action == 'edit') {
+      final l10n = AppLocalizations.of(context)!;
       final controller = TextEditingController(text: skill);
       if (!context.mounted) return;
       final next = await showDialog<String>(
@@ -822,39 +855,65 @@ class _MindSkillsViewState extends State<MindSkillsView>
         useRootNavigator: true,
         builder: (dialogContext) {
           return AlertDialog(
-            title: const Text('Edit skill'),
+            title: Text(l10n.mind_skill_edit_title),
             content: TextField(
               controller: controller,
               autofocus: true,
               textInputAction: TextInputAction.done,
-              decoration: const InputDecoration(hintText: 'Skill name'),
+              decoration: InputDecoration(
+                hintText: l10n.mind_skills_add_skill,
+              ),
               onSubmitted: (_) =>
                   Navigator.of(dialogContext).pop(controller.text),
             ),
             actions: [
               TextButton(
                 onPressed: () => Navigator.of(dialogContext).pop(),
-                child: const Text('Cancel'),
+                child: Text(l10n.cancel),
               ),
               ElevatedButton(
                 onPressed: () =>
                     Navigator.of(dialogContext).pop(controller.text),
-                child: const Text('Save'),
+                child: Text(l10n.edit),
               ),
             ],
           );
         },
       );
 
-      final normalized = (next ?? '').trim();
-      if (normalized.isEmpty) return;
-      final lower = normalized.toLowerCase();
-      final alreadyExists = _allSkills().any((s) => s.toLowerCase() == lower);
-      if (alreadyExists && lower != skill.toLowerCase()) {
+      final normalized = MindSkillCatalog.normalizeName(next ?? '');
+      if (normalized == null) {
         if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('That skill already exists.'),
+          SnackBar(
+            content: Text(l10n.mind_skill_name_invalid),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+      if (_allSkills().any(
+            (s) =>
+                MindSkillCatalog.namesMatch(s, normalized) &&
+                !MindSkillCatalog.namesMatch(s, skill),
+          )) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.mind_skill_name_duplicate),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        return;
+      }
+
+      final growth = context.read<GrowthBlock>();
+      final renamed = await growth.renamePersonLibrarySkill(skill, normalized);
+      if (!renamed) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(l10n.mind_skill_name_duplicate),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -869,8 +928,7 @@ class _MindSkillsViewState extends State<MindSkillsView>
           final idx = _customSkills.indexOf(skill);
           if (idx >= 0) _customSkills[idx] = normalized;
         } else {
-          // Rename a default skill by hiding the default and creating a custom replacement.
-          if (!_customSkills.any((s) => s.toLowerCase() == newKey)) {
+          if (!_customSkills.any((s) => MindSkillCatalog.namesMatch(s, normalized))) {
             _customSkills.add(normalized);
           }
           _hiddenDefaultSkillsLower.add(oldKey);
@@ -926,25 +984,14 @@ class _MindSkillsViewState extends State<MindSkillsView>
   }
 
   List<String> _allSkills() {
-    final hidden = _hiddenDefaultSkillsLower;
-    final growth = context.read<GrowthBlock>();
-    final base = growth
-        .personSkillNames()
-        .where((s) => !hidden.contains(s.toLowerCase()))
-        .toList();
-    final extra = _customSkills.where(
-      (c) => !base.any((b) => MindSkillCatalog.namesMatch(b, c)),
+    return context.read<GrowthBlock>().mindVisibleSkillNames(
+      customSkills: _customSkills,
+      hiddenDefaultSkillsLower: _hiddenDefaultSkillsLower,
     );
-    if (base.isNotEmpty) {
-      return MindSkillCatalog.dedupeNames([...base, ...extra]);
-    }
-    return MindSkillCatalog.dedupeNames([
-      ..._defaultSkills.where((s) => !hidden.contains(s.toLowerCase())),
-      ..._customSkills,
-    ]);
   }
 
   Future<void> _promptAddSkill(BuildContext context, String personId) async {
+    final l10n = AppLocalizations.of(context)!;
     final controller = TextEditingController();
     final cs = Theme.of(context).colorScheme;
 
@@ -954,53 +1001,47 @@ class _MindSkillsViewState extends State<MindSkillsView>
       builder: (dialogContext) {
         return AlertDialog(
           backgroundColor: cs.surface.withValues(alpha: 0.95),
-          title: const Text('Add a skill'),
+          title: Text(l10n.mind_skill_add_title),
           content: TextField(
             controller: controller,
             autofocus: true,
             textInputAction: TextInputAction.done,
             decoration: const InputDecoration(
-              hintText: 'e.g. Writing, Memory, Negotiation',
+              hintText: 'Writing, Memory, Negotiation',
             ),
             onSubmitted: (_) => Navigator.of(dialogContext).pop(controller.text),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(dialogContext).pop(),
-              child: const Text('Cancel'),
+              child: Text(l10n.cancel),
             ),
             ElevatedButton(
               onPressed: () => Navigator.of(dialogContext).pop(controller.text),
-              child: const Text('Add'),
+              child: Text(l10n.add),
             ),
           ],
         );
       },
     );
 
-    final name = (result ?? '').trim();
-    if (name.isEmpty) return;
-
-    // Normalize: collapse spaces, cap length
-    final normalized = name.replaceAll(RegExp(r'\s+'), ' ');
-    if (normalized.length > 24) {
+    final normalized = MindSkillCatalog.normalizeName(result ?? '');
+    if (normalized == null) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Skill name too long (max 24 chars).'),
+        SnackBar(
+          content: Text(l10n.mind_skill_name_invalid),
           behavior: SnackBarBehavior.floating,
         ),
       );
       return;
     }
 
-    final exists = _allSkills()
-        .any((s) => s.toLowerCase() == normalized.toLowerCase());
-    if (exists) {
+    if (_allSkills().any((s) => MindSkillCatalog.namesMatch(s, normalized))) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('That skill already exists.'),
+        SnackBar(
+          content: Text(l10n.mind_skill_name_duplicate),
           behavior: SnackBarBehavior.floating,
         ),
       );
@@ -1027,6 +1068,29 @@ class _MindSkillsViewState extends State<MindSkillsView>
       if (MindSkillCatalog.namesMatch(s.skillName, name)) return s;
     }
     return null;
+  }
+
+  Future<void> _openSkillCertificate(
+    BuildContext context, {
+    required String skillName,
+    required int accentIndex,
+    required bool selected,
+  }) async {
+    final uri = Uri(
+      path: '/social/skills/certificate',
+      queryParameters: {
+        'skill': skillName,
+        'accent': '$accentIndex',
+        if (selected) 'selected': '1',
+      },
+    );
+    final wantSelect = await context.push<bool>(uri.toString());
+    if (!mounted) return;
+    if (wantSelect == true && !_selected.contains(skillName)) {
+      _toggleSkillSelection(skillName);
+    } else if (wantSelect == false && _selected.contains(skillName)) {
+      _toggleSkillSelection(skillName);
+    }
   }
 
   void _toggleSkillSelection(String skill) {
@@ -1195,7 +1259,13 @@ class _MindSkillsViewState extends State<MindSkillsView>
               proficiencyLabel: _proficiencyLabel(
                 data?.proficiencyLevel ?? 'beginner',
               ),
-              onTap: () => _toggleSkillSelection(name),
+              onOpenCertificate: () => _openSkillCertificate(
+                context,
+                skillName: name,
+                accentIndex: index,
+                selected: selected,
+              ),
+              onToggleSession: () => _toggleSkillSelection(name),
               onLongPress: () => _editSkillMenu(
                 context,
                 personId: personId,
@@ -1372,7 +1442,8 @@ class _MindSkillStatusRow extends StatelessWidget {
     required this.streak,
     required this.l10n,
     required this.proficiencyLabel,
-    required this.onTap,
+    required this.onOpenCertificate,
+    required this.onToggleSession,
     required this.onLongPress,
   });
 
@@ -1384,7 +1455,8 @@ class _MindSkillStatusRow extends StatelessWidget {
   final int streak;
   final AppLocalizations l10n;
   final String proficiencyLabel;
-  final VoidCallback onTap;
+  final VoidCallback onOpenCertificate;
+  final VoidCallback onToggleSession;
   final VoidCallback onLongPress;
 
   @override
@@ -1398,7 +1470,8 @@ class _MindSkillStatusRow extends StatelessWidget {
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: onTap,
+        onTap: onOpenCertificate,
+        onDoubleTap: onOpenCertificate,
         onLongPress: onLongPress,
         borderRadius: BorderRadius.circular(14),
         child: Container(
@@ -1531,6 +1604,21 @@ class _MindSkillStatusRow extends StatelessWidget {
                       ],
                     ),
                   ],
+                ),
+              ),
+              const SizedBox(width: 4),
+              IconButton(
+                visualDensity: VisualDensity.compact,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+                tooltip: l10n.mind_skill_certificate_select_session,
+                onPressed: onToggleSession,
+                icon: Icon(
+                  selected
+                      ? Icons.check_circle_rounded
+                      : Icons.radio_button_unchecked_rounded,
+                  color: selected ? accent : cs.onSurface.withValues(alpha: 0.35),
+                  size: 22,
                 ),
               ),
             ],

@@ -8,7 +8,9 @@ import 'package:ice_gate/orchestration_layer/Action/WidgetNavigator.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/HealthBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/PersonBlock.dart';
 import 'package:ice_gate/sensor_layer/phone_sensor/AppleHealthServices.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/health_page/HealthMetricColors.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/home_page/MainButton.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/reusable_widget/RadialPremiumBackground.dart';
 import 'package:provider/provider.dart';
 import 'package:intl/intl.dart';
 class WeightPage extends StatefulWidget {
@@ -107,9 +109,11 @@ class _WeightPageState extends State<WeightPage> {
     final personId = personBlock.information.value.profiles.id ?? "";
     final l10n = AppLocalizations.of(context)!;
     final healthBlock = context.watch<HealthBlock>();
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    return Scaffold(
-      backgroundColor: Colors.black,
+    final scaffold = Scaffold(
+      backgroundColor: isDark ? Colors.transparent : cs.surface,
       extendBodyBehindAppBar: true,
       body: Stack(
         children: [
@@ -128,7 +132,12 @@ class _WeightPageState extends State<WeightPage> {
             slivers: [
               SliverAppBar(
                 pinned: true,
-                backgroundColor: Colors.black.withValues(alpha: 0.5),
+                backgroundColor: isDark
+                    ? HealthMetricColors.pageBackground.withValues(alpha: 0.5)
+                    : cs.surface.withValues(alpha: 0.92),
+                iconTheme: IconThemeData(
+                  color: HealthMetricColors.ink(cs, isDark: isDark),
+                ),
                 actions: [
                   IconButton(
                     tooltip: l10n.health_smart_scale_sync,
@@ -178,7 +187,7 @@ class _WeightPageState extends State<WeightPage> {
                             Icon(
                               Icons.monitor_weight_outlined,
                               size: 80,
-                              color: Colors.white.withValues(alpha: 0.05),
+                              color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.05),
                             ),
                             const SizedBox(height: 16),
                             Padding(
@@ -187,7 +196,7 @@ class _WeightPageState extends State<WeightPage> {
                                 l10n.health_smart_scale_sync_empty,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.25),
+                                  color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.25),
                                   fontSize: 12,
                                   fontWeight: FontWeight.w600,
                                 ),
@@ -203,7 +212,7 @@ class _WeightPageState extends State<WeightPage> {
                     padding: const EdgeInsets.fromLTRB(20, 0, 20, 100),
                     sliver: SliverList(
                       delegate: SliverChildBuilderDelegate((context, index) {
-                        return _WeightListItem(metric: data[index]);
+                        return _WeightListItem(metric: data[index], cs: cs, isDark: isDark);
                       }, childCount: data.length),
                     ),
                   );
@@ -214,6 +223,15 @@ class _WeightPageState extends State<WeightPage> {
         ],
       ),
     );
+
+    if (isDark) {
+      return RadialPremiumBackground(
+        baseColor: HealthMetricColors.pageBackground,
+        glowColor: HealthMetricColors.pillarViolet,
+        child: scaffold,
+      );
+    }
+    return scaffold;
   }
 }
 
@@ -235,6 +253,8 @@ class _SmartScaleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final cs = Theme.of(context).colorScheme;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(24),
@@ -243,7 +263,7 @@ class _SmartScaleCard extends StatelessWidget {
         child: Container(
           padding: const EdgeInsets.all(20),
           decoration: BoxDecoration(
-            color: Colors.white.withValues(alpha: 0.04),
+            color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.04),
             borderRadius: BorderRadius.circular(24),
             border: Border.all(color: Colors.purpleAccent.withValues(alpha: 0.2)),
           ),
@@ -271,8 +291,8 @@ class _SmartScaleCard extends StatelessWidget {
                       children: [
                         Text(
                           l10n.health_smart_scale_title.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
+                          style: TextStyle(
+                            color: HealthMetricColors.ink(cs, isDark: isDark),
                             fontWeight: FontWeight.w900,
                             fontSize: 12,
                             letterSpacing: 1.2,
@@ -282,7 +302,7 @@ class _SmartScaleCard extends StatelessWidget {
                         Text(
                           l10n.health_smart_scale_desc,
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.45),
+                            color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.45),
                             fontSize: 11,
                             height: 1.3,
                           ),
@@ -296,8 +316,8 @@ class _SmartScaleCard extends StatelessWidget {
                 const SizedBox(height: 16),
                 Text(
                   '${latestKg.toStringAsFixed(1)} kg',
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: HealthMetricColors.ink(cs, isDark: isDark),
                     fontWeight: FontWeight.w900,
                     fontSize: 28,
                     letterSpacing: -1,
@@ -306,7 +326,7 @@ class _SmartScaleCard extends StatelessWidget {
                 Text(
                   l10n.health_subtitle_current_weight.toUpperCase(),
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.35),
                     fontSize: 9,
                     fontWeight: FontWeight.w900,
                     letterSpacing: 1.5,
@@ -319,12 +339,12 @@ class _SmartScaleCard extends StatelessWidget {
                 child: FilledButton.icon(
                   onPressed: (syncing || isLoading) ? null : onSync,
                   icon: syncing || isLoading
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 18,
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.white,
+                            color: HealthMetricColors.ink(cs, isDark: isDark),
                           ),
                         )
                       : const Icon(Icons.sync_rounded, size: 18),
@@ -349,7 +369,7 @@ class _SmartScaleCard extends StatelessWidget {
                 Text(
                   l10n.health_smart_scale_desktop,
                   style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.35),
+                    color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.35),
                     fontSize: 10,
                   ),
                 ),
@@ -364,7 +384,13 @@ class _SmartScaleCard extends StatelessWidget {
 
 class _WeightListItem extends StatelessWidget {
   final HealthMetricsLocal metric;
-  const _WeightListItem({required this.metric});
+  final ColorScheme cs;
+  final bool isDark;
+  const _WeightListItem({
+    required this.metric,
+    required this.cs,
+    required this.isDark,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -377,9 +403,11 @@ class _WeightListItem extends StatelessWidget {
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.03),
+              color: HealthMetricColors.glassFill(cs, isDark: isDark, darkAlpha: 0.03),
               borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
+              border: Border.all(
+                color: HealthMetricColors.glassBorder(cs, isDark: isDark, darkAlpha: 0.05),
+              ),
             ),
             child: Row(
               children: [
@@ -404,8 +432,8 @@ class _WeightListItem extends StatelessWidget {
                         DateFormat(
                           'MMMM d, yyyy',
                         ).format(metric.date).toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white38,
+                        style: TextStyle(
+                          color: HealthMetricColors.faintInk(cs, isDark: isDark),
                           fontWeight: FontWeight.w900,
                           letterSpacing: 1,
                           fontSize: 10,
@@ -414,8 +442,8 @@ class _WeightListItem extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         "${(metric.weightKg ?? 0.0).toStringAsFixed(1)} kg",
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: HealthMetricColors.ink(cs, isDark: isDark),
                           fontWeight: FontWeight.w900,
                           fontSize: 24,
                           letterSpacing: -1,
@@ -424,7 +452,10 @@ class _WeightListItem extends StatelessWidget {
                     ],
                   ),
                 ),
-                const Icon(Icons.chevron_right_rounded, color: Colors.white12),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: HealthMetricColors.faintInk(cs, isDark: isDark, darkAlpha: 0.12),
+                ),
               ],
             ),
           ),

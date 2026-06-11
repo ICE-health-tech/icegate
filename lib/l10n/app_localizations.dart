@@ -242,6 +242,126 @@ abstract class AppLocalizations {
   /// **'Add reminder'**
   String get projects_calendar_add_reminder;
 
+  /// No description provided for @projects_calendar_add_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Add event'**
+  String get projects_calendar_add_event;
+
+  /// No description provided for @projects_calendar_event_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Event title'**
+  String get projects_calendar_event_title;
+
+  /// No description provided for @projects_calendar_event_title_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an event title'**
+  String get projects_calendar_event_title_required;
+
+  /// No description provided for @projects_calendar_event_start.
+  ///
+  /// In en, this message translates to:
+  /// **'Start'**
+  String get projects_calendar_event_start;
+
+  /// No description provided for @projects_calendar_event_end.
+  ///
+  /// In en, this message translates to:
+  /// **'End'**
+  String get projects_calendar_event_end;
+
+  /// No description provided for @projects_calendar_event_saved.
+  ///
+  /// In en, this message translates to:
+  /// **'Event saved to calendar'**
+  String get projects_calendar_event_saved;
+
+  /// No description provided for @projects_calendar_event_deleted.
+  ///
+  /// In en, this message translates to:
+  /// **'Event removed'**
+  String get projects_calendar_event_deleted;
+
+  /// No description provided for @projects_calendar_event_failed.
+  ///
+  /// In en, this message translates to:
+  /// **'Could not save event'**
+  String get projects_calendar_event_failed;
+
+  /// No description provided for @projects_calendar_edit_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit event'**
+  String get projects_calendar_edit_event;
+
+  /// No description provided for @projects_calendar_delete_event.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete event'**
+  String get projects_calendar_delete_event;
+
+  /// No description provided for @projects_calendar_edit_reminder.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit reminder'**
+  String get projects_calendar_edit_reminder;
+
+  /// No description provided for @projects_calendar_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save'**
+  String get projects_calendar_save;
+
+  /// No description provided for @projects_calendar_select_calendar.
+  ///
+  /// In en, this message translates to:
+  /// **'Calendar'**
+  String get projects_calendar_select_calendar;
+
+  /// No description provided for @projects_calendar_tap_day_add_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the selected day again to add an event'**
+  String get projects_calendar_tap_day_add_hint;
+
+  /// No description provided for @projects_calendar_hold_day_add_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Hold a day to add an event'**
+  String get projects_calendar_hold_day_add_hint;
+
+  /// No description provided for @projects_calendar_timeline_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No timed events this day'**
+  String get projects_calendar_timeline_empty;
+
+  /// No description provided for @projects_calendar_timeline_tap_slot.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap an hour row to add · tap an event to edit or delete'**
+  String get projects_calendar_timeline_tap_slot;
+
+  /// No description provided for @projects_calendar_timeline_remove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove from timeline'**
+  String get projects_calendar_timeline_remove;
+
+  /// No description provided for @projects_calendar_timeline_remove_confirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove \"{title}\" from this day\'s timeline?'**
+  String projects_calendar_timeline_remove_confirm(String title);
+
+  /// No description provided for @projects_calendar_day_timeline.
+  ///
+  /// In en, this message translates to:
+  /// **'Daily timeline'**
+  String get projects_calendar_day_timeline;
+
   /// No description provided for @projects_calendar_reminder_title.
   ///
   /// In en, this message translates to:
@@ -409,6 +529,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Health'**
   String get integration_hub_health_section;
+
+  /// No description provided for @integration_hub_notes_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Notes & documents'**
+  String get integration_hub_notes_section;
+
+  /// No description provided for @integration_hub_google_drive_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sync project notes and vault files from Google Drive.'**
+  String get integration_hub_google_drive_hint;
+
+  /// No description provided for @integration_hub_notion_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Import shared Notion pages and databases into your vault.'**
+  String get integration_hub_notion_hint;
 
   /// No description provided for @integration_hub_connect.
   ///
@@ -3488,6 +3626,72 @@ abstract class AppLocalizations {
   /// **'Focus areas'**
   String get mind_focus_title;
 
+  /// No description provided for @mind_focus_weekly_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Weekly focus'**
+  String get mind_focus_weekly_title;
+
+  /// No description provided for @mind_focus_monthly_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Monthly focus'**
+  String get mind_focus_monthly_title;
+
+  /// No description provided for @mind_focus_goal_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Goal: Lv. {level}'**
+  String mind_focus_goal_level(int level);
+
+  /// No description provided for @mind_focus_xp_progress.
+  ///
+  /// In en, this message translates to:
+  /// **'{current} / {cap} XP'**
+  String mind_focus_xp_progress(int current, int cap);
+
+  /// No description provided for @mind_focus_badge.
+  ///
+  /// In en, this message translates to:
+  /// **'FOCUS'**
+  String get mind_focus_badge;
+
+  /// No description provided for @mind_total_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Total level'**
+  String get mind_total_level;
+
+  /// No description provided for @mind_streak_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get mind_streak_label;
+
+  /// No description provided for @mind_streak_days.
+  ///
+  /// In en, this message translates to:
+  /// **'{days} days'**
+  String mind_streak_days(int days);
+
+  /// No description provided for @mind_streak_bonus.
+  ///
+  /// In en, this message translates to:
+  /// **'+15% EXP bonus'**
+  String get mind_streak_bonus;
+
+  /// No description provided for @mind_skill_tree_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill tree'**
+  String get mind_skill_tree_title;
+
+  /// No description provided for @mind_skill_certificates_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Certificates'**
+  String get mind_skill_certificates_title;
+
   /// No description provided for @mind_focus_subtitle.
   ///
   /// In en, this message translates to:
@@ -3644,6 +3848,18 @@ abstract class AppLocalizations {
   /// **'Start session'**
   String get mind_skills_session_start;
 
+  /// No description provided for @mind_skills_session_empty_month.
+  ///
+  /// In en, this message translates to:
+  /// **'No skill sessions this month yet.'**
+  String get mind_skills_session_empty_month;
+
+  /// No description provided for @mind_skills_session_skill_meta.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes}m'**
+  String mind_skills_session_skill_meta(int sessions, int minutes);
+
   /// No description provided for @mind_skills_session_empty.
   ///
   /// In en, this message translates to:
@@ -3733,6 +3949,186 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Session logged · {minutes} min · +{xp} XP'**
   String mind_skills_session_logged(int minutes, int xp);
+
+  /// No description provided for @mind_skills_celebration_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill proof saved'**
+  String get mind_skills_celebration_title;
+
+  /// No description provided for @mind_skills_celebration_proof.
+  ///
+  /// In en, this message translates to:
+  /// **'You focused {minutes} min and earned +{xp} XP — real practice on your record.'**
+  String mind_skills_celebration_proof(int minutes, int xp);
+
+  /// No description provided for @mind_skills_celebration_level_up.
+  ///
+  /// In en, this message translates to:
+  /// **'Level up: {skills}'**
+  String mind_skills_celebration_level_up(String skills);
+
+  /// No description provided for @mind_skills_celebration_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'{days}-day streak — keep the chain alive.'**
+  String mind_skills_celebration_streak(int days);
+
+  /// No description provided for @mind_skills_celebration_goal.
+  ///
+  /// In en, this message translates to:
+  /// **'Tomorrow’s you is built from sessions like this.'**
+  String get mind_skills_celebration_goal;
+
+  /// No description provided for @mind_skill_name_invalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Name must be 1–24 characters.'**
+  String get mind_skill_name_invalid;
+
+  /// No description provided for @mind_skill_name_duplicate.
+  ///
+  /// In en, this message translates to:
+  /// **'That skill already exists.'**
+  String get mind_skill_name_duplicate;
+
+  /// No description provided for @mind_skill_add_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add skill'**
+  String get mind_skill_add_title;
+
+  /// No description provided for @mind_skill_edit_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit skill'**
+  String get mind_skill_edit_title;
+
+  /// No description provided for @mind_skill_delete_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete skill?'**
+  String get mind_skill_delete_title;
+
+  /// No description provided for @mind_skill_delete_body.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove “{name}” from your library?'**
+  String mind_skill_delete_body(String name);
+
+  /// No description provided for @mind_skill_certificate_header.
+  ///
+  /// In en, this message translates to:
+  /// **'CERTIFICATE OF PRACTICE'**
+  String get mind_skill_certificate_header;
+
+  /// No description provided for @mind_skill_certificate_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital · verified progress'**
+  String get mind_skill_certificate_subtitle;
+
+  /// No description provided for @mind_skill_certificate_awarded_to.
+  ///
+  /// In en, this message translates to:
+  /// **'Awarded for sustained skill practice'**
+  String get mind_skill_certificate_awarded_to;
+
+  /// No description provided for @mind_skill_certificate_level.
+  ///
+  /// In en, this message translates to:
+  /// **'Rank'**
+  String get mind_skill_certificate_level;
+
+  /// No description provided for @mind_skill_certificate_xp.
+  ///
+  /// In en, this message translates to:
+  /// **'Experience'**
+  String get mind_skill_certificate_xp;
+
+  /// No description provided for @mind_skill_certificate_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Streak'**
+  String get mind_skill_certificate_streak;
+
+  /// No description provided for @mind_skill_certificate_proof.
+  ///
+  /// In en, this message translates to:
+  /// **'This record reflects real sessions logged in ice_gate — your proof of growth.'**
+  String get mind_skill_certificate_proof;
+
+  /// No description provided for @mind_skill_certificate_seal.
+  ///
+  /// In en, this message translates to:
+  /// **'ICEGATE SEAL'**
+  String get mind_skill_certificate_seal;
+
+  /// No description provided for @mind_skill_certificate_select_session.
+  ///
+  /// In en, this message translates to:
+  /// **'Select for session'**
+  String get mind_skill_certificate_select_session;
+
+  /// No description provided for @mind_skill_certificate_close.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get mind_skill_certificate_close;
+
+  /// No description provided for @mind_skill_certificate_created.
+  ///
+  /// In en, this message translates to:
+  /// **'Created'**
+  String get mind_skill_certificate_created;
+
+  /// No description provided for @mind_skill_certificate_updated.
+  ///
+  /// In en, this message translates to:
+  /// **'Last updated'**
+  String get mind_skill_certificate_updated;
+
+  /// No description provided for @mind_skill_certificate_description.
+  ///
+  /// In en, this message translates to:
+  /// **'Description'**
+  String get mind_skill_certificate_description;
+
+  /// No description provided for @mind_skill_certificate_description_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'What this skill means to you, or how you earned it…'**
+  String get mind_skill_certificate_description_hint;
+
+  /// No description provided for @mind_skill_certificate_edit.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit certificate'**
+  String get mind_skill_certificate_edit;
+
+  /// No description provided for @mind_skill_certificate_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save certificate'**
+  String get mind_skill_certificate_save;
+
+  /// No description provided for @mind_skill_certificates_table_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Practice certificates'**
+  String get mind_skill_certificates_table_title;
+
+  /// No description provided for @mind_skill_certificates_table_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'No skills in your library yet. Open Skills to start earning certificates.'**
+  String get mind_skill_certificates_table_empty;
+
+  /// No description provided for @mind_skill_certificates_col_skill.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill'**
+  String get mind_skill_certificates_col_skill;
 
   /// No description provided for @mood_trends_title.
   ///
@@ -3877,6 +4273,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Sentiment'**
   String get stat_sentiment;
+
+  /// No description provided for @stat_mind_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs (30d)'**
+  String get stat_mind_logs;
+
+  /// No description provided for @stat_active_days.
+  ///
+  /// In en, this message translates to:
+  /// **'Active days'**
+  String get stat_active_days;
+
+  /// No description provided for @stat_avg_mood.
+  ///
+  /// In en, this message translates to:
+  /// **'Avg mood'**
+  String get stat_avg_mood;
+
+  /// No description provided for @journal_hourly_logs.
+  ///
+  /// In en, this message translates to:
+  /// **'Logs by hour (today)'**
+  String get journal_hourly_logs;
+
+  /// No description provided for @mind_insights_skill_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill practice (30d)'**
+  String get mind_insights_skill_title;
+
+  /// No description provided for @mind_insights_skill_summary.
+  ///
+  /// In en, this message translates to:
+  /// **'{sessions} sessions · {minutes} min'**
+  String mind_insights_skill_summary(int sessions, int minutes);
+
+  /// No description provided for @mind_insights_top_skill_streak.
+  ///
+  /// In en, this message translates to:
+  /// **'Top streak · {skill} · {days}d'**
+  String mind_insights_top_skill_streak(String skill, int days);
+
+  /// No description provided for @mind_insights_open_notes.
+  ///
+  /// In en, this message translates to:
+  /// **'Mind notes'**
+  String get mind_insights_open_notes;
+
+  /// No description provided for @mind_insights_open_skills.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill certificates'**
+  String get mind_insights_open_skills;
 
   /// No description provided for @weekly_mood_trend.
   ///
@@ -5549,19 +5999,31 @@ abstract class AppLocalizations {
   /// No description provided for @project_auto_add_all_skills.
   ///
   /// In en, this message translates to:
-  /// **'Add all automatically'**
+  /// **'Create new skill'**
   String get project_auto_add_all_skills;
 
   /// No description provided for @project_auto_add_all_skills_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Link every skill from your Mind library to this project'**
+  /// **'Add a brand-new skill to Mind and this project'**
   String get project_auto_add_all_skills_subtitle;
+
+  /// No description provided for @project_skill_already_exists.
+  ///
+  /// In en, this message translates to:
+  /// **'That skill already exists'**
+  String get project_skill_already_exists;
+
+  /// No description provided for @project_skill_name_too_long.
+  ///
+  /// In en, this message translates to:
+  /// **'Skill name too long (max 24 characters)'**
+  String get project_skill_name_too_long;
 
   /// No description provided for @project_skills_all_on_project.
   ///
   /// In en, this message translates to:
-  /// **'All library skills are already on this project'**
+  /// **'All Mind skills are already on this project'**
   String get project_skills_all_on_project;
 
   /// No description provided for @project_skills_added_count.
@@ -6200,6 +6662,18 @@ abstract class AppLocalizations {
   /// **'I understand my account may not be fully erased from the server until backend deletion is enabled.'**
   String get delete_account_acknowledge;
 
+  /// No description provided for @delete_account_type_key_word.
+  ///
+  /// In en, this message translates to:
+  /// **'DELETE-ACCOUNT'**
+  String get delete_account_type_key_word;
+
+  /// No description provided for @delete_account_type_key_prompt.
+  ///
+  /// In en, this message translates to:
+  /// **'Type {word} to confirm:'**
+  String delete_account_type_key_prompt(String word);
+
   /// No description provided for @delete_account_confirm.
   ///
   /// In en, this message translates to:
@@ -6542,6 +7016,36 @@ abstract class AppLocalizations {
   /// **'Description (optional)'**
   String get finance_label_description_optional;
 
+  /// No description provided for @finance_txn_source_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid from'**
+  String get finance_txn_source_account;
+
+  /// No description provided for @finance_txn_source_account_none.
+  ///
+  /// In en, this message translates to:
+  /// **'Not specified'**
+  String get finance_txn_source_account_none;
+
+  /// No description provided for @finance_txn_source_account_empty.
+  ///
+  /// In en, this message translates to:
+  /// **'Save a wallet or account first, then choose it when logging spend.'**
+  String get finance_txn_source_account_empty;
+
+  /// No description provided for @finance_txn_source_account_add.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get finance_txn_source_account_add;
+
+  /// No description provided for @finance_txn_source_account_required.
+  ///
+  /// In en, this message translates to:
+  /// **'Choose which account this money left.'**
+  String get finance_txn_source_account_required;
+
   /// No description provided for @finance_recurring_income.
   ///
   /// In en, this message translates to:
@@ -6563,7 +7067,7 @@ abstract class AppLocalizations {
   /// No description provided for @finance_fixed_income_subtitle.
   ///
   /// In en, this message translates to:
-  /// **'Salary, rent received, and other steady income'**
+  /// **'Human capital (skills), salary, rent received, and other steady inflows'**
   String get finance_fixed_income_subtitle;
 
   /// No description provided for @finance_fixed_income_monthly_total.
@@ -6985,6 +7489,342 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'General'**
   String get finance_cat_general;
+
+  /// No description provided for @finance_cat_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_cat_human_capital;
+
+  /// No description provided for @finance_inflow_pillar_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_inflow_pillar_human_capital;
+
+  /// No description provided for @finance_inflow_pillar_liquidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity'**
+  String get finance_inflow_pillar_liquidity;
+
+  /// No description provided for @finance_inflow_pillar_fixed_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income'**
+  String get finance_inflow_pillar_fixed_income;
+
+  /// No description provided for @finance_inflow_pillar_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get finance_inflow_pillar_investment;
+
+  /// No description provided for @finance_inflow_pillar_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow'**
+  String get finance_inflow_pillar_cashflow;
+
+  /// No description provided for @finance_inflow_pillars_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Inflow layers'**
+  String get finance_inflow_pillars_title;
+
+  /// No description provided for @finance_inflow_pillars_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Skills & work, cash buffer, steady yield, growth assets, recurring systems'**
+  String get finance_inflow_pillars_subtitle;
+
+  /// No description provided for @finance_asset_pillars_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset layers'**
+  String get finance_asset_pillars_title;
+
+  /// No description provided for @finance_asset_pillars_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity, fixed income, investment, cashflow'**
+  String get finance_asset_pillars_subtitle;
+
+  /// No description provided for @finance_asset_pillar_liquidity.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity'**
+  String get finance_asset_pillar_liquidity;
+
+  /// No description provided for @finance_asset_pillar_fixed_income.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income'**
+  String get finance_asset_pillar_fixed_income;
+
+  /// No description provided for @finance_asset_pillar_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment'**
+  String get finance_asset_pillar_investment;
+
+  /// No description provided for @finance_asset_pillar_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow'**
+  String get finance_asset_pillar_cashflow;
+
+  /// No description provided for @finance_record_section_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Record'**
+  String get finance_record_section_title;
+
+  /// No description provided for @finance_record_section_subtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Add accounts, assets, human capital, and subscriptions'**
+  String get finance_record_section_subtitle;
+
+  /// No description provided for @finance_record_human_capital.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_record_human_capital;
+
+  /// No description provided for @finance_record_human_capital_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity (imputed value)'**
+  String get finance_record_human_capital_hint;
+
+  /// No description provided for @finance_record_liquidity_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity account'**
+  String get finance_record_liquidity_account;
+
+  /// No description provided for @finance_record_liquidity_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash, checking'**
+  String get finance_record_liquidity_hint;
+
+  /// No description provided for @finance_record_fixed_income_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Fixed income asset'**
+  String get finance_record_fixed_income_asset;
+
+  /// No description provided for @finance_record_fixed_income_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond, savings'**
+  String get finance_record_fixed_income_hint;
+
+  /// No description provided for @finance_record_investment_account.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment account'**
+  String get finance_record_investment_account;
+
+  /// No description provided for @finance_record_investment_account_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Broker, crypto wallet'**
+  String get finance_record_investment_account_hint;
+
+  /// No description provided for @finance_record_investment_holding.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment holding'**
+  String get finance_record_investment_holding;
+
+  /// No description provided for @finance_record_investment_holding_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock, crypto, real estate'**
+  String get finance_record_investment_holding_hint;
+
+  /// No description provided for @finance_account_type_checking.
+  ///
+  /// In en, this message translates to:
+  /// **'Checking'**
+  String get finance_account_type_checking;
+
+  /// No description provided for @finance_account_type_savings.
+  ///
+  /// In en, this message translates to:
+  /// **'Savings'**
+  String get finance_account_type_savings;
+
+  /// No description provided for @finance_account_type_cash.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash'**
+  String get finance_account_type_cash;
+
+  /// No description provided for @finance_account_type_credit_card.
+  ///
+  /// In en, this message translates to:
+  /// **'Credit card'**
+  String get finance_account_type_credit_card;
+
+  /// No description provided for @finance_account_type_deposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Term deposit'**
+  String get finance_account_type_deposit;
+
+  /// No description provided for @finance_account_type_investment.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment account'**
+  String get finance_account_type_investment;
+
+  /// No description provided for @finance_add_account_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add account'**
+  String get finance_add_account_title;
+
+  /// No description provided for @finance_account_type_section.
+  ///
+  /// In en, this message translates to:
+  /// **'Account type'**
+  String get finance_account_type_section;
+
+  /// No description provided for @finance_accounts_liquidity_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Liquidity accounts'**
+  String get finance_accounts_liquidity_title;
+
+  /// No description provided for @finance_accounts_investment_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Investment accounts'**
+  String get finance_accounts_investment_title;
+
+  /// No description provided for @finance_account_investment_name_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'e.g. VNDirect, SSI, Binance'**
+  String get finance_account_investment_name_hint;
+
+  /// No description provided for @finance_record_cashflow_asset.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow asset'**
+  String get finance_record_cashflow_asset;
+
+  /// No description provided for @finance_record_cashflow_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'SaaS, recurring system'**
+  String get finance_record_cashflow_hint;
+
+  /// No description provided for @finance_record_subscription.
+  ///
+  /// In en, this message translates to:
+  /// **'Subscription'**
+  String get finance_record_subscription;
+
+  /// No description provided for @finance_record_subscription_hint.
+  ///
+  /// In en, this message translates to:
+  /// **'Recurring expense'**
+  String get finance_record_subscription_hint;
+
+  /// No description provided for @finance_hc_capacity_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity'**
+  String get finance_hc_capacity_label;
+
+  /// No description provided for @finance_hc_realized_label.
+  ///
+  /// In en, this message translates to:
+  /// **'Received'**
+  String get finance_hc_realized_label;
+
+  /// No description provided for @finance_hc_gap_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Human capital'**
+  String get finance_hc_gap_title;
+
+  /// No description provided for @finance_hc_gap_message.
+  ///
+  /// In en, this message translates to:
+  /// **'Capacity {capacity} · received {received} · gap {gap}'**
+  String finance_hc_gap_message(String capacity, String received, String gap);
+
+  /// No description provided for @finance_add_asset_title.
+  ///
+  /// In en, this message translates to:
+  /// **'Add asset'**
+  String get finance_add_asset_title;
+
+  /// No description provided for @finance_add_asset_category.
+  ///
+  /// In en, this message translates to:
+  /// **'Asset type'**
+  String get finance_add_asset_category;
+
+  /// No description provided for @finance_add_asset_name.
+  ///
+  /// In en, this message translates to:
+  /// **'Name / symbol'**
+  String get finance_add_asset_name;
+
+  /// No description provided for @finance_add_asset_value.
+  ///
+  /// In en, this message translates to:
+  /// **'Estimated value'**
+  String get finance_add_asset_value;
+
+  /// No description provided for @finance_add_asset_save.
+  ///
+  /// In en, this message translates to:
+  /// **'Save asset'**
+  String get finance_add_asset_save;
+
+  /// No description provided for @finance_asset_cat_stock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stock'**
+  String get finance_asset_cat_stock;
+
+  /// No description provided for @finance_asset_cat_crypto.
+  ///
+  /// In en, this message translates to:
+  /// **'Crypto'**
+  String get finance_asset_cat_crypto;
+
+  /// No description provided for @finance_asset_cat_bond.
+  ///
+  /// In en, this message translates to:
+  /// **'Bond'**
+  String get finance_asset_cat_bond;
+
+  /// No description provided for @finance_asset_cat_deposit.
+  ///
+  /// In en, this message translates to:
+  /// **'Deposit'**
+  String get finance_asset_cat_deposit;
+
+  /// No description provided for @finance_asset_cat_real_estate.
+  ///
+  /// In en, this message translates to:
+  /// **'Real estate'**
+  String get finance_asset_cat_real_estate;
+
+  /// No description provided for @finance_asset_cat_cashflow.
+  ///
+  /// In en, this message translates to:
+  /// **'Cashflow (SaaS)'**
+  String get finance_asset_cat_cashflow;
 
   /// No description provided for @finance_cat_salary.
   ///

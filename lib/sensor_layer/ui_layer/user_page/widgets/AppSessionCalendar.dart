@@ -9,6 +9,8 @@ class AppSessionCalendar extends StatelessWidget {
     required this.selectedDay,
     required this.onMonthChanged,
     required this.onDaySelected,
+    this.onDayLongPress,
+    this.onDaySecondaryTap,
     this.accentColor,
     this.outerDecoration,
   });
@@ -18,6 +20,8 @@ class AppSessionCalendar extends StatelessWidget {
   final DateTime selectedDay;
   final ValueChanged<DateTime> onMonthChanged;
   final ValueChanged<DateTime> onDaySelected;
+  final ValueChanged<DateTime>? onDayLongPress;
+  final ValueChanged<DateTime>? onDaySecondaryTap;
   final Color? accentColor;
   final BoxDecoration? outerDecoration;
 
@@ -127,11 +131,17 @@ class AppSessionCalendar extends StatelessWidget {
               final isToday = _dateOnly(date) == today;
               final isSelected = _dateOnly(date) == selected;
 
-              return Material(
+              return GestureDetector(
+                onSecondaryTap: onDaySecondaryTap != null
+                    ? () => onDaySecondaryTap!(date)
+                    : null,
+                child: Material(
                 color: Colors.transparent,
                 child: InkWell(
                   borderRadius: BorderRadius.circular(12),
                   onTap: () => onDaySelected(date),
+                  onLongPress:
+                      onDayLongPress != null ? () => onDayLongPress!(date) : null,
                   child: DecoratedBox(
                     decoration: BoxDecoration(
                       color: isSelected
@@ -167,6 +177,7 @@ class AppSessionCalendar extends StatelessWidget {
                     ),
                   ),
                 ),
+              ),
               );
             },
           ),

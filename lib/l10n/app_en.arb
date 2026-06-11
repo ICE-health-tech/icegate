@@ -33,6 +33,33 @@
   "projects_calendar_insufficient_scopes": "Calendar access was not granted. Disconnect Google, connect again, and accept all permissions.",
   "projects_calendar_connect_hint": "Sign in with Google to sync all your Google calendars to the Calendar screen.",
   "projects_calendar_add_reminder": "Add reminder",
+  "projects_calendar_add_event": "Add event",
+  "projects_calendar_event_title": "Event title",
+  "projects_calendar_event_title_required": "Enter an event title",
+  "projects_calendar_event_start": "Start",
+  "projects_calendar_event_end": "End",
+  "projects_calendar_event_saved": "Event saved to calendar",
+  "projects_calendar_event_deleted": "Event removed",
+  "projects_calendar_event_failed": "Could not save event",
+  "projects_calendar_edit_event": "Edit event",
+  "projects_calendar_delete_event": "Delete event",
+  "projects_calendar_edit_reminder": "Edit reminder",
+  "projects_calendar_save": "Save",
+  "projects_calendar_select_calendar": "Calendar",
+  "projects_calendar_tap_day_add_hint": "Tap the selected day again to add an event",
+  "projects_calendar_hold_day_add_hint": "Hold a day to add an event",
+  "projects_calendar_timeline_empty": "No timed events this day",
+  "projects_calendar_timeline_tap_slot": "Tap an hour row to add · tap an event to edit or delete",
+  "projects_calendar_timeline_remove": "Remove from timeline",
+  "projects_calendar_timeline_remove_confirm": "Remove \"{title}\" from this day's timeline?",
+  "@projects_calendar_timeline_remove_confirm": {
+    "placeholders": {
+      "title": {
+        "type": "String"
+      }
+    }
+  },
+  "projects_calendar_day_timeline": "Daily timeline",
   "projects_calendar_reminder_title": "Reminder title",
   "projects_calendar_sync_google": "Sync events",
   "projects_calendar_all_day": "All day",
@@ -66,6 +93,9 @@
   "projects_calendar_sync_empty_month": "Connected — no events this month. Try another month or check Google Calendar.",
   "integration_hub_calendars_section": "Calendars",
   "integration_hub_health_section": "Health",
+  "integration_hub_notes_section": "Notes & documents",
+  "integration_hub_google_drive_hint": "Sync project notes and vault files from Google Drive.",
+  "integration_hub_notion_hint": "Import shared Notion pages and databases into your vault.",
   "integration_hub_connect": "Connect",
   "integration_hub_status_connected": "Connected",
   "integration_hub_apple_health": "Apple Health",
@@ -823,6 +853,29 @@
   "mind_focus_none": "Not set",
   "mind_quick_entry_hint": "What's on your mind?",
   "mind_focus_title": "Focus areas",
+  "mind_focus_weekly_title": "Weekly focus",
+  "mind_focus_monthly_title": "Monthly focus",
+  "mind_focus_goal_level": "Goal: Lv. {level}",
+  "@mind_focus_goal_level": {
+    "placeholders": { "level": { "type": "int" } }
+  },
+  "mind_focus_xp_progress": "{current} / {cap} XP",
+  "@mind_focus_xp_progress": {
+    "placeholders": {
+      "current": { "type": "int" },
+      "cap": { "type": "int" }
+    }
+  },
+  "mind_focus_badge": "FOCUS",
+  "mind_total_level": "Total level",
+  "mind_streak_label": "Streak",
+  "mind_streak_days": "{days} days",
+  "@mind_streak_days": {
+    "placeholders": { "days": { "type": "int" } }
+  },
+  "mind_streak_bonus": "+15% EXP bonus",
+  "mind_skill_tree_title": "Skill tree",
+  "mind_skill_certificates_title": "Certificates",
   "mind_focus_subtitle": "Define weekly trends so you know where to put your energy.",
   "mind_focus_empty": "No focus areas yet. Start from a template or create your own.",
   "mind_focus_add": "New focus area",
@@ -863,6 +916,14 @@
   "mind_skills_session_title": "Skill session",
   "mind_skills_session_subtitle": "Pick skills, run a focus block, log what you learned.",
   "mind_skills_session_start": "Start session",
+  "mind_skills_session_empty_month": "No skill sessions this month yet.",
+  "mind_skills_session_skill_meta": "{sessions} sessions · {minutes}m",
+  "@mind_skills_session_skill_meta": {
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
   "mind_skills_session_empty": "No skill sessions in the last {days} days.",
   "@mind_skills_session_empty": {
     "placeholders": {
@@ -913,6 +974,57 @@
       }
     }
   },
+  "mind_skills_celebration_title": "Skill proof saved",
+  "mind_skills_celebration_proof": "You focused {minutes} min and earned +{xp} XP — real practice on your record.",
+  "@mind_skills_celebration_proof": {
+    "placeholders": {
+      "minutes": { "type": "int" },
+      "xp": { "type": "int" }
+    }
+  },
+  "mind_skills_celebration_level_up": "Level up: {skills}",
+  "@mind_skills_celebration_level_up": {
+    "placeholders": {
+      "skills": { "type": "String" }
+    }
+  },
+  "mind_skills_celebration_streak": "{days}-day streak — keep the chain alive.",
+  "@mind_skills_celebration_streak": {
+    "placeholders": {
+      "days": { "type": "int" }
+    }
+  },
+  "mind_skills_celebration_goal": "Tomorrow’s you is built from sessions like this.",
+  "mind_skill_name_invalid": "Name must be 1–24 characters.",
+  "mind_skill_name_duplicate": "That skill already exists.",
+  "mind_skill_add_title": "Add skill",
+  "mind_skill_edit_title": "Edit skill",
+  "mind_skill_delete_title": "Delete skill?",
+  "mind_skill_delete_body": "Remove “{name}” from your library?",
+  "@mind_skill_delete_body": {
+    "placeholders": {
+      "name": { "type": "String" }
+    }
+  },
+  "mind_skill_certificate_header": "CERTIFICATE OF PRACTICE",
+  "mind_skill_certificate_subtitle": "Human capital · verified progress",
+  "mind_skill_certificate_awarded_to": "Awarded for sustained skill practice",
+  "mind_skill_certificate_level": "Rank",
+  "mind_skill_certificate_xp": "Experience",
+  "mind_skill_certificate_streak": "Streak",
+  "mind_skill_certificate_proof": "This record reflects real sessions logged in ice_gate — your proof of growth.",
+  "mind_skill_certificate_seal": "ICEGATE SEAL",
+  "mind_skill_certificate_select_session": "Select for session",
+  "mind_skill_certificate_close": "Close",
+  "mind_skill_certificate_created": "Created",
+  "mind_skill_certificate_updated": "Last updated",
+  "mind_skill_certificate_description": "Description",
+  "mind_skill_certificate_description_hint": "What this skill means to you, or how you earned it…",
+  "mind_skill_certificate_edit": "Edit certificate",
+  "mind_skill_certificate_save": "Save certificate",
+  "mind_skill_certificates_table_title": "Practice certificates",
+  "mind_skill_certificates_table_empty": "No skills in your library yet. Open Skills to start earning certificates.",
+  "mind_skill_certificates_col_skill": "Skill",
   "mood_trends_title": "Mood Trends",
   "social_notes_title": "Social Notes",
   "social_empty_state_title": "Your story begins here",
@@ -944,6 +1056,27 @@
   "stat_entries": "Entries",
   "stat_images": "Images",
   "stat_sentiment": "Sentiment",
+  "stat_mind_logs": "Logs (30d)",
+  "stat_active_days": "Active days",
+  "stat_avg_mood": "Avg mood",
+  "journal_hourly_logs": "Logs by hour (today)",
+  "mind_insights_skill_title": "Skill practice (30d)",
+  "mind_insights_skill_summary": "{sessions} sessions · {minutes} min",
+  "@mind_insights_skill_summary": {
+    "placeholders": {
+      "sessions": { "type": "int" },
+      "minutes": { "type": "int" }
+    }
+  },
+  "mind_insights_top_skill_streak": "Top streak · {skill} · {days}d",
+  "@mind_insights_top_skill_streak": {
+    "placeholders": {
+      "skill": { "type": "String" },
+      "days": { "type": "int" }
+    }
+  },
+  "mind_insights_open_notes": "Mind notes",
+  "mind_insights_open_skills": "Skill certificates",
   "weekly_mood_trend": "Weekly Mood Trend",
   "no_records_last_7_days": "No records for the last 7 days",
   "frequent_activities": "Frequent Activities",
@@ -1397,9 +1530,11 @@
     }
   },
   "project_skill_catalog_hint": "Pick from the same skills as Mind → Skills tiles.",
-  "project_auto_add_all_skills": "Add all automatically",
-  "project_auto_add_all_skills_subtitle": "Link every skill from your Mind library to this project",
-  "project_skills_all_on_project": "All library skills are already on this project",
+  "project_auto_add_all_skills": "Create new skill",
+  "project_auto_add_all_skills_subtitle": "Add a brand-new skill to Mind and this project",
+  "project_skill_already_exists": "That skill already exists",
+  "project_skill_name_too_long": "Skill name too long (max 24 characters)",
+  "project_skills_all_on_project": "All Mind skills are already on this project",
   "project_skills_added_count": "{count, plural, one{1 skill added} other{{count} skills added}}",
   "@project_skills_added_count": {
     "placeholders": {
@@ -1596,6 +1731,15 @@
   "delete_account_plan_step2": "If your project deploys the Supabase Edge Function \"delete-account\", your auth user and linked rows can be removed server-side.",
   "delete_account_plan_step3": "Until that endpoint exists, cloud data may remain — contact support or use the dashboard to request full erasure under applicable privacy laws.",
   "delete_account_acknowledge": "I understand my account may not be fully erased from the server until backend deletion is enabled.",
+  "delete_account_type_key_word": "DELETE-ACCOUNT",
+  "delete_account_type_key_prompt": "Type {word} to confirm:",
+  "@delete_account_type_key_prompt": {
+    "placeholders": {
+      "word": {
+        "type": "String"
+      }
+    }
+  },
   "delete_account_confirm": "Delete and sign out",
   "delete_account_cancel": "Cancel",
   "delete_account_success": "You have been signed out. Complete cloud deletion may take up to 48 hours once enabled.",
@@ -1670,10 +1814,15 @@
   "finance_label_amount": "Amount",
   "finance_label_category": "Category",
   "finance_label_description_optional": "Description (optional)",
+  "finance_txn_source_account": "Paid from",
+  "finance_txn_source_account_none": "Not specified",
+  "finance_txn_source_account_empty": "Save a wallet or account first, then choose it when logging spend.",
+  "finance_txn_source_account_add": "Add account",
+  "finance_txn_source_account_required": "Choose which account this money left.",
   "finance_recurring_income": "Recurring income",
   "finance_recurring_interval": "Repeat every",
   "finance_fixed_income_title": "Fixed income",
-  "finance_fixed_income_subtitle": "Salary, rent received, and other steady income",
+  "finance_fixed_income_subtitle": "Human capital (skills), salary, rent received, and other steady inflows",
   "finance_fixed_income_monthly_total": "Monthly total",
   "finance_fixed_income_empty": "No fixed income yet",
   "finance_fixed_income_add": "Add fixed income",
@@ -1818,6 +1967,69 @@
   "finance_cat_education": "Education",
   "finance_cat_investing": "Investing",
   "finance_cat_general": "General",
+  "finance_cat_human_capital": "Human capital",
+  "finance_inflow_pillar_human_capital": "Human capital",
+  "finance_inflow_pillar_liquidity": "Liquidity",
+  "finance_inflow_pillar_fixed_income": "Fixed income",
+  "finance_inflow_pillar_investment": "Investment",
+  "finance_inflow_pillar_cashflow": "Cashflow",
+  "finance_inflow_pillars_title": "Inflow layers",
+  "finance_inflow_pillars_subtitle": "Skills & work, cash buffer, steady yield, growth assets, recurring systems",
+  "finance_asset_pillars_title": "Asset layers",
+  "finance_asset_pillars_subtitle": "Liquidity, fixed income, investment, cashflow",
+  "finance_asset_pillar_liquidity": "Liquidity",
+  "finance_asset_pillar_fixed_income": "Fixed income",
+  "finance_asset_pillar_investment": "Investment",
+  "finance_asset_pillar_cashflow": "Cashflow",
+  "finance_record_section_title": "Record",
+  "finance_record_section_subtitle": "Add accounts, assets, human capital, and subscriptions",
+  "finance_record_human_capital": "Human capital",
+  "finance_record_human_capital_hint": "Capacity (imputed value)",
+  "finance_record_liquidity_account": "Liquidity account",
+  "finance_record_liquidity_hint": "Cash, checking",
+  "finance_record_fixed_income_asset": "Fixed income asset",
+  "finance_record_fixed_income_hint": "Bond, savings",
+  "finance_record_investment_account": "Investment account",
+  "finance_record_investment_account_hint": "Broker, crypto wallet",
+  "finance_record_investment_holding": "Investment holding",
+  "finance_record_investment_holding_hint": "Stock, crypto, real estate",
+  "finance_account_type_checking": "Checking",
+  "finance_account_type_savings": "Savings",
+  "finance_account_type_cash": "Cash",
+  "finance_account_type_credit_card": "Credit card",
+  "finance_account_type_deposit": "Term deposit",
+  "finance_account_type_investment": "Investment account",
+  "finance_add_account_title": "Add account",
+  "finance_account_type_section": "Account type",
+  "finance_accounts_liquidity_title": "Liquidity accounts",
+  "finance_accounts_investment_title": "Investment accounts",
+  "finance_account_investment_name_hint": "e.g. VNDirect, SSI, Binance",
+  "finance_record_cashflow_asset": "Cashflow asset",
+  "finance_record_cashflow_hint": "SaaS, recurring system",
+  "finance_record_subscription": "Subscription",
+  "finance_record_subscription_hint": "Recurring expense",
+  "finance_hc_capacity_label": "Capacity",
+  "finance_hc_realized_label": "Received",
+  "finance_hc_gap_title": "Human capital",
+  "finance_hc_gap_message": "Capacity {capacity} · received {received} · gap {gap}",
+  "@finance_hc_gap_message": {
+    "placeholders": {
+      "capacity": {"type": "String"},
+      "received": {"type": "String"},
+      "gap": {"type": "String"}
+    }
+  },
+  "finance_add_asset_title": "Add asset",
+  "finance_add_asset_category": "Asset type",
+  "finance_add_asset_name": "Name / symbol",
+  "finance_add_asset_value": "Estimated value",
+  "finance_add_asset_save": "Save asset",
+  "finance_asset_cat_stock": "Stock",
+  "finance_asset_cat_crypto": "Crypto",
+  "finance_asset_cat_bond": "Bond",
+  "finance_asset_cat_deposit": "Deposit",
+  "finance_asset_cat_real_estate": "Real estate",
+  "finance_asset_cat_cashflow": "Cashflow (SaaS)",
   "finance_cat_salary": "Salary",
   "finance_cat_freelance": "Freelance",
   "finance_cat_investment": "Investment",

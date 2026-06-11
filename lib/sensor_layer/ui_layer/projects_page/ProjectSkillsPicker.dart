@@ -8,11 +8,34 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:signals_flutter/signals_flutter.dart';
 
-Future<List<String>> _loadMindCustomSkillNames(String personId) async {
-  if (personId.isEmpty) return const [];
+class _MindSkillPickerPrefs {
+  const _MindSkillPickerPrefs({
+    required this.customSkills,
+    required this.hiddenDefaultSkillsLower,
+  });
+
+  final List<String> customSkills;
+  final List<String> hiddenDefaultSkillsLower;
+}
+
+Future<_MindSkillPickerPrefs> _loadMindSkillPickerPrefs(String personId) async {
+  if (personId.isEmpty) {
+    return const _MindSkillPickerPrefs(
+      customSkills: [],
+      hiddenDefaultSkillsLower: [],
+    );
+  }
   final prefs = await SharedPreferences.getInstance();
-  return MindSkillCatalog.dedupeNames(
-    prefs.getStringList('mind_custom_skills_$personId') ?? const [],
+  return _MindSkillPickerPrefs(
+    customSkills: MindSkillCatalog.dedupeNames(
+      prefs.getStringList('mind_custom_skills_$personId') ?? const [],
+    ),
+    hiddenDefaultSkillsLower: (prefs
+                .getStringList('mind_hidden_default_skills_$personId') ??
+            const [])
+        .map((s) => s.toLowerCase().trim())
+        .where((s) => s.isNotEmpty)
+        .toList(),
   );
 }
 
@@ -56,40 +79,104 @@ void showProjectSkillsPicker(
     builder: (sheetContext) {
       final maxSheetHeight = MediaQuery.sizeOf(sheetContext).height * 0.82;
 
-      return FutureBuilder<List<String>>(
-        future: _loadMindCustomSkillNames(personId),
-        builder: (context, customSnap) {
+      return FutureBuilder<_MindSkillPickerPrefs>(
+        future: _loadMindSkillPickerPrefs(personId),
+        builder: (context, prefsSnap) {
+          var customSkills = prefsSnap.data?.customSkills ?? const <String>[];
+          final hiddenDefaults =
+              prefsSnap.data?.hiddenDefaultSkillsLower ?? const <String>[];
+
           return StatefulBuilder(
             builder: (context, setSheetState) {
               final cs = Theme.of(sheetContext).colorScheme;
-              final catalog = growthBlock.skillNamesForPicker(
-                extra: customSnap.data ?? const [],
-              );
 
-              Future<void> autoAddAll() async {
-                final pending = catalog
-                    .where((n) => !existing.contains(n.toLowerCase()))
-                    .toList();
-                if (pending.isEmpty) {
+              List<String> visibleSkills() {
+                return growthBlock.mindVisibleSkillNames(
+                  customSkills: customSkills,
+                  hiddenDefaultSkillsLower: hiddenDefaults,
+                );
+              }
+
+              Future<void> promptCreateNewSkill() async {
+                final controller = TextEditingController();
+                final name = await showDialog<String>(
+                  context: sheetContext,
+                  useRootNavigator: true,
+                  builder: (dialogContext) {
+                    return AlertDialog(
+                      title: Text(l10n.project_auto_add_all_skills),
+                      content: TextField(
+                        controller: controller,
+                        autofocus: true,
+                        textInputAction: TextInputAction.done,
+                        decoration: InputDecoration(
+                          hintText: l10n.project_skill_name_hint,
+                        ),
+                        onSubmitted: (_) => Navigator.of(dialogContext)
+                            .pop(controller.text.trim()),
+                      ),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Navigator.of(dialogContext).pop(),
+                          child: Text(l10n.cancel),
+                        ),
+                        FilledButton(
+                          onPressed: () => Navigator.of(dialogContext)
+                              .pop(controller.text.trim()),
+                          child: Text(l10n.add),
+                        ),
+                      ],
+                    );
+                  },
+                );
+                controller.dispose();
+
+                final normalized =
+                    (name ?? '').trim().replaceAll(RegExp(r'\s+'), ' ');
+                if (normalized.isEmpty) return;
+
+                if (normalized.length > 24) {
                   if (sheetContext.mounted) {
                     ScaffoldMessenger.of(sheetContext).showSnackBar(
                       SnackBar(
-                        content: Text(l10n.project_skills_all_on_project),
+                        content: Text(l10n.project_skill_name_too_long),
                         behavior: SnackBarBehavior.floating,
                       ),
                     );
                   }
                   return;
                 }
-                final added = await attachSkills(pending);
-                setSheetState(() => picked.clear());
-                if (sheetContext.mounted) {
-                  Navigator.pop(sheetContext);
+
+                if (visibleSkills().any(
+                  (s) => MindSkillCatalog.namesMatch(s, normalized),
+                )) {
+                  if (sheetContext.mounted) {
+                    ScaffoldMessenger.of(sheetContext).showSnackBar(
+                      SnackBar(
+                        content: Text(l10n.project_skill_already_exists),
+                        behavior: SnackBarBehavior.floating,
+                      ),
+                    );
+                  }
+                  return;
                 }
-                if (context.mounted && added > 0) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+
+                customSkills =
+                    await growthBlock.appendCustomMindSkill(normalized);
+                if (!existing.contains(normalized.toLowerCase())) {
+                  await growthBlock.createProjectSkill(
+                    projectId,
+                    normalized,
+                    altProjectId: altProjectId,
+                  );
+                  existing.add(normalized.toLowerCase());
+                }
+                setSheetState(() => picked.add(normalized));
+
+                if (sheetContext.mounted) {
+                  ScaffoldMessenger.of(sheetContext).showSnackBar(
                     SnackBar(
-                      content: Text(l10n.project_skills_added_count(added)),
+                      content: Text(l10n.project_skill_added),
                       behavior: SnackBarBehavior.floating,
                     ),
                   );
@@ -130,12 +217,12 @@ void showProjectSkillsPicker(
                           ),
                           const SizedBox(height: 12),
                           OutlinedButton.icon(
-                            onPressed: customSnap.connectionState ==
+                            onPressed: prefsSnap.connectionState ==
                                     ConnectionState.waiting
                                 ? null
-                                : autoAddAll,
+                                : promptCreateNewSkill,
                             icon: const Icon(
-                              Icons.auto_awesome_rounded,
+                              Icons.add_circle_outline_rounded,
                               size: 18,
                             ),
                             label: Text(l10n.project_auto_add_all_skills),
@@ -162,7 +249,7 @@ void showProjectSkillsPicker(
                             ),
                           ),
                           const SizedBox(height: 12),
-                          if (customSnap.connectionState ==
+                          if (prefsSnap.connectionState ==
                               ConnectionState.waiting)
                             const Center(
                               child: Padding(
@@ -172,9 +259,7 @@ void showProjectSkillsPicker(
                             )
                           else
                             Watch((context) {
-                              final names = growthBlock.skillNamesForPicker(
-                                extra: customSnap.data ?? const [],
-                              );
+                              final names = visibleSkills();
                               return Wrap(
                                 spacing: 8,
                                 runSpacing: 8,

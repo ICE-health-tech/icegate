@@ -586,11 +586,18 @@ class CursorHubSliver extends StatelessWidget {
 
   final bool compact;
 
+  /// Matches [MainShell] island slot: SafeArea top + 54px bar.
+  static double mainShellTopInset(BuildContext context, {double gap = 12}) {
+    const islandSlotHeight = 54.0;
+    return MediaQuery.paddingOf(context).top + islandSlotHeight + gap;
+  }
+
   @override
   Widget build(BuildContext context) {
+    final top = compact ? mainShellTopInset(context) : 0.0;
     return SliverToBoxAdapter(
       child: Padding(
-        padding: EdgeInsets.fromLTRB(16, compact ? 16 : 0, 16, 0),
+        padding: EdgeInsets.fromLTRB(16, top, 16, 0),
         child: CursorHubPanel(compact: compact),
       ),
     );

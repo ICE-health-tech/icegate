@@ -4,6 +4,7 @@ import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/FinanceBlock.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/animation_page/components/EntryConstants.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceSurface.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinanceInflowPillars.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/FinancePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceCurrencyToggle.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/finance_page/widgets/FinanceEntryInsightPanel.dart';
@@ -14,6 +15,7 @@ void showFixedIncomeEditor(
   BuildContext context,
   FinanceBlock financeBlock, {
   RecurringIncomeData? income,
+  String? initialCategory,
 }) {
   final l10n = AppLocalizations.of(context)!;
   final isEdit = income != null;
@@ -28,7 +30,8 @@ void showFixedIncomeEditor(
         .toStringAsFixed(financeBlock.useVnd.value ? 0 : 2);
   }
   final amountController = TextEditingController(text: initialAmount);
-  String selectedCategory = income?.category ?? 'salary';
+  String selectedCategory =
+      income?.category ?? initialCategory ?? 'human_capital';
   String selectedInterval = income?.interval ?? 'monthly';
 
   showModalBottomSheet(
@@ -239,12 +242,14 @@ Widget _categoryPicker(
   AppLocalizations l10n,
   ValueChanged<String> onChanged,
 ) {
-  const keys = ['salary', 'freelance', 'investment', 'gift', 'bonus', 'rent'];
   return _dropdown<String>(
-    value: keys.contains(value) ? value : 'salary',
+    value: financeIncomeCategoryKeys.contains(value)
+        ? value
+        : 'human_capital',
     label: l10n.finance_label_category,
     items: {
-      for (final k in keys) k: FinancePage.getCategoryName(l10n, k),
+      for (final k in financeIncomeCategoryKeys)
+        k: financeIncomeCategoryLabel(l10n, k),
     },
     onChanged: onChanged,
   );

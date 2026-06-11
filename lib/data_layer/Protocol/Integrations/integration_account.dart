@@ -35,9 +35,10 @@ class IntegrationAccount {
     return IntegrationAccount(
       id: row.id,
       personId: row.personId,
-      domain: row.domain == 'health'
-          ? IntegrationDomain.health
-          : IntegrationDomain.calendar,
+      domain: IntegrationDomain.values.firstWhere(
+        (d) => d.name == row.domain,
+        orElse: () => IntegrationDomain.calendar,
+      ),
       provider: IntegrationProviderId.values.firstWhere(
         (p) => p.storageKey == row.provider,
         orElse: () => IntegrationProviderId.googleCalendar,

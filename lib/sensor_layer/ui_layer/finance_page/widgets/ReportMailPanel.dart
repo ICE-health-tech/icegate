@@ -2,6 +2,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/l10n/app_localizations.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/User/ConfigBlock.dart';
 import 'package:ice_gate/orchestration_layer/ReactiveBlock/Project/ProjectBlock.dart';
@@ -36,6 +37,7 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
   bool _loadingRecipient = true;
   bool _sending = false;
   String? _profileEmail;
+  List<String> _userEmails = [];
 
   @override
   void initState() {
@@ -51,7 +53,18 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
 
   Future<void> _loadRecipient() async {
     final personBlock = context.read<PersonBlock>();
-    final defaultEmail = ReportRecipientResolver.profileEmail(personBlock);
+    final personId = personBlock.currentPersonID.value ?? '';
+    final stored = personId.isEmpty
+        ? <EmailAddressData>[]
+        : await context
+            .read<AppDatabase>()
+            .personManagementDAO
+            .getEmailsForPerson(personId);
+    final userEmails = ReportRecipientResolver.userEmailCandidates(
+      personBlock,
+      stored: stored,
+    );
+    final defaultEmail = userEmails.isNotEmpty ? userEmails.first : null;
     final saved = (await ReportRecipientPrefs.getRecipient())?.trim();
     if (saved != null &&
         saved.isNotEmpty &&
@@ -63,10 +76,16 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
         ReportRecipientResolver.isValidEmail(saved);
     if (!mounted) return;
     setState(() {
+      _userEmails = userEmails;
       _profileEmail = defaultEmail;
       _recipientController.text = savedValid ? saved : (defaultEmail ?? '');
       _loadingRecipient = false;
     });
+  }
+
+  void _selectUserEmail(String email) {
+    setState(() => _recipientController.text = email);
+    _saveRecipient();
   }
 
   Future<void> _saveRecipient() async {
@@ -348,7 +367,39 @@ class _ReportMailPanelState extends State<ReportMailPanel> {
                   ),
                   onSubmitted: (_) => _saveRecipient(),
                 ),
-              if (_profileEmail != null && _profileEmail!.isNotEmpty) ...[
+              if (_userEmails.length > 1) ...[
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: _userEmails.map((email) {
+                    final selected =
+                        _recipientController.text.trim().toLowerCase() ==
+                            email.toLowerCase();
+                    return FilterChip(
+                      label: Text(
+                        email,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: selected
+                              ? EntryColors.deepGlacier
+                              : Colors.white.withValues(alpha: 0.85),
+                        ),
+                      ),
+                      selected: selected,
+                      onSelected: (_) => _selectUserEmail(email),
+                      selectedColor:
+                          EntryColors.financeSilverAccent.withValues(alpha: 0.9),
+                      backgroundColor:
+                          EntryColors.deepGlacier.withValues(alpha: 0.55),
+                      side: BorderSide(
+                        color: Colors.white.withValues(alpha: 0.12),
+                      ),
+                      showCheckmark: false,
+                    );
+                  }).toList(),
+                ),
+              ] else if (_profileEmail != null && _profileEmail!.isNotEmpty) ...[
                 const SizedBox(height: 6),
                 Text(
                   l10n.reports_recipient_profile_fallback(_profileEmail!),
@@ -637,6 +688,8 @@ class _MailAiSuggestionsSection extends StatelessWidget {
       final health = context.read<HealthBlock>();
       final mind = context.read<MindBlock>();
       final growth = context.read<GrowthBlock>();
+      final l10n = AppLocalizations.of(context)!;
+      final localeCode = Localizations.localeOf(context).languageCode;
       final refreshKey = Object.hash(
         finance.transactions.value.length,
         health.todaySteps.value,
@@ -645,6 +698,7 @@ class _MailAiSuggestionsSection extends StatelessWidget {
         health.todayFocusMinutes.value,
         mind.latestMoodLog.value?.id,
         growth.goals.value.length,
+        localeCode,
       );
 
       return _MailAiSuggestionsLoader(
@@ -653,6 +707,8 @@ class _MailAiSuggestionsSection extends StatelessWidget {
         health: health,
         mind: mind,
         growth: growth,
+        l10n: l10n,
+        localeCode: localeCode,
       );
     });
   }
@@ -665,12 +721,16 @@ class _MailAiSuggestionsLoader extends StatefulWidget {
     required this.health,
     required this.mind,
     required this.growth,
+    required this.l10n,
+    required this.localeCode,
   });
 
   final FinanceBlock finance;
   final HealthBlock health;
   final MindBlock mind;
   final GrowthBlock growth;
+  final AppLocalizations l10n;
+  final String localeCode;
 
   @override
   State<_MailAiSuggestionsLoader> createState() =>
@@ -687,15 +747,13 @@ class _MailAiSuggestionsLoaderState extends State<_MailAiSuggestionsLoader> {
   }
 
   Future<DailyMailSummarySuggestionsResult> _load() {
-    final l10n = AppLocalizations.of(context)!;
-    final locale = Localizations.localeOf(context).languageCode;
     return DailyMailSummarySuggestions.resolveAsync(
-      l10n: l10n,
+      l10n: widget.l10n,
       finance: widget.finance,
       health: widget.health,
       mind: widget.mind,
       growth: widget.growth,
-      localeCode: locale,
+      localeCode: widget.localeCode,
     );
   }
 

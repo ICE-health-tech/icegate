@@ -13,7 +13,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/StepsPage.dar
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/StepsDashboardPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/health_page/subpage/HealthAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/TextEditorPage.dart';
-import 'package:ice_gate/sensor_layer/ui_layer/animation_page/PrismEntryPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/animation_page/entry/PrismEntryPage.dart';
 import 'package:ice_gate/orchestration_layer/Services/SessionTracker.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/DragCanvasGridPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/canvas_page/GoalConfigurationWidget.dart';
@@ -59,6 +59,7 @@ import 'package:ice_gate/sensor_layer/ui_layer/finance_page/pages/FinanceDailyRe
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindAnalysisPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/MindSkillsPage.dart';
+import 'package:ice_gate/sensor_layer/ui_layer/social_page/SkillCertificatePage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/SocialNotesDashboard.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/blocker/SocialBlockerPage.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/projects_page/ProjectsPage.dart';
@@ -513,12 +514,12 @@ final GoRouter router = GoRouter(
               builder: (context, state) {
                 final q = state.uri.queryParameters;
                 final startSkillsRaw = q['startSkills'];
+                // go_router already percent-decodes query parameter values.
                 final startSkills = startSkillsRaw == null ||
                         startSkillsRaw.isEmpty
                     ? null
                     : startSkillsRaw
                         .split('|')
-                        .map(Uri.decodeComponent)
                         .where((s) => s.trim().isNotEmpty)
                         .toList();
                 return MindSkillsPage(
@@ -531,6 +532,21 @@ final GoRouter router = GoRouter(
                       q['autoStart'] == 'true',
                 );
               },
+              routes: [
+                GoRoute(
+                  path: 'certificate',
+                  builder: (context, state) {
+                    final q = state.uri.queryParameters;
+                    final skill = q['skill'] ?? '';
+                    return SkillCertificatePage(
+                      skillName: skill,
+                      accentIndex: int.tryParse(q['accent'] ?? '') ?? 0,
+                      initiallySelected:
+                          q['selected'] == '1' || q['selected'] == 'true',
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: 'journal',

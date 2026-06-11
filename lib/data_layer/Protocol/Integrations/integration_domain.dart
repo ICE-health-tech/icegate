@@ -1,7 +1,9 @@
-/// Calendar vs health integration domains.
+/// Calendar, health, documents, and automation integration domains.
 enum IntegrationDomain {
   calendar,
   health,
+  documents,
+  automation,
 }
 
 /// Stable provider ids stored in [integration_accounts].provider.
@@ -11,7 +13,10 @@ enum IntegrationProviderId {
   androidDeviceCalendar('android_device_calendar'),
   appleHealth('apple_health'),
   huaweiHealth('huawei_health'),
-  googleFit('google_fit');
+  googleFit('google_fit'),
+  googleDrive('google_drive'),
+  notion('notion'),
+  cursor('cursor');
 
   const IntegrationProviderId(this.storageKey);
   final String storageKey;
@@ -21,6 +26,10 @@ enum IntegrationProviderId {
         IntegrationProviderId.appleDeviceCalendar ||
         IntegrationProviderId.androidDeviceCalendar =>
           IntegrationDomain.calendar,
+        IntegrationProviderId.googleDrive ||
+        IntegrationProviderId.notion =>
+          IntegrationDomain.documents,
+        IntegrationProviderId.cursor => IntegrationDomain.automation,
         _ => IntegrationDomain.health,
       };
 }

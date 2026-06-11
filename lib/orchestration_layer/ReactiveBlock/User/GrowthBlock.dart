@@ -7,6 +7,7 @@ import 'package:ice_gate/data_layer/DataSources/local_database/Database.dart';
 import 'package:ice_gate/data_layer/Protocol/User/GrowthProtocols.dart';
 import 'package:ice_gate/orchestration_layer/IDGen.dart';
 import 'package:ice_gate/sensor_layer/ui_layer/social_page/mind_skill_catalog.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class GrowthBlock {
   final goals = signal<List<GoalProtocol>>([]);
@@ -115,9 +116,11 @@ class GrowthBlock {
                   skillName: e.skillName,
                   skillCategory: e.skillCategory,
                   proficiencyLevel: e.proficiencyLevel.name,
-                  practicePoints: e.yearsOfExperience,
+                  practicePoints: e.point,
                   description: e.description,
                   isFeatured: e.isFeatured,
+                  createdAt: e.createdAt,
+                  updatedAt: e.updatedAt,
                 ),
               )
               .toList(),
@@ -153,8 +156,15 @@ class GrowthBlock {
     }
   }
 
+  SkillProtocol? personLibrarySkillByName(String name) {
+    for (final s in personLibrarySkills()) {
+      if (MindSkillCatalog.namesMatch(s.skillName, name)) return s;
+    }
+    return null;
+  }
+
   Future<String?> ensurePersonLibrarySkill(String name) async {
-    final trimmed = name.trim();
+    final trimmed = MindSkillCatalog.normalizeName(name) ?? name.trim();
     if (_personId.isEmpty || trimmed.isEmpty) return null;
 
     final match = skills.value
@@ -187,7 +197,7 @@ class GrowthBlock {
         skillName: Value(trimmed),
         skillCategory: Value(MindSkillCatalog.personLibraryCategory()),
         proficiencyLevel: const Value(SkillLevel.beginner),
-        yearsOfExperience: const Value(0),
+        point: const Value(0),
         createdAt: Value(now),
         updatedAt: Value(now),
       ),
@@ -263,6 +273,31 @@ class GrowthBlock {
     return deduped;
   }
 
+  /// Same skill tiles as Mind → Skills (library + custom, minus hidden defaults).
+  List<String> mindVisibleSkillNames({
+    Iterable<String> customSkills = const [],
+    Iterable<String> hiddenDefaultSkillsLower = const [],
+  }) {
+    final hidden = hiddenDefaultSkillsLower
+        .map((s) => s.toLowerCase().trim())
+        .where((s) => s.isNotEmpty)
+        .toSet();
+    final base = personSkillNames()
+        .where((s) => !hidden.contains(s.toLowerCase()))
+        .toList();
+    final extra = customSkills.where(
+      (c) => !base.any((b) => MindSkillCatalog.namesMatch(b, c)),
+    );
+    if (base.isNotEmpty) {
+      return MindSkillCatalog.dedupeNames([...base, ...extra]);
+    }
+    return MindSkillCatalog.dedupeNames([
+      ...MindSkillCatalog.defaults
+          .where((s) => !hidden.contains(s.toLowerCase())),
+      ...customSkills,
+    ]);
+  }
+
   /// Prefer `person:library` over legacy `mind:boost`, then higher XP.
   static bool _preferPersonLibrarySkill(SkillProtocol a, SkillProtocol b) {
     final aCanon = a.skillCategory == MindSkillCatalog.personLibraryCategory();
@@ -295,7 +330,7 @@ class GrowthBlock {
     String name, {
     String? altProjectId,
   }) async {
-    final trimmed = name.trim();
+    final trimmed = MindSkillCatalog.normalizeName(name) ?? name.trim();
     if (_personId.isEmpty || trimmed.isEmpty) return null;
     final existing = skillsForProject(
       projectId,
@@ -316,7 +351,7 @@ class GrowthBlock {
         skillName: Value(trimmed),
         skillCategory: Value(GrowthDAO.projectSkillCategory(projectId)),
         proficiencyLevel: const Value(SkillLevel.beginner),
-        yearsOfExperience: const Value(0),
+        point: const Value(0),
         createdAt: Value(now),
         updatedAt: Value(now),
       ),
@@ -328,6 +363,23 @@ class GrowthBlock {
 
   Future<String?> createMindSkill(String name) =>
       ensurePersonLibrarySkill(name);
+
+  /// Appends a custom skill to Mind prefs + person library (shared with Mind → Skills).
+  Future<List<String>> appendCustomMindSkill(String name) async {
+    final trimmed = MindSkillCatalog.normalizeName(name);
+    if (_personId.isEmpty || trimmed == null) {
+      return const [];
+    }
+    final prefs = await SharedPreferences.getInstance();
+    final key = 'mind_custom_skills_$_personId';
+    final merged = MindSkillCatalog.dedupeNames([
+      ...prefs.getStringList(key) ?? const [],
+      trimmed,
+    ]);
+    await prefs.setStringList(key, merged);
+    await ensurePersonLibrarySkill(trimmed);
+    return merged;
+  }
 
   /// Skill Boost session → XP on global mind skills (creates row if missing).
   Future<int> grantSessionXpToMindSkills({
@@ -393,6 +445,62 @@ class GrowthBlock {
 
   Future<void> deleteSkill(String id) async {
     await _dao.deleteSkillByUuid(id);
+  }
+
+  /// Updates certificate metadata stored on the person library skill row.
+  Future<bool> updateSkillCertificateDetails({
+    required String skillName,
+    String? description,
+    DateTime? createdAt,
+  }) async {
+    if (_personId.isEmpty) return false;
+    final skill = personLibrarySkillByName(skillName);
+    if (skill == null) return false;
+    await _dao.updateSkillCertificateDetails(
+      id: skill.id,
+      description: description,
+      createdAt: createdAt,
+    );
+    return true;
+  }
+
+  /// Rename `person:library` row (and sync). Returns false if name invalid or taken.
+  Future<bool> renamePersonLibrarySkill(String oldName, String newName) async {
+    if (_personId.isEmpty) return false;
+    final normalized = MindSkillCatalog.normalizeName(newName);
+    if (normalized == null) return false;
+    if (MindSkillCatalog.namesMatch(oldName, normalized)) return true;
+
+    final taken = skills.value.any(
+      (s) =>
+          MindSkillCatalog.isPersonLibrary(s.skillCategory) &&
+          MindSkillCatalog.namesMatch(s.skillName, normalized) &&
+          !MindSkillCatalog.namesMatch(s.skillName, oldName),
+    );
+    if (taken) return false;
+
+    final existing = personLibrarySkillByName(oldName);
+    if (existing != null) {
+      await _dao.updateSkillName(existing.id, normalized);
+      return true;
+    }
+    await ensurePersonLibrarySkill(normalized);
+    return true;
+  }
+
+  /// Removes all `person:library` rows for this display name.
+  Future<void> deletePersonLibrarySkillByName(String name) async {
+    if (_personId.isEmpty) return;
+    final targets = skills.value
+        .where(
+          (s) =>
+              MindSkillCatalog.isPersonLibrary(s.skillCategory) &&
+              MindSkillCatalog.namesMatch(s.skillName, name),
+        )
+        .toList();
+    for (final s in targets) {
+      await deleteSkill(s.id);
+    }
   }
 
   /// Awards practice XP to every skill linked to this project.

@@ -40,13 +40,15 @@ class FocusHistoryPage extends StatelessWidget {
               return const Center(child: CircularProgressIndicator());
             }
 
-            final sessions = snapshot.data!.reversed.toList();
+            final sessions = snapshot.data!;
 
             if (sessions.isEmpty) {
               return _EmptyState(colorScheme: colorScheme);
             }
 
             final groupedSessions = _groupSessionsByDate(sessions);
+            final sortedDateGroups = groupedSessions.entries.toList()
+              ..sort((a, b) => b.key.compareTo(a.key));
             final totalMinutes = sessions.fold<int>(
               0,
               (sum, s) => sum + (s.durationSeconds ~/ 60),
@@ -62,7 +64,7 @@ class FocusHistoryPage extends StatelessWidget {
                     colorScheme: colorScheme,
                   ),
                 ),
-                ...groupedSessions.entries.map((entry) {
+                ...sortedDateGroups.map((entry) {
                   return SliverMainAxisGroup(
                     slivers: [
                       SliverToBoxAdapter(
@@ -110,6 +112,9 @@ class FocusHistoryPage extends StatelessWidget {
         session.startTime.day,
       );
       grouped.putIfAbsent(date, () => []).add(session);
+    }
+    for (final list in grouped.values) {
+      list.sort((a, b) => b.startTime.compareTo(a.startTime));
     }
     return grouped;
   }

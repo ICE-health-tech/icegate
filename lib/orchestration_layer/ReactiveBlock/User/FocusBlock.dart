@@ -115,6 +115,8 @@ class FocusBlock {
   String? _activeSessionId;
   bool _isStarting = false;
   bool _isLiveActivityInitialized = false;
+  /// Throttles lock-screen / audio metadata updates (was firing ~10×/s).
+  int? _lastMetadataSecond;
 
   final MusicBlock? _musicBlock;
   final FocusAudioHandler? _audioHandler;
@@ -203,80 +205,16 @@ class FocusBlock {
       }
 
       // Force immediate metadata update for instant play/pause button toggle
-      _updateMediaMetadata();
+      _lastMetadataSecond = null;
+      _updateMediaMetadata(force: true);
 
-      // 1. START TIMER IMMEDIATELY
+      // 1. START TIMER — 1s tick (UI is second-precision; avoids 10×/s overhead)
       _timer?.cancel();
       final totalSeconds = remainingTime.value;
-      _timer = Timer.periodic(const Duration(milliseconds: 100), (timer) {
-        if (isStopwatchMode.value) {
-          final now = DateTime.now();
-          final currentSegmentElapsed = now.difference(_lastStartTime!).inSeconds;
-          final totalElapsed = _accumulatedSeconds + currentSegmentElapsed;
-          
-          if (totalElapsed != stopwatchElapsedSeconds.value) {
-            stopwatchElapsedSeconds.value = totalElapsed;
-            // Update remainingTime for UI consistency
-            remainingTime.value = totalElapsed; 
-            
-            if (totalElapsed % 5 == 0) {
-              _updateLiveActivity();
-            }
-            _updateMediaMetadata();
-          }
-          return;
-        }
-
-        if (_targetEndTime == null) return;
-        final now = DateTime.now();
-        final remaining = _targetEndTime!.difference(now);
-        if (remaining.inMilliseconds <= 0) {
-          remainingTime.value = 0;
-          if (isSyncingWithClock.value) {
-            // Wait period over, start the actual session
-            isSyncingWithClock.value = false;
-            _actualStartTime =
-                DateTime.now(); // Reset start time for the real block
-            remainingTime.value = muskFocusDuration.value * 60;
-            _targetEndTime = DateTime.now().add(
-              Duration(seconds: remainingTime.value),
-            );
-            _notificationService?.showNotification(
-              889,
-              "BLOCK INITIATED",
-              "Aligned. Sequence starting for ${muskFocusDuration.value} minutes.",
-            );
-            HapticFeedback.heavyImpact();
-          } else {
-            completeSession();
-          }
-        } else {
-          final newSeconds = remaining.inSeconds;
-          if (newSeconds != remainingTime.value) {
-            remainingTime.value = newSeconds;
-
-            // --- Periodic Haptics for Musk Mode ---
-            if (isMuskMode.value) {
-              final elapsedSeconds = totalSeconds - newSeconds;
-              if (elapsedSeconds > 0 && elapsedSeconds % 60 == 0) {
-                final elapsedMinutes = elapsedSeconds ~/ 60;
-                if (elapsedMinutes % 5 == 0) {
-                  _triggerIntervalHaptics(strong: true);
-                } else {
-                  _triggerIntervalHaptics(strong: false);
-                }
-              }
-            }
-
-            // Only update Live Activity every 5 seconds to avoid iOS throttling
-            if (newSeconds % 5 == 0) {
-              _updateLiveActivity();
-            }
-
-            _updateMediaMetadata();
-          }
-        }
+      _timer = Timer.periodic(const Duration(seconds: 1), (_) {
+        _onFocusTimerTick(totalSecondsAtStart: totalSeconds);
       });
+      _onFocusTimerTick(totalSecondsAtStart: totalSeconds);
 
       // 2. RUN SETUP IN BACKGROUND
       Timer(Duration.zero, () {
@@ -304,6 +242,74 @@ class FocusBlock {
     } finally {
       _isStarting = false;
     }
+  }
+
+  void _onFocusTimerTick({required int totalSecondsAtStart}) {
+    if (isStopwatchMode.value) {
+      if (_lastStartTime == null) return;
+      final now = DateTime.now();
+      final currentSegmentElapsed =
+          now.difference(_lastStartTime!).inSeconds;
+      final totalElapsed = _accumulatedSeconds + currentSegmentElapsed;
+
+      if (totalElapsed == stopwatchElapsedSeconds.value) return;
+
+      stopwatchElapsedSeconds.value = totalElapsed;
+      remainingTime.value = totalElapsed;
+
+      if (totalElapsed % 5 == 0) {
+        _updateLiveActivity();
+      }
+      _updateMediaMetadata();
+      return;
+    }
+
+    if (_targetEndTime == null) return;
+    final now = DateTime.now();
+    final remaining = _targetEndTime!.difference(now);
+    if (remaining.inMilliseconds <= 0) {
+      remainingTime.value = 0;
+      if (isSyncingWithClock.value) {
+        isSyncingWithClock.value = false;
+        _actualStartTime = DateTime.now();
+        remainingTime.value = muskFocusDuration.value * 60;
+        _targetEndTime = DateTime.now().add(
+          Duration(seconds: remainingTime.value),
+        );
+        _notificationService?.showNotification(
+          889,
+          "BLOCK INITIATED",
+          "Aligned. Sequence starting for ${muskFocusDuration.value} minutes.",
+        );
+        HapticFeedback.heavyImpact();
+        _updateMediaMetadata(force: true);
+      } else {
+        completeSession();
+      }
+      return;
+    }
+
+    final newSeconds = remaining.inSeconds;
+    if (newSeconds == remainingTime.value) return;
+
+    remainingTime.value = newSeconds;
+
+    if (isMuskMode.value) {
+      final elapsedSeconds = totalSecondsAtStart - newSeconds;
+      if (elapsedSeconds > 0 && elapsedSeconds % 60 == 0) {
+        final elapsedMinutes = elapsedSeconds ~/ 60;
+        if (elapsedMinutes % 5 == 0) {
+          _triggerIntervalHaptics(strong: true);
+        } else {
+          _triggerIntervalHaptics(strong: false);
+        }
+      }
+    }
+
+    if (newSeconds % 5 == 0) {
+      _updateLiveActivity();
+    }
+    _updateMediaMetadata();
   }
 
   Future<void> _createLiveActivity() async {
@@ -366,6 +372,7 @@ class FocusBlock {
 
     isRunning.value = false;
     isSyncingWithClock.value = false;
+    _lastMetadataSecond = null;
 
     // Accumulate time spent in current segment
     if (_lastStartTime != null) {
@@ -399,11 +406,19 @@ class FocusBlock {
     }
   }
 
-  void _updateMediaMetadata() {
+  void _updateMediaMetadata({bool force = false}) {
+    final sec = remainingTime.value;
+    if (!force &&
+        isRunning.value &&
+        _lastMetadataSecond == sec &&
+        _lastMetadataSecond != null) {
+      return;
+    }
+    _lastMetadataSecond = sec;
     _musicBlock?.updateMediaMetadata(
       isRunning: isRunning.value,
       sessionType: currentSessionType.value,
-      remainingTime: remainingTime.value,
+      remainingTime: sec,
       totalDuration: _getDurationForType(currentSessionType.value),
     );
   }
@@ -507,25 +522,14 @@ class FocusBlock {
       await _saveSession(status: 'completed');
     }
 
-    // Update stats immediately
-    if (currentSessionType.value == 'Focus') {
-      int duration = _getDurationForType('Focus');
-      totalStudyTimeToday.value += duration;
-      sessionsCompletedToday.value++;
+    // Stats come from DB (actual elapsed seconds), not planned pomodoro length.
+    await fetchDailyStats();
 
-      // Automation - Only complete task if explicitly requested
-      if (markTaskDone && selectedTaskId.value != null && growthBlock != null) {
-        await growthBlock!.completeGoalByGoalId(
-          selectedTaskId.value!,
-        );
-      }
-
-
-      // We keep the selectedTaskId so they can run another session on the same task,
-      // UNLESS they explicitly marked it as done.
-      if (markTaskDone) {
-        selectedTaskId.value = null;
-      }
+    if (markTaskDone &&
+        selectedTaskId.value != null &&
+        growthBlock != null) {
+      await growthBlock!.completeGoalByGoalId(selectedTaskId.value!);
+      selectedTaskId.value = null;
     }
 
     showSummary.value = false;
@@ -777,14 +781,11 @@ class FocusBlock {
 
     for (var session in allSessions) {
       if (session.startTime.isAfter(todayStart) &&
-          session.startTime.isBefore(todayEnd)) {
-        if (session.status == 'completed' &&
-            session.durationSeconds >= 25 * 60) {
-          todayDuration += session.durationSeconds;
-          todayCount++;
-        } else if (session.status == 'completed') {
-          todayDuration += session.durationSeconds;
-        }
+          session.startTime.isBefore(todayEnd) &&
+          session.status == 'completed' &&
+          session.sessionType == 'Focus') {
+        todayDuration += session.durationSeconds;
+        todayCount++;
       }
     }
 

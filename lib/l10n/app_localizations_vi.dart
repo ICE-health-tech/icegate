@@ -91,6 +91,71 @@ class AppLocalizationsVi extends AppLocalizations {
   String get projects_calendar_add_reminder => 'Thêm nhắc nhở';
 
   @override
+  String get projects_calendar_add_event => 'Thêm sự kiện';
+
+  @override
+  String get projects_calendar_event_title => 'Tiêu đề sự kiện';
+
+  @override
+  String get projects_calendar_event_title_required => 'Nhập tiêu đề sự kiện';
+
+  @override
+  String get projects_calendar_event_start => 'Bắt đầu';
+
+  @override
+  String get projects_calendar_event_end => 'Kết thúc';
+
+  @override
+  String get projects_calendar_event_saved => 'Đã lưu sự kiện vào lịch';
+
+  @override
+  String get projects_calendar_event_deleted => 'Đã xóa sự kiện';
+
+  @override
+  String get projects_calendar_event_failed => 'Không thể lưu sự kiện';
+
+  @override
+  String get projects_calendar_edit_event => 'Sửa sự kiện';
+
+  @override
+  String get projects_calendar_delete_event => 'Xóa sự kiện';
+
+  @override
+  String get projects_calendar_edit_reminder => 'Sửa nhắc nhở';
+
+  @override
+  String get projects_calendar_save => 'Lưu';
+
+  @override
+  String get projects_calendar_select_calendar => 'Lịch';
+
+  @override
+  String get projects_calendar_tap_day_add_hint =>
+      'Chạm lại ngày đã chọn để thêm sự kiện';
+
+  @override
+  String get projects_calendar_hold_day_add_hint => 'Giữ ngày để thêm sự kiện';
+
+  @override
+  String get projects_calendar_timeline_empty =>
+      'Không có sự kiện theo giờ trong ngày';
+
+  @override
+  String get projects_calendar_timeline_tap_slot =>
+      'Chạm khung giờ để thêm · chạm sự kiện để sửa hoặc xóa';
+
+  @override
+  String get projects_calendar_timeline_remove => 'Ẩn khỏi timeline';
+
+  @override
+  String projects_calendar_timeline_remove_confirm(String title) {
+    return 'Ẩn \"$title\" khỏi timeline ngày này?';
+  }
+
+  @override
+  String get projects_calendar_day_timeline => 'Dòng thời gian';
+
+  @override
   String get projects_calendar_reminder_title => 'Tiêu đề nhắc nhở';
 
   @override
@@ -182,6 +247,17 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get integration_hub_health_section => 'Sức khỏe';
+
+  @override
+  String get integration_hub_notes_section => 'Ghi chú & tài liệu';
+
+  @override
+  String get integration_hub_google_drive_hint =>
+      'Đồng bộ ghi chú dự án và tệp vault từ Google Drive.';
+
+  @override
+  String get integration_hub_notion_hint =>
+      'Nhập trang và cơ sở dữ liệu Notion được chia sẻ vào vault.';
 
   @override
   String get integration_hub_connect => 'Kết nối';
@@ -1854,6 +1930,45 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_focus_title => 'KHU VỰC TẬP TRUNG';
 
   @override
+  String get mind_focus_weekly_title => 'Trọng tâm tuần này';
+
+  @override
+  String get mind_focus_monthly_title => 'Trọng tâm tháng này';
+
+  @override
+  String mind_focus_goal_level(int level) {
+    return 'Mục tiêu: Lv. $level';
+  }
+
+  @override
+  String mind_focus_xp_progress(int current, int cap) {
+    return '$current / $cap XP';
+  }
+
+  @override
+  String get mind_focus_badge => 'FOCUS';
+
+  @override
+  String get mind_total_level => 'Level tổng';
+
+  @override
+  String get mind_streak_label => 'Chuỗi';
+
+  @override
+  String mind_streak_days(int days) {
+    return '$days ngày';
+  }
+
+  @override
+  String get mind_streak_bonus => '+15% EXP bonus';
+
+  @override
+  String get mind_skill_tree_title => 'Cây kỹ năng';
+
+  @override
+  String get mind_skill_certificates_title => 'Chứng nhận';
+
+  @override
   String get mind_focus_subtitle =>
       'Định nghĩa xu hướng theo tuần để biết nên tập trung vào đâu.';
 
@@ -1941,6 +2056,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get mind_skills_session_start => 'Bắt đầu phiên';
 
   @override
+  String get mind_skills_session_empty_month =>
+      'Chưa có phiên kỹ năng trong tháng này.';
+
+  @override
+  String mind_skills_session_skill_meta(int sessions, int minutes) {
+    return '$sessions phiên · $minutes phút';
+  }
+
+  @override
   String mind_skills_session_empty(int days) {
     return 'Chưa có phiên kỹ năng trong $days ngày qua.';
   }
@@ -1994,6 +2118,110 @@ class AppLocalizationsVi extends AppLocalizations {
   String mind_skills_session_logged(int minutes, int xp) {
     return 'Đã ghi phiên · $minutes phút · +$xp XP';
   }
+
+  @override
+  String get mind_skills_celebration_title => 'Đã lưu bằng chứng luyện tập';
+
+  @override
+  String mind_skills_celebration_proof(int minutes, int xp) {
+    return 'Bạn tập trung $minutes phút và +$xp XP — đã ghi vào hồ sơ kỹ năng.';
+  }
+
+  @override
+  String mind_skills_celebration_level_up(String skills) {
+    return 'Lên cấp: $skills';
+  }
+
+  @override
+  String mind_skills_celebration_streak(int days) {
+    return 'Chuỗi $days ngày — giữ nhịp luyện tập.';
+  }
+
+  @override
+  String get mind_skills_celebration_goal =>
+      'Phiên hôm nay là nền cho phiên bản bạn ngày mai.';
+
+  @override
+  String get mind_skill_name_invalid => 'Tên kỹ năng từ 1–24 ký tự.';
+
+  @override
+  String get mind_skill_name_duplicate => 'Kỹ năng này đã có trong danh sách.';
+
+  @override
+  String get mind_skill_add_title => 'Thêm kỹ năng';
+
+  @override
+  String get mind_skill_edit_title => 'Sửa tên kỹ năng';
+
+  @override
+  String get mind_skill_delete_title => 'Xóa kỹ năng?';
+
+  @override
+  String mind_skill_delete_body(String name) {
+    return 'Gỡ “$name” khỏi thư viện kỹ năng?';
+  }
+
+  @override
+  String get mind_skill_certificate_header => 'CHỨNG NHẬN LUYỆN TẬP';
+
+  @override
+  String get mind_skill_certificate_subtitle =>
+      'Năng lực con người · tiến độ đã xác minh';
+
+  @override
+  String get mind_skill_certificate_awarded_to =>
+      'Trao tặng cho quá trình rèn luyện kỹ năng';
+
+  @override
+  String get mind_skill_certificate_level => 'Cấp bậc';
+
+  @override
+  String get mind_skill_certificate_xp => 'Kinh nghiệm';
+
+  @override
+  String get mind_skill_certificate_streak => 'Chuỗi ngày';
+
+  @override
+  String get mind_skill_certificate_proof =>
+      'Bản ghi này từ các phiên thật trên ice_gate — bằng chứng tiến bộ của bạn.';
+
+  @override
+  String get mind_skill_certificate_seal => 'ẤN ICEGATE';
+
+  @override
+  String get mind_skill_certificate_select_session => 'Chọn cho phiên';
+
+  @override
+  String get mind_skill_certificate_close => 'Đóng';
+
+  @override
+  String get mind_skill_certificate_created => 'Ngày tạo';
+
+  @override
+  String get mind_skill_certificate_updated => 'Cập nhật lần cuối';
+
+  @override
+  String get mind_skill_certificate_description => 'Mô tả';
+
+  @override
+  String get mind_skill_certificate_description_hint =>
+      'Ý nghĩa kỹ năng này với bạn, hoặc cách bạn đạt được…';
+
+  @override
+  String get mind_skill_certificate_edit => 'Sửa chứng nhận';
+
+  @override
+  String get mind_skill_certificate_save => 'Lưu chứng nhận';
+
+  @override
+  String get mind_skill_certificates_table_title => 'Chứng nhận luyện tập';
+
+  @override
+  String get mind_skill_certificates_table_empty =>
+      'Chưa có kỹ năng trong thư viện. Mở Kỹ năng để bắt đầu tích lũy chứng nhận.';
+
+  @override
+  String get mind_skill_certificates_col_skill => 'Kỹ năng';
 
   @override
   String get mood_trends_title => 'XU HƯỚNG TÂM TRẠNG';
@@ -2070,6 +2298,37 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get stat_sentiment => 'TÂM TRẠNG';
+
+  @override
+  String get stat_mind_logs => 'Log (30 ngày)';
+
+  @override
+  String get stat_active_days => 'Ngày có log';
+
+  @override
+  String get stat_avg_mood => 'Mood TB';
+
+  @override
+  String get journal_hourly_logs => 'Log theo giờ (hôm nay)';
+
+  @override
+  String get mind_insights_skill_title => 'Luyện kỹ năng (30 ngày)';
+
+  @override
+  String mind_insights_skill_summary(int sessions, int minutes) {
+    return '$sessions phiên · $minutes phút';
+  }
+
+  @override
+  String mind_insights_top_skill_streak(String skill, int days) {
+    return 'Chuỗi · $skill · $days ngày';
+  }
+
+  @override
+  String get mind_insights_open_notes => 'Ghi chép tinh thần';
+
+  @override
+  String get mind_insights_open_skills => 'Chứng nhận kỹ năng';
 
   @override
   String get weekly_mood_trend => 'XU HƯỚNG TÂM TRẠNG TUẦN';
@@ -2988,15 +3247,22 @@ class AppLocalizationsVi extends AppLocalizations {
       'Chọn từ các kỹ năng giống tab Skills trong Mind.';
 
   @override
-  String get project_auto_add_all_skills => 'Thêm tự động tất cả';
+  String get project_auto_add_all_skills => 'Tạo kỹ năng mới';
 
   @override
   String get project_auto_add_all_skills_subtitle =>
-      'Gắn mọi kỹ năng trong thư viện Mind vào dự án này';
+      'Tạo kỹ năng hoàn toàn mới cho Mind và dự án này';
+
+  @override
+  String get project_skill_already_exists => 'Kỹ năng này đã tồn tại';
+
+  @override
+  String get project_skill_name_too_long =>
+      'Tên kỹ năng quá dài (tối đa 24 ký tự)';
 
   @override
   String get project_skills_all_on_project =>
-      'Tất cả kỹ năng đã có trong dự án';
+      'Tất cả kỹ năng Mind đã có trong dự án';
 
   @override
   String project_skills_added_count(int count) {
@@ -3352,6 +3618,14 @@ class AppLocalizationsVi extends AppLocalizations {
       'Tôi hiểu tài khoản có thể chưa bị xóa hoàn toàn trên máy chủ cho đến khi backend bật xóa.';
 
   @override
+  String get delete_account_type_key_word => 'XOA-TAI-KHOAN';
+
+  @override
+  String delete_account_type_key_prompt(String word) {
+    return 'Nhập $word để xác nhận:';
+  }
+
+  @override
   String get delete_account_confirm => 'Xóa và đăng xuất';
 
   @override
@@ -3533,6 +3807,23 @@ class AppLocalizationsVi extends AppLocalizations {
   String get finance_label_description_optional => 'Mô tả (tùy chọn)';
 
   @override
+  String get finance_txn_source_account => 'Chi từ';
+
+  @override
+  String get finance_txn_source_account_none => 'Không chọn';
+
+  @override
+  String get finance_txn_source_account_empty =>
+      'Hãy lưu ví/tài khoản trước, sau đó chọn nguồn khi ghi chi tiêu.';
+
+  @override
+  String get finance_txn_source_account_add => 'Thêm tài khoản';
+
+  @override
+  String get finance_txn_source_account_required =>
+      'Hãy chọn ví/tài khoản chi tiền.';
+
+  @override
   String get finance_recurring_income => 'Thu nhập định kỳ';
 
   @override
@@ -3543,7 +3834,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_fixed_income_subtitle =>
-      'Lương, tiền thuê và các khoản thu ổn định khác';
+      'Vốn con người (kỹ năng), lương, tiền thuê và các khoản thu ổn định khác';
 
   @override
   String get finance_fixed_income_monthly_total => 'Tổng / tháng';
@@ -3791,6 +4082,182 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get finance_cat_general => 'Chung';
+
+  @override
+  String get finance_cat_human_capital => 'Vốn con người';
+
+  @override
+  String get finance_inflow_pillar_human_capital => 'Vốn con người';
+
+  @override
+  String get finance_inflow_pillar_liquidity => 'Thanh khoản';
+
+  @override
+  String get finance_inflow_pillar_fixed_income => 'Thu nhập cố định';
+
+  @override
+  String get finance_inflow_pillar_investment => 'Đầu tư';
+
+  @override
+  String get finance_inflow_pillar_cashflow => 'Dòng tiền';
+
+  @override
+  String get finance_inflow_pillars_title => 'Các lớp thu vào';
+
+  @override
+  String get finance_inflow_pillars_subtitle =>
+      'Kỹ năng & việc làm, tiền mặt, thu ổn định, tài sản tăng trưởng, hệ thống định kỳ';
+
+  @override
+  String get finance_asset_pillars_title => 'Lớp tài sản';
+
+  @override
+  String get finance_asset_pillars_subtitle =>
+      'Thanh khoản, thu nhập cố định, đầu tư, dòng tiền';
+
+  @override
+  String get finance_asset_pillar_liquidity => 'Thanh khoản';
+
+  @override
+  String get finance_asset_pillar_fixed_income => 'Thu nhập cố định';
+
+  @override
+  String get finance_asset_pillar_investment => 'Đầu tư';
+
+  @override
+  String get finance_asset_pillar_cashflow => 'Dòng tiền';
+
+  @override
+  String get finance_record_section_title => 'Ghi nhận';
+
+  @override
+  String get finance_record_section_subtitle =>
+      'Thêm tài khoản, tài sản, vốn con người và subscription';
+
+  @override
+  String get finance_record_human_capital => 'Vốn con người';
+
+  @override
+  String get finance_record_human_capital_hint =>
+      'Năng lực / capacity (ước tính)';
+
+  @override
+  String get finance_record_liquidity_account => 'TK thanh khoản';
+
+  @override
+  String get finance_record_liquidity_hint => 'Tiền mặt, ngân hàng';
+
+  @override
+  String get finance_record_fixed_income_asset => 'TS thu nhập cố định';
+
+  @override
+  String get finance_record_fixed_income_hint => 'Trái phiếu, tiết kiệm';
+
+  @override
+  String get finance_record_investment_account => 'TK đầu tư';
+
+  @override
+  String get finance_record_investment_account_hint =>
+      'CTCK, crypto, ví broker';
+
+  @override
+  String get finance_record_investment_holding => 'TS đầu tư';
+
+  @override
+  String get finance_record_investment_holding_hint => 'Cổ phiếu, crypto, BĐS';
+
+  @override
+  String get finance_account_type_checking => 'Thanh toán';
+
+  @override
+  String get finance_account_type_savings => 'Tiết kiệm';
+
+  @override
+  String get finance_account_type_cash => 'Tiền mặt';
+
+  @override
+  String get finance_account_type_credit_card => 'Thẻ tín dụng';
+
+  @override
+  String get finance_account_type_deposit => 'Gửi có kỳ hạn';
+
+  @override
+  String get finance_account_type_investment => 'Tài khoản đầu tư';
+
+  @override
+  String get finance_add_account_title => 'Thêm tài khoản';
+
+  @override
+  String get finance_account_type_section => 'Loại tài khoản';
+
+  @override
+  String get finance_accounts_liquidity_title => 'Tài khoản thanh khoản';
+
+  @override
+  String get finance_accounts_investment_title => 'Tài khoản đầu tư';
+
+  @override
+  String get finance_account_investment_name_hint =>
+      'VD: VNDirect, SSI, Binance';
+
+  @override
+  String get finance_record_cashflow_asset => 'TS dòng tiền';
+
+  @override
+  String get finance_record_cashflow_hint => 'SaaS, hệ thống định kỳ';
+
+  @override
+  String get finance_record_subscription => 'Subscription';
+
+  @override
+  String get finance_record_subscription_hint => 'Chi phí lặp lại';
+
+  @override
+  String get finance_hc_capacity_label => 'Capacity';
+
+  @override
+  String get finance_hc_realized_label => 'Đã nhận';
+
+  @override
+  String get finance_hc_gap_title => 'Vốn con người';
+
+  @override
+  String finance_hc_gap_message(String capacity, String received, String gap) {
+    return 'Capacity $capacity · nhận $received · chênh $gap';
+  }
+
+  @override
+  String get finance_add_asset_title => 'Thêm tài sản';
+
+  @override
+  String get finance_add_asset_category => 'Loại tài sản';
+
+  @override
+  String get finance_add_asset_name => 'Tên / mã';
+
+  @override
+  String get finance_add_asset_value => 'Giá trị ước tính';
+
+  @override
+  String get finance_add_asset_save => 'Lưu tài sản';
+
+  @override
+  String get finance_asset_cat_stock => 'Cổ phiếu';
+
+  @override
+  String get finance_asset_cat_crypto => 'Crypto';
+
+  @override
+  String get finance_asset_cat_bond => 'Trái phiếu';
+
+  @override
+  String get finance_asset_cat_deposit => 'Tiết kiệm';
+
+  @override
+  String get finance_asset_cat_real_estate => 'Bất động sản';
+
+  @override
+  String get finance_asset_cat_cashflow => 'Dòng tiền (SaaS)';
 
   @override
   String get finance_cat_salary => 'Lương';
